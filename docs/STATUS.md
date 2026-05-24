@@ -36,12 +36,11 @@ Phase 1 — 基础设施（Task 004 完成，进入 Task 005）
 - [x] Task 004: Repository 层（11 个 Repository，51 个 DB 测试全部通过）
 - [x] Task 005: Genre Profile 系统（3 个 JSON 配置 + 加载器 + 36 个测试全部通过）
 - [x] Task 006: CreativeModeProfile 系统（3 个 JSON 配置 + 注册表 + 38 个测试全部通过）
+- [x] Task 007: CLI 创建项目（create-project 交互向导 + list-projects + 6 个 CLI 测试全部通过）
 
 ## 待开始
 
-- [ ] Task 007: CLI 创建项目
-- [ ] Task 006: CreativeModeProfile 系统
-- [ ] Task 007: CLI 创建项目
+- [ ] Task 008: GoalPlanner Agent
 - [ ] Task 008: GoalPlanner Agent
 - [ ] Task 009: CreativeDirector Agent
 - [ ] Task 010: ContextPackage 组装
@@ -62,6 +61,7 @@ Phase 1 — 基础设施（Task 004 完成，进入 Task 005）
 
 ## 最近变更
 
+- 2026-05-24: Task 007 CLI 创建项目完成（create-project 8 步交互向导、list-projects、动态加载 mode/genre、project_id 生成、SQLite 持久化、6 个 CLI 测试全部通过）
 - 2026-05-24: Task 006 CreativeModeProfile 系统完成（webnovel 完整配置 + literary/hybrid 基础配置、load_creative_mode_profile / list_creative_mode_profiles / CreativeModeProfileLoader、内存缓存、38 个测试全部通过）
 - 2026-05-24: Task 005 Genre Profile 系统完成（xuanhuan 完整配置 + urban/scifi 基础配置、load_genre_profile / list_genre_profiles / GenreProfileLoader、内存缓存、36 个测试全部通过）
 - 2026-05-24: Task 004 Repository 层完成（核心/审查/结算 11 个 Repository、JSON 序列化、版本链、快照 INSERT only、51 个 DB 测试全部通过）
