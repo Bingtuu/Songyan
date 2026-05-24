@@ -7,7 +7,7 @@
 
 ## 当前阶段
 
-Phase 0 — 工程规范与项目骨架建立
+Phase 1 — 基础设施（Task 002 完成，进入 Task 003）
 
 ## 已完成
 
@@ -30,12 +30,13 @@ Phase 0 — 工程规范与项目骨架建立
 
 ## 进行中
 
-- [ ] Task 001: 项目初始化（骨架已搭，待 `pip install` 验证）
+- [x] Task 001: 项目初始化（骨架已搭，pip install 验证通过）
+- [x] Task 002: Pydantic 数据模型（35 个模型，68 个测试全部通过）
 
 ## 待开始
 
 - [ ] Task 002: Pydantic 数据模型
-- [ ] Task 003: SQLite Schema
+- [ ] Task 003: SQLite Schema（当前进行中的下一 Task）
 - [ ] Task 004: Repository 层
 - [ ] Task 005: Genre Profile 系统
 - [ ] Task 006: CreativeModeProfile 系统
