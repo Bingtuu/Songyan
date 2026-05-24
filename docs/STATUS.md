@@ -7,7 +7,7 @@
 
 ## 当前阶段
 
-Phase 1 — 基础设施（Task 004 完成，进入 Task 005）
+Phase 2 — Agent 能力层（Task 017 完成）
 
 ## 已完成
 
@@ -45,8 +45,12 @@ Phase 1 — 基础设施（Task 004 完成，进入 Task 005）
 - [ ] Task 009: CreativeDirector Agent
 - [ ] Task 010: ContextPackage 组装
 - [ ] Task 011: Writer Agent
-- [ ] Task 017: Quality Utils
+- [x] Task 017: Quality Utils（5 个检测工具 + 77 测试全部通过）
 - [ ] Task 018: Craft Card Prompts
+- [ ] Task 008: GoalPlanner Agent
+- [ ] Task 009: CreativeDirector Agent
+- [ ] Task 010: ContextManager
+- [ ] Task 011: Writer Agent
 - [ ] Task 012: RuleAuditor Agent
 - [ ] Task 013: LLMAuditor Agent
 - [ ] Task 014: LiteraryAuditor Agent
@@ -61,6 +65,7 @@ Phase 1 — 基础设施（Task 004 完成，进入 Task 005）
 
 ## 最近变更
 
+- 2026-05-24: Task 017 Quality Utils 完成（AI 腔/疲劳词/钩子/段落节奏/数值验证 5 个检测工具、_helpers 辅助模块、77 个 utils 测试全部通过、ruff 0 errors、总测试 279 passed）
 - 2026-05-24: Task 007 CLI 创建项目完成（create-project 8 步交互向导、list-projects、动态加载 mode/genre、project_id 生成、SQLite 持久化、6 个 CLI 测试全部通过）
 - 2026-05-24: Task 006 CreativeModeProfile 系统完成（webnovel 完整配置 + literary/hybrid 基础配置、load_creative_mode_profile / list_creative_mode_profiles / CreativeModeProfileLoader、内存缓存、38 个测试全部通过）
 - 2026-05-24: Task 005 Genre Profile 系统完成（xuanhuan 完整配置 + urban/scifi 基础配置、load_genre_profile / list_genre_profiles / GenreProfileLoader、内存缓存、36 个测试全部通过）
