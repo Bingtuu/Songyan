@@ -7,7 +7,7 @@
 
 ## 当前阶段
 
-Phase 1 — 基础设施（Task 003 完成，进入 Task 004）
+Phase 1 — 基础设施（Task 004 完成，进入 Task 005）
 
 ## 已完成
 
@@ -33,10 +33,10 @@ Phase 1 — 基础设施（Task 003 完成，进入 Task 004）
 - [x] Task 001: 项目初始化（骨架已搭，pip install 验证通过）
 - [x] Task 002: Pydantic 数据模型（35 个模型，68 个测试全部通过）
 - [x] Task 003: SQLite Schema（13 张表，26 个测试全部通过）
+- [x] Task 004: Repository 层（11 个 Repository，51 个 DB 测试全部通过）
 
 ## 待开始
 
-- [ ] Task 004: Repository 层（当前进行中的下一 Task）
 - [ ] Task 005: Genre Profile 系统
 - [ ] Task 006: CreativeModeProfile 系统
 - [ ] Task 007: CLI 创建项目
@@ -60,6 +60,7 @@ Phase 1 — 基础设施（Task 003 完成，进入 Task 004）
 
 ## 最近变更
 
+- 2026-05-24: Task 004 Repository 层完成（核心/审查/结算 11 个 Repository、JSON 序列化、版本链、快照 INSERT only、51 个 DB 测试全部通过）
 - 2026-05-24: Task 003 SQLite Schema 完成（13 张表、aiosqlite 异步连接、WAL 模式、26 个测试全部通过）
 - 2026-05-24: Task 002 Pydantic 数据模型完成（35 个模型、68 个测试全部通过）
 - 2026-05-24: 完整工程规范体系建立（CLAUDE.md + TDD + 上下文管理 + 协作规范 + Task 001 骨架）

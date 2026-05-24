@@ -9,6 +9,7 @@ import pytest
 from songyan.db.connection import get_db, get_db_path
 from songyan.db.migrations import init_schema
 
+
 class TestGetDbPath:
     """get_db_path() 解析测试."""
 
