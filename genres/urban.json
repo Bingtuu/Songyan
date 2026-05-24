@@ -1,0 +1,66 @@
+{
+  "id": "urban",
+  "name": "都市",
+  "language": "zh",
+  "chapter_types": [
+    "opening",
+    "daily",
+    "conflict",
+    "career",
+    "relationship",
+    "transition"
+  ],
+  "fatigue_words": [
+    "嘴角微微上扬",
+    "眼中闪过一丝玩味",
+    "淡淡的",
+    "冷笑",
+    "蝼蚁",
+    "不知天高地厚",
+    "你也配",
+    "给我等着",
+    "恐怖如斯",
+    "此子不可留"
+  ],
+  "satisfaction_types": [
+    "逆袭",
+    "打脸",
+    "职场晋升",
+    "情感突破",
+    "身份揭露",
+    "危机化解"
+  ],
+  "has_numerical_system": false,
+  "has_power_scaling": false,
+  "pacing_rule": "日常章与冲突章交替推进，单章内必须包含至少一个情绪转折点。",
+  "writer_rules": [
+    "现代都市背景必须符合现实逻辑，避免出现无法自圆其说的超自然设定",
+    "职场描写需符合行业常识，禁止明显违背现实的商业操作",
+    "人际关系发展需有合理铺垫，禁止突兀的情感转变",
+    "主角的金手指或系统能力必须有明确限制，禁止无限制滥用"
+  ],
+  "reviewer_focus": [
+    "都市背景设定是否与现实逻辑冲突",
+    "人际关系发展是否突兀",
+    "职场/商业情节是否符合常识",
+    "金手指使用是否过度且无代价"
+  ],
+  "active_audit_dimensions": [
+    "world_consistency",
+    "character_behavior",
+    "timeline",
+    "narrative_pacing",
+    "narrative_hook",
+    "info_dump",
+    "dialogue_distinctness",
+    "dialogue_subtext",
+    "description_sensory",
+    "show_dont_tell"
+  ],
+  "taboos": [
+    "主角通过毫无代价的方式获得巨额财富或权力",
+    "同一打脸套路反复使用",
+    "配角完全工具化",
+    "感情线突兀插入且无铺垫"
+  ]
+}

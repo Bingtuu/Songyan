@@ -1,0 +1,85 @@
+{
+  "id": "xuanhuan",
+  "name": "玄幻",
+  "language": "zh",
+  "chapter_types": [
+    "opening",
+    "cultivation_breakthrough",
+    "combat",
+    "sect_conflict",
+    "treasure_hunt",
+    "transition"
+  ],
+  "fatigue_words": [
+    "嘴角勾起一抹弧度",
+    "倒吸一口凉气",
+    "眼中闪过一丝寒芒",
+    "蝼蚁",
+    "废物",
+    "不知死活",
+    "找死",
+    "跪地求饶",
+    "恐怖如斯",
+    "此子不可留",
+    "桀桀桀",
+    "苍天饶过谁",
+    "天道好轮回",
+    "冷哼一声",
+    "淡淡地说道",
+    "冷笑道",
+    "怒极反笑",
+    "瞳孔骤缩",
+    "宛如看待死人",
+    "杀意沸腾"
+  ],
+  "satisfaction_types": [
+    "升级",
+    "打脸",
+    "夺宝",
+    "宗门压迫",
+    "师徒/传承",
+    "伏笔回收"
+  ],
+  "has_numerical_system": true,
+  "has_power_scaling": true,
+  "pacing_rule": "每章至少包含一个情绪钩子（悬念、冲突或爽点），战斗章需在 500 字内进入核心对抗，过渡章不得超过全书的 15%。",
+  "writer_rules": [
+    "境界体系必须前后一致，同一境界的战力表现不得出现明显矛盾",
+    "丹药、法宝、功法必须有明确的获取来源或炼制过程，禁止凭空出现",
+    "地图扩张需遵循渐进原则，新区域登场时必须与主角当前实力匹配",
+    "宗门/势力之间的关系需保持逻辑自洽，不得随意更改立场",
+    "战斗描写优先体现实力差距与策略博弈，避免纯数值堆砌",
+    "主角获得重大机缘后必须有相应的代价或风险，禁止无代价升级",
+    "多线叙事时，副线进度不得超过主线两个大章节",
+    "伏笔设置后必须在 10 章内给出回收信号，超长伏笔需有中间提示"
+  ],
+  "reviewer_focus": [
+    "数值体系是否前后一致（境界、战力、资源）",
+    "新地图/新设定登场时是否有合理的铺垫和限制",
+    "战斗逻辑是否自洽，是否存在战力崩坏",
+    "宗门关系与角色立场是否出现逻辑矛盾",
+    "爽点节奏是否过于密集或稀疏",
+    "功法、法宝等核心设定是否存在设定冲突"
+  ],
+  "active_audit_dimensions": [
+    "world_consistency",
+    "character_behavior",
+    "timeline",
+    "new_setting_unregistered",
+    "narrative_pacing",
+    "narrative_hook",
+    "info_dump",
+    "dialogue_distinctness",
+    "dialogue_subtext",
+    "description_sensory",
+    "show_dont_tell",
+    "genre_numerical"
+  ],
+  "taboos": [
+    "主角通过毫无代价的系统直接获得无敌能力",
+    "同一套路重复超过三次仍未升级（如连续三章都是打脸小混混）",
+    "配角完全工具化，没有任何独立动机",
+    "世界观设定随意吃书",
+    "感情线突兀插入且无铺垫"
+  ]
+}

@@ -34,10 +34,11 @@ Phase 1 — 基础设施（Task 004 完成，进入 Task 005）
 - [x] Task 002: Pydantic 数据模型（35 个模型，68 个测试全部通过）
 - [x] Task 003: SQLite Schema（13 张表，26 个测试全部通过）
 - [x] Task 004: Repository 层（11 个 Repository，51 个 DB 测试全部通过）
+- [x] Task 005: Genre Profile 系统（3 个 JSON 配置 + 加载器 + 36 个测试全部通过）
 
 ## 待开始
 
-- [ ] Task 005: Genre Profile 系统
+- [ ] Task 006: CreativeModeProfile 系统
 - [ ] Task 006: CreativeModeProfile 系统
 - [ ] Task 007: CLI 创建项目
 - [ ] Task 008: GoalPlanner Agent
@@ -60,6 +61,7 @@ Phase 1 — 基础设施（Task 004 完成，进入 Task 005）
 
 ## 最近变更
 
+- 2026-05-24: Task 005 Genre Profile 系统完成（xuanhuan 完整配置 + urban/scifi 基础配置、load_genre_profile / list_genre_profiles / GenreProfileLoader、内存缓存、36 个测试全部通过）
 - 2026-05-24: Task 004 Repository 层完成（核心/审查/结算 11 个 Repository、JSON 序列化、版本链、快照 INSERT only、51 个 DB 测试全部通过）
 - 2026-05-24: Task 003 SQLite Schema 完成（13 张表、aiosqlite 异步连接、WAL 模式、26 个测试全部通过）
 - 2026-05-24: Task 002 Pydantic 数据模型完成（35 个模型、68 个测试全部通过）

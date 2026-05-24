@@ -1,0 +1,67 @@
+{
+  "id": "scifi",
+  "name": "科幻",
+  "language": "zh",
+  "chapter_types": [
+    "opening",
+    "exploration",
+    "conflict",
+    "tech_revelation",
+    "world_building",
+    "transition"
+  ],
+  "fatigue_words": [
+    "嘴角微微上扬",
+    "眼中闪过一丝光芒",
+    "淡淡的",
+    "冷笑",
+    "蝼蚁",
+    "不知天高地厚",
+    "恐怖如斯",
+    "此子不可留",
+    "桀桀桀",
+    "冷哼一声"
+  ],
+  "satisfaction_types": [
+    "科技突破",
+    "危机化解",
+    "真相揭露",
+    "文明碰撞",
+    "生存逆袭",
+    "伏笔回收"
+  ],
+  "has_numerical_system": false,
+  "has_power_scaling": false,
+  "pacing_rule": "科技揭示与叙事推进交替进行，世界观信息需通过剧情自然带出，避免大段说明文。",
+  "writer_rules": [
+    "科技设定必须基于现有科学原理或给出合理的虚构延伸，禁止自相矛盾",
+    "外星文明或未来社会必须有内部一致性，文化、政治、经济逻辑需自洽",
+    "技术细节的展示需服务于剧情，禁止纯技术炫技脱离叙事",
+    "时间线与因果关系必须清晰，涉及时间旅行或多线叙事时需格外谨慎"
+  ],
+  "reviewer_focus": [
+    "科技设定是否前后一致",
+    "世界观信息是否以剧情自然带出",
+    "时间线与因果关系是否清晰",
+    "文明/社会设定是否存在逻辑漏洞"
+  ],
+  "active_audit_dimensions": [
+    "world_consistency",
+    "character_behavior",
+    "timeline",
+    "new_setting_unregistered",
+    "narrative_pacing",
+    "narrative_hook",
+    "info_dump",
+    "dialogue_distinctness",
+    "dialogue_subtext",
+    "description_sensory",
+    "show_dont_tell"
+  ],
+  "taboos": [
+    "科技设定随意吃书",
+    "大段脱离剧情的技术说明",
+    "时间旅行逻辑不自洽",
+    "配角完全工具化"
+  ]
+}
