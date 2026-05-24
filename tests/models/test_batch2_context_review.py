@@ -4,28 +4,28 @@ import pytest
 from pydantic import ValidationError
 
 from songyan.models.chapter import ChapterGoal
-from songyan.models.creative_mode import CreativeModeProfile, CreativeBrief, Tension
 from songyan.models.context import (
-    ContextPackage,
-    HardConstraint,
-    CharacterStateSnapshot,
-    RecentPlot,
     ChapterSummary,
+    CharacterStateSnapshot,
+    ContextPackage,
     ForeshadowingItem,
-    SoftReference,
     GenreRules,
+    HardConstraint,
     ModeRules,
+    RecentPlot,
+    SoftReference,
 )
+from songyan.models.creative_mode import CreativeBrief, CreativeModeProfile, Tension
+from songyan.models.literary import LiteraryAuditResult, LiteraryObservation
 from songyan.models.review import (
-    ReviewCategory,
-    ReviewIssue,
-    RuleAuditResult,
     AiTellMatch,
     FatigueWordMatch,
     LLMAuditResult,
     MergedReviewReport,
+    ReviewCategory,
+    ReviewIssue,
+    RuleAuditResult,
 )
-from songyan.models.literary import LiteraryObservation, LiteraryAuditResult
 
 
 class TestTension:

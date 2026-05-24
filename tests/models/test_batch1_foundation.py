@@ -3,10 +3,10 @@
 import pytest
 from pydantic import ValidationError
 
-from songyan.models.project import ProjectSetting
+from songyan.models.chapter import ChapterGoal, ChapterHead, ChapterVersion
 from songyan.models.character import Character, CharacterState
-from songyan.models.chapter import ChapterGoal, ChapterVersion, ChapterHead
 from songyan.models.genre import GenreProfile
+from songyan.models.project import ProjectSetting
 
 
 class TestProjectSetting:

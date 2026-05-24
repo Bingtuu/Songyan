@@ -4,15 +4,15 @@ import pytest
 from pydantic import ValidationError
 
 from songyan.models.review import ReviewCategory, ReviewIssue
-from songyan.models.revision import RevisionInput, Patch, RevisionOutput
+from songyan.models.revision import Patch, RevisionInput, RevisionOutput
 from songyan.models.settlement import (
-    StateSettlement,
     CharacterUpdate,
-    NewSetting,
-    ForeshadowingUpdate,
-    NumericalUpdate,
-    Increment,
     Decrement,
+    ForeshadowingUpdate,
+    Increment,
+    NewSetting,
+    NumericalUpdate,
+    StateSettlement,
 )
 
 
