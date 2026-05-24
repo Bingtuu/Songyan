@@ -7,7 +7,7 @@
 
 ## 当前阶段
 
-Phase 2 — Agent 能力层（Task 008 完成）
+Phase 2 — Agent 能力层（Task 010 完成）
 
 ## 已完成
 
@@ -24,11 +24,10 @@ Phase 2 — Agent 能力层（Task 008 完成）
 - [x] Task 017: Quality Utils（AI 腔/疲劳词/钩子/段落节奏/数值验证、77 个测试）
 - [x] Task 008: GoalPlanner Agent（LLM Client + 章节目标制定、32 个测试）
 - [x] Task 009: CreativeDirector Agent（CreativeBrief 生成 + 张力地图 + 禁忌清单、23 个测试）
+- [x] Task 010: ContextManager Agent（上下文包组装 + Token 预算裁剪、36 个测试）
 
 ## 待开始
 
-- [ ] Task 010: ContextPackage 组装
-- [ ] Task 011: Writer Agent
 - [ ] Task 011: Writer Agent
 - [ ] Task 012: RuleAuditor Agent
 - [ ] Task 013: LLMAuditor Agent
@@ -45,6 +44,7 @@ Phase 2 — Agent 能力层（Task 008 完成）
 
 ## 最近变更
 
+- 2026-05-24: Task 010 ContextManager Agent 完成（ContextPackage 组装 + TokenEstimator tiktoken/回退 + BudgetPruner 按优先级裁剪、SummaryRepository + CharacterStateRepository 新增、36 个测试全部通过、ruff 0 errors、总测试 370 passed）
 - 2026-05-24: Task 009 CreativeDirector Agent 完成（CreativeBrief 生成、张力地图 required_tensions + 禁忌 forbidden_patterns + 裂隙 allowed_fissures、张力类型验证、forbidden_patterns 保底填充、prompts/creative_director.md 模板、23 个测试全部通过、ruff 0 errors、总测试 334 passed）
 - 2026-05-24: Task 008 GoalPlanner Agent 完成（LLM Client 基础设施 get_llm/call_llm + retry_with_backoff、GoalPlanner define_chapter_goal、prompts/goal_planner.md 模板、JSON 提取/解析/字段修正、32 个测试全部通过、ruff 0 errors、总测试 311 passed）
 - 2026-05-24: Task 017 Quality Utils 完成（5 个检测工具 + 77 个 utils 测试、总测试 279 passed）

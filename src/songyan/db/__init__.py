@@ -1,6 +1,7 @@
 """Songyan database layer — schema, connection, migrations, repositories."""
 
 from songyan.db.connection import get_db, get_db_path
+from songyan.db.context_repo import CharacterStateRepository, SummaryRepository
 from songyan.db.migrations import init_schema, verify_schema
 from songyan.db.repository import (
     ChapterGoalRepository,
@@ -25,6 +26,7 @@ __all__ = [
     "ChapterHeadRepository",
     "ChapterVersionRepository",
     "CharacterRepository",
+    "CharacterStateRepository",
     "CreativeBriefRepository",
     "ForeshadowingRepository",
     "LiteraryObservationRepository",
@@ -32,6 +34,7 @@ __all__ = [
     "ProjectRepository",
     "ReviewReportRepository",
     "SettingSnapshotRepository",
+    "SummaryRepository",
     "get_db",
     "get_db_path",
     "init_schema",
