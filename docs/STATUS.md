@@ -26,6 +26,7 @@ Phase 2 — Agent 能力层（Task 010 完成）
 - [x] Task 009: CreativeDirector Agent（CreativeBrief 生成 + 张力地图 + 禁忌清单、23 个测试）
 - [x] Task 010: ContextManager Agent（上下文包组装 + Token 预算裁剪、36 个测试）
 - [x] Task 011: Writer Agent（章节正文生成 + Scene 分割 + 版本保存、37 个测试）
+- [x] Task 012: RuleAuditor Agent（纯代码规则检测 + Quality Utils 复用 + 综合评分、29 个测试）
 
 ## 待开始
 
@@ -45,6 +46,7 @@ Phase 2 — Agent 能力层（Task 010 完成）
 
 ## 最近变更
 
+- 2026-05-24: Task 012 RuleAuditor Agent 完成（纯代码规则检测 + 复用 Quality Utils 5 个工具 + 综合评分 0-10 + 摘要生成、29 个测试全部通过、ruff 0 errors、总测试 436 passed）
 - 2026-05-24: Task 011 Writer Agent 完成（章节正文生成 + Prompt 渲染 + Scene 分割 + 字数统计 + 版本保存 + ChapterHead 更新、prompts/writer.md 模板、37 个测试全部通过、ruff 0 errors、总测试 407 passed）
 - 2026-05-24: Task 010 ContextManager Agent 完成（ContextPackage 组装 + TokenEstimator tiktoken/回退 + BudgetPruner 按优先级裁剪、SummaryRepository + CharacterStateRepository 新增、36 个测试全部通过、ruff 0 errors、总测试 370 passed）
 - 2026-05-24: Task 009 CreativeDirector Agent 完成（CreativeBrief 生成、张力地图 required_tensions + 禁忌 forbidden_patterns + 裂隙 allowed_fissures、张力类型验证、forbidden_patterns 保底填充、prompts/creative_director.md 模板、23 个测试全部通过、ruff 0 errors、总测试 334 passed）
