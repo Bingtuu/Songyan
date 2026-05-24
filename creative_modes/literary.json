@@ -1,0 +1,51 @@
+{
+  "id": "literary",
+  "name": "严肃文学模式",
+  "enabled_agents": {
+    "pre_write": ["goal_planner", "creative_director"],
+    "write": ["writer"],
+    "post_write": ["rule_auditor", "llm_auditor", "literary_auditor"],
+    "revision": ["revision_handler"],
+    "settlement": ["settlement_extractor"]
+  },
+  "audit_weights": {
+    "world_consistency": 1.0,
+    "character_behavior": 1.2,
+    "timeline": 0.8,
+    "new_setting_unregistered": 0.8,
+    "narrative_pacing": 1.0,
+    "narrative_hook": 0.6,
+    "info_dump": 1.0,
+    "dialogue_distinctness": 1.2,
+    "dialogue_subtext": 1.5,
+    "description_sensory": 1.5,
+    "show_dont_tell": 1.5,
+    "genre_numerical": 0.0
+  },
+  "active_audit_dimensions": [
+    "world_consistency",
+    "character_behavior",
+    "timeline",
+    "narrative_pacing",
+    "narrative_hook",
+    "info_dump",
+    "dialogue_distinctness",
+    "dialogue_subtext",
+    "description_sensory",
+    "show_dont_tell"
+  ],
+  "revision_policy": "minimal",
+  "tolerance": {
+    "max_ai_tells": 1.0,
+    "max_fatigue_words": 1.0,
+    "max_cliche_risk": 0.5,
+    "min_paragraph_rhythm_score": 7.0,
+    "max_word_count_deviation": 0.2
+  },
+  "context_pruning_strategy": "character_focused",
+  "success_metrics": {
+    "character_autonomy_score": 0.85,
+    "description_depth": 0.9,
+    "subtext_richness": 0.85
+  }
+}
