@@ -17,11 +17,12 @@
 
 ### 新增测试
 - `tests/utils/__init__.py`
-- `tests/utils/test_ai_tells.py` — 12 个测试（含 16 个已知短语覆盖）
-- `tests/utils/test_fatigue_words.py` — 10 个测试（含 xuanhuan 集成测试）
-- `tests/utils/test_hook_checker.py` — 16 个测试
+- `tests/utils/test_ai_tells.py` — 27 个测试（11 个基础 + 16 个参数化已知短语覆盖）
+- `tests/utils/test_fatigue_words.py` — 11 个测试（含 xuanhuan 集成测试）
+- `tests/utils/test_hook_checker.py` — 18 个测试
 - `tests/utils/test_paragraph_rhythm.py` — 8 个测试
-- `tests/utils/test_numerical_validator.py` — 14 个测试
+- `tests/utils/test_numerical_validator.py` — 13 个测试
+- `tests/utils/test_integration_performance.py` — 1 个集成性能测试（验证 5 个检测总耗时 < 200ms）
 
 ### 新增 Task 文件
 - `tasks/017-quality-utils.md` — Task 规格
@@ -41,7 +42,7 @@ ruff check src/songyan/utils/ tests/utils/
 
 ## 验证结果
 
-- `pytest tests/utils/`：**77 passed, 0 failed**
+- `pytest tests/utils/`：**78 passed, 0 failed**
 - `pytest`（全量）：**279 passed, 0 failed**（202 原有 + 77 新增）
 - `ruff check`：**0 errors**
 
