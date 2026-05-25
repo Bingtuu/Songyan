@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import time
 import uuid
-from pathlib import Path
 from typing import Any
 
 import structlog
@@ -28,11 +27,9 @@ MAX_CONTENT_LENGTH = 8000
 
 
 def _load_prompt_template() -> str:
-    """加载 RevisionHandler Prompt 模板."""
-    template_path = Path(__file__).parents[3] / "prompts" / "revision_handler.md"
-    if template_path.exists():
-        return template_path.read_text(encoding="utf-8")
-    return "请根据以下问题对章节进行局部修改。输出 JSON：content + patches"
+    """加载 RevisionHandler Prompt 模板 — 已迁移到工艺卡系统."""
+    from songyan.prompts import get_prompt_loader
+    return get_prompt_loader().load_card("revision_handler").system_prompt
 
 
 def _filter_patchable_issues(report: MergedReviewReport) -> list[ReviewIssue]:
@@ -93,17 +90,20 @@ def _render_prompt(
     protected_fissures: list[str],
 ) -> str:
     """渲染 RevisionHandler Prompt."""
-    template = _load_prompt_template()
+    from songyan.prompts import get_prompt_loader
+
+    loader = get_prompt_loader()
+    card = loader.load_card("revision_handler")
 
     if len(content) > MAX_CONTENT_LENGTH:
         content = content[:MAX_CONTENT_LENGTH] + "\n...（正文已截断）"
 
-    prompt = template.replace("{{ content }}", content)
-    prompt = prompt.replace("{{ issues }}", _render_issues(issues))
-    prompt = prompt.replace(
-        "{{ protected_fissures }}", _render_protected_fissures(protected_fissures)
-    )
-    return prompt
+    rendered = loader.render_card(card, {
+        "content": content,
+        "issues": _render_issues(issues),
+        "protected_fissures": _render_protected_fissures(protected_fissures),
+    })
+    return rendered.full_prompt
 
 
 def _parse_patches(data: dict[str, Any]) -> list[Patch]:

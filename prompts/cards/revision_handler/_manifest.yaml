@@ -1,0 +1,7 @@
+agent: "revision_handler"
+default_version: "1.0.0"
+versions:
+  - version: "1.0.0"
+    description: "issue-driven patch 修订"
+    tags: ["webnovel", "xuanhuan", "urban", "scifi"]
+    created_at: "2026-05-25"

@@ -1,0 +1,7 @@
+agent: "creative_director"
+default_version: "1.0.0"
+versions:
+  - version: "1.0.0"
+    description: "创作意图与张力地图生成"
+    tags: ["webnovel", "xuanhuan", "urban", "scifi"]
+    created_at: "2026-05-25"

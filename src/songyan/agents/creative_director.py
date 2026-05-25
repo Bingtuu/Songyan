@@ -40,11 +40,9 @@ DEFAULT_FORBIDDEN_PATTERNS = [
 
 
 def _load_prompt_template() -> str:
-    """加载 CreativeDirector Prompt 模板."""
-    if not PROMPT_PATH.exists():
-        msg = f"Prompt 模板未找到: {PROMPT_PATH}"
-        raise FileNotFoundError(msg)
-    return PROMPT_PATH.read_text(encoding="utf-8")
+    """加载 CreativeDirector Prompt 模板 — 已迁移到工艺卡系统."""
+    from songyan.prompts import get_prompt_loader
+    return get_prompt_loader().load_card("creative_director").system_prompt
 
 
 def _render_prompt(

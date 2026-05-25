@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import time
 import uuid
-from pathlib import Path
 from typing import Any
 
 import structlog
@@ -35,15 +34,9 @@ MAX_CONTENT_LENGTH = 8000
 
 
 def _load_prompt_template() -> str:
-    """加载 SettlementExtractor Prompt 模板."""
-    template_path = Path(__file__).parents[3] / "prompts" / "settlement_extractor.md"
-    if template_path.exists():
-        return template_path.read_text(encoding="utf-8")
-    return (
-        "请从以下章节正文中提取所有状态变更。"
-        "输出 JSON：character_updates + new_settings + foreshadowing_updates + "
-        "numerical_updates + planted_hooks + resolved_hooks"
-    )
+    """加载 SettlementExtractor Prompt 模板 — 已迁移到工艺卡系统."""
+    from songyan.prompts import get_prompt_loader
+    return get_prompt_loader().load_card("settlement_extractor").system_prompt
 
 
 async def _load_current_character_states(
@@ -129,22 +122,23 @@ def _render_prompt(
     genre_rules: GenreRules | None,
 ) -> str:
     """渲染 SettlementExtractor Prompt."""
-    template = _load_prompt_template()
+    from songyan.prompts import get_prompt_loader
+
+    loader = get_prompt_loader()
+    card = loader.load_card("settlement_extractor")
 
     if len(content) > MAX_CONTENT_LENGTH:
         content = content[:MAX_CONTENT_LENGTH] + "\n...（正文已截断）"
 
-    prompt = template.replace("{{ content }}", content)
-    prompt = prompt.replace("{{ version_id }}", version_id)
-    states_text = _render_character_states(current_states)
-    settings_text = _render_settings(current_settings)
-    foreshadowings_text = _render_foreshadowings(current_foreshadowings)
-    rules_text = _render_genre_rules(genre_rules)
-    prompt = prompt.replace("{{ current_character_states }}", states_text)
-    prompt = prompt.replace("{{ current_settings }}", settings_text)
-    prompt = prompt.replace("{{ current_foreshadowings }}", foreshadowings_text)
-    prompt = prompt.replace("{{ genre_rules }}", rules_text)
-    return prompt
+    rendered = loader.render_card(card, {
+        "content": content,
+        "version_id": version_id,
+        "current_character_states": _render_character_states(current_states),
+        "current_settings": _render_settings(current_settings),
+        "current_foreshadowings": _render_foreshadowings(current_foreshadowings),
+        "genre_rules": _render_genre_rules(genre_rules),
+    })
+    return rendered.full_prompt
 
 
 def _build_character_update(data: dict[str, Any]) -> CharacterUpdate | None:

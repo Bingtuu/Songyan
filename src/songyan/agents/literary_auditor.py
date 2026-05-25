@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import time
 import uuid
-from pathlib import Path
 from typing import Any
 
 import structlog
@@ -30,15 +29,9 @@ VALID_SEVERITIES = {"notice", "suggestion", "highlight"}
 
 
 def _load_prompt_template() -> str:
-    """加载 LiteraryAuditor Prompt 模板."""
-    template_path = Path(__file__).parents[3] / "prompts" / "literary_auditor.md"
-    if template_path.exists():
-        return template_path.read_text(encoding="utf-8")
-    return (
-        "请对以下小说章节进行文学性层面的深度观察。"
-        "输出 JSON：observations + literary_quality_score + character_autonomy_score + "
-        "conceptual_grounding_score + fissure_preservation_score + summary"
-    )
+    """加载 LiteraryAuditor Prompt 模板 — 已迁移到工艺卡系统."""
+    from songyan.prompts import get_prompt_loader
+    return get_prompt_loader().load_card("literary_auditor").system_prompt
 
 
 def _render_context_info(ctx: ContextPackage | None) -> str:
@@ -73,7 +66,10 @@ def _render_context_info(ctx: ContextPackage | None) -> str:
 
 def _render_prompt(content: str, context_package: ContextPackage | None) -> str:
     """渲染 LiteraryAuditor Prompt."""
-    template = _load_prompt_template()
+    from songyan.prompts import get_prompt_loader
+    loader = get_prompt_loader()
+    card = loader.load_card("literary_auditor")
+    template = card.system_prompt
     context_info = _render_context_info(context_package)
 
     if len(content) > MAX_CONTENT_LENGTH:

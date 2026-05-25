@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import time
 import uuid
-from pathlib import Path
 from typing import Any
 
 import structlog
@@ -26,18 +25,6 @@ MAX_CONTENT_LENGTH = 8000  # 正文长度上限，超出时截断
 VALID_SEVERITIES = {"critical", "major", "minor", "info"}
 VALID_FIX_TYPES = {"patch", "rewrite_scene", "confirm", "register_setting"}
 DEFAULT_DIMENSIONS = [c.value for c in ReviewCategory]
-
-
-def _load_prompt_template() -> str:
-    """加载 LLMAuditor Prompt 模板."""
-    template_path = Path(__file__).parents[3] / "prompts" / "llm_auditor.md"
-    if template_path.exists():
-        return template_path.read_text(encoding="utf-8")
-    return (
-        "审查以下章节正文，从 12 个维度评估质量。"
-        "输出 JSON：issues + dimension_scores + cliche_risk_score + "
-        "character_autonomy_score + conceptual_idling_score + summary"
-    )
 
 
 def _render_context_info(ctx: ContextPackage | None) -> str:
@@ -77,16 +64,21 @@ def _render_context_info(ctx: ContextPackage | None) -> str:
 
 def _render_prompt(content: str, context_package: ContextPackage | None) -> str:
     """渲染 LLMAuditor Prompt."""
-    template = _load_prompt_template()
+    from songyan.prompts import get_prompt_loader
+
+    loader = get_prompt_loader()
+    card = loader.load_card("llm_auditor")
     context_info = _render_context_info(context_package)
 
     # 截断过长的正文
     if len(content) > MAX_CONTENT_LENGTH:
         content = content[:MAX_CONTENT_LENGTH] + "\n...（正文已截断）"
 
-    prompt = template.replace("{{ context_info }}", context_info)
-    prompt = prompt.replace("{{ content }}", content)
-    return prompt
+    rendered = loader.render_card(card, {
+        "context_info": context_info,
+        "content": content,
+    })
+    return rendered.full_prompt
 
 
 def _validate_category(value: str) -> str | None:

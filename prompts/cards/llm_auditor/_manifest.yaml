@@ -1,0 +1,7 @@
+agent: "llm_auditor"
+default_version: "1.0.0"
+versions:
+  - version: "1.0.0"
+    description: "语义审查 12 维度"
+    tags: ["webnovel", "xuanhuan", "urban", "scifi"]
+    created_at: "2026-05-25"

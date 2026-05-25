@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import re
 import uuid
-from pathlib import Path
 
 import structlog
 
@@ -18,25 +17,12 @@ SCENE_PATTERN = re.compile(r"^###\s*Scene\s+(\d+)", re.IGNORECASE | re.MULTILINE
 WORD_COUNT_TOLERANCE = 0.10  # ±10%
 
 
-def _load_prompt_template() -> str:
-    """加载 Writer Prompt 模板."""
-    template_path = Path(__file__).parents[3] / "prompts" / "writer.md"
-    if template_path.exists():
-        return template_path.read_text(encoding="utf-8")
-    # 回退：返回简化模板
-    return (
-        "撰写第 {{ chapter_number }} 章。"
-        "目标事件：{{ target_events }}。"
-        "字数目标：{{ word_count_target }}。"
-        "创作意图：{{ creative_intent }}。"
-        "禁忌：{{ forbidden_patterns }}。"
-        "使用 ### Scene N 标记场景。"
-    )
-
-
 def _render_prompt(ctx: ContextPackage) -> str:
     """将 ContextPackage 渲染为 Writer Prompt."""
-    template = _load_prompt_template()
+    from songyan.prompts import get_prompt_loader
+
+    loader = get_prompt_loader()
+    card = loader.load_card("writer")
 
     goal = ctx.chapter_goal
     brief = ctx.creative_brief
@@ -131,32 +117,34 @@ def _render_prompt(ctx: ContextPackage) -> str:
         lines.append(f"- 疲劳词容忍：{mr.tolerance_max_fatigue_words}")
         mode_rules = "\n".join(lines)
 
-    # 变量替换
-    prompt = template
-    replacements = {
-        "{{ chapter_number }}": str(goal.chapter_number),
-        "{{ chapter_type }}": goal.chapter_type or "（未指定）",
-        "{{ word_count_target }}": str(goal.word_count_target),
-        "{{ target_events }}": target_events,
-        "{{ emotional_arc }}": goal.emotional_arc or "（未指定）",
-        "{{ hooks }}": hooks,
-        "{{ obligations }}": obligations,
-        "{{ creative_intent }}": creative_intent,
-        "{{ required_tensions }}": tensions,
-        "{{ forbidden_patterns }}": forbidden,
-        "{{ allowed_fissures }}": fissures,
-        "{{ style_constraints }}": style,
-        "{{ reader_contract }}": reader_contract,
-        "{{ hard_constraints }}": hard_constraints,
-        "{{ character_states }}": character_states,
-        "{{ recent_plot }}": recent_plot,
-        "{{ foreshadowing }}": foreshadowing,
-        "{{ genre_rules }}": genre_rules,
-        "{{ mode_rules }}": mode_rules,
+    variables = {
+        "chapter_number": goal.chapter_number,
+        "chapter_type": goal.chapter_type or "（未指定）",
+        "word_count_target": goal.word_count_target,
+        "target_events": target_events,
+        "emotional_arc": goal.emotional_arc or "（未指定）",
+        "hooks": hooks,
+        "obligations": obligations,
+        "creative_intent": creative_intent,
+        "required_tensions": tensions,
+        "forbidden_patterns": forbidden,
+        "allowed_fissures": fissures,
+        "style_constraints": style,
+        "reader_contract": reader_contract,
+        "hard_constraints": hard_constraints,
+        "character_states": character_states,
+        "recent_plot": recent_plot,
+        "foreshadowing": foreshadowing,
+        "genre_rules": genre_rules,
+        "mode_rules": mode_rules,
     }
-    for key, value in replacements.items():
-        prompt = prompt.replace(key, value)
-    return prompt
+
+    tags: list[str] = []
+    if goal.chapter_number <= 3:
+        tags.append("chapter_early")
+
+    rendered = loader.render_card(card, variables, tags=tags)
+    return rendered.full_prompt
 
 
 def _parse_scenes(content: str) -> list[dict]:
