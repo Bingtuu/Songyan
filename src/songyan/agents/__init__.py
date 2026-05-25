@@ -8,6 +8,7 @@ from songyan.agents.llm_auditor import run_llm_audit, save_llm_audit
 from songyan.agents.revision_handler import run_revision, save_revision_output
 from songyan.agents.rule_auditor import run_rule_audit, save_rule_audit
 from songyan.agents.settlement_extractor import apply_settlement, extract_settlement
+from songyan.agents.summary_writer import write_chapter_summary
 from songyan.agents.writer import write_chapter
 
 __all__ = [
@@ -25,4 +26,5 @@ __all__ = [
     "save_revision_output",
     "save_rule_audit",
     "write_chapter",
+    "write_chapter_summary",
 ]

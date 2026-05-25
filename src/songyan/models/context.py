@@ -42,6 +42,8 @@ class ChapterSummary(BaseModel):
     chapter_number: int
     summary: str
     key_events: list[str] = Field(default_factory=list)
+    characters_appeared: list[str] = Field(default_factory=list)
+    emotional_tone: str = ""
 
 
 class RecentPlot(BaseModel):

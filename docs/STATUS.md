@@ -7,7 +7,7 @@
 
 ## 当前阶段
 
-Phase 2 — Agent 能力层 **已完成**，准备进入 Phase 3
+Phase 3 — 编排层 **已完成**
 
 ## 已完成
 
@@ -31,12 +31,12 @@ Phase 2 — Agent 能力层 **已完成**，准备进入 Phase 3
 - [x] Task 015: RevisionHandler Agent（issue-driven patch 修订 + 保护 valuable_fissure、38 个测试）
 - [x] Task 016: SettlementExtractor Agent（状态结算提取 + 代码验证 + INSERT 快照、40 个测试）
 - [x] Task 017: Quality Utils（AI 腔/疲劳词/钩子/段落节奏/数值验证、78 个测试）
-
-## 待开始
+- [x] Task 018: Craft Card Prompts（YAML 工艺卡系统 + 8 模块 Writer + PromptLoader 单例 + 18 测试）
 
 ### Phase 3 — 编排层 + Prompt 工程
-- [x] Task 018: Craft Card Prompts（工艺卡 Prompt 结构化、版本化、标签匹配、7 个 Agent 迁移）
-- [ ] Task 019: LangGraph 编排 + SummaryWriter（状态机 + Agent 编排 + 章节摘要）
+- [x] Task 019: LangGraph 编排 + SummaryWriter（StateGraph 状态机 + 12 节点 + 条件路由 + interrupt 人工确认 + 22 测试）
+
+## 待开始
 
 ### Phase 4 — 评测与优化
 - [ ] 集成测试 + 评测集（端到端单章闭环验证）
@@ -47,6 +47,7 @@ Phase 2 — Agent 能力层 **已完成**，准备进入 Phase 3
 
 ## 最近变更
 
+- 2026-05-25: Task 019 LangGraph 编排 + SummaryWriter 完成（12 节点工作流 + ReviewMerger + SummaryWriter + 22 测试、总测试 617 passed）
 - 2026-05-25: Task 018 Craft Card Prompts 完成（YAML 工艺卡系统 + 8 模块 Writer + PromptLoader 单例 + 18 测试、总测试 595 passed）
 - 2026-05-25: PR #2 合并 — Task 014/015/016 从 `task_14_0525` 分支合并到 `main`
 - 2026-05-25: Task 017 修复 — DONE 文档测试数量修正 + 集成性能测试（78 passed）
