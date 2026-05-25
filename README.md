@@ -6,13 +6,13 @@
 
 ## 项目状态
 
-**Phase 2 — Agent 能力层已完成（17/17 Task），共 577 个测试全部通过。** 准备进入 Phase 3 编排层。
+**Phase 3 — 编排层已完成（19/19 Task），共 617 个测试全部通过。** V1.0 核心闭环已跑通，准备进入 Phase 4 评测优化。
 
 | Phase | 状态 | 内容 |
 |-------|------|------|
 | Phase 1 | ✅ 完成 | 模型、Schema、Repository、Genre/Mode 配置、CLI |
 | Phase 2 | ✅ 完成 | 10 个 Agent + 5 个质量检测工具 |
-| Phase 3 | 🚧 待开始 | LangGraph 编排 + Craft Card Prompts + 集成测试 |
+| Phase 3 | ✅ 完成 | LangGraph 编排 + Craft Card Prompts + SummaryWriter |
 
 ---
 
@@ -47,30 +47,36 @@ LAYER 8: 人工确认（最终门控）
 │                    Songyan V1.0 单章闭环                     │
 ├─────────────────────────────────────────────────────────────┤
 │                                                              │
-│  GoalPlanner → CreativeDirector → ContextManager            │
-│       |              |                  |                    │
-│       ▼              ▼                  ▼                    │
-│  ChapterGoal    CreativeBrief    ContextPackage              │
-│       |              |                  |                    │
-│       └──────────────┴──────────────────┘                    │
-│                        |                                     │
-│                        ▼                                     │
-│                    Writer Agent                              │
-│                        |                                     │
-│                        ▼                                     │
-│              Reviewer 双层审查                               │
-│         RuleAuditor（代码）+ LLMAuditor（语义）              │
-│                        |                                     │
-│                   MergedReviewReport                         │
-│                        |                                     │
-│              RevisionHandler（最多 2 轮）                    │
-│                        |                                     │
-│              LiteraryAuditor（诊断，不阻塞）                 │
-│                        |                                     │
-│                   Human Confirm                              │
-│              accept → SettlementExtractor                    │
-│                        |                                     │
-│                   SQLite（唯一事实源）                       │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │              LangGraph Phase1State                    │   │
+│  │  （只存 ID：project_id / version_id / report_id...）  │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                          |                                   │
+│  GoalPlanner → CreativeDirector → ContextManager → Writer   │
+│       |              |                  |            |       │
+│       ▼              ▼                  ▼            ▼       │
+│  ChapterGoal    CreativeBrief    ContextPackage  ChapterVersion
+│                                                          |   │
+│              ┌───────────────────────────────────────────┐   │
+│              ▼                                           ▼   │
+│       RuleAuditor（代码）                        LLMAuditor（语义）
+│              |                                           |   │
+│              └──────────────────┬────────────────────────┘   │
+│                                 ▼                            │
+│                          ReviewMerger                        │
+│                     MergedReviewReport                       │
+│                                 |                            │
+│              ┌──────────────────┼──────────────────┐       │
+│              ▼                  ▼                  ▼       │
+│       LiteraryAuditor    RevisionHandler      HumanConfirm │
+│       （诊断，不阻塞）   （patch，最多 2 轮）  accept/edit/reject/back
+│                                 |                  |       │
+│                                 └──────────────────┘       │
+│                                                    |       │
+│                                          SettlementExtractor│
+│                                          + SummaryWriter    │
+│                                                    |       │
+│                                             SQLite（唯一事实源）
 │                                                              │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -93,7 +99,7 @@ songyan/
 │   ├── cli/                 # CLI 命令（create-project / list-projects）
 │   ├── db/                  # SQLite Schema + Repository + 连接管理
 │   ├── models/              # Pydantic 数据模型（35+ 个）
-│   ├── agents/              # Agent 实现（10 个 Agent）
+│   ├── agents/              # Agent 实现（11 个 Agent）
 │   │   ├── goal_planner.py
 │   │   ├── creative_director.py
 │   │   ├── context_manager.py
@@ -102,18 +108,24 @@ songyan/
 │   │   ├── llm_auditor.py
 │   │   ├── literary_auditor.py
 │   │   ├── revision_handler.py
-│   │   └── settlement_extractor.py
+│   │   ├── settlement_extractor.py
+│   │   └── summary_writer.py      # 章节摘要生成
 │   ├── utils/               # 质量检测工具（5 个纯代码工具）
 │   │   ├── ai_tells.py
 │   │   ├── fatigue_words.py
 │   │   ├── hook_checker.py
 │   │   ├── paragraph_rhythm.py
 │   │   └── numerical_validator.py
-│   ├── workflows/           # LangGraph 工作流编排（待实现）
+│   ├── workflows/           # LangGraph 工作流编排
+│   │   ├── phase1_graph.py  # 12 节点状态机 + 公共 API
+│   │   ├── review_merger.py # Rule + LLM 合并
+│   │   ├── _nodes.py        # 节点函数
+│   │   └── _helpers.py      # 数据加载辅助
+│   ├── prompts/             # PromptLoader + 工艺卡系统
 │   ├── genres/              # Genre Profile 加载器
 │   └── creative_modes/      # CreativeModeProfile 注册表
-├── tests/                   # 测试（577 passed）
-├── tasks/                   # Task 规格 + 交接报告（17 个 DONE）
+├── tests/                   # 测试（617 passed）
+├── tasks/                   # Task 规格 + 交接报告（19 个 DONE）
 └── docs/                    # 文档
 ```
 
@@ -194,18 +206,20 @@ songyan/
 
 ### 3.4 审查体系
 
-- **RuleAuditor**（代码检测）：AI 腔、疲劳词、段落长度、首屏钩子、字数统计、数值公式
-- **LLMAuditor**（语义审查）：角色行为一致性、叙事节奏、对话区分度、信息倾倒、设定一致性
+- **RuleAuditor**（代码检测）：AI 腔、疲劳词、段落长度、首屏钩子、字数统计、数值公式（< 200ms）
+- **LLMAuditor**（语义审查）：角色行为一致性、叙事节奏、对话区分度、信息倾倒、设定一致性（12 维度）
 - **LiteraryAuditor**（文学性诊断）：人物工具化、概念空转、过度平滑、有价值裂隙（不阻塞流程）
+- **ReviewMerger**（轻量合并）：Rule + LLM 结果合并为统一报告，加权评分
+- **RevisionHandler**（patch 修订）：从 MergedReviewReport 提取 patchable issues，保护 valuable_fissure，最多 2 轮
 
 ### 3.5 状态结算
 
-每章 accept 后必须执行 SettlementExtractor：
+每章 accept 后必须执行 SettlementExtractor + SummaryWriter：
 - 角色状态更新（old_value 必须与 DB 当前值一致）
 - 新设定快照（source_quote 必须在正文中存在）
 - 伏笔追踪（source_version_id 必须记录）
 - 数值账本（closing_value 必须等于公式值）
-- 结算完成后生成 ChapterSummary（Phase 3 实现）
+- 结算完成后 **SummaryWriter** 生成结构化摘要（plot_summary / key_events / characters_appeared / emotional_tone）
 
 ---
 
@@ -238,7 +252,14 @@ songyan/
 | **Task 016** | SettlementExtractor Agent（状态结算提取 + 代码验证） | 40 passed |
 | **Task 017** | Quality Utils（AI 腔/疲劳词/钩子/段落节奏/数值验证） | 78 passed |
 
-**总计：577 个测试全部通过，ruff 0 errors。**
+### Phase 3 — 编排层 + Prompt 工程（Task 018 ~ 019）
+
+| Task | 内容 | 测试 |
+|------|------|------|
+| **Task 018** | Craft Card Prompts（YAML 工艺卡 + PromptLoader + 8 模块 Writer） | 18 passed |
+| **Task 019** | LangGraph 编排 + SummaryWriter（12 节点状态机 + ReviewMerger + 摘要生成） | 22 passed |
+
+**总计：617 个测试全部通过，ruff 0 errors。**
 
 ### 4.1 已交付的关键能力
 
@@ -247,9 +268,11 @@ songyan/
 - **交互式 CLI**：`songyan create-project` 8 步向导自动关联 genre_id + mode_id，保存到 SQLite
 - **数据持久化**：Project / Character / Chapter / Review / Settlement 共 11 个 Repository 完整覆盖
 - **版本链**：chapter_versions INSERT only，chapter_heads 指向当前和 accepted 版本
-- **双层审查**：RuleAuditor（代码）+ LLMAuditor（语义）+ LiteraryAuditor（文学性诊断）
+- **双层审查**：RuleAuditor（代码）+ LLMAuditor（语义）→ ReviewMerger 合并 → LiteraryAuditor（文学性诊断）
+- **LangGraph 编排**：12 节点状态机，条件路由（revision 循环最多 2 轮，human_confirm 支持 accept/edit/reject/back）
 - **Issue-driven 修订**：RevisionHandler 从 MergedReviewReport 提取 patchable issues，保护 valuable_fissure
-- **状态闭环**：SettlementExtractor 执行 5 条验证规则后 INSERT 新快照到 character_states / setting_snapshots / foreshadowings / numerical_ledger
+- **状态闭环**：SettlementExtractor 执行 5 条验证规则后 INSERT 新快照，SummaryWriter 生成结构化摘要
+- **工艺卡系统**：YAML 工艺卡（_manifest.yaml + vX.Y.Z.yaml），PromptLoader 单例支持标签过滤和版本切换
 
 ### 4.2 快速开始
 
@@ -275,7 +298,7 @@ pytest tests/ -v
 
 ```bash
 pytest tests/ -v
-# Expected: 577 passed
+# Expected: 617 passed
 
 ruff check src/ tests/
 # Expected: All checks passed
@@ -283,11 +306,11 @@ ruff check src/ tests/
 
 ---
 
-## 5. 下一阶段（Phase 3）
+## 5. 下一阶段（Phase 4）
 
-- **Task 018**: Craft Card Prompts — 工艺卡 Prompt 精调、版本化、A/B 测试支持
-- **Task 019**: LangGraph 编排 + SummaryWriter — 状态机编排、章节摘要生成、端到端闭环
-- **集成测试 + 评测集**：验证单章完整流程的正确性
+- **端到端集成测试**：验证单章完整流程（创建项目 → 生成章节 → 审查 → 修订 → 确认 → 结算 → 摘要）
+- **评测集**：3 个种子项目（xuanhuan + webnovel），客观指标验收
+- **验收指标**：设定硬错误数 = 0、AI 腔 < 2 处/章、审查漏检率 < 35%、状态结算准确率 > 90%
 
 ---
 
