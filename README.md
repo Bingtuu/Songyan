@@ -6,13 +6,13 @@
 
 ## 项目状态
 
-**Phase 1 — 基础设施已完成（7/7 Task）**，进入 Phase 2 Agent 层开发。
+**Phase 2 — Agent 能力层已完成（17/17 Task），共 577 个测试全部通过。** 准备进入 Phase 3 编排层。
 
 | Phase | 状态 | 内容 |
 |-------|------|------|
 | Phase 1 | ✅ 完成 | 模型、Schema、Repository、Genre/Mode 配置、CLI |
-| Phase 2 | 🚧 进行中 | Agent 实现与 LangGraph 编排 |
-| Phase 3 | ⏳ 待开始 | 集成测试与评测集 |
+| Phase 2 | ✅ 完成 | 10 个 Agent + 5 个质量检测工具 |
+| Phase 3 | 🚧 待开始 | LangGraph 编排 + Craft Card Prompts + 集成测试 |
 
 ---
 
@@ -24,7 +24,7 @@ V1.0 唯一要验证的假设：
 
 > **"每生成一章，系统都知道它为什么这么写、哪里可能错、改了什么、状态发生了什么变化、下一章应该继承什么。"**
 
-这不是一个"一键写小说"的工具，而是一个**可控生产、审查、修订、沉淀上下文**的工程闭环。质量不是 Writer 一个人的事，而是贯穿六层防线的共同结果：
+这不是一个"一键写小说"的工具，而是一个**可控生产、审查、修订、沉淀上下文**的工程闭环。质量不是 Writer 一个人的事，而是贯穿八层防线的共同结果：
 
 ```
 LAYER 1: CreativeModeProfile（创作模式选择）
@@ -92,14 +92,28 @@ songyan/
 ├── src/songyan/
 │   ├── cli/                 # CLI 命令（create-project / list-projects）
 │   ├── db/                  # SQLite Schema + Repository + 连接管理
-│   ├── models/              # Pydantic 数据模型（35 个）
-│   ├── agents/              # Agent 实现（GoalPlanner / Writer / Auditor...）
-│   ├── workflows/           # LangGraph 工作流编排
-│   ├── utils/               # 质量检测工具（AI 腔 / 疲劳词 / 钩子 / Token）
+│   ├── models/              # Pydantic 数据模型（35+ 个）
+│   ├── agents/              # Agent 实现（10 个 Agent）
+│   │   ├── goal_planner.py
+│   │   ├── creative_director.py
+│   │   ├── context_manager.py
+│   │   ├── writer.py
+│   │   ├── rule_auditor.py
+│   │   ├── llm_auditor.py
+│   │   ├── literary_auditor.py
+│   │   ├── revision_handler.py
+│   │   └── settlement_extractor.py
+│   ├── utils/               # 质量检测工具（5 个纯代码工具）
+│   │   ├── ai_tells.py
+│   │   ├── fatigue_words.py
+│   │   ├── hook_checker.py
+│   │   ├── paragraph_rhythm.py
+│   │   └── numerical_validator.py
+│   ├── workflows/           # LangGraph 工作流编排（待实现）
 │   ├── genres/              # Genre Profile 加载器
 │   └── creative_modes/      # CreativeModeProfile 注册表
-├── tests/                   # 测试
-├── tasks/                   # Task 规格 + 交接报告
+├── tests/                   # 测试（577 passed）
+├── tasks/                   # Task 规格 + 交接报告（17 个 DONE）
 └── docs/                    # 文档
 ```
 
@@ -151,7 +165,7 @@ songyan/
 |------|------|------|
 | Python | 3.11+ | 异步优先 `async/await` |
 | Pydantic | v2 | 所有数据模型，严格类型校验 |
-| LangGraph | >=0.2 | 工作流编排 |
+| LangGraph | >=0.2 | 工作流编排（Phase 3 使用） |
 | LangChain | >=0.3 | LLM 接口 |
 | litellm | latest | 多模型统一接口 |
 | SQLite | 内置 | V1.0 唯一长期事实源 |
@@ -191,13 +205,13 @@ songyan/
 - 新设定快照（source_quote 必须在正文中存在）
 - 伏笔追踪（source_version_id 必须记录）
 - 数值账本（closing_value 必须等于公式值）
-- 结算完成后生成 ChapterSummary
+- 结算完成后生成 ChapterSummary（Phase 3 实现）
 
 ---
 
-## 4. 第一阶段主要实现方式和内容
+## 4. 已实现内容
 
-Phase 1 — 基础设施（Task 001 ~ 007）已全部完成，共 **202 个测试全部通过**。
+### Phase 1 — 基础设施（Task 001 ~ 007）
 
 | Task | 内容 | 测试 |
 |------|------|------|
@@ -209,6 +223,23 @@ Phase 1 — 基础设施（Task 001 ~ 007）已全部完成，共 **202 个测�
 | **Task 006** | CreativeModeProfile 系统（3 JSON + 注册表） | 38 passed |
 | **Task 007** | CLI 创建项目（交互向导 + list-projects） | 6 passed |
 
+### Phase 2 — Agent 能力层（Task 008 ~ 017）
+
+| Task | 内容 | 测试 |
+|------|------|------|
+| **Task 008** | GoalPlanner Agent（LLM Client + 章节目标制定） | 32 passed |
+| **Task 009** | CreativeDirector Agent（CreativeBrief + 张力地图） | 23 passed |
+| **Task 010** | ContextManager Agent（上下文包组装 + Token 裁剪） | 36 passed |
+| **Task 011** | Writer Agent（章节正文生成 + Scene 分割） | 37 passed |
+| **Task 012** | RuleAuditor Agent（纯代码规则检测 + 综合评分） | 29 passed |
+| **Task 013** | LLMAuditor Agent（LLM 语义审查 12 维度） | 33 passed |
+| **Task 014** | LiteraryAuditor Agent（文学性诊断 7 类观察 + 4 维度评分） | 29 passed |
+| **Task 015** | RevisionHandler Agent（issue-driven patch 修订） | 38 passed |
+| **Task 016** | SettlementExtractor Agent（状态结算提取 + 代码验证） | 40 passed |
+| **Task 017** | Quality Utils（AI 腔/疲劳词/钩子/段落节奏/数值验证） | 78 passed |
+
+**总计：577 个测试全部通过，ruff 0 errors。**
+
 ### 4.1 已交付的关键能力
 
 - **配置即代码**：`genres/*.json` 和 `creative_modes/*.json` 是题材/模式规则的事实源，新增配置无需改代码
@@ -216,6 +247,9 @@ Phase 1 — 基础设施（Task 001 ~ 007）已全部完成，共 **202 个测�
 - **交互式 CLI**：`songyan create-project` 8 步向导自动关联 genre_id + mode_id，保存到 SQLite
 - **数据持久化**：Project / Character / Chapter / Review / Settlement 共 11 个 Repository 完整覆盖
 - **版本链**：chapter_versions INSERT only，chapter_heads 指向当前和 accepted 版本
+- **双层审查**：RuleAuditor（代码）+ LLMAuditor（语义）+ LiteraryAuditor（文学性诊断）
+- **Issue-driven 修订**：RevisionHandler 从 MergedReviewReport 提取 patchable issues，保护 valuable_fissure
+- **状态闭环**：SettlementExtractor 执行 5 条验证规则后 INSERT 新快照到 character_states / setting_snapshots / foreshadowings / numerical_ledger
 
 ### 4.2 快速开始
 
@@ -241,11 +275,19 @@ pytest tests/ -v
 
 ```bash
 pytest tests/ -v
-# Expected: 202 passed
+# Expected: 577 passed
 
 ruff check src/ tests/
 # Expected: All checks passed
 ```
+
+---
+
+## 5. 下一阶段（Phase 3）
+
+- **Task 018**: Craft Card Prompts — 工艺卡 Prompt 精调、版本化、A/B 测试支持
+- **Task 019**: LangGraph 编排 + SummaryWriter — 状态机编排、章节摘要生成、端到端闭环
+- **集成测试 + 评测集**：验证单章完整流程的正确性
 
 ---
 
