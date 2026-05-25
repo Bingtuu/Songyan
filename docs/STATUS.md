@@ -35,7 +35,7 @@ Phase 2 — Agent 能力层 **已完成**，准备进入 Phase 3
 ## 待开始
 
 ### Phase 3 — 编排层 + Prompt 工程
-- [ ] Task 018: Craft Card Prompts（工艺卡 Prompt 精调、版本化、A/B 测试支持）
+- [x] Task 018: Craft Card Prompts（工艺卡 Prompt 结构化、版本化、标签匹配、7 个 Agent 迁移）
 - [ ] Task 019: LangGraph 编排 + SummaryWriter（状态机 + Agent 编排 + 章节摘要）
 
 ### Phase 4 — 评测与优化
@@ -47,6 +47,7 @@ Phase 2 — Agent 能力层 **已完成**，准备进入 Phase 3
 
 ## 最近变更
 
+- 2026-05-25: Task 018 Craft Card Prompts 完成（YAML 工艺卡系统 + 8 模块 Writer + PromptLoader 单例 + 18 测试、总测试 595 passed）
 - 2026-05-25: PR #2 合并 — Task 014/015/016 从 `task_14_0525` 分支合并到 `main`
 - 2026-05-25: Task 017 修复 — DONE 文档测试数量修正 + 集成性能测试（78 passed）
 - 2026-05-24: Task 013 LLMAuditor Agent 完成（33 个测试全部通过、总测试 469 passed）
