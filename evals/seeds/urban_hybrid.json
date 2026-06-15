@@ -1,0 +1,77 @@
+{
+  "project_name": "霓虹之下",
+  "genre_id": "urban",
+  "mode_id": "hybrid",
+  "description": "表面是普通职场新人的主角，意外发现自己能听见城市中古老地脉的低语",
+  "characters": [
+    {
+      "name": "程野",
+      "role": "protagonist",
+      "age": 24,
+      "description": "滨江新区一家广告公司的文案策划。独居，作息混乱，喜欢深夜在城市旧巷散步。一次暴雨夜后获得了'听地'能力。",
+      "initial_state": {
+        "job": "文案策划",
+        "location": "滨江新区出租屋",
+        "ability": "无",
+        "mental_state": "迷茫"
+      }
+    },
+    {
+      "name": "林教授",
+      "role": "supporting",
+      "age": 58,
+      "description": "城市大学建筑系退休教授，研究本地古地图二十年。知道滨江新区地下埋着什么。",
+      "initial_state": {
+        "job": "退休教授",
+        "location": "老城区书房",
+        "knowledge": "古地图研究",
+        "mental_state": "警觉"
+      }
+    },
+    {
+      "name": "周总",
+      "role": "antagonist",
+      "age": 42,
+      "description": "广告公司老板，表面儒雅，实则与地产集团勾结。正在推动老城区拆迁项目。",
+      "initial_state": {
+        "job": "公司老板",
+        "location": "CBD写字楼",
+        "power": "中等",
+        "mental_state": "野心勃勃"
+      }
+    }
+  ],
+  "initial_settings": [
+    {
+      "setting_key": "binjiang_district",
+      "setting_name": "滨江新区",
+      "description": "十年内快速崛起的新城区，高楼林立，但地下管网混乱，常出现不明原因的地面沉降。",
+      "source_quote": ""
+    },
+    {
+      "setting_key": "old_alley",
+      "setting_name": "槐树巷",
+      "description": "老城区最后一条未改造的巷子，巷口有一棵三百年的老槐树。居民多为老人，年轻人早已搬离。",
+      "source_quote": ""
+    },
+    {
+      "setting_key": "underground_pulse",
+      "setting_name": "地脉低语",
+      "description": "城市地下存在一种古老的地脉网络，类似生物的神经系统。某些特殊体质的人能在特定条件下'听见'地脉传递的信息。",
+      "source_quote": ""
+    },
+    {
+      "setting_key": "demolition_plan",
+      "setting_name": "老城区改造计划",
+      "description": "由恒远地产集团主导的大型拆迁项目，计划将槐树巷一带改造成商业综合体。工期紧迫，似乎在赶某个时间节点。",
+      "source_quote": ""
+    },
+    {
+      "setting_key": "ancient_seal",
+      "setting_name": "地下封印",
+      "description": "古地图显示，槐树巷正下方有一处从未被记载的地下空间入口。入口被某种力量封印，封印的纹路与老槐树的根系走向一致。",
+      "source_quote": ""
+    }
+  ],
+  "numerical_system": null
+}

@@ -1,0 +1,251 @@
+{
+  "id": "xuanhuan",
+  "name": "玄幻",
+  "language": "zh",
+  "chapter_types": [
+    "opening",
+    "cultivation_breakthrough",
+    "combat",
+    "sect_conflict",
+    "treasure_hunt",
+    "transition"
+  ],
+  "fatigue_words": [
+    "嘴角勾起一抹弧度",
+    "倒吸一口凉气",
+    "眼中闪过一丝寒芒",
+    "蝼蚁",
+    "废物",
+    "不知死活",
+    "找死",
+    "跪地求饶",
+    "恐怖如斯",
+    "此子不可留",
+    "桀桀桀",
+    "苍天饶过谁",
+    "天道好轮回",
+    "冷哼一声",
+    "淡淡地说道",
+    "冷笑道",
+    "怒极反笑",
+    "瞳孔骤缩",
+    "宛如看待死人",
+    "杀意沸腾",
+    "气息暴涨",
+    "修为狂飙",
+    "一步登天",
+    "惊才绝艳",
+    "万古奇才",
+    "镇压当世",
+    "横扫八荒",
+    "无敌之姿",
+    "逆天改命",
+    "夺天地造化",
+    "盯着看",
+    "低声说",
+    "僵住了",
+    "呼吸停滞",
+    "呼吸一停",
+    "自言自语",
+    "喃喃自语",
+    "死死盯着",
+    "停住了",
+    "目光死死盯着"
+  ],
+  "satisfaction_types": [
+    "升级",
+    "打脸",
+    "夺宝",
+    "宗门压迫",
+    "师徒/传承",
+    "伏笔回收"
+  ],
+  "has_numerical_system": true,
+  "has_power_scaling": true,
+  "pacing_rule": "每章至少包含一个情绪钩子（悬念、冲突或爽点），战斗章需在 500 字内进入核心对抗，过渡章不得超过全书的 15%。",
+  "writer_rules": [
+    "境界体系必须前后一致，同一境界的战力表现不得出现明显矛盾",
+    "丹药、法宝、功法必须有明确的获取来源或炼制过程，禁止凭空出现",
+    "地图扩张需遵循渐进原则，新区域登场时必须与主角当前实力匹配",
+    "宗门/势力之间的关系需保持逻辑自洽，不得随意更改立场",
+    "战斗描写优先体现实力差距与策略博弈，避免纯数值堆砌",
+    "主角获得重大机缘后必须有相应的代价或风险，禁止无代价升级",
+    "多线叙事时，副线进度不得超过主线两个大章节",
+    "伏笔设置后必须在 10 章内给出回收信号，超长伏笔需有中间提示"
+  ],
+  "reviewer_focus": [
+    "数值体系是否前后一致（境界、战力、资源）",
+    "新地图/新设定登场时是否有合理的铺垫和限制",
+    "战斗逻辑是否自洽，是否存在战力崩坏",
+    "宗门关系与角色立场是否出现逻辑矛盾",
+    "爽点节奏是否过于密集或稀疏",
+    "功法、法宝等核心设定是否存在设定冲突"
+  ],
+  "active_audit_dimensions": [
+    "world_consistency",
+    "character_behavior",
+    "timeline",
+    "new_setting_unregistered",
+    "narrative_pacing",
+    "narrative_hook",
+    "info_dump",
+    "dialogue_distinctness",
+    "dialogue_subtext",
+    "description_sensory",
+    "show_dont_tell",
+    "genre_numerical"
+  ],
+  "taboos": [
+    "主角通过毫无代价的系统直接获得无敌能力",
+    "同一套路重复超过三次仍未升级（如连续三章都是打脸小混混）",
+    "配角完全工具化，没有任何独立动机",
+    "世界观设定随意吃书",
+    "感情线突兀插入且无铺垫"
+  ],
+  "pacing_templates": [
+    {
+      "chapter_types": [
+        "cultivation_breakthrough",
+        "opening"
+      ],
+      "emotion_arc": "升级爽点",
+      "punch_density": 3.0,
+      "info_release_strategy": "突破章需在 300 字内进入核心爽点，通过境界对比和周围人的震惊反应放大爽感，禁止纯数值堆砌。"
+    },
+    {
+      "chapter_types": [
+        "treasure_hunt",
+        "combat"
+      ],
+      "emotion_arc": "绝境逆袭",
+      "punch_density": 2.0,
+      "info_release_strategy": "夺宝章需在 500 字内进入危险核心，通过环境压迫和强敌围堵制造绝境，再于结尾处完成反杀或逃脱。"
+    },
+    {
+      "chapter_types": [
+        "sect_conflict",
+        "combat"
+      ],
+      "emotion_arc": "师徒传承",
+      "punch_density": 2.5,
+      "info_release_strategy": "宗门冲突章需在 400 字内进入对抗核心，通过势力博弈和人情冷暖展现宗门生态。"
+    },
+    {
+      "chapter_types": [
+        "transition"
+      ],
+      "emotion_arc": "平稳过渡",
+      "punch_density": 0.5,
+      "info_release_strategy": "过渡章以信息整理和伏笔铺设为主，情绪钩子密度降低，但必须在结尾处设置下一章的悬念。"
+    }
+  ],
+  "style_baseline": {
+    "sentence_rhythm": "短促有力",
+    "description_density": 0.35,
+    "dialogue_ratio": 0.25,
+    "inner_monologue": "克制",
+    "pov_depth": "中"
+  },
+  "sensory_templates": [
+    {
+      "sense": "proprioception",
+      "intensity_target": 0.8,
+      "description_density": 120.0,
+      "example_phrases": [
+        "丹田处灵力漩涡越转越快，仿佛要冲破某种无形的桎梏",
+        "神识扫过之处，周围灵气的流动脉络清晰如掌纹"
+      ]
+    },
+    {
+      "sense": "pain",
+      "intensity_target": 0.7,
+      "description_density": 90.0,
+      "example_phrases": [
+        "经脉如被烈火焚烧，每一息都是煎熬",
+        "骨骼碎裂的声音清晰可闻，剧痛从四肢百骸涌上天灵"
+      ]
+    },
+    {
+      "sense": "gustatory",
+      "intensity_target": 0.5,
+      "description_density": 50.0,
+      "example_phrases": [
+        "丹药入口即化，一股清凉之意从喉头直抵丹田",
+        "灵泉水的甘甜中带着一丝草木的涩味"
+      ]
+    }
+  ],
+  "emotion_arc_library": [
+    {
+      "arc_name": "升级爽点",
+      "phases": [
+        {
+          "from": "积累",
+          "to": "瓶颈"
+        },
+        {
+          "from": "瓶颈",
+          "to": "突破"
+        },
+        {
+          "from": "突破",
+          "to": "震撼"
+        }
+      ],
+      "typical_length_words": 3000,
+      "suitable_chapter_types": [
+        "cultivation_breakthrough",
+        "opening"
+      ]
+    },
+    {
+      "arc_name": "绝境逆袭",
+      "phases": [
+        {
+          "from": "绝境",
+          "to": "反击"
+        },
+        {
+          "from": "反击",
+          "to": "逆转"
+        },
+        {
+          "from": "逆转",
+          "to": "扬名"
+        }
+      ],
+      "typical_length_words": 2800,
+      "suitable_chapter_types": [
+        "combat",
+        "sect_conflict"
+      ]
+    },
+    {
+      "arc_name": "师徒传承",
+      "phases": [
+        {
+          "from": "试探",
+          "to": "认可"
+        },
+        {
+          "from": "认可",
+          "to": "授业"
+        },
+        {
+          "from": "授业",
+          "to": "超越"
+        }
+      ],
+      "typical_length_words": 3500,
+      "suitable_chapter_types": [
+        "transition",
+        "treasure_hunt"
+      ]
+    }
+  ],
+  "reference_works": [
+    "斗破苍穹",
+    "凡人修仙传",
+    "仙逆"
+  ]
+}

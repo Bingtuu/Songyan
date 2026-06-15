@@ -1,0 +1,77 @@
+{
+  "project_name": "深空锚点",
+  "genre_id": "scifi",
+  "mode_id": "webnovel",
+  "description": "星际货运船上的维修工在废弃空间站发现了一枚能篡改物理常数的外星遗物",
+  "characters": [
+    {
+      "name": "江燃",
+      "role": "protagonist",
+      "age": 27,
+      "description": "'尘埃号'货运船的二级维修工，前工程师学院肄业生。左手是廉价的义肢，对机械有天生的直觉。性格寡言，但关键时刻果决。",
+      "initial_state": {
+        "job": "维修工",
+        "location": "尘埃号货舱",
+        "augmentation": "左手义肢",
+        "mental_state": "麻木中暗藏不甘"
+      }
+    },
+    {
+      "name": "老鬼",
+      "role": "supporting",
+      "age": 60,
+      "description": "尘埃号船长，在边缘航线跑了四十年。知道很多不该知道的事，从不写日记，所有秘密都记在脑子里。",
+      "initial_state": {
+        "job": "船长",
+        "location": "尘埃号驾驶舱",
+        "augmentation": "脑部记忆芯片",
+        "mental_state": "疲惫但警惕"
+      }
+    },
+    {
+      "name": "艾拉",
+      "role": "supporting",
+      "age": 25,
+      "description": "船上医官，兼管冷冻舱。真实身份是联邦调查局的潜伏探员，正在追踪一批失踪的考古队。",
+      "initial_state": {
+        "job": "医官",
+        "location": "尘埃号医疗舱",
+        "augmentation": "无",
+        "mental_state": "伪装亲和，实则审视"
+      }
+    }
+  ],
+  "initial_settings": [
+    {
+      "setting_key": "dust_mothership",
+      "setting_name": "尘埃号货运船",
+      "description": "服役七十年的老旧的模块化货运船，注册地在三不管的泰坦自由港。船体多处打补丁，但引擎核心是一台罕见的聚变-跃迁混合动力炉。",
+      "source_quote": ""
+    },
+    {
+      "setting_key": "abandoned_station",
+      "setting_name": "第七观测站",
+      "description": "十五年前失联的联邦深空观测站，位于小行星带边缘。最后一次传回的数据中出现了一段无法解析的引力波异常。",
+      "source_quote": ""
+    },
+    {
+      "setting_key": "alien_relic",
+      "setting_name": "锚点遗物",
+      "description": "一枚约拳头大小的黑色十二面体，表面没有任何接口或缝隙。触碰者会在短时间内感知到'另一个物理法则'的片段。联邦将其列为最高机密。",
+      "source_quote": ""
+    },
+    {
+      "setting_key": "federation_law",
+      "setting_name": "联邦遗物管制法",
+      "description": "任何发现外星文明遗物的个人或组织必须在二十四小时内上报联邦科学院。私自持有或交易遗物者，最低刑罚为终身冷冻监禁。",
+      "source_quote": ""
+    },
+    {
+      "setting_key": "missing_team",
+      "setting_name": "普罗米修斯考古队",
+      "description": "七个月前秘密派遣至第七观测站的精英考古队，由十二名顶尖科学家组成。三周前全部失联，联邦对外宣称是遭遇了太阳风事故。",
+      "source_quote": ""
+    }
+  ],
+  "numerical_system": null
+}

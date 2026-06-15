@@ -1,0 +1,11 @@
+agent: "literary_auditor"
+default_version: "1.0.1"
+versions:
+  - version: "1.0.0"
+    description: "文学性诊断 7 维度"
+    tags: ["webnovel", "xuanhuan", "urban", "scifi", "literary"]
+    created_at: "2026-05-25"
+  - version: "1.0.1"
+    description: "增强版：新增破碎短句和AI节奏模式检测，critical级别可触发修改"
+    tags: ["webnovel", "xuanhuan", "urban", "scifi", "literary"]
+    created_at: "2026-06-01"

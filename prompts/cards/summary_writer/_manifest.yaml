@@ -1,0 +1,8 @@
+agent: "summary_writer"
+default_version: "1.0.0"
+versions:
+  - version: "1.0.0"
+    description: "章节摘要生成工艺卡"
+    tags: []
+    created_at: "2026-05-25"
+author: "Songyan"

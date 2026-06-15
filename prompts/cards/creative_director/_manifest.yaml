@@ -1,0 +1,23 @@
+﻿agent: "creative_director"
+default_version: "1.0.4"
+versions:
+  - version: "1.0.0"
+    description: "创作意图与张力地图生成"
+    tags: ["webnovel", "xuanhuan", "urban", "scifi"]
+    created_at: "2026-05-25"
+  - version: "1.0.1"
+    description: "强化版：增加对话潜台词约束、禁止直白独白"
+    tags: ["webnovel", "xuanhuan", "urban", "scifi"]
+    created_at: "2026-05-27"
+  - version: "1.0.2"
+    description: "修复版：保留对话约束，增加角色语言指纹预定义"
+    tags: ["webnovel", "xuanhuan", "urban", "scifi"]
+    created_at: "2026-05-28"
+  - version: "1.0.3"
+    description: "修复版：增加设定连续性约束、节奏地图、禁止凭空引入新组织"
+    tags: ["webnovel", "xuanhuan", "urban", "scifi"]
+    created_at: "2026-06-01"
+  - version: "1.0.4"
+    description: "上下文压力计四信号输出：narrative_fullness / character_focus / foreshadowing_due / focal_distance"
+    tags: ["webnovel", "xuanhuan", "urban", "scifi"]
+    created_at: "2026-06-11"

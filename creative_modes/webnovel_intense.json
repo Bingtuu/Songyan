@@ -1,0 +1,82 @@
+{
+  "id": "webnovel_intense",
+  "name": "网文高刺激模式",
+  "enabled_agents": {
+    "pre_write": [
+      "goal_planner",
+      "creative_director"
+    ],
+    "write": [
+      "writer"
+    ],
+    "post_write": [
+      "rule_auditor",
+      "llm_auditor",
+      "literary_auditor"
+    ],
+    "revision": [
+      "revision_handler"
+    ],
+    "settlement": [
+      "settlement_extractor"
+    ]
+  },
+  "audit_weights": {
+    "world_consistency": 1.0,
+    "character_behavior": 1.0,
+    "timeline": 1.0,
+    "new_setting_unregistered": 1.0,
+    "narrative_pacing": 2.0,
+    "narrative_hook": 2.0,
+    "info_dump": 1.0,
+    "dialogue_distinctness": 1.0,
+    "dialogue_subtext": 0.6,
+    "description_sensory": 1.5,
+    "show_dont_tell": 1.5,
+    "genre_numerical": 1.5
+  },
+  "active_audit_dimensions": [
+    "world_consistency",
+    "character_behavior",
+    "timeline",
+    "new_setting_unregistered",
+    "narrative_pacing",
+    "narrative_hook",
+    "info_dump",
+    "dialogue_distinctness",
+    "dialogue_subtext",
+    "description_sensory",
+    "show_dont_tell",
+    "genre_numerical"
+  ],
+  "revision_policy": "standard",
+  "tolerance": {
+    "max_ai_tells": 2.0,
+    "max_fatigue_words": 3.0,
+    "max_cliche_risk": 1.0,
+    "min_paragraph_rhythm_score": 6.0,
+    "max_word_count_deviation": 0.15
+  },
+  "context_pruning_strategy": "default",
+  "human_memory": {
+    "priority_threshold": 8,
+    "max_marks_in_context": 10
+  },
+  "success_metrics": {
+    "word_count_compliance": 0.9,
+    "hook_presence_rate": 0.95,
+    "fatigue_word_control": 0.9,
+    "revision_round_efficiency": 0.8
+  },
+  "punch_engine": {
+    "sensory_intensity_scale": 1.5,
+    "required_punches_per_chapter": 1,
+    "emotion_switch_required_per_scene": 1,
+    "forbidden_flat_zones": 1500
+  },
+  "rag_config": {
+    "enabled": "auto",
+    "max_results": 5,
+    "min_similarity": 0.3
+  }
+}

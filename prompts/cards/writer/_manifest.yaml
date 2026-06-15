@@ -1,0 +1,23 @@
+﻿agent: "writer"
+default_version: "1.0.9"
+versions:
+  - version: "1.0.5"
+    description: "Phase 5：新增风格参考分区，扩充疲劳词覆盖"
+    tags: ["webnovel", "xuanhuan", "urban", "scifi", "urban_fantasy", "post_apocalyptic", "mystery_noir", "wuxia"]
+    created_at: "2026-06-02"
+  - version: "1.0.6"
+    description: "Phase 8b：新增 RAG 历史相关段落分区，支持长程记忆自动检索"
+    tags: ["webnovel", "xuanhuan", "urban", "scifi", "urban_fantasy", "post_apocalyptic", "mystery_noir", "wuxia"]
+    created_at: "2026-06-03"
+  - version: "1.0.7"
+    description: "Task 092+093：场景字数预算约束 + 预算总和 105% + 最低字数语义，修复系统性字数不足"
+    tags: ["webnovel", "xuanhuan", "urban", "scifi", "urban_fantasy", "post_apocalyptic", "mystery_noir", "wuxia"]
+    created_at: "2026-06-09"
+  - version: "1.0.8"
+    description: "章节类型感知动态字数容差 — 动作/高潮放大到 1.35x，过渡收紧到 1.15x，消除过激惩罚措辞"
+    tags: ["webnovel", "xuanhuan", "urban", "scifi", "urban_fantasy", "post_apocalyptic", "mystery_noir", "wuxia"]
+    created_at: "2026-06-10"
+  - version: "1.0.9"
+    description: "措辞回调：1.4x 超标不可接受，与 Accept 路径字数守卫协同"
+    tags: ["webnovel", "xuanhuan", "urban", "scifi", "urban_fantasy", "post_apocalyptic", "mystery_noir", "wuxia"]
+    created_at: "2026-06-11"

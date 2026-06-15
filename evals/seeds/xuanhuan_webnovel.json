@@ -1,0 +1,134 @@
+{
+  "project_name": "灵渊纪",
+  "genre_id": "xuanhuan",
+  "mode_id": "webnovel",
+  "description": "出身微末的少年在灵气枯竭的末法时代，意外获得上古灵渊传承，踏上逆天改命之路",
+  "characters": [
+    {
+      "name": "陆沉",
+      "role": "protagonist",
+      "age": 16,
+      "description": "青岩镇铁匠铺学徒，父母死于十年前的妖兽袭城。性格沉稳坚韧，不善言辞但内心炽烈。右手腕有一道暗红色胎记，据说是出生时便有的灵纹残迹。",
+      "initial_state": {
+        "cultivation_level": "无",
+        "spirit_value": 0,
+        "location": "青岩镇铁匠铺",
+        "reputation": "镇民口中的孤儿",
+        "physical_condition": "健康"
+      }
+    },
+    {
+      "name": "老周头",
+      "role": "supporting",
+      "age": 62,
+      "description": "铁匠铺老板，陆沉的养父般的存在。曾是低阶修士，灵气枯竭后退隐。左腿有旧伤，走路微跛。知晓许多上古秘闻，但从不主动提及。",
+      "initial_state": {
+        "cultivation_level": "炼气三层（已废）",
+        "spirit_value": 3,
+        "location": "青岩镇铁匠铺",
+        "reputation": "镇上最好的铁匠",
+        "physical_condition": "左腿旧伤"
+      }
+    },
+    {
+      "name": "赵天衡",
+      "role": "antagonist",
+      "age": 19,
+      "description": "青岩镇镇守之子，自诩天才，已踏入炼气一层。傲慢跋扈，视陆沉为蝼蚁。腰间佩有一块青云宗外门弟子预选令牌。",
+      "initial_state": {
+        "cultivation_level": "炼气一层",
+        "spirit_value": 12,
+        "location": "镇守府",
+        "reputation": "镇上最耀眼的少年",
+        "physical_condition": "健康"
+      }
+    },
+    {
+      "name": "苏晚晴",
+      "role": "supporting",
+      "age": 15,
+      "description": "镇东药铺苏掌柜的独女，性情清冷，精通药理。与陆沉青梅竹马，常暗中给他送伤药。体内隐有不明寒毒，每逢月圆便会发作。",
+      "initial_state": {
+        "cultivation_level": "无",
+        "spirit_value": 0,
+        "location": "苏家药铺",
+        "reputation": "镇上最聪慧的少女",
+        "physical_condition": "体内寒毒"
+      }
+    }
+  ],
+  "initial_settings": [
+    {
+      "setting_key": "qingyan_town",
+      "setting_name": "青岩镇",
+      "description": "位于苍云山脉西麓的边陲小镇，常住人口约三千。因附近出产青纹铁矿石而得名。镇中央有一座三百年历史的守望塔，塔顶悬着一口预警妖兽的青铜钟。",
+      "source_quote": ""
+    },
+    {
+      "setting_key": "spirit_depletion_era",
+      "setting_name": "灵气枯竭时代",
+      "description": "三千年前大劫之后，天地间灵气浓度骤降至不足往昔百分之一。绝大多数修士境界倒退或退隐，法宝沦为废铁，丹药失效。凡人社会重新占据主导。",
+      "source_quote": ""
+    },
+    {
+      "setting_key": "cangyun_mountain",
+      "setting_name": "苍云山脉",
+      "description": "横亘大陆中部的巨大山脉，主峰苍云峰高达九千米。山脉深处仍有稀薄灵气残留，是妖兽最后的栖息地，也是修士遗迹最密集的区域。凡人禁入。",
+      "source_quote": ""
+    },
+    {
+      "setting_key": "green_iron_ore",
+      "setting_name": "青纹铁矿石",
+      "description": "青岩镇特产矿石，表面有天然青绿色纹路。在灵气充沛时代可用于炼制低阶法器，如今仅能做普通精铁。老周头掌握着一种秘传锻打法，能让青纹铁保持微弱灵性。",
+      "source_quote": ""
+    },
+    {
+      "setting_key": "watchtower_bell",
+      "setting_name": "守望塔青铜钟",
+      "description": "三百年前由最后一位路过青岩镇的筑基修士所铸。钟声可震慑低阶妖兽，但每鸣一次需消耗塔底灵石残存之力。近十年已未再鸣。",
+      "source_quote": ""
+    },
+    {
+      "setting_key": "qingyun_sect",
+      "setting_name": "青云宗",
+      "description": "灵气枯竭前的一流宗门，如今虽已式微，但仍是方圆千里名义上的主宰。每三年派遣外门执事巡视下辖城镇，选拔有灵根的少年。选拔标准已降至只需有一丝灵根反应。",
+      "source_quote": ""
+    },
+    {
+      "setting_key": "spirit_root_test",
+      "setting_name": "灵根检测仪式",
+      "description": "青云宗执事使用测灵石检测少年体内灵根。测灵石在灵气枯竭年代光芒暗淡，唯有接近法器级别的测灵石才能准确检测。检测结果分为天、地、玄、黄、废五品。",
+      "source_quote": ""
+    },
+    {
+      "setting_key": "ancient_ruins_legend",
+      "setting_name": "灵渊传说",
+      "description": "苍云山脉深处有一处被称为'灵渊'的上古遗迹，据说是大劫前某位化神期大能的洞府。传说灵渊之中封印着一条灵脉，若能解封，可让方圆百里的灵气恢复至大劫前的三成。千年来无数修士寻访，无一归来。",
+      "source_quote": ""
+    },
+    {
+      "setting_key": "beast_tide_history",
+      "setting_name": "十年前的妖兽袭城",
+      "description": "陆沉六岁那年，一小股妖兽从苍云山脉深处涌出，突袭青岩镇。镇守府的修士弃城而逃，是老周头以废掉的修为催动守望塔青铜钟，才吓退妖兽。陆沉的父母在保护他逃离时遇难。",
+      "source_quote": ""
+    },
+    {
+      "setting_key": "cold_poison",
+      "setting_name": "玄阴寒毒",
+      "description": "一种罕见的先天寒毒，患者每逢月圆便会通体冰寒。在灵气充沛时代可用阳属性丹药化解，如今几乎无药可医。苏晚晴体内的寒毒似乎与她出生时一场奇异的霜降有关。",
+      "source_quote": ""
+    }
+  ],
+  "numerical_system": {
+    "name": "九品灵根修炼体系",
+    "levels": [
+      "无",
+      "炼气一层", "炼气二层", "炼气三层",
+      "炼气四层", "炼气五层", "炼气六层",
+      "炼气七层", "炼气八层", "炼气九层",
+      "筑基"
+    ],
+    "base_unit": "灵气值",
+    "formula_hint": "每提升一层需要上一层的灵气值 × 1.5，炼气一层门槛为 10 点灵气值"
+  }
+}

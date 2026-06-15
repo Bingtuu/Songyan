@@ -1,0 +1,220 @@
+{
+  "id": "wuxia",
+  "name": "武侠",
+  "language": "zh",
+  "chapter_types": [
+    "opening",
+    "sect_daily",
+    "jianghu_conflict",
+    "martial_breakthrough",
+    "duel",
+    "transition"
+  ],
+  "fatigue_words": [
+    "嘴角微微上扬",
+    "眼中闪过一丝光芒",
+    "淡淡的",
+    "冷笑",
+    "蝼蚁",
+    "不知天高地厚",
+    "废物",
+    "找死",
+    "恐怖如斯",
+    "此子不可留",
+    "大侠饶命",
+    "承让承让",
+    "江湖规矩",
+    "邪不胜正",
+    "武林盟主",
+    "盯着看",
+    "低声说",
+    "僵住了",
+    "呼吸停滞",
+    "呼吸一停",
+    "自言自语",
+    "喃喃自语",
+    "死死盯着",
+    "停住了",
+    "呼吸一滞",
+    "低声说道"
+  ],
+  "satisfaction_types": [
+    "武功突破",
+    "江湖恩怨",
+    "门派晋升",
+    "侠义伸张",
+    "传承授业",
+    "以弱胜强"
+  ],
+  "has_numerical_system": false,
+  "has_power_scaling": true,
+  "pacing_rule": "门派日常章与江湖冲突章交替推进，决斗章需在 400 字内进入核心交锋，武学突破章必须呈现明确的武学理念升华。",
+  "writer_rules": [
+    "武功体系必须前后一致，同一门派的武功风格不得出现明显矛盾",
+    "江湖规矩和社会结构必须有内部逻辑，禁止随意更改门派立场",
+    "武学突破必须伴随武学理念的升华，禁止纯力量增长而无心性的变化",
+    "兵器和武学招式必须有明确的来源或传承，禁止凭空创造"
+  ],
+  "reviewer_focus": [
+    "武功体系是否前后一致",
+    "江湖规矩和社会结构是否有内部逻辑",
+    "武学突破是否伴随理念升华",
+    "兵器和招式来源是否明确"
+  ],
+  "active_audit_dimensions": [
+    "world_consistency",
+    "character_behavior",
+    "timeline",
+    "narrative_pacing",
+    "narrative_hook",
+    "info_dump",
+    "dialogue_distinctness",
+    "dialogue_subtext",
+    "description_sensory",
+    "show_dont_tell"
+  ],
+  "taboos": [
+    "主角通过毫无代价的方式获得绝世武功",
+    "同一套路重复超过三次仍未升级",
+    "配角完全工具化，没有任何独立动机",
+    "武功设定随意吃书"
+  ],
+  "pacing_templates": [
+    {
+      "chapter_types": [
+        "sect_daily",
+        "transition"
+      ],
+      "emotion_arc": "门派日常",
+      "punch_density": 0.6,
+      "info_release_strategy": "门派日常章以闲适的笔调展现江湖生态， subtly 埋下线，结尾处暗示即将到来的冲突。"
+    },
+    {
+      "chapter_types": [
+        "jianghu_conflict",
+        "duel"
+      ],
+      "emotion_arc": "江湖恩怨",
+      "punch_density": 2.0,
+      "info_release_strategy": "冲突章需在 400 字内进入核心交锋，通过武学风格对比展现人物性格，而非纯力量比拼。"
+    },
+    {
+      "chapter_types": [
+        "martial_breakthrough",
+        "opening"
+      ],
+      "emotion_arc": "武学突破",
+      "punch_density": 1.5,
+      "info_release_strategy": "突破章必须呈现武学理念的升华，通过武学典故或心法领悟推动境界提升。"
+    }
+  ],
+  "style_baseline": {
+    "sentence_rhythm": "短促有力",
+    "description_density": 0.3,
+    "dialogue_ratio": 0.3,
+    "inner_monologue": "克制",
+    "pov_depth": "中"
+  },
+  "sensory_templates": [
+    {
+      "sense": "visual",
+      "intensity_target": 0.7,
+      "description_density": 110.0,
+      "example_phrases": [
+        "竹林深处，剑光如水银泻地",
+        "夕阳将酒旗染成血红色，在风中猎猎作响"
+      ]
+    },
+    {
+      "sense": "gustatory",
+      "intensity_target": 0.5,
+      "description_density": 40.0,
+      "example_phrases": [
+        "烈酒入喉，像一道火线从胸口烧到胃里",
+        "陈年女儿红的醇香在舌尖化开"
+      ]
+    },
+    {
+      "sense": "pain",
+      "intensity_target": 0.6,
+      "description_density": 55.0,
+      "example_phrases": [
+        "剑锋划过肋下，温热的血瞬间浸透了衣衫",
+        "内力反噬时，经脉如被无数细针穿刺"
+      ]
+    }
+  ],
+  "emotion_arc_library": [
+    {
+      "arc_name": "侠义弧线",
+      "phases": [
+        {
+          "from": "犹豫",
+          "to": "抉择"
+        },
+        {
+          "from": "抉择",
+          "to": "行动"
+        },
+        {
+          "from": "行动",
+          "to": "担当"
+        }
+      ],
+      "typical_length_words": 3500,
+      "suitable_chapter_types": [
+        "jianghu_conflict",
+        "sect_daily"
+      ]
+    },
+    {
+      "arc_name": "恩怨弧线",
+      "phases": [
+        {
+          "from": "仇恨",
+          "to": "追寻"
+        },
+        {
+          "from": "追寻",
+          "to": "对峙"
+        },
+        {
+          "from": "对峙",
+          "to": "了断"
+        }
+      ],
+      "typical_length_words": 3000,
+      "suitable_chapter_types": [
+        "duel",
+        "jianghu_conflict"
+      ]
+    },
+    {
+      "arc_name": "传承弧线",
+      "phases": [
+        {
+          "from": "仰慕",
+          "to": "考验"
+        },
+        {
+          "from": "考验",
+          "to": "领悟"
+        },
+        {
+          "from": "领悟",
+          "to": "超越"
+        }
+      ],
+      "typical_length_words": 4000,
+      "suitable_chapter_types": [
+        "martial_breakthrough",
+        "opening"
+      ]
+    }
+  ],
+  "reference_works": [
+    "射雕英雄传",
+    "笑傲江湖",
+    "陆小凤传奇"
+  ]
+}

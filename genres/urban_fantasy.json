@@ -1,0 +1,220 @@
+{
+  "id": "urban_fantasy",
+  "name": "都市异能",
+  "language": "zh",
+  "chapter_types": [
+    "opening",
+    "daily_disguise",
+    "awakening",
+    "faction_conflict",
+    "power_training",
+    "transition"
+  ],
+  "fatigue_words": [
+    "嘴角微微上扬",
+    "眼中闪过一丝玩味",
+    "淡淡的",
+    "冷笑",
+    "蝼蚁",
+    "不知天高地厚",
+    "你也配",
+    "给我等着",
+    "恐怖如斯",
+    "此子不可留",
+    "觉醒吧",
+    "我的力量",
+    "这股气息",
+    "不可思议",
+    "怎么可能",
+    "盯着看",
+    "低声说",
+    "僵住了",
+    "呼吸停滞",
+    "呼吸一停",
+    "自言自语",
+    "喃喃自语",
+    "死死盯着",
+    "停住了",
+    "呼吸一滞"
+  ],
+  "satisfaction_types": [
+    "身份揭露",
+    "异能觉醒",
+    "打脸反派",
+    "势力扩张",
+    "保护亲友",
+    "隐藏身份"
+  ],
+  "has_numerical_system": false,
+  "has_power_scaling": true,
+  "pacing_rule": "日常伪装章与异能事件章交替推进，觉醒章必须在 800 字内完成能力首次展示，冲突章需在 500 字内进入对抗核心。",
+  "writer_rules": [
+    "现代都市背景必须符合现实逻辑，异能设定需有明确限制和代价",
+    "主角隐藏身份时，周围人物的怀疑和试探需有合理铺垫",
+    "异能等级或能力体系必须前后一致，禁止临时新增能力解决困境",
+    "势力冲突需符合现实社会规则，禁止随意破坏社会秩序而无后果",
+    "配角必须有独立动机，禁止完全为衬托主角而存在的工具人"
+  ],
+  "reviewer_focus": [
+    "异能设定是否前后一致，限制和代价是否明确",
+    "隐藏身份的逻辑是否合理，周围人物的反应是否自然",
+    "势力冲突是否符合现实社会规则",
+    "配角是否有独立动机和行为逻辑"
+  ],
+  "active_audit_dimensions": [
+    "world_consistency",
+    "character_behavior",
+    "timeline",
+    "narrative_pacing",
+    "narrative_hook",
+    "info_dump",
+    "dialogue_distinctness",
+    "dialogue_subtext",
+    "description_sensory",
+    "show_dont_tell"
+  ],
+  "taboos": [
+    "主角通过毫无代价的方式获得无敌异能",
+    "同一打脸套路反复使用超过三次",
+    "配角完全工具化，没有任何独立动机",
+    "异能设定随意吃书或临时新增能力"
+  ],
+  "pacing_templates": [
+    {
+      "chapter_types": [
+        "daily_disguise",
+        "transition"
+      ],
+      "emotion_arc": "日常伪装",
+      "punch_density": 0.8,
+      "info_release_strategy": "日常伪装章以平淡叙事为主， subtly 埋下异能线索，结尾处设置微小悬念。"
+    },
+    {
+      "chapter_types": [
+        "awakening",
+        "opening"
+      ],
+      "emotion_arc": "异能觉醒",
+      "punch_density": 2.0,
+      "info_release_strategy": "觉醒章必须在 800 字内完成能力首次展示，通过强烈的感官冲击让读者同步体验觉醒瞬间。"
+    },
+    {
+      "chapter_types": [
+        "faction_conflict",
+        "power_training"
+      ],
+      "emotion_arc": "势力冲突",
+      "punch_density": 2.5,
+      "info_release_strategy": "冲突章需在 500 字内进入对抗核心，通过信息差和身份隐藏制造多层反转。"
+    }
+  ],
+  "style_baseline": {
+    "sentence_rhythm": "短促有力",
+    "description_density": 0.3,
+    "dialogue_ratio": 0.4,
+    "inner_monologue": "丰富",
+    "pov_depth": "深"
+  },
+  "sensory_templates": [
+    {
+      "sense": "visual",
+      "intensity_target": 0.7,
+      "description_density": 110.0,
+      "example_phrases": [
+        "霓虹灯在雨后的街道上投下斑驳的倒影",
+        "异能激活时，瞳孔深处闪过一丝不易察觉的金芒"
+      ]
+    },
+    {
+      "sense": "auditory",
+      "intensity_target": 0.6,
+      "description_density": 55.0,
+      "example_phrases": [
+        "地铁进站的轰鸣声淹没了周围的窃窃私语",
+        "深夜便利店的自动门发出单调的叮咚声"
+      ]
+    },
+    {
+      "sense": "tactile",
+      "intensity_target": 0.5,
+      "description_density": 45.0,
+      "example_phrases": [
+        "雨夜的冷风夹杂着细密的雨丝打在脸上",
+        "掌心传来异能涌动时微微发麻的灼烧感"
+      ]
+    }
+  ],
+  "emotion_arc_library": [
+    {
+      "arc_name": "异能觉醒",
+      "phases": [
+        {
+          "from": "困惑",
+          "to": "恐惧"
+        },
+        {
+          "from": "恐惧",
+          "to": "接受"
+        },
+        {
+          "from": "接受",
+          "to": "兴奋"
+        }
+      ],
+      "typical_length_words": 3000,
+      "suitable_chapter_types": [
+        "awakening",
+        "opening"
+      ]
+    },
+    {
+      "arc_name": "身份撕裂",
+      "phases": [
+        {
+          "from": "平静",
+          "to": "伪装"
+        },
+        {
+          "from": "伪装",
+          "to": "暴露"
+        },
+        {
+          "from": "暴露",
+          "to": "抉择"
+        }
+      ],
+      "typical_length_words": 3500,
+      "suitable_chapter_types": [
+        "daily_disguise",
+        "faction_conflict"
+      ]
+    },
+    {
+      "arc_name": "复仇弧线",
+      "phases": [
+        {
+          "from": "压抑",
+          "to": "谋划"
+        },
+        {
+          "from": "谋划",
+          "to": "执行"
+        },
+        {
+          "from": "执行",
+          "to": "解脱"
+        }
+      ],
+      "typical_length_words": 4000,
+      "suitable_chapter_types": [
+        "faction_conflict",
+        "power_training"
+      ]
+    }
+  ],
+  "reference_works": [
+    "龙族",
+    "全职法师",
+    "一世之尊"
+  ]
+}

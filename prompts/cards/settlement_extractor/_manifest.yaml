@@ -1,0 +1,11 @@
+agent: "settlement_extractor"
+default_version: "1.0.1"
+versions:
+  - version: "1.0.0"
+    description: "状态结算提取"
+    tags: ["webnovel", "xuanhuan", "urban", "scifi"]
+    created_at: "2026-05-25"
+  - version: "1.0.1"
+    description: "修复版：强化 source_quote 精度要求，增加精确引用示例"
+    tags: ["webnovel", "xuanhuan", "urban", "scifi"]
+    created_at: "2026-05-28"

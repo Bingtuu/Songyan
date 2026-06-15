@@ -1,0 +1,210 @@
+{
+  "id": "mystery_noir",
+  "name": "悬疑 noir",
+  "language": "zh",
+  "chapter_types": [
+    "opening",
+    "clue_gathering",
+    "red_herring",
+    "confrontation",
+    "revelation",
+    "transition"
+  ],
+  "fatigue_words": [
+    "嘴角微微上扬",
+    "眼中闪过一丝光芒",
+    "淡淡的",
+    "冷笑",
+    "蝼蚁",
+    "不知天高地厚",
+    "怎么可能",
+    "不可思议",
+    "原来如此",
+    "这就是真相",
+    "我早就知道",
+    "果然是你",
+    "盯着看",
+    "低声说",
+    "僵住了",
+    "呼吸停滞",
+    "呼吸一停",
+    "自言自语",
+    "喃喃自语",
+    "死死盯着",
+    "停住了",
+    "呼吸一滞",
+    "低声说道",
+    "目光死死盯着"
+  ],
+  "satisfaction_types": [
+    "真相揭露",
+    "凶手落网",
+    "伏笔回收",
+    "反转打脸",
+    "心理博弈",
+    "谜团解开"
+  ],
+  "has_numerical_system": false,
+  "has_power_scaling": false,
+  "pacing_rule": "线索搜集章与误导章交替推进，真相揭露章必须让所有伏笔同时回收，禁止事后补充关键线索。",
+  "writer_rules": [
+    "所有关键线索必须在真相揭露前呈现给读者，禁止事后补充读者不知道的信息",
+    "嫌疑人必须有合理的动机和行为逻辑，禁止为了反转而强行改变角色性格",
+    "叙述者或视角角色的信息差必须有明确交代，禁止利用视角欺骗制造廉价反转",
+    "推理过程必须符合逻辑，禁止用超自然或巧合解决核心谜团"
+  ],
+  "reviewer_focus": [
+    "关键线索是否在真相揭露前已呈现",
+    "嫌疑人动机和行为逻辑是否合理",
+    "叙述者信息差是否有明确交代",
+    "推理过程是否符合逻辑"
+  ],
+  "active_audit_dimensions": [
+    "world_consistency",
+    "character_behavior",
+    "timeline",
+    "narrative_pacing",
+    "narrative_hook",
+    "info_dump",
+    "dialogue_distinctness",
+    "dialogue_subtext",
+    "description_sensory",
+    "show_dont_tell"
+  ],
+  "taboos": [
+    "事后补充读者不知道的关键线索",
+    "为了反转而强行改变角色性格",
+    "利用视角欺骗制造廉价反转",
+    "用巧合或超自然解决核心谜团"
+  ],
+  "pacing_templates": [
+    {
+      "chapter_types": [
+        "clue_gathering",
+        "transition"
+      ],
+      "emotion_arc": "线索搜集",
+      "punch_density": 1.0,
+      "info_release_strategy": "线索搜集章每次只释放一个核心线索，同时埋下两个干扰信息，保持读者在迷雾中的参与感。"
+    },
+    {
+      "chapter_types": [
+        "red_herring",
+        "confrontation"
+      ],
+      "emotion_arc": "误导反转",
+      "punch_density": 1.8,
+      "info_release_strategy": "误导章必须通过已有线索的重新排列组合制造合理怀疑，禁止引入全新的误导信息。"
+    },
+    {
+      "chapter_types": [
+        "revelation",
+        "opening"
+      ],
+      "emotion_arc": "真相揭露",
+      "punch_density": 2.5,
+      "info_release_strategy": "真相揭露章必须让所有伏笔同时回收，通过信息重组让读者产生顿悟感。"
+    }
+  ],
+  "style_baseline": {
+    "sentence_rhythm": "错落有致",
+    "description_density": 0.35,
+    "dialogue_ratio": 0.35,
+    "inner_monologue": "丰富",
+    "pov_depth": "深"
+  },
+  "sensory_templates": [
+    {
+      "sense": "visual",
+      "intensity_target": 0.6,
+      "description_density": 100.0,
+      "example_phrases": [
+        "霓虹灯在积水的巷子里碎成一片片光斑",
+        "烟雾在台灯的光晕里缓缓升腾"
+      ]
+    },
+    {
+      "sense": "olfactory",
+      "intensity_target": 0.5,
+      "description_density": 40.0,
+      "example_phrases": [
+        "廉价烟草和潮湿木头混合的气味弥漫在狭窄的房间里",
+        "雨后的 asphalt 散发出沥青特有的苦涩气息"
+      ]
+    },
+    {
+      "sense": "tactile",
+      "intensity_target": 0.4,
+      "description_density": 35.0,
+      "example_phrases": [
+        "雨水顺着衣领滑进后背，带来一阵冰冷的战栗",
+        "皮质座椅的表面已经被岁月磨得光滑发凉"
+      ]
+    }
+  ],
+  "emotion_arc_library": [
+    {
+      "arc_name": "好奇到震惊",
+      "phases": [
+        {
+          "from": "好奇",
+          "to": "困惑"
+        },
+        {
+          "from": "困惑",
+          "to": "震惊"
+        }
+      ],
+      "typical_length_words": 3000,
+      "suitable_chapter_types": [
+        "clue_gathering",
+        "red_herring"
+      ]
+    },
+    {
+      "arc_name": "怀疑到幻灭",
+      "phases": [
+        {
+          "from": "怀疑",
+          "to": "确信"
+        },
+        {
+          "from": "确信",
+          "to": "幻灭"
+        }
+      ],
+      "typical_length_words": 3500,
+      "suitable_chapter_types": [
+        "confrontation",
+        "revelation"
+      ]
+    },
+    {
+      "arc_name": "迷雾到顿悟",
+      "phases": [
+        {
+          "from": "迷雾",
+          "to": "碎片"
+        },
+        {
+          "from": "碎片",
+          "to": "重组"
+        },
+        {
+          "from": "重组",
+          "to": "顿悟"
+        }
+      ],
+      "typical_length_words": 4000,
+      "suitable_chapter_types": [
+        "revelation",
+        "opening"
+      ]
+    }
+  ],
+  "reference_works": [
+    "白夜行",
+    "漫长的告别",
+    "福尔摩斯探案集"
+  ]
+}

@@ -1,0 +1,195 @@
+{
+  "id": "scifi",
+  "name": "科幻",
+  "language": "zh",
+  "chapter_types": [
+    "opening",
+    "exploration",
+    "conflict",
+    "tech_revelation",
+    "world_building",
+    "transition"
+  ],
+  "fatigue_words": [
+    "嘴角微微上扬",
+    "眼中闪过一丝光芒",
+    "淡淡的",
+    "冷笑",
+    "蝼蚁",
+    "不知天高地厚",
+    "恐怖如斯",
+    "此子不可留",
+    "桀桀桀",
+    "冷哼一声",
+    "盯着看",
+    "低声说",
+    "僵住了",
+    "呼吸停滞",
+    "呼吸一停",
+    "自言自语",
+    "喃喃自语",
+    "死死盯着",
+    "目不转睛地看着",
+    "呼吸一滞",
+    "低声说道",
+    "停住了"
+  ],
+  "satisfaction_types": [
+    "科技突破",
+    "危机化解",
+    "真相揭露",
+    "文明碰撞",
+    "生存逆袭",
+    "伏笔回收"
+  ],
+  "has_numerical_system": false,
+  "has_power_scaling": false,
+  "pacing_rule": "科技揭示与叙事推进交替进行，世界观信息需通过剧情自然带出，避免大段说明文。",
+  "writer_rules": [
+    "科技设定必须基于现有科学原理或给出合理的虚构延伸，禁止自相矛盾",
+    "外星文明或未来社会必须有内部一致性，文化、政治、经济逻辑需自洽",
+    "技术细节的展示需服务于剧情，禁止纯技术炫技脱离叙事",
+    "时间线与因果关系必须清晰，涉及时间旅行或多线叙事时需格外谨慎"
+  ],
+  "reviewer_focus": [
+    "科技设定是否前后一致",
+    "世界观信息是否以剧情自然带出",
+    "时间线与因果关系是否清晰",
+    "文明/社会设定是否存在逻辑漏洞"
+  ],
+  "active_audit_dimensions": [
+    "world_consistency",
+    "character_behavior",
+    "timeline",
+    "new_setting_unregistered",
+    "narrative_pacing",
+    "narrative_hook",
+    "info_dump",
+    "dialogue_distinctness",
+    "dialogue_subtext",
+    "description_sensory",
+    "show_dont_tell"
+  ],
+  "taboos": [
+    "科技设定随意吃书",
+    "大段脱离剧情的技术说明",
+    "时间旅行逻辑不自洽",
+    "配角完全工具化"
+  ],
+  "pacing_templates": [
+    {
+      "chapter_types": [
+        "opening",
+        "exploration",
+        "conflict",
+        "tech_revelation",
+        "world_building",
+        "transition"
+      ],
+      "emotion_arc": "悬疑揭示",
+      "punch_density": 1.2,
+      "info_release_strategy": "科技揭示与叙事推进交替进行，世界观信息需通过剧情自然带出，避免大段说明文。"
+    }
+  ],
+  "style_baseline": {
+    "sentence_rhythm": "错落有致",
+    "description_density": 0.35,
+    "dialogue_ratio": 0.3,
+    "inner_monologue": "克制",
+    "pov_depth": "中"
+  },
+  "sensory_templates": [
+    {
+      "sense": "visual",
+      "intensity_target": 0.7,
+      "description_density": 120.0,
+      "example_phrases": [
+        "全息投影在舱壁上投下幽蓝的光纹",
+        "星环像一条碎钻编织的腰带悬在舷窗外"
+      ]
+    },
+    {
+      "sense": "auditory",
+      "intensity_target": 0.5,
+      "description_density": 60.0,
+      "example_phrases": [
+        "引擎的低频嗡鸣从甲板深处传来",
+        "通讯频道里夹杂着静电的嘶嘶声"
+      ]
+    },
+    {
+      "sense": "tactile",
+      "intensity_target": 0.4,
+      "description_density": 40.0,
+      "example_phrases": [
+        "人工重力失效的瞬间，胃部传来熟悉的失重感",
+        "舱壁的金属冷得像冰"
+      ]
+    }
+  ],
+  "emotion_arc_library": [
+    {
+      "arc_name": "悬疑揭示",
+      "phases": [
+        {
+          "from": "好奇",
+          "to": "紧张"
+        },
+        {
+          "from": "紧张",
+          "to": "震惊"
+        }
+      ],
+      "typical_length_words": 3000,
+      "suitable_chapter_types": [
+        "exploration",
+        "tech_revelation"
+      ]
+    },
+    {
+      "arc_name": "危机突围",
+      "phases": [
+        {
+          "from": "平静",
+          "to": "紧张"
+        },
+        {
+          "from": "紧张",
+          "to": "绝望"
+        },
+        {
+          "from": "绝望",
+          "to": "希望"
+        }
+      ],
+      "typical_length_words": 3500,
+      "suitable_chapter_types": [
+        "conflict",
+        "transition"
+      ]
+    },
+    {
+      "arc_name": "文明碰撞",
+      "phases": [
+        {
+          "from": "陌生",
+          "to": "冲突"
+        },
+        {
+          "from": "冲突",
+          "to": "理解"
+        }
+      ],
+      "typical_length_words": 4000,
+      "suitable_chapter_types": [
+        "world_building",
+        "opening"
+      ]
+    }
+  ],
+  "reference_works": [
+    "三体",
+    "银河帝国",
+    "海伯利安"
+  ]
+}

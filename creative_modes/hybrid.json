@@ -1,0 +1,63 @@
+{
+  "id": "hybrid",
+  "name": "混合模式",
+  "enabled_agents": {
+    "pre_write": ["goal_planner", "creative_director"],
+    "write": ["writer"],
+    "post_write": ["rule_auditor", "llm_auditor", "literary_auditor"],
+    "revision": ["revision_handler"],
+    "settlement": ["settlement_extractor"]
+  },
+  "audit_weights": {
+    "world_consistency": 1.2,
+    "character_behavior": 1.2,
+    "timeline": 1.0,
+    "new_setting_unregistered": 1.0,
+    "narrative_pacing": 1.2,
+    "narrative_hook": 1.2,
+    "info_dump": 1.2,
+    "dialogue_distinctness": 1.2,
+    "dialogue_subtext": 1.2,
+    "description_sensory": 1.2,
+    "show_dont_tell": 1.2,
+    "genre_numerical": 1.0
+  },
+  "active_audit_dimensions": [
+    "world_consistency",
+    "character_behavior",
+    "timeline",
+    "new_setting_unregistered",
+    "narrative_pacing",
+    "narrative_hook",
+    "info_dump",
+    "dialogue_distinctness",
+    "dialogue_subtext",
+    "description_sensory",
+    "show_dont_tell",
+    "genre_numerical"
+  ],
+  "revision_policy": "selective",
+  "tolerance": {
+    "max_ai_tells": 2.0,
+    "max_fatigue_words": 2.0,
+    "max_cliche_risk": 0.8,
+    "min_paragraph_rhythm_score": 6.5,
+    "max_word_count_deviation": 0.18
+  },
+  "context_pruning_strategy": "theme_focused",
+  "human_memory": {
+    "priority_threshold": 8,
+    "max_marks_in_context": 10
+  },
+  "success_metrics": {
+    "word_count_compliance": 0.85,
+    "hook_presence_rate": 0.9,
+    "character_autonomy_score": 0.8,
+    "description_depth": 0.85
+  },
+  "rag_config": {
+    "enabled": "auto",
+    "max_results": 5,
+    "min_similarity": 0.3
+  }
+}

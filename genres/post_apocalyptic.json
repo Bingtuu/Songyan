@@ -1,0 +1,215 @@
+{
+  "id": "post_apocalyptic",
+  "name": "末世生存",
+  "language": "zh",
+  "chapter_types": [
+    "opening",
+    "scavenging",
+    "faction_conflict",
+    "survival",
+    "base_building",
+    "transition"
+  ],
+  "fatigue_words": [
+    "嘴角微微上扬",
+    "眼中闪过一丝光芒",
+    "淡淡的",
+    "冷笑",
+    "蝼蚁",
+    "不知天高地厚",
+    "废物",
+    "找死",
+    "恐怖如斯",
+    "此子不可留",
+    "末日降临",
+    "人性丑恶",
+    "弱肉强食",
+    "适者生存",
+    "这就是末世",
+    "盯着看",
+    "低声说",
+    "僵住了",
+    "呼吸停滞",
+    "呼吸一停",
+    "自言自语",
+    "喃喃自语",
+    "死死盯着",
+    "停住了",
+    "呼吸一滞"
+  ],
+  "satisfaction_types": [
+    "资源获取",
+    "基地扩张",
+    "科技重建",
+    "势力吞并",
+    "人性光辉",
+    "复仇"
+  ],
+  "has_numerical_system": false,
+  "has_power_scaling": false,
+  "pacing_rule": "资源搜寻章与冲突章交替推进，生存章必须呈现真实的资源压力，人性抉择章不得给出廉价的道德答案。",
+  "writer_rules": [
+    "资源稀缺必须是真实的约束，禁止主角凭空获得无限物资",
+    "末日环境下的社会形态必须有演化逻辑，禁止突然出现的完美秩序",
+    "变异生物或灾难机制必须有内部一致性，禁止随意增加新威胁而不解释来源",
+    "人性抉择必须呈现真实的代价，禁止毫无代价的圣母行为"
+  ],
+  "reviewer_focus": [
+    "资源约束是否真实，是否存在凭空获得物资的情节",
+    "末日社会形态是否有演化逻辑",
+    "变异生物或灾难机制是否前后一致",
+    "人性抉择是否有真实代价"
+  ],
+  "active_audit_dimensions": [
+    "world_consistency",
+    "character_behavior",
+    "timeline",
+    "narrative_pacing",
+    "narrative_hook",
+    "info_dump",
+    "dialogue_distinctness",
+    "dialogue_subtext",
+    "description_sensory",
+    "show_dont_tell"
+  ],
+  "taboos": [
+    "主角通过毫无代价的方式获得无限物资",
+    "同一套路重复超过三次仍未推进剧情",
+    "配角完全工具化，没有任何独立动机",
+    "末日设定随意吃书"
+  ],
+  "pacing_templates": [
+    {
+      "chapter_types": [
+        "scavenging",
+        "survival"
+      ],
+      "emotion_arc": "资源搜寻",
+      "punch_density": 1.0,
+      "info_release_strategy": "资源搜寻章以压抑的氛围为主，通过环境细节传达 scarcity，结尾处设置资源冲突的伏笔。"
+    },
+    {
+      "chapter_types": [
+        "faction_conflict",
+        "base_building"
+      ],
+      "emotion_arc": "阵营冲突",
+      "punch_density": 2.0,
+      "info_release_strategy": "阵营冲突章需在 600 字内进入对抗核心，通过资源争夺展现不同群体的生存哲学。"
+    },
+    {
+      "chapter_types": [
+        "transition",
+        "opening"
+      ],
+      "emotion_arc": "人性抉择",
+      "punch_density": 1.5,
+      "info_release_strategy": "人性抉择章不得给出廉价的道德答案，必须让主角在两种都有代价的选择中做出决定。"
+    }
+  ],
+  "style_baseline": {
+    "sentence_rhythm": "短促有力",
+    "description_density": 0.4,
+    "dialogue_ratio": 0.25,
+    "inner_monologue": "克制",
+    "pov_depth": "中"
+  },
+  "sensory_templates": [
+    {
+      "sense": "visual",
+      "intensity_target": 0.7,
+      "description_density": 130.0,
+      "example_phrases": [
+        "锈蚀的钢筋从断裂的混凝土中刺出，像一具巨兽的肋骨",
+        "夕阳将废墟染成血红色"
+      ]
+    },
+    {
+      "sense": "olfactory",
+      "intensity_target": 0.6,
+      "description_density": 50.0,
+      "example_phrases": [
+        "空气中弥漫着腐烂植物和金属锈蚀混合的刺鼻气味",
+        "地下掩体里潮湿的霉味让人喘不过气来"
+      ]
+    },
+    {
+      "sense": "auditory",
+      "intensity_target": 0.5,
+      "description_density": 40.0,
+      "example_phrases": [
+        "风吹过破碎窗户时发出尖锐的呜咽",
+        "远处传来变异生物低沉的嘶吼，然后一切归于死寂"
+      ]
+    }
+  ],
+  "emotion_arc_library": [
+    {
+      "arc_name": "绝望到希望",
+      "phases": [
+        {
+          "from": "绝望",
+          "to": "麻木"
+        },
+        {
+          "from": "麻木",
+          "to": "发现"
+        },
+        {
+          "from": "发现",
+          "to": "希望"
+        }
+      ],
+      "typical_length_words": 3500,
+      "suitable_chapter_types": [
+        "scavenging",
+        "survival"
+      ]
+    },
+    {
+      "arc_name": "信任到背叛",
+      "phases": [
+        {
+          "from": "信任",
+          "to": "怀疑"
+        },
+        {
+          "from": "怀疑",
+          "to": "证实"
+        },
+        {
+          "from": "证实",
+          "to": "决裂"
+        }
+      ],
+      "typical_length_words": 3000,
+      "suitable_chapter_types": [
+        "faction_conflict",
+        "transition"
+      ]
+    },
+    {
+      "arc_name": "牺牲到传承",
+      "phases": [
+        {
+          "from": "抉择",
+          "to": "牺牲"
+        },
+        {
+          "from": "牺牲",
+          "to": "传承"
+        }
+      ],
+      "typical_length_words": 2800,
+      "suitable_chapter_types": [
+        "base_building",
+        "opening"
+      ]
+    }
+  ],
+  "reference_works": [
+    "生化危机",
+    "流浪地球",
+    "末日乐园"
+  ]
+}

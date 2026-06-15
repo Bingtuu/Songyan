@@ -1,0 +1,15 @@
+agent: "llm_auditor"
+default_version: "1.0.2"
+versions:
+  - version: "1.0.0"
+    description: "语义审查 12 维度"
+    tags: ["webnovel", "xuanhuan", "urban", "scifi"]
+    created_at: "2026-05-25"
+  - version: "1.0.1"
+    description: "强化版：针对对话潜台词、ShowDontTell、感官描写、叙事节奏加强审查标准"
+    tags: ["webnovel", "xuanhuan", "urban", "scifi"]
+    created_at: "2026-05-27"
+  - version: "1.0.2"
+    description: "修复版：放宽过度严格的评分标准，区分显性与隐性 tell"
+    tags: ["webnovel", "xuanhuan", "urban", "scifi"]
+    created_at: "2026-05-28"
