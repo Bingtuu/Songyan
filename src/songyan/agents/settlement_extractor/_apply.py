@@ -28,9 +28,12 @@ from songyan.db.settlement_repo import (
 from songyan.models import (
     CharacterState,
     ForeshadowingItem,
+    NewSetting,
     PermanentScene,
     StateSettlement,
 )
+
+from ._state_compression import compress_character_state_value
 
 logger = structlog.get_logger(__name__)
 
@@ -106,6 +109,7 @@ async def apply_settlement(
     # 预加载项目角色白名单（LLM 可能 hallucinate 不存在的角色）
     project_characters = await char_repo.list_by_project(project_id)
     valid_char_ids = {c.character_id for c in project_characters}
+    role_type_by_id = {c.character_id: c.role_type for c in project_characters}
 
     # Continuity tracking repositories
     setting_tracking_repo = SettingTrackingRepository()
@@ -126,10 +130,17 @@ async def apply_settlement(
                     action="skip",
                 )
                 continue
+
+            # Task 110a: 按角色层级保真压缩状态值
+            role_type = role_type_by_id.get(update.character_id, "supporting")
+            compressed_value = compress_character_state_value(
+                update.new_value, update.field, role_type
+            )
+
             state = CharacterState(
                 character_id=update.character_id,
                 field=update.field,
-                value=update.new_value,
+                value=compressed_value,
                 source_version_id=version_id,
             )
             await char_repo.add_state_snapshot(state, conn=c)
