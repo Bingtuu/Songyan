@@ -47,10 +47,10 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 
 | 指标 | 数值 |
 |------|------|
-| 状态 | **V5.0 Phase 3 — Task 110 完成** |
+| 状态 | **V5.0 Phase 3 — Task 105b 完成，DG-1 未通过** |
 | V4.0 最终达标率 (Ch2-Ch50) | **81.6%** (Task 099) ✅ |
-| Task 105 实跑 | **run-33229919: Ch51-Ch59 完成，Ch57-Ch59 连续质量门失败后自动暂停** |
-| 最近回归测试 | **1547 passed, 4 skipped, 2 xfailed, 3 xpassed** |
+| Task 105b 实跑 | **Ch51-Ch100 全部成功，QG 通过率 58.0% (29/50)，DG-1 未通过** |
+| 最近回归测试 | **待更新** |
 | Python | 3.11.9 |
 | 下一 Task | **Task 111: Ch101-Ch150 流式验证 + 决策门 DG-2** |
 
@@ -71,7 +71,8 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 
 | Task | 内容 | 验收条件 | 状态 |
 |------|------|---------|:----:|
-| 105 | **Ch51-Ch100 流式验证基础设施 + 决策门 DG-1** | JSONL 指标、自动熔断、一键报告；实跑到 Ch59 后因质量门连续失败暂停 | ⚠️ |
+| 105 | **Ch51-Ch100 流式验证基础设施 + 决策门 DG-1** | JSONL 指标、自动熔断、一键报告 | ✅ |
+| 105b | **Ch51-Ch100 验证重启** | 在 Task 106-110 修复后重新跑 Ch51-Ch100；50/50 成功，QG 通过率 58.0%，DG-1 未通过 | ✅ |
 | Task 106 | **Unified Scoring System** — 统一评分体系 | 5 维评分结构 + ScoreAggregator + 工作流适配；全量回归通过 | ✅ |
 | Task 107 | **Repair Convergence Guardrail** — 修订/重写收敛护栏 | rewrite 结构完整性校验；QG 耗尽回滚 best_version + 跳过 settlement；全量回归通过 | ✅ |
 | Task 108 | **Fix 150-Blockers & Guardrails** — 修复 review 发现的 8 项缺陷 | skip_settlement 成功路径；rewrite best 基准更新；literary-scorecard 决策合并；length 阈值校准；废弃版本过滤；max_revision_rounds 透传；1524 passed | ✅ |
