@@ -205,3 +205,55 @@ class TestRetrieveForChapter:
         )
         assert len(results) >= 1
         assert results[0].text == "认知补丁生效"
+
+
+class TestCacheReuse:
+    """VectorStore 跨 Retriever 实例缓存复用测试."""
+
+    @pytest.fixture(autouse=True)
+    def clear_cache(self) -> None:
+        Embedder.clear_cache()
+        RAGRetriever._store_cache.clear()
+
+    @pytest.mark.asyncio
+    async def test_retriever_reuses_cached_store(self) -> None:
+        """同一 project 的第二个 RAGRetriever 复用缓存实例，避免重复全量加载."""
+        embedder = Embedder("mock")
+        chunks = [
+            TextChunk(
+                chunk_id="c1", project_id="p1", chapter_number=1,
+                version_id="v1", chunk_index=0, text="认知补丁生效",
+                metadata=ChunkMetadata(),
+            ),
+        ]
+        embeddings = embedder.embed([c.text for c in chunks])
+        repo = _MockChunkRepo(chunks, embeddings)
+        store1 = VectorStore("p1", repo)  # type: ignore[arg-type]
+
+        retriever1 = RAGRetriever(
+            embedder=embedder,
+            vector_store=store1,
+            rag_config=RAGConfig(max_results=5, min_similarity=0.0),
+        )
+
+        goal = ChapterGoal(
+            chapter_number=2,
+            target_events=["认知补丁"],
+            obligations=[],
+        )
+
+        results1 = await retriever1.retrieve_for_chapter("p1", 2, goal)
+        assert len(results1) >= 1
+        cached_store = RAGRetriever._store_cache["p1"]
+        assert retriever1.vector_store is cached_store
+
+        # 第二个 retriever + 全新 store 实例，应复用缓存
+        store2 = VectorStore("p1", repo)  # type: ignore[arg-type]
+        retriever2 = RAGRetriever(
+            embedder=embedder,
+            vector_store=store2,
+            rag_config=RAGConfig(max_results=5, min_similarity=0.0),
+        )
+        results2 = await retriever2.retrieve_for_chapter("p1", 2, goal)
+        assert retriever2.vector_store is cached_store
+        assert len(results2) >= 1

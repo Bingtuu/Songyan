@@ -149,3 +149,67 @@ class TestVectorStore:
         query = embeddings[0]
         results = await store.search(query, top_k=5)
         assert not any(r.chapter_number == 1 for r in results)
+
+    async def test_load_incremental_first_call_loads_all(self, test_db, seeded_db) -> None:
+        """首次 load_incremental 等价于 load()."""
+        repo = ChunkRepository()
+        store1 = VectorStore(project_id="proj1", repo=repo)
+        chunks = _make_chunks(4)
+        embeddings = _make_embeddings(4)
+        await store1.add_chunks(chunks, embeddings)
+
+        store2 = VectorStore(project_id="proj1", repo=repo)
+        await store2.load_incremental()
+        assert store2.total_chunks == 4
+        assert store2._embeddings is not None
+        assert store2._embeddings.shape[0] == 4
+
+    async def test_load_incremental_appends_new_chunks_syncs_embeddings(
+        self, test_db, seeded_db
+    ) -> None:
+        """第二次 load_incremental 只追加新增 chunks，并保持 embeddings 一致."""
+        repo = ChunkRepository()
+        store = VectorStore(project_id="proj1", repo=repo)
+
+        chunks1 = _make_chunks(4)
+        embeddings1 = _make_embeddings(4)
+        await store.add_chunks(chunks1, embeddings1)
+
+        store2 = VectorStore(project_id="proj1", repo=repo)
+        await store2.load_incremental()
+        assert store2.total_chunks == 4
+        assert store2._embeddings is not None
+        assert store2._embeddings.shape[0] == 4
+
+        chunks2 = _make_chunks(8)[4:]
+        embeddings2 = _make_embeddings(8)[4:]
+        await store.add_chunks(chunks2, embeddings2)
+
+        await store2.load_incremental()
+        assert store2.total_chunks == 8
+        assert store2._embeddings.shape[0] == 8
+
+        # 老 chunk 仍可检索
+        results = await store2.search(embeddings1[0], top_k=8)
+        assert any(r.chunk_id == chunks1[0].chunk_id for r in results)
+        # 新 chunk 也可检索
+        results = await store2.search(embeddings2[0], top_k=8)
+        assert any(r.chunk_id == chunks2[0].chunk_id for r in results)
+
+    async def test_load_incremental_idempotent(self, test_db, seeded_db) -> None:
+        """无新数据时多次 load_incremental 保持状态不变."""
+        repo = ChunkRepository()
+        store1 = VectorStore(project_id="proj1", repo=repo)
+        chunks = _make_chunks(4)
+        embeddings = _make_embeddings(4)
+        await store1.add_chunks(chunks, embeddings)
+
+        store2 = VectorStore(project_id="proj1", repo=repo)
+        await store2.load_incremental()
+        total1 = store2.total_chunks
+        emb_shape1 = store2._embeddings.shape if store2._embeddings is not None else None
+
+        await store2.load_incremental()
+        assert store2.total_chunks == total1
+        assert store2._embeddings is not None
+        assert store2._embeddings.shape == emb_shape1

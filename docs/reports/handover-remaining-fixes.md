@@ -1,6 +1,11 @@
 ﻿# 待修复项（2026-06-11 交接）
 
-> 以下 4 项在 CR 修复中被 git checkout 回滚冲掉，需要重新应用。
+> **状态更新（2026-06-16）**: 以下 4 项已修复/确认，详见 `docs/memos/MEMO-001-vectorstore-reload.md`。
+> 本文件保留为历史交接记录，不再作为活跃任务清单。
+
+---
+
+> 原说明：以下 4 项在 CR 修复中被 git checkout 回滚冲掉，需要重新应用。
 > 所有修复逻辑已验证，只需用 Python 脚本重新写入。
 
 ---
@@ -125,3 +130,29 @@ py fix_remaining.py
 | `.env.example` | DATABASE_URL 配置项 | ✅ 已写入 |
 | `README.md` | 快速开始 + CLI + 恢复文档 | ✅ 已写入 |
 | `docs/*` | STATUS/INDEX + 13 份审查报告 | ✅ 已写入 |
+
+
+---
+
+## 修复状态汇总（2026-06-16）
+
+| # | 修复项 | 状态 | 备注 |
+|---|--------|:----:|------|
+| 1 | `vector_store.py` — `load_incremental()` | ✅ 已修复 | 同步追加 chunks 与 embeddings，见 MEMO-001 |
+| 2 | `retriever.py` — `RAGRetriever` 缓存 | ✅ 已修复 | 缓存命中后 `self.vector_store` 指向缓存实例，见 MEMO-001 |
+| 3 | `embedder.py` — `warm_up()` + `aembed()` 超时 | ✅ 已存在 | `warm_up()` 与 30s 超时已在当前代码中 |
+| 4 | `test_eval_runner.py` — xfail 缩进 | ✅ 已正确 | 第 334 行缩进正确 |
+
+### 验证结果
+
+```bash
+pytest tests/rag/test_vector_store.py tests/rag/test_retriever.py -v
+# 18 passed
+
+pytest tests/ -q --tb=no
+# 1555 passed, 4 skipped, 1 xfailed, 4 xpassed
+
+ruff check src/songyan/rag/vector_store.py src/songyan/rag/retriever.py \
+  tests/rag/test_vector_store.py tests/rag/test_retriever.py
+# All checks passed!
+```

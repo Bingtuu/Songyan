@@ -49,17 +49,41 @@ class VectorStore:
             )
 
     async def load_incremental(self) -> None:
+        """增量加载：首次全量加载，后续只加载新增 chunks 和 embeddings.
+
+        保持 ``_chunks`` 与 ``_embeddings`` 索引严格一致，避免 RAG 检索时
+        向量与文本错位。
+        """
         if self._loaded_chapter == 0:
             await self.load()
             self._loaded_chapter = max((c.chapter_number for c in self._chunks), default=0)
             return
-        all_chunks, all_embs = await self._repo.get_with_embeddings(self.project_id)
+
+        all_chunks, all_embeddings = await self._repo.get_with_embeddings(self.project_id)
+        if not all_chunks:
+            return
+
+        # 如果任一侧没有 embeddings，无法安全增量合并，回退到全量加载
+        if all_embeddings is None or self._embeddings is None:
+            await self.load()
+            self._loaded_chapter = max((c.chapter_number for c in self._chunks), default=0)
+            return
+
         existing_ids = {c.chunk_id for c in self._chunks}
-        for c in all_chunks:
-            if c.chunk_id not in existing_ids:
-                self._chunks.append(c)
-        if self._chunks:
-            self._loaded_chapter = max(c.chapter_number for c in self._chunks)
+        new_chunks: list[TextChunk] = []
+        new_embeddings: list[np.ndarray] = []
+
+        for chunk, embedding in zip(all_chunks, all_embeddings):
+            if chunk.chunk_id not in existing_ids:
+                new_chunks.append(chunk)
+                new_embeddings.append(embedding)
+
+        if not new_chunks:
+            return
+
+        self._chunks.extend(new_chunks)
+        self._embeddings = np.vstack([self._embeddings, np.vstack(new_embeddings)])
+        self._loaded_chapter = max((c.chapter_number for c in self._chunks), default=0)
 
     async def add_chunks(
         self,
@@ -165,7 +189,9 @@ class VectorStore:
         ]
         if keep_indices:
             self._chunks = [self._chunks[i] for i in keep_indices]
-            self._embeddings = self._embeddings[keep_indices] if self._embeddings is not None else None
+            self._embeddings = (
+                self._embeddings[keep_indices] if self._embeddings is not None else None
+            )
         else:
             self._chunks = []
             self._embeddings = None

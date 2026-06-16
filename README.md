@@ -12,7 +12,7 @@
 
 **V5.0 — Context Diet 2.0 智能遗忘架构**
 
-目标：通过 TemporalCompressor + CharacterFocalDecay + SettingEvaporator + BudgetHardCeiling 四组件协同，控制信息密度，支撑 Ch1-Ch150 全自动稳定生成。Task 101~105 已完成基础设施与 Context Diet 2.0 核心组件验证；真实 Ch51-Ch100 流式试跑在 Ch59 因连续质量门失败自动暂停，当前进入自动修订/重写收敛修复阶段。
+目标：通过 TemporalCompressor + CharacterFocalDecay + SettingEvaporator + BudgetHardCeiling 四组件协同，控制信息密度，支撑 Ch1-Ch150 全自动稳定生成。Task 101~110 已完成 Context Diet 2.0 核心组件、流式验证基础设施、统一评分体系、修复收敛护栏、角色退场机制、设定去重与伏笔监控；真实 Ch51-Ch100 流式试跑在 Ch59 因连续质量门失败自动暂停，当前准备基于 Task 106~110 的修复重启 Ch51-Ch100 验证。
 
 ### 版本概览
 
@@ -28,8 +28,9 @@
 
 | 指标 | 数值 |
 |------|------|
-| 最近回归测试 | **1483 passed, 4 skipped, 2 xfailed, 3 xpassed** |
-| V5.0 当前 Task | **106**（Repair Convergence Guardrail） |
+| 最近回归测试 | **1555 passed, 4 skipped, 1 xfailed, 4 xpassed** |
+| V5.0 当前 Task | **110**（SettingDeduplication + ForeshadowingPressure） |
+| 下一任务 | **Task 105b：Ch51-Ch100 验证重启** |
 | Task 105 实跑 | **run-33229919: Ch51-Ch59 完成，Ch57-Ch59 连续质量门失败后暂停** |
 | V4.0 最终达标率 | Task 099: Ch2-Ch50 **81.6%** |
 | V4.x 归档 | `archive/v4/`（报告 + 任务 + 验证数据）|
@@ -376,15 +377,18 @@ ContextManager 按 Token 预算组装 `ContextPackage`（默认 32K）：
 
 | 阶段 | Task | 内容 | 状态 |
 |------|------|------|:----:|
-| M43 TemporalCompressor | 101 | 时间分层压缩：金字塔摘要结构 |  |
-| M44 CharacterFocalDecay | 102 | 角色焦点衰减：未出场章数驱动档案降级 |  |
-| M45 SettingEvaporator | 103 | 设定蒸发器：resolve_confidence + embedding 合并 |  |
-| M46 BudgetHardCeiling | 104 | 预算硬天花板：fullness_factor 0.7 + ContextEmergency |  |
-| M47 Ch51-Ch100 流式验证 | 105 | 自动收集指标 + 一键报告 + 决策门 DG-1；实跑至 Ch59 后熔断暂停 |  |
-| M48 修复收敛护栏 | 106 | QG 失败不污染 settlement；revision 劣化回滚；rewrite 保结构 |  |
-| M49 角色退场机制 | 109 | CharacterLifecycleAuditor：非核心角色 dormant |  |
-| M50 设定合并 + 伏笔监控 | 110 | SettingDeduplication + ForeshadowingPressure |  |
-| M51 Ch101-Ch150 验证 | 111 | 流式验证 + 决策门 DG-2 |  |
+| M43 TemporalCompressor | 101 | 时间分层压缩：金字塔摘要结构 | ✅ |
+| M44 CharacterFocalDecay | 102 | 角色焦点衰减：未出场章数驱动档案降级 | ✅ |
+| M45 SettingEvaporator | 103 | 设定蒸发器：resolve_confidence + embedding 合并 | ✅ |
+| M46 BudgetHardCeiling | 104 | 预算硬天花板：fullness_factor 0.7 + ContextEmergency | ✅ |
+| M47 Ch51-Ch100 流式验证 | 105 | 自动收集指标 + 一键报告 + 决策门 DG-1；实跑至 Ch59 后熔断暂停 | ⚠️ |
+| M48 统一评分体系 | 106 | 5 维评分 + ScoreAggregator + 工作流适配 | ✅ |
+| M49 修复收敛护栏 | 107 | rewrite 结构完整性；QG 耗尽回滚 best_version + 跳过 settlement | ✅ |
+| M50 150-Blockers 修复 | 108 | 8 项缺陷修复（skip_settlement、literary-scorecard、length 阈值等）| ✅ |
+| M51 角色退场机制 | 109 | CharacterLifecycleAuditor：非核心角色 dormant；活跃角色硬上限 | ✅ |
+| M52 设定合并 + 伏笔监控 | 110 | SettingDeduplication + ForeshadowingPressure | ✅ |
+| M53 Ch51-Ch100 验证重启 | 105b | 基于 Task 106~110 修复重启实跑，触发 DG-1 | 📝 |
+| M54 Ch101-Ch150 验证 | 111 | 流式验证 + 决策门 DG-2 |  |
 
 ---
 
@@ -420,7 +424,7 @@ pytest -k "not integration" -q
 
 ```bash
 pytest tests/ -q
-# Current baseline: 1483 passed, 4 skipped, 2 xfailed, 3 xpassed
+# Current baseline: 1555 passed, 4 skipped, 1 xfailed, 4 xpassed
 
 ruff check src/ tests/ evals/
 # Note: 全量 ruff 仍有历史 lint 存量；当前修复任务需保证改动文件不新增 lint。
@@ -472,9 +476,21 @@ ruff check src/ tests/ evals/
 - **Task 105** : Ch51-Ch100 流式验证 + 决策门 DG-1 基础设施
 - 真实试跑 `run-33229919` 已完成 Ch51-Ch59，因 Ch57-Ch59 连续 3 章质量门失败自动暂停。
 
-### 当前：V5.0 Phase 2.5 — 自动修复收敛
+### 已完成：V5.0 Phase 2.5 — 修复与收敛
 
-- **Task 106** : Repair Convergence Guardrail — 修复 revision/rewrite 劣化、QG 失败污染 settlement、rewrite 破坏 scene/钩子等问题。
+- **Task 106** : Unified Scoring System — 统一 5 维评分体系
+- **Task 107** : Repair Convergence Guardrail — 修复 revision/rewrite 劣化、QG 失败污染 settlement
+- **Task 108** : Fix 150-Blockers and Guardrails — 修复 8 项阻断/收敛缺陷
+
+### 已完成：V5.0 Phase 3 — 活跃信息池控制
+
+- **Task 109** : CharacterLifecycleAuditor — 角色退场机制
+- **Task 110** : SettingDeduplication + ForeshadowingPressure — 设定去重与伏笔压力监控
+
+### 当前：V5.0 Phase 4 准备 — Ch51-Ch100 验证重启
+
+- **Task 105b** : 基于 Task 106~110 修复重启 Ch51-Ch100 真实 LLM 实跑，验证 DG-1 达标率（≥75%）
+- 同步修复 MEMO-001：`VectorStore` 增量加载 + `RAGRetriever` 缓存复用，消除 Ch70+ 重复全量加载性能瓶颈
 
 ---
 

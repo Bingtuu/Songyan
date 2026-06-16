@@ -3,7 +3,7 @@
 > **ID**: MEMO-001
 > **创建**: 2026-06-10
 > **来源**: Code Review Pass 5 (R2)
-> **状态**: 待修复
+> **状态**: 已修复（2026-06-16）
 
 ---
 
@@ -73,3 +73,58 @@ class RAGRetriever:
 1. 在 Ch70 种子项目上运行 pipeline，对比修复前后的 `vector_store.load()` 调用次数
 2. 确认每次写作的 `assemble_context_package` 延迟显著下降
 3. 回归测试：`pytest tests/rag/ -v` 全部通过
+
+
+---
+
+## 修复记录（2026-06-16）
+
+### 修复内容
+
+| 文件 | 修复点 |
+|------|--------|
+| `src/songyan/rag/vector_store.py` | `load_incremental()` 增量加载时同步追加 `_chunks` 与 `_embeddings`，保持索引一致；首次加载等价于 `load()`；无新数据时幂等 |
+| `src/songyan/rag/retriever.py` | `retrieve_for_chapter()` 缓存命中后将 `self.vector_store` 指向缓存实例，确保后续检索真正复用缓存 |
+
+### 关键代码变更
+
+**vector_store.py**
+```python
+# 增量加载新增 chunks 时，同步用 np.vstack 合并对应 embeddings
+self._chunks.extend(new_chunks)
+self._embeddings = np.vstack([self._embeddings, np.vstack(new_embeddings)])
+```
+
+**retriever.py**
+```python
+if cache_key in self._store_cache:
+    cached = self._store_cache[cache_key]
+    await cached.load_incremental()
+    self.vector_store = cached  # ← 关键：后续 search 走缓存实例
+else:
+    await self.vector_store.load()
+    self._store_cache[cache_key] = self.vector_store
+```
+
+### 新增测试
+
+- `tests/rag/test_vector_store.py`
+  - `test_load_incremental_first_call_loads_all`
+  - `test_load_incremental_appends_new_chunks_syncs_embeddings`
+  - `test_load_incremental_idempotent`
+- `tests/rag/test_retriever.py`
+  - `TestCacheReuse::test_retriever_reuses_cached_store`
+
+### 验证结果
+
+```bash
+pytest tests/rag/test_vector_store.py tests/rag/test_retriever.py -v
+# 18 passed
+
+pytest tests/ -q --tb=no
+# 1555 passed, 4 skipped, 1 xfailed, 4 xpassed
+
+ruff check src/songyan/rag/vector_store.py src/songyan/rag/retriever.py \
+  tests/rag/test_vector_store.py tests/rag/test_retriever.py
+# All checks passed!
+```

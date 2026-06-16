@@ -152,6 +152,8 @@ class RAGRetriever:
             if cache_key in self._store_cache:
                 cached = self._store_cache[cache_key]
                 await cached.load_incremental()
+                # 让当前 retriever 的后续检索走缓存实例，避免重复全量加载
+                self.vector_store = cached
             else:
                 await self.vector_store.load()
                 self._store_cache[cache_key] = self.vector_store
