@@ -1,7 +1,7 @@
 # Songyan 项目状态板
 
 > **当前阶段: V5.0 "Context Diet 2.0" — 智能遗忘架构**
-> **更新日期**: 2026-06-14
+> **更新日期**: 2026-06-16
 >
 > V4.x 历史归档见 `archive/v4/INDEX.md`
 
@@ -50,7 +50,7 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 | 状态 | **V5.0 Phase 3 — Task 105b 完成，DG-1 未通过** |
 | V4.0 最终达标率 (Ch2-Ch50) | **81.6%** (Task 099) ✅ |
 | Task 105b 实跑 | **Ch51-Ch100 全部成功，QG 通过率 58.0% (29/50)，DG-1 未通过** |
-| 最近回归测试 | **待更新** |
+| 最近回归测试 | **1555 passed, 4 skipped, 1 xfailed, 4 xpassed** |
 | Python | 3.11.9 |
 | 下一 Task | **Task 111: Ch101-Ch150 流式验证 + 决策门 DG-2** |
 
@@ -120,4 +120,8 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 - `docs/INDEX.md` — 文档索引
 - `AGENTS.md` — 开发代理指令与不可违背规则
 - `tasks/105-ch51-ch100-streaming-validation-DONE.md` — 流式验证基础设施交付记录
+- `tasks/105b-ch51-ch100-validation-restart-DONE.md` — Ch51-Ch100 验证重启交付记录
+- `tasks/108-fix-150-blockers-and-guardrails-DONE.md` — 150 章阻断缺陷修复记录
+- `tasks/109-character-lifecycle-auditor-DONE.md` — 角色退场机制记录
+- `tasks/110-setting-dedup-and-foreshadowing-pressure-DONE.md` — 设定合并与伏笔监控记录
 - `logs/chapter_runs/run-33229919.jsonl` — Ch51-Ch59 实跑指标
