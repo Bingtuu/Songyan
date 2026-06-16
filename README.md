@@ -479,17 +479,16 @@ ruff check src/ tests/ evals/
 ### 已完成：V5.0 Phase 2.5 — 修复与收敛
 
 - **Task 106** : Unified Scoring System — 统一 5 维评分体系
-- **Task 107** : Repair Convergence Guardrail — 修复 revision/rewrite 劣化、QG 失败污染 settlement
-- **Task 108** : Fix 150-Blockers and Guardrails — 修复 8 项阻断/收敛缺陷
+- **Task 107** : Repair Convergence Guardrail + Fix 150-Blockers — 修复 revision/rewrite 劣化、QG 失败污染 settlement 等 8 项阻断/收敛缺陷
 
 ### 已完成：V5.0 Phase 3 — 活跃信息池控制
 
-- **Task 109** : CharacterLifecycleAuditor — 角色退场机制
-- **Task 110** : SettingDeduplication + ForeshadowingPressure — 设定去重与伏笔压力监控
+- **Task 108** : CharacterLifecycleAuditor — 角色退场机制
+- **Task 109** : SettingDeduplication + ForeshadowingPressure — 设定去重与伏笔压力监控
 
 ### 当前：V5.0 Phase 4 准备 — Ch51-Ch100 验证重启
 
-- **Task 105b** : 基于 Task 106~110 修复重启 Ch51-Ch100 真实 LLM 实跑，验证 DG-1 达标率（≥75%）
+- **Task 105b** : 基于 Task 106~109 修复重启 Ch51-Ch100 真实 LLM 实跑，验证 DG-1 达标率（≥75%）
 - 同步修复 MEMO-001：`VectorStore` 增量加载 + `RAGRetriever` 缓存复用，消除 Ch70+ 重复全量加载性能瓶颈
 
 ---

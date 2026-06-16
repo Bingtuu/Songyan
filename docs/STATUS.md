@@ -52,7 +52,7 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 | Task 105b 实跑 | **Ch51-Ch100 全部成功，QG 通过率 58.0% (29/50)，DG-1 未通过** |
 | 最近回归测试 | **1555 passed, 4 skipped, 1 xfailed, 4 xpassed** |
 | Python | 3.11.9 |
-| 下一 Task | **Task 111: Ch101-Ch150 流式验证 + 决策门 DG-2** |
+| 下一 Task | **Task 110: Ch101-Ch150 流式验证 + 决策门 DG-2** |
 
 ---
 
@@ -72,23 +72,22 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 | Task | 内容 | 验收条件 | 状态 |
 |------|------|---------|:----:|
 | 105 | **Ch51-Ch100 流式验证基础设施 + 决策门 DG-1** | JSONL 指标、自动熔断、一键报告 | ✅ |
-| 105b | **Ch51-Ch100 验证重启** | 在 Task 106-110 修复后重新跑 Ch51-Ch100；50/50 成功，QG 通过率 58.0%，DG-1 未通过 | ✅ |
+| 105b | **Ch51-Ch100 验证重启** | 在 Task 106-109 修复后重新跑 Ch51-Ch100；50/50 成功，QG 通过率 58.0%，DG-1 未通过 | ✅ |
 | Task 106 | **Unified Scoring System** — 统一评分体系 | 5 维评分结构 + ScoreAggregator + 工作流适配；全量回归通过 | ✅ |
-| Task 107 | **Repair Convergence Guardrail** — 修订/重写收敛护栏 | rewrite 结构完整性校验；QG 耗尽回滚 best_version + 跳过 settlement；全量回归通过 | ✅ |
-| Task 108 | **Fix 150-Blockers & Guardrails** — 修复 review 发现的 8 项缺陷 | skip_settlement 成功路径；rewrite best 基准更新；literary-scorecard 决策合并；length 阈值校准；废弃版本过滤；max_revision_rounds 透传；1524 passed | ✅ |
+| Task 107 | **Repair Convergence Guardrail + Fix 150-Blockers** — 修订/重写收敛护栏与 150 章阻断缺陷修复 | rewrite 结构完整性校验；QG 耗尽回滚 best_version + 跳过 settlement；skip_settlement 成功路径；rewrite best 基准更新；literary-scorecard 决策合并；length 阈值校准；废弃版本过滤；max_revision_rounds 透传；1524 passed | ✅ |
 
 ### Phase 3 — 活跃信息池控制（Week 5-6）
 
 | Task | 内容 | 验收条件 | 状态 |
 |------|------|---------|:----:|
-| 109 | **角色退场机制** — CharacterLifecycleAuditor | 非核心角色 30 章未出场 → dormant；活跃角色 ≤ 10 | ✅ |
-| 110 | **设定合并 + 伏笔监控** — SettingDeduplication + ForeshadowingPressure | 相似设定合并率 ≥ 90%；未闭合伏笔比例 ≤ 60% | ✅ |
+| 108 | **角色退场机制** — CharacterLifecycleAuditor | 非核心角色 30 章未出场 → dormant；活跃角色 ≤ 10 | ✅ |
+| 109 | **设定合并 + 伏笔监控** — SettingDeduplication + ForeshadowingPressure | 相似设定合并率 ≥ 90%；未闭合伏笔比例 ≤ 60% | ✅ |
 
 ### Phase 4 — Ch101-Ch150 验证（Week 7-8）
 
 | Task | 内容 | 验收条件 | 状态 |
 |------|------|---------|:----:|
-| 111 | **Ch101-Ch150 流式验证 + 决策门 DG-2** | 达标率 ≥ 70%；budget_used ≤ 1.0 | 📝 |
+| 110 | **Ch101-Ch150 流式验证 + 决策门 DG-2** | 达标率 ≥ 70%；budget_used ≤ 1.0 | 📝 |
 
 ---
 
@@ -121,7 +120,7 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 - `AGENTS.md` — 开发代理指令与不可违背规则
 - `tasks/105-ch51-ch100-streaming-validation-DONE.md` — 流式验证基础设施交付记录
 - `tasks/105b-ch51-ch100-validation-restart-DONE.md` — Ch51-Ch100 验证重启交付记录
-- `tasks/108-fix-150-blockers-and-guardrails-DONE.md` — 150 章阻断缺陷修复记录
-- `tasks/109-character-lifecycle-auditor-DONE.md` — 角色退场机制记录
-- `tasks/110-setting-dedup-and-foreshadowing-pressure-DONE.md` — 设定合并与伏笔监控记录
+- `tasks/107-repair-convergence-guardrail-DONE.md` — 收敛护栏与 150 章阻断缺陷修复记录
+- `tasks/108-character-lifecycle-auditor-DONE.md` — 角色退场机制记录
+- `tasks/109-setting-dedup-and-foreshadowing-pressure-DONE.md` — 设定合并与伏笔监控记录
 - `logs/chapter_runs/run-33229919.jsonl` — Ch51-Ch59 实跑指标

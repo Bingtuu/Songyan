@@ -1,8 +1,8 @@
-# Task 108-DONE: Fix 150-Blockers and Guardrails
+# Task 107-DONE: Repair Convergence Guardrail + Fix 150-Blockers
 
 ## 任务摘要
 
-系统性 review 发现 8 项缺陷，其中 2 项 P0 级问题会直接阻断 150 章全自动验证。本次 Task 对这 8 项缺陷进行了整体修复。
+本 Task 合并了原计划的 Repair Convergence Guardrail（修订/重写收敛护栏）与 150-Blockers 修复。系统性 review 发现 8 项缺陷，其中 2 项 P0 级问题会直接阻断 150 章全自动验证。本次对这 8 项缺陷进行了整体修复。
 
 ## 修复清单
 
@@ -92,7 +92,7 @@ ruff check src/songyan/workflows/_nodes.py src/songyan/workflows/phase1_graph.py
 
 ## 下一 Task
 
-**Task 109: CharacterLifecycleAuditor**（角色退场机制）
+**Task 108: CharacterLifecycleAuditor**（角色退场机制）
 - 非核心角色 30 章未出场 → dormant
 - 活跃角色硬上限 ≤ 10
 - 支撑 150 章角色池控制

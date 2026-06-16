@@ -1,4 +1,4 @@
-# Task 109: CharacterLifecycleAuditor — 角色退场机制
+# Task 108: CharacterLifecycleAuditor — 角色退场机制
 
 > **状态**: 完成
 > **完成日期**: 2026-06-14
@@ -70,9 +70,9 @@
 |------|----------|------|
 | `src/songyan/db/context_repo.py` | 修改+新增 | 窗口默认值调整；antagonist 保护；动态 cap；`archive_overflow`；`archive_stale_functional` |
 | `src/songyan/db/lifecycle_cleaners.py` | 修改 | `CharacterStateCleaner` 增加 `archive_stale_functional` 与 `archive_overflow` 调用 |
-| `tests/db/test_character_state_lifecycle.py` | 新增测试 | 9 个 Task 109 专项测试 |
+| `tests/db/test_character_state_lifecycle.py` | 新增测试 | 9 个 Task 108 专项测试 |
 | `tests/test_087_lifecycle_integration.py` | 修改 | 适配新默认窗口的断言 |
-| `docs/STATUS.md` | 修改 | 标记 Task 109 完成，更新下一 Task |
+| `docs/STATUS.md` | 修改 | 标记 Task 108 完成，更新下一 Task |
 
 ---
 
@@ -103,13 +103,13 @@ pytest tests/ -q
 # 结果: 1533 passed, 4 skipped, 2 xfailed, 3 xpassed, 0 failed
 ```
 
-**对比**: Task 108 完成时为 1524 passed，本次新增 9 个测试全部通过，无新增失败。
+**对比**: Task 107 完成时为 1524 passed，本次新增 9 个测试全部通过，无新增失败。
 
 ### ruff 检查
 
 ```bash
 ruff check src/songyan/db/context_repo.py src/songyan/db/lifecycle_cleaners.py tests/db/test_character_state_lifecycle.py tests/test_087_lifecycle_integration.py
-# 结果: 8 errors（全部 pre-existing，Task 109 修改未引入新错误）
+# 结果: 8 errors（全部 pre-existing，Task 108 修改未引入新错误）
 # - aiosqlite 未导入导致的 F821（原文件已有）
 # - lifecycle_status 行过长 E501（原文件已有）
 ```

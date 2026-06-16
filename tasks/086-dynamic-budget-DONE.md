@@ -85,7 +85,7 @@ def _dynamic_budget(chapter_number: int, base_budget: int = DEFAULT_BASE_BUDGET)
 
 1. **Mode 规则未分组**：Task 086 规格中只要求 Genre 规则分组。CreativeModeProfile 的 `writer_rules` 字段不存在（Mode 规则通过 `revision_policy`、`tolerance` 等结构化字段表达），Mode 分组加载如需实现需后续 Task 定义。
 
-2. **`writer_rules_by_type` 未在现有 genre JSON 中填充**：当前 `genres/*.json` 未添加 `writer_rules_by_type` 字段。V4.0 验证阶段（Task 109+）需要为验证用的 genre 配置添加分组规则。
+2. **`writer_rules_by_type` 未在现有 genre JSON 中填充**：当前 `genres/*.json` 未添加 `writer_rules_by_type` 字段。V4.0 验证阶段（Task 108+）需要为验证用的 genre 配置添加分组规则。
 
 3. **动态预算的硬断言阈值不变**：`HARD_ENFORCE_THRESHOLD = 1.3` 仍为固定比例。预算增大后，硬断言的绝对阈值也同步增大（Ch100: 16000*1.3=20800）。
 

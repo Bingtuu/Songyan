@@ -1,4 +1,4 @@
-# Task 110: SettingDeduplication + ForeshadowingPressure — DONE
+# Task 109: SettingDeduplication + ForeshadowingPressure — DONE
 
 ## 做了什么
 
@@ -38,7 +38,7 @@
 | `src/songyan/db/settlement_repo.py` | 修改+新增 | `ForeshadowingRepository` 新增 `mark_overdue`、`get_unresolved_ratio`；新增 `SettingDeduplicationService` |
 | `src/songyan/db/lifecycle_cleaners.py` | 修改 | 新增 `SettingDeduplicationCleaner`；注册到 `get_default_scheduler` |
 | `src/songyan/agents/settlement_extractor/_apply.py` | 修改 | settlement 后集成 foreshadowing pressure 计算 |
-| `tests/db/test_setting_deduplication.py` | 新增 | 11 个 Task 110 专项测试 |
+| `tests/db/test_setting_deduplication.py` | 新增 | 11 个 Task 109 专项测试 |
 | `tests/test_settlement_extractor.py` | 新增 | 3 个 foreshadowing pressure 测试 |
 
 ## 测试数据
@@ -73,7 +73,7 @@ pytest tests/ -q
 # 结果: 1547 passed, 4 skipped, 2 xfailed, 3 xpassed, 0 failed
 ```
 
-**对比**: Task 109 完成时为 1533 passed，本次新增 14 个测试全部通过，无新增失败。
+**对比**: Task 108 完成时为 1533 passed，本次新增 14 个测试全部通过，无新增失败。
 
 ### 代码检查
 
@@ -86,10 +86,10 @@ ruff check src/ tests/
 ## 已知限制
 
 1. **`difflib.SequenceMatcher` 对中文相似度偏保守**：相同设定用不同措辞描述时，相似度可能低于 0.85 阈值。当前 threshold=0.85 是生产默认值，若实际去重率不足可考虑引入更先进的文本相似度算法（如 sentence-transformers）。
-2. **`setting_snapshots.created_at` 无 `source_version_id`**：与 Task 109 相同，`setting_snapshots` 无法精确关联到章节，去重只基于 `setting_tracking` 的时间戳。
+2. **`setting_snapshots.created_at` 无 `source_version_id`**：与 Task 108 相同，`setting_snapshots` 无法精确关联到章节，去重只基于 `setting_tracking` 的时间戳。
 3. **去重 Cleaner 每 10 章触发一次**：短窗口内（<10 章）的重复设定不会立即被合并，但通常语义漂移需要多章积累才会出现。
 4. **`foreshadowing_pressure` 未直接注入 CreativeBrief**：当前仅写入 `StateSettlement`，后续若 GoalPlanner/CreativeDirector 需要读取，需额外透传逻辑。
 
 ## 下一 Task
 
-按 STATUS.md 规划，进入 **Task 111: Ch101-Ch150 流式验证 + 决策门 DG-2**（Phase 4 规模化验证）。
+按 STATUS.md 规划，进入 **Task 110: Ch101-Ch150 流式验证 + 决策门 DG-2**（Phase 4 规模化验证）。
