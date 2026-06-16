@@ -52,7 +52,7 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 | Task 105b 实跑 | **Ch51-Ch100 全部成功，QG 通过率 58.0% (29/50)，DG-1 未通过** |
 | 最近回归测试 | **1555 passed, 4 skipped, 1 xfailed, 4 xpassed** |
 | Python | 3.11.9 |
-| 下一 Task | **Task 110: Ch101-Ch150 流式验证 + 决策门 DG-2** |
+| 下一 Task | **Task 110a: CharacterState 分层保真压缩** |
 
 ---
 
@@ -83,11 +83,15 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 | 108 | **角色退场机制** — CharacterLifecycleAuditor | 非核心角色 30 章未出场 → dormant；活跃角色 ≤ 10 | ✅ |
 | 109 | **设定合并 + 伏笔监控** — SettingDeduplication + ForeshadowingPressure | 相似设定合并率 ≥ 90%；未闭合伏笔比例 ≤ 60% | ✅ |
 
-### Phase 4 — Ch101-Ch150 验证（Week 7-8）
+### Phase 4 — 150 章规模化验证（Week 7-10）
 
 | Task | 内容 | 验收条件 | 状态 |
 |------|------|---------|:----:|
-| 110 | **Ch101-Ch150 流式验证 + 决策门 DG-2** | 达标率 ≥ 70%；budget_used ≤ 1.0 | 📝 |
+| 110a | **生产端保真压缩** — CharacterState 分层压缩 + 关键事实保留 | Ch80-Ch100 emergency 下降 ≥ 30%；关键事实不丢失 | 📝 |
+| 110b | **结构与质量控制** — Setting key 规范化、Summary 模板化、HardConstraint 长度审计 | setting key 规范率 100%；summary 长度受控；hard_constraints 不膨胀 | 📝 |
+| 110c | **加载与裁剪优化** — 智能过滤 + 分级 ContextEmergency + 可恢复性 | Ch80-Ch100 emergency 再降 ≥ 30%；保留 source_version_id | 📝 |
+| 110d | **Ch80-Ch100 快速验证与调优** — 验证 110a-110c 效果并调参 | Ch80-Ch100 达标率 ≥ 80%；无连续 3 章失败 | 📝 |
+| 111 | **Ch101-Ch150 流式验证 + 决策门 DG-2** | 达标率 ≥ 70%；budget_used ≤ 1.0；完成 150 章一次性生成 | 📝 |
 
 ---
 
@@ -123,4 +127,8 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 - `tasks/107-repair-convergence-guardrail-DONE.md` — 收敛护栏与 150 章阻断缺陷修复记录
 - `tasks/108-character-lifecycle-auditor-DONE.md` — 角色退场机制记录
 - `tasks/109-setting-dedup-and-foreshadowing-pressure-DONE.md` — 设定合并与伏笔监控记录
+- `tasks/110a-character-state-tiered-compression.md` — CharacterState 分层保真压缩规划
+- `tasks/110b-setting-summary-quality-control.md` — Setting/Summary/HardConstraint 质量控制规划
+- `tasks/110c-loading-and-pruning-strategy.md` — 加载端智能过滤与分级裁剪规划
+- `tasks/110d-ch80-ch100-validation-and-tuning.md` — Ch80-Ch100 快速验证与调优规划
 - `logs/chapter_runs/run-33229919.jsonl` — Ch51-Ch59 实跑指标
