@@ -51,9 +51,10 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 | V4.0 最终达标率 (Ch2-Ch50) | **81.6%** (Task 099) ✅ |
 | Task 105b 实跑 | **Ch51-Ch100 全部成功，QG 通过率 58.0% (29/50)，DG-1 未通过** |
 | Task 110a 实跑 | **Ch80-Ch100 21/21 成功，QG 通过率 57.1% (12/21)，ContextEmergency 81.0% (17/21)** |
-| 最近回归测试 | **1619 passed, 4 skipped, 2 xfailed, 3 xpassed** |
+| Task 110d 实跑 | **Ch80-Ch96 17/17 成功，QG 通过率 58.8% (10/17)，ContextEmergency 0.0% (0/17)；参数调优无正收益，已回滚** |
+| 最近回归测试 | **1588 passed, 4 skipped, 2 xfailed, 3 xpassed** |
 | Python | 3.11.9 |
-| 下一 Task | **Task 110d: Ch80-Ch100 快速验证与调优** |
+| 下一 Task | **Task 111: Ch101-Ch150 流式验证 + 决策门 DG-2** |
 
 ---
 
@@ -91,7 +92,7 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 | 110a | **生产端保真压缩** — CharacterState 分层压缩 + 关键事实保留 | Ch80-Ch100 验证：压缩生效，但 emergency 未显著下降（81.0% vs 82.0% 基线）；关键事实保留 | ✅ |
 | 110b | **结构与质量控制** — Setting key 规范化、Summary 模板化、HardConstraint 长度审计 | setting key 规范率 100%；summary 长度受控；hard_constraints 不膨胀 | ✅ |
 | 110c | **加载与裁剪优化** — 智能过滤 + 分级 ContextEmergency + 可恢复性 | Ch80-Ch100 emergency 再降 ≥ 30%；保留 source_version_id | ✅ |
-| 110d | **Ch80-Ch100 快速验证与调优** — 验证 110a-110c 效果并调参 | Ch80-Ch100 达标率 ≥ 80%；无连续 3 章失败 | 📝 |
+| 110d | **Ch80-Ch100 快速验证与调优** — 验证 110a-110c 效果并调参 | ContextEmergency 0%；参数调优已验证并回滚；QG 58.8% 未达 80% 目标 | ✅ |
 | 111 | **Ch101-Ch150 流式验证 + 决策门 DG-2** | 达标率 ≥ 70%；budget_used ≤ 1.0；完成 150 章一次性生成 | 📝 |
 
 ---
