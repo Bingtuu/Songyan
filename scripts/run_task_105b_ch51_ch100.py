@@ -103,13 +103,25 @@ async def _find_resume_point(project_id: str, start: int, end: int) -> int:
     return start
 
 
-async def _generate_report(run_id: str, project_id: str, start: int, end: int) -> Path:
-    """读取本次运行的 JSONL 日志并生成 markdown 报告."""
+async def _generate_report(
+    run_ids: list[str],
+    project_id: str,
+    start: int,
+    end: int,
+    primary_run_id: str | None = None,
+) -> Path:
+    """读取本次运行的 JSONL 日志并生成 markdown 报告.
+
+    由于逐章运行会为每章创建独立的 run_id，需要汇总所有 run_id 的日志。
+    """
     from songyan.models.run_log import ChapterRunLog
 
-    log_path = _LOGS_DIR / f"{run_id}.jsonl"
     logs: list[ChapterRunLog] = []
-    if log_path.exists():
+    seen_chapters: set[int] = set()
+    for run_id in run_ids:
+        log_path = _LOGS_DIR / f"{run_id}.jsonl"
+        if not log_path.exists():
+            continue
         with log_path.open(encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
@@ -117,8 +129,13 @@ async def _generate_report(run_id: str, project_id: str, start: int, end: int) -
                     continue
                 try:
                     data = ChapterRunLog.model_validate_json(line)
-                    if data.project_id == project_id and start <= data.chapter_number <= end:
+                    if (
+                        data.project_id == project_id
+                        and start <= data.chapter_number <= end
+                        and data.chapter_number not in seen_chapters
+                    ):
                         logs.append(data)
+                        seen_chapters.add(data.chapter_number)
                 except Exception:
                     continue
 
@@ -126,7 +143,8 @@ async def _generate_report(run_id: str, project_id: str, start: int, end: int) -
     report_md = generate_report(logs, chapter_range=(start, end))
 
     _REPORTS_DIR.mkdir(parents=True, exist_ok=True)
-    report_path = _REPORTS_DIR / f"report-{run_id}.md"
+    report_name = f"report-{primary_run_id or run_ids[-1] if run_ids else 'unknown'}.md"
+    report_path = _REPORTS_DIR / report_name
     report_path.write_text(report_md, encoding="utf-8")
     return report_path
 
@@ -200,6 +218,7 @@ async def main() -> int:
     await reset_checkpointer()
 
     run_id: str | None = None
+    run_ids: list[str] = []
     completed: list[int] = []
     failed: list[int] = []
     consecutive_failures = 0
@@ -232,7 +251,9 @@ async def main() -> int:
             consecutive_failures += 1
         else:
             result = outcome["result"]
-            run_id = result.run_id if result else run_id
+            if result:
+                run_id = result.run_id
+                run_ids.append(run_id)
             if result and chapter_number not in result.chapters_failed:
                 completed.append(chapter_number)
                 consecutive_failures = 0
@@ -255,8 +276,11 @@ async def main() -> int:
     print(f"   失败: {failed}")
     print(f"   总耗时: {total_elapsed / 60:.1f} 分钟")
 
-    if run_id:
-        report_path = await _generate_report(run_id, project_id, original_start, end)
+    if run_ids:
+        primary_run_id = run_ids[-1]
+        report_path = await _generate_report(
+            run_ids, project_id, original_start, end, primary_run_id=primary_run_id
+        )
         print(f"   报告: {report_path}")
     else:
         print("   没有生成 run_id，无法生成报告")
