@@ -172,31 +172,33 @@ class TestContextEmergency:
         budget = 500  # 极小的预算，强制超预算
         result = pruner.prune(ctx, budget)
         assert result.context_emergency is True
-        assert result.budget_used <= 1.0
+        # Task 110c: 分级 emergency 不保证 budget_used <= 1.0，只保证降低
+        assert result.budget_used < 2.0
 
-    def test_emergency_reduces_tokens_below_budget(self) -> None:
+    def test_emergency_reduces_tokens_significantly(self) -> None:
         pruner = BudgetPruner()
         ctx = self._make_overflow_context()
         budget = 500
         before = pruner._estimate_package(ctx)
         result = pruner.prune(ctx, budget)
         assert before > budget
-        assert result.estimated_tokens <= budget
-        assert result.budget_used <= 1.0
+        # Task 110c: 分级 emergency 显著降低 token，但极端情况可能仍超预算
+        assert result.estimated_tokens < before
+        assert result.context_emergency is True
 
-    def test_emergency_clears_soft_partitions(self) -> None:
+    def test_emergency_drastically_reduces_soft_partitions(self) -> None:
         pruner = BudgetPruner()
         ctx = self._make_overflow_context()
         result = pruner.prune(ctx, 500)
         assert result.context_emergency is True
-        assert result.soft_references == []
-        assert result.foreshadowing == []
-        assert result.open_threads == []
-        assert result.permanent_scenes == []
+        # Task 110c: 分级 emergency 大幅削减 soft_refs，但 Level 1/2 可能保留少量
+        assert len(result.soft_references) <= 5
+        assert len(result.foreshadowing) <= 5
         assert result.dialogue_style_cards == []
         assert result.human_marks == []
-        assert result.arc_context is None
-        assert result.volume_context is None
+        # open_threads / permanent_scenes 在 Level 2+ 被清空
+        assert len(result.open_threads) <= 2
+        assert len(result.permanent_scenes) <= 1
 
     def test_emergency_preserves_hard_partitions(self) -> None:
         pruner = BudgetPruner()

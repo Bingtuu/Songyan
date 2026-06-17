@@ -228,3 +228,5 @@ class ContextPackage(BaseModel):
     context_pressure: dict = Field(default_factory=dict)
     # Task 104: 是否触发了 ContextEmergency（预算硬天花板）
     context_emergency: bool = False
+    # Task 110c: ContextEmergency 降级级别（1/2/3）
+    context_emergency_level: int = 0

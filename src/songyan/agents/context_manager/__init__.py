@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import random
+from typing import Any
 
 import structlog
 
@@ -17,11 +18,13 @@ from songyan.models import (
     CreativeModeProfile,
     ForeshadowingItem,
     GenreProfile,
+    HumanMark,
     NewSetting,
     OpenThread,
     PermanentScene,
     ProjectSetting,
     RetrievedChunk,
+    SoftReference,
     StyleSample,
     VolumeSummary,
 )
@@ -35,8 +38,8 @@ from ._assemblers import (
     _build_rag_soft_references,
     _build_recent_plot,
     _build_soft_references,
-    _calculate_dynamic_relevance,
     _dynamic_budget,
+    _extract_keywords,
     _is_setting_critical,
 )
 
@@ -64,6 +67,24 @@ MAX_SETTING_INPUT: int = 10       # is_critical 不计入上限
 
 # 077b: BudgetPruner 硬断言阈值
 HARD_ENFORCE_THRESHOLD: float = 1.3  # 超过预算 130% 时触发硬断言核裁
+
+
+# ---------------------------------------------------------------------------
+# Task 110c: 按章节阶段动态调整硬上限
+# ---------------------------------------------------------------------------
+def _dynamic_max_for_chapter(chapter_number: int) -> dict[str, int]:
+    """Ch80+ 收紧各分区硬上限，降低初始 token 负担."""
+    if chapter_number <= 80:
+        return {
+            "max_setting_input": MAX_SETTING_INPUT,
+            "max_foreshadowing": MAX_FORESHADOWING,
+            "max_character_states": MAX_CHARACTER_STATES,
+        }
+    return {
+        "max_setting_input": 6,
+        "max_foreshadowing": 5,
+        "max_character_states": 3,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -159,6 +180,9 @@ class BudgetPruner:
         ctx = self._prune_foreshadowing(ctx, budget_tokens, max_items=dynamic_max_fore)
         ctx = self._prune_character_states(ctx, budget_tokens, max_states=dynamic_max_char)
 
+        # Task 110c: 分区预算制 — 各分区先内部压缩到预算比例
+        ctx = self._apply_partition_budgets(ctx, budget_tokens)
+
         current = self._estimate_package(ctx)
         if current <= budget_tokens:
             ctx.estimated_tokens = current
@@ -247,6 +271,66 @@ class BudgetPruner:
             budget_enforced=ctx._budget_enforced,
             context_emergency=ctx.context_emergency,
         )
+        return ctx
+
+    def _apply_partition_budgets(
+        self, ctx: ContextPackage, budget: int
+    ) -> ContextPackage:
+        """Task 110c: 分区预算制 — 各分区先内部压缩到预算比例.
+
+        分区比例：
+        - character_states: 30%
+        - recent_plot: 20%
+        - soft_references: 15%
+        - foreshadowing: 10%
+        """
+        if budget <= 0:
+            return ctx
+
+        partitions: dict[str, tuple[Any, float]] = {
+            "character_states": (ctx.character_states, 0.30),
+            "recent_plot": (ctx.recent_plot, 0.20),
+            "soft_references": (ctx.soft_references, 0.15),
+            "foreshadowing": (ctx.foreshadowing, 0.10),
+        }
+
+        for name, (data, ratio) in partitions.items():
+            if not data:
+                continue
+            max_tokens = int(budget * ratio)
+            current = self.estimator.estimate_model(data)
+            if current > max_tokens:
+                logger.info(
+                    "context_manager.partition_budget_exceeded",
+                    partition=name,
+                    current_tokens=current,
+                    max_tokens=max_tokens,
+                )
+                if name == "character_states":
+                    keep = max(1, int(len(ctx.character_states) * 0.7))
+                    ctx.character_states = sorted(
+                        ctx.character_states,
+                        key=lambda s: s.importance_score,
+                        reverse=True,
+                    )[:keep]
+                elif name == "recent_plot":
+                    if ctx.recent_plot and ctx.recent_plot.summaries:
+                        keep = max(1, len(ctx.recent_plot.summaries) // 2)
+                        ctx.recent_plot.summaries = ctx.recent_plot.summaries[-keep:]
+                elif name == "soft_references":
+                    keep = max(1, int(len(ctx.soft_references) * 0.6))
+                    sorted_refs = sorted(
+                        ctx.soft_references,
+                        key=lambda r: r.relevance_score,
+                        reverse=True,
+                    )
+                    ctx.soft_references = sorted_refs[:keep]
+                elif name == "foreshadowing":
+                    high = [f for f in ctx.foreshadowing if f.status in ("due", "overdue")]
+                    rest = [f for f in ctx.foreshadowing if f.status not in ("due", "overdue")]
+                    keep_rest = max(0, int(len(rest) * 0.5))
+                    ctx.foreshadowing = high + rest[:keep_rest]
+
         return ctx
 
     def _estimate_package(self, ctx: ContextPackage) -> int:
@@ -614,41 +698,106 @@ class BudgetPruner:
         return ctx
 
     def _context_emergency(self, ctx: ContextPackage, budget: int) -> ContextPackage:
-        """ContextEmergency — 预算硬天花板最后防线.
+        """ContextEmergency — 分级降级策略（Task 110c）.
 
-        Task 104: 当 budget_used > 1.0 时触发，强制降级到最小上下文。
-        保留：genre_rules, mode_rules, chapter_goal, creative_brief,
-              hard_constraints, 主角档案（1个）, 最近1章摘要。
-        丢弃：其余所有软参考、角色、伏笔、场景、线索、摘要。
+        根据 budget_used 决定降级级别，避免直接清空所有信息：
+        - Level 1 (1.0–1.2): 保留主角+top2 配角；soft_refs top5；
+          foreshadowing due/overdue；arc/volume 截断 50%
+        - Level 2 (1.2–1.5): 只保留主角；soft_refs top3；
+          foreshadowing overdue；清空 open_threads/permanent_scenes
+        - Level 3 (>1.5): 当前核裁模式（最严格）
         """
         before = self._estimate_package(ctx)
+        budget_used = before / budget if budget > 0 else 0.0
 
-        # 1. 清空所有低优先级分区
-        ctx.soft_references = []
-        ctx.foreshadowing = []
-        ctx.open_threads = []
-        ctx.permanent_scenes = []
+        # 确定降级级别
+        if budget_used > 1.5:
+            level = 3
+        elif budget_used > 1.2:
+            level = 2
+        else:
+            level = 1
+
+        # Level 1/2/3 共同：清空低优先级分区
         ctx.dialogue_style_cards = []
         ctx.human_marks = []
-        ctx.arc_context = None
-        ctx.volume_context = None
 
-        # 2. 角色只保留 importance_score 最高的 1 个（主角）
-        if ctx.character_states:
-            top_char = max(ctx.character_states, key=lambda s: s.importance_score)
-            ctx.character_states = [top_char]
+        if level >= 1:
+            # Level 1: arc/volume 截断 50%
+            if ctx.arc_context is not None and ctx.arc_context.arc_summary:
+                arc = ctx.arc_context.model_copy(deep=True)
+                mid = len(arc.arc_summary) // 2
+                arc.arc_summary = arc.arc_summary[:mid] + "..."
+                ctx.arc_context = arc
+            if ctx.volume_context is not None and ctx.volume_context.volume_summary:
+                vol = ctx.volume_context.model_copy(deep=True)
+                mid = len(vol.volume_summary) // 2
+                vol.volume_summary = vol.volume_summary[:mid] + "..."
+                ctx.volume_context = vol
+            # soft_refs 保留 top 5（is_critical 优先）
+            if ctx.soft_references:
+                critical_refs = [r for r in ctx.soft_references if r.is_critical]
+                other_refs = sorted(
+                    [r for r in ctx.soft_references if not r.is_critical],
+                    key=lambda r: r.relevance_score,
+                    reverse=True,
+                )
+                ctx.soft_references = critical_refs + other_refs[:5]
+            # foreshadowing 保留 due/overdue
+            if ctx.foreshadowing:
+                ctx.foreshadowing = [f for f in ctx.foreshadowing if f.status in ("due", "overdue")]
+            # 角色保留主角 + top2 配角
+            if ctx.character_states:
+                sorted_chars = sorted(
+                    ctx.character_states, key=lambda s: s.importance_score, reverse=True
+                )
+                ctx.character_states = sorted_chars[:3]
 
-        # 3. 最近剧情只保留最后 1 章摘要
-        if ctx.recent_plot and ctx.recent_plot.summaries:
-            rp = ctx.recent_plot.model_copy(deep=True)
-            rp.summaries = rp.summaries[-1:]
-            ctx.recent_plot = rp
+        if level >= 2:
+            # Level 2: 进一步收紧
+            # soft_refs 只保留 top 3
+            if ctx.soft_references:
+                critical_refs = [r for r in ctx.soft_references if r.is_critical]
+                other_refs = sorted(
+                    [r for r in ctx.soft_references if not r.is_critical],
+                    key=lambda r: r.relevance_score,
+                    reverse=True,
+                )
+                ctx.soft_references = critical_refs + other_refs[:3]
+            # foreshadowing 只保留 overdue
+            if ctx.foreshadowing:
+                ctx.foreshadowing = [f for f in ctx.foreshadowing if f.status == "overdue"]
+            # 清空 open_threads / permanent_scenes
+            ctx.open_threads = []
+            ctx.permanent_scenes = []
+            # 角色只保留主角
+            if ctx.character_states:
+                top_char = max(ctx.character_states, key=lambda s: s.importance_score)
+                ctx.character_states = [top_char]
+
+        if level >= 3:
+            # Level 3: 核裁模式（原 Task 104 行为）
+            ctx.soft_references = []
+            ctx.foreshadowing = []
+            ctx.open_threads = []
+            ctx.permanent_scenes = []
+            ctx.arc_context = None
+            ctx.volume_context = None
+            if ctx.character_states:
+                top_char = max(ctx.character_states, key=lambda s: s.importance_score)
+                ctx.character_states = [top_char]
+            if ctx.recent_plot and ctx.recent_plot.summaries:
+                rp = ctx.recent_plot.model_copy(deep=True)
+                rp.summaries = rp.summaries[-1:]
+                ctx.recent_plot = rp
 
         ctx.context_emergency = True
+        ctx.context_emergency_level = level
         after = self._estimate_package(ctx)
 
         logger.warning(
             "context_manager.context_emergency_triggered",
+            level=level,
             before_tokens=before,
             after_tokens=after,
             budget=budget,
@@ -812,15 +961,16 @@ def assemble_context_package(
     )
     recent_chapters = [s.chapter_number for s in recent_summaries]
 
-    # 077a: setting_snapshots 去重 + Top-N 入站过滤
+    # Task 110c: 按章节阶段获取动态硬上限
+    _dyn_caps = _dynamic_max_for_chapter(chapter_goal.chapter_number)
+
+    # 077a + Task 110c: setting_snapshots 去重 + Top-N 入站过滤（动态上限）
     if setting_snapshots:
-        # 按 setting_key 去重（保留最后出现的版本）
         seen: dict[str, NewSetting] = {}
         for s in setting_snapshots:
             key = s.setting_key or s.setting_name
             seen[key] = s
         deduped = list(seen.values())
-        # 分离 critical 和 non-critical
         critical: list[NewSetting] = []
         non_critical: list[NewSetting] = []
         for s in deduped:
@@ -828,16 +978,16 @@ def assemble_context_package(
                 critical.append(s)
             else:
                 non_critical.append(s)
-        # 保留所有 critical + Top-N non-critical（取最新的 N 条）
-        if len(non_critical) > MAX_SETTING_INPUT:
-            non_critical = non_critical[-MAX_SETTING_INPUT:]
-        # 合并并按 ordinal asc 排序，使 _build_soft_references 的 i/n 计算正确
+        _max_setting_input = _dyn_caps["max_setting_input"]
+        if len(non_critical) > _max_setting_input:
+            non_critical = non_critical[-_max_setting_input:]
         limited = sorted(critical + non_critical, key=lambda s: s.chapter_number)
         logger.info(
             "context_manager.setting_input_filter",
             before=len(setting_snapshots),
             after=len(limited),
             critical=len(critical),
+            max_setting_input=_max_setting_input,
         )
         setting_snapshots = limited
 
@@ -847,6 +997,27 @@ def assemble_context_package(
         recent_chapters=recent_chapters,
         chapter_goal=chapter_goal,
     )
+    # Task 110c: soft_references 按 chapter_goal 关键词过滤
+    if soft_refs and chapter_goal.target_events:
+        keywords = _extract_keywords(chapter_goal)
+        if keywords:
+            filtered_refs: list[SoftReference] = []
+            for ref in soft_refs:
+                if ref.is_critical:
+                    filtered_refs.append(ref)
+                    continue
+                # 检查 content 中是否包含任一关键词
+                content_lower = ref.content.lower()
+                if any(kw.lower() in content_lower for kw in keywords):
+                    filtered_refs.append(ref)
+            logger.info(
+                "context_manager.soft_ref_keyword_filter",
+                before=len(soft_refs),
+                after=len(filtered_refs),
+                keywords=keywords,
+            )
+            soft_refs = filtered_refs
+
     # Phase 8b: 合并 RAG 检索结果到 soft_references
     if rag_chunks:
         rag_refs = _build_rag_soft_references(rag_chunks)
@@ -856,7 +1027,7 @@ def assemble_context_package(
     genre_rules = _build_genre_rules(genre_profile, project, chapter_goal)
     mode_rules = _build_mode_rules(mode_profile)
 
-    # Task 098: 按紧迫性排序伏笔
+    # Task 098 + Task 110c: 按紧迫性排序伏笔，并过滤非相关项
     _foreshadowings = list(active_foreshadowings)
     if foreshadowing_due:
         _foreshadowings = _rank_foreshadowings(
@@ -864,6 +1035,13 @@ def assemble_context_package(
             foreshadowing_due=foreshadowing_due,
             current_chapter=chapter_goal.chapter_number,
         )
+    # Task 110c: 只保留 due/overdue + 最近 planted 的 N 个
+    _max_fs = _dyn_caps["max_foreshadowing"]
+    high_priority_fs = [f for f in _foreshadowings if f.status in ("due", "overdue")]
+    rest_fs = [f for f in _foreshadowings if f.status not in ("due", "overdue")]
+    # 保留所有 due/overdue + 最近 planted 的补充到上限
+    keep_rest = min(max(0, _max_fs - len(high_priority_fs)), len(rest_fs))
+    _foreshadowings = high_priority_fs + rest_fs[:keep_rest]
 
     ctx = ContextPackage(
         chapter_goal=chapter_goal,
@@ -895,11 +1073,11 @@ def assemble_context_package(
         engine = StyleMimicryEngine()
         ctx = engine.inject_multiple(style_samples, ctx)
 
-    # Task 100c: 计算动态硬上限
-    _dyn_max_char = _dynamic_max_character_states(len(characters))
+    # Task 100c + Task 110c: 计算动态硬上限（章节阶段优先）
+    _dyn_max_char = _dyn_caps["max_character_states"]
     _dyn_max_soft = _dynamic_max_soft_refs(len(setting_snapshots))
 
-    # Task 098: Token 预算裁剪（集成 narrative_fullness + focal_distance）
+    # Task 098 + Task 110c: Token 预算裁剪（集成 narrative_fullness + focal_distance）
     pruner = BudgetPruner()
     ctx = pruner.prune(
         ctx,

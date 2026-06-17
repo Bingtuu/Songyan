@@ -405,9 +405,13 @@ def _build_character_snapshots(
         elif focus_level == "compressed":
             profile_level = "compact"
 
-        # 080 arc 规则：非 arc 角色降级为 compact（除非 protagonist 或 focus 指定）
-        if use_arc_window and not in_arc and not is_protagonist and not focus_level:
-            profile_level = "compact"
+        # Task 110c: 非 arc 角色直接 skip（protagonist/antagonist 除外）
+        if (
+            use_arc_window and not in_arc
+            and not is_protagonist and not is_antagonist
+            and not focus_level
+        ):
+            continue
 
         if profile_level == "skip":
             continue

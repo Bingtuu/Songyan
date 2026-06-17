@@ -64,8 +64,8 @@ class TestArcWindowFiltering:
         assert by_name["配角A"].emotional_state == "紧张"
         assert by_name["配角A"].importance_score == 0.8
 
-    def test_non_arc_gets_minimal_profile(self) -> None:
-        """非 arc 角色只返回 name + role_type，其余为空."""
+    def test_non_arc_gets_skipped(self) -> None:
+        """Task 110c: 非 arc 角色直接 skip（protagonist/antagonist 除外）."""
         characters = [
             _make_char("c1", "主角", "protagonist"),
             _make_char("c2", "配角A", "supporting"),
@@ -81,11 +81,8 @@ class TestArcWindowFiltering:
             current_chapter=5,
         )
         by_name = {s.name: s for s in snapshots}
-        assert by_name["配角A"].current_location is None
-        assert by_name["配角A"].emotional_state is None
-        assert by_name["配角A"].active_relationships == []
-        assert by_name["配角A"].unresolved_issues == []
-        assert by_name["配角A"].importance_score == 0.4
+        assert "配角A" not in by_name
+        assert "主角" in by_name
 
     def test_protagonist_always_full(self) -> None:
         """主角始终获得完整档案，无论是否在 arc 内出场."""
@@ -155,8 +152,8 @@ class TestArcWindowFiltering:
         assert by_name["主角"].importance_score == 1.0
         # 新角色在 arc2 出场 → 完整
         assert by_name["新角色"].importance_score == 0.8
-        # 旧角色只在 arc1 出场 → 精简
-        assert by_name["旧角色"].importance_score == 0.4
+        # 旧角色只在 arc1 出场 → Task 110c 直接 skip
+        assert "旧角色" not in by_name
 
     def test_character_states_total_not_in_snapshot(self) -> None:
         """character_states_total 在 ContextPackage 中，不在 snapshot 中."""

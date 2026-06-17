@@ -11,6 +11,7 @@ from songyan.agents.context_manager import (
     _build_mode_rules,
     _build_recent_plot,
     _build_soft_references,
+    _dynamic_max_for_chapter,
     _rank_foreshadowings,
     assemble_context_package,
 )
@@ -968,7 +969,10 @@ class TestBudgetPrunerFourSignals:
         ctx = ContextPackage(
             chapter_goal=ChapterGoal(chapter_number=1),
             soft_references=[
-                SoftReference(type="world_setting", content=f"设定{i}", relevance_score=0.5 + i * 0.05)
+                SoftReference(
+                    type="world_setting", content=f"设定{i}",
+                    relevance_score=0.5 + i * 0.05,
+                )
                 for i in range(10)
             ],
         )
@@ -985,7 +989,10 @@ class TestBudgetPrunerFourSignals:
         ctx = ContextPackage(
             chapter_goal=ChapterGoal(chapter_number=1),
             soft_references=[
-                SoftReference(type="world_setting", content=f"设定{i}", relevance_score=0.9 - i * 0.05)
+                SoftReference(
+                    type="world_setting", content=f"设定{i}",
+                    relevance_score=0.9 - i * 0.05,
+                )
                 for i in range(10)
             ],
         )
@@ -1089,3 +1096,397 @@ class TestCharacterFocusSnapshots:
         snapshots = _build_character_snapshots(chars, states, character_focus=None)
         assert len(snapshots) == 1
         assert snapshots[0].current_location == "山门"
+
+
+# ---------------------------------------------------------------------------
+# Task 110c Tests
+# ---------------------------------------------------------------------------
+class TestDynamicMaxForChapter:
+    def test_early_chapter_uses_default_caps(self) -> None:
+        caps = _dynamic_max_for_chapter(50)
+        assert caps["max_setting_input"] == 10
+        assert caps["max_foreshadowing"] == 8
+        assert caps["max_character_states"] == 4
+
+    def test_late_chapter_tightens_caps(self) -> None:
+        caps = _dynamic_max_for_chapter(90)
+        assert caps["max_setting_input"] == 6
+        assert caps["max_foreshadowing"] == 5
+        assert caps["max_character_states"] == 3
+
+    def test_boundary_at_chapter_80(self) -> None:
+        caps = _dynamic_max_for_chapter(80)
+        assert caps["max_setting_input"] == 10
+        assert caps["max_foreshadowing"] == 8
+        assert caps["max_character_states"] == 4
+
+
+class TestContextEmergencyLevels:
+    def _make_ctx(self) -> ContextPackage:
+        return ContextPackage(
+            chapter_goal=ChapterGoal(chapter_number=1),
+            character_states=[
+                CharacterStateSnapshot(
+                    character_id=f"c{i}",
+                    name=f"角色{i}",
+                    importance_score=1.0 if i == 0 else 0.8 if i == 1 else 0.5,
+                )
+                for i in range(5)
+            ],
+            soft_references=[
+                SoftReference(
+                    type="world_setting",
+                    content=f"设定{i}",
+                    relevance_score=float(10 - i),
+                    is_critical=(i == 0),
+                )
+                for i in range(10)
+            ],
+            foreshadowing=[
+                ForeshadowingItem(
+                    foreshadowing_id=f"fs{i}",
+                    description="desc",
+                    planted_in_chapter=i,
+                    status="planted" if i < 3 else "due" if i < 5 else "overdue",
+                )
+                for i in range(8)
+            ],
+            open_threads=[],
+            permanent_scenes=[],
+        )
+
+    def test_level1_keeps_due_overdue_and_top_chars(self) -> None:
+        pruner = BudgetPruner()
+        ctx = self._make_ctx()
+        # 让 budget_used 落在 1.0-1.2 之间触发 Level 1
+        before = pruner._estimate_package(ctx)
+        budget = max(1, int(before / 1.1))
+        ctx = pruner._context_emergency(ctx, budget)
+        assert ctx.context_emergency is True
+        assert ctx.context_emergency_level == 1
+        # 保留主角 + top2 配角 = 3
+        assert len(ctx.character_states) <= 3
+        # soft_refs 保留 critical + top5
+        assert len(ctx.soft_references) <= 6
+        # foreshadowing 保留 due/overdue
+        assert all(f.status in ("due", "overdue") for f in ctx.foreshadowing)
+
+    def test_level2_keeps_overdue_only_and_protagonist(self) -> None:
+        pruner = BudgetPruner()
+        ctx = self._make_ctx()
+        # 让 budget_used 落在 1.2-1.5 之间触发 Level 2
+        before = pruner._estimate_package(ctx)
+        budget = max(1, int(before / 1.35))
+        ctx = pruner._context_emergency(ctx, budget)
+        assert ctx.context_emergency_level == 2
+        # Level 2: 只保留主角
+        assert len(ctx.character_states) == 1
+        # soft_refs 只保留 critical + top3
+        assert len(ctx.soft_references) <= 4
+        # foreshadowing 只保留 overdue
+        assert all(f.status == "overdue" for f in ctx.foreshadowing)
+
+    def test_level3_nuclear_mode(self) -> None:
+        pruner = BudgetPruner()
+        ctx = self._make_ctx()
+        # 让 budget_used > 1.5 触发 Level 3
+        before = pruner._estimate_package(ctx)
+        budget = max(1, int(before / 2.0))
+        ctx = pruner._context_emergency(ctx, budget)
+        assert ctx.context_emergency_level == 3
+        assert ctx.arc_context is None
+        assert ctx.volume_context is None
+        assert len(ctx.character_states) == 1
+        assert len(ctx.soft_references) == 0
+        assert len(ctx.foreshadowing) == 0
+
+
+class TestPartitionBudgets:
+    def test_character_states_compressed_when_over_budget(self) -> None:
+        pruner = BudgetPruner()
+        ctx = ContextPackage(
+            chapter_goal=ChapterGoal(chapter_number=1),
+            character_states=[
+                CharacterStateSnapshot(
+                    character_id=f"c{i}",
+                    name=f"角色{i}",
+                    importance_score=float(10 - i),
+                )
+                for i in range(20)
+            ],
+        )
+        ctx = pruner._apply_partition_budgets(ctx, 100)
+        # 20 -> max(1, int(20 * 0.7)) = 14
+        assert len(ctx.character_states) <= 14
+
+    def test_recent_plot_halved_when_over_budget(self) -> None:
+        pruner = BudgetPruner()
+        ctx = ContextPackage(
+            chapter_goal=ChapterGoal(chapter_number=1),
+            recent_plot=RecentPlot(
+                summaries=[
+                    ChapterSummary(chapter_number=i, summary="summary" * 200)
+                    for i in range(1, 11)
+                ]
+            ),
+        )
+        ctx = pruner._apply_partition_budgets(ctx, 100)
+        # 10 -> max(1, 10 // 2) = 5
+        assert len(ctx.recent_plot.summaries) <= 5
+
+    def test_soft_refs_sorted_and_trimmed(self) -> None:
+        pruner = BudgetPruner()
+        ctx = ContextPackage(
+            chapter_goal=ChapterGoal(chapter_number=1),
+            soft_references=[
+                SoftReference(
+                    type="world_setting",
+                    content=f"设定{i}",
+                    relevance_score=float(i),
+                )
+                for i in range(20)
+            ],
+        )
+        ctx = pruner._apply_partition_budgets(ctx, 100)
+        # 20 -> max(1, int(20 * 0.6)) = 12
+        assert len(ctx.soft_references) <= 12
+        # 验证按 relevance_score 降序
+        scores = [r.relevance_score for r in ctx.soft_references]
+        assert scores == sorted(scores, reverse=True)
+
+    def test_foreshadowing_keeps_due_overdue_first(self) -> None:
+        pruner = BudgetPruner()
+        ctx = ContextPackage(
+            chapter_goal=ChapterGoal(chapter_number=1),
+            foreshadowing=[
+                ForeshadowingItem(
+                    foreshadowing_id=f"fs{i}",
+                    description="desc",
+                    planted_in_chapter=i,
+                    status="planted" if i < 5 else "due",
+                )
+                for i in range(10)
+            ],
+        )
+        ctx = pruner._apply_partition_budgets(ctx, 100)
+        due_items = [f for f in ctx.foreshadowing if f.status == "due"]
+        assert len(due_items) == 5  # 所有 due 都保留
+
+
+class TestArcCharacterSkip:
+    def test_non_arc_supporting_character_skipped(self) -> None:
+        chars = [
+            Character(
+                character_id="c1",
+                name="主角",
+                role_type="protagonist",
+                relationships={},
+                goals=[],
+                project_id="p1",
+            ),
+            Character(
+                character_id="c2",
+                name="路人甲",
+                role_type="supporting",
+                relationships={},
+                goals=[],
+                project_id="p1",
+            ),
+        ]
+        states = [
+            CharacterState(character_id="c1", field="location", value="山门"),
+            CharacterState(character_id="c2", field="location", value="山下"),
+        ]
+        summaries = [
+            ChapterSummary(
+                chapter_number=1,
+                summary="第一章",
+                characters_appeared=["主角"],
+            ),
+        ]
+        snapshots = _build_character_snapshots(
+            chars,
+            states,
+            recent_summaries=summaries,
+            arc_boundaries=[5, 10],
+            current_chapter=2,
+        )
+        assert len(snapshots) == 1
+        assert snapshots[0].character_id == "c1"
+
+    def test_non_arc_antagonist_kept(self) -> None:
+        chars = [
+            Character(
+                character_id="c1",
+                name="反派",
+                role_type="antagonist",
+                relationships={},
+                goals=[],
+                project_id="p1",
+            ),
+        ]
+        states = [CharacterState(character_id="c1", field="location", value="魔宫")]
+        summaries = [
+            ChapterSummary(
+                chapter_number=1,
+                summary="第一章",
+                characters_appeared=["主角"],
+            ),
+        ]
+        snapshots = _build_character_snapshots(
+            chars,
+            states,
+            recent_summaries=summaries,
+            arc_boundaries=[5, 10],
+            current_chapter=2,
+        )
+        assert len(snapshots) == 1
+        assert snapshots[0].character_id == "c1"
+
+    def test_arc_character_kept(self) -> None:
+        chars = [
+            Character(
+                character_id="c1",
+                name="主角",
+                role_type="protagonist",
+                relationships={},
+                goals=[],
+                project_id="p1",
+            ),
+            Character(
+                character_id="c2",
+                name="师妹",
+                role_type="supporting",
+                relationships={},
+                goals=[],
+                project_id="p1",
+            ),
+        ]
+        states = [
+            CharacterState(character_id="c1", field="location", value="山门"),
+            CharacterState(character_id="c2", field="location", value="山门"),
+        ]
+        summaries = [
+            ChapterSummary(
+                chapter_number=1,
+                summary="第一章",
+                characters_appeared=["主角", "师妹"],
+            ),
+        ]
+        snapshots = _build_character_snapshots(
+            chars,
+            states,
+            recent_summaries=summaries,
+            arc_boundaries=[5, 10],
+            current_chapter=2,
+        )
+        assert len(snapshots) == 2
+
+
+class TestAssembleContextPackage110c:
+    def test_soft_refs_filtered_by_keywords(self) -> None:
+        goal = ChapterGoal(
+            chapter_number=3,
+            target_events=["争夺玄天剑"],
+            hooks=["剑灵开口"],
+        )
+        settings = [
+            NewSetting(
+                setting_name="玄天剑",
+                description="上古神器",
+                source_quote="剑身散发着幽蓝光芒",
+                setting_key="item.xuantian.sword",
+            ),
+            NewSetting(
+                setting_name="魔道法器",
+                description="邪恶法器",
+                source_quote="散发着黑气",
+                setting_key="item.demonic.artifact",
+            ),
+        ]
+        pkg = assemble_context_package(
+            chapter_goal=goal,
+            creative_brief=None,
+            genre_profile=_make_genre(),
+            mode_profile=_make_mode(),
+            project=_make_project(),
+            characters=_make_characters(),
+            character_states=_make_character_states(),
+            recent_summaries=_make_summaries(),
+            active_foreshadowings=_make_foreshadowings(),
+            setting_snapshots=settings,
+            budget_tokens=20000,
+        )
+        # 玄天剑应该在关键词过滤后保留（因为 setting_name 包含"玄天剑"）
+        # 魔道法器应该被过滤掉（与 target_events/hooks 无关）
+        names = [s.content for s in pkg.soft_references]
+        assert any("玄天剑" in n for n in names)
+        assert not any("魔道法器" in n for n in names)
+
+    def test_foreshadowings_filtered_by_due_and_max(self) -> None:
+        foreshadowings = [
+            ForeshadowingItem(
+                foreshadowing_id="fs_due",
+                description="即将揭晓的秘密",
+                planted_in_chapter=1,
+                status="due",
+            ),
+            ForeshadowingItem(
+                foreshadowing_id="fs_planted_1",
+                description="普通伏笔1",
+                planted_in_chapter=5,
+                status="planted",
+            ),
+            ForeshadowingItem(
+                foreshadowing_id="fs_planted_2",
+                description="普通伏笔2",
+                planted_in_chapter=6,
+                status="planted",
+            ),
+        ]
+        goal = ChapterGoal(chapter_number=10, target_events=["事件A"])
+        pkg = assemble_context_package(
+            chapter_goal=goal,
+            creative_brief=None,
+            genre_profile=_make_genre(),
+            mode_profile=_make_mode(),
+            project=_make_project(),
+            characters=_make_characters(),
+            character_states=_make_character_states(),
+            recent_summaries=_make_summaries(),
+            active_foreshadowings=foreshadowings,
+            setting_snapshots=[],
+            budget_tokens=20000,
+        )
+        ids = {f.foreshadowing_id for f in pkg.foreshadowing}
+        assert "fs_due" in ids
+        # 非 due 的最多保留到 max_foreshadowing - due_count
+        # 对于 Ch10 (<=80)，max_foreshadowing=8，所以 planted 可以保留
+        assert len(pkg.foreshadowing) <= 8
+
+    def test_chapter_90_uses_tightened_caps(self) -> None:
+        goal = ChapterGoal(chapter_number=90, target_events=["事件A"])
+        foreshadowings = [
+            ForeshadowingItem(
+                foreshadowing_id=f"fs{i}",
+                description="desc",
+                planted_in_chapter=i,
+                status="planted",
+            )
+            for i in range(1, 12)
+        ]
+        pkg = assemble_context_package(
+            chapter_goal=goal,
+            creative_brief=None,
+            genre_profile=_make_genre(),
+            mode_profile=_make_mode(),
+            project=_make_project(),
+            characters=_make_characters(),
+            character_states=_make_character_states(),
+            recent_summaries=_make_summaries(),
+            active_foreshadowings=foreshadowings,
+            setting_snapshots=[],
+            budget_tokens=20000,
+        )
+        # Ch90 的 max_foreshadowing=5
+        assert len(pkg.foreshadowing) <= 5

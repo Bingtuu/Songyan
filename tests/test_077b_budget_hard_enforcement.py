@@ -113,9 +113,18 @@ def _make_ctx(
 
 class TestTriggerCondition:
     def test_triggers_when_over_threshold(self) -> None:
-        ctx = _make_ctx(n_soft_refs=20)
+        # Task 110c: 分区预算制先压缩，需更大数据量才能触发硬断言
+        ctx = _make_ctx(
+            n_soft_refs=50,
+            n_open_threads=20,
+            n_foreshadowing=20,
+            n_character_states=10,
+            n_dialogue_cards=10,
+            n_summaries=20,
+            with_arc_volume=True,
+        )
         pruner = BudgetPruner()
-        result = pruner.prune(ctx, budget_tokens=300)
+        result = pruner.prune(ctx, budget_tokens=100)
         assert result._budget_enforced is True
 
     def test_no_trigger_when_under_threshold(self) -> None:
