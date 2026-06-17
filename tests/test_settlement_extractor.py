@@ -415,9 +415,15 @@ class TestApplySettlement:
 
     async def test_applies_new_settings(self) -> None:
         mock_setting = AsyncMock()
+        mock_setting.archive_by_key.return_value = 0
         settlement = StateSettlement(
             new_settings=[
-                NewSetting(setting_name="灵石", description="补充灵气", source_quote="q")
+                NewSetting(
+                    setting_name="下品灵石",
+                    description="修仙者使用灵石补充灵气",
+                    source_quote="q",
+                    setting_key="xuanhuan.magic.spirit_stone",
+                )
             ]
         )
         mock_conn = AsyncMock()
@@ -431,7 +437,85 @@ class TestApplySettlement:
         )
         mock_setting.create.assert_called_once()
         setting = mock_setting.create.call_args[0][0]
-        assert setting.setting_name == "灵石"
+        assert setting.setting_name == "下品灵石"
+        assert setting.setting_key == "xuanhuan.magic.spirit_stone"
+
+    async def test_normalizes_invalid_setting_key(self) -> None:
+        mock_setting = AsyncMock()
+        mock_setting.archive_by_key.return_value = 0
+        settlement = StateSettlement(
+            new_settings=[
+                NewSetting(
+                    setting_name="通信天线构造",
+                    description="用于通信的天线结构",
+                    source_quote="q",
+                    setting_key="anomaly_x.communication.antenna.construction",
+                )
+            ]
+        )
+        mock_conn = AsyncMock()
+        await apply_settlement(
+            settlement, "p1", 3, "v1",
+            conn=mock_conn,
+            char_repo=AsyncMock(),
+            setting_repo=mock_setting,
+            foreshadowing_repo=AsyncMock(),
+            numerical_repo=AsyncMock(),
+        )
+        mock_setting.create.assert_called_once()
+        setting = mock_setting.create.call_args[0][0]
+        assert setting.setting_key == "anomaly_x_communication.antenna.construction"
+
+    async def test_skips_setting_when_no_fallback_key(self) -> None:
+        mock_setting = AsyncMock()
+        settlement = StateSettlement(
+            new_settings=[
+                NewSetting(
+                    setting_name="门",
+                    description="一扇门",
+                    source_quote="q",
+                    setting_key="bad.key",
+                )
+            ]
+        )
+        mock_conn = AsyncMock()
+        await apply_settlement(
+            settlement, "p1", 3, "v1",
+            conn=mock_conn,
+            char_repo=AsyncMock(),
+            setting_repo=mock_setting,
+            foreshadowing_repo=AsyncMock(),
+            numerical_repo=AsyncMock(),
+        )
+        mock_setting.create.assert_not_called()
+
+    async def test_archives_previous_setting_version(self) -> None:
+        mock_setting = AsyncMock()
+        mock_setting.archive_by_key.return_value = 1
+        settlement = StateSettlement(
+            new_settings=[
+                NewSetting(
+                    setting_name="通信天线构造",
+                    description="用于通信的天线结构",
+                    source_quote="q",
+                    setting_key="anomaly_x.communication.antenna.construction",
+                )
+            ]
+        )
+        mock_conn = AsyncMock()
+        await apply_settlement(
+            settlement, "p1", 3, "v1",
+            conn=mock_conn,
+            char_repo=AsyncMock(),
+            setting_repo=mock_setting,
+            foreshadowing_repo=AsyncMock(),
+            numerical_repo=AsyncMock(),
+        )
+        mock_setting.archive_by_key.assert_called_once_with(
+            project_id="p1",
+            setting_key="anomaly_x_communication.antenna.construction",
+            conn=mock_conn,
+        )
 
     async def test_applies_foreshadowing_plant(self) -> None:
         mock_fs = AsyncMock()
@@ -887,7 +971,10 @@ class TestSettlementAtomicity:
                 ],
                 new_settings=[
                     NewSetting(
-                        setting_name="灵石", description="补充灵气", source_quote="q"
+                        setting_name="古老灵石门",
+                        description="补充灵气",
+                        source_quote="q",
+                        setting_key="xuanhuan.stone.lingshi",
                     )
                 ],
             )

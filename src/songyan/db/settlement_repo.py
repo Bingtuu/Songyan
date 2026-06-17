@@ -546,6 +546,45 @@ class SettingSnapshotRepository:
             )
         return archived
 
+    async def archive_by_key(
+        self,
+        project_id: str,
+        setting_key: str,
+        conn: aiosqlite.Connection | None = None,
+    ) -> int:
+        """将指定 setting_key 的 active snapshots 标记为 archived.
+
+        Task 110b: 同一 setting_key 更新时，旧版本自动归档，保留最新版本。
+        返回: 影响的记录数。
+        """
+        async def _do(c: aiosqlite.Connection) -> int:
+            cursor = await c.execute(
+                """UPDATE setting_snapshots
+                SET lifecycle_status = 'archived'
+                WHERE project_id = ?
+                  AND setting_key = ?
+                  AND lifecycle_status = 'active'""",
+                (project_id, setting_key),
+            )
+            return cursor.rowcount
+
+        if conn is None:
+            async with get_db() as c:
+                archived = await _do(c)
+                await c.commit()
+        else:
+            archived = await _do(conn)
+        if archived > 0:
+            logger.info(
+                "repository.write",
+                table="setting_snapshots",
+                operation="archive_by_key",
+                project_id=project_id,
+                setting_key=setting_key,
+                archived_count=archived,
+            )
+        return archived
+
 
 class SettingDeduplicationService:
     """设定语义去重服务 — Task 110.

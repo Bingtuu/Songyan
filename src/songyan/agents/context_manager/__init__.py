@@ -58,7 +58,8 @@ MAX_CHARACTER_STATES: int = 4    # 角色状态上限
 MAX_PERMANENT_SCENES: int = 3    # Phase 4: 永久场景上限
 MAX_OPEN_THREADS: int = 5        # Phase 4: 开放线索上限
 
-# 077a: setting_snapshots → SoftReference 的入站硬上限# 077a: 关键词工具函数
+# 077a: setting_snapshots → SoftReference 的入站硬上限
+# 077a: 关键词工具函数
 MAX_SETTING_INPUT: int = 10       # is_critical 不计入上限
 
 # 077b: BudgetPruner 硬断言阈值
@@ -789,7 +790,11 @@ def assemble_context_package(
 
     # 构建各分区
     hard_constraints = _build_hard_constraints(
-        chapter_goal, genre_profile, project, filtered_marks
+        chapter_goal,
+        genre_profile,
+        project,
+        filtered_marks,
+        chapter_number=chapter_goal.chapter_number,
     )
     # 080: 按 arc 出场窗口过滤角色
     arc_boundaries = getattr(project, "arc_boundaries", None) or []

@@ -9,8 +9,11 @@ import pytest
 from songyan.db.connection import get_db
 from songyan.db.migrations import init_schema
 from songyan.db.repository import ProjectRepository
-from songyan.db.settlement_repo import SettingDeduplicationService
-from songyan.models import ProjectSetting
+from songyan.db.settlement_repo import (
+    SettingDeduplicationService,
+    SettingSnapshotRepository,
+)
+from songyan.models import NewSetting, ProjectSetting
 
 
 @pytest.fixture
@@ -91,6 +94,57 @@ async def _insert_snapshot(
             ),
         )
         await conn.commit()
+
+
+class TestSettingSnapshotRepository:
+    async def test_archive_by_key_archives_active(self, dedup_db: Path) -> None:
+        await _seed_project("p1")
+        await _insert_snapshot("s1", "key-a", "灵石矿脉", "矿", lifecycle_status="active")
+        await _insert_snapshot("s2", "key-a", "灵石矿脉", "矿 v2", lifecycle_status="active")
+
+        repo = SettingSnapshotRepository()
+        archived = await repo.archive_by_key("p1", "key-a")
+        assert archived == 2
+
+        async with get_db() as conn:
+            cursor = await conn.execute(
+                "SELECT COUNT(*) FROM setting_snapshots WHERE project_id = ? AND setting_key = ? AND lifecycle_status = 'active'",
+                ("p1", "key-a"),
+            )
+            row = await cursor.fetchone()
+        assert row[0] == 0
+
+    async def test_archive_by_key_ignores_other_keys(self, dedup_db: Path) -> None:
+        await _seed_project("p1")
+        await _insert_snapshot("s1", "key-a", "灵石矿脉", "矿", lifecycle_status="active")
+        await _insert_snapshot("s2", "key-b", "灵石来源", "矿", lifecycle_status="active")
+
+        repo = SettingSnapshotRepository()
+        archived = await repo.archive_by_key("p1", "key-a")
+        assert archived == 1
+
+        async with get_db() as conn:
+            cursor = await conn.execute(
+                "SELECT lifecycle_status FROM setting_snapshots WHERE setting_id = ?",
+                ("s2",),
+            )
+            row = await cursor.fetchone()
+        assert row[0] == "active"
+
+    async def test_create_and_list_active(self, dedup_db: Path) -> None:
+        await _seed_project("p1")
+        repo = SettingSnapshotRepository()
+        setting = NewSetting(
+            setting_name="测试设定",
+            description="测试描述",
+            source_quote="quote",
+            setting_key="test.category.name",
+        )
+        await repo.create(setting, "p1", "s-new")
+
+        active = await repo.list_by_project("p1")
+        assert len(active) == 1
+        assert active[0].setting_key == "test.category.name"
 
 
 class TestSimilarity:

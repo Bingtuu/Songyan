@@ -33,6 +33,10 @@ from songyan.models import (
     StateSettlement,
 )
 
+from ._setting_quality import (
+    _archive_previous_setting_version,
+    _normalize_setting_key,
+)
 from ._state_compression import compress_character_state_value
 
 logger = structlog.get_logger(__name__)
@@ -153,12 +157,29 @@ async def apply_settlement(
 
         # 2. 新设定登记 — INSERT
         for setting in settlement.new_settings:
+            # Task 110b: 规范化 setting_key，无法生成合规 key 则跳过
+            normalized_key = _normalize_setting_key(
+                setting.setting_key, setting.setting_name
+            )
+            if normalized_key is None:
+                continue
+            setting.setting_key = normalized_key
+
+            # Task 110b: 同一 setting_key 的旧版本自动归档
+            await _archive_previous_setting_version(
+                project_id=project_id,
+                setting_key=normalized_key,
+                setting_repo=setting_repo,
+                conn=c,
+            )
+
             setting_id = f"set-{project_id}-{uuid.uuid4().hex[:8]}"
             await setting_repo.create(setting, project_id, setting_id, conn=c)
             logger.info(
                 "settlement.setting_inserted",
                 setting_id=setting_id,
                 setting_name=setting.setting_name,
+                setting_key=normalized_key,
             )
 
         # 3. 伏笔操作 — plant 时 INSERT，resolve 时 UPDATE

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from typing import Literal
 
 import structlog
 
@@ -145,22 +146,42 @@ def _calculate_dynamic_relevance(
 # ---------------------------------------------------------------------------
 # Partition Builders
 # ---------------------------------------------------------------------------
+def _max_obligations_for_chapter(chapter_number: int) -> int:
+    """Task 110b: 按章节阶段动态调整 obligations 保留数量."""
+    if chapter_number <= 30:
+        return 10
+    if chapter_number <= 80:
+        return 8
+    return 6
+
+
+def _estimate_tokens(text: str) -> int:
+    """粗略估算中文字符 token 数（按 2 字符 ≈ 1 token）."""
+    return max(1, len(text) // 2)
+
+
 def _build_hard_constraints(
     chapter_goal: ChapterGoal,
     genre_profile: GenreProfile,
     project: ProjectSetting,
     human_marks: list[HumanMark] | None = None,
+    chapter_number: int = 0,
 ) -> list[HardConstraint]:
     """构建硬约束 — obligations + taboos + human marks.
 
-    obligations 最多保留最近 10 条，防止长尺度累积膨胀。
+    Task 110b:
+    - obligations 按章节阶段动态上限
+    - human_mark note 长度收紧
+    - 总 token 超过 budget 20% 时只保留高 priority marks
     """
-    MAX_OBLIGATIONS = 10
+    # 动态 obligations 上限
+    effective_chapter = chapter_number or chapter_goal.chapter_number
+    max_obligations = _max_obligations_for_chapter(effective_chapter)
     constraints: list[HardConstraint] = []
     # 只保留最近 N 条 obligations
     obligations = chapter_goal.obligations
-    if len(obligations) > MAX_OBLIGATIONS:
-        obligations = obligations[-MAX_OBLIGATIONS:]
+    if len(obligations) > max_obligations:
+        obligations = obligations[-max_obligations:]
     for obligation in obligations:
         constraints.append(
             HardConstraint(
@@ -185,19 +206,61 @@ def _build_hard_constraints(
                 source="project_setting",
             )
         )
-    for mark in human_marks or []:
+
+    # Task 110b: 先加入核心约束，再估算 token 决定是否加入 human_marks
+    core_token = sum(_estimate_tokens(c.description) for c in constraints)
+
+    # 按 priority 降序排序 marks，高 priority 优先保留
+    sorted_marks = sorted(
+        human_marks or [],
+        key=lambda m: m.priority,
+        reverse=True,
+    )
+
+    # 默认 budget 32K，20% 约 6400 tokens；章节级 budget 可能不同
+    budget = getattr(project, "context_budget", None) or 32000
+    max_hard_constraint_tokens = budget // 5
+
+    mark_constraints: list[HardConstraint] = []
+    current_token = core_token
+    max_mark_note_len = 80
+
+    for mark in sorted_marks:
         note = mark.note
-        # V3.1 Layer 2: 截断过长的 human_mark 描述，防止单条约束占用过多 token
-        MAX_MARK_NOTE_LEN = 100
-        if len(note) > MAX_MARK_NOTE_LEN:
-            note = note[:MAX_MARK_NOTE_LEN] + "..."
-        constraints.append(
-            HardConstraint(
-                type="human_mark",
-                description=f"[{mark.mark_type}] {mark.target_key}: {note}",
-                source=f"human_mark:{mark.mark_id}",
+        # V3.1 Layer 2: 截断过长的 human_mark 描述
+        if len(note) > max_mark_note_len:
+            note = note[:max_mark_note_len] + "..."
+        desc = f"[{mark.mark_type}] {mark.target_key}: {note}"
+        mark_token = _estimate_tokens(desc)
+
+        # 高 priority (>=8) 直接保留；低 priority 受总 token 限制
+        if mark.priority >= 8 or current_token + mark_token <= max_hard_constraint_tokens:
+            mark_constraints.append(
+                HardConstraint(
+                    type="human_mark",
+                    description=desc,
+                    source=f"human_mark:{mark.mark_id}",
+                )
             )
-        )
+            current_token += mark_token
+        else:
+            logger.info(
+                "context_manager.hard_constraint_mark_dropped",
+                mark_id=mark.mark_id,
+                priority=mark.priority,
+                reason="token_budget_exceeded",
+            )
+
+    constraints.extend(mark_constraints)
+
+    logger.info(
+        "context_manager.hard_constraints_built",
+        chapter_number=effective_chapter,
+        obligation_count=len(obligations),
+        mark_count=len(mark_constraints),
+        total_constraints=len(constraints),
+        estimated_tokens=current_token,
+    )
     return constraints
 
 
@@ -207,7 +270,7 @@ def _resolve_profile_level(
     is_antagonist: bool,
     current_chapter: int,
     last_appeared_chapters: dict[str, int] | None,
-) -> Literal[full, compact, symbol, skip]:
+) -> Literal["full", "compact", "symbol", "skip"]:
     """V5.0 Task 102: 按未出场章数解析档案衰减级别.
 
     衰减规则：
@@ -384,7 +447,10 @@ def _build_character_snapshots(
                 importance_score=0.4 if not is_protagonist else 0.9,
             )
         else:  # symbol
-            last_ch = last_appeared_chapters.get(char.character_id, 0) if last_appeared_chapters else 0
+            if last_appeared_chapters:
+                last_ch = last_appeared_chapters.get(char.character_id, 0)
+            else:
+                last_ch = 0
             last_state = latest_by_field.get("emotional_state", "状态未知")
             last_loc = latest_by_field.get("location", "位置未知")
             symbol_summary = (

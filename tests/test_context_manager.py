@@ -431,6 +431,70 @@ class TestBuildHardConstraints:
         constraints = _build_hard_constraints(goal, genre, project)
         assert len(constraints) == 0
 
+    def test_dynamic_max_obligations_early_chapters(self) -> None:
+        obligations = [f"义务{i}" for i in range(15)]
+        goal = ChapterGoal(chapter_number=10, obligations=obligations)
+        genre = GenreProfile(id="g", name="测试")
+        project = ProjectSetting(genre_id="g", protagonist_name="主角")
+        constraints = _build_hard_constraints(goal, genre, project)
+        obligation_constraints = [c for c in constraints if c.type == "obligation"]
+        assert len(obligation_constraints) == 10
+
+    def test_dynamic_max_obligations_late_chapters(self) -> None:
+        obligations = [f"义务{i}" for i in range(15)]
+        goal = ChapterGoal(chapter_number=90, obligations=obligations)
+        genre = GenreProfile(id="g", name="测试")
+        project = ProjectSetting(genre_id="g", protagonist_name="主角")
+        constraints = _build_hard_constraints(goal, genre, project)
+        obligation_constraints = [c for c in constraints if c.type == "obligation"]
+        assert len(obligation_constraints) == 6
+
+    def test_mark_note_truncated(self) -> None:
+        goal = ChapterGoal(chapter_number=1)
+        genre = GenreProfile(id="g", name="测试")
+        project = ProjectSetting(genre_id="g", protagonist_name="主角")
+        marks = [
+            HumanMark(
+                mark_id="m1",
+                project_id="p1",
+                mark_type="setting",
+                target_key="k1",
+                note="a" * 100,
+                priority=5,
+            )
+        ]
+        constraints = _build_hard_constraints(goal, genre, project, marks)
+        mark_constraints = [c for c in constraints if c.type == "human_mark"]
+        assert len(mark_constraints) == 1
+        assert len(mark_constraints[0].description) < 100
+        assert "..." in mark_constraints[0].description
+
+    def test_high_priority_marks_kept_when_token_budget_exceeded(self) -> None:
+        goal = ChapterGoal(chapter_number=90)
+        genre = GenreProfile(id="g", name="测试")
+        project = ProjectSetting(genre_id="g", protagonist_name="主角")
+        marks = [
+            HumanMark(
+                mark_id="m1",
+                project_id="p1",
+                mark_type="setting",
+                target_key="k1",
+                note="高优先级标记" * 50,
+                priority=9,
+            ),
+            HumanMark(
+                mark_id="m2",
+                project_id="p1",
+                mark_type="setting",
+                target_key="k2",
+                note="低优先级标记" * 50,
+                priority=3,
+            ),
+        ]
+        constraints = _build_hard_constraints(goal, genre, project, marks)
+        mark_constraints = [c for c in constraints if c.type == "human_mark"]
+        assert any("m1" in c.source for c in mark_constraints)
+
 
 class TestBuildCharacterSnapshots:
     def test_protagonist_importance(self) -> None:

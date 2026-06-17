@@ -113,8 +113,9 @@ async def _validate_settlement(
                 )
             if not _SETTING_KEY_PATTERN.match(setting.setting_key):
                 errors.append(
-                    f"设定 key '{setting.setting_key}' 格式不符合 "
-                    f"category.subcategory.name 规范"
+                    f"设定 '{setting.setting_name}' 的 setting_key "
+                    f"'{setting.setting_key}' 格式无效，"
+                    f"必须为 category.subcategory.name 三段式小写 key"
                 )
 
     # 4. 验证 numerical_update.closing_value 公式
