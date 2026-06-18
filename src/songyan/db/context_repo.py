@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from sqlite3 import Row
+from typing import Any
 
+import aiosqlite
 import structlog
 
 from songyan.db.connection import get_db
@@ -21,12 +23,13 @@ class SummaryRepository:
         summary: ChapterSummary,
         project_id: str,
         summary_id: str,
+        conn: Any | None = None,
     ) -> None:
         """创建章节摘要记录."""
         import json as _json
 
-        async with get_db() as conn:
-            await conn.execute(
+        async def _do(c: Any) -> None:
+            await c.execute(
                 """INSERT INTO summaries (
                     summary_id, project_id, chapter_number,
                     plot_summary, key_events, characters_appeared, emotional_tone, impact_score
@@ -42,13 +45,42 @@ class SummaryRepository:
                     summary.impact_score,
                 ),
             )
-            await conn.commit()
+
+        if conn is None:
+            async with get_db() as c:
+                await _do(c)
+                await c.commit()
+        else:
+            await _do(conn)
         logger.info(
             "repository.write",
             table="summaries",
             operation="create",
             project_id=project_id,
             chapter_number=summary.chapter_number,
+        )
+
+    async def get(self, summary_id: str) -> ChapterSummary | None:
+        """按 summary_id 读取章节摘要."""
+        async with get_db() as conn:
+            conn.row_factory = Row
+            cursor = await conn.execute(
+                """SELECT chapter_number, plot_summary, key_events,
+                          characters_appeared, emotional_tone, impact_score
+                   FROM summaries
+                   WHERE summary_id = ?""",
+                (summary_id,),
+            )
+            row = await cursor.fetchone()
+        if row is None:
+            return None
+        return ChapterSummary(
+            chapter_number=row["chapter_number"],
+            summary=row["plot_summary"] or "",
+            key_events=_from_json(row["key_events"], []),
+            characters_appeared=_from_json(row["characters_appeared"], []),
+            emotional_tone=row["emotional_tone"] or "",
+            impact_score=row["impact_score"] or 0.0,
         )
 
     async def list_recent(
@@ -182,7 +214,11 @@ class CharacterStateRepository:
                 field=row["field"],
                 value=row["value"],
                 source_version_id=row["source_version_id"],
-                lifecycle_status=row["lifecycle_status"] if "lifecycle_status" in row.keys() else "active",
+                lifecycle_status=(
+                    row["lifecycle_status"]
+                    if "lifecycle_status" in row.keys()
+                    else "active"
+                ),
                 created_at=row["created_at"],
             )
             for row in rows
@@ -591,7 +627,11 @@ class CharacterStateRepository:
                 field=row["field"],
                 value=row["value"],
                 source_version_id=row["source_version_id"],
-                lifecycle_status=row["lifecycle_status"] if "lifecycle_status" in row.keys() else "active",
+                lifecycle_status=(
+                    row["lifecycle_status"]
+                    if "lifecycle_status" in row.keys()
+                    else "active"
+                ),
                 created_at=row["created_at"],
             )
             for row in rows

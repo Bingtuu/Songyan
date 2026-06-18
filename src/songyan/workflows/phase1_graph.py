@@ -90,6 +90,8 @@ class Phase1State(TypedDict):
     _rewrite_reason: str | None
     # 077b: BudgetPruner 是否触发过硬断言
     _budget_was_enforced: bool
+    # Task 111b: ContextPackage 不入 state，仅保留轻量指标
+    _context_metrics: dict
     # 078: ContinuityAuditor 预算状态
     _deferred_constraints: list[str]
     _continuity_budget_exhausted: bool
@@ -349,6 +351,7 @@ async def run_chapter_pipeline(
         "_was_rewritten": False,
         "_rewrite_reason": None,
         "_budget_was_enforced": False,
+        "_context_metrics": {},
         "_deferred_constraints": [],
         "_continuity_budget_exhausted": False,
         "_total_revision_count": 0,

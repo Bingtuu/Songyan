@@ -214,7 +214,11 @@ class CharacterRepository:
                     _to_json(character.personality_traits),
                     _to_json(character.goals),
                     _to_json(character.relationships),
-                    _to_json(character.dialogue_style_card.model_dump(mode="json") if character.dialogue_style_card else {}),
+                    _to_json(
+                        character.dialogue_style_card.model_dump(mode="json")
+                        if character.dialogue_style_card
+                        else {}
+                    ),
                     _dt(character.created_at),
                 ),
             )
@@ -262,7 +266,14 @@ class CharacterRepository:
         async def _do(c: aiosqlite.Connection) -> None:
             await c.execute(
                 "UPDATE characters SET dialogue_style_card = ? WHERE character_id = ?",
-                (_to_json(card.model_dump(mode="json") if hasattr(card, "model_dump") else card), character_id),
+                (
+                    _to_json(
+                        card.model_dump(mode="json")
+                        if hasattr(card, "model_dump")
+                        else card
+                    ),
+                    character_id,
+                ),
             )
 
         if conn is None:
@@ -415,7 +426,8 @@ class ChapterVersionRepository:
                 """INSERT INTO chapter_versions (
                     version_id, project_id, chapter_number, version_number,
                     version_type, is_abandoned, content, word_count, scenes,
-                    generation_metadata, score_card, creative_brief_id, parent_version_id, created_at
+                    generation_metadata, score_card, creative_brief_id,
+                    parent_version_id, created_at
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
                     version.version_id,
@@ -486,14 +498,24 @@ class ChapterVersionRepository:
             version_id=version_id,
         )
 
-    async def accept_version(self, version_id: str) -> None:
+    async def accept_version(
+        self,
+        version_id: str,
+        conn: aiosqlite.Connection | None = None,
+    ) -> None:
         """将版本标记为 accepted（RAG 索引触发条件）."""
-        async with get_db() as conn:
-            await conn.execute(
+        async def _do(c: aiosqlite.Connection) -> None:
+            await c.execute(
                 "UPDATE chapter_versions SET version_type = 'accepted' WHERE version_id = ?",
                 (version_id,),
             )
-            await conn.commit()
+
+        if conn is None:
+            async with get_db() as c:
+                await _do(c)
+                await c.commit()
+        else:
+            await _do(conn)
         logger.info(
             "repository.write",
             table="chapter_versions",
@@ -592,9 +614,13 @@ class ChapterHeadRepository:
             for row in rows
         ]
 
-    async def update(self, head: ChapterHead) -> None:
-        async with get_db() as conn:
-            await conn.execute(
+    async def update(
+        self,
+        head: ChapterHead,
+        conn: aiosqlite.Connection | None = None,
+    ) -> None:
+        async def _do(c: aiosqlite.Connection) -> None:
+            await c.execute(
                 """INSERT INTO chapter_heads (
                     project_id, chapter_number, current_version_id,
                     accepted_version_id, status, updated_at
@@ -613,7 +639,13 @@ class ChapterHeadRepository:
                     _dt(head.updated_at),
                 ),
             )
-            await conn.commit()
+
+        if conn is None:
+            async with get_db() as c:
+                await _do(c)
+                await c.commit()
+        else:
+            await _do(conn)
         logger.info(
             "repository.write",
             table="chapter_heads",

@@ -261,7 +261,7 @@ class TestWriteChapterSummary:
             with patch("songyan.agents.summary_writer._save_summary"):
                 mock_db = AsyncMock()
                 settlement = StateSettlement()
-                result = await write_chapter_summary(
+                summary_id, result = await write_chapter_summary(
                     content="正文内容",
                     settlement=settlement,
                     project_id="proj_123",
@@ -269,6 +269,7 @@ class TestWriteChapterSummary:
                     db=mock_db,
                 )
 
+        assert summary_id.startswith("sum-proj_123-3-")
         assert result.chapter_number == 3
         assert result.chapter_number == 3
         # Task 110b: 模板化输出
@@ -287,7 +288,7 @@ class TestWriteChapterSummary:
             with patch("songyan.agents.summary_writer._save_summary"):
                 mock_db = AsyncMock()
                 settlement = StateSettlement()
-                result = await write_chapter_summary(
+                summary_id, result = await write_chapter_summary(
                     content="正文",
                     settlement=settlement,
                     project_id="proj_123",
@@ -295,6 +296,7 @@ class TestWriteChapterSummary:
                     db=mock_db,
                 )
 
+        assert summary_id.startswith("sum-proj_123-5-")
         assert result.chapter_number == 5
         assert "第5章" in result.summary
 

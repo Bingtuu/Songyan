@@ -229,7 +229,7 @@ async def write_chapter_summary(
     db: SummaryRepository,
     *,
     temperature: float = 0.3,
-) -> ChapterSummary:
+) -> tuple[str, ChapterSummary]:
     """基于 accepted version + settlement 生成结构化摘要.
 
     优先从 settlement 中提取结构化信息，plot_summary 调用轻量 LLM。
@@ -242,7 +242,7 @@ async def write_chapter_summary(
         db: SummaryRepository
 
     Returns:
-        ChapterSummary
+        真实落库的 summary_id 与 ChapterSummary
     """
     prompt = _build_prompt(content, settlement)
 
@@ -310,7 +310,7 @@ async def write_chapter_summary(
         summary_length=len(summary.summary),
         emotional_tone_length=len(summary.emotional_tone),
     )
-    return summary
+    return summary_id, summary
 
 
 async def _save_summary(

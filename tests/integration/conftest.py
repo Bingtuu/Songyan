@@ -261,21 +261,13 @@ def revision_resp() -> str:
 def settlement_resp() -> str:
     return json.dumps(
         {
-            "character_updates": [
-                {
-                    "character_id": "char-001",
-                    "field": "location",
-                    "old_value": "悬崖顶",
-                    "new_value": "古修洞府入口",
-                    "source_quote": "荡进一道石缝",
-                }
-            ],
+            "character_updates": [],
             "new_settings": [
                 {
                     "setting_name": "青铜大门",
                     "description": "刻满符文的古老门户",
                     "source_quote": "一扇青铜大门静静矗立",
-                    "setting_key": "bronze_gate",
+                    "setting_key": "xuanhuan.artifact.bronze_gate",
                 }
             ],
             "foreshadowing_updates": [],

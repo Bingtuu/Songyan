@@ -21,7 +21,7 @@ from songyan.agents.settlement_extractor import (
     apply_settlement,
     extract_settlement,
 )
-from songyan.exceptions import LLMResponseParseError
+from songyan.exceptions import LLMResponseParseError, SettlementError
 from songyan.models import (
     CharacterState,
     CharacterUpdate,
@@ -599,6 +599,30 @@ class TestApplySettlement:
         )
         mock_char.add_state_snapshot.assert_not_called()
 
+    async def test_invalid_settlement_does_not_call_repositories(self) -> None:
+        mock_char = AsyncMock()
+        mock_setting = AsyncMock()
+        mock_fs = AsyncMock()
+        mock_num = AsyncMock()
+        mock_conn = AsyncMock()
+        settlement = StateSettlement(validation_status="needs_human_review")
+
+        with pytest.raises(SettlementError):
+            await apply_settlement(
+                settlement, "p1", 3, "v1",
+                conn=mock_conn,
+                char_repo=mock_char,
+                setting_repo=mock_setting,
+                foreshadowing_repo=mock_fs,
+                numerical_repo=mock_num,
+            )
+
+        mock_char.list_by_project.assert_not_called()
+        mock_char.add_state_snapshot.assert_not_called()
+        mock_setting.create.assert_not_called()
+        mock_fs.create.assert_not_called()
+        mock_num.create.assert_not_called()
+
     async def test_sets_foreshadowing_pressure_high(self) -> None:
         mock_fs = AsyncMock()
         mock_fs.get_unresolved_ratio.return_value = 0.40
@@ -849,7 +873,10 @@ class TestDbRetry:
 # ---------------------------------------------------------------------------
 class TestConcurrentSettlement:
     @pytest.mark.xfail(
-        reason="SQLite on Windows does not guarantee concurrent writer progress across separate connections",
+        reason=(
+            "SQLite on Windows does not guarantee concurrent writer progress "
+            "across separate connections"
+        ),
         strict=False,
     )
     async def test_concurrent_settlement_writes(self, tmp_path) -> None:
@@ -872,15 +899,30 @@ class TestConcurrentSettlement:
             async with get_db() as conn:
                 for i in range(3):
                     await conn.execute(
-                        "INSERT INTO projects (project_id, title, genre_id, mode_id, protagonist_name, estimated_chapters) VALUES (?, ?, ?, ?, ?, ?)",
-                        (f"p{i}", f"Project {i}", "scifi", "webnovel", f"Protagonist {i}", 30),
+                        """INSERT INTO projects (
+                            project_id, title, genre_id, mode_id,
+                            protagonist_name, estimated_chapters
+                        ) VALUES (?, ?, ?, ?, ?, ?)""",
+                        (
+                            f"p{i}",
+                            f"Project {i}",
+                            "scifi",
+                            "webnovel",
+                            f"Protagonist {i}",
+                            30,
+                        ),
                     )
                     await conn.execute(
-                        "INSERT INTO characters (character_id, project_id, name, role_type) VALUES (?, ?, ?, ?)",
+                        """INSERT INTO characters (
+                            character_id, project_id, name, role_type
+                        ) VALUES (?, ?, ?, ?)""",
                         (f"c{i}", f"p{i}", f"Char {i}", "protagonist"),
                     )
                     await conn.execute(
-                        "INSERT INTO chapter_versions (version_id, project_id, chapter_number, version_number, version_type, content, word_count) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                        """INSERT INTO chapter_versions (
+                            version_id, project_id, chapter_number, version_number,
+                            version_type, content, word_count
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?)""",
                         (f"v{i}", f"p{i}", 1, 1, "draft", "正文", 100),
                     )
                 await conn.commit()
@@ -942,15 +984,22 @@ class TestSettlementAtomicity:
             # 创建 project、角色和 chapter_version
             async with get_db() as conn:
                 await conn.execute(
-                    "INSERT INTO projects (project_id, title, genre_id, mode_id, protagonist_name) VALUES (?, ?, ?, ?, ?)",
+                    """INSERT INTO projects (
+                        project_id, title, genre_id, mode_id, protagonist_name
+                    ) VALUES (?, ?, ?, ?, ?)""",
                     ("p1", "Test", "scifi", "webnovel", "Protagonist"),
                 )
                 await conn.execute(
-                    "INSERT INTO characters (character_id, project_id, name, role_type) VALUES (?, ?, ?, ?)",
+                    """INSERT INTO characters (
+                        character_id, project_id, name, role_type
+                    ) VALUES (?, ?, ?, ?)""",
                     ("c1", "p1", "Char1", "protagonist"),
                 )
                 await conn.execute(
-                    "INSERT INTO chapter_versions (version_id, project_id, chapter_number, version_number, version_type, content, word_count) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                    """INSERT INTO chapter_versions (
+                        version_id, project_id, chapter_number, version_number,
+                        version_type, content, word_count
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?)""",
                     ("v1", "p1", 1, 1, "draft", "正文", 100),
                 )
                 await conn.commit()

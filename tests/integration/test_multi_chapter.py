@@ -27,13 +27,14 @@ def _writer_resp_ch(n: int) -> str:
 
 def _settlement_resp_ch(n: int) -> str:
     """为第 n 章生成不同的 settlement 响应."""
+    key_suffix = {1: "one", 2: "two", 3: "three"}.get(n, "later")
     return json.dumps(
         {
             "character_updates": [
                 {
                     "character_id": "char-001",
                     "field": f"field_{n}",
-                    "old_value": f"old_{n}",
+                    "old_value": f"new_{n - 1}" if n > 1 else f"old_{n}",
                     "new_value": f"new_{n}",
                     "source_quote": "荡进一道石缝",
                 }
@@ -43,7 +44,7 @@ def _settlement_resp_ch(n: int) -> str:
                     "setting_name": f"Setting_{n}",
                     "description": f"desc_{n}",
                     "source_quote": "一扇青铜大门静静矗立",
-                    "setting_key": f"key_{n}",
+                    "setting_key": f"xuanhuan.chapter.{key_suffix}",
                 }
             ],
             "foreshadowing_updates": [],

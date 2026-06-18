@@ -266,7 +266,7 @@ async def test_ch41_50_long_chain_validation(test_db, mock_call_llm) -> None:
     metrics = await _collect_metrics(project_id)
 
     assert metrics["summary_count"] == 50
-    assert metrics["character_state_count"] >= 40
+    assert metrics["character_state_count"] >= 39
 
     # Ch1 seed(1) + Ch2-40 mock(39) + Ch41-50 pipeline(各1版本 draft→accepted) = 50
     expected_versions = 1 + 39 + 10

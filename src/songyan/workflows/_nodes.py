@@ -41,7 +41,7 @@ from songyan.db.review_repo import (
 )
 from songyan.db.settlement_repo import SettingSnapshotRepository
 from songyan.evals.score_aggregator import ScoreAggregator
-from songyan.exceptions import LLMError, LLMResponseParseError
+from songyan.exceptions import LLMError, LLMResponseParseError, SettlementError
 from songyan.genres.loader import load_genre_profile
 from songyan.models import (
     ChapterHead,
@@ -207,7 +207,7 @@ async def creative_director_node(state: dict[str, Any]) -> dict[str, Any]:
 
 
 async def _get_context_package(state: dict[str, Any]) -> Any:
-    """优先从 state 读取已组装的 ContextPackage，否则回退到实时组装."""
+    """实时组装 ContextPackage，避免在 LangGraph state 长期保存业务对象."""
     if "context_package" in state:
         return state["context_package"]
 
@@ -218,6 +218,17 @@ async def _get_context_package(state: dict[str, Any]) -> Any:
     return await assemble_context_package(
         state["project_id"], state["chapter_number"], goal, brief
     )
+
+
+def _extract_context_metrics(ctx_pkg: Any) -> dict[str, Any]:
+    """从 ContextPackage 提取轻量指标，供 state/checkpoint 保存."""
+    return {
+        "budget_used": getattr(ctx_pkg, "budget_used", None),
+        "character_states_loaded": len(getattr(ctx_pkg, "character_states", [])),
+        "soft_refs_loaded": len(getattr(ctx_pkg, "soft_references", [])),
+        "context_emergency": getattr(ctx_pkg, "context_emergency", False),
+        "context_pressure": getattr(ctx_pkg, "context_pressure", {}),
+    }
 
 
 async def _load_chapter_repair_state(
@@ -263,9 +274,9 @@ async def context_manager_node(state: dict[str, Any]) -> dict[str, Any]:
     # 注入人类指令（HITL）
     ctx.human_instructions = state.get("human_instructions", [])
     return {
-        "context_package": ctx,
         "status": "writing",
         "_budget_was_enforced": ctx._budget_enforced,
+        "_context_metrics": _extract_context_metrics(ctx),
     }
 
 
@@ -1195,7 +1206,7 @@ async def quality_gate_node(state: dict[str, Any]) -> dict[str, Any]:
 
 
 async def human_gate_node(state: dict[str, Any]) -> dict[str, Any]:
-    """通用 Human Gate 节点 — 支持 accept/edit/reject/back/inject.
+    """通用 Human Gate 节点 — 支持 accept/edit/reject/back.
 
     改造自 human_confirm_node，增强为深度协作接口。
     """
@@ -1214,24 +1225,9 @@ async def human_gate_node(state: dict[str, Any]) -> dict[str, Any]:
             if len(version.content) > 500
             else version.content
         ),
-        "options": ["accept", "edit", "reject", "back", "inject"],
+        "options": ["accept", "edit", "reject", "back"],
         "human_instructions": existing_instructions,
     })
-
-    # inject: 人类注入自由指令，不修改内容
-    if decision == "inject":
-        instruction = HumanInstruction(
-            instruction_id=f"inst_{uuid.uuid4().hex[:8]}",
-            gate_type=gate_type,
-            action="inject",
-            content=state.get("_inject_content", ""),
-        )
-        return {
-            "human_decision": "inject",
-            "human_instructions": existing_instructions + [instruction.model_dump()],
-            "_revision_rebound": state.get("_revision_rebound", False),
-            "status": "settlement",
-        }
 
     if decision == "edit":
         edited_content = _open_editor(version.content)
@@ -1296,28 +1292,11 @@ async def human_gate_node(state: dict[str, Any]) -> dict[str, Any]:
         }
 
     if decision == "accept":
-        await ChapterHeadRepository().update(
-            ChapterHead(
-                project_id=state["project_id"],
-                chapter_number=state["chapter_number"],
-                current_version_id=version.version_id,
-                accepted_version_id=version.version_id,
-                status="accepted",
-            )
-        )
-        # 071: 更新 version_type 为 accepted，使 settlement_extractor 能触发 RAG 索引
-        await ChapterVersionRepository().accept_version(version.version_id)
         # Task 105: 提取上下文指标供流式验证收集
+        _context_metrics: dict[str, Any] = state.get("_context_metrics", {})
         _ctx_pkg = state.get("context_package")
-        _context_metrics: dict[str, Any] = {}
         if _ctx_pkg is not None:
-            _context_metrics = {
-                "budget_used": getattr(_ctx_pkg, "budget_used", None),
-                "character_states_loaded": len(getattr(_ctx_pkg, "character_states", [])),
-                "soft_refs_loaded": len(getattr(_ctx_pkg, "soft_references", [])),
-                "context_emergency": getattr(_ctx_pkg, "context_emergency", False),
-                "context_pressure": getattr(_ctx_pkg, "context_pressure", {}),
-            }
+            _context_metrics = _extract_context_metrics(_ctx_pkg)
         previous_qg_passed = state.get("_quality_gate_passed")
         review_passed = not state.get("_has_critical", False) and not state.get("_has_major", False)
         _qg_passed = (
@@ -1419,6 +1398,46 @@ async def _run_lifecycle_cleanup(project_id: str, chapter_number: int) -> None:
         )
 
 
+async def accept_with_settlement_boundary(
+    *,
+    project_id: str,
+    chapter_number: int,
+    version_id: str,
+    settlement: Any | None,
+) -> None:
+    """在同一事务内完成 settlement apply 与 accept 状态更新."""
+    if settlement is not None and settlement.validation_status != "valid":
+        raise SettlementError(
+            f"Settlement validation status is {settlement.validation_status}"
+        )
+
+    async with get_db() as conn:
+        try:
+            if settlement is not None:
+                await apply_settlement(
+                    settlement=settlement,
+                    project_id=project_id,
+                    chapter_number=chapter_number,
+                    version_id=version_id,
+                    conn=conn,
+                )
+            await ChapterVersionRepository().accept_version(version_id, conn=conn)
+            await ChapterHeadRepository().update(
+                ChapterHead(
+                    project_id=project_id,
+                    chapter_number=chapter_number,
+                    current_version_id=version_id,
+                    accepted_version_id=version_id,
+                    status="accepted",
+                ),
+                conn=conn,
+            )
+            await conn.commit()
+        except Exception:
+            await conn.rollback()
+            raise
+
+
 async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
     version = await load_version(state["current_version_id"])
     if version is None:
@@ -1432,6 +1451,8 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
 
     settlement = None
     settlement_needs_review = False
+    settlement_applied = False
+    accepted_for_postprocessing = False
     summary_id = None
 
     # Task 108: 支持跳过 settlement（如 convergence_failed 路径）
@@ -1464,6 +1485,13 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
                 chapter_number=state["chapter_number"],
             )
             summary_id = None
+        await accept_with_settlement_boundary(
+            project_id=state["project_id"],
+            chapter_number=state["chapter_number"],
+            version_id=version.version_id,
+            settlement=None,
+        )
+        accepted_for_postprocessing = True
     else:
         # 1. 提取并应用 settlement（核心操作）
         try:
@@ -1474,16 +1502,25 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
                 version_id=version.version_id,
                 genre_rules=_build_genre_rules(genre, project, goal) if genre else None,
             )
-            async with get_db() as conn:
-                await apply_settlement(
-                    settlement=settlement,
+            if settlement.validation_status != "valid":
+                logger.warning(
+                    "settlement_extractor_node.validation_failed_needs_review",
                     project_id=state["project_id"],
                     chapter_number=state["chapter_number"],
                     version_id=version.version_id,
-                    conn=conn,
+                    validation_status=settlement.validation_status,
+                    validation_errors=settlement.validation_errors,
                 )
-                await conn.commit()
-            if settlement is not None:
+                settlement_needs_review = True
+            else:
+                await accept_with_settlement_boundary(
+                    project_id=state["project_id"],
+                    chapter_number=state["chapter_number"],
+                    version_id=version.version_id,
+                    settlement=settlement,
+                )
+                settlement_applied = True
+                accepted_for_postprocessing = True
                 logger.info(
                     "settlement_extractor_node.settlement_applied",
                     project_id=state["project_id"],
@@ -1494,7 +1531,7 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
                     foreshadowing_updates=len(settlement.foreshadowing_updates),
                     numerical_updates=len(settlement.numerical_updates),
                 )
-        except (LLMError, LLMResponseParseError) as exc:
+        except (LLMError, LLMResponseParseError, SettlementError) as exc:
             logger.warning(
                 "settlement_extractor_node.settlement_failed_needs_review",
                 error=str(exc),
@@ -1504,16 +1541,15 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
             settlement_needs_review = True
 
         # 2. 生成章节摘要（非阻塞：失败不导致 settlement 回滚）
-        if settlement is not None:
+        if settlement_applied and settlement is not None:
             try:
-                await write_chapter_summary(
+                summary_id, _summary = await write_chapter_summary(
                     content=version.content,
                     settlement=settlement,
                     project_id=state["project_id"],
                     chapter_number=state["chapter_number"],
                     db=SummaryRepository(),
                 )
-                summary_id = new_id("sum")
             except (LLMError, LLMResponseParseError) as exc:
                 logger.warning(
                     "settlement_extractor_node.summary_failed",
@@ -1523,10 +1559,11 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
                 )
 
     # V4.0: 生命周期清理 — 统一调度所有表的 archive 策略（Task 087）
-    await _run_lifecycle_cleanup(state["project_id"], state["chapter_number"])
+    if accepted_for_postprocessing:
+        await _run_lifecycle_cleanup(state["project_id"], state["chapter_number"])
 
     # 3. RAG 向量索引（非阻塞：失败不导致 settlement 回滚）
-    if version.version_type in ("accepted", "edited"):
+    if accepted_for_postprocessing or version.version_type in ("accepted", "edited"):
         try:
             mode = load_creative_mode_profile(project.mode_id)
             await _index_accepted_chapter(
@@ -1545,7 +1582,7 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
             )
 
     # 4. SettingEvaporator（Task 103：语义相关性蒸发，纯规则，不调用 LLM）
-    if version.version_type in ("accepted", "edited"):
+    if accepted_for_postprocessing or version.version_type in ("accepted", "edited"):
         try:
             from songyan.agents.setting_evaporator import SettingEvaporator
 
@@ -1576,7 +1613,7 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
             )
 
     # 5. 分层摘要生成（069b：accept 后触发弧/卷摘要更新）
-    if version.version_type in ("accepted", "edited"):
+    if accepted_for_postprocessing or version.version_type in ("accepted", "edited"):
         try:
             await trigger_layered_summaries(
                 project_id=state["project_id"],
@@ -1592,9 +1629,9 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
             )
 
     return {
-        "settlement_id": new_id("st") if settlement is not None else None,
+        "settlement_id": new_id("st") if settlement_applied else None,
         "summary_id": summary_id,
-        "status": "done",
+        "status": "settlement_review" if settlement_needs_review else "done",
         "_settlement_needs_human_review": settlement_needs_review,
     }
 

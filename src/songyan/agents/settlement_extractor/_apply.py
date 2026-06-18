@@ -25,6 +25,7 @@ from songyan.db.settlement_repo import (
     NumericalLedgerRepository,
     SettingSnapshotRepository,
 )
+from songyan.exceptions import SettlementError
 from songyan.models import (
     CharacterState,
     ForeshadowingItem,
@@ -101,6 +102,19 @@ async def apply_settlement(
         version_id: 关联版本 ID
         conn: 数据库连接；由调用方创建并管理事务。
     """
+    if settlement.validation_status != "valid":
+        logger.warning(
+            "settlement.apply_blocked_invalid",
+            project_id=project_id,
+            chapter_number=chapter_number,
+            version_id=version_id,
+            validation_status=settlement.validation_status,
+            validation_errors=settlement.validation_errors,
+        )
+        raise SettlementError(
+            f"Refusing to apply invalid settlement: {settlement.validation_status}"
+        )
+
     if char_repo is None:
         char_repo = CharacterRepository()
     if setting_repo is None:

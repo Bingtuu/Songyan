@@ -489,7 +489,7 @@ class TestSummaryWriter:
                     "songyan.agents.summary_writer._save_summary",
                     new_callable=AsyncMock,
                 ):
-                    summary = await write_chapter_summary(
+                    summary_id, summary = await write_chapter_summary(
                         content="chapter text here",
                         settlement=settlement,
                         project_id="p1",
@@ -497,6 +497,7 @@ class TestSummaryWriter:
                         db=mock_db,
                     )
 
+        assert summary_id.startswith("sum-p1-1-")
         assert isinstance(summary, ChapterSummary)
         assert summary.chapter_number == 1
         assert "protagonist" in summary.characters_appeared
@@ -541,8 +542,8 @@ class TestContextManagerNode:
         assert result["status"] == "context_manager"
 
     @pytest.mark.asyncio
-    async def test_populates_context_package(self) -> None:
-        """context_manager_node 应组装 ContextPackage 并存入 state."""
+    async def test_populates_context_metrics_without_package(self) -> None:
+        """context_manager_node 应只把轻量指标存入 state."""
         from songyan.models import ChapterGoal, ContextPackage
         from songyan.workflows._nodes import context_manager_node
 
@@ -578,9 +579,9 @@ class TestContextManagerNode:
                 }
             )
         assert result["status"] == "writing"
-        assert "context_package" in result
-        assert isinstance(result["context_package"], ContextPackage)
-        assert result["context_package"].chapter_goal.chapter_number == 2
+        assert "context_package" not in result
+        assert result["_context_metrics"]["budget_used"] == ctx.budget_used
+        assert result["_context_metrics"]["character_states_loaded"] == 0
 
 
 class TestReviewMergerNode:
@@ -619,3 +620,132 @@ class TestSettlementExtractorNode:
                 {"current_version_id": "missing"}
             )
         assert result["status"] == "settlement_extractor"
+
+    @pytest.mark.asyncio
+    async def test_validation_failed_does_not_accept_or_apply(self) -> None:
+        from songyan.workflows._nodes import settlement_extractor_node
+
+        version = MagicMock(version_id="v-invalid", content="正文", version_type="draft")
+        settlement = StateSettlement(
+            validation_status="needs_human_review",
+            validation_errors=["bad quote"],
+        )
+
+        with (
+            patch(
+                "songyan.workflows._nodes.load_version",
+                new_callable=AsyncMock,
+                return_value=version,
+            ),
+            patch(
+                "songyan.workflows._nodes.load_project",
+                new_callable=AsyncMock,
+                return_value=None,
+            ),
+            patch(
+                "songyan.workflows._nodes.load_chapter_goal",
+                new_callable=AsyncMock,
+                return_value=None,
+            ),
+            patch(
+                "songyan.workflows._nodes.extract_settlement",
+                new_callable=AsyncMock,
+                return_value=settlement,
+            ),
+            patch(
+                "songyan.workflows._nodes.accept_with_settlement_boundary",
+                new_callable=AsyncMock,
+            ) as mock_accept,
+            patch(
+                "songyan.workflows._nodes.write_chapter_summary",
+                new_callable=AsyncMock,
+            ) as mock_summary,
+        ):
+            result = await settlement_extractor_node(
+                {
+                    "project_id": "p1",
+                    "chapter_number": 3,
+                    "current_version_id": "v-invalid",
+                    "chapter_goal_id": "goal-1",
+                }
+            )
+
+        assert result["status"] == "settlement_review"
+        assert result["_settlement_needs_human_review"] is True
+        assert result["settlement_id"] is None
+        assert result["summary_id"] is None
+        mock_accept.assert_not_called()
+        mock_summary.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_returns_real_summary_id_after_valid_settlement(self) -> None:
+        from songyan.workflows._nodes import settlement_extractor_node
+
+        version = MagicMock(version_id="v-valid", content="正文", version_type="draft")
+        project = MagicMock(mode_id="webnovel", genre_id="scifi")
+        settlement = StateSettlement()
+        summary = ChapterSummary(
+            chapter_number=3,
+            summary="摘要",
+            key_events=[],
+            characters_appeared=[],
+            emotional_tone="中性",
+            impact_score=0.0,
+        )
+
+        with (
+            patch(
+                "songyan.workflows._nodes.load_version",
+                new_callable=AsyncMock,
+                return_value=version,
+            ),
+            patch(
+                "songyan.workflows._nodes.load_project",
+                new_callable=AsyncMock,
+                return_value=project,
+            ),
+            patch(
+                "songyan.workflows._nodes.load_chapter_goal",
+                new_callable=AsyncMock,
+                return_value=None,
+            ),
+            patch("songyan.workflows._nodes.load_genre_profile", return_value=None),
+            patch(
+                "songyan.workflows._nodes.extract_settlement",
+                new_callable=AsyncMock,
+                return_value=settlement,
+            ),
+            patch(
+                "songyan.workflows._nodes.accept_with_settlement_boundary",
+                new_callable=AsyncMock,
+            ) as mock_accept,
+            patch(
+                "songyan.workflows._nodes.write_chapter_summary",
+                new_callable=AsyncMock,
+                return_value=("sum-real", summary),
+            ),
+            patch(
+                "songyan.workflows._nodes._run_lifecycle_cleanup",
+                new_callable=AsyncMock,
+            ),
+            patch(
+                "songyan.workflows._nodes.load_creative_mode_profile",
+                return_value=MagicMock(rag_config={}),
+            ),
+            patch("songyan.workflows._nodes._index_accepted_chapter", new_callable=AsyncMock),
+            patch("songyan.workflows._nodes.trigger_layered_summaries", new_callable=AsyncMock),
+        ):
+            result = await settlement_extractor_node(
+                {
+                    "project_id": "p1",
+                    "chapter_number": 3,
+                    "current_version_id": "v-valid",
+                    "chapter_goal_id": "goal-1",
+                }
+            )
+
+        assert result["status"] == "done"
+        assert result["_settlement_needs_human_review"] is False
+        assert result["settlement_id"] is not None
+        assert result["summary_id"] == "sum-real"
+        mock_accept.assert_awaited_once()

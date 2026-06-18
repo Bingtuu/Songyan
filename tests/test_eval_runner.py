@@ -180,7 +180,7 @@ def _settlement_resp() -> str:
                     "setting_name": "青铜大门",
                     "description": "刻满符文的古老门户",
                     "source_quote": "一扇青铜大门静静矗立",
-                    "setting_key": "bronze_gate",
+                    "setting_key": "xuanhuan.artifact.bronze_gate",
                 }
             ],
             "foreshadowing_updates": [],
@@ -839,13 +839,18 @@ async def test_metrics_all_keys_present(test_db, mock_call_llm) -> None:
             for r in rows
         ]
         cursor = await conn.execute(
-            "SELECT setting_name, description, source_quote, setting_key FROM setting_snapshots WHERE project_id = ?",
+            """SELECT setting_name, description, source_quote, setting_key
+            FROM setting_snapshots
+            WHERE project_id = ?""",
             (result.project_id,),
         )
         rows = await cursor.fetchall()
         new_settings = [
             NewSetting(
-                setting_name=r[0], description=r[1] or "", source_quote=r[2] or "", setting_key=r[3] or ""
+                setting_name=r[0],
+                description=r[1] or "",
+                source_quote=r[2] or "",
+                setting_key=r[3] or "",
             )
             for r in rows
         ]

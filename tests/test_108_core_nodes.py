@@ -78,34 +78,37 @@ class TestSettlementExtractorNodeSkipSettlement:
                                         new_callable=AsyncMock,
                                     ) as mock_lifecycle:
                                         with patch(
-                                            "songyan.workflows._nodes._index_accepted_chapter",
+                                            "songyan.workflows._nodes.accept_with_settlement_boundary",
                                             new_callable=AsyncMock,
                                         ):
                                             with patch(
-                                            "songyan.agents.setting_evaporator.SettingEvaporator",
-                                        ) as mock_evap_cls:
-                                                mock_evap = AsyncMock()
-                                                mock_evap.run = AsyncMock(return_value=[])
-                                                mock_evap.merge_similar_settings = AsyncMock()
-                                                mock_evap_cls.return_value = mock_evap
+                                                "songyan.workflows._nodes._index_accepted_chapter",
+                                                new_callable=AsyncMock,
+                                            ):
                                                 with patch(
-                                                    "songyan.workflows._nodes.trigger_layered_summaries",
-                                                    new_callable=AsyncMock,
-                                                ):
+                                                    "songyan.agents.setting_evaporator.SettingEvaporator",
+                                                ) as mock_evap_cls:
+                                                    mock_evap = AsyncMock()
+                                                    mock_evap.run = AsyncMock(return_value=[])
+                                                    mock_evap.merge_similar_settings = AsyncMock()
+                                                    mock_evap_cls.return_value = mock_evap
                                                     with patch(
-                                                        "songyan.workflows._nodes.SummaryRepository",
-                                                        return_value=mock_summary_repo,
+                                                        "songyan.workflows._nodes.trigger_layered_summaries",
+                                                        new_callable=AsyncMock,
                                                     ):
-                                                        state = {
-                                                            "project_id": "p1",
-                                                            "chapter_number": 1,
-                                                            "current_version_id": "v-skip-001",
-                                                            "chapter_goal_id": None,
-                                                            "_skip_settlement": True,
-                                                        }
-                                                        result = await settlement_extractor_node(
-                                                            state
-                                                        )
+                                                        with patch(
+                                                            "songyan.workflows._nodes.SummaryRepository",
+                                                            return_value=mock_summary_repo,
+                                                        ):
+                                                            state = {
+                                                                "project_id": "p1",
+                                                                "chapter_number": 1,
+                                                                "current_version_id": "v-skip-001",
+                                                                "chapter_goal_id": None,
+                                                                "_skip_settlement": True,
+                                                            }
+                                                            node = settlement_extractor_node
+                                                            result = await node(state)
 
         mock_extract.assert_not_awaited()
         mock_apply.assert_not_awaited()

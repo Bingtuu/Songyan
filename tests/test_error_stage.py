@@ -226,3 +226,25 @@ async def test_human_gate_error_stage_unknown_decision() -> None:
             result = await human_gate_node({"current_version_id": "v-1"})
     assert result["status"] == "human_confirm"
     assert result["error"] is not None
+
+
+@pytest.mark.asyncio
+async def test_human_gate_options_do_not_expose_inject() -> None:
+    """HumanGate 不暴露未接入路由的 inject 选项."""
+    version = AsyncMock()
+    version.version_id = "v-1"
+    version.content = "test"
+    with (
+        patch(
+            "songyan.workflows._nodes.load_version",
+            new_callable=AsyncMock,
+            return_value=version,
+        ),
+        patch("songyan.workflows._nodes.interrupt", return_value="reject") as mock_interrupt,
+    ):
+        await human_gate_node(
+            {"current_version_id": "v-1", "project_id": "p1", "chapter_number": 1}
+        )
+
+    payload = mock_interrupt.call_args.args[0]
+    assert "inject" not in payload["options"]
