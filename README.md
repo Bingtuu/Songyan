@@ -12,7 +12,7 @@
 
 **V5.0 — Context Diet 2.0 智能遗忘架构**
 
-目标：通过 TemporalCompressor + CharacterFocalDecay + SettingEvaporator + BudgetHardCeiling 四组件协同，控制信息密度，支撑 Ch1-Ch150 全自动稳定生成。Task 101~110 已完成 Context Diet 2.0 核心组件、流式验证基础设施、统一评分体系、修复收敛护栏、角色退场机制、设定去重与伏笔监控；真实 Ch51-Ch100 流式试跑在 Ch59 因连续质量门失败自动暂停，当前准备基于 Task 106~110 的修复重启 Ch51-Ch100 验证。
+目标：通过 TemporalCompressor + CharacterFocalDecay + SettingEvaporator + BudgetHardCeiling 四组件协同，控制信息密度，支撑 Ch1-Ch150 全自动稳定生成。Task 101~110e 已完成 Context Diet 2.0 核心组件、流式验证基础设施、统一评分体系、修复收敛护栏、角色退场机制、设定去重与伏笔监控、coherence_major 根因修复；Ch80-Ch96 实跑验证 QG 通过率 100% (17/17)，coherence_major 清零，ContextEmergency 清零，文本阅读体验验证通过。当前进入 Task 111：Ch101-Ch150 流式验证 + 决策门 DG-2。
 
 ### 版本概览
 
@@ -28,10 +28,10 @@
 
 | 指标 | 数值 |
 |------|------|
-| 最近回归测试 | **1555 passed, 4 skipped, 1 xfailed, 4 xpassed** |
-| V5.0 当前 Task | **110**（SettingDeduplication + ForeshadowingPressure） |
-| 下一任务 | **Task 105b：Ch51-Ch100 验证重启** |
-| Task 105 实跑 | **run-33229919: Ch51-Ch59 完成，Ch57-Ch59 连续质量门失败后暂停** |
+| 最近回归测试 | **1621 passed, 4 skipped, 1 xfailed, 4 xpassed** |
+| V5.0 当前 Task | **110e**（coherence_major 根因修复 — 已完成） |
+| 下一任务 | **Task 111：Ch101-Ch150 流式验证 + 决策门 DG-2** |
+| Task 110e 实跑 | **Ch80-Ch96 17/17 成功，QG 100%，coherence_major 0/17** |
 | V4.0 最终达标率 | Task 099: Ch2-Ch50 **81.6%** |
 | V4.x 归档 | `archive/v4/`（报告 + 任务 + 验证数据）|
 

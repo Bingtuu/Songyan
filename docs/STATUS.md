@@ -1,7 +1,7 @@
 # Songyan 项目状态板
 
 > **当前阶段: V5.0 "Context Diet 2.0" — 智能遗忘架构**
-> **更新日期**: 2026-06-17
+> **更新日期**: 2026-06-18
 >
 > V4.x 历史归档见 `archive/v4/INDEX.md`
 
@@ -52,8 +52,8 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 | Task 105b 实跑 | **Ch51-Ch100 全部成功，QG 通过率 58.0% (29/50)，DG-1 未通过** |
 | Task 110a 实跑 | **Ch80-Ch100 21/21 成功，QG 通过率 57.1% (12/21)，ContextEmergency 81.0% (17/21)** |
 | Task 110d 实跑 | **Ch80-Ch96 17/17 成功，QG 通过率 58.8% (10/17)，ContextEmergency 0.0% (0/17)；参数调优无正收益，已回滚** |
-| Task 110e 实跑 | **Ch91-Ch93 3/3 成功，QG 通过率 100% (3/3)，coherence_major 0/3；Auditor 阈值校准生效** |
-| 最近回归测试 | **1593 passed, 4 skipped, 1 xfailed, 4 xpassed** |
+| Task 110e 实跑 | **Ch80-Ch96 17/17 成功，QG 通过率 100% (17/17)，coherence_major 0/17，ContextEmergency 0/17；Auditor 阈值校准 + 审查上下文增强生效** |
+| 最近回归测试 | **1621 passed, 4 skipped, 1 xfailed, 4 xpassed** |
 | Python | 3.11.9 |
 | 下一 Task | **Task 111: Ch101-Ch150 流式验证 + 决策门 DG-2** |
 
@@ -94,6 +94,7 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 | 110b | **结构与质量控制** — Setting key 规范化、Summary 模板化、HardConstraint 长度审计 | setting key 规范率 100%；summary 长度受控；hard_constraints 不膨胀 | ✅ |
 | 110c | **加载与裁剪优化** — 智能过滤 + 分级 ContextEmergency + 可恢复性 | Ch80-Ch100 emergency 再降 ≥ 30%；保留 source_version_id | ✅ |
 | 110d | **Ch80-Ch100 快速验证与调优** — 验证 110a-110c 效果并调参 | ContextEmergency 0%；参数调优已验证并回滚；QG 58.8% 未达 80% 目标 | ✅ |
+| 110e | **coherence_major 根因修复** — ScoreAggregator 阈值校准 + LLMAuditor 审查上下文增强 | Ch80-Ch96 QG 100% (17/17)；coherence_major 0/17；文本阅读体验验证通过 | ✅ |
 | 111 | **Ch101-Ch150 流式验证 + 决策门 DG-2** | 达标率 ≥ 70%；budget_used ≤ 1.0；完成 150 章一次性生成 | 📝 |
 
 ---
@@ -134,4 +135,5 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 - `tasks/110b-setting-summary-quality-control.md` — Setting/Summary/HardConstraint 质量控制规划
 - `tasks/110c-loading-and-pruning-strategy.md` — 加载端智能过滤与分级裁剪规划
 - `tasks/110d-ch80-ch100-validation-and-tuning.md` — Ch80-Ch100 快速验证与调优规划
+- `tasks/110e-coherence-major-fix-DONE.md` — coherence_major 根因修复交付记录
 - `logs/chapter_runs/run-33229919.jsonl` — Ch51-Ch59 实跑指标

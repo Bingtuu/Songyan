@@ -38,6 +38,7 @@ from ._assemblers import (
     _build_rag_soft_references,
     _build_recent_plot,
     _build_soft_references,
+    _calculate_dynamic_relevance,
     _dynamic_budget,
     _extract_keywords,
     _is_setting_critical,
