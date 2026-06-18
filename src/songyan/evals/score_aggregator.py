@@ -100,7 +100,7 @@ def _score_coherence(llm_result: LLMAuditResult) -> tuple[float, dict[str, float
     major = sum(1 for i in consistency_issues if i.severity == "major")
     minor = sum(1 for i in consistency_issues if i.severity == "minor")
 
-    score = 1.0 - critical * 0.40 - major * 0.25 - minor * 0.10
+    score = 1.0 - critical * 0.40 - major * 0.15 - minor * 0.10
     score = max(0.0, min(1.0, score))
 
     details = {
@@ -109,7 +109,7 @@ def _score_coherence(llm_result: LLMAuditResult) -> tuple[float, dict[str, float
         "major": float(major),
         "minor": float(minor),
     }
-    return score, details, critical > 0, major > 0
+    return score, details, critical > 0, major >= 2
 
 
 def _score_momentum(rule_result: RuleAuditResult) -> tuple[float, dict[str, float]]:
@@ -207,6 +207,7 @@ class ScoreAggregator:
 
         # 3. 一致性
         coherence_score, coherence_details, has_critical, has_major = _score_coherence(llm_result)
+        major_count = coherence_details.get("major", 0)
 
         # 4. 推动力
         momentum_score, momentum_details = _score_momentum(rule_result)
@@ -239,7 +240,11 @@ class ScoreAggregator:
                 length_ok=length_score_rounded >= 0.5,
                 budget_ok=budget_score >= 0.5,
                 coherence_critical=has_critical,
-                coherence_major=has_major,
+                coherence_major=(
+                    has_critical
+                    or has_major
+                    or (coherence_score < 0.6 and major_count > 0)
+                ),
                 momentum_present=(momentum_score >= 0.5 or momentum_score == -1.0),
                 readability_ok=readability_score >= 0.6,
             ),

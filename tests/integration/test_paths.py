@@ -30,7 +30,8 @@ from .conftest import (
 
 
 async def _versions(project_id: str, chapter_number: int = 2):
-    return await ChapterVersionRepository().list_by_chapter(project_id, chapter_number, include_abandoned=True)
+    repo = ChapterVersionRepository()
+    return await repo.list_by_chapter(project_id, chapter_number, include_abandoned=True)
 
 
 async def _head(project_id: str, chapter_number: int = 2):
@@ -320,13 +321,13 @@ async def test_path_f_edit_saves_edited_version(test_db, mock_call_llm) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Path G: major (non-critical) issue → 1-round revision → accept
+# Path G: 1 major (non-critical) issue → no revision (Task 110e) → accept directly
 # ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
 async def test_path_g_major_revision_accept(test_db, mock_call_llm) -> None:
-    """Major severity (not critical) should also trigger revision."""
+    """Task 110e: 1 major (not critical) does NOT trigger revision (needs 2+ major)."""
     project_id = await seed_project()
     thread_id = "thread-g"
 
@@ -334,10 +335,7 @@ async def test_path_g_major_revision_accept(test_db, mock_call_llm) -> None:
         goal_resp(),
         brief_resp(),
         writer_resp(),
-        llm_major_resp(),      # 1st audit → major (not critical)
-        literary_resp(),
-        revision_resp(),
-        llm_clean_resp(),
+        llm_major_resp(),      # 1st audit → 1 major (not critical)
         literary_resp(),
         settlement_resp(),
         summary_resp(),
@@ -348,11 +346,11 @@ async def test_path_g_major_revision_accept(test_db, mock_call_llm) -> None:
 
     final = await resume_human_confirm(thread_id, "accept")
     assert final["status"] == "done"
-    assert final["revision_round"] == 1
+    assert final["revision_round"] == 0
 
     versions = await _versions(project_id)
-    assert len(versions) == 2
-    assert versions[1].version_type == "accepted"
+    assert len(versions) == 1
+    assert versions[0].version_type == "accepted"
 
 
 # ---------------------------------------------------------------------------

@@ -54,6 +54,14 @@ def _render_context_info(ctx: ContextPackage | None) -> str:
             info = f"{cs.name}"
             if cs.emotional_state:
                 info += f"（情绪：{cs.emotional_state}）"
+            if cs.current_location:
+                info += f"（位置：{cs.current_location}）"
+            if cs.current_cultivation:
+                info += f"（修为：{cs.current_cultivation}）"
+            if cs.active_relationships:
+                info += f"（关系：{'，'.join(cs.active_relationships)}）"
+            if cs.unresolved_issues:
+                info += f"（目标：{'，'.join(cs.unresolved_issues)}）"
             char_lines.append(info)
         lines.append(f"**出场角色**：{'；'.join(char_lines)}")
 

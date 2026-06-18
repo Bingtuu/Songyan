@@ -167,7 +167,8 @@ class TestScoreCoherence:
         assert card.flags.coherence_critical is True
         assert card.flags.needs_revision is True
 
-    def test_major_coherence(self):
+    def test_single_major_not_coherence_major(self):
+        """Task 110e: 单个 major 不再触发 coherence_major."""
         issues = [
             ReviewIssue(
                 issue_id="i1",
@@ -180,8 +181,59 @@ class TestScoreCoherence:
         ]
         rule = _make_rule_result()
         card = ScoreAggregator.aggregate("v1", rule, _make_llm_result(issues=issues))
-        assert card.coherence.score == 0.75
+        assert card.coherence.score == 0.85  # 1.0 - 0.15
+        assert card.flags.coherence_major is False
+
+    def test_two_major_triggers_coherence_major(self):
+        """Task 110e: 2+ major 触发 coherence_major."""
+        issues = [
+            ReviewIssue(
+                issue_id="i1",
+                category=ReviewCategory.CHARACTER_BEHAVIOR,
+                severity="major",
+                evidence_quote="q",
+                evidence_location="l",
+                issue_description="d",
+            ),
+            ReviewIssue(
+                issue_id="i2",
+                category=ReviewCategory.WORLD_CONSISTENCY,
+                severity="major",
+                evidence_quote="q",
+                evidence_location="l",
+                issue_description="d",
+            ),
+        ]
+        rule = _make_rule_result()
+        card = ScoreAggregator.aggregate("v1", rule, _make_llm_result(issues=issues))
+        assert card.coherence.score == 0.70  # 1.0 - 2*0.15
         assert card.flags.coherence_major is True
+
+    def test_single_major_with_low_score_triggers_coherence_major(self):
+        """Task 110e: 1 major + coherence_score < 0.6 触发 coherence_major."""
+        issues = [
+            ReviewIssue(
+                issue_id="i1",
+                category=ReviewCategory.CHARACTER_BEHAVIOR,
+                severity="critical",
+                evidence_quote="q",
+                evidence_location="l",
+                issue_description="d",
+            ),
+            ReviewIssue(
+                issue_id="i2",
+                category=ReviewCategory.WORLD_CONSISTENCY,
+                severity="major",
+                evidence_quote="q",
+                evidence_location="l",
+                issue_description="d",
+            ),
+        ]
+        rule = _make_rule_result()
+        card = ScoreAggregator.aggregate("v1", rule, _make_llm_result(issues=issues))
+        assert card.coherence.score == 0.45  # 1.0 - 0.40 - 0.15
+        assert card.flags.coherence_critical is True
+        assert card.flags.coherence_major is True  # critical 触发
 
     def test_non_coherence_issue_ignored(self):
         issues = [
@@ -306,7 +358,8 @@ class TestOverallScore:
             "v1", rule, _make_llm_result(issues=issues), budget_used=0.85
         )
         assert 0.0 < card.overall_score < 1.0
-        assert card.flags.coherence_major is True
+        # Task 110e: 单个 major 不再触发 coherence_major
+        assert card.flags.coherence_major is False
 
 
 class TestDimensionDegradation:

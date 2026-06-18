@@ -139,6 +139,39 @@ class BudgetPruner:
     def __init__(self, estimator: TokenEstimator | None = None) -> None:
         self.estimator = estimator or TokenEstimator()
 
+    def _log_breakdown(self, ctx: ContextPackage, budget: int, step: str) -> None:
+        """诊断日志：记录各分区 token 分配."""
+        est = self.estimator
+        total = est.estimate_model(ctx)
+        char_tok = est.estimate_model(ctx.character_states) if ctx.character_states else 0
+        plot_tok = est.estimate_model(ctx.recent_plot) if ctx.recent_plot else 0
+        soft_tok = est.estimate_model(ctx.soft_references) if ctx.soft_references else 0
+        fore_tok = est.estimate_model(ctx.foreshadowing) if ctx.foreshadowing else 0
+        hard_tok = est.estimate_model(ctx.hard_constraints) if ctx.hard_constraints else 0
+        arc_tok = est.estimate_model(ctx.arc_context) if ctx.arc_context else 0
+        vol_tok = est.estimate_model(ctx.volume_context) if ctx.volume_context else 0
+        scene_tok = est.estimate_model(ctx.permanent_scenes) if ctx.permanent_scenes else 0
+        thread_tok = est.estimate_model(ctx.open_threads) if ctx.open_threads else 0
+        mark_tok = est.estimate_model(ctx.human_marks) if ctx.human_marks else 0
+        logger.info(
+            "context_manager.budget_breakdown",
+            step=step,
+            total=total,
+            budget=budget,
+            budget_used=round(total / budget, 3) if budget else 0,
+            character_states=char_tok,
+            recent_plot=plot_tok,
+            soft_references=soft_tok,
+            foreshadowing=fore_tok,
+            hard_constraints=hard_tok,
+            arc_context=arc_tok,
+            volume_context=vol_tok,
+            permanent_scenes=scene_tok,
+            open_threads=thread_tok,
+            human_marks=mark_tok,
+            character_count=len(ctx.character_states) if ctx.character_states else 0,
+        )
+
     def prune(
         self,
         ctx: ContextPackage,
@@ -174,14 +207,17 @@ class BudgetPruner:
         # Task 098: 应用 focal_distance 调整上下文包
         # Task 100c: 传入 chapter_number 用于 disruption 随机 seed
         ctx = self._apply_focal_distance(ctx, focal_distance, chapter_number=chapter_number)
+        self._log_breakdown(ctx, budget_tokens, step="after_focal_distance")
 
         # Task 098: 即使未超预算，也应用动态上限防止上下文膨胀
         ctx = self._prune_soft_references(ctx, budget_tokens, max_refs=dynamic_max_soft)
         ctx = self._prune_foreshadowing(ctx, budget_tokens, max_items=dynamic_max_fore)
         ctx = self._prune_character_states(ctx, budget_tokens, max_states=dynamic_max_char)
+        self._log_breakdown(ctx, budget_tokens, step="after_character_prune")
 
         # Task 110c: 分区预算制 — 各分区先内部压缩到预算比例
         ctx = self._apply_partition_budgets(ctx, budget_tokens)
+        self._log_breakdown(ctx, budget_tokens, step="after_partition_budgets")
 
         current = self._estimate_package(ctx)
         if current <= budget_tokens:
@@ -242,6 +278,7 @@ class BudgetPruner:
             ctx = self._enforce_budget_hard(ctx, budget_tokens)
             current = self._estimate_package(ctx)
             ctx._budget_enforced = True
+            self._log_breakdown(ctx, budget_tokens, step="after_hard_enforce")
 
         ctx.estimated_tokens = current
         ctx.budget_used = current / budget_tokens if budget_tokens > 0 else 0.0
@@ -299,6 +336,14 @@ class BudgetPruner:
                 continue
             max_tokens = int(budget * ratio)
             current = self.estimator.estimate_model(data)
+            logger.info(
+                "context_manager.partition_budget_check",
+                partition=name,
+                current_tokens=current,
+                max_tokens=max_tokens,
+                ratio=ratio,
+                exceeded=current > max_tokens,
+            )
             if current > max_tokens:
                 logger.info(
                     "context_manager.partition_budget_exceeded",
@@ -308,6 +353,9 @@ class BudgetPruner:
                 )
                 if name == "character_states":
                     keep = max(1, int(len(ctx.character_states) * 0.7))
+                    # Task 110d fix: 确保 protagonist + antagonist 至少保留 2 个
+                    if len(ctx.character_states) >= 2:
+                        keep = max(2, keep)
                     ctx.character_states = sorted(
                         ctx.character_states,
                         key=lambda s: s.importance_score,
@@ -427,6 +475,7 @@ class BudgetPruner:
         if not ctx.character_states:
             return ctx
         current = self._estimate_package(ctx)
+        char_tokens = self.estimator.estimate_model(ctx.character_states)
         if current <= budget:
             # 即使未超预算，也应用硬上限防止膨胀
             if len(ctx.character_states) > _max:
@@ -436,13 +485,32 @@ class BudgetPruner:
                     reverse=True,
                 )
                 ctx.character_states = sorted_states[:_max]
+                logger.info(
+                    "context_manager.character_states_hard_cap",
+                    before_count=len(sorted_states),
+                    after_count=_max,
+                    characters=[(s.name, s.importance_score) for s in sorted_states[:_max]],
+                    char_tokens=char_tokens,
+                )
             return ctx
         # 保留主角和重要角色，按 importance_score 排序
         sorted_states = sorted(
             ctx.character_states, key=lambda s: s.importance_score, reverse=True
         )
-        keep_count = min(max(1, len(sorted_states) // 2), _max)
-        ctx.character_states = sorted_states[:keep_count]
+        keep_count = min(max(2, len(sorted_states) // 2), _max)
+        kept = sorted_states[:keep_count]
+        dropped = sorted_states[keep_count:]
+        ctx.character_states = kept
+        logger.info(
+            "context_manager.character_states_pruned",
+            before_count=len(sorted_states),
+            after_count=keep_count,
+            kept=[(s.name, s.importance_score) for s in kept],
+            dropped=[(s.name, s.importance_score) for s in dropped],
+            char_tokens=char_tokens,
+            total_tokens=current,
+            budget=budget,
+        )
         return ctx
 
     # Phase 4 新增裁剪方法

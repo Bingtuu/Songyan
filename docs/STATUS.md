@@ -47,12 +47,13 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 
 | 指标 | 数值 |
 |------|------|
-| 状态 | **V5.0 Phase 4 — Task 110c 完成，加载端智能过滤与分级裁剪落地** |
+| 状态 | **V5.0 Phase 4 — Task 110e 完成，Auditor 阈值校准 + 审查上下文增强落地** |
 | V4.0 最终达标率 (Ch2-Ch50) | **81.6%** (Task 099) ✅ |
 | Task 105b 实跑 | **Ch51-Ch100 全部成功，QG 通过率 58.0% (29/50)，DG-1 未通过** |
 | Task 110a 实跑 | **Ch80-Ch100 21/21 成功，QG 通过率 57.1% (12/21)，ContextEmergency 81.0% (17/21)** |
 | Task 110d 实跑 | **Ch80-Ch96 17/17 成功，QG 通过率 58.8% (10/17)，ContextEmergency 0.0% (0/17)；参数调优无正收益，已回滚** |
-| 最近回归测试 | **1588 passed, 4 skipped, 2 xfailed, 3 xpassed** |
+| Task 110e 实跑 | **Ch91-Ch93 3/3 成功，QG 通过率 100% (3/3)，coherence_major 0/3；Auditor 阈值校准生效** |
+| 最近回归测试 | **1593 passed, 4 skipped, 1 xfailed, 4 xpassed** |
 | Python | 3.11.9 |
 | 下一 Task | **Task 111: Ch101-Ch150 流式验证 + 决策门 DG-2** |
 
