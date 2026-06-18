@@ -106,11 +106,11 @@ Ch80-Ch100 的 coherence_major 失败不是上下文加载问题，而是：
 2. **连锁反应**：`skip_settlement` 导致后续章节连贯性受损，形成恶性循环
 3. **Writer/Auditor 层面**：coherence_major 的判定标准在 Ch80+ 压力区过于严格，或 Writer 的生成质量在该区间自然下降
 
-### 5.3 对 Task 111 的建议
+### 5.3 对后续验证任务的建议
 
 - **接受 Ch80-Ch100 的自然损耗**：该区间是上下文压力极限区，57-59% 的 QG 通过率可能是当前架构下的局部最优
 - **不继续调优加载端参数**：ContextEmergency 已为 0%，进一步放宽只会增加 budget_used，不会改善 coherence_major
-- **Task 111 重点**：验证 Ch101-Ch150 是否能维持相似通过率，并确认 budget_used 不重新触发 Emergency
+- **Task 112 重点**：在 Task 111a-111c 前置一致性修复后，验证 Ch101-Ch150 是否能维持相似通过率，并确认 budget_used 不重新触发 Emergency
 - **如需提升 QG 通过率**：需要 Writer 层面的改进（如增强角色连贯性 Prompt）或 Auditor 层面的阈值调整，超出 Task 110d 范围
 
 ---

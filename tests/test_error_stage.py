@@ -6,10 +6,11 @@ so that phase2_graph can capture it as `error_stage` in the run log.
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from songyan.exceptions import LLMError, LLMResponseParseError
 from songyan.workflows._nodes import (
     context_manager_node,
     creative_director_node,
@@ -84,6 +85,25 @@ async def test_llm_auditor_error_stage() -> None:
 
 
 @pytest.mark.asyncio
+async def test_llm_auditor_llm_error_returns_diagnostic_state() -> None:
+    """llm_auditor_node catches LLM failures instead of raising."""
+    version = MagicMock()
+    version.version_id = "v-1"
+    version.content = "正文"
+    with (
+        patch("songyan.workflows._nodes.load_version", new_callable=AsyncMock) as mock_ver,
+        patch("songyan.workflows._nodes._get_context_package", new_callable=AsyncMock) as mock_ctx,
+        patch("songyan.workflows._nodes.run_llm_audit", new_callable=AsyncMock) as mock_audit,
+    ):
+        mock_ver.return_value = version
+        mock_ctx.return_value = None
+        mock_audit.side_effect = LLMResponseParseError("bad response")
+        result = await llm_auditor_node({"current_version_id": "v-1"})
+    assert result["status"] == "llm_auditor"
+    assert result["error"] is not None
+
+
+@pytest.mark.asyncio
 async def test_review_merger_error_stage_missing_version() -> None:
     """review_merger_node returns status='review_merger' when version missing."""
     with patch("songyan.workflows._nodes.load_version", new_callable=AsyncMock) as mock:
@@ -115,6 +135,25 @@ async def test_literary_auditor_error_stage() -> None:
     with patch("songyan.workflows._nodes.load_version", new_callable=AsyncMock) as mock:
         mock.return_value = None
         result = await literary_auditor_node({"current_version_id": "missing"})
+    assert result["status"] == "literary_auditor"
+    assert result["error"] is not None
+
+
+@pytest.mark.asyncio
+async def test_literary_auditor_llm_error_returns_diagnostic_state() -> None:
+    """literary_auditor_node catches LLM failures instead of raising."""
+    version = MagicMock()
+    version.version_id = "v-1"
+    version.content = "正文"
+    with (
+        patch("songyan.workflows._nodes.load_version", new_callable=AsyncMock) as mock_ver,
+        patch("songyan.workflows._nodes._get_context_package", new_callable=AsyncMock) as mock_ctx,
+        patch("songyan.workflows._nodes.run_literary_audit", new_callable=AsyncMock) as mock_audit,
+    ):
+        mock_ver.return_value = version
+        mock_ctx.return_value = None
+        mock_audit.side_effect = LLMError("api failed")
+        result = await literary_auditor_node({"current_version_id": "v-1"})
     assert result["status"] == "literary_auditor"
     assert result["error"] is not None
 
@@ -183,7 +222,7 @@ async def test_human_gate_error_stage_unknown_decision() -> None:
     version.content = "test"
     with patch("songyan.workflows._nodes.load_version", new_callable=AsyncMock) as mock:
         mock.return_value = version
-        with patch("songyan.workflows._nodes.interrupt", return_value="invalid") as mock_int:
+        with patch("songyan.workflows._nodes.interrupt", return_value="invalid"):
             result = await human_gate_node({"current_version_id": "v-1"})
     assert result["status"] == "human_confirm"
     assert result["error"] is not None

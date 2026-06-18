@@ -48,6 +48,7 @@ from songyan.models import (
     ChapterSummary,
     ChapterVersion,
     HumanInstruction,
+    ReviewCategory,
     ReviewIssue,
 )
 from songyan.utils.scene_parser import parse_scenes as _parse_scenes
@@ -69,6 +70,36 @@ from songyan.workflows._helpers import (
 from songyan.workflows.review_merger import merge_reviews
 
 logger = structlog.get_logger(__name__)
+
+_COHERENCE_CATEGORIES: set[ReviewCategory] = {
+    ReviewCategory.WORLD_CONSISTENCY,
+    ReviewCategory.CHARACTER_BEHAVIOR,
+    ReviewCategory.TIMELINE,
+    ReviewCategory.NEW_SETTING_UNREGISTERED,
+}
+
+
+def combine_revision_signals(
+    *,
+    merged_has_critical: bool,
+    merged_has_major: bool,
+    score_needs_revision: bool,
+    score_has_critical: bool = False,
+    score_has_major: bool = False,
+) -> tuple[bool, bool, bool]:
+    """合并审查与评分阻断信号，评分只能增强、不能覆盖 merged issue."""
+    has_critical = merged_has_critical or score_has_critical
+    has_major = merged_has_major or score_has_major
+    needs_revision = has_critical or has_major or score_needs_revision
+    return has_critical, has_major, needs_revision
+
+
+def _has_non_coherence_major(issues: list[ReviewIssue]) -> bool:
+    """非 coherence major 由 ReviewMerger 直接阻断；coherence major 走 110e 阈值."""
+    return any(
+        issue.severity == "major" and issue.category not in _COHERENCE_CATEGORIES
+        for issue in issues
+    )
 
 # =============================================================================
 # Editor callable（可注入，用于测试）
@@ -615,7 +646,16 @@ async def llm_auditor_node(state: dict[str, Any]) -> dict[str, Any]:
 
     ctx = await _get_context_package(state)
 
-    result = await run_llm_audit(content=version.content, context_package=ctx)
+    try:
+        result = await run_llm_audit(content=version.content, context_package=ctx)
+    except (LLMError, LLMResponseParseError) as exc:
+        logger.warning(
+            "llm_auditor_node.audit_failed",
+            error=str(exc),
+            version_id=version.version_id,
+        )
+        return {"error": f"LLM audit failed: {exc}", "status": "llm_auditor"}
+
     report_id = new_id("la")
     await save_llm_audit(
         db=ReviewReportRepository(),
@@ -675,9 +715,8 @@ async def review_merger_node(state: dict[str, Any]) -> dict[str, Any]:
         previous_all_issues=previous_all_issues,
     )
 
-    has_critical = merged.has_critical
-    has_major = merged.has_major
-    needs_revision = has_critical or has_major
+    merged_has_critical = merged.has_critical
+    merged_has_major = _has_non_coherence_major(merged.issues)
     current_issues = len(merged.issues)
     db_revision_count, db_was_rewritten = await _load_chapter_repair_state(
         state["project_id"],
@@ -699,14 +738,13 @@ async def review_merger_node(state: dict[str, Any]) -> dict[str, Any]:
         llm_result=llm_result,
         budget_used=budget_used,
     )
-    # 使用 score_card flags 作为 needs_revision 的增强判定（优先）
-    needs_revision = score_card.flags.needs_revision
-    has_critical = score_card.flags.coherence_critical
-    has_major = score_card.flags.coherence_major
-
-    # Task 108: 合并 literary auditor 的 revision 需求
-    literary_needs_revision = state.get("_needs_revision", False)
-    needs_revision = needs_revision or literary_needs_revision
+    has_critical, has_major, needs_revision = combine_revision_signals(
+        merged_has_critical=merged_has_critical,
+        merged_has_major=merged_has_major,
+        score_needs_revision=score_card.flags.needs_revision,
+        score_has_critical=score_card.flags.coherence_critical,
+        score_has_major=score_card.flags.coherence_major,
+    )
 
     # 统一使用 score_card 口径（Task 106-patch）
     current_score = score_card.overall_score
@@ -863,7 +901,19 @@ async def literary_auditor_node(state: dict[str, Any]) -> dict[str, Any]:
 
     ctx = await _get_context_package(state)
 
-    result = await run_literary_audit(content=version.content, context_package=ctx)
+    try:
+        result = await run_literary_audit(content=version.content, context_package=ctx)
+    except (LLMError, LLMResponseParseError) as exc:
+        logger.warning(
+            "literary_auditor_node.audit_failed",
+            error=str(exc),
+            version_id=version.version_id,
+        )
+        return {
+            "error": f"Literary audit failed: {exc}",
+            "status": "literary_auditor",
+        }
+
     obs_id = new_id("lo")
     await save_literary_audit(
         db=LiteraryObservationRepository(),
@@ -871,15 +921,10 @@ async def literary_auditor_node(state: dict[str, Any]) -> dict[str, Any]:
         result=result,
         observation_id=obs_id,
     )
-    # 检测是否存在 critical 级别的文学观察，若存在则触发 revision
-    has_critical_literary = any(
-        obs.severity == "critical" for obs in result.observations
-    )
     return_state: dict[str, Any] = {
         "literary_observation_id": obs_id,
         "status": "revision_routing",
     }
-    return_state["_needs_revision"] = has_critical_literary
     return return_state
 
 
@@ -1069,7 +1114,8 @@ async def quality_gate_node(state: dict[str, Any]) -> dict[str, Any]:
 
     # 新问题检查（revision 链路特有）
     new_issues = state.get("_new_issues_introduced")
-    if new_issues and isinstance(new_issues, list) and len(new_issues) > 0:
+    has_new_issues = bool(new_issues and isinstance(new_issues, list) and len(new_issues) > 0)
+    if has_new_issues:
         failures.append(f"new_issues_introduced:{len(new_issues)}")
 
     if failures:
@@ -1084,7 +1130,9 @@ async def quality_gate_node(state: dict[str, Any]) -> dict[str, Any]:
 
         # rewrite 是最后一次自动修复。重写后无论质量门因何失败，
         # 都交给 human gate/auto-confirm 收束，避免绕过 revision_router 继续修订。
-        if was_rewritten:
+        if has_new_issues:
+            next_status = "human_confirm"
+        elif was_rewritten:
             next_status = "human_confirm"
         elif any(
             f.startswith(("word_count_too_high:", "length_score:")) for f in failures
@@ -1108,6 +1156,10 @@ async def quality_gate_node(state: dict[str, Any]) -> dict[str, Any]:
             "_needs_revision": next_status == "rule_auditing",
             "status": next_status,
         }
+
+        if has_new_issues:
+            result["_convergence_failed"] = True
+            result["_skip_settlement"] = True
 
         if repair_exhausted and next_status == "human_confirm":
             best_version_id = state.get("_best_version_id")

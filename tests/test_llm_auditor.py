@@ -218,6 +218,21 @@ class TestBuildIssue:
         assert issue.fix_type == "patch"
         assert issue.confidence == 1.0
 
+    def test_major_without_evidence_filtered(self) -> None:
+        data = {
+            "category": "character_behavior",
+            "severity": "major",
+            "evidence_quote": "",
+        }
+        assert _build_issue(data, 0) is None
+
+    def test_critical_without_evidence_filtered(self) -> None:
+        data = {
+            "category": "world_consistency",
+            "severity": "critical",
+        }
+        assert _build_issue(data, 0) is None
+
 
 # ---------------------------------------------------------------------------
 # Result Building Tests

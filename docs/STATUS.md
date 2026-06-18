@@ -47,15 +47,16 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 
 | 指标 | 数值 |
 |------|------|
-| 状态 | **V5.0 Phase 4 — Task 110e 完成，Auditor 阈值校准 + 审查上下文增强落地** |
+| 状态 | **V5.0 Phase 4 — Task 111a 已完成，进入 Task 111b Settlement/事实源一致性修复** |
 | V4.0 最终达标率 (Ch2-Ch50) | **81.6%** (Task 099) ✅ |
 | Task 105b 实跑 | **Ch51-Ch100 全部成功，QG 通过率 58.0% (29/50)，DG-1 未通过** |
 | Task 110a 实跑 | **Ch80-Ch100 21/21 成功，QG 通过率 57.1% (12/21)，ContextEmergency 81.0% (17/21)** |
 | Task 110d 实跑 | **Ch80-Ch96 17/17 成功，QG 通过率 58.8% (10/17)，ContextEmergency 0.0% (0/17)；参数调优无正收益，已回滚** |
 | Task 110e 实跑 | **Ch80-Ch96 17/17 成功，QG 通过率 100% (17/17)，coherence_major 0/17，ContextEmergency 0/17；Auditor 阈值校准 + 审查上下文增强生效** |
-| 最近回归测试 | **1621 passed, 4 skipped, 1 xfailed, 4 xpassed** |
+| 最近回归测试 | **1628 passed, 4 skipped, 1 xfailed, 4 xpassed** (`pytest tests/ -q`, Task 111a) |
 | Python | 3.11.9 |
-| 下一 Task | **Task 111: Ch101-Ch150 流式验证 + 决策门 DG-2** |
+| 当前 Task | **Task 111b: Settlement 与事实源一致性修复** |
+| 下一验证 Task | **Task 112: Ch101-Ch150 流式验证 + 决策门 DG-2** |
 
 ---
 
@@ -95,7 +96,10 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 | 110c | **加载与裁剪优化** — 智能过滤 + 分级 ContextEmergency + 可恢复性 | Ch80-Ch100 emergency 再降 ≥ 30%；保留 source_version_id | ✅ |
 | 110d | **Ch80-Ch100 快速验证与调优** — 验证 110a-110c 效果并调参 | ContextEmergency 0%；参数调优已验证并回滚；QG 58.8% 未达 80% 目标 | ✅ |
 | 110e | **coherence_major 根因修复** — ScoreAggregator 阈值校准 + LLMAuditor 审查上下文增强 | Ch80-Ch96 QG 100% (17/17)；coherence_major 0/17；文本阅读体验验证通过 | ✅ |
-| 111 | **Ch101-Ch150 流式验证 + 决策门 DG-2** | 达标率 ≥ 70%；budget_used ≤ 1.0；完成 150 章一次性生成 | 📝 |
+| 111a | **工作流决策契约修复** — ReviewMerger/ScoreAggregator/Literary/Revision 路由一致性 | merged critical/major 不被覆盖；Literary 不阻塞；rewrite_scene 不自动 patch；无证据 issue 不修订；全量回归 1628 passed | ✅ |
+| 111b | **Settlement 与事实源一致性修复** — accept/settlement/summary/state 边界 | validation failed 不落库；accepted 与 settlement 无半提交；summary_id 指向真实记录；state 不存完整 ContextPackage | 📝 |
+| 111c | **Context 与 Prompt 一致性修复** — hard ceiling、hard constraints、Craft Card、human instruction | Emergency 后 budget ≤ 1.0；硬约束不裁剪；Prompt 权重和 human instruction 字段一致 | 📝 |
+| 112 | **Ch101-Ch150 流式验证 + 决策门 DG-2** | 达标率 ≥ 70%；budget_used ≤ 1.0；完成 150 章一次性生成 | 📝 |
 
 ---
 
@@ -136,4 +140,9 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 - `tasks/110c-loading-and-pruning-strategy.md` — 加载端智能过滤与分级裁剪规划
 - `tasks/110d-ch80-ch100-validation-and-tuning.md` — Ch80-Ch100 快速验证与调优规划
 - `tasks/110e-coherence-major-fix-DONE.md` — coherence_major 根因修复交付记录
+- `tasks/111a-workflow-decision-contract-fix.md` — 工作流决策契约前置修复规划
+- `tasks/111a-workflow-decision-contract-fix-DONE.md` — 工作流决策契约修复交付记录
+- `tasks/111b-settlement-state-integrity-fix.md` — Settlement 与事实源一致性前置修复规划
+- `tasks/111c-context-prompt-consistency-fix.md` — Context 与 Prompt 一致性前置修复规划
+- `tasks/112-ch101-ch150-streaming-validation.md` — Ch101-Ch150 流式验证与 DG-2 规划
 - `logs/chapter_runs/run-33229919.jsonl` — Ch51-Ch59 实跑指标

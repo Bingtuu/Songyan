@@ -10,7 +10,10 @@
 |:------:|------|------|
 | P0 | `AGENTS.md` | 开发代理指令与不可违背规则 |
 | P0 | `docs/STATUS.md` | 项目状态看板（当前 Task、路线图） |
-| P0 | `tasks/10x-xxx.md` | 当前 Task 规格 |
+| P0 | `tasks/111a-workflow-decision-contract-fix-DONE.md` | 最新完成：工作流决策契约修复 |
+| P0 | `tasks/111b-settlement-state-integrity-fix.md` | 当前 Task：Settlement 与事实源一致性 |
+| P0 | `tasks/111c-context-prompt-consistency-fix.md` | 下一前置修复：Context 与 Prompt 一致性 |
+| P0 | `tasks/112-ch101-ch150-streaming-validation.md` | 顺延后的 Ch101-Ch150 流式验证 + DG-2 |
 | P1 | `docs/INDEX.md` | 本文档 |
 | P2 | `archive/v4/INDEX.md` | V4.x 归档（历史结论参考） |
 

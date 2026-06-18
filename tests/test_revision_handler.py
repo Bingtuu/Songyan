@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -11,6 +12,7 @@ from songyan.agents.revision_handler import (
     MAX_CONTENT_TOKENS,
     _apply_patches,
     _build_revision_output,
+    _detect_new_issues,
     _determine_issues_fixed,
     _extract_protected_fissures,
     _filter_patchable_issues,
@@ -32,6 +34,7 @@ from songyan.models import (
     ReviewCategory,
     ReviewIssue,
     RevisionOutput,
+    RuleAuditResult,
 )
 
 
@@ -92,6 +95,12 @@ class TestFilterPatchableIssues:
         i2 = _make_review_issue("i2", "major", "confirm")
         i3 = _make_review_issue("i3", "major", "register_setting")
         report = _make_merged_report(i1, i2, i3)
+        result = _filter_patchable_issues(report)
+        assert result == []
+
+    def test_excludes_empty_evidence_quote(self) -> None:
+        i1 = _make_review_issue("i1", "critical", "patch", evidence_quote="")
+        report = _make_merged_report(i1)
         result = _filter_patchable_issues(report)
         assert result == []
 
@@ -853,13 +862,6 @@ class TestSaveRevisionOutput:
         assert created.status == "under_review"
 
 
-# ---------------------------------------------------------------------------
-# 058d: New Issues Detection
-# ---------------------------------------------------------------------------
-from songyan.agents.revision_handler import _detect_new_issues
-from songyan.models import RuleAuditResult
-
-
 class TestDetectNewIssues:
     """Tests for _detect_new_issues — 058d revision convergence fix."""
 
@@ -917,7 +919,10 @@ class TestDetectNewIssues:
         assert len(result) == 1
         assert result[0].category == ReviewCategory.DESCRIPTION_SENSORY
         assert result[0].severity == "major"
-        assert "fatigue" in result[0].issue_description.lower() or "疲劳" in result[0].issue_description
+        assert (
+            "fatigue" in result[0].issue_description.lower()
+            or "疲劳" in result[0].issue_description
+        )
 
     def test_detects_opening_hook_loss(self) -> None:
         original = self._make_rule_result(has_opening_hook=True)
@@ -926,7 +931,10 @@ class TestDetectNewIssues:
         assert len(result) == 1
         assert result[0].category == ReviewCategory.NARRATIVE_HOOK
         assert result[0].severity == "critical"
-        assert "opening" in result[0].issue_description.lower() or "首屏" in result[0].issue_description
+        assert (
+            "opening" in result[0].issue_description.lower()
+            or "首屏" in result[0].issue_description
+        )
 
     def test_detects_ending_hook_loss(self) -> None:
         original = self._make_rule_result(has_ending_hook=True)
@@ -935,7 +943,10 @@ class TestDetectNewIssues:
         assert len(result) == 1
         assert result[0].category == ReviewCategory.NARRATIVE_HOOK
         assert result[0].severity == "critical"
-        assert "ending" in result[0].issue_description.lower() or "章末" in result[0].issue_description
+        assert (
+            "ending" in result[0].issue_description.lower()
+            or "章末" in result[0].issue_description
+        )
 
     def test_detects_multiple_regressions(self) -> None:
         original = self._make_rule_result(
@@ -1023,7 +1034,7 @@ class TestBuildRevisionOutputWithNewIssues:
 # Task 095: Scene Split / Merge Strategies
 # ---------------------------------------------------------------------------
 class TestSceneSplitStrategy:
-    async def test_scene_split_triggered(self) -> None:
+    async def test_rewrite_scene_not_auto_split(self) -> None:
         content = "### Scene 1\n这是一个很长的场景内容。" * 50
         issue = ReviewIssue(
             issue_id="rule-v1-001",
@@ -1039,14 +1050,16 @@ class TestSceneSplitStrategy:
             issues=[issue],
         )
 
-        with patch(
-            "songyan.agents.revision_handler._handle_scene_shortage",
-            return_value="### Scene 1\na\n\n### Scene 2\nb",
-        ) as mock_split:
+        with (
+            patch("songyan.agents.revision_handler._handle_scene_shortage") as mock_split,
+            patch("songyan.agents.revision_handler.call_llm") as mock_llm,
+        ):
             result, revised = await run_revision(content, report)
 
-        mock_split.assert_called_once()
-        assert "### Scene 2" in revised
+        mock_split.assert_not_called()
+        mock_llm.assert_not_called()
+        assert result.patches_applied == []
+        assert revised == content
 
     async def test_scene_split_not_triggered_without_issue(self) -> None:
         """没有场景结构 issue 时，即使单 scene 也不触发 scene_split."""
@@ -1091,7 +1104,7 @@ class TestSceneSplitStrategy:
 
 
 class TestSceneMergeStrategy:
-    async def test_scene_merge_triggered(self) -> None:
+    async def test_scene_merge_llm_path_not_triggered(self) -> None:
         # 5 个 scene，每个约 1000 字，总计约 5000 字
         content = (
             "### Scene 1\n" + "正文" * 500 + "\n\n"
@@ -1113,17 +1126,21 @@ class TestSceneMergeStrategy:
             chapter_version_id="v1",
             issues=[issue],
         )
+        llm_response = json.dumps(
+            {"content": content, "patches": []}, ensure_ascii=False
+        )
 
-        with patch(
-            "songyan.agents.revision_handler._handle_scene_overflow",
-            return_value="### Scene 1\na\n\n### Scene 2\nb",
-        ) as mock_merge:
+        with (
+            patch("songyan.agents.revision_handler._handle_scene_overflow") as mock_merge,
+            patch("songyan.agents.revision_handler.call_llm", return_value=llm_response),
+        ):
             result, revised = await run_revision(
                 content, report, word_count_target=3000
             )
 
-        mock_merge.assert_called_once()
-        assert "### Scene 2" in revised
+        mock_merge.assert_not_called()
+        assert result.patches_applied == []
+        assert revised == content
 
     async def test_scene_merge_not_triggered_when_word_count_ok(self) -> None:
         """字数未超标时不触发 scene_merge."""

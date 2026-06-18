@@ -140,11 +140,22 @@ def _build_issue(data: dict[str, Any], index: int) -> ReviewIssue | None:
     if not issue_id:
         issue_id = f"issue_{index:03d}"
 
+    severity = _validate_severity(data.get("severity", "minor"))
+    evidence_quote = str(data.get("evidence_quote", "") or "")
+    if severity in {"critical", "major"} and not evidence_quote.strip():
+        logger.warning(
+            "llm_auditor.missing_evidence_quote",
+            issue_id=issue_id,
+            severity=severity,
+            category=category,
+        )
+        return None
+
     return ReviewIssue(
         issue_id=issue_id,
         category=category,  # type: ignore[arg-type]
-        severity=_validate_severity(data.get("severity", "minor")),  # type: ignore[arg-type]
-        evidence_quote=data.get("evidence_quote", ""),
+        severity=severity,  # type: ignore[arg-type]
+        evidence_quote=evidence_quote,
         evidence_location=data.get("evidence_location", ""),
         issue_description=data.get("issue_description", ""),
         expected=data.get("expected"),

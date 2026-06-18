@@ -25,8 +25,19 @@ from songyan.models import (
 )
 from songyan.utils.token_estimator import truncate_to_tokens
 
-from ._diff import _difflib_fuzzy_search, _paragraph_fallback_search
-from ._patch_engine import _apply_patches, _determine_issues_fixed, _find_text_span
+from ._diff import (
+    _difflib_fuzzy_search as _difflib_fuzzy_search,
+)
+from ._diff import (
+    _paragraph_fallback_search as _paragraph_fallback_search,
+)
+from ._patch_engine import (
+    _apply_patches,
+    _determine_issues_fixed,
+)
+from ._patch_engine import (
+    _find_text_span as _find_text_span,
+)
 from ._segmented_revision import run_segmented_revision
 
 logger = structlog.get_logger(__name__)
@@ -42,9 +53,20 @@ def _load_prompt_template() -> str:
     return get_prompt_loader().load_card("revision_handler").system_prompt
 
 
+def filter_patchable_issues(report: MergedReviewReport) -> list[ReviewIssue]:
+    """仅保留有证据、fix_type=patch、允许自动修复的 critical/major issue."""
+    return [
+        issue
+        for issue in report.issues
+        if issue.severity in ("critical", "major")
+        and issue.fix_type == "patch"
+        and bool(issue.evidence_quote.strip())
+    ]
+
+
 def _filter_patchable_issues(report: MergedReviewReport) -> list[ReviewIssue]:
-    """筛选可 patch 的 issues."""
-    return report.patchable_issues
+    """兼容旧测试与内部调用的别名."""
+    return filter_patchable_issues(report)
 
 
 def _extract_protected_fissures(
@@ -407,84 +429,6 @@ async def run_revision(
         (RevisionOutput, revised_content)
     """
     start_time = time.perf_counter()
-
-    # Task 095: 场景结构策略选择
-    from songyan.utils.scene_parser import parse_scenes as _parse_scenes
-
-    scenes = _parse_scenes(content)
-    scenes_count = len(scenes)
-    current_wc = len(re.findall(r"[\u4e00-\u9fff]", content)) + len(
-        re.findall(r"[a-zA-Z0-9]+", content)
-    )
-
-    # 只有当 report 中存在明确的场景结构 issue 时才触发 scene_split/scene_merge
-    has_scene_structure_issue = any(
-        i.category == ReviewCategory.NARRATIVE_PACING
-        and i.severity in ("critical", "major")
-        and "场景" in (i.issue_description or "")
-        for i in report.issues
-    )
-
-    if scenes_count < 2 and has_scene_structure_issue:
-        logger.info(
-            "revision_handler.scene_split_strategy",
-            scenes_count=scenes_count,
-            word_count=current_wc,
-        )
-        revised_content = await _handle_scene_shortage(content, target_scenes=2)
-        new_scenes = _parse_scenes(revised_content)
-        duration_ms = int((time.perf_counter() - start_time) * 1000)
-        output = RevisionOutput(
-            new_version_id="",
-            patches_applied=[],
-            issues_fixed=[],
-            issues_remaining=[],
-            new_issues_introduced=[],
-            content_preservation_ratio=(
-                round(min(len(revised_content) / len(content), 1.0), 4) if content else 1.0
-            ),
-        )
-        logger.info(
-            "revision_handler.scene_split_done",
-            original_scenes=scenes_count,
-            revised_scenes=len(new_scenes),
-            duration_ms=duration_ms,
-        )
-        return output, revised_content
-
-    if (
-        current_wc > int(word_count_target * 1.4)
-        and scenes_count > 3
-        and has_scene_structure_issue
-    ):
-        logger.info(
-            "revision_handler.scene_merge_strategy",
-            scenes_count=scenes_count,
-            word_count=current_wc,
-            target=word_count_target,
-        )
-        revised_content = await _handle_scene_overflow(
-            content, target_words=word_count_target
-        )
-        new_scenes = _parse_scenes(revised_content)
-        duration_ms = int((time.perf_counter() - start_time) * 1000)
-        output = RevisionOutput(
-            new_version_id="",
-            patches_applied=[],
-            issues_fixed=[],
-            issues_remaining=[],
-            new_issues_introduced=[],
-            content_preservation_ratio=(
-                round(min(len(revised_content) / len(content), 1.0), 4) if content else 1.0
-            ),
-        )
-        logger.info(
-            "revision_handler.scene_merge_done",
-            original_scenes=scenes_count,
-            revised_scenes=len(new_scenes),
-            duration_ms=duration_ms,
-        )
-        return output, revised_content
 
     patchable_issues = _filter_patchable_issues(report)
 

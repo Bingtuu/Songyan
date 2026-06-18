@@ -6,9 +6,17 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from songyan.models import ChapterVersion
+from songyan.models import (
+    ChapterVersion,
+    LiteraryAuditResult,
+    LiteraryObservation,
+    ReviewCategory,
+    ReviewIssue,
+)
 from songyan.workflows._nodes import (
     _load_chapter_repair_state,
+    combine_revision_signals,
+    literary_auditor_node,
     review_merger_node,
     rewrite_node,
     settlement_extractor_node,
@@ -161,12 +169,24 @@ class TestRewriteNodeSuccessPath:
         assert result["_best_score_card"] is None
 
 
-class TestReviewMergerNodeLiteraryNeedsRevision:
-    """review_merger_node 合并 literary _needs_revision 测试."""
+class TestReviewMergerNodeRevisionSignals:
+    """review_merger_node 合并审查与评分阻断信号测试."""
+
+    def test_combine_revision_signals_preserves_merged_major(self) -> None:
+        has_critical, has_major, needs_revision = combine_revision_signals(
+            merged_has_critical=False,
+            merged_has_major=True,
+            score_needs_revision=False,
+            score_has_critical=False,
+            score_has_major=False,
+        )
+        assert has_critical is False
+        assert has_major is True
+        assert needs_revision is True
 
     @pytest.mark.asyncio
-    async def test_literary_needs_revision_overrides_score_card(self) -> None:
-        """score_card flags 说不需要 revision，但 literary 说需要，则仍需 revision."""
+    async def test_merged_major_overrides_clean_score_card(self) -> None:
+        """score_card flags 说不需要 revision，但 merged 有 major，则仍需 revision."""
         mock_version = MagicMock()
         mock_version.version_id = "v1"
         mock_version.content = "正文"
@@ -205,8 +225,17 @@ class TestReviewMergerNodeLiteraryNeedsRevision:
                 ) as mock_merge:
                     merged_mock = MagicMock()
                     merged_mock.has_critical = False
-                    merged_mock.has_major = False
-                    merged_mock.issues = []
+                    merged_mock.has_major = True
+                    merged_mock.issues = [
+                        ReviewIssue(
+                            issue_id="i1",
+                            category=ReviewCategory.NARRATIVE_HOOK,
+                            severity="major",
+                            evidence_quote="quote",
+                            evidence_location="loc",
+                            issue_description="hook weak",
+                        )
+                    ]
                     mock_merge.return_value = merged_mock
 
                     with patch(
@@ -229,7 +258,7 @@ class TestReviewMergerNodeLiteraryNeedsRevision:
                                     "chapter_number": 1,
                                     "current_version_id": "v1",
                                     "revision_round": 0,
-                                    "_needs_revision": True,  # literary says needs revision
+                                    "_needs_revision": False,
                                     "_total_revision_count": 0,
                                     "_was_rewritten": False,
                                 }
@@ -237,7 +266,56 @@ class TestReviewMergerNodeLiteraryNeedsRevision:
 
         assert result["_needs_revision"] is True
         assert result["_has_critical"] is False
-        assert result["_has_major"] is False
+        assert result["_has_major"] is True
+
+
+class TestLiteraryAuditorNodeNonBlocking:
+    """literary_auditor_node 只输出诊断，不改变修订决策."""
+
+    @pytest.mark.asyncio
+    async def test_critical_observation_does_not_set_needs_revision(self) -> None:
+        mock_version = MagicMock()
+        mock_version.version_id = "v1"
+        mock_version.content = "正文"
+        audit = LiteraryAuditResult(
+            observations=[
+                LiteraryObservation(
+                    observation_id="lo-1",
+                    observation_type="conceptual_idling",
+                    description="概念空转",
+                    severity="critical",
+                )
+            ]
+        )
+        with (
+            patch(
+                "songyan.workflows._nodes.load_version",
+                new_callable=AsyncMock,
+                return_value=mock_version,
+            ),
+            patch(
+                "songyan.workflows._nodes._get_context_package",
+                new_callable=AsyncMock,
+                return_value=None,
+            ),
+            patch(
+                "songyan.workflows._nodes.run_literary_audit",
+                new_callable=AsyncMock,
+                return_value=audit,
+            ),
+            patch(
+                "songyan.workflows._nodes.save_literary_audit",
+                new_callable=AsyncMock,
+            ),
+        ):
+            result = await literary_auditor_node({
+                "current_version_id": "v1",
+                "_needs_revision": False,
+            })
+
+        assert result["status"] == "revision_routing"
+        assert "literary_observation_id" in result
+        assert "_needs_revision" not in result
 
 
 class TestLoadChapterRepairStateExcludesAbandoned:

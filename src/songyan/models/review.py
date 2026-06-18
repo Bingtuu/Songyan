@@ -204,5 +204,7 @@ class MergedReviewReport(BaseModel):
         return [
             i
             for i in self.issues
-            if i.severity in ("critical", "major") and i.fix_type == "patch"
+            if i.severity in ("critical", "major")
+            and i.fix_type == "patch"
+            and bool(i.evidence_quote.strip())
         ]
