@@ -1,4 +1,4 @@
-﻿"""Tests for Craft Card PromptLoader."""
+"""Tests for Craft Card PromptLoader."""
 
 from __future__ import annotations
 
@@ -124,6 +124,41 @@ class TestRenderCard:
         unconditional = [s.id for s in card.sections if not s.tags]
         for sid in unconditional:
             assert sid in rendered.active_sections
+
+    def test_render_content_follows_weight_order(self) -> None:
+        card = CraftCard(
+            metadata=CraftCardMetadata(agent="test", version="1.0.0"),
+            sections=[
+                CraftCardSection(
+                    id="low",
+                    name="Low",
+                    content="low content",
+                    weight=0.5,
+                ),
+                CraftCardSection(
+                    id="high",
+                    name="High",
+                    content="high content",
+                    weight=2.0,
+                ),
+                CraftCardSection(
+                    id="mid",
+                    name="Mid",
+                    content="mid content",
+                    weight=1.0,
+                ),
+            ],
+        )
+        reset_prompt_loader()
+        loader = get_prompt_loader()
+        rendered = loader.render_card(card, {})
+        assert rendered.active_sections == ["high", "mid", "low"]
+        assert rendered.sections_content.index("high content") < rendered.sections_content.index(
+            "mid content"
+        )
+        assert rendered.sections_content.index("mid content") < rendered.sections_content.index(
+            "low content"
+        )
 
     def test_render_caches_result(self) -> None:
         reset_prompt_loader()

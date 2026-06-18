@@ -38,10 +38,12 @@ from ._assemblers import (
     _build_rag_soft_references,
     _build_recent_plot,
     _build_soft_references,
-    _calculate_dynamic_relevance,
     _dynamic_budget,
     _extract_keywords,
     _is_setting_critical,
+)
+from ._assemblers import (
+    _calculate_dynamic_relevance as _calculate_dynamic_relevance,
 )
 
 logger = structlog.get_logger(__name__)
@@ -555,21 +557,8 @@ class BudgetPruner:
     def _prune_hard_constraints(
         self, ctx: ContextPackage, budget: int
     ) -> ContextPackage:
-        """裁剪 hard_constraints 中的 human_mark（核心 obligations/taboo 保留）."""
-        if not ctx.hard_constraints:
-            return ctx
-        current = self._estimate_package(ctx)
-        if current <= budget:
-            return ctx
-
-        core = [c for c in ctx.hard_constraints if c.type != "human_mark"]
-        marks = [c for c in ctx.hard_constraints if c.type == "human_mark"]
-        if not marks:
-            return ctx
-
-        # 超预算时只保留最重要的 3 个人为标记
-        keep = min(max(1, len(marks) // 2), 3)
-        ctx.hard_constraints = core + marks[:keep]
+        """Task 111c: hard_constraints 不裁剪；human_marks 使用独立分区."""
+        _ = budget
         return ctx
 
     # V3.1 Layer 2 新增：arc/volume 摘要最后手段截断
@@ -767,102 +756,43 @@ class BudgetPruner:
         return ctx
 
     def _context_emergency(self, ctx: ContextPackage, budget: int) -> ContextPackage:
-        """ContextEmergency — 分级降级策略（Task 110c）.
+        """ContextEmergency — 真正超预算后的最终硬裁。
 
-        根据 budget_used 决定降级级别，避免直接清空所有信息：
-        - Level 1 (1.0–1.2): 保留主角+top2 配角；soft_refs top5；
-          foreshadowing due/overdue；arc/volume 截断 50%
-        - Level 2 (1.2–1.5): 只保留主角；soft_refs top3；
-          foreshadowing overdue；清空 open_threads/permanent_scenes
-        - Level 3 (>1.5): 当前核裁模式（最严格）
+        Task 111c: pre-emergency / soft-degrade 不再使用 context_emergency 表示。
+        一旦 budget_used > 1.0，最终形态只保留硬约束、规则、章节目标、
+        creative_brief 和主角/最高优先级角色状态。
         """
         before = self._estimate_package(ctx)
-        budget_used = before / budget if budget > 0 else 0.0
+        level = 3
 
-        # 确定降级级别
-        if budget_used > 1.5:
-            level = 3
-        elif budget_used > 1.2:
-            level = 2
-        else:
-            level = 1
-
-        # Level 1/2/3 共同：清空低优先级分区
         ctx.dialogue_style_cards = []
         ctx.human_marks = []
-
-        if level >= 1:
-            # Level 1: arc/volume 截断 50%
-            if ctx.arc_context is not None and ctx.arc_context.arc_summary:
-                arc = ctx.arc_context.model_copy(deep=True)
-                mid = len(arc.arc_summary) // 2
-                arc.arc_summary = arc.arc_summary[:mid] + "..."
-                ctx.arc_context = arc
-            if ctx.volume_context is not None and ctx.volume_context.volume_summary:
-                vol = ctx.volume_context.model_copy(deep=True)
-                mid = len(vol.volume_summary) // 2
-                vol.volume_summary = vol.volume_summary[:mid] + "..."
-                ctx.volume_context = vol
-            # soft_refs 保留 top 5（is_critical 优先）
-            if ctx.soft_references:
-                critical_refs = [r for r in ctx.soft_references if r.is_critical]
-                other_refs = sorted(
-                    [r for r in ctx.soft_references if not r.is_critical],
-                    key=lambda r: r.relevance_score,
-                    reverse=True,
-                )
-                ctx.soft_references = critical_refs + other_refs[:5]
-            # foreshadowing 保留 due/overdue
-            if ctx.foreshadowing:
-                ctx.foreshadowing = [f for f in ctx.foreshadowing if f.status in ("due", "overdue")]
-            # 角色保留主角 + top2 配角
-            if ctx.character_states:
-                sorted_chars = sorted(
-                    ctx.character_states, key=lambda s: s.importance_score, reverse=True
-                )
-                ctx.character_states = sorted_chars[:3]
-
-        if level >= 2:
-            # Level 2: 进一步收紧
-            # soft_refs 只保留 top 3
-            if ctx.soft_references:
-                critical_refs = [r for r in ctx.soft_references if r.is_critical]
-                other_refs = sorted(
-                    [r for r in ctx.soft_references if not r.is_critical],
-                    key=lambda r: r.relevance_score,
-                    reverse=True,
-                )
-                ctx.soft_references = critical_refs + other_refs[:3]
-            # foreshadowing 只保留 overdue
-            if ctx.foreshadowing:
-                ctx.foreshadowing = [f for f in ctx.foreshadowing if f.status == "overdue"]
-            # 清空 open_threads / permanent_scenes
-            ctx.open_threads = []
-            ctx.permanent_scenes = []
-            # 角色只保留主角
-            if ctx.character_states:
-                top_char = max(ctx.character_states, key=lambda s: s.importance_score)
-                ctx.character_states = [top_char]
-
-        if level >= 3:
-            # Level 3: 核裁模式（原 Task 104 行为）
-            ctx.soft_references = []
-            ctx.foreshadowing = []
-            ctx.open_threads = []
-            ctx.permanent_scenes = []
-            ctx.arc_context = None
-            ctx.volume_context = None
-            if ctx.character_states:
-                top_char = max(ctx.character_states, key=lambda s: s.importance_score)
-                ctx.character_states = [top_char]
-            if ctx.recent_plot and ctx.recent_plot.summaries:
-                rp = ctx.recent_plot.model_copy(deep=True)
-                rp.summaries = rp.summaries[-1:]
-                ctx.recent_plot = rp
+        ctx.soft_references = []
+        ctx.foreshadowing = []
+        ctx.open_threads = []
+        ctx.permanent_scenes = []
+        ctx.arc_context = None
+        ctx.volume_context = None
+        if ctx.character_states:
+            top_char = max(ctx.character_states, key=lambda s: s.importance_score)
+            ctx.character_states = [top_char]
+        if ctx.recent_plot:
+            rp = ctx.recent_plot.model_copy(deep=True)
+            rp.summaries = []
+            rp.last_chapter_ending = ""
+            rp.open_threads = []
+            ctx.recent_plot = rp
 
         ctx.context_emergency = True
         ctx.context_emergency_level = level
         after = self._estimate_package(ctx)
+        if after > budget:
+            logger.warning(
+                "context_manager.context_emergency_irreducible",
+                after_tokens=after,
+                budget=budget,
+                reason="hard_partitions_exceed_budget",
+            )
 
         logger.warning(
             "context_manager.context_emergency_triggered",
@@ -1199,5 +1129,3 @@ def assemble_context_package(
         focal_distance=final_focal,
     )
     return ctx
-
-

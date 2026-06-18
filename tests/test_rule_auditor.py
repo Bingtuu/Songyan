@@ -397,7 +397,23 @@ class TestWordCountRatio:
         result = run_rule_audit(text, word_count_target=250)
         # 300/250 = 1.20
         assert result.word_count_ratio == 1.20
-        assert result.word_count_ok is False
+        assert result.word_count_ok is True
+
+    def test_chapter_type_dynamic_upper_bound(self) -> None:
+        """RuleAuditor 与 Writer 使用同一 chapter_type-aware 字数上限."""
+        text = "测试" * 650  # 1300 字
+        transition = run_rule_audit(
+            text,
+            word_count_target=1000,
+            chapter_type="transition",
+        )
+        conflict = run_rule_audit(
+            text,
+            word_count_target=1000,
+            chapter_type="conflict",
+        )
+        assert transition.word_count_ok is False
+        assert conflict.word_count_ok is True
 
     def test_word_count_ratio_zero_target(self) -> None:
         """target=0 时 ratio 为 0.0."""

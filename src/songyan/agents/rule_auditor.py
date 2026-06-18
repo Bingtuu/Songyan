@@ -27,12 +27,10 @@ from songyan.utils.generic_names import detect_generic_names
 from songyan.utils.numerical_validator import (
     NumericalContext,
 )
+from songyan.utils.truncation import word_count_bounds
 from songyan.utils.word_count import count_chinese_words as _count_chinese_words
 
 logger = structlog.get_logger(__name__)
-
-WORD_COUNT_TOLERANCE = 0.10  # ±10%
-
 
 # 简易情感词表（用于情绪转折检测）
 _POSITIVE_WORDS = {
@@ -120,6 +118,7 @@ def run_rule_audit(
     content: str,
     genre_rules: GenreRules | None = None,
     word_count_target: int = 3000,
+    chapter_type: str | None = None,
     scene_count_target: int = 2,
     numerical_contexts: list[NumericalContext] | None = None,
     punch_points: list[PunchPoint] | None = None,
@@ -158,8 +157,7 @@ def run_rule_audit(
 
     # 5. 字数统计
     word_count = _count_chinese_words(content)
-    lower_bound = int(word_count_target * (1 - WORD_COUNT_TOLERANCE))
-    upper_bound = int(word_count_target * (1 + WORD_COUNT_TOLERANCE))
+    lower_bound, upper_bound = word_count_bounds(word_count_target, chapter_type)
     word_count_ok = lower_bound <= word_count <= upper_bound
     word_count_ratio = round(word_count / word_count_target, 2) if word_count_target > 0 else 0.0
 

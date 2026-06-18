@@ -450,7 +450,7 @@ class TestBuildHardConstraints:
         obligation_constraints = [c for c in constraints if c.type == "obligation"]
         assert len(obligation_constraints) == 6
 
-    def test_mark_note_truncated(self) -> None:
+    def test_human_marks_stay_out_of_hard_constraints(self) -> None:
         goal = ChapterGoal(chapter_number=1)
         genre = GenreProfile(id="g", name="测试")
         project = ProjectSetting(genre_id="g", protagonist_name="主角")
@@ -466,11 +466,9 @@ class TestBuildHardConstraints:
         ]
         constraints = _build_hard_constraints(goal, genre, project, marks)
         mark_constraints = [c for c in constraints if c.type == "human_mark"]
-        assert len(mark_constraints) == 1
-        assert len(mark_constraints[0].description) < 100
-        assert "..." in mark_constraints[0].description
+        assert mark_constraints == []
 
-    def test_high_priority_marks_kept_when_token_budget_exceeded(self) -> None:
+    def test_human_marks_preserved_in_independent_partition(self) -> None:
         goal = ChapterGoal(chapter_number=90)
         genre = GenreProfile(id="g", name="测试")
         project = ProjectSetting(genre_id="g", protagonist_name="主角")
@@ -481,7 +479,7 @@ class TestBuildHardConstraints:
                 mark_type="setting",
                 target_key="k1",
                 note="高优先级标记" * 50,
-                priority=9,
+                priority=10,
             ),
             HumanMark(
                 mark_id="m2",
@@ -492,9 +490,22 @@ class TestBuildHardConstraints:
                 priority=3,
             ),
         ]
-        constraints = _build_hard_constraints(goal, genre, project, marks)
-        mark_constraints = [c for c in constraints if c.type == "human_mark"]
-        assert any("m1" in c.source for c in mark_constraints)
+        ctx = assemble_context_package(
+            chapter_goal=goal,
+            creative_brief=None,
+            genre_profile=genre,
+            mode_profile=_make_mode(),
+            project=project,
+            characters=[],
+            character_states=[],
+            recent_summaries=[],
+            active_foreshadowings=[],
+            setting_snapshots=[],
+            human_marks=marks,
+            budget_tokens=10000,
+        )
+        assert ctx.human_marks == [marks[0]]
+        assert all(c.type != "human_mark" for c in ctx.hard_constraints)
 
 
 class TestBuildCharacterSnapshots:
@@ -832,9 +843,15 @@ class TestHumanMarksInContext:
         assert len(ctx.human_marks) == 1
         assert ctx.human_marks[0].mark_id == "m1"
 
-    def test_marks_converted_to_hard_constraints(self) -> None:
+    def test_marks_not_converted_to_hard_constraints(self) -> None:
         marks = [
-            HumanMark(mark_id="m1", project_id="p1", mark_type="setting", target_key="核心道具", priority=9),
+            HumanMark(
+                mark_id="m1",
+                project_id="p1",
+                mark_type="setting",
+                target_key="核心道具",
+                priority=9,
+            ),
         ]
         ctx = assemble_context_package(
             chapter_goal=_make_chapter_goal(),
@@ -851,8 +868,9 @@ class TestHumanMarksInContext:
             human_marks=marks,
         )
         hm_constraints = [c for c in ctx.hard_constraints if c.type == "human_mark"]
-        assert len(hm_constraints) == 1
-        assert "核心道具" in hm_constraints[0].description
+        assert hm_constraints == []
+        assert len(ctx.human_marks) == 1
+        assert ctx.human_marks[0].target_key == "核心道具"
 
     def test_marks_respect_mode_threshold(self) -> None:
         mode = CreativeModeProfile(
@@ -1155,36 +1173,28 @@ class TestContextEmergencyLevels:
             permanent_scenes=[],
         )
 
-    def test_level1_keeps_due_overdue_and_top_chars(self) -> None:
+    def test_emergency_uses_final_hard_cut_for_level1_range(self) -> None:
         pruner = BudgetPruner()
         ctx = self._make_ctx()
-        # 让 budget_used 落在 1.0-1.2 之间触发 Level 1
         before = pruner._estimate_package(ctx)
         budget = max(1, int(before / 1.1))
         ctx = pruner._context_emergency(ctx, budget)
         assert ctx.context_emergency is True
-        assert ctx.context_emergency_level == 1
-        # 保留主角 + top2 配角 = 3
-        assert len(ctx.character_states) <= 3
-        # soft_refs 保留 critical + top5
-        assert len(ctx.soft_references) <= 6
-        # foreshadowing 保留 due/overdue
-        assert all(f.status in ("due", "overdue") for f in ctx.foreshadowing)
+        assert ctx.context_emergency_level == 3
+        assert len(ctx.character_states) == 1
+        assert ctx.soft_references == []
+        assert ctx.foreshadowing == []
 
-    def test_level2_keeps_overdue_only_and_protagonist(self) -> None:
+    def test_emergency_uses_final_hard_cut_for_level2_range(self) -> None:
         pruner = BudgetPruner()
         ctx = self._make_ctx()
-        # 让 budget_used 落在 1.2-1.5 之间触发 Level 2
         before = pruner._estimate_package(ctx)
         budget = max(1, int(before / 1.35))
         ctx = pruner._context_emergency(ctx, budget)
-        assert ctx.context_emergency_level == 2
-        # Level 2: 只保留主角
+        assert ctx.context_emergency_level == 3
         assert len(ctx.character_states) == 1
-        # soft_refs 只保留 critical + top3
-        assert len(ctx.soft_references) <= 4
-        # foreshadowing 只保留 overdue
-        assert all(f.status == "overdue" for f in ctx.foreshadowing)
+        assert ctx.soft_references == []
+        assert ctx.foreshadowing == []
 
     def test_level3_nuclear_mode(self) -> None:
         pruner = BudgetPruner()
@@ -1199,6 +1209,7 @@ class TestContextEmergencyLevels:
         assert len(ctx.character_states) == 1
         assert len(ctx.soft_references) == 0
         assert len(ctx.foreshadowing) == 0
+        assert ctx.recent_plot.summaries == []
 
 
 class TestPartitionBudgets:

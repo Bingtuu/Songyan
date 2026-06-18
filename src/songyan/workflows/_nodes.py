@@ -508,6 +508,7 @@ async def rewrite_node(state: dict[str, Any]) -> dict[str, Any]:
             content=version.content,
             genre_rules=_build_genre_rules(_genre, _project, _goal) if _genre else None,
             word_count_target=_word_count_target,
+            chapter_type=_goal.chapter_type if _goal else None,
             scene_count_target=max(len(version.scenes), 2),
         )
         if not _rule_check.has_opening_hook:
@@ -637,6 +638,7 @@ async def rule_auditor_node(state: dict[str, Any]) -> dict[str, Any]:
         content=version.content,
         genre_rules=_build_genre_rules(genre, project, goal) if genre else None,
         word_count_target=word_count_target,
+        chapter_type=goal.chapter_type if goal else None,
         scene_count_target=max(len(version.scenes), 2) if version.scenes else 2,
         punch_points=punch_points,
     )
@@ -1028,6 +1030,7 @@ async def revision_handler_node(state: dict[str, Any]) -> dict[str, Any]:
         content=revised_content,
         genre_rules=_build_genre_rules(genre, project, goal) if genre else None,
         word_count_target=word_count_target,
+        chapter_type=goal.chapter_type if goal else None,
         scene_count_target=max(len(output.patches_applied), 2),
         punch_points=punch_points,
     )

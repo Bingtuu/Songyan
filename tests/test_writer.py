@@ -192,6 +192,21 @@ class TestRenderPrompt:
         # 文件模板包含 "小说写作专家"
         assert "小说写作专家" in prompt
 
+    def test_human_instruction_type_field_renders_action_label(self) -> None:
+        ctx = _make_context_package(
+            human_instructions=[
+                {
+                    "instruction_id": "inst-old",
+                    "gate_type": "audit_report",
+                    "type": "rewrite",
+                    "content": "按人工意见重写冲突场景",
+                }
+            ]
+        )
+        prompt = _render_prompt(ctx)
+        assert "- [rewrite] 按人工意见重写冲突场景" in prompt
+        assert "- []" not in prompt
+
 
 # ---------------------------------------------------------------------------
 # Scene Parsing Tests

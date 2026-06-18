@@ -161,7 +161,7 @@ system_prompt: |
   ## 人类指令（最高优先级）
   以下指令来自人类作者，优先级高于所有其他约束：
   {% for inst in human_instructions %}
-  - [{{ inst.action }}] {{ inst.content }}
+  - [{{ inst.action or inst.type }}] {{ inst.content }}
   {% endfor %}
   {% endif %}
 

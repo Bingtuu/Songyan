@@ -11,6 +11,7 @@ import structlog
 from songyan.db.repository import ChapterHeadRepository, ChapterVersionRepository
 from songyan.llm.client import call_llm
 from songyan.models import ChapterHead, ChapterVersion, ContextPackage
+from songyan.models.human_instruction import normalize_human_instruction
 from songyan.utils.scene_parser import parse_scenes as _parse_scenes
 from songyan.utils.truncation import enforce_word_count as _enforce_word_count
 from songyan.utils.truncation import hard_truncate_at_boundary
@@ -359,7 +360,11 @@ def _render_prompt(ctx: ContextPackage) -> str:
         "mode_rules": mode_rules,
         "punch_points": punch_points,
         "emotion_arc": emotion_arc,
-        "human_instructions": ctx.human_instructions,
+        "human_instructions": [
+            normalize_human_instruction(inst).model_dump(mode="json")
+            for inst in ctx.human_instructions
+            if isinstance(inst, dict)
+        ],
         "arc_context": arc_context,
         "volume_context": volume_context,
         "permanent_scenes": permanent_scenes,

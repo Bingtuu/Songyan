@@ -167,12 +167,14 @@ def _build_hard_constraints(
     human_marks: list[HumanMark] | None = None,
     chapter_number: int = 0,
 ) -> list[HardConstraint]:
-    """构建硬约束 — obligations + taboos + human marks.
+    """构建硬约束 — obligations + taboos.
 
     Task 110b:
     - obligations 按章节阶段动态上限
-    - human_mark note 长度收紧
-    - 总 token 超过 budget 20% 时只保留高 priority marks
+
+    Task 111c:
+    - human_marks 保留在 ContextPackage.human_marks 独立分区；
+      进入 hard_constraints 的内容不可裁剪。
     """
     # 动态 obligations 上限
     effective_chapter = chapter_number or chapter_goal.chapter_number
@@ -207,57 +209,14 @@ def _build_hard_constraints(
             )
         )
 
-    # Task 110b: 先加入核心约束，再估算 token 决定是否加入 human_marks
-    core_token = sum(_estimate_tokens(c.description) for c in constraints)
-
-    # 按 priority 降序排序 marks，高 priority 优先保留
-    sorted_marks = sorted(
-        human_marks or [],
-        key=lambda m: m.priority,
-        reverse=True,
-    )
-
-    # 默认 budget 32K，20% 约 6400 tokens；章节级 budget 可能不同
-    budget = getattr(project, "context_budget", None) or 32000
-    max_hard_constraint_tokens = budget // 5
-
-    mark_constraints: list[HardConstraint] = []
-    current_token = core_token
-    max_mark_note_len = 80
-
-    for mark in sorted_marks:
-        note = mark.note
-        # V3.1 Layer 2: 截断过长的 human_mark 描述
-        if len(note) > max_mark_note_len:
-            note = note[:max_mark_note_len] + "..."
-        desc = f"[{mark.mark_type}] {mark.target_key}: {note}"
-        mark_token = _estimate_tokens(desc)
-
-        # 高 priority (>=8) 直接保留；低 priority 受总 token 限制
-        if mark.priority >= 8 or current_token + mark_token <= max_hard_constraint_tokens:
-            mark_constraints.append(
-                HardConstraint(
-                    type="human_mark",
-                    description=desc,
-                    source=f"human_mark:{mark.mark_id}",
-                )
-            )
-            current_token += mark_token
-        else:
-            logger.info(
-                "context_manager.hard_constraint_mark_dropped",
-                mark_id=mark.mark_id,
-                priority=mark.priority,
-                reason="token_budget_exceeded",
-            )
-
-    constraints.extend(mark_constraints)
+    _ = human_marks
+    current_token = sum(_estimate_tokens(c.description) for c in constraints)
 
     logger.info(
         "context_manager.hard_constraints_built",
         chapter_number=effective_chapter,
         obligation_count=len(obligations),
-        mark_count=len(mark_constraints),
+        mark_count=0,
         total_constraints=len(constraints),
         estimated_tokens=current_token,
     )

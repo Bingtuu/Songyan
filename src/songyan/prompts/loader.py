@@ -200,7 +200,12 @@ class PromptLoader:
         safe_variables = _escape_jinja2(variables)
 
         active_ids = self.get_active_sections(card, tags)
-        active_sections = [s for s in card.sections if s.id in active_ids]
+        section_by_id = {section.id: section for section in card.sections}
+        active_sections = [
+            section_by_id[section_id]
+            for section_id in active_ids
+            if section_id in section_by_id
+        ]
 
         # Render system prompt
         system = ""

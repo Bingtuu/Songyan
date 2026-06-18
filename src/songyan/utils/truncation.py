@@ -21,6 +21,18 @@ _CHAPTER_TYPE_TOLERANCE: dict[str, float] = {
     "revelation": 1.30,
 }
 _DEFAULT_TOLERANCE: float = 1.20
+_LOWER_TOLERANCE: float = 0.80
+
+
+def word_count_bounds(
+    word_count_target: int,
+    chapter_type: str | None = None,
+) -> tuple[int, int]:
+    """返回 Writer/RuleAuditor/ScoreAggregator 共用的字数上下界."""
+    if word_count_target <= 0:
+        return 0, 0
+    multiplier = _CHAPTER_TYPE_TOLERANCE.get(chapter_type or "", _DEFAULT_TOLERANCE)
+    return int(word_count_target * _LOWER_TOLERANCE), int(word_count_target * multiplier)
 
 
 def enforce_word_count(
@@ -35,8 +47,7 @@ def enforce_word_count(
     删除了 min_scenes 场景数保护 — Task 096 数据证明 1-scene 章节在叙事上合理，
     不应因其场景数少而被豁免字数截断。
     """
-    _multiplier = _CHAPTER_TYPE_TOLERANCE.get(chapter_type or "", _DEFAULT_TOLERANCE)
-    _upper = int(word_count_target * _multiplier)
+    _lower, _upper = word_count_bounds(word_count_target, chapter_type)
     if current_word_count <= _upper:
         return content, scenes, current_word_count, False, ""
     if len(scenes) < 1:
@@ -44,8 +55,6 @@ def enforce_word_count(
     _headers = list(SCENE_PATTERN.finditer(content))
     if len(_headers) < 1:
         return content, scenes, current_word_count, False, "no_scene_headers_found"
-
-    _lower = int(word_count_target * 0.80)  # 截断后字数不得低于 target 的 80%
 
     for _i in range(len(_headers) - 1, 0, -1):
         _cut = _headers[_i].start()
