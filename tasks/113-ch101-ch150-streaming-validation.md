@@ -17,6 +17,41 @@
 
 Task 113 不承担前置修复职责，只负责规模化实跑、指标收集、报告生成和决策门判断。
 
+## 执行顺序（必须按序）
+
+1. **前置回归与环境确认**
+   - 按 `AGENTS.md` Windows 测试进程防卡协议执行 `pytest tests/ -q`。
+   - 若看到完整 `\d+ passed` summary 且无 `failed` / `error` / `errors`，但进程未退出，记录为 `PASS_WITH_TEARDOWN_TIMEOUT` 并清理残留进程。
+   - 执行 `ruff check src/ tests/`，区分本 Task 新增 lint 与历史存量 lint；不得把历史存量作为启动长跑的重复阻断。
+   - 确认 `git status --short` 干净，避免长跑期间混入未提交代码改动。
+
+2. **接口与报告入口确认**
+   - 通过 `songyan run --help` 或源码确认长跑 CLI 参数。
+   - 通过 `python scripts/generate_streaming_report.py --help` 或源码确认报告脚本参数。
+   - 确认项目 ID 为 `proj-e74ef1e4`，章节范围为 `101-150`，模式为 `webnovel_intense`，并启用 `--auto-confirm`。
+   - 确认 DB、`.env`、logs 路径、checkpointer 模式和 JSONL metrics 输出位置。
+
+3. **启动 Ch101-Ch150 长跑**
+   - 使用确认后的 CLI 启动：
+
+```bash
+songyan run --project-id proj-e74ef1e4 --chapters 101-150 --mode-id webnovel_intense --auto-confirm
+```
+
+   - 长跑命令必须使用硬超时或可轮询的外层包装，避免 Windows 终端在业务完成后卡住。
+   - 长跑过程中不临时修改评分阈值、Prompt 或 Workflow 节点。
+
+4. **流式监控与熔断**
+   - 每个章节完成后确认 chapter run metrics、accepted 状态、settlement、summary 和 `budget_used`。
+   - 出现连续失败时立即触发现有熔断策略，停止长跑并保留 DB、logs、JSONL 和 run id。
+   - 如果出现 accepted/settlement/summary 长期事实源污染，停止 Task 113，拆分 P0 修复任务，不继续推进后续章节。
+
+5. **报告与收口**
+   - 生成 DG-2 报告，对比 Task 105b、110d、110e 基线。
+   - 生成 `tasks/113-ch101-ch150-streaming-validation-DONE.md`。
+   - 更新 `docs/STATUS.md`、`README.md` 和必要索引。
+   - 提交包含报告、DONE 文档和状态更新的 git commit。
+
 ## In Scope（必须完成）
 
 - [ ] **准备验证基线**
@@ -72,8 +107,8 @@ python scripts/generate_streaming_report.py --run-id <run_id>
 ## 测试要求
 
 ### Layer 1: 前置回归
-- [ ] `pytest tests/ -q` 通过
-- [ ] `ruff check src/ tests/` 无新增 lint 错误
+- [ ] `pytest tests/ -q` 按 `AGENTS.md` 防卡协议执行并通过；允许记录 `PASS_WITH_TEARDOWN_TIMEOUT`
+- [ ] `ruff check src/ tests/` 无本 Task 新增 lint 错误；历史存量 lint 必须在 DONE 文档中记录
 
 ### Layer 2: 长跑验证
 - [ ] Ch101-Ch150 运行不中断，或按熔断策略留下可诊断日志
