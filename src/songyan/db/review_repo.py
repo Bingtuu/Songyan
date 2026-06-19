@@ -215,6 +215,19 @@ class LiteraryObservationRepository:
             observation_id=observation_id,
         )
 
+    async def get_latest_id_by_version(self, version_id: str) -> str | None:
+        """Return latest literary observation id for a chapter version."""
+        async with get_db() as conn:
+            cursor = await conn.execute(
+                """SELECT observation_id FROM literary_observations
+                WHERE version_id = ?
+                ORDER BY created_at DESC, observation_id DESC
+                LIMIT 1""",
+                (version_id,),
+            )
+            row = await cursor.fetchone()
+        return row[0] if row else None
+
     async def get_by_version(self, version_id: str) -> LiteraryAuditResult | None:
         async with get_db() as conn:
             conn.row_factory = Row

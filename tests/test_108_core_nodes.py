@@ -314,6 +314,40 @@ class TestLiteraryAuditorNodeNonBlocking:
         assert "literary_observation_id" in result
         assert "_needs_revision" not in result
 
+    @pytest.mark.asyncio
+    async def test_existing_observation_skips_literary_llm(self) -> None:
+        mock_version = MagicMock()
+        mock_version.version_id = "v1"
+        mock_version.content = "正文"
+        repo = AsyncMock()
+        repo.get_latest_id_by_version = AsyncMock(return_value="lo-existing")
+
+        with (
+            patch(
+                "songyan.workflows._nodes.load_version",
+                new_callable=AsyncMock,
+                return_value=mock_version,
+            ),
+            patch("songyan.workflows._nodes.LiteraryObservationRepository", return_value=repo),
+            patch(
+                "songyan.workflows._nodes._get_context_package",
+                new_callable=AsyncMock,
+            ) as mock_context,
+            patch(
+                "songyan.workflows._nodes.run_literary_audit",
+                new_callable=AsyncMock,
+            ) as mock_audit,
+        ):
+            result = await literary_auditor_node({"current_version_id": "v1"})
+
+        assert result == {
+            "literary_observation_id": "lo-existing",
+            "status": "revision_routing",
+        }
+        mock_context.assert_not_called()
+        mock_audit.assert_not_called()
+        assert "_needs_revision" not in result
+
 
 class TestLoadChapterRepairStateExcludesAbandoned:
     """_load_chapter_repair_state 排除废弃 revision 测试."""

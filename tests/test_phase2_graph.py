@@ -309,6 +309,47 @@ async def test_run_project_pipeline_auto_confirm_false_rejected() -> None:
         )
 
 
+@pytest.mark.asyncio
+async def test_run_project_pipeline_persists_only_latest_summary_entry() -> None:
+    """project_runs 持久化只写最近单章摘要，避免全量历史写放大."""
+
+    async def _fake_run(**kwargs: Any) -> dict[str, Any]:
+        chapter_number = kwargs["chapter_number"]
+        return {
+            "success": True,
+            "summary_text": f"summary-ch{chapter_number}",
+            "error": None,
+            "final_state": {},
+            "final_version_id": f"v-{chapter_number}",
+            "budget_used": 0.8,
+            "context_emergency": False,
+            "quality_gate_passed": True,
+        }
+
+    saved_states: list[Any] = []
+
+    async def _capture_state(state: Any) -> None:
+        saved_states.append(state.model_copy(deep=True))
+
+    with (
+        patch("songyan.workflows.phase2_graph._run_single_chapter", side_effect=_fake_run),
+        patch("songyan.workflows.phase2_graph._save_run_state", side_effect=_capture_state),
+    ):
+        result = await run_project_pipeline(
+            project_id="proj-001",
+            chapter_range=(1, 4),
+            auto_confirm=True,
+        )
+
+    assert result.accumulated_summary == (
+        "第1章：summary-ch1\n\n"
+        "第2章：summary-ch2\n\n"
+        "第3章：summary-ch3\n\n"
+        "第4章：summary-ch4"
+    )
+    assert saved_states[-1].accumulated_summary == "第4章：summary-ch4"
+    assert all("\n\n" not in state.accumulated_summary for state in saved_states)
+
 # ---------- _run_single_chapter stage tracking -- Task 059 ----------
 
 

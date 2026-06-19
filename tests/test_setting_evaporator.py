@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+import songyan.agents.setting_evaporator as setting_evaporator
 from songyan.agents.setting_evaporator import (
     CONFIDENCE_ARCHIVE_THRESHOLD,
     MERGE_SIMILARITY_THRESHOLD,
@@ -266,3 +267,62 @@ class TestSettingEvaporatorUnit:
         # 确保没有重复的 drop key
         drops = [drop for drop, _ in merged]
         assert len(drops) == len(set(drops))
+
+    @pytest.mark.asyncio
+    async def test_merge_uses_bucket_and_recent_window(self, monkeypatch) -> None:
+        """合并扫描不再对全部 active settings 做无条件两两比较."""
+        evap = SettingEvaporator()
+        mock_settings = [
+            {
+                "setting_name": f"设定{i}",
+                "setting_key": f"cat{i % 10}.group{i % 5}.setting{i}",
+                "category": f"cat{i % 10}",
+                "created_at": f"2024-01-{i % 28 + 1:02d}",
+                "last_mentioned_chapter": 1,
+            }
+            for i in range(120)
+        ]
+        mock_settings.append(
+            {
+                "setting_name": "天道法则",
+                "setting_key": "critical.dao.source",
+                "category": "critical",
+                "created_at": "2024-01-01",
+                "last_mentioned_chapter": 95,
+            }
+        )
+        mock_settings.append(
+            {
+                "setting_name": "天道法则",
+                "setting_key": "critical.dao.duplicate",
+                "category": "critical",
+                "created_at": "2024-02-01",
+                "last_mentioned_chapter": 100,
+            }
+        )
+        calls = 0
+        archived_keys: list[str] = []
+
+        def fake_overlap(*_args: object) -> float:
+            nonlocal calls
+            calls += 1
+            return 1.0
+
+        async def mock_archive(_pid: str, keys: list[str]) -> int:
+            archived_keys.extend(keys)
+            return len(keys)
+
+        monkeypatch.setattr(setting_evaporator, "_compute_keyword_overlap", fake_overlap)
+        monkeypatch.setattr(evap.repo, "archive_by_confidence", mock_archive)
+
+        merged = await evap.merge_similar_settings(
+            project_id="p1",
+            settings=mock_settings,
+            current_chapter=100,
+            source_window=10,
+        )
+
+        full_pair_overlap_calls = len(mock_settings) * (len(mock_settings) - 1)
+        assert calls < full_pair_overlap_calls // 10
+        assert ("critical.dao.duplicate", "critical.dao.source") in merged
+        assert archived_keys == ["critical.dao.duplicate"]

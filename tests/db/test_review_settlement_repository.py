@@ -158,10 +158,12 @@ class TestReviewRepositories:
 
         await LiteraryObservationRepository().create(result, "o-report-1", "v1")
         saved = await LiteraryObservationRepository().get_by_version("v1")
+        saved_id = await LiteraryObservationRepository().get_latest_id_by_version("v1")
 
         assert saved is not None
         assert saved.literary_quality_score == 7.5
         assert saved.observations[0].preserve is True
+        assert saved_id == "o-report-1"
 
 
 class TestSettlementRepositories:

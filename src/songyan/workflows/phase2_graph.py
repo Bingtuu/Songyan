@@ -64,14 +64,14 @@ async def _persist_run_progress(
     run_state: ProjectRunState,
     completed: list[int],
     failed: list[int],
-    accumulated_summary_parts: list[str],
+    persisted_summary: str,
     *,
     status: str | None = None,
 ) -> None:
     """持久化当前批量运行进度，避免长跑中途异常丢失恢复信息."""
     run_state.completed_chapters = completed
     run_state.failed_chapters = failed
-    run_state.accumulated_summary = "\n\n".join(accumulated_summary_parts)
+    run_state.accumulated_summary = persisted_summary
     if status is not None:
         run_state.status = status
     await _save_run_state(run_state)
@@ -81,16 +81,21 @@ async def _pause_run_for_auto_halt(
     run_state: ProjectRunState,
     completed: list[int],
     failed: list[int],
-    accumulated_summary_parts: list[str],
+    persisted_summary: str,
 ) -> None:
     """自动熔断前持久化项目级运行状态，保留已完成章节."""
     await _persist_run_progress(
         run_state,
         completed,
         failed,
-        accumulated_summary_parts,
+        persisted_summary,
         status="paused",
     )
+
+
+def _format_chapter_summary(chapter_number: int, summary_text: str) -> str:
+    """格式化单章摘要条目，供运行结果和轻量持久化状态复用."""
+    return f"第{chapter_number}章：{summary_text}"
 
 
 # =============================================================================
@@ -162,6 +167,7 @@ async def run_project_pipeline(
     completed: list[int] = []
     failed: list[int] = []
     accumulated_summary_parts: list[str] = []
+    persisted_summary = ""
 
     # Task 105: 熔断历史窗口（最近 3 章的指标）
     _recent_results: list[dict] = []
@@ -200,9 +206,10 @@ async def run_project_pipeline(
             # 累加 summary
             summary_text = chapter_result.get("summary_text", "")
             if summary_text:
-                accumulated_summary_parts.append(
-                    f"第{chapter_number}章：{summary_text}"
+                persisted_summary = _format_chapter_summary(
+                    chapter_number, summary_text
                 )
+                accumulated_summary_parts.append(persisted_summary)
             logger.info(
                 "project_pipeline.chapter_success",
                 run_id=run_id,
@@ -212,7 +219,7 @@ async def run_project_pipeline(
                 run_state,
                 completed,
                 failed,
-                accumulated_summary_parts,
+                persisted_summary,
                 status="running",
             )
 
@@ -228,7 +235,7 @@ async def run_project_pipeline(
                 run_state,
                 completed,
                 failed,
-                accumulated_summary_parts,
+                persisted_summary,
                 status="running",
             )
             if on_failure == "abort":
@@ -260,7 +267,7 @@ async def run_project_pipeline(
                         run_state,
                         completed,
                         failed,
-                        accumulated_summary_parts,
+                        persisted_summary,
                     )
                     raise AutoHaltException(
                         message=f"连续 3 章质量门未通过（Ch{_ch_start}-Ch{chapter_number}）",
@@ -273,7 +280,7 @@ async def run_project_pipeline(
                     run_state,
                     completed,
                     failed,
-                    accumulated_summary_parts,
+                    persisted_summary,
                 )
                 raise AutoHaltException(
                     message=f"连续 3 章触发 ContextEmergency（Ch{_ch_start}-Ch{chapter_number}）",
@@ -289,10 +296,11 @@ async def run_project_pipeline(
         run_state,
         completed,
         failed,
-        accumulated_summary_parts,
+        persisted_summary,
         status=final_status,
     )
 
+    accumulated_summary = "\n\n".join(accumulated_summary_parts)
     result = ProjectRunResult(
         project_id=project_id,
         run_id=run_id,
@@ -301,7 +309,7 @@ async def run_project_pipeline(
         total_cost=0.0,  # TODO: Task 025 中接入精确成本追踪
         total_duration_sec=duration,
         final_status=final_status,
-        accumulated_summary=run_state.accumulated_summary,
+        accumulated_summary=accumulated_summary,
     )
 
     logger.info(

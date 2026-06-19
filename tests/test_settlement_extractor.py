@@ -9,6 +9,9 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from songyan.agents.settlement_extractor import (
+    MAX_PROMPT_CHARACTER_STATES,
+    MAX_PROMPT_FORESHADOWINGS,
+    MAX_PROMPT_SETTINGS,
     _build_character_update,
     _build_foreshadowing_update,
     _build_new_setting,
@@ -17,6 +20,7 @@ from songyan.agents.settlement_extractor import (
     _execute_with_db_retry,
     _render_genre_rules,
     _render_prompt,
+    _select_prompt_facts,
     _validate_settlement,
     apply_settlement,
     extract_settlement,
@@ -137,6 +141,49 @@ class TestRenderGenreRules:
 
     def test_empty(self) -> None:
         assert _render_genre_rules(GenreRules()) == "（无特殊题材规则）"
+
+
+class TestPromptFactSelection:
+    def test_limits_prompt_facts_without_dropping_relevant_items(self) -> None:
+        states = [
+            CharacterState(character_id=f"char_{i}", field="mood", value=f"state-{i}")
+            for i in range(MAX_PROMPT_CHARACTER_STATES + 10)
+        ]
+        settings = [
+            NewSetting(
+                setting_name=f"设定{i}",
+                description=f"描述{i}",
+                source_quote=f"quote-{i}",
+                setting_key=f"world.setting.{i}",
+                chapter_number=i,
+            )
+            for i in range(MAX_PROMPT_SETTINGS + 10)
+        ]
+        foreshadowings = [
+            ForeshadowingItem(
+                foreshadowing_id=f"fs-{i}",
+                description=f"伏笔{i}",
+                planted_in_chapter=i,
+                expected_resolve_chapter=200 + i,
+            )
+            for i in range(MAX_PROMPT_FORESHADOWINGS + 10)
+        ]
+        foreshadowings[-1].expected_resolve_chapter = 12
+
+        selected_states, selected_settings, selected_foreshadowings = _select_prompt_facts(
+            "正文提到 char_49、设定49、fs-39",
+            10,
+            states,
+            settings,
+            foreshadowings,
+        )
+
+        assert len(selected_states) == MAX_PROMPT_CHARACTER_STATES
+        assert len(selected_settings) == MAX_PROMPT_SETTINGS
+        assert len(selected_foreshadowings) == MAX_PROMPT_FORESHADOWINGS
+        assert any(state.character_id == "char_49" for state in selected_states)
+        assert any(setting.setting_name == "设定49" for setting in selected_settings)
+        assert any(item.foreshadowing_id == "fs-39" for item in selected_foreshadowings)
 
 
 # ---------------------------------------------------------------------------

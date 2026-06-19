@@ -1027,6 +1027,20 @@ async def literary_auditor_node(state: dict[str, Any]) -> dict[str, Any]:
     if version is None:
         return {"error": "Version not found", "status": "literary_auditor"}
 
+    cached_observation_id = await LiteraryObservationRepository().get_latest_id_by_version(
+        version.version_id
+    )
+    if cached_observation_id:
+        logger.info(
+            "literary_auditor_node.cache_hit",
+            version_id=version.version_id,
+            observation_id=cached_observation_id,
+        )
+        return {
+            "literary_observation_id": cached_observation_id,
+            "status": "revision_routing",
+        }
+
     try:
         ctx = await _get_context_package(state)
     except ValueError as exc:
@@ -1725,7 +1739,10 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
             )
             # 每 50 章执行一次合并扫描
             if state["chapter_number"] % 50 == 0:
-                await evaporator.merge_similar_settings(state["project_id"])
+                await evaporator.merge_similar_settings(
+                    state["project_id"],
+                    current_chapter=state["chapter_number"],
+                )
         except (RuntimeError, OSError) as exc:
             logger.warning(
                 "settlement_extractor_node.evaporator_failed",
@@ -1756,8 +1773,3 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
         "status": "settlement_review" if settlement_needs_review else "done",
         "_settlement_needs_human_review": settlement_needs_review,
     }
-
-
-
-
-

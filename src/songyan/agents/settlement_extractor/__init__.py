@@ -26,13 +26,25 @@ from songyan.models import (
 )
 from songyan.utils.token_estimator import truncate_to_tokens
 
-from ._apply import _execute_with_db_retry, _save_permanent_scenes, apply_settlement
+from ._apply import (
+    _execute_with_db_retry as _execute_with_db_retry,
+)
+from ._apply import (
+    _save_permanent_scenes as _save_permanent_scenes,
+)
+from ._apply import (
+    apply_settlement as apply_settlement,
+)
 from ._quote_filter import filter_settlement_source_quotes
 from ._validate import _validate_settlement
 
 logger = structlog.get_logger(__name__)
 
 MAX_CONTENT_TOKENS = 6000
+MAX_PROMPT_CHARACTER_STATES = 40
+MAX_PROMPT_SETTINGS = 40
+MAX_PROMPT_FORESHADOWINGS = 30
+FORESHADOWING_DUE_WINDOW = 5
 
 
 def _load_prompt_template() -> str:
@@ -114,6 +126,133 @@ def _render_genre_rules(genre_rules: GenreRules | None) -> str:
         lines.append(f"- 疲劳词：{', '.join(genre_rules.fatigue_words)}")
     return "\n".join(lines) if lines else "（无特殊题材规则）"
 
+
+
+def _matches_content(content_lower: str, *values: object) -> bool:
+    """判断字段值是否在正文中出现，用于 prompt-only 事实源过滤."""
+    for value in values:
+        if value is None:
+            continue
+        text = str(value).strip().lower()
+        if text and text in content_lower:
+            return True
+    return False
+
+
+def _select_prompt_character_states(
+    content: str,
+    states: list[CharacterState],
+    limit: int = MAX_PROMPT_CHARACTER_STATES,
+) -> list[CharacterState]:
+    """选择进入 Settlement prompt 的角色状态，验证仍使用全量 states."""
+    if len(states) <= limit:
+        return states
+    content_lower = content.lower()
+    matched = [
+        state
+        for state in states
+        if _matches_content(
+            content_lower,
+            state.character_id,
+            state.field,
+            state.value,
+            state.source_version_id,
+        )
+    ]
+    selected: list[CharacterState] = []
+    seen: set[tuple[str, str]] = set()
+    for state in [*matched, *states]:
+        key = (state.character_id, state.field)
+        if key in seen:
+            continue
+        seen.add(key)
+        selected.append(state)
+        if len(selected) >= limit:
+            break
+    return selected
+
+
+def _select_prompt_settings(
+    content: str,
+    settings: list[NewSetting],
+    limit: int = MAX_PROMPT_SETTINGS,
+) -> list[NewSetting]:
+    """选择进入 Settlement prompt 的设定，验证仍使用全量 settings."""
+    if len(settings) <= limit:
+        return settings
+    content_lower = content.lower()
+    matched = [
+        setting
+        for setting in settings
+        if _matches_content(
+            content_lower,
+            setting.setting_name,
+            setting.setting_key,
+            setting.description,
+            setting.source_quote,
+        )
+    ]
+    recent = sorted(settings, key=lambda item: item.chapter_number, reverse=True)
+    selected: list[NewSetting] = []
+    seen: set[str] = set()
+    for setting in [*matched, *recent]:
+        key = setting.setting_key or setting.setting_name
+        if key in seen:
+            continue
+        seen.add(key)
+        selected.append(setting)
+        if len(selected) >= limit:
+            break
+    return selected
+
+
+def _foreshadowing_priority(
+    item: ForeshadowingItem,
+    content_lower: str,
+    chapter_number: int,
+) -> tuple[int, int, int]:
+    content_hit = _matches_content(
+        content_lower,
+        item.foreshadowing_id,
+        item.description,
+    )
+    due = item.expected_resolve_chapter
+    due_soon = due is not None and due <= chapter_number + FORESHADOWING_DUE_WINDOW
+    due_distance = abs((due or chapter_number) - chapter_number)
+    priority = 0 if content_hit or due_soon or item.status == "due" else 1
+    return (priority, due_distance, -item.planted_in_chapter)
+
+
+def _select_prompt_foreshadowings(
+    content: str,
+    foreshadowings: list[ForeshadowingItem],
+    chapter_number: int,
+    limit: int = MAX_PROMPT_FORESHADOWINGS,
+) -> list[ForeshadowingItem]:
+    """选择进入 Settlement prompt 的伏笔，优先 due/正文命中/近期."""
+    if len(foreshadowings) <= limit:
+        return foreshadowings
+    content_lower = content.lower()
+    ranked = sorted(
+        foreshadowings,
+        key=lambda item: _foreshadowing_priority(item, content_lower, chapter_number),
+    )
+    return ranked[:limit]
+
+
+def _select_prompt_facts(
+    content: str,
+    chapter_number: int,
+    states: list[CharacterState],
+    settings: list[NewSetting],
+    foreshadowings: list[ForeshadowingItem],
+) -> tuple[list[CharacterState], list[NewSetting], list[ForeshadowingItem]]:
+    """限制 Settlement prompt 事实源规模，不影响后续代码验证."""
+    return (
+        _select_prompt_character_states(content, states),
+        _select_prompt_settings(content, settings),
+        _select_prompt_foreshadowings(content, foreshadowings, chapter_number),
+    )
 
 def _render_prompt(
     content: str,
@@ -351,12 +490,25 @@ async def extract_settlement(
         foreshadowings_count=len(current_foreshadowings),
     )
 
-    # 2. 渲染 Prompt
-    prompt = _render_prompt(
-        content, version_id, current_states, current_settings,
-        current_foreshadowings, genre_rules,
+    prompt_states, prompt_settings, prompt_foreshadowings = _select_prompt_facts(
+        content,
+        chapter_number,
+        current_states,
+        current_settings,
+        current_foreshadowings,
+    )
+    logger.info(
+        "settlement.prompt_facts_selected",
+        states_count=len(prompt_states),
+        settings_count=len(prompt_settings),
+        foreshadowings_count=len(prompt_foreshadowings),
     )
 
+    # 2. 渲染 Prompt
+    prompt = _render_prompt(
+        content, version_id, prompt_states, prompt_settings,
+        prompt_foreshadowings, genre_rules,
+    )
     # 3. 调用 LLM
     llm_response = await call_llm(prompt, temperature=temperature)
     data = parse_llm_response(llm_response)

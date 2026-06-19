@@ -27,6 +27,7 @@ CONFIDENCE_ARCHIVE_THRESHOLD: float = 0.3
 MERGE_SIMILARITY_THRESHOLD: float = 0.9
 # 每 N 章执行一次合并扫描
 MERGE_SCAN_INTERVAL: int = 50
+MERGE_SOURCE_WINDOW: int = 50
 
 
 def _calculate_resolve_confidence(
@@ -84,6 +85,53 @@ def _calculate_resolve_confidence(
     confidence = 0.5 * time_factor + 0.3 * relevance + 0.2 * hard_factor
     return round(min(max(confidence, 0.0), 1.0), 4)
 
+
+def _setting_bucket(row: dict) -> tuple[str, str]:
+    """按 category 与 setting_key 前缀缩小合并候选集."""
+    category = str(row.get("category") or "uncategorized")
+    setting_key = str(row.get("setting_key") or "")
+    key_parts = [part for part in setting_key.split(".") if part] if "." in setting_key else []
+    if key_parts:
+        prefix = ".".join(key_parts[:2])
+    else:
+        prefix = setting_key.split("_", maxsplit=1)[0] or setting_key[:8]
+    return (category, prefix)
+
+
+def _is_recent_setting(row: dict, current_chapter: int | None, window: int) -> bool:
+    """仅让最近新增/提及的设定主动探测重复项."""
+    if current_chapter is None:
+        return True
+    chapter_values = [
+        row.get("chapter_number"),
+        row.get("introduced_in_chapter"),
+        row.get("last_mentioned_chapter"),
+    ]
+    for value in chapter_values:
+        if (
+            isinstance(value, int)
+            and current_chapter - window <= value <= current_chapter
+        ):
+            return True
+    return False
+
+
+def _stable_setting_order(row: dict) -> tuple[str, str]:
+    """稳定排序，保证合并结果确定性."""
+    return (str(row.get("created_at") or ""), str(row.get("setting_key") or ""))
+
+
+def _setting_similarity(s1: dict, s2: dict) -> float:
+    """计算设定相似度；同名设定保持旧合并语义."""
+    name1 = s1.get("setting_name", "")
+    name2 = s2.get("setting_name", "")
+    if name1 and name1 == name2:
+        return 1.0
+    key1 = s1.get("setting_key", "")
+    key2 = s2.get("setting_key", "")
+    sim_fwd = _compute_keyword_overlap(name1, key1, [name2, key2])
+    sim_rev = _compute_keyword_overlap(name2, key2, [name1, key1])
+    return max(sim_fwd, sim_rev)
 
 class SettingEvaporator:
     """设定蒸发器 — 轻量规则节点."""
@@ -149,58 +197,63 @@ class SettingEvaporator:
         project_id: str,
         settings: list[dict] | None = None,
         similarity_threshold: float = MERGE_SIMILARITY_THRESHOLD,
+        current_chapter: int | None = None,
+        source_window: int = MERGE_SOURCE_WINDOW,
     ) -> list[tuple[str, str]]:
-        """合并 embedding 相似度高的重复设定。
-
-        使用 _compute_keyword_overlap 作为轻量相似度代理，
-        避免调用 Embedder（保性能）。每 50 章扫描一次。
-
-        返回: [(被合并的 key, 保留的 key), ...]
-        """
+        """合并相似重复设定，按 bucket/recent window 控制比较规模."""
         if settings is None:
             settings = await self.repo.list_active_with_tracking(project_id)
         if len(settings) < 2:
             return []
 
-        merged: list[tuple[str, str]] = []
-        keys_to_archive: list[str] = []
-
-        # O(n^2) 两两比较，适合设定数量 < 200 的场景
-        for i, s1 in enumerate(settings):
-            key1 = s1.get("setting_key", "")
-            name1 = s1.get("setting_name", "")
-            if not key1 or key1 in keys_to_archive:
+        ordered_settings = sorted(settings, key=_stable_setting_order)
+        buckets: dict[tuple[str, str], list[dict]] = {}
+        for row in ordered_settings:
+            key = row.get("setting_key", "")
+            if not key:
                 continue
-            for s2 in settings[i + 1 :]:
-                key2 = s2.get("setting_key", "")
-                name2 = s2.get("setting_name", "")
-                if not key2 or key2 in keys_to_archive:
+            buckets.setdefault(_setting_bucket(row), []).append(row)
+
+        merged: list[tuple[str, str]] = []
+        keys_to_archive: set[str] = set()
+
+        for bucket_settings in buckets.values():
+            probes = [
+                row
+                for row in bucket_settings
+                if _is_recent_setting(row, current_chapter, source_window)
+            ]
+            for s1 in probes:
+                key1 = s1.get("setting_key", "")
+                if not key1 or key1 in keys_to_archive:
                     continue
-                sim_fwd = _compute_keyword_overlap(name1, key1, [name2, key2])
-                sim_rev = _compute_keyword_overlap(name2, key2, [name1, key1])
-                sim = max(sim_fwd, sim_rev)
-                if sim >= similarity_threshold:
-                    # 保留最早创建的 setting_key，archive 另一个
-                    created1 = s1.get("created_at", "")
-                    created2 = s2.get("created_at", "")
-                    keep = key1 if created1 <= created2 else key2
-                    drop = key2 if keep == key1 else key1
-                    if drop not in keys_to_archive:
-                        keys_to_archive.append(drop)
-                        merged.append((drop, keep))
-                        logger.info(
-                            "setting_evaporator.merge_candidate",
-                            project_id=project_id,
-                            drop=drop,
-                            keep=keep,
-                            similarity=sim,
-                        )
+                for s2 in bucket_settings:
+                    key2 = s2.get("setting_key", "")
+                    if key1 == key2 or not key2 or key2 in keys_to_archive:
+                        continue
+                    sim = _setting_similarity(s1, s2)
+                    if sim >= similarity_threshold:
+                        created1 = s1.get("created_at", "")
+                        created2 = s2.get("created_at", "")
+                        keep = key1 if created1 <= created2 else key2
+                        drop = key2 if keep == key1 else key1
+                        if drop not in keys_to_archive:
+                            keys_to_archive.add(drop)
+                            merged.append((drop, keep))
+                            logger.info(
+                                "setting_evaporator.merge_candidate",
+                                project_id=project_id,
+                                drop=drop,
+                                keep=keep,
+                                similarity=sim,
+                            )
 
         if keys_to_archive:
-            await self.repo.archive_by_confidence(project_id, keys_to_archive)
+            await self.repo.archive_by_confidence(project_id, sorted(keys_to_archive))
             logger.info(
                 "setting_evaporator.merge_complete",
                 project_id=project_id,
                 merged_count=len(merged),
+                buckets_count=len(buckets),
             )
         return merged
