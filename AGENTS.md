@@ -157,6 +157,69 @@ Context Diet 2.0 四组件:
 
 代码写完后，按以下顺序执行，**跳过任何一步视为 Task 未完成**。
 
+### Windows 测试进程防卡协议（强制）
+
+在 Windows 环境下，`pytest` 或真实长跑命令有时会出现：终端已经输出完整完成摘要（如 `73 passed`、`运行完成`），但 Python/pytest 进程没有正常退出，导致代理反复卡在命令状态轮询上。
+
+遇到这种情况必须按以下规则处理：
+
+1. **不要无限等待同一个命令**。如果已经看到完整 pytest summary 或业务完成日志，最多再检查一次进程状态。
+2. 用 `Get-Process python,pytest -ErrorAction SilentlyContinue` 确认是否有真实残留进程。
+3. 若测试 summary 已明确通过，但进程仍不退出，记录为 **teardown/后台资源释放卡住**，可以清理残留进程后继续；不得把它误判为测试失败。
+4. 后续重跑测试时优先使用 PowerShell Job + 硬超时包装，避免主终端被卡住。推荐 wrapper 必须输出标准判定标记：
+
+```powershell
+$tests = @('tests/test_xxx.py')
+$job = Start-Job -ScriptBlock {
+    param($testArgs)
+    Set-Location 'c:\Vibe Project\Songyan'
+    python -m pytest @testArgs -q
+    Write-Output "PYTEST_PROCESS_EXIT=$LASTEXITCODE"
+    exit $LASTEXITCODE
+} -ArgumentList (,$tests)
+$done = Wait-Job $job -Timeout 60
+$output = Receive-Job $job -Keep
+$text = ($output | Out-String)
+Write-Output $text
+if ($done -eq $null) {
+    Stop-Job $job
+    Start-Sleep -Seconds 1
+    $more = Receive-Job $job
+    if ($more) {
+        Write-Output ($more | Out-String)
+        $text += ($more | Out-String)
+    }
+    Remove-Job $job -Force
+    if ($text -match "\d+ passed" -and $text -notmatch "\b(failed|error|errors)\b") {
+        Write-Output "WRAPPER_RESULT=PASS_WITH_TEARDOWN_TIMEOUT"
+        Write-Output "TEST_ASSERTIONS=PASSED"
+        Write-Output "PROCESS_EXIT=TIMEOUT_AFTER_SUMMARY"
+        exit 0
+    }
+    Write-Output "WRAPPER_RESULT=TIMEOUT_WITHOUT_PASS_SUMMARY"
+    exit 124
+}
+$state = $job.State
+Remove-Job $job
+if ($text -match "PYTEST_PROCESS_EXIT=0") {
+    Write-Output "WRAPPER_RESULT=PASS_NORMAL_EXIT"
+    Write-Output "TEST_ASSERTIONS=PASSED"
+    Write-Output "PROCESS_EXIT=NORMAL"
+    exit 0
+}
+Write-Output "WRAPPER_RESULT=PYTEST_NONZERO_OR_UNKNOWN"
+Write-Output "JOB_STATE=$state"
+exit 1
+```
+
+5. wrapper 标准结果含义：
+   - `PASS_NORMAL_EXIT`: pytest 断言通过，进程正常退出。
+   - `PASS_WITH_TEARDOWN_TIMEOUT`: 已看到完整通过摘要（如 `73 passed`），但 pytest 进程未在超时内退出；按“断言通过，teardown/后台资源释放卡住”处理。
+   - `TIMEOUT_WITHOUT_PASS_SUMMARY`: 未看到完整通过摘要，必须视为阻断，继续诊断。
+   - `PYTEST_NONZERO_OR_UNKNOWN`: pytest 非零退出或结果不明确，必须视为测试失败/未知，继续诊断。
+6. 如果输出中出现完整通过摘要（如 `40 passed`）但 Job 超时，汇报时必须区分：**测试断言已通过** vs **pytest 进程退出异常/teardown 卡住**。
+7. 清理残留进程前不得杀掉无关用户进程；只清理本次命令产生的明确 `python/pytest` 进程。
+
 ### Step 1: 单元测试
 ```bash
 pytest tests/ -v

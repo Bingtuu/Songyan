@@ -12,7 +12,7 @@
 
 **V5.0 — Context Diet 2.0 智能遗忘架构**
 
-目标：通过 TemporalCompressor + CharacterFocalDecay + SettingEvaporator + BudgetHardCeiling 四组件协同，控制信息密度，支撑 Ch1-Ch150 全自动稳定生成。Task 101~111d 已完成 Context Diet 2.0 核心组件、流式验证基础设施、统一评分体系、修复收敛护栏、角色退场机制、设定去重与伏笔监控、coherence_major 根因修复、工作流决策契约修复、Settlement 事实源修复、Context/Prompt 一致性修复和 QualityGate/Settlement 阻断修复。当前进入 Task 111e：Task 112 报告与 DG-2 Gate 完整性修复；Ch101-Ch150 流式验证为 Task 112，依赖 111e-111g 完成。
+目标：通过 TemporalCompressor + CharacterFocalDecay + SettingEvaporator + BudgetHardCeiling 四组件协同，控制信息密度，支撑 Ch1-Ch150 全自动稳定生成。Task 101~112 已完成 Context Diet 2.0 核心组件、流式验证基础设施、统一评分体系、修复收敛护栏、角色退场机制、设定去重与伏笔监控、coherence_major 根因修复、工作流决策契约修复、Settlement 事实源修复、Context/Prompt 一致性修复、QualityGate/Settlement 阻断修复、DG-2 报告修复、Context Snapshot/Metadata 修复、长跑性能收敛和 Task 113 前置阻断修复。当前进入 Task 113：Ch101-Ch150 流式验证 + 决策门 DG-2。
 
 ### 版本概览
 
@@ -28,9 +28,9 @@
 
 | 指标 | 数值 |
 |------|------|
-| 最近回归测试 | **1640 passed, 4 skipped, 1 xfailed, 4 xpassed** (`pytest tests/ -q`, Task 111d) |
-| V5.0 当前 Task | **111e**（Task 112 报告与 DG-2 Gate 完整性修复） |
-| 下一验证任务 | **Task 112：Ch101-Ch150 流式验证 + 决策门 DG-2（依赖 111d-111g 完成）** |
+| 最近回归测试 | **1658 passed, 4 skipped, 2 xfailed, 3 xpassed** (`python -m pytest tests/ -q`, Task 112) |
+| V5.0 当前 Task | **113**（Ch101-Ch150 流式验证 + 决策门 DG-2） |
+| 前置状态 | **Task 112 已完成；Ch97 accepted + settlement + summary 基线已恢复** |
 | Task 110e 实跑 | **Ch80-Ch96 17/17 成功，QG 100%，coherence_major 0/17** |
 | V4.0 最终达标率 | Task 099: Ch2-Ch50 **81.6%** |
 | V4.x 归档 | `archive/v4/`（报告 + 任务 + 验证数据）|
@@ -393,9 +393,10 @@ ContextManager 按 Token 预算组装 `ContextPackage`（默认 32K）：
 | M56 Context/Prompt 一致性修复 | 111c | ContextEmergency、hard constraints、Craft Card、human instruction 口径统一 | ✅ |
 | M57 QualityGate/Settlement 阻断修复 | 111d | budget QG、new issues 终态、summary fallback | ✅ |
 | M58 报告与 DG-2 Gate 修复 | 111e | streaming report 兼容缺失 metrics；DG-2 覆盖硬指标 | ✅ |
-| M59 Context Snapshot/Metadata 修复 | 111f | Writer/Auditor 复用上下文快照；metadata 可回放 | 📝 |
-| M60 长跑性能缺陷收敛 | 111g | context assembly、Settlement prompt facts、O(N²) 热点收敛 | 📝 |
-| M61 Ch101-Ch150 验证 | 112 | 流式验证 + 决策门 DG-2 | 📝 |
+| M59 Context Snapshot/Metadata 修复 | 111f | Writer/Auditor 复用上下文快照；metadata 可回放 | ✅ |
+| M60 长跑性能缺陷收敛 | 111g | context assembly、Settlement prompt facts、O(N²) 热点收敛 | ✅ |
+| M61 Task 113 前置阻断修复 | 112 | 修复 budget QG 硬门禁与 Settlement setting_key 规范化；恢复 Ch97 基线 | ✅ |
+| M62 Ch101-Ch150 验证 | 113 | 流式验证 + 决策门 DG-2 | 📝 |
 
 ---
 
@@ -431,9 +432,9 @@ pytest -k "not integration" -q
 
 ```bash
 pytest tests/ -q
-# Current baseline: 1555 passed, 4 skipped, 1 xfailed, 4 xpassed
+# Current baseline: 1653 passed, 4 skipped, 1 xfailed, 4 xpassed
 
-ruff check src/ tests/ evals/
+ruff check src/ tests/
 # Note: 全量 ruff 仍有历史 lint 存量；当前修复任务需保证改动文件不新增 lint。
 ```
 
@@ -493,16 +494,23 @@ ruff check src/ tests/ evals/
 - **Task 108** : CharacterLifecycleAuditor — 角色退场机制
 - **Task 109** : SettingDeduplication + ForeshadowingPressure — 设定去重与伏笔压力监控
 
-### 当前：V5.0 Phase 4 前置修复 — Task 111d-111g
+### 已完成：V5.0 Phase 4 前置修复 — Task 111d-111g
 
 - **Task 111a** : 工作流决策契约修复 — 修复 ReviewMerger/ScoreAggregator/Literary/Revision 路由一致性 ✅
 - **Task 111b** : Settlement 与事实源一致性修复 — 防止 accepted/settlement/summary/state 半提交或污染 ✅
 - **Task 111c** : Context 与 Prompt 一致性修复 — 校准 ContextEmergency、hard constraints、Craft Card 和 human instruction ✅
 - **Task 111d** : QualityGate 与 Settlement 阻断项修复 — budget QG、new issues 终态、summary fallback ✅
 - **Task 111e** : Task 112 报告与 DG-2 Gate 完整性修复 — report 稳定性和决策门硬指标 ✅
-- **Task 111f** : Context Snapshot、Prompt 与 Metadata 一致性修复 — prompt 输入可回放、可审计
-- **Task 111g** : 长跑性能缺陷收敛 — 降低重复组装、LLM 调用和 O(N²) 热点
-- **Task 112** : Ch101-Ch150 流式验证 + 决策门 DG-2（依赖 111d-111g 完成）
+- **Task 111f** : Context Snapshot、Prompt 与 Metadata 一致性修复 — prompt 输入可回放、可审计 ✅
+- **Task 111g** : 长跑性能缺陷收敛 — 降低重复组装、LLM 调用和 O(N²) 热点 ✅
+
+### 已完成：V5.0 Phase 4 前置阻断修复 — Task 112
+
+- **Task 112** : Task 113 前置阻断修复 — 修复 budget QG 硬门禁与 Settlement `setting_key` 规范化，恢复 Ch97 accepted + settlement + summary 基线 ✅
+
+### 当前：V5.0 Phase 4 验证 — Task 113
+
+- **Task 113** : Ch101-Ch150 流式验证 + 决策门 DG-2
 
 ---
 

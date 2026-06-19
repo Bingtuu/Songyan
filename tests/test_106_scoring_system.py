@@ -130,9 +130,15 @@ class TestScoreBudget:
         assert card.budget.score == 1.0
         assert card.flags.budget_ok is True
 
-    def test_over_budget(self):
+    def test_budget_at_hard_ceiling_passes(self):
         rule = _make_rule_result()
         card = ScoreAggregator.aggregate("v1", rule, _make_llm_result(), budget_used=1.0)
+        assert card.budget.score == 0.0
+        assert card.flags.budget_ok is True
+
+    def test_over_budget(self):
+        rule = _make_rule_result()
+        card = ScoreAggregator.aggregate("v1", rule, _make_llm_result(), budget_used=1.01)
         assert card.budget.score == 0.0
         assert card.flags.budget_ok is False
 

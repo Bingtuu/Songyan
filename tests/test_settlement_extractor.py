@@ -755,6 +755,48 @@ class TestExtractSettlement:
         assert result.validation_status == "valid"
         assert result.validation_errors == []
 
+    async def test_task112_normalizes_invalid_setting_key_before_validation(self) -> None:
+        content = "实验室位置与历史被第一次完整揭示。"
+        llm_response = _make_valid_llm_response(
+            character_updates=[],
+            new_settings=[
+                {
+                    "setting_name": "实验室位置与历史",
+                    "description": "实验室位于旧矿井下方，曾用于权限实验",
+                    "source_quote": "实验室位置与历史被第一次完整揭示",
+                    "setting_key": "e.0.实验室.位置与历史",
+                }
+            ],
+            foreshadowing_updates=[],
+            numerical_updates=[],
+            planted_hooks=[],
+            resolved_hooks=[],
+        )
+
+        with patch("songyan.agents.settlement_extractor.call_llm", return_value=llm_response):
+            with patch(
+                "songyan.agents.settlement_extractor._load_current_character_states",
+                return_value=[],
+            ):
+                with patch(
+                    "songyan.agents.settlement_extractor._load_current_settings",
+                    return_value=[],
+                ):
+                    with patch(
+                        "songyan.agents.settlement_extractor._load_current_foreshadowings",
+                        return_value=[],
+                    ):
+                        result = await extract_settlement(
+                            content=content,
+                            project_id="p1",
+                            chapter_number=97,
+                            version_id="v97",
+                        )
+
+        assert result.validation_status == "valid"
+        assert result.validation_errors == []
+        assert result.new_settings[0].setting_key == "e_0.s_4ae2c4c7.n_ad166662"
+
     async def test_empty_settlement(self) -> None:
         llm_response = _make_valid_llm_response(
             character_updates=[], new_settings=[], foreshadowing_updates=[],

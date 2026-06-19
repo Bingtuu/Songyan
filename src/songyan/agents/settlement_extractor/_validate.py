@@ -14,6 +14,8 @@ from songyan.models import (
 )
 from songyan.utils.numerical_validator import NUMERICAL_TOLERANCE
 
+from ._setting_quality import _is_valid_setting_key
+
 logger = structlog.get_logger(__name__)
 
 
@@ -56,9 +58,6 @@ def _quote_in_content(quote: str, content: str, threshold: float = 0.8) -> bool:
             return True
 
     return False
-
-
-_SETTING_KEY_PATTERN = re.compile(r"^[a-z_]+\.[a-z_]+\.[a-z_]+$")
 
 
 async def _validate_settlement(
@@ -111,7 +110,7 @@ async def _validate_settlement(
                     key=setting.setting_key,
                     project_id=project_id,
                 )
-            if not _SETTING_KEY_PATTERN.match(setting.setting_key):
+            if not _is_valid_setting_key(setting.setting_key):
                 errors.append(
                     f"设定 '{setting.setting_name}' 的 setting_key "
                     f"'{setting.setting_key}' 格式无效，"

@@ -50,7 +50,7 @@
 - `tasks/111e-task112-reporting-dg2-gate-fix.md`
 - `tasks/111f-context-snapshot-prompt-metadata-fix.md`
 - `tasks/111g-long-run-performance-containment.md`
-- `tasks/112-ch101-ch150-streaming-validation.md`
+- `tasks/113-ch101-ch150-streaming-validation.md`
 
 ---
 

@@ -1,24 +1,27 @@
-# Task 112: Ch101-Ch150 流式验证 + 决策门 DG-2
+# Task 113: Ch101-Ch150 流式验证 + 决策门 DG-2
 
 > **Phase**: V5.0 Phase 4 — 150 章规模化验证
 > **优先级**: P0
-> **依赖**: Task 111a-111g 完成
+> **依赖**: Task 111a-111g 完成；Task 112 前置阻断修复完成
 > **预计工作量**: 2-4 天
 
 ---
 
 ## Goal
 
-在 Task 111a-111g 修复 Agent/Workflow/Settlement/Context/Report/Performance 契约后，执行 Ch101-Ch150 流式验证，判断 V5.0 Context Diet 2.0 是否具备支撑 150 章全自动生成的稳定性。
+在 Task 111a-111g 修复 Agent/Workflow/Settlement/Context/Report/Performance 契约，并由 Task 112 恢复 Ch97 accepted 基线后，执行 Ch101-Ch150 流式验证，判断 V5.0 Context Diet 2.0 是否具备支撑 150 章全自动生成的稳定性。
 
 ## Context
 
-原 Task 111 是 “Ch101-Ch150 流式验证 + 决策门 DG-2”。整体 review 后发现多个 P0/P1 一致性问题，因此该验证顺延为 Task 112。Task 112 不再承担前置修复职责，只负责规模化实跑、指标收集、报告生成和决策门判断。
+原 Task 112 是 “Ch101-Ch150 流式验证 + 决策门 DG-2”。进入长跑前的基线检查发现 Ch97 当前 head 为 draft 且 `accepted_version_id=None`，补跑 Ch97 时又暴露 Settlement `setting_key` 非法值阻断，因此正式长跑顺延为 Task 113。
+
+Task 113 不承担前置修复职责，只负责规模化实跑、指标收集、报告生成和决策门判断。
 
 ## In Scope（必须完成）
 
 - [ ] **准备验证基线**
   - 确认 Task 111a-111g 的 DONE 文档和回归测试结果
+  - 确认 Task 112 已恢复 Ch97 accepted + settlement + summary
   - 确认当前 DB、`.env`、logs 路径、checkpointer 模式和项目 ID
   - 记录 Ch80-Ch96 / Ch51-Ch100 的最新对比基线
 
@@ -53,7 +56,7 @@
 ## 接口契约
 
 ```bash
-songyan run --project-id <project_id> --chapters 101-150 --auto-confirm
+songyan run --project-id <project_id> --chapters 101-150 --mode-id webnovel_intense --auto-confirm
 ```
 
 ```bash
@@ -101,7 +104,7 @@ python scripts/generate_streaming_report.py --run-id <run_id>
 
 ## 验收标准（工程流程）
 
-- [ ] 生成 `tasks/112-ch101-ch150-streaming-validation-DONE.md`
+- [ ] 生成 `tasks/113-ch101-ch150-streaming-validation-DONE.md`
 - [ ] 更新 `docs/STATUS.md`
 - [ ] 更新 `README.md`
 - [ ] Git commit 包含验证报告、DONE 文档和状态更新
@@ -118,3 +121,4 @@ python scripts/generate_streaming_report.py --run-id <run_id>
 - `tasks/111e-task112-reporting-dg2-gate-fix.md` — Task 112 报告与 DG-2 Gate 完整性修复
 - `tasks/111f-context-snapshot-prompt-metadata-fix.md` — Context Snapshot、Prompt 与 Metadata 一致性修复
 - `tasks/111g-long-run-performance-containment.md` — 长跑性能缺陷收敛
+- `tasks/112-preflight-blocker-fix.md` — Task 112 前置阻断修复

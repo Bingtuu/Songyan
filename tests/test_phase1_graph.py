@@ -824,6 +824,60 @@ class TestReviewMergerNode:
 
         assert result["_score_card"]["flags"]["budget_ok"] is True
 
+    @pytest.mark.asyncio
+    async def test_context_metrics_budget_passes_at_task112_hard_ceiling(self) -> None:
+        """Task 112: budget_used <= 1.0 不应触发 QG budget 阻断."""
+        from songyan.workflows._nodes import review_merger_node
+
+        version = MagicMock(version_id="v-budget-ceiling", content="正文")
+        rule = RuleAuditResult(
+            ai_tell_count=0,
+            fatigue_word_count=0,
+            has_opening_hook=True,
+            has_ending_hook=True,
+            paragraph_rhythm_score=8.0,
+            word_count=3000,
+            word_count_target=3000,
+        )
+        llm = LLMAuditResult(issues=[])
+        merged = MagicMock(has_critical=False, has_major=False, issues=[])
+        repo = AsyncMock()
+        repo.update_score_card = AsyncMock()
+
+        with (
+            patch(
+                "songyan.workflows._nodes.load_version",
+                new_callable=AsyncMock,
+                return_value=version,
+            ),
+            patch(
+                "songyan.workflows._nodes.load_latest_audits",
+                new_callable=AsyncMock,
+                return_value=(rule, llm),
+            ),
+            patch(
+                "songyan.workflows._nodes.merge_reviews",
+                new_callable=AsyncMock,
+                return_value=merged,
+            ),
+            patch(
+                "songyan.workflows._nodes._load_chapter_repair_state",
+                new_callable=AsyncMock,
+                return_value=(0, False),
+            ),
+            patch("songyan.workflows._nodes.ChapterVersionRepository", return_value=repo),
+        ):
+            result = await review_merger_node(
+                {
+                    "project_id": "p1",
+                    "chapter_number": 1,
+                    "current_version_id": "v-budget-ceiling",
+                    "_context_metrics": {"budget_used": 0.959},
+                }
+            )
+
+        assert result["_score_card"]["flags"]["budget_ok"] is True
+
 
 class TestSettlementExtractorNode:
     @pytest.mark.asyncio

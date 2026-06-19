@@ -36,6 +36,7 @@ from ._apply import (
     apply_settlement as apply_settlement,
 )
 from ._quote_filter import filter_settlement_source_quotes
+from ._setting_quality import _normalize_setting_key
 from ._validate import _validate_settlement
 
 logger = structlog.get_logger(__name__)
@@ -515,6 +516,26 @@ async def extract_settlement(
 
     # 4. 构建 StateSettlement
     settlement = _build_state_settlement(data)
+
+    # Task 112: setting_key 必须在 validation 前规范化。
+    # apply_settlement 仍保留幂等规范化作为写库前防线。
+    normalized_settings: list[NewSetting] = []
+    for setting in settlement.new_settings:
+        normalized_key = _normalize_setting_key(
+            setting.setting_key, setting.setting_name
+        )
+        if normalized_key is None:
+            logger.warning(
+                "settlement.setting_key_discarded_before_validation",
+                setting_name=setting.setting_name,
+                original_key=setting.setting_key,
+                project_id=project_id,
+                chapter_number=chapter_number,
+            )
+            continue
+        setting.setting_key = normalized_key
+        normalized_settings.append(setting)
+    settlement.new_settings = normalized_settings
 
     # 4.3. Task 094: 代码层去重 — 跳过已存在的 setting_key
     existing_keys = {s.setting_key for s in current_settings if s.setting_key}

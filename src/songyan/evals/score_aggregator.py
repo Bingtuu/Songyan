@@ -75,6 +75,8 @@ def _score_budget(budget_used: float | None) -> tuple[float, dict[str, float]]:
     - budget_used <= 0.80 -> 1.0
     - 0.80 ~ 1.00 -> 线性下降到 0.0
     - > 1.00 -> 0.0
+
+    评分用于排序和总分加权；硬门禁以 budget_used <= 1.0 为准。
     """
     bu = budget_used if budget_used is not None else 0.0
     details = {"budget_used": round(bu, 3)}
@@ -238,7 +240,7 @@ class ScoreAggregator:
             ),
             flags=ScoreFlags(
                 length_ok=length_score_rounded >= 0.5,
-                budget_ok=budget_score >= 0.5,
+                budget_ok=(budget_used is None or budget_used <= 1.0),
                 coherence_critical=has_critical,
                 coherence_major=(
                     has_critical

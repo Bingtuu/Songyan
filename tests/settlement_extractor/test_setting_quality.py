@@ -49,16 +49,27 @@ class TestNormalizeKeySegments:
     def test_two_part_key_no_underscore_returns_none(self) -> None:
         assert _normalize_key_segments("category.sub") is None
 
+    def test_task112_mixed_invalid_key_sanitized(self) -> None:
+        normalized = _normalize_key_segments("e.0.实验室.位置与历史")
+        assert normalized == "e_0.s_4ae2c4c7.n_ad166662"
+        assert _is_valid_setting_key(normalized) is True
+
 
 class TestGenerateFallbackKey:
     def test_from_chinese_name(self) -> None:
-        assert _generate_fallback_key("通信天线构造") == "通信.天线.构造"
+        key = _generate_fallback_key("通信天线构造")
+        assert key == "c_f97cb6b6.s_fe7a4c49.n_59176c56"
+        assert _is_valid_setting_key(key) is True
 
     def test_from_mixed_name(self) -> None:
-        assert _generate_fallback_key("青铜大门 ancient gate") == "青铜.大门.ancient"
+        key = _generate_fallback_key("青铜大门 ancient gate")
+        assert key == "c_6dae199f.s_c4ae0f6e.ancient"
+        assert _is_valid_setting_key(key) is True
 
     def test_stop_words_skipped(self) -> None:
-        assert _generate_fallback_key("神秘的古老遗迹") == "神秘.古老.遗迹"
+        key = _generate_fallback_key("神秘的古老遗迹")
+        assert key == "c_86878053.s_6bad1a9d.n_6c0ed487"
+        assert _is_valid_setting_key(key) is True
 
     def test_too_short_returns_none(self) -> None:
         assert _generate_fallback_key("大门") is None
@@ -85,14 +96,22 @@ class TestNormalizeSettingKey:
     def test_invalid_key_uses_name_fallback(self) -> None:
         assert (
             _normalize_setting_key("bad_key_without_dots", "通信天线构造")
-            == "通信.天线.构造"
+            == "c_f97cb6b6.s_fe7a4c49.n_59176c56"
         )
 
     def test_invalid_key_no_fallback_returns_none(self) -> None:
         assert _normalize_setting_key("bad_key_without_dots", "大门") is None
 
     def test_empty_key_uses_name_fallback(self) -> None:
-        assert _normalize_setting_key("", "古老符文大门") == "古老.符文.大门"
+        assert (
+            _normalize_setting_key("", "古老符文大门")
+            == "c_6bad1a9d.s_52bd5ee2.n_c4ae0f6e"
+        )
 
     def test_empty_key_and_short_name_returns_none(self) -> None:
         assert _normalize_setting_key("", "大门") is None
+
+    def test_task112_ch97_key_normalized_before_validation(self) -> None:
+        normalized = _normalize_setting_key("e.0.实验室.位置与历史", "实验室位置与历史")
+        assert normalized == "e_0.s_4ae2c4c7.n_ad166662"
+        assert _is_valid_setting_key(normalized) is True
