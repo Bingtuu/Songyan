@@ -1,7 +1,7 @@
 # Songyan 项目状态板
 
 > **当前阶段: V5.0 "Context Diet 2.0" — 智能遗忘架构**
-> **更新日期**: 2026-06-19
+> **更新日期**: 2026-06-20
 >
 > V4.x 历史归档见 `archive/v4/INDEX.md`
 
@@ -47,16 +47,18 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 
 | 指标 | 数值 |
 |------|------|
-| 状态 | **V5.0 Phase 4 — Task 113 Ch101 收敛回滚与 Settlement 阻断修复中** |
+| 状态 | **V5.0 Phase 4 — Task 114a Settlement 事实源契约修复准备中** |
 | V4.0 最终达标率 (Ch2-Ch50) | **81.6%** (Task 099) ✅ |
 | Task 105b 实跑 | **Ch51-Ch100 全部成功，QG 通过率 58.0% (29/50)，DG-1 未通过** |
 | Task 110a 实跑 | **Ch80-Ch100 21/21 成功，QG 通过率 57.1% (12/21)，ContextEmergency 81.0% (17/21)** |
 | Task 110d 实跑 | **Ch80-Ch96 17/17 成功，QG 通过率 58.8% (10/17)，ContextEmergency 0.0% (0/17)；参数调优无正收益，已回滚** |
 | Task 110e 实跑 | **Ch80-Ch96 17/17 成功，QG 通过率 100% (17/17)，coherence_major 0/17，ContextEmergency 0/17；Auditor 阈值校准 + 审查上下文增强生效** |
-| 最近回归测试 | **1658 passed, 4 skipped, 2 xfailed, 3 xpassed** (`python -m pytest tests/ -q`, Task 113 前置回归) |
+| Task 113 回放 | **Ch101 accepted + settlement + summary 已恢复** (`run-90e08243`) |
+| Task 114 Phase 1 | **Ch102 成功；Ch103 settlement_review 阻断** (`run-5105e24b`)，Ch104-Ch110 未执行 |
+| 最近回归测试 | **1659 passed, 4 skipped, 2 xfailed, 3 xpassed** (`pytest tests/ -q`，Task 113 后全量回归) |
 | Python | 3.11.9 |
-| 当前 Task | **Task 113: Ch101 收敛回滚与 Settlement 阻断修复** |
-| 前置状态 | **Task 112 已完成；Task 113 首次长跑在 Ch101 触发 settlement_review 熔断，run-6b462cb9 已留存日志** |
+| 当前 Task | **Task 114a: Settlement 事实源契约修复** |
+| 前置状态 | **Task 112/113 已完成；Task 114 拆分为 114a/114b/114c，禁止在 114a 完成前启动 Ch111-Ch150** |
 
 ---
 
@@ -104,8 +106,10 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 | 111f | **Context Snapshot、Prompt 与 Metadata 一致性修复** | Writer/Auditor 复用上下文快照；human instruction/brief 动态字段不丢；metadata 可回放 | ✅ |
 | 111g | **长跑性能缺陷收敛** | 减少重复 context assembly；限制 settlement prompt 事实源；收敛 O(N²) 热点 | ✅ |
 | 112 | **Task 114 前置阻断修复** | 修复 budget QG 硬门禁与 Settlement setting_key 规范化；恢复 Ch97 accepted + settlement + summary 基线 | ✅ |
-| 113 | **Ch101 收敛回滚与 Settlement 阻断修复** | 修复 rebound 后 best version/head 选择；恢复 Ch101 accepted + settlement + summary 基线 | 📝 |
-| 114 | **Ch101-Ch150 流式验证 + 决策门 DG-2** | 达标率 ≥ 70%；budget_used ≤ 1.0；完成 150 章一次性生成 | 📝 |
+| 113 | **Ch101 收敛回滚与 Settlement 阻断修复** | 修复 rebound 后 best version/head 选择；恢复 Ch101 accepted + settlement + summary 基线；全量回归通过 | ✅ |
+| 114a | **Settlement 事实源契约修复** | 修复 Ch103 暴露的 `old_value` mismatch、`quote_filter` 内部 ID 误杀引用、run logger/post-processing 残留风险 | 📝 |
+| 114b | **Phase 1 重跑 Ch102-Ch110** | 先回放 Ch103，再补完 Ch102-Ch110；无连续 settlement 阻断后才进入 Phase 2 | ⏸️ |
+| 114c | **Ch111-Ch150 分段流式验证 + DG-2** | Phase 2 Ch111-Ch130、Phase 3 Ch131-Ch150；生成 DG-2 报告 | ⏸️ |
 
 ---
 
@@ -162,6 +166,6 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 - `tasks/111g-long-run-performance-containment-DONE.md` — 长跑性能缺陷收敛交付记录
 - `tasks/112-preflight-blocker-fix.md` — Task 114 前置阻断修复规划
 - `tasks/112-preflight-blocker-fix-DONE.md` — Task 114 前置阻断修复交付记录
-- `tasks/113-ch101-convergence-settlement-blocker-fix.md` — Ch101 收敛回滚与 Settlement 阻断修复规划
-- `tasks/114-ch101-ch150-streaming-validation.md` — Ch101-Ch150 流式验证与 DG-2 规划
+- `tasks/113-ch101-convergence-settlement-blocker-fix.md` — Ch101 收敛回滚与 Settlement 阻断修复记录
+- `tasks/114-ch101-ch150-streaming-validation.md` — Task 114 umbrella 规划：114a Settlement 修复、114b Phase 1 重跑、114c DG-2 长跑
 - `logs/chapter_runs/run-33229919.jsonl` — Ch51-Ch59 实跑指标

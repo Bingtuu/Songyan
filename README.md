@@ -12,7 +12,7 @@
 
 **V5.0 — Context Diet 2.0 智能遗忘架构**
 
-目标：通过 TemporalCompressor + CharacterFocalDecay + SettingEvaporator + BudgetHardCeiling 四组件协同，控制信息密度，支撑 Ch1-Ch150 全自动稳定生成。Task 101~112 已完成 Context Diet 2.0 核心组件、流式验证基础设施、统一评分体系、修复收敛护栏、角色退场机制、设定去重与伏笔监控、coherence_major 根因修复、工作流决策契约修复、Settlement 事实源修复、Context/Prompt 一致性修复、QualityGate/Settlement 阻断修复、DG-2 报告修复、Context Snapshot/Metadata 修复、长跑性能收敛和 Task 114 前置阻断修复。当前进入 Task 113：Ch101 收敛回滚与 Settlement 阻断修复；原 Ch101-Ch150 流式验证后移为 Task 114。
+目标：通过 TemporalCompressor + CharacterFocalDecay + SettingEvaporator + BudgetHardCeiling 四组件协同，控制信息密度，支撑 Ch1-Ch150 全自动稳定生成。Task 101~113 已完成 Context Diet 2.0 核心组件、流式验证基础设施、统一评分体系、修复收敛护栏、角色退场机制、设定去重与伏笔监控、coherence_major 根因修复、工作流决策契约修复、Settlement 事实源修复、Context/Prompt 一致性修复、QualityGate/Settlement 阻断修复、DG-2 报告修复、Context Snapshot/Metadata 修复、长跑性能收敛、Task 114 前置阻断修复和 Ch101 收敛回滚修复。当前进入 Task 114a：Settlement 事实源契约修复；Task 114b/114c 将在 114a 通过后分段推进。
 
 ### 版本概览
 
@@ -22,15 +22,16 @@
 | V2.x | M6~M15 | 长篇支撑能力（RAG / Punch / 一致性）| 已完成 |
 | V3.x | M16~M27 | Ch1~Ch70 稳定长跑 | 已完成 |
 | V4.0 | M28~M42 | Ch1~Ch50 极限优化（81.6% 达标率）| 已完成 |
-| **V5.0** | **M43~M50** | **Context Diet 2.0 → Ch150 全自动** | **进行中** |
+| **V5.0** | **M43~M65** | **Context Diet 2.0 → Ch150 全自动** | **进行中** |
 
 ### 当前关键指标
 
 | 指标 | 数值 |
 |------|------|
-| 最近回归测试 | **1658 passed, 4 skipped, 2 xfailed, 3 xpassed** (`python -m pytest tests/ -q`, Task 113 前置回归) |
-| V5.0 当前 Task | **113**（Ch101 收敛回滚与 Settlement 阻断修复） |
-| 前置状态 | **Task 112 已完成；Task 113 首次长跑在 Ch101 触发 settlement_review 熔断，run-6b462cb9 已留存日志** |
+| 最近回归测试 | **1659 passed, 4 skipped, 2 xfailed, 3 xpassed** (`pytest tests/ -q`，Task 113 后全量回归) |
+| V5.0 当前 Task | **114a**（Settlement 事实源契约修复） |
+| 前置状态 | **Task 112/113 已完成；Ch101 基线已恢复；Task 114 Phase 1 在 Ch103 暴露 settlement `old_value` mismatch** |
+| 当前门禁 | **Task 114a 完成前禁止启动 Ch111-Ch150** |
 | Task 110e 实跑 | **Ch80-Ch96 17/17 成功，QG 100%，coherence_major 0/17** |
 | V4.0 最终达标率 | Task 099: Ch2-Ch50 **81.6%** |
 | V4.x 归档 | `archive/v4/`（报告 + 任务 + 验证数据）|
@@ -371,7 +372,7 @@ ContextManager 按 Token 预算组装 `ContextPackage`（默认 32K）：
 | M41 流程质量门 + edit 审计 | 100b | accept 前三联检，edit 后重跑 Audit |  |
 | M42 上下文压力优化 | 100c | narrative_fullness 客观化，硬上限动态化 |  |
 
-### V5.0 — Context Diet 2.0（Task 101 ~ 112）
+### V5.0 — Context Diet 2.0（Task 101 ~ 114）
 
 > **"不是所有信息都值得记住。通过智能遗忘与分层压缩，支撑 150+ 章稳定生成。"**
 
@@ -396,8 +397,10 @@ ContextManager 按 Token 预算组装 `ContextPackage`（默认 32K）：
 | M59 Context Snapshot/Metadata 修复 | 111f | Writer/Auditor 复用上下文快照；metadata 可回放 | ✅ |
 | M60 长跑性能缺陷收敛 | 111g | context assembly、Settlement prompt facts、O(N²) 热点收敛 | ✅ |
 | M61 Task 114 前置阻断修复 | 112 | 修复 budget QG 硬门禁与 Settlement setting_key 规范化；恢复 Ch97 基线 | ✅ |
-| M62 Ch101 收敛/Settlement 阻断修复 | 113 | 修复 rebound 后 best version/head 选择；恢复 Ch101 基线 | 📝 |
-| M63 Ch101-Ch150 验证 | 114 | 流式验证 + 决策门 DG-2 | 📝 |
+| M62 Ch101 收敛/Settlement 阻断修复 | 113 | 修复 rebound 后 best version/head 选择；恢复 Ch101 基线 | ✅ |
+| M63 Settlement 事实源契约修复 | 114a | 修复 Ch103 `old_value` mismatch、`quote_filter` 内部 ID 误杀引用、run logger/post-processing 残留风险 | 📝 |
+| M64 Phase 1 重跑 | 114b | 先回放 Ch103，再补完 Ch102-Ch110 | ⏸️ |
+| M65 Ch111-Ch150 验证 | 114c | Phase 2/3 分段长跑 + 决策门 DG-2 | ⏸️ |
 
 ---
 
@@ -433,7 +436,7 @@ pytest -k "not integration" -q
 
 ```bash
 pytest tests/ -q
-# Current baseline: 1653 passed, 4 skipped, 1 xfailed, 4 xpassed
+# Current baseline: 1659 passed, 4 skipped, 2 xfailed, 3 xpassed
 
 ruff check src/ tests/
 # Note: 全量 ruff 仍有历史 lint 存量；当前修复任务需保证改动文件不新增 lint。
@@ -509,11 +512,18 @@ ruff check src/ tests/
 
 - **Task 112** : Task 114 前置阻断修复 — 修复 budget QG 硬门禁与 Settlement `setting_key` 规范化，恢复 Ch97 accepted + settlement + summary 基线 ✅
 
-### 当前：V5.0 Phase 4 阻断修复 — Task 113
+### 已完成：V5.0 Phase 4 阻断修复 — Task 113
 
-- **Task 113** : Ch101 收敛回滚与 Settlement 阻断修复
-- 首次 Task 113 长跑窗口 `run-6b462cb9` 在 Ch101 触发 `settlement_review` 熔断；当前先修复 rebound 后 best version/head 选择与 settlement 状态契约。
-- **Task 114** : Ch101-Ch150 流式验证 + 决策门 DG-2，在 Task 113 修复并恢复 Ch101 基线后启动。
+- **Task 113** : Ch101 收敛回滚与 Settlement 阻断修复 ✅
+- 首次 Task 113 长跑窗口 `run-6b462cb9` 在 Ch101 触发 `settlement_review` 熔断；修复后通过 `run-90e08243` 恢复 Ch101 accepted、settlement 和 summary 基线。
+
+### 当前：V5.0 Phase 4 分段验证前置修复 — Task 114a
+
+- **Task 114a** : Settlement 事实源契约修复
+- Task 114 Phase 1 首次运行 `run-5105e24b` 中，Ch102 成功，Ch103 因 settlement `old_value` 与 DB 当前事实源不一致进入 `settlement_review`，Ch104-Ch110 未继续执行。
+- 当前门禁：先修复 `old_value` 回填/校正、`quote_filter` 内部 ID 误杀引用、run logger 和 settlement 后处理残留风险；114a 通过前不启动 Ch111-Ch150。
+- **Task 114b** : Phase 1 重跑 Ch102-Ch110，先回放 Ch103，再补完 Ch104-Ch110。
+- **Task 114c** : Ch111-Ch150 分段流式验证 + 决策门 DG-2，在 114b 通过后启动。
 
 ---
 
