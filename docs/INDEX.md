@@ -10,11 +10,12 @@
 |:------:|------|------|
 | P0 | `AGENTS.md` | 开发代理指令与不可违背规则 |
 | P0 | `docs/STATUS.md` | 项目状态看板（当前 Task、路线图） |
-| P0 | `tasks/112-preflight-blocker-fix-DONE.md` | 最新完成：Task 113 前置阻断修复 |
+| P0 | `tasks/113-ch101-convergence-settlement-blocker-fix.md` | 当前 Task：Ch101 收敛回滚与 Settlement 阻断修复 |
+| P0 | `tasks/112-preflight-blocker-fix-DONE.md` | 最新完成：Task 114 前置阻断修复 |
+| P0 | `tasks/114-ch101-ch150-streaming-validation.md` | 后续 Task：Ch101-Ch150 流式验证 + DG-2 |
 | P0 | `tasks/111g-long-run-performance-containment-DONE.md` | 最新完成：长跑性能缺陷收敛 |
 | P0 | `tasks/111f-context-snapshot-prompt-metadata-fix-DONE.md` | 已完成：Context Snapshot、Prompt 与 Metadata 一致性 |
 | P0 | `tasks/111e-task112-reporting-dg2-gate-fix-DONE.md` | 已完成：Task 112 报告与 DG-2 Gate 修复 |
-| P0 | `tasks/113-ch101-ch150-streaming-validation.md` | 当前 Task：Ch101-Ch150 流式验证 + DG-2 |
 | P1 | `docs/INDEX.md` | 本文档 |
 | P2 | `archive/v4/INDEX.md` | V4.x 归档（历史结论参考） |
 

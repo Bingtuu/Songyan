@@ -127,7 +127,7 @@ class TestRewriteNodeSuccessPath:
     """rewrite_node success path 返回值测试."""
 
     @pytest.mark.asyncio
-    async def test_returns_best_version_id_and_best_score_card(self) -> None:
+    async def test_rewrite_draft_does_not_overwrite_existing_best(self) -> None:
         mock_version = MagicMock()
         mock_version.version_id = "v-rewrite-best"
         mock_version.scenes = [{"scene_id": "s1"}, {"scene_id": "s2"}]
@@ -159,11 +159,14 @@ class TestRewriteNodeSuccessPath:
                         "creative_brief_id": None,
                         "review_report_id": None,
                         "_new_issues_introduced": None,
+                        "_best_version_id": "v-existing-best",
+                        "_best_score_card": {"version_id": "v-existing-best"},
                     }
                     result = await rewrite_node(state)
 
-        assert result["_best_version_id"] == "v-rewrite-best"
-        assert result["_best_score_card"] is None
+        assert result["current_version_id"] == "v-rewrite-best"
+        assert "_best_version_id" not in result
+        assert "_best_score_card" not in result
 
 
 class TestReviewMergerNodeRevisionSignals:
@@ -264,6 +267,126 @@ class TestReviewMergerNodeRevisionSignals:
         assert result["_needs_revision"] is True
         assert result["_has_critical"] is False
         assert result["_has_major"] is True
+
+    @pytest.mark.asyncio
+    async def test_rebound_rolls_back_to_active_best_and_syncs_score_card(self) -> None:
+        """Ch101 形态：高分 best 后的劣化 rewrite 反弹，应回滚 active best."""
+        mock_version = MagicMock()
+        mock_version.version_id = "v-current"
+        mock_version.content = "正文"
+
+        best_version = MagicMock()
+        best_version.version_id = "v-best"
+        best_version.project_id = "p1"
+        best_version.chapter_number = 1
+        best_version.is_abandoned = False
+        best_version.score_card = None
+
+        mock_rule = MagicMock()
+        mock_llm = MagicMock()
+
+        mock_score_card = MagicMock()
+        mock_score_card.flags.needs_revision = True
+        mock_score_card.flags.coherence_critical = False
+        mock_score_card.flags.coherence_major = True
+        mock_score_card.overall_score = 0.50
+        mock_score_card.model_dump.return_value = {
+            "version_id": "v-current",
+            "overall_score": 0.50,
+        }
+        for dim_name in ("length", "budget", "coherence", "momentum", "readability"):
+            dim_mock = MagicMock()
+            dim_mock.score = 0.50
+            setattr(mock_score_card, dim_name, dim_mock)
+
+        best_score_card = {
+            "version_id": "v-best",
+            "overall_score": 0.92,
+            "length": {"score": 0.90},
+            "budget": {"score": 0.90},
+            "coherence": {"score": 0.90},
+            "momentum": {"score": 0.90},
+            "readability": {"score": 0.90},
+            "flags": {
+                "length_ok": True,
+                "budget_ok": True,
+                "coherence_critical": False,
+                "coherence_major": False,
+                "momentum_present": True,
+                "readability_ok": True,
+            },
+        }
+
+        merged_mock = MagicMock()
+        merged_mock.has_critical = False
+        merged_mock.has_major = True
+        merged_mock.issues = [
+            ReviewIssue(
+                issue_id=f"i{i}",
+                category=ReviewCategory.NARRATIVE_HOOK,
+                severity="major",
+                evidence_quote="quote",
+                evidence_location="loc",
+                issue_description="hook weak",
+            )
+            for i in range(3)
+        ]
+
+        with (
+            patch(
+                "songyan.workflows._nodes.load_version",
+                new_callable=AsyncMock,
+                return_value=mock_version,
+            ),
+            patch(
+                "songyan.workflows._nodes.load_latest_audits",
+                new_callable=AsyncMock,
+                return_value=(mock_rule, mock_llm),
+            ),
+            patch(
+                "songyan.workflows._nodes.merge_reviews",
+                new_callable=AsyncMock,
+                return_value=merged_mock,
+            ),
+            patch(
+                "songyan.workflows._nodes.ScoreAggregator.aggregate",
+                return_value=mock_score_card,
+            ),
+            patch(
+                "songyan.workflows._nodes._load_chapter_repair_state",
+                new_callable=AsyncMock,
+                return_value=(2, True),
+            ),
+            patch("songyan.workflows._nodes.ChapterVersionRepository") as mock_ver_repo_cls,
+            patch("songyan.workflows._nodes.ChapterHeadRepository") as mock_head_repo_cls,
+        ):
+            mock_ver_repo = AsyncMock()
+            mock_ver_repo.update_score_card = AsyncMock()
+            mock_ver_repo.get = AsyncMock(return_value=best_version)
+            mock_ver_repo.mark_abandoned = AsyncMock()
+            mock_ver_repo_cls.return_value = mock_ver_repo
+            mock_head_repo = AsyncMock()
+            mock_head_repo.update = AsyncMock()
+            mock_head_repo_cls.return_value = mock_head_repo
+
+            result = await review_merger_node({
+                "project_id": "p1",
+                "chapter_number": 1,
+                "current_version_id": "v-current",
+                "revision_round": 2,
+                "_best_version_id": "v-best",
+                "_best_report_id": "rr-best",
+                "_best_issues_count": 1,
+                "_best_overall_score": 0.92,
+                "_best_score_card": best_score_card,
+            })
+
+        assert result["current_version_id"] == "v-best"
+        assert result["_best_version_id"] == "v-best"
+        assert result["_score_card"] == best_score_card
+        assert result["_best_score_card"] == best_score_card
+        mock_ver_repo.mark_abandoned.assert_awaited_once_with("v-current")
+        mock_head_repo.update.assert_awaited_once()
 
 
 class TestLiteraryAuditorNodeNonBlocking:

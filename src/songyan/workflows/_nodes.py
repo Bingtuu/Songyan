@@ -105,6 +105,69 @@ def _has_non_coherence_major(issues: list[ReviewIssue]) -> bool:
         for issue in issues
     )
 
+
+async def _load_active_best_version(
+    *,
+    version_id: str | None,
+    project_id: str,
+    chapter_number: int,
+) -> ChapterVersion | None:
+    """加载可作为回滚目标的 best version，拒绝 abandoned 或跨章节版本."""
+    if not version_id:
+        return None
+
+    version = await ChapterVersionRepository().get(version_id)
+    if version is None:
+        logger.warning(
+            "workflow.best_version_missing",
+            version_id=version_id,
+            project_id=project_id,
+            chapter_number=chapter_number,
+        )
+        return None
+
+    if version.is_abandoned:
+        logger.warning(
+            "workflow.best_version_abandoned",
+            version_id=version_id,
+            project_id=project_id,
+            chapter_number=chapter_number,
+        )
+        return None
+
+    if version.project_id != project_id or version.chapter_number != chapter_number:
+        logger.warning(
+            "workflow.best_version_scope_mismatch",
+            version_id=version_id,
+            version_project_id=version.project_id,
+            version_chapter_number=version.chapter_number,
+            project_id=project_id,
+            chapter_number=chapter_number,
+        )
+        return None
+
+    return version
+
+
+def _score_card_for_version(
+    score_card_raw: dict[str, Any] | None,
+    version_id: str,
+) -> dict[str, Any] | None:
+    """返回与 version_id 同源的 score_card；缺失 version_id 的旧数据按当前 best 补齐."""
+    if not isinstance(score_card_raw, dict):
+        return None
+
+    score_version_id = score_card_raw.get("version_id")
+    if score_version_id and score_version_id != version_id:
+        logger.warning(
+            "workflow.best_score_card_version_mismatch",
+            version_id=version_id,
+            score_card_version_id=score_version_id,
+        )
+        return None
+
+    return {**score_card_raw, "version_id": version_id}
+
 # =============================================================================
 # Editor callable（可注入，用于测试）
 # =============================================================================
@@ -634,22 +697,26 @@ async def rewrite_node(state: dict[str, Any]) -> dict[str, Any]:
             project_id=state["project_id"],
             chapter_number=state["chapter_number"],
         )
-        # 废弃当前失败版本
-        await ChapterVersionRepository().mark_abandoned(version.version_id)
-        # 回滚到 best_version（如有）
+        # 只有存在有效回滚目标时才废弃当前失败版本，避免 head/state 指向 abandoned。
         best_version_id = state.get("_best_version_id")
-        if best_version_id:
+        best_version = await _load_active_best_version(
+            version_id=best_version_id,
+            project_id=state["project_id"],
+            chapter_number=state["chapter_number"],
+        )
+        if best_version:
+            await ChapterVersionRepository().mark_abandoned(version.version_id)
             await ChapterHeadRepository().update(
                 ChapterHead(
                     project_id=state["project_id"],
                     chapter_number=state["chapter_number"],
-                    current_version_id=best_version_id,
+                    current_version_id=best_version.version_id,
                     accepted_version_id=None,
                     status="draft",
                 )
             )
         return {
-            "current_version_id": best_version_id or version.version_id,
+            "current_version_id": best_version.version_id if best_version else version.version_id,
             "revision_round": 0,
             "_was_rewritten": True,
             "_rewrite_reason": f"struct_integrity_failed:{struct_fail_reason}",
@@ -670,8 +737,6 @@ async def rewrite_node(state: dict[str, Any]) -> dict[str, Any]:
         "_needs_revision": False,
         "_has_critical": False,
         "_has_major": False,
-        "_best_version_id": version.version_id,
-        "_best_score_card": None,
         "status": "rule_auditing",
     }
 
@@ -923,6 +988,16 @@ async def review_merger_node(state: dict[str, Any]) -> dict[str, Any]:
                 logger.warning("review_merger.invalid_best_score_card", exc_info=True)
 
         if issues_increased or score_dropped or dim_degraded:
+            active_best = await _load_active_best_version(
+                version_id=best_version,
+                project_id=state["project_id"],
+                chapter_number=state["chapter_number"],
+            )
+            active_best_score_card = (
+                _score_card_for_version(best_score_card_raw, active_best.version_id)
+                if active_best
+                else None
+            )
             logger.warning(
                 "revision_rebound_detected",
                 prev_issues=best_issues,
@@ -932,9 +1007,38 @@ async def review_merger_node(state: dict[str, Any]) -> dict[str, Any]:
                 degraded_dimension=degraded_dim,
                 rollback_version=best_version,
                 revision_round=rround,
+                rollback_valid=bool(active_best and active_best_score_card),
             )
-            # 标记当前失败版本为废弃，避免幽灵版本污染历史
+            if not active_best or not active_best_score_card:
+                return {
+                    "review_report_id": report_id,
+                    "revision_round": rround,
+                    "_total_revision_count": total_revision_count,
+                    "_was_rewritten": was_rewritten,
+                    "_has_critical": has_critical,
+                    "_has_major": has_major,
+                    "_needs_revision": False,
+                    "_current_issues_count": current_issues,
+                    "_current_overall_score": current_score,
+                    "_revision_rebound": True,
+                    "_convergence_failed": True,
+                    "_skip_settlement": True,
+                    "current_version_id": version.version_id,
+                    "_score_card": score_card.model_dump(),
+                    "_prev_merged_issues": [i.model_dump() for i in merged.issues],
+                    "status": "human_confirm",
+                }
+
             await ChapterVersionRepository().mark_abandoned(version.version_id)
+            await ChapterHeadRepository().update(
+                ChapterHead(
+                    project_id=state["project_id"],
+                    chapter_number=state["chapter_number"],
+                    current_version_id=active_best.version_id,
+                    accepted_version_id=None,
+                    status="draft",
+                )
+            )
             return {
                 "review_report_id": best_report_id,
                 "revision_round": rround,
@@ -946,9 +1050,11 @@ async def review_merger_node(state: dict[str, Any]) -> dict[str, Any]:
                 "_current_issues_count": best_issues,
                 "_current_overall_score": best_score or 0.0,
                 "_revision_rebound": True,
-                "current_version_id": best_version,
+                "_best_version_id": active_best.version_id,
+                "_best_score_card": active_best_score_card,
+                "current_version_id": active_best.version_id,
                 "literary_observation_id": None,
-                "_score_card": best_score_card_raw or score_card.model_dump(),
+                "_score_card": active_best_score_card,
                 "_prev_merged_issues": [i.model_dump() for i in merged.issues],
                 "status": "literary_auditing",
             }
@@ -1011,7 +1117,7 @@ async def review_merger_node(state: dict[str, Any]) -> dict[str, Any]:
     }
     _should_save_best = (
         (needs_revision and rround == 0)
-        or (state.get("_best_score_card") is None and version.version_id)
+        or not state.get("_best_version_id")
     )
     if _should_save_best:
         result["_best_issues_count"] = current_issues
@@ -1316,27 +1422,44 @@ async def quality_gate_node(state: dict[str, Any]) -> dict[str, Any]:
 
         if repair_exhausted and next_status == "human_confirm":
             best_version_id = state.get("_best_version_id")
-            if best_version_id:
-                logger.warning(
-                    "quality_gate.convergence_failed",
-                    project_id=state["project_id"],
-                    chapter_number=state["chapter_number"],
-                    failures=failures,
-                    rollback_version=best_version_id,
+            active_best = await _load_active_best_version(
+                version_id=best_version_id,
+                project_id=state["project_id"],
+                chapter_number=state["chapter_number"],
+            )
+            active_best_score_card = (
+                _score_card_for_version(
+                    state.get("_best_score_card") or active_best.score_card,
+                    active_best.version_id,
                 )
-                # 回滚到 best_version
+                if active_best
+                else None
+            )
+            logger.warning(
+                "quality_gate.convergence_failed",
+                project_id=state["project_id"],
+                chapter_number=state["chapter_number"],
+                failures=failures,
+                rollback_version=best_version_id,
+                rollback_valid=bool(active_best and active_best_score_card),
+            )
+            result["_convergence_failed"] = True
+            result["_skip_settlement"] = True
+
+            if active_best and active_best_score_card:
                 await ChapterHeadRepository().update(
                     ChapterHead(
                         project_id=state["project_id"],
                         chapter_number=state["chapter_number"],
-                        current_version_id=best_version_id,
+                        current_version_id=active_best.version_id,
                         accepted_version_id=None,
                         status="draft",
                     )
                 )
-                result["current_version_id"] = best_version_id
-                result["_convergence_failed"] = True
-                result["_skip_settlement"] = True
+                result["current_version_id"] = active_best.version_id
+                result["_best_version_id"] = active_best.version_id
+                result["_best_score_card"] = active_best_score_card
+                result["_score_card"] = active_best_score_card
 
         return result
 

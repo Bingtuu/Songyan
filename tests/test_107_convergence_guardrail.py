@@ -29,10 +29,17 @@ async def test_rewrite_scene_count_too_low_triggers_rollback() -> None:
     version.scenes = [{"scene_id": "s1"}]  # 仅 1 个场景
     version.content = "content"
     version.word_count = 3000
+    best_version = MagicMock()
+    best_version.version_id = "v-best"
 
     with (
         patch("songyan.workflows._nodes.write_chapter", new_callable=AsyncMock) as mock_write,
         patch("songyan.workflows._nodes._get_context_package", new_callable=AsyncMock) as mock_ctx,
+        patch(
+            "songyan.workflows._nodes._load_active_best_version",
+            new_callable=AsyncMock,
+            return_value=best_version,
+        ),
         patch("songyan.workflows._nodes.ChapterVersionRepository") as mock_ver_repo,
         patch("songyan.workflows._nodes.ChapterHeadRepository") as mock_head_repo,
     ):
@@ -68,6 +75,8 @@ async def test_rewrite_missing_hooks_triggers_rollback() -> None:
     version.scenes = [{"scene_id": "s1"}, {"scene_id": "s2"}]
     version.content = "content"
     version.word_count = 3000
+    best_version = MagicMock()
+    best_version.version_id = "v-best"
 
     rule_result = MagicMock()
     rule_result.has_opening_hook = True
@@ -80,6 +89,11 @@ async def test_rewrite_missing_hooks_triggers_rollback() -> None:
         patch("songyan.workflows._nodes.load_genre_profile", return_value=None),
         patch("songyan.workflows._nodes.load_chapter_goal", new_callable=AsyncMock) as mock_goal,
         patch("songyan.workflows._nodes.run_rule_audit", return_value=rule_result),
+        patch(
+            "songyan.workflows._nodes._load_active_best_version",
+            new_callable=AsyncMock,
+            return_value=best_version,
+        ),
         patch("songyan.workflows._nodes.ChapterVersionRepository") as mock_ver_repo,
         patch("songyan.workflows._nodes.ChapterHeadRepository") as mock_head_repo,
     ):
@@ -157,6 +171,9 @@ async def test_qg_after_rewrite_failure_rollback_best_version() -> None:
     """rewrite 后 QG 仍失败 → 回滚 best_version，设置收敛失败标志."""
     version = MagicMock()
     version.word_count = 3000
+    best_version = MagicMock()
+    best_version.version_id = "v-best"
+    best_version.score_card = None
 
     with (
         patch("songyan.workflows._nodes.load_version", new_callable=AsyncMock) as mock_ver,
@@ -164,6 +181,11 @@ async def test_qg_after_rewrite_failure_rollback_best_version() -> None:
             "songyan.workflows._nodes._load_chapter_repair_state",
             new_callable=AsyncMock,
             return_value=(2, True),
+        ),
+        patch(
+            "songyan.workflows._nodes._load_active_best_version",
+            new_callable=AsyncMock,
+            return_value=best_version,
         ),
         patch("songyan.workflows._nodes.ChapterHeadRepository") as mock_head_repo,
     ):
@@ -176,6 +198,7 @@ async def test_qg_after_rewrite_failure_rollback_best_version() -> None:
             "current_version_id": "v-current",
             "_was_rewritten": True,
             "_best_version_id": "v-best",
+            "_best_score_card": {"version_id": "v-best", "overall_score": 0.8},
             "_score_card": {
                 "version_id": "v",
                 "overall_score": 0.5,
@@ -207,6 +230,9 @@ async def test_qg_after_two_revisions_failure_rollback() -> None:
     """2 轮 revision 后 QG 仍失败 → 回滚 best_version."""
     version = MagicMock()
     version.word_count = 3000
+    best_version = MagicMock()
+    best_version.version_id = "v-best"
+    best_version.score_card = None
 
     with (
         patch("songyan.workflows._nodes.load_version", new_callable=AsyncMock) as mock_ver,
@@ -214,6 +240,11 @@ async def test_qg_after_two_revisions_failure_rollback() -> None:
             "songyan.workflows._nodes._load_chapter_repair_state",
             new_callable=AsyncMock,
             return_value=(2, False),
+        ),
+        patch(
+            "songyan.workflows._nodes._load_active_best_version",
+            new_callable=AsyncMock,
+            return_value=best_version,
         ),
         patch("songyan.workflows._nodes.ChapterHeadRepository") as mock_head_repo,
     ):
@@ -225,6 +256,7 @@ async def test_qg_after_two_revisions_failure_rollback() -> None:
             "chapter_number": 1,
             "current_version_id": "v-current",
             "_best_version_id": "v-best",
+            "_best_score_card": {"version_id": "v-best", "overall_score": 0.8},
             "_content_preservation_ratio": 0.50,
         })
 
@@ -236,7 +268,7 @@ async def test_qg_after_two_revisions_failure_rollback() -> None:
 
 @pytest.mark.asyncio
 async def test_qg_without_best_version_no_rollback() -> None:
-    """修复耗尽但无 best_version → 不尝试回滚（避免空指针）."""
+    """修复耗尽但无 best_version → 明确阻断 settlement，不尝试回滚."""
     version = MagicMock()
     version.word_count = 3000
 
@@ -258,12 +290,12 @@ async def test_qg_without_best_version_no_rollback() -> None:
             "current_version_id": "v-current",
             "_was_rewritten": True,
             "_best_version_id": None,
+            "_content_preservation_ratio": 0.50,
         })
 
     assert result["status"] == "human_confirm"
-    # 无 best_version，不设置收敛失败标志（避免跳过无意义的 settlement）
-    assert result.get("_convergence_failed", False) is False
-    assert result.get("_skip_settlement", False) is False
+    assert result["_convergence_failed"] is True
+    assert result["_skip_settlement"] is True
     mock_head_repo.return_value.update.assert_not_awaited()
 
 

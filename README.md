@@ -12,7 +12,7 @@
 
 **V5.0 — Context Diet 2.0 智能遗忘架构**
 
-目标：通过 TemporalCompressor + CharacterFocalDecay + SettingEvaporator + BudgetHardCeiling 四组件协同，控制信息密度，支撑 Ch1-Ch150 全自动稳定生成。Task 101~112 已完成 Context Diet 2.0 核心组件、流式验证基础设施、统一评分体系、修复收敛护栏、角色退场机制、设定去重与伏笔监控、coherence_major 根因修复、工作流决策契约修复、Settlement 事实源修复、Context/Prompt 一致性修复、QualityGate/Settlement 阻断修复、DG-2 报告修复、Context Snapshot/Metadata 修复、长跑性能收敛和 Task 113 前置阻断修复。当前进入 Task 113：Ch101-Ch150 流式验证 + 决策门 DG-2。
+目标：通过 TemporalCompressor + CharacterFocalDecay + SettingEvaporator + BudgetHardCeiling 四组件协同，控制信息密度，支撑 Ch1-Ch150 全自动稳定生成。Task 101~112 已完成 Context Diet 2.0 核心组件、流式验证基础设施、统一评分体系、修复收敛护栏、角色退场机制、设定去重与伏笔监控、coherence_major 根因修复、工作流决策契约修复、Settlement 事实源修复、Context/Prompt 一致性修复、QualityGate/Settlement 阻断修复、DG-2 报告修复、Context Snapshot/Metadata 修复、长跑性能收敛和 Task 114 前置阻断修复。当前进入 Task 113：Ch101 收敛回滚与 Settlement 阻断修复；原 Ch101-Ch150 流式验证后移为 Task 114。
 
 ### 版本概览
 
@@ -28,9 +28,9 @@
 
 | 指标 | 数值 |
 |------|------|
-| 最近回归测试 | **1658 passed, 4 skipped, 2 xfailed, 3 xpassed** (`python -m pytest tests/ -q`, Task 112) |
-| V5.0 当前 Task | **113**（Ch101-Ch150 流式验证 + 决策门 DG-2） |
-| 前置状态 | **Task 112 已完成；Ch97 accepted + settlement + summary 基线已恢复** |
+| 最近回归测试 | **1658 passed, 4 skipped, 2 xfailed, 3 xpassed** (`python -m pytest tests/ -q`, Task 113 前置回归) |
+| V5.0 当前 Task | **113**（Ch101 收敛回滚与 Settlement 阻断修复） |
+| 前置状态 | **Task 112 已完成；Task 113 首次长跑在 Ch101 触发 settlement_review 熔断，run-6b462cb9 已留存日志** |
 | Task 110e 实跑 | **Ch80-Ch96 17/17 成功，QG 100%，coherence_major 0/17** |
 | V4.0 最终达标率 | Task 099: Ch2-Ch50 **81.6%** |
 | V4.x 归档 | `archive/v4/`（报告 + 任务 + 验证数据）|
@@ -395,8 +395,9 @@ ContextManager 按 Token 预算组装 `ContextPackage`（默认 32K）：
 | M58 报告与 DG-2 Gate 修复 | 111e | streaming report 兼容缺失 metrics；DG-2 覆盖硬指标 | ✅ |
 | M59 Context Snapshot/Metadata 修复 | 111f | Writer/Auditor 复用上下文快照；metadata 可回放 | ✅ |
 | M60 长跑性能缺陷收敛 | 111g | context assembly、Settlement prompt facts、O(N²) 热点收敛 | ✅ |
-| M61 Task 113 前置阻断修复 | 112 | 修复 budget QG 硬门禁与 Settlement setting_key 规范化；恢复 Ch97 基线 | ✅ |
-| M62 Ch101-Ch150 验证 | 113 | 流式验证 + 决策门 DG-2 | 📝 |
+| M61 Task 114 前置阻断修复 | 112 | 修复 budget QG 硬门禁与 Settlement setting_key 规范化；恢复 Ch97 基线 | ✅ |
+| M62 Ch101 收敛/Settlement 阻断修复 | 113 | 修复 rebound 后 best version/head 选择；恢复 Ch101 基线 | 📝 |
+| M63 Ch101-Ch150 验证 | 114 | 流式验证 + 决策门 DG-2 | 📝 |
 
 ---
 
@@ -506,11 +507,13 @@ ruff check src/ tests/
 
 ### 已完成：V5.0 Phase 4 前置阻断修复 — Task 112
 
-- **Task 112** : Task 113 前置阻断修复 — 修复 budget QG 硬门禁与 Settlement `setting_key` 规范化，恢复 Ch97 accepted + settlement + summary 基线 ✅
+- **Task 112** : Task 114 前置阻断修复 — 修复 budget QG 硬门禁与 Settlement `setting_key` 规范化，恢复 Ch97 accepted + settlement + summary 基线 ✅
 
-### 当前：V5.0 Phase 4 验证 — Task 113
+### 当前：V5.0 Phase 4 阻断修复 — Task 113
 
-- **Task 113** : Ch101-Ch150 流式验证 + 决策门 DG-2
+- **Task 113** : Ch101 收敛回滚与 Settlement 阻断修复
+- 首次 Task 113 长跑窗口 `run-6b462cb9` 在 Ch101 触发 `settlement_review` 熔断；当前先修复 rebound 后 best version/head 选择与 settlement 状态契约。
+- **Task 114** : Ch101-Ch150 流式验证 + 决策门 DG-2，在 Task 113 修复并恢复 Ch101 基线后启动。
 
 ---
 
