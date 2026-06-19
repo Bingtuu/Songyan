@@ -231,6 +231,55 @@ def _extract_context_metrics(ctx_pkg: Any) -> dict[str, Any]:
     }
 
 
+def _budget_used_for_scoring(state: dict[str, Any]) -> float | None:
+    """读取质量评分使用的预算指标，优先使用轻量 state metrics."""
+    context_metrics = state.get("_context_metrics") or {}
+    budget_used = context_metrics.get("budget_used")
+    if budget_used is not None:
+        return float(budget_used)
+    ctx_pkg = state.get("context_package")
+    return getattr(ctx_pkg, "budget_used", None) if ctx_pkg is not None else None
+
+
+async def _write_fallback_chapter_summary(
+    *,
+    content: str,
+    settlement: Any | None,
+    project_id: str,
+    chapter_number: int,
+    db: SummaryRepository,
+) -> str:
+    """写入代码生成的兜底章节摘要，返回真实 summary_id."""
+    summary_text = content[:300] + "..." if len(content) > 300 else content
+    key_events: list[str] = ["章节推进"]
+    characters: list[str] = []
+    impact_score = 0.0
+    if settlement is not None:
+        key_events = []
+        for update in getattr(settlement, "character_updates", [])[:3]:
+            key_events.append(f"{update.character_id} 的 {update.field} 变为 {update.new_value}")
+            characters.append(update.character_id)
+        for setting in getattr(settlement, "new_settings", [])[:2]:
+            key_events.append(f"揭示新设定：{setting.setting_name}")
+        for foreshadowing in getattr(settlement, "foreshadowing_updates", [])[:2]:
+            key_events.append(f"{foreshadowing.operation} 伏笔：{foreshadowing.description}")
+        if not key_events:
+            key_events = ["章节推进"]
+        impact_score = float(getattr(settlement, "impact_score", 0.0) or 0.0)
+
+    fallback_summary = ChapterSummary(
+        summary=summary_text,
+        chapter_number=chapter_number,
+        key_events=key_events,
+        characters_appeared=list(dict.fromkeys(characters)),
+        emotional_tone="中性",
+        impact_score=impact_score,
+    )
+    summary_id = new_id("sum")
+    await db.create(fallback_summary, project_id, summary_id)
+    return summary_id
+
+
 async def _load_chapter_repair_state(
     project_id: str,
     chapter_number: int,
@@ -742,9 +791,8 @@ async def review_merger_node(state: dict[str, Any]) -> dict[str, Any]:
     )
     was_rewritten = state.get("_was_rewritten", False) or db_was_rewritten
 
-    # Task 106: 统一评分聚合
-    ctx_pkg = state.get("context_package")
-    budget_used = getattr(ctx_pkg, "budget_used", None) if ctx_pkg is not None else None
+    # Task 106 + 111d: 统一评分聚合，预算指标来自轻量 _context_metrics。
+    budget_used = _budget_used_for_scoring(state)
     score_card = ScoreAggregator.aggregate(
         version_id=version.version_id,
         rule_result=rule_result,
@@ -1145,7 +1193,7 @@ async def quality_gate_node(state: dict[str, Any]) -> dict[str, Any]:
         # rewrite 是最后一次自动修复。重写后无论质量门因何失败，
         # 都交给 human gate/auto-confirm 收束，避免绕过 revision_router 继续修订。
         if has_new_issues:
-            next_status = "human_confirm"
+            next_status = "human_review_required"
         elif was_rewritten:
             next_status = "human_confirm"
         elif any(
@@ -1173,7 +1221,9 @@ async def quality_gate_node(state: dict[str, Any]) -> dict[str, Any]:
 
         if has_new_issues:
             result["_convergence_failed"] = True
-            result["_skip_settlement"] = True
+            result["_skip_settlement"] = False
+            result["_settlement_needs_human_review"] = True
+            return result
 
         if repair_exhausted and next_status == "human_confirm":
             best_version_id = state.get("_best_version_id")
@@ -1458,7 +1508,7 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
     accepted_for_postprocessing = False
     summary_id = None
 
-    # Task 108: 支持跳过 settlement（如 convergence_failed 路径）
+    # Task 111d: skipped settlement 不能再伪装为 accepted/done。
     if state.get("_skip_settlement", False):
         logger.info(
             "settlement_extractor_node.skipping_settlement",
@@ -1466,35 +1516,13 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
             chapter_number=state["chapter_number"],
             version_id=version.version_id,
         )
-        # Fallback inline summary
-        summary_id = new_id("sum")
-        _content = version.content
-        _summary_text = _content[:300] + "..." if len(_content) > 300 else _content
-        fallback_summary = ChapterSummary(
-            summary=_summary_text,
-            chapter_number=state["chapter_number"],
-            key_events=[],
-            characters_appeared=[],
-            emotional_tone="",
-            impact_score=0.0,
-        )
-        try:
-            await SummaryRepository().create(fallback_summary, state["project_id"], summary_id)
-        except Exception as exc:
-            logger.warning(
-                "settlement_extractor_node.fallback_summary_failed",
-                error=str(exc),
-                project_id=state["project_id"],
-                chapter_number=state["chapter_number"],
-            )
-            summary_id = None
-        await accept_with_settlement_boundary(
-            project_id=state["project_id"],
-            chapter_number=state["chapter_number"],
-            version_id=version.version_id,
-            settlement=None,
-        )
-        accepted_for_postprocessing = True
+        settlement_needs_review = True
+        return {
+            "settlement_id": None,
+            "summary_id": None,
+            "status": "settlement_review",
+            "_settlement_needs_human_review": settlement_needs_review,
+        }
     else:
         # 1. 提取并应用 settlement（核心操作）
         try:
@@ -1560,6 +1588,22 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
                     project_id=state["project_id"],
                     chapter_number=state["chapter_number"],
                 )
+                try:
+                    summary_id = await _write_fallback_chapter_summary(
+                        content=version.content,
+                        settlement=settlement,
+                        project_id=state["project_id"],
+                        chapter_number=state["chapter_number"],
+                        db=SummaryRepository(),
+                    )
+                except Exception as fallback_exc:
+                    logger.warning(
+                        "settlement_extractor_node.fallback_summary_failed",
+                        error=str(fallback_exc),
+                        project_id=state["project_id"],
+                        chapter_number=state["chapter_number"],
+                    )
+                    settlement_needs_review = True
 
     # V4.0: 生命周期清理 — 统一调度所有表的 archive 策略（Task 087）
     if accepted_for_postprocessing:

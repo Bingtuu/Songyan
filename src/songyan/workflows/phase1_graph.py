@@ -168,6 +168,8 @@ def quality_gate_router(state: Phase1State) -> str:
         return "rewrite"
     if status == "rule_auditing":
         return "revision_needed"
+    if status == "human_review_required":
+        return "blocked"
     return "pass"
 
 
@@ -264,6 +266,7 @@ async def build_phase1_graph() -> Any:
             "pass": "human_confirm",
             "rewrite": "rewrite",
             "revision_needed": "revision_handler",
+            "blocked": END,
         },
     )
 

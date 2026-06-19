@@ -2,14 +2,14 @@
 
 > **Phase**: V5.0 Phase 4 — 150 章规模化验证
 > **优先级**: P0
-> **依赖**: Task 111a、111b、111c 完成
+> **依赖**: Task 111a-111g 完成
 > **预计工作量**: 2-4 天
 
 ---
 
 ## Goal
 
-在 Task 111a-111c 修复 Agent/Workflow/Settlement/Context 契约后，执行 Ch101-Ch150 流式验证，判断 V5.0 Context Diet 2.0 是否具备支撑 150 章全自动生成的稳定性。
+在 Task 111a-111g 修复 Agent/Workflow/Settlement/Context/Report/Performance 契约后，执行 Ch101-Ch150 流式验证，判断 V5.0 Context Diet 2.0 是否具备支撑 150 章全自动生成的稳定性。
 
 ## Context
 
@@ -18,7 +18,7 @@
 ## In Scope（必须完成）
 
 - [ ] **准备验证基线**
-  - 确认 Task 111a-111c 的 DONE 文档和回归测试结果
+  - 确认 Task 111a-111g 的 DONE 文档和回归测试结果
   - 确认当前 DB、`.env`、logs 路径、checkpointer 模式和项目 ID
   - 记录 Ch80-Ch96 / Ch51-Ch100 的最新对比基线
 
@@ -114,3 +114,7 @@ python scripts/generate_streaming_report.py --run-id <run_id>
 - `tasks/111a-workflow-decision-contract-fix.md` — 工作流决策契约前置修复
 - `tasks/111b-settlement-state-integrity-fix.md` — Settlement 事实源前置修复
 - `tasks/111c-context-prompt-consistency-fix.md` — Context/Prompt 一致性前置修复
+- `tasks/111d-quality-gate-settlement-blockers-fix.md` — QualityGate 与 Settlement 阻断项修复
+- `tasks/111e-task112-reporting-dg2-gate-fix.md` — Task 112 报告与 DG-2 Gate 完整性修复
+- `tasks/111f-context-snapshot-prompt-metadata-fix.md` — Context Snapshot、Prompt 与 Metadata 一致性修复
+- `tasks/111g-long-run-performance-containment.md` — 长跑性能缺陷收敛

@@ -27,8 +27,8 @@ class TestSettlementExtractorNodeSkipSettlement:
     """settlement_extractor_node _skip_settlement=True 路径测试."""
 
     @pytest.mark.asyncio
-    async def test_skips_llm_extraction_and_applies_fallback_summary(self) -> None:
-        """skip_settlement=True 时跳过 settlement 提取，生成 fallback summary."""
+    async def test_skip_settlement_requires_review_without_accept(self) -> None:
+        """skip_settlement=True 时不 accepted，不生成 summary，进入复核态."""
         mock_version = MagicMock()
         mock_version.version_id = "v-skip-001"
         mock_version.content = "A" * 500
@@ -80,7 +80,7 @@ class TestSettlementExtractorNodeSkipSettlement:
                                         with patch(
                                             "songyan.workflows._nodes.accept_with_settlement_boundary",
                                             new_callable=AsyncMock,
-                                        ):
+                                        ) as mock_accept:
                                             with patch(
                                                 "songyan.workflows._nodes._index_accepted_chapter",
                                                 new_callable=AsyncMock,
@@ -113,20 +113,14 @@ class TestSettlementExtractorNodeSkipSettlement:
         mock_extract.assert_not_awaited()
         mock_apply.assert_not_awaited()
         mock_write_summary.assert_not_awaited()
-        mock_lifecycle.assert_awaited_once()
+        mock_lifecycle.assert_not_awaited()
+        mock_accept.assert_not_awaited()
 
         assert result["settlement_id"] is None
-        assert result["summary_id"] is not None
-        assert result["status"] == "done"
-        assert result["_settlement_needs_human_review"] is False
-
-        mock_summary_repo.create.assert_awaited_once()
-        call_args = mock_summary_repo.create.await_args
-        summary_obj, proj_id, summary_id = call_args[0]
-        assert proj_id == "p1"
-        assert summary_obj.chapter_number == 1
-        assert summary_obj.summary == "A" * 300 + "..."
-        assert summary_obj.impact_score == 0.0
+        assert result["summary_id"] is None
+        assert result["status"] == "settlement_review"
+        assert result["_settlement_needs_human_review"] is True
+        mock_summary_repo.create.assert_not_awaited()
 
 
 class TestRewriteNodeSuccessPath:

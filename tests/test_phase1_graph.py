@@ -23,6 +23,7 @@ from songyan.workflows.phase1_graph import (
     Phase1State,
     build_phase1_graph,
     human_confirm_router,
+    quality_gate_router,
     revision_router,
 )
 from songyan.workflows.review_merger import (
@@ -309,6 +310,12 @@ class TestRevisionRouter:
             error="something wrong",
         )
         assert revision_router(state) == "pass"
+
+
+class TestQualityGateRouter:
+    def test_human_review_required_blocks_graph(self) -> None:
+        state = _base_revision_state(status="human_review_required")
+        assert quality_gate_router(state) == "blocked"
 
 
 class TestHumanConfirmRouter:
@@ -605,6 +612,114 @@ class TestReviewMergerNode:
         assert result["status"] == "review_merger"
         assert "Missing audit" in result["error"]
 
+    @pytest.mark.asyncio
+    async def test_uses_context_metrics_budget_without_context_package(self) -> None:
+        """review_merger_node 应从 _context_metrics 读取 budget_used."""
+        from songyan.workflows._nodes import review_merger_node
+
+        version = MagicMock(version_id="v-budget", content="正文")
+        rule = RuleAuditResult(
+            ai_tell_count=0,
+            fatigue_word_count=0,
+            has_opening_hook=True,
+            has_ending_hook=True,
+            paragraph_rhythm_score=8.0,
+            word_count=3000,
+            word_count_target=3000,
+        )
+        llm = LLMAuditResult(issues=[])
+        merged = MagicMock(has_critical=False, has_major=False, issues=[])
+        repo = AsyncMock()
+        repo.update_score_card = AsyncMock()
+
+        with (
+            patch(
+                "songyan.workflows._nodes.load_version",
+                new_callable=AsyncMock,
+                return_value=version,
+            ),
+            patch(
+                "songyan.workflows._nodes.load_latest_audits",
+                new_callable=AsyncMock,
+                return_value=(rule, llm),
+            ),
+            patch(
+                "songyan.workflows._nodes.merge_reviews",
+                new_callable=AsyncMock,
+                return_value=merged,
+            ),
+            patch(
+                "songyan.workflows._nodes._load_chapter_repair_state",
+                new_callable=AsyncMock,
+                return_value=(0, False),
+            ),
+            patch("songyan.workflows._nodes.ChapterVersionRepository", return_value=repo),
+        ):
+            result = await review_merger_node(
+                {
+                    "project_id": "p1",
+                    "chapter_number": 1,
+                    "current_version_id": "v-budget",
+                    "_context_metrics": {"budget_used": 1.1},
+                }
+            )
+
+        assert result["_score_card"]["flags"]["budget_ok"] is False
+
+    @pytest.mark.asyncio
+    async def test_context_metrics_budget_passes_under_limit(self) -> None:
+        """_context_metrics.budget_used=0.8 时预算维度正常通过."""
+        from songyan.workflows._nodes import review_merger_node
+
+        version = MagicMock(version_id="v-budget-ok", content="正文")
+        rule = RuleAuditResult(
+            ai_tell_count=0,
+            fatigue_word_count=0,
+            has_opening_hook=True,
+            has_ending_hook=True,
+            paragraph_rhythm_score=8.0,
+            word_count=3000,
+            word_count_target=3000,
+        )
+        llm = LLMAuditResult(issues=[])
+        merged = MagicMock(has_critical=False, has_major=False, issues=[])
+        repo = AsyncMock()
+        repo.update_score_card = AsyncMock()
+
+        with (
+            patch(
+                "songyan.workflows._nodes.load_version",
+                new_callable=AsyncMock,
+                return_value=version,
+            ),
+            patch(
+                "songyan.workflows._nodes.load_latest_audits",
+                new_callable=AsyncMock,
+                return_value=(rule, llm),
+            ),
+            patch(
+                "songyan.workflows._nodes.merge_reviews",
+                new_callable=AsyncMock,
+                return_value=merged,
+            ),
+            patch(
+                "songyan.workflows._nodes._load_chapter_repair_state",
+                new_callable=AsyncMock,
+                return_value=(0, False),
+            ),
+            patch("songyan.workflows._nodes.ChapterVersionRepository", return_value=repo),
+        ):
+            result = await review_merger_node(
+                {
+                    "project_id": "p1",
+                    "chapter_number": 1,
+                    "current_version_id": "v-budget-ok",
+                    "_context_metrics": {"budget_used": 0.8},
+                }
+            )
+
+        assert result["_score_card"]["flags"]["budget_ok"] is True
+
 
 class TestSettlementExtractorNode:
     @pytest.mark.asyncio
@@ -749,3 +864,142 @@ class TestSettlementExtractorNode:
         assert result["settlement_id"] is not None
         assert result["summary_id"] == "sum-real"
         mock_accept.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_summary_failure_writes_fallback_summary(self) -> None:
+        from songyan.exceptions import LLMError
+        from songyan.workflows._nodes import settlement_extractor_node
+
+        version = MagicMock(version_id="v-valid", content="A" * 500, version_type="draft")
+        project = MagicMock(mode_id="webnovel", genre_id="scifi")
+        settlement = StateSettlement()
+        summary_repo = AsyncMock()
+        summary_repo.create = AsyncMock()
+
+        with (
+            patch(
+                "songyan.workflows._nodes.load_version",
+                new_callable=AsyncMock,
+                return_value=version,
+            ),
+            patch(
+                "songyan.workflows._nodes.load_project",
+                new_callable=AsyncMock,
+                return_value=project,
+            ),
+            patch(
+                "songyan.workflows._nodes.load_chapter_goal",
+                new_callable=AsyncMock,
+                return_value=None,
+            ),
+            patch("songyan.workflows._nodes.load_genre_profile", return_value=None),
+            patch(
+                "songyan.workflows._nodes.extract_settlement",
+                new_callable=AsyncMock,
+                return_value=settlement,
+            ),
+            patch(
+                "songyan.workflows._nodes.accept_with_settlement_boundary",
+                new_callable=AsyncMock,
+            ),
+            patch(
+                "songyan.workflows._nodes.write_chapter_summary",
+                new_callable=AsyncMock,
+                side_effect=LLMError("summary failed"),
+            ),
+            patch("songyan.workflows._nodes.SummaryRepository", return_value=summary_repo),
+            patch(
+                "songyan.workflows._nodes._run_lifecycle_cleanup",
+                new_callable=AsyncMock,
+            ),
+            patch(
+                "songyan.workflows._nodes.load_creative_mode_profile",
+                return_value=MagicMock(rag_config={}),
+            ),
+            patch("songyan.workflows._nodes._index_accepted_chapter", new_callable=AsyncMock),
+            patch("songyan.workflows._nodes.trigger_layered_summaries", new_callable=AsyncMock),
+        ):
+            result = await settlement_extractor_node(
+                {
+                    "project_id": "p1",
+                    "chapter_number": 3,
+                    "current_version_id": "v-valid",
+                    "chapter_goal_id": "goal-1",
+                }
+            )
+
+        assert result["status"] == "done"
+        assert result["_settlement_needs_human_review"] is False
+        assert result["summary_id"] is not None
+        summary_repo.create.assert_awaited_once()
+        summary_obj, project_id, summary_id = summary_repo.create.await_args.args
+        assert project_id == "p1"
+        assert summary_id == result["summary_id"]
+        assert summary_obj.summary == "A" * 300 + "..."
+
+    @pytest.mark.asyncio
+    async def test_summary_and_fallback_failure_returns_review(self) -> None:
+        from songyan.exceptions import LLMResponseParseError
+        from songyan.workflows._nodes import settlement_extractor_node
+
+        version = MagicMock(version_id="v-valid", content="正文", version_type="draft")
+        project = MagicMock(mode_id="webnovel", genre_id="scifi")
+        settlement = StateSettlement()
+        summary_repo = AsyncMock()
+        summary_repo.create = AsyncMock(side_effect=RuntimeError("db down"))
+
+        with (
+            patch(
+                "songyan.workflows._nodes.load_version",
+                new_callable=AsyncMock,
+                return_value=version,
+            ),
+            patch(
+                "songyan.workflows._nodes.load_project",
+                new_callable=AsyncMock,
+                return_value=project,
+            ),
+            patch(
+                "songyan.workflows._nodes.load_chapter_goal",
+                new_callable=AsyncMock,
+                return_value=None,
+            ),
+            patch("songyan.workflows._nodes.load_genre_profile", return_value=None),
+            patch(
+                "songyan.workflows._nodes.extract_settlement",
+                new_callable=AsyncMock,
+                return_value=settlement,
+            ),
+            patch(
+                "songyan.workflows._nodes.accept_with_settlement_boundary",
+                new_callable=AsyncMock,
+            ),
+            patch(
+                "songyan.workflows._nodes.write_chapter_summary",
+                new_callable=AsyncMock,
+                side_effect=LLMResponseParseError("bad json"),
+            ),
+            patch("songyan.workflows._nodes.SummaryRepository", return_value=summary_repo),
+            patch(
+                "songyan.workflows._nodes._run_lifecycle_cleanup",
+                new_callable=AsyncMock,
+            ),
+            patch(
+                "songyan.workflows._nodes.load_creative_mode_profile",
+                return_value=MagicMock(rag_config={}),
+            ),
+            patch("songyan.workflows._nodes._index_accepted_chapter", new_callable=AsyncMock),
+            patch("songyan.workflows._nodes.trigger_layered_summaries", new_callable=AsyncMock),
+        ):
+            result = await settlement_extractor_node(
+                {
+                    "project_id": "p1",
+                    "chapter_number": 3,
+                    "current_version_id": "v-valid",
+                    "chapter_goal_id": "goal-1",
+                }
+            )
+
+        assert result["status"] == "settlement_review"
+        assert result["_settlement_needs_human_review"] is True
+        assert result["summary_id"] is None

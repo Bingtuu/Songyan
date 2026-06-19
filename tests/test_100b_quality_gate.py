@@ -211,7 +211,7 @@ async def test_quality_gate_preservation_too_low() -> None:
 
 @pytest.mark.asyncio
 async def test_quality_gate_new_issues_introduced() -> None:
-    """新问题非空 → 停止自动修订，交给 human gate/convergence 处理."""
+    """新问题非空 → 停止自动修订，进入人工复核/失败态。"""
     version = MagicMock()
     version.word_count = 3000
     goal = MagicMock()
@@ -235,10 +235,11 @@ async def test_quality_gate_new_issues_introduced() -> None:
         })
     assert result["_quality_gate_passed"] is False
     assert any("new_issues_introduced" in f for f in result["_quality_gate_failures"])
-    assert result["status"] == "human_confirm"
+    assert result["status"] == "human_review_required"
     assert result["_needs_revision"] is False
     assert result["_convergence_failed"] is True
-    assert result["_skip_settlement"] is True
+    assert result["_skip_settlement"] is False
+    assert result["_settlement_needs_human_review"] is True
 
 
 @pytest.mark.asyncio

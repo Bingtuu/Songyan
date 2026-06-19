@@ -47,16 +47,16 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 
 | 指标 | 数值 |
 |------|------|
-| 状态 | **V5.0 Phase 4 — Task 111c 已完成，进入 Task 112 Ch101-Ch150 流式验证** |
+| 状态 | **V5.0 Phase 4 — Task 111d 已完成，进入 Task 111e 报告与 DG-2 Gate 修复** |
 | V4.0 最终达标率 (Ch2-Ch50) | **81.6%** (Task 099) ✅ |
 | Task 105b 实跑 | **Ch51-Ch100 全部成功，QG 通过率 58.0% (29/50)，DG-1 未通过** |
 | Task 110a 实跑 | **Ch80-Ch100 21/21 成功，QG 通过率 57.1% (12/21)，ContextEmergency 81.0% (17/21)** |
 | Task 110d 实跑 | **Ch80-Ch96 17/17 成功，QG 通过率 58.8% (10/17)，ContextEmergency 0.0% (0/17)；参数调优无正收益，已回滚** |
 | Task 110e 实跑 | **Ch80-Ch96 17/17 成功，QG 通过率 100% (17/17)，coherence_major 0/17，ContextEmergency 0/17；Auditor 阈值校准 + 审查上下文增强生效** |
-| 最近回归测试 | **1635 passed, 4 skipped, 1 xfailed, 4 xpassed** (`pytest tests/ -q`, Task 111c) |
+| 最近回归测试 | **1640 passed, 4 skipped, 1 xfailed, 4 xpassed** (`pytest tests/ -q`, Task 111d) |
 | Python | 3.11.9 |
-| 当前 Task | **Task 112: Ch101-Ch150 流式验证 + 决策门 DG-2** |
-| 下一验证 Task | **Task 112: Ch101-Ch150 流式验证 + 决策门 DG-2** |
+| 当前 Task | **Task 111e: Task 112 报告与 DG-2 Gate 完整性修复** |
+| 下一验证 Task | **Task 112: Ch101-Ch150 流式验证 + 决策门 DG-2（依赖 111d-111g 完成）** |
 
 ---
 
@@ -99,6 +99,10 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 | 111a | **工作流决策契约修复** — ReviewMerger/ScoreAggregator/Literary/Revision 路由一致性 | merged critical/major 不被覆盖；Literary 不阻塞；rewrite_scene 不自动 patch；无证据 issue 不修订；全量回归 1628 passed | ✅ |
 | 111b | **Settlement 与事实源一致性修复** — accept/settlement/summary/state 边界 | validation failed 不落库；accepted 与 settlement 无半提交；summary_id 指向真实记录；state 不存完整 ContextPackage；全量回归 1632 passed | ✅ |
 | 111c | **Context 与 Prompt 一致性修复** — hard ceiling、hard constraints、Craft Card、human instruction | Emergency 后 budget ≤ 1.0；硬约束不裁剪；Prompt 权重和 human instruction 字段一致；全量回归 1635 passed | ✅ |
+| 111d | **QualityGate 与 Settlement 阻断项修复** — budget QG、new issues、summary fallback | budget_used 使用 `_context_metrics`；new issues 不 accepted+missing settlement；accepted 后 summary 100% | ✅ |
+| 111e | **Task 112 报告与 DG-2 Gate 完整性修复** | report 不因 `budget_used=None` 崩溃；DG-2 覆盖逐章 budget、settlement、summary、failure reason | 📝 |
+| 111f | **Context Snapshot、Prompt 与 Metadata 一致性修复** | Writer/Auditor 复用上下文快照；human instruction/brief 动态字段不丢；metadata 可回放 | 📝 |
+| 111g | **长跑性能缺陷收敛** | 减少重复 context assembly；限制 settlement prompt 事实源；收敛 O(N²) 热点 | 📝 |
 | 112 | **Ch101-Ch150 流式验证 + 决策门 DG-2** | 达标率 ≥ 70%；budget_used ≤ 1.0；完成 150 章一次性生成 | 📝 |
 
 ---
@@ -146,5 +150,10 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 - `tasks/111b-settlement-state-integrity-fix-DONE.md` — Settlement 与事实源一致性修复交付记录
 - `tasks/111c-context-prompt-consistency-fix.md` — Context 与 Prompt 一致性前置修复规划
 - `tasks/111c-context-prompt-consistency-fix-DONE.md` — Context 与 Prompt 一致性修复交付记录
+- `tasks/111d-quality-gate-settlement-blockers-fix.md` — QualityGate 与 Settlement 阻断项修复规划
+- `tasks/111d-quality-gate-settlement-blockers-fix-DONE.md` — QualityGate 与 Settlement 阻断项修复交付记录
+- `tasks/111e-task112-reporting-dg2-gate-fix.md` — Task 112 报告与 DG-2 Gate 完整性修复规划
+- `tasks/111f-context-snapshot-prompt-metadata-fix.md` — Context Snapshot、Prompt 与 Metadata 一致性修复规划
+- `tasks/111g-long-run-performance-containment.md` — 长跑性能缺陷收敛规划
 - `tasks/112-ch101-ch150-streaming-validation.md` — Ch101-Ch150 流式验证与 DG-2 规划
 - `logs/chapter_runs/run-33229919.jsonl` — Ch51-Ch59 实跑指标
