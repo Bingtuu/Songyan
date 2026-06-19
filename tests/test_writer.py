@@ -207,6 +207,20 @@ class TestRenderPrompt:
         assert "- [rewrite] 按人工意见重写冲突场景" in prompt
         assert "- []" not in prompt
 
+    def test_human_instruction_action_field_renders_action_label(self) -> None:
+        ctx = _make_context_package(
+            human_instructions=[
+                {
+                    "instruction_id": "inst-new",
+                    "gate_type": "audit_report",
+                    "action": "inject",
+                    "content": "强化主角对黑匣子的执念",
+                }
+            ]
+        )
+        prompt = _render_prompt(ctx)
+        assert "- [inject] 强化主角对黑匣子的执念" in prompt
+
 
 # ---------------------------------------------------------------------------
 # Scene Parsing Tests
@@ -418,11 +432,17 @@ class TestWriteChapter:
                 db_head=mock_head_repo,
                 project_id="proj_123",
                 context_package=ctx,
+                context_snapshot_id="ctx-123",
             )
 
         assert "context_snapshot" in version.generation_metadata
+        assert version.generation_metadata["context_snapshot_id"] == "ctx-123"
         assert version.generation_metadata["context_snapshot"]["estimated_tokens"] == 5000
         assert version.generation_metadata["context_snapshot"]["budget_used"] == 0.75
+        brief_snapshot = version.generation_metadata["creative_brief_snapshot"]
+        assert brief_snapshot["creative_intent"] == "让读者感受到爽感"
+        assert brief_snapshot["narrative_fullness"] == 0.0
+        assert brief_snapshot["focal_distance"] == "mid"
         assert "prompt_length" in version.generation_metadata
         assert "scenes_count" in version.generation_metadata
 
@@ -433,7 +453,10 @@ class TestWriteChapter:
         mock_head_repo = AsyncMock()
         mock_head_repo.get.return_value = None
 
-        llm_response = "### Scene 1\n这是一段测试正文，包含中文和 English。\n\n### Scene 2\n第二段测试内容。"
+        llm_response = (
+            "### Scene 1\n这是一段测试正文，包含中文和 English。"
+            "\n\n### Scene 2\n第二段测试内容。"
+        )
 
         with patch("songyan.agents.writer.call_llm", return_value=llm_response):
             version = await write_chapter(

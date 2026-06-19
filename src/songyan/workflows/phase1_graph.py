@@ -54,6 +54,7 @@ class Phase1State(TypedDict):
     mode_id: str
     chapter_goal_id: str | None
     creative_brief_id: str | None
+    context_snapshot_id: str | None
     current_version_id: str | None
     review_report_id: str | None
     literary_observation_id: str | None
@@ -327,6 +328,7 @@ async def run_chapter_pipeline(
         "mode_id": mode_id,
         "chapter_goal_id": None,
         "creative_brief_id": None,
+        "context_snapshot_id": None,
         "current_version_id": None,
         "review_report_id": None,
         "literary_observation_id": None,

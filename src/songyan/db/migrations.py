@@ -6,10 +6,14 @@ import sqlite3
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import structlog
+
 from songyan.db.connection import get_db_path
 
 if TYPE_CHECKING:
     import aiosqlite
+
+logger = structlog.get_logger(__name__)
 
 
 # 期望存在的所有表名（用于验证）
@@ -19,6 +23,7 @@ _EXPECTED_TABLES: list[str] = [
     "chapter_goals",
     "creative_briefs",
     "chapter_versions",
+    "context_snapshots",
     "chapter_heads",
     "character_states",
     "literary_observations",
@@ -100,7 +105,10 @@ async def _migrate_continuity_tables(conn: aiosqlite.Connection) -> None:
 
 async def _migrate_human_instructions(conn: aiosqlite.Connection) -> None:
     """添加 human_instructions 表（v2.0.2）."""
-    cursor = await conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='human_instructions'")
+    cursor = await conn.execute(
+        "SELECT name FROM sqlite_master "
+        "WHERE type='table' AND name='human_instructions'"
+    )
     if not await cursor.fetchone():
         await conn.execute(
             """CREATE TABLE human_instructions (
@@ -203,7 +211,8 @@ async def _migrate_layered_context_tables(conn: aiosqlite.Connection) -> None:
         "CREATE INDEX IF NOT EXISTS idx_arc_project ON arc_summaries(project_id)",
         "CREATE INDEX IF NOT EXISTS idx_volume_project ON volume_summaries(project_id)",
         "CREATE INDEX IF NOT EXISTS idx_permanent_project ON permanent_scenes(project_id)",
-        "CREATE INDEX IF NOT EXISTS idx_permanent_chapter ON permanent_scenes(project_id, chapter_number)",
+        "CREATE INDEX IF NOT EXISTS idx_permanent_chapter "
+        "ON permanent_scenes(project_id, chapter_number)",
     ]
     for sql in indexes:
         await conn.execute(sql)
@@ -239,7 +248,8 @@ async def _migrate_human_marks(conn: aiosqlite.Connection) -> None:
         "CREATE INDEX IF NOT EXISTS idx_human_marks_project ON human_marks(project_id)"
     )
     await conn.execute(
-        "CREATE INDEX IF NOT EXISTS idx_human_marks_project_priority ON human_marks(project_id, priority)"
+        "CREATE INDEX IF NOT EXISTS idx_human_marks_project_priority "
+        "ON human_marks(project_id, priority)"
     )
     # 为已有表添加 source 列（幂等：忽略已存在错误）
     try:
@@ -302,7 +312,8 @@ async def _migrate_chapter_chunks(conn: aiosqlite.Connection) -> None:
         )"""
     )
     await conn.execute(
-        "CREATE INDEX IF NOT EXISTS idx_chunks_project ON chapter_chunks(project_id, chapter_number)"
+        "CREATE INDEX IF NOT EXISTS idx_chunks_project "
+        "ON chapter_chunks(project_id, chapter_number)"
     )
 
 
@@ -390,6 +401,27 @@ async def _migrate_chapter_versions_score_card(conn: aiosqlite.Connection) -> No
         )
 
 
+async def _migrate_context_snapshots(conn: aiosqlite.Connection) -> None:
+    """添加裁剪后上下文快照表（Task 111f）."""
+    await conn.execute(
+        """CREATE TABLE IF NOT EXISTS context_snapshots (
+            snapshot_id        TEXT PRIMARY KEY,
+            project_id         TEXT NOT NULL REFERENCES projects(project_id) ON DELETE CASCADE,
+            chapter_number     INTEGER NOT NULL,
+            chapter_goal_id    TEXT,
+            creative_brief_id  TEXT REFERENCES creative_briefs(brief_id) ON DELETE SET NULL,
+            budget_used        REAL,
+            context_emergency  INTEGER DEFAULT 0,
+            payload            TEXT DEFAULT '{}',
+            created_at         TEXT DEFAULT (datetime('now'))
+        )"""
+    )
+    await conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_context_snapshots_project_chapter "
+        "ON context_snapshots(project_id, chapter_number)"
+    )
+
+
 async def _migrate_setting_setting_key_index(conn: aiosqlite.Connection) -> None:
     """PERF-04: 为 setting_snapshots 添加 (project_id, setting_key) 索引.
 
@@ -435,6 +467,7 @@ async def init_schema(db_path: str | Path | None = None) -> None:
         await _migrate_chapter_chunks(conn)
         await _migrate_dialogue_style_card(conn)
         await _migrate_chapter_versions_score_card(conn)
+        await _migrate_context_snapshots(conn)
         await _migrate_setting_setting_key_index(conn)
         await conn.commit()
 
@@ -471,6 +504,7 @@ async def run_migrations(conn: aiosqlite.Connection) -> None:
     await _migrate_summaries_impact_score(conn)
     await _migrate_project_arc_boundaries(conn)
     await _migrate_chapter_versions_score_card(conn)
+    await _migrate_context_snapshots(conn)
     await _migrate_layered_context_tables(conn)
     await _migrate_continuity_suggested_marks(conn)
     await _migrate_human_marks(conn)
@@ -479,6 +513,6 @@ async def run_migrations(conn: aiosqlite.Connection) -> None:
     await _migrate_chapter_chunks(conn)
     await _migrate_lifecycle_status(conn)
     await _migrate_setting_category(conn)
-    await _migrate_chapter_version_score_card(conn)
+    await _migrate_chapter_versions_score_card(conn)
     await _migrate_setting_setting_key_index(conn)
     logger.info("migrations.run_all", status="complete")

@@ -11,6 +11,7 @@ from songyan.models import (
     ChapterSummary,
     CharacterUpdate,
     FatigueWordMatch,
+    LiteraryAuditResult,
     LLMAuditResult,
     MergedReviewReport,
     NewSetting,
@@ -565,6 +566,9 @@ class TestContextManagerNode:
         )
         ctx = ContextPackage(chapter_goal=goal)
 
+        snapshot_repo = AsyncMock()
+        snapshot_repo.create = AsyncMock()
+
         with patch(
             "songyan.workflows._nodes.load_chapter_goal",
             new_callable=AsyncMock,
@@ -577,18 +581,118 @@ class TestContextManagerNode:
             "songyan.workflows._nodes.assemble_context_package",
             new_callable=AsyncMock,
             return_value=ctx,
+        ), patch(
+            "songyan.workflows._nodes.ContextSnapshotRepository",
+            return_value=snapshot_repo,
         ):
             result = await context_manager_node(
                 {
                     "project_id": "proj-test",
                     "chapter_number": 2,
                     "chapter_goal_id": "goal-1",
+                    "human_instructions": [{"action": "revise", "content": "保留黑匣子"}],
                 }
             )
         assert result["status"] == "writing"
         assert "context_package" not in result
+        assert result["context_snapshot_id"].startswith("ctx-")
         assert result["_context_metrics"]["budget_used"] == ctx.budget_used
         assert result["_context_metrics"]["character_states_loaded"] == 0
+        snapshot = snapshot_repo.create.await_args.args[0]
+        assert snapshot.payload["human_instructions"][0]["content"] == "保留黑匣子"
+
+    @pytest.mark.asyncio
+    async def test_get_context_package_loads_snapshot(self) -> None:
+        """Writer/Auditor 通过 context_snapshot_id 复用同一份上下文."""
+        from songyan.models import ChapterGoal, ContextPackage, ContextSnapshot
+        from songyan.workflows._nodes import _get_context_package
+
+        goal = ChapterGoal(chapter_number=2, word_count_target=3000)
+        ctx = ContextPackage(
+            chapter_goal=goal,
+            human_instructions=[{"action": "revise", "content": "保留黑匣子"}],
+        )
+        snapshot = ContextSnapshot(
+            snapshot_id="ctx-1",
+            project_id="proj-test",
+            chapter_number=2,
+            chapter_goal_id="goal-1",
+            payload=ctx.model_dump(mode="json"),
+        )
+        snapshot_repo = AsyncMock()
+        snapshot_repo.get = AsyncMock(return_value=snapshot)
+
+        with patch(
+            "songyan.workflows._nodes.ContextSnapshotRepository",
+            return_value=snapshot_repo,
+        ):
+            loaded = await _get_context_package({"context_snapshot_id": "ctx-1"})
+
+        assert loaded.human_instructions[0]["content"] == "保留黑匣子"
+        snapshot_repo.get.assert_awaited_once_with("ctx-1")
+
+    @pytest.mark.asyncio
+    async def test_auditors_reuse_context_snapshot(self) -> None:
+        """LLMAuditor 与 LiteraryAuditor 使用同一个 context_snapshot_id."""
+        from songyan.models import ChapterGoal, ContextPackage, ContextSnapshot
+        from songyan.workflows._nodes import literary_auditor_node, llm_auditor_node
+
+        goal = ChapterGoal(chapter_number=2, word_count_target=3000)
+        ctx = ContextPackage(
+            chapter_goal=goal,
+            human_instructions=[{"action": "inject", "content": "保留黑匣子"}],
+        )
+        snapshot = ContextSnapshot(
+            snapshot_id="ctx-shared",
+            project_id="proj-test",
+            chapter_number=2,
+            chapter_goal_id="goal-1",
+            payload=ctx.model_dump(mode="json"),
+        )
+        snapshot_repo = AsyncMock()
+        snapshot_repo.get = AsyncMock(return_value=snapshot)
+        version = MagicMock(version_id="v1", content="正文")
+
+        with (
+            patch(
+                "songyan.workflows._nodes.load_version",
+                new_callable=AsyncMock,
+                return_value=version,
+            ),
+            patch(
+                "songyan.workflows._nodes.ContextSnapshotRepository",
+                return_value=snapshot_repo,
+            ),
+            patch(
+                "songyan.workflows._nodes.run_llm_audit",
+                new_callable=AsyncMock,
+                return_value=LLMAuditResult(),
+            ) as mock_llm,
+            patch(
+                "songyan.workflows._nodes.run_literary_audit",
+                new_callable=AsyncMock,
+                return_value=LiteraryAuditResult(),
+            ) as mock_literary,
+            patch("songyan.workflows._nodes.save_llm_audit", new_callable=AsyncMock),
+            patch(
+                "songyan.workflows._nodes.save_literary_audit",
+                new_callable=AsyncMock,
+            ),
+        ):
+            llm_result = await llm_auditor_node(
+                {"current_version_id": "v1", "context_snapshot_id": "ctx-shared"}
+            )
+            literary_result = await literary_auditor_node(
+                {"current_version_id": "v1", "context_snapshot_id": "ctx-shared"}
+            )
+
+        assert llm_result["status"] == "review_merging"
+        assert literary_result["status"] == "revision_routing"
+        assert snapshot_repo.get.await_count == 2
+        llm_ctx = mock_llm.await_args.kwargs["context_package"]
+        literary_ctx = mock_literary.await_args.kwargs["context_package"]
+        assert llm_ctx.human_instructions[0]["content"] == "保留黑匣子"
+        assert literary_ctx.human_instructions[0]["content"] == "保留黑匣子"
 
 
 class TestReviewMergerNode:

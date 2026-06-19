@@ -230,3 +230,17 @@ class ContextPackage(BaseModel):
     context_emergency: bool = False
     # Task 110c: ContextEmergency 降级级别（1/2/3）
     context_emergency_level: int = 0
+
+
+class ContextSnapshot(BaseModel):
+    """裁剪后上下文快照 — 供 Writer/Auditor 复用与 prompt 回放."""
+
+    snapshot_id: str
+    project_id: str
+    chapter_number: int
+    chapter_goal_id: str | None = None
+    creative_brief_id: str | None = None
+    budget_used: float | None = None
+    context_emergency: bool = False
+    payload: dict = Field(default_factory=dict)
+    created_at: datetime = Field(default_factory=datetime.now)

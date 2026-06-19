@@ -33,6 +33,7 @@ from songyan.db.repository import (
     ChapterHeadRepository,
     ChapterVersionRepository,
     CharacterRepository,
+    ContextSnapshotRepository,
 )
 from songyan.db.review_repo import (
     CreativeBriefRepository,
@@ -47,6 +48,9 @@ from songyan.models import (
     ChapterHead,
     ChapterSummary,
     ChapterVersion,
+    ContextPackage,
+    ContextSnapshot,
+    CreativeBrief,
     HumanInstruction,
     ReviewCategory,
     ReviewIssue,
@@ -211,13 +215,73 @@ async def _get_context_package(state: dict[str, Any]) -> Any:
     if "context_package" in state:
         return state["context_package"]
 
-    goal = await load_chapter_goal(state["chapter_goal_id"])
-    brief = None
-    if state.get("creative_brief_id"):
-        brief = await load_creative_brief(state["creative_brief_id"])
-    return await assemble_context_package(
-        state["project_id"], state["chapter_number"], goal, brief
+    snapshot_id = state.get("context_snapshot_id")
+    if snapshot_id:
+        snapshot = await ContextSnapshotRepository().get(snapshot_id)
+        if snapshot is None:
+            raise ValueError(f"ContextSnapshot not found: {snapshot_id}")
+        return ContextPackage.model_validate(snapshot.payload)
+
+    return await _assemble_context_fallback(state)
+
+
+async def _save_context_snapshot(
+    *,
+    state: dict[str, Any],
+    ctx: ContextPackage,
+) -> str:
+    """保存裁剪后的上下文快照，只把 snapshot_id 放入 LangGraph state."""
+    snapshot_id = new_id("ctx")
+    snapshot = ContextSnapshot(
+        snapshot_id=snapshot_id,
+        project_id=state["project_id"],
+        chapter_number=state["chapter_number"],
+        chapter_goal_id=state.get("chapter_goal_id"),
+        creative_brief_id=state.get("creative_brief_id"),
+        budget_used=getattr(ctx, "budget_used", None),
+        context_emergency=getattr(ctx, "context_emergency", False),
+        payload=ctx.model_dump(mode="json"),
     )
+    await ContextSnapshotRepository().create(snapshot)
+    return snapshot_id
+
+
+async def _assemble_context_from_state(
+    state: dict[str, Any],
+    goal: Any,
+    brief: CreativeBrief | None,
+) -> ContextPackage:
+    """按 CreativeBrief 动态字段组装 ContextPackage 并注入人类指令."""
+    _nf = brief.narrative_fullness if brief else 0.0
+    _cf = brief.character_focus if brief else None
+    _fd = brief.foreshadowing_due if brief else None
+    _fod = brief.focal_distance if brief else "mid"
+    ctx = await assemble_context_package(
+        state["project_id"],
+        state["chapter_number"],
+        goal,
+        brief,
+        narrative_fullness=_nf,
+        character_focus=_cf,
+        foreshadowing_due=_fd,
+        focal_distance=_fod,
+    )
+    ctx.human_instructions = state.get("human_instructions", [])
+    return ctx
+
+
+async def _load_brief_from_state(state: dict[str, Any]) -> CreativeBrief | None:
+    """按 state 中的 creative_brief_id 加载 CreativeBrief."""
+    if state.get("creative_brief_id"):
+        return await load_creative_brief(state["creative_brief_id"])
+    return None
+
+
+async def _assemble_context_fallback(state: dict[str, Any]) -> ContextPackage:
+    """兼容未进入 ContextManager 的旧测试/旧调用路径."""
+    goal = await load_chapter_goal(state["chapter_goal_id"])
+    brief = await _load_brief_from_state(state)
+    return await _assemble_context_from_state(state, goal, brief)
 
 
 def _extract_context_metrics(ctx_pkg: Any) -> dict[str, Any]:
@@ -308,22 +372,12 @@ async def context_manager_node(state: dict[str, Any]) -> dict[str, Any]:
     goal = await load_chapter_goal(state["chapter_goal_id"])
     if goal is None:
         return {"error": "ChapterGoal not found", "status": "context_manager"}
-    brief = None
-    if state.get("creative_brief_id"):
-        brief = await load_creative_brief(state["creative_brief_id"])
-    _nf = brief.narrative_fullness if brief else 0.0
-    _cf = brief.character_focus if brief else None
-    _fd = brief.foreshadowing_due if brief else None
-    _fod = brief.focal_distance if brief else "mid"
-    ctx = await assemble_context_package(
-        state["project_id"], state["chapter_number"], goal, brief,
-        narrative_fullness=_nf, character_focus=_cf,
-        foreshadowing_due=_fd, focal_distance=_fod,
-    )
-    # 注入人类指令（HITL）
-    ctx.human_instructions = state.get("human_instructions", [])
+    brief = await _load_brief_from_state(state)
+    ctx = await _assemble_context_from_state(state, goal, brief)
+    context_snapshot_id = await _save_context_snapshot(state=state, ctx=ctx)
     return {
         "status": "writing",
+        "context_snapshot_id": context_snapshot_id,
         "_budget_was_enforced": ctx._budget_enforced,
         "_context_metrics": _extract_context_metrics(ctx),
     }
@@ -339,9 +393,10 @@ async def writer_node(state: dict[str, Any]) -> dict[str, Any]:
             project_id=state["project_id"],
             context_package=ctx,
             creative_brief_id=state.get("creative_brief_id"),
+            context_snapshot_id=state.get("context_snapshot_id"),
         )
         return {"current_version_id": version.version_id, "status": "rule_auditing"}
-    except (LLMError, LLMResponseParseError) as exc:
+    except (LLMError, LLMResponseParseError, ValueError) as exc:
         logger.warning(
             "writer_node.llm_failed",
             error=str(exc),
@@ -405,12 +460,16 @@ async def rewrite_node(state: dict[str, Any]) -> dict[str, Any]:
             chapter_number=state["chapter_number"],
         )
 
+    rewrite_context_snapshot_id = None
+    if state.get("context_snapshot_id"):
+        rewrite_context_snapshot_id = await _save_context_snapshot(state=state, ctx=ctx)
     version = await write_chapter(
         db_version=ChapterVersionRepository(),
         db_head=ChapterHeadRepository(),
         project_id=state["project_id"],
         context_package=ctx,
         creative_brief_id=state.get("creative_brief_id"),
+        context_snapshot_id=rewrite_context_snapshot_id,
     )
 
     # 093: 对 rewrite 结果追加硬截断回退（收紧到 ±20%）
@@ -706,7 +765,15 @@ async def llm_auditor_node(state: dict[str, Any]) -> dict[str, Any]:
     if version is None:
         return {"error": "Version not found", "status": "llm_auditor"}
 
-    ctx = await _get_context_package(state)
+    try:
+        ctx = await _get_context_package(state)
+    except ValueError as exc:
+        logger.warning(
+            "llm_auditor_node.context_snapshot_missing",
+            error=str(exc),
+            version_id=version.version_id,
+        )
+        return {"error": str(exc), "status": "llm_auditor"}
 
     try:
         result = await run_llm_audit(content=version.content, context_package=ctx)
@@ -960,7 +1027,15 @@ async def literary_auditor_node(state: dict[str, Any]) -> dict[str, Any]:
     if version is None:
         return {"error": "Version not found", "status": "literary_auditor"}
 
-    ctx = await _get_context_package(state)
+    try:
+        ctx = await _get_context_package(state)
+    except ValueError as exc:
+        logger.warning(
+            "literary_auditor_node.context_snapshot_missing",
+            error=str(exc),
+            version_id=version.version_id,
+        )
+        return {"error": str(exc), "status": "literary_auditor"}
 
     try:
         result = await run_literary_audit(content=version.content, context_package=ctx)

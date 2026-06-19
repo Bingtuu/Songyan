@@ -7,6 +7,7 @@ from songyan.models.context import (
     ChapterSummary,
     CharacterStateSnapshot,
     ContextPackage,
+    ContextSnapshot,
     ForeshadowingItem,
     GenreRules,
     HardConstraint,
@@ -30,7 +31,6 @@ from songyan.models.creative_mode import (
     EmotionArcItem,
     HumanMemoryConfig,
     PunchPoint,
-    RAGConfig,
     Tension,
 )
 from songyan.models.genre import (
@@ -99,7 +99,6 @@ __all__ = [
     "PunchPoint",
     "EmotionArcItem",
     "HumanMemoryConfig",
-    "RAGConfig",
     "HumanInstruction",
     # continuity
     "ContinuityReport",
@@ -109,6 +108,7 @@ __all__ = [
     "OverdueForeshadowing",
     # context
     "ContextPackage",
+    "ContextSnapshot",
     "HardConstraint",
     "CharacterStateSnapshot",
     "RecentPlot",
@@ -128,6 +128,7 @@ __all__ = [
     "RuleAuditResult",
     "AiTellMatch",
     "FatigueWordMatch",
+    "GenericNameMatch",
     "LLMAuditResult",
     "MergedReviewReport",
     "PunchCheck",
@@ -158,4 +159,9 @@ __all__ = [
     "RAGConfig",
     # Task 058a 新增
     "ChapterRunLog",
+    "ProjectRunResult",
+    "ProjectRunState",
+    "ChapterScoreCard",
+    "DimensionScore",
+    "ScoreFlags",
 ]

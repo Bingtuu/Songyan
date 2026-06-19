@@ -196,6 +196,24 @@ CREATE INDEX IF NOT EXISTS idx_versions_project_chapter ON chapter_versions(proj
 CREATE INDEX IF NOT EXISTS idx_versions_parent ON chapter_versions(parent_version_id);
 
 -- ============================================================
+-- 5.5 context_snapshots — 裁剪后上下文快照（Prompt 可回放）
+-- ============================================================
+CREATE TABLE IF NOT EXISTS context_snapshots (
+    snapshot_id        TEXT PRIMARY KEY,
+    project_id         TEXT NOT NULL REFERENCES projects(project_id) ON DELETE CASCADE,
+    chapter_number     INTEGER NOT NULL,
+    chapter_goal_id    TEXT,
+    creative_brief_id  TEXT REFERENCES creative_briefs(brief_id) ON DELETE SET NULL,
+    budget_used        REAL,
+    context_emergency  INTEGER DEFAULT 0,
+    payload            TEXT DEFAULT '{}',
+    created_at         TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_context_snapshots_project_chapter
+ON context_snapshots(project_id, chapter_number);
+
+-- ============================================================
 -- 6. chapter_heads — 章节头（指向当前版本和 accepted 版本）
 -- ============================================================
 CREATE TABLE IF NOT EXISTS chapter_heads (

@@ -462,6 +462,29 @@ def _extract_body(llm_response: str) -> str:
     return text.strip()
 
 
+def _build_creative_brief_snapshot(ctx: ContextPackage) -> dict:
+    """生成精简 CreativeBrief 快照，供版本 metadata 回放."""
+    brief = ctx.creative_brief
+    if brief is None:
+        return {}
+    return {
+        "creative_intent": brief.creative_intent,
+        "required_tensions": [
+            tension.model_dump(mode="json") for tension in brief.required_tensions
+        ],
+        "forbidden_patterns": brief.forbidden_patterns,
+        "allowed_fissures": brief.allowed_fissures,
+        "style_constraints": brief.style_constraints,
+        "reader_contract": brief.reader_contract,
+        "punch_points": [point.model_dump(mode="json") for point in brief.punch_points],
+        "emotion_arc": [item.model_dump(mode="json") for item in brief.emotion_arc],
+        "narrative_fullness": brief.narrative_fullness,
+        "character_focus": brief.character_focus,
+        "foreshadowing_due": brief.foreshadowing_due,
+        "focal_distance": brief.focal_distance,
+    }
+
+
 # ---------------------------------------------------------------------------
 # Main Entry
 # ---------------------------------------------------------------------------
@@ -471,6 +494,7 @@ async def write_chapter(
     project_id: str,
     context_package: ContextPackage,
     creative_brief_id: str | None = None,
+    context_snapshot_id: str | None = None,
     temperature: float = 0.8,
 ) -> ChapterVersion:
     """生成章节正文并保存为 ChapterVersion.
@@ -481,6 +505,7 @@ async def write_chapter(
         project_id: 项目 ID
         context_package: 上下文包（来自 ContextManager）
         creative_brief_id: CreativeBrief ID（写入版本外键）
+        context_snapshot_id: ContextManager 写入的上下文快照 ID
         temperature: LLM 温度（默认 0.8）
 
     Returns:
@@ -594,6 +619,7 @@ async def write_chapter(
 
     # 构建 generation_metadata
     generation_metadata = {
+        "context_snapshot_id": context_snapshot_id,
         "context_snapshot": {
             "estimated_tokens": context_package.estimated_tokens,
             "budget_used": context_package.budget_used,
@@ -613,6 +639,7 @@ async def write_chapter(
         "scenes_count": len(scenes),
         # Task 100c: 上下文压力指标
         "context_pressure": getattr(context_package, "context_pressure", {}) or {},
+        "creative_brief_snapshot": _build_creative_brief_snapshot(context_package),
     }
 
     version = ChapterVersion(

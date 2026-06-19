@@ -26,6 +26,7 @@ from songyan.models import (
     ChapterVersion,
     Character,
     CharacterState,
+    ContextSnapshot,
     ProjectSetting,
 )
 
@@ -570,6 +571,70 @@ class ChapterVersionRepository:
             )
             rows = await cursor.fetchall()
         return [_version_from_row(row) for row in reversed(rows)]
+
+
+class ContextSnapshotRepository:
+    """Repository for pruned context snapshots used by prompt replay."""
+
+    async def create(
+        self,
+        snapshot: ContextSnapshot,
+        conn: aiosqlite.Connection | None = None,
+    ) -> None:
+        async def _do(c: aiosqlite.Connection) -> None:
+            await c.execute(
+                """INSERT INTO context_snapshots (
+                    snapshot_id, project_id, chapter_number, chapter_goal_id,
+                    creative_brief_id, budget_used, context_emergency, payload,
+                    created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    snapshot.snapshot_id,
+                    snapshot.project_id,
+                    snapshot.chapter_number,
+                    snapshot.chapter_goal_id,
+                    snapshot.creative_brief_id,
+                    snapshot.budget_used,
+                    int(snapshot.context_emergency),
+                    _to_json(snapshot.payload),
+                    _dt(snapshot.created_at),
+                ),
+            )
+
+        if conn is None:
+            async with get_db() as c:
+                await _do(c)
+                await c.commit()
+        else:
+            await _do(conn)
+        logger.info(
+            "repository.write",
+            table="context_snapshots",
+            operation="insert",
+            snapshot_id=snapshot.snapshot_id,
+        )
+
+    async def get(self, snapshot_id: str) -> ContextSnapshot | None:
+        async with get_db() as conn:
+            conn.row_factory = Row
+            cursor = await conn.execute(
+                "SELECT * FROM context_snapshots WHERE snapshot_id = ?",
+                (snapshot_id,),
+            )
+            row = await cursor.fetchone()
+        if row is None:
+            return None
+        return ContextSnapshot(
+            snapshot_id=row["snapshot_id"],
+            project_id=row["project_id"],
+            chapter_number=row["chapter_number"],
+            chapter_goal_id=row["chapter_goal_id"],
+            creative_brief_id=row["creative_brief_id"],
+            budget_used=row["budget_used"],
+            context_emergency=bool(row["context_emergency"]),
+            payload=_from_json(row["payload"], {}),
+            created_at=row["created_at"],
+        )
 
 
 class ChapterHeadRepository:
