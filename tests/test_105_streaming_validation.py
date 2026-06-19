@@ -33,9 +33,14 @@ def _make_log(
     soft_refs_loaded: int | None = 3,
     context_emergency: bool = False,
     quality_gate_passed: bool | None = True,
+    settlement_success: bool = True,
+    settlement_needs_human_review: bool = False,
+    summary_success: bool | None = True,
     revision_rounds: int = 0,
     word_count: int = 3000,
     context_pressure: dict | None = None,
+    error: str | None = None,
+    error_stage: str | None = None,
 ) -> ChapterRunLog:
     return ChapterRunLog(
         log_id=f"log-{chapter_number}",
@@ -44,11 +49,16 @@ def _make_log(
         started_at=datetime(2024, 1, 1, 12, 0, 0),
         finished_at=datetime(2024, 1, 1, 12, 1, 0),
         success=success,
+        error=error,
+        error_stage=error_stage,
         budget_used=budget_used,
         character_states_loaded=character_states_loaded,
         soft_refs_loaded=soft_refs_loaded,
         context_emergency=context_emergency,
         quality_gate_passed=quality_gate_passed,
+        settlement_success=settlement_success,
+        settlement_needs_human_review=settlement_needs_human_review,
+        summary_success=summary_success,
         revision_rounds=revision_rounds,
         word_count=word_count,
         context_pressure=context_pressure or {},
@@ -149,6 +159,45 @@ def test_generate_report_dg1_fail_reason() -> None:
     assert "未达标项" in report
 
 
+def test_generate_report_handles_missing_budget_and_zero() -> None:
+    logs = [
+        _make_log(chapter_number=101, budget_used=None),
+        _make_log(chapter_number=102, budget_used=0.0),
+    ]
+    report = generate_report(logs, chapter_range=(101, 102))
+    assert "| Ch101 | Y | - |" in report
+    assert "| Ch102 | Y | 0.000 |" in report
+
+
+def test_generate_report_dg2_lists_blocking_details() -> None:
+    logs = [
+        _make_log(chapter_number=101, budget_used=0.8),
+        _make_log(chapter_number=102, budget_used=1.2),
+        _make_log(
+            chapter_number=103,
+            success=True,
+            budget_used=0.9,
+            settlement_success=False,
+            settlement_needs_human_review=True,
+        ),
+        _make_log(chapter_number=104, budget_used=0.9, summary_success=False),
+        _make_log(
+            chapter_number=105,
+            success=False,
+            budget_used=None,
+            quality_gate_passed=False,
+            error_stage="writing",
+            error="timeout",
+        ),
+    ]
+    report = generate_report(logs, chapter_range=(101, 105))
+    assert "**budget 超限章节**: Ch102" in report
+    assert "**settlement validation failed 章节**: Ch103" in report
+    assert "**accepted 后缺 summary 章节**: Ch104" in report
+    assert "**失败章节**: Ch105" in report
+    assert "Ch105: writing / timeout" in report
+
+
 # ---------------------------------------------------------------------------
 # run_decision_gate_dg1
 # ---------------------------------------------------------------------------
@@ -237,6 +286,77 @@ def test_dg2_budget_fail() -> None:
     assert "budget_used 均值 <= 1.00" in dg.reason
 
 
+def test_dg2_fails_single_chapter_over_budget() -> None:
+    logs = [
+        _make_log(chapter_number=101, budget_used=0.8),
+        _make_log(chapter_number=102, budget_used=1.2),
+        _make_log(chapter_number=103, budget_used=0.8),
+    ]
+    dg = run_decision_gate_dg2(
+        pass_rate=1.0,
+        avg_budget=sum(log.budget_used or 0 for log in logs) / len(logs),
+        total=len(logs),
+        logs=logs,
+    )
+    assert dg.passed is False
+    assert dg.status == "failed"
+    assert dg.metrics["over_budget_chapters"] == [102]
+    assert "每章 budget_used <= 1.00 且有记录" in dg.reason
+
+
+def test_dg2_fails_settlement_validation_failure() -> None:
+    logs = [
+        _make_log(chapter_number=101),
+        _make_log(
+            chapter_number=102,
+            settlement_success=False,
+            settlement_needs_human_review=True,
+        ),
+    ]
+    dg = run_decision_gate_dg2(
+        pass_rate=1.0,
+        avg_budget=0.8,
+        total=len(logs),
+        logs=logs,
+    )
+    assert dg.passed is False
+    assert dg.metrics["settlement_failed_chapters"] == [102]
+    assert "settlement validation failed == 0" in dg.reason
+
+
+def test_dg2_fails_missing_summary_after_accept() -> None:
+    logs = [
+        _make_log(chapter_number=101),
+        _make_log(chapter_number=102, summary_success=False),
+    ]
+    dg = run_decision_gate_dg2(
+        pass_rate=1.0,
+        avg_budget=0.8,
+        total=len(logs),
+        logs=logs,
+    )
+    assert dg.passed is False
+    assert dg.metrics["missing_summary_chapters"] == [102]
+    assert "accepted 后 summary 100% 完整" in dg.reason
+
+
+def test_dg2_compatible_with_old_logs_missing_new_fields() -> None:
+    log = ChapterRunLog(
+        log_id="old-log-101",
+        project_id="p-1",
+        chapter_number=101,
+        started_at=datetime(2024, 1, 1, 12, 0, 0),
+        finished_at=datetime(2024, 1, 1, 12, 1, 0),
+        success=True,
+        quality_gate_passed=True,
+        budget_used=None,
+    )
+    report = generate_report([log], chapter_range=(101, 101))
+    assert "| Ch101 | Y | - |" in report
+    assert "**budget 缺失章节**: Ch101" in report
+    assert "❌ 未通过" in report
+
+
 # ---------------------------------------------------------------------------
 # generate_report auto-selects DG-2 for Ch101+
 # ---------------------------------------------------------------------------
@@ -258,6 +378,7 @@ def test_report_uses_dg2_for_ch101() -> None:
         context_emergency=False,
         character_states_loaded=5,
         soft_refs_loaded=3,
+        summary_success=True,
     )
     report = generate_report([log], chapter_range=(101, 101))
     assert "决策门 DG-2" in report

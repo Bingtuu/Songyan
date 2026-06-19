@@ -43,6 +43,8 @@ class ChapterRunLog(BaseModel):
     # Settlement 状态
     settlement_success: bool = True
     settlement_needs_human_review: bool = False
+    summary_id: str | None = None
+    summary_success: bool | None = None
 
     # V5.0 Context Diet 2.0 指标（Task 105）
     budget_used: float | None = None

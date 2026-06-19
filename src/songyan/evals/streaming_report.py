@@ -17,10 +17,17 @@ _LOGS_DIR = Path("logs/chapter_runs")
 class DecisionGateResult:
     """决策门结果 (DG-1 / DG-2)."""
 
-    def __init__(self, passed: bool, reason: str, metrics: dict[str, Any]) -> None:
+    def __init__(
+        self,
+        passed: bool,
+        reason: str,
+        metrics: dict[str, Any],
+        status: str | None = None,
+    ) -> None:
         self.passed = passed
         self.reason = reason
         self.metrics = metrics
+        self.status = status or ("passed" if passed else "failed")
 
 
 def read_run_logs(run_id: str) -> list[ChapterRunLog]:
@@ -49,6 +56,50 @@ def _compute_word_count_ratio(log: ChapterRunLog) -> float | None:
     if target and target > 0 and log.word_count > 0:
         return round(log.word_count / target, 3)
     return None
+
+
+def _format_float(value: float | None) -> str:
+    """格式化可缺失浮点数，保留 0.000 并兼容 None."""
+    if value is None:
+        return "-"
+    return f"{value:.3f}"
+
+
+def _format_int(value: int | None) -> str:
+    """格式化可缺失整数."""
+    if value is None:
+        return "-"
+    return str(value)
+
+
+def _format_bool(value: bool | None) -> str:
+    """格式化可缺失布尔值."""
+    if value is None:
+        return "?"
+    return "Y" if value else "N"
+
+
+def _format_chapters(chapters: list[int]) -> str:
+    """格式化章节列表."""
+    if not chapters:
+        return "-"
+    return ", ".join(f"Ch{chapter}" for chapter in chapters)
+
+
+def _decision_label(dg: DecisionGateResult) -> str:
+    """返回报告中的决策门状态标签."""
+    if dg.status == "passed":
+        return "✅ 通过"
+    if dg.status == "conditional":
+        return "⚠ 条件通过"
+    return "❌ 未通过"
+
+
+def _failure_reason(log: ChapterRunLog) -> str:
+    """生成失败章节的可读原因."""
+    stage = log.error_stage or "unknown_stage"
+    error = log.error or "unknown_error"
+    return f"Ch{log.chapter_number}: {stage} / {error}"
 
 
 def generate_report(
@@ -120,6 +171,7 @@ def generate_report(
             pass_rate=pass_rate,
             avg_budget=avg_budget,
             total=total,
+            logs=logs,
         )
         dg_label = "DG-2"
     else:
@@ -155,21 +207,55 @@ def generate_report(
         "",
         f"## 决策门 {dg_label}",
         "",
-        f"- **结果**: {'✅ 通过' if dg.passed else '❌ 未通过'}",
+        f"- **结果**: {_decision_label(dg)}",
         f"- **判定理由**: {dg.reason}",
         "",
+    ]
+
+    if dg_label == "DG-2":
+        metrics = dg.metrics
+        lines.extend(
+            [
+                "### DG-2 明细",
+                "",
+                f"- **运行完成率**: {metrics.get('completion_rate', 0.0):.1%} "
+                f"({metrics.get('success_count', 0)}/{total})",
+                f"- **budget 超限章节**: "
+                f"{_format_chapters(metrics.get('over_budget_chapters', []))}",
+                f"- **budget 缺失章节**: "
+                f"{_format_chapters(metrics.get('missing_budget_chapters', []))}",
+                f"- **ContextEmergency 章节**: "
+                f"{_format_chapters(metrics.get('context_emergency_chapters', []))}",
+                f"- **settlement validation failed 章节**: "
+                f"{_format_chapters(metrics.get('settlement_failed_chapters', []))}",
+                f"- **accepted 后缺 summary 章节**: "
+                f"{_format_chapters(metrics.get('missing_summary_chapters', []))}",
+                f"- **失败章节**: {_format_chapters(metrics.get('failed_chapters', []))}",
+                f"- **失败原因**: {metrics.get('failure_reasons_text', '-')}",
+                f"- **失败可恢复性**: {metrics.get('recoverability', 'unknown')}",
+                "",
+            ]
+        )
+
+    lines.extend(
+        [
         "## 详细指标",
         "",
-        "| 章节 | 成功 | budget_used | char_states | soft_refs | emergency | revision | QG通过 |",
-        "|------|------|-------------|-------------|-----------|-----------|----------|--------|",
-    ]
+            "| 章节 | 成功 | budget_used | char_states | soft_refs | emergency | "
+            "revision | QG通过 | settlement | summary | 失败原因 |",
+            "|------|------|-------------|-------------|-----------|-----------|"
+            "----------|--------|------------|---------|----------|",
+        ]
+    )
 
     for log in logs:
         lines.append(
             f"| Ch{log.chapter_number} | {'Y' if log.success else 'N'} | "
-            f"{log.budget_used or '-':.3f} | {log.character_states_loaded or '-'} | "
-            f"{log.soft_refs_loaded or '-'} | {'Y' if log.context_emergency else 'N'} | "
-            f"{log.revision_rounds} | {'Y' if log.quality_gate_passed else 'N'} |"
+            f"{_format_float(log.budget_used)} | {_format_int(log.character_states_loaded)} | "
+            f"{_format_int(log.soft_refs_loaded)} | {_format_bool(log.context_emergency)} | "
+            f"{log.revision_rounds} | {_format_bool(log.quality_gate_passed)} | "
+            f"{_format_bool(log.settlement_success)} | {_format_bool(log.summary_success)} | "
+            f"{'-' if log.success else _failure_reason(log)} |"
         )
 
     lines.append("")
@@ -226,30 +312,127 @@ def run_decision_gate_dg2(
     pass_rate: float,
     avg_budget: float,
     total: int,
+    logs: list[ChapterRunLog] | None = None,
 ) -> DecisionGateResult:
     """执行决策门 DG-2 判断 (Ch101-Ch150).
 
-    验收标准（核心指标通过即可推进）：
+    验收标准：
+    - 运行完成率 >= 95%（90%-95% 且失败可诊断为条件通过）
     - 达标率 >= 70%
-    - budget_used 均值 <= 1.00
+    - budget_used 均值 <= 1.00 且每章 <= 1.00
+    - settlement validation failed 为 0
+    - accepted 后 summary 完整
     """
+    if logs is None:
+        checks = {
+            "达标率 >= 70%": pass_rate >= 0.70,
+            "budget_used 均值 <= 1.00": avg_budget <= 1.00,
+        }
+
+        failed_checks = [name for name, ok in checks.items() if not ok]
+        if not failed_checks:
+            return DecisionGateResult(
+                passed=True,
+                reason="DG-2 核心指标达标，推进后续章节验证。",
+                metrics={"checks": checks},
+            )
+
+        return DecisionGateResult(
+            passed=False,
+            reason=f"DG-2 未达标项: {', '.join(failed_checks)}。",
+            metrics={"checks": checks},
+        )
+
+    successes = [log for log in logs if log.success]
+    failed_logs = [log for log in logs if not log.success]
+    success_count = len(successes)
+    completion_rate = success_count / total if total > 0 else 0.0
+    over_budget_chapters = [
+        log.chapter_number
+        for log in successes
+        if log.budget_used is not None and log.budget_used > 1.0
+    ]
+    missing_budget_chapters = [
+        log.chapter_number for log in successes if log.budget_used is None
+    ]
+    context_emergency_chapters = [
+        log.chapter_number for log in logs if log.context_emergency
+    ]
+    settlement_failed_chapters = [
+        log.chapter_number
+        for log in successes
+        if (not log.settlement_success) or log.settlement_needs_human_review
+    ]
+    missing_summary_chapters = [
+        log.chapter_number
+        for log in successes
+        if log.settlement_success and log.summary_success is not True
+    ]
+    failed_chapters = [log.chapter_number for log in failed_logs]
+    failure_reasons = [_failure_reason(log) for log in failed_logs]
+    failures_have_reasons = all(
+        log.error is not None or log.error_stage is not None for log in failed_logs
+    )
+
     checks = {
+        "运行完成率 >= 95%": completion_rate >= 0.95,
         "达标率 >= 70%": pass_rate >= 0.70,
         "budget_used 均值 <= 1.00": avg_budget <= 1.00,
+        "每章 budget_used <= 1.00 且有记录": (
+            not over_budget_chapters and not missing_budget_chapters
+        ),
+        "ContextEmergency 次数 == 0": not context_emergency_chapters,
+        "settlement validation failed == 0": not settlement_failed_chapters,
+        "accepted 后 summary 100% 完整": not missing_summary_chapters,
+        "失败章节有原因": failures_have_reasons,
+    }
+    metrics = {
+        "checks": checks,
+        "completion_rate": completion_rate,
+        "success_count": success_count,
+        "over_budget_chapters": over_budget_chapters,
+        "missing_budget_chapters": missing_budget_chapters,
+        "context_emergency_chapters": context_emergency_chapters,
+        "settlement_failed_chapters": settlement_failed_chapters,
+        "missing_summary_chapters": missing_summary_chapters,
+        "failed_chapters": failed_chapters,
+        "failure_reasons": failure_reasons,
+        "failure_reasons_text": "; ".join(failure_reasons) or "-",
+        "recoverability": "blocked",
     }
 
     failed_checks = [name for name, ok in checks.items() if not ok]
     if not failed_checks:
+        metrics["recoverability"] = "no_failures"
         return DecisionGateResult(
             passed=True,
             reason="DG-2 核心指标达标，推进后续章节验证。",
-            metrics={"checks": checks},
+            metrics=metrics,
+        )
+
+    conditionally_recoverable = (
+        completion_rate >= 0.90
+        and pass_rate >= 0.60
+        and avg_budget <= 1.00
+        and not over_budget_chapters
+        and not missing_budget_chapters
+        and not settlement_failed_chapters
+        and not missing_summary_chapters
+        and failures_have_reasons
+    )
+    if conditionally_recoverable:
+        metrics["recoverability"] = "reviewable"
+        return DecisionGateResult(
+            passed=False,
+            status="conditional",
+            reason=f"DG-2 条件通过项需复核: {', '.join(failed_checks)}。",
+            metrics=metrics,
         )
 
     return DecisionGateResult(
         passed=False,
         reason=f"DG-2 未达标项: {', '.join(failed_checks)}。",
-        metrics={"checks": checks},
+        metrics=metrics,
     )
 
 

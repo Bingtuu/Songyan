@@ -137,6 +137,7 @@ def build_chapter_run_log(
 
     # Task 105: 提取 V5.0 上下文指标
     _ctx_metrics = state.get("_context_metrics") or m.get("_context_metrics", {})
+    summary_id = state.get("summary_id")
 
     # Task 106: 提取 score_card（含 details 子指标）
     _score_card_raw = state.get("_score_card")
@@ -175,6 +176,8 @@ def build_chapter_run_log(
         continuity_health_score=continuity_health_score,
         settlement_success=not state.get("_settlement_needs_human_review", False),
         settlement_needs_human_review=state.get("_settlement_needs_human_review", False),
+        summary_id=summary_id,
+        summary_success=summary_id is not None,
         budget_used=_ctx_metrics.get("budget_used"),
         character_states_loaded=_ctx_metrics.get("character_states_loaded"),
         soft_refs_loaded=_ctx_metrics.get("soft_refs_loaded"),

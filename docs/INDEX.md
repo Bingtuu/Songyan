@@ -10,9 +10,8 @@
 |:------:|------|------|
 | P0 | `AGENTS.md` | 开发代理指令与不可违背规则 |
 | P0 | `docs/STATUS.md` | 项目状态看板（当前 Task、路线图） |
-| P0 | `tasks/111d-quality-gate-settlement-blockers-fix-DONE.md` | 最新完成：QualityGate 与 Settlement 阻断项修复 |
-| P0 | `tasks/111e-task112-reporting-dg2-gate-fix.md` | 当前 Task：Task 112 报告与 DG-2 Gate |
-| P0 | `tasks/111f-context-snapshot-prompt-metadata-fix.md` | 后续前置修复：Context Snapshot、Prompt 与 Metadata 一致性 |
+| P0 | `tasks/111e-task112-reporting-dg2-gate-fix-DONE.md` | 最新完成：Task 112 报告与 DG-2 Gate 修复 |
+| P0 | `tasks/111f-context-snapshot-prompt-metadata-fix.md` | 当前 Task：Context Snapshot、Prompt 与 Metadata 一致性 |
 | P0 | `tasks/111g-long-run-performance-containment.md` | 后续前置修复：长跑性能缺陷收敛 |
 | P0 | `tasks/112-ch101-ch150-streaming-validation.md` | 依赖 111d-111g 的 Ch101-Ch150 流式验证 + DG-2 |
 | P1 | `docs/INDEX.md` | 本文档 |

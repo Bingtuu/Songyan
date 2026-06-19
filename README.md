@@ -392,7 +392,7 @@ ContextManager 按 Token 预算组装 `ContextPackage`（默认 32K）：
 | M55 事实源一致性修复 | 111b | Settlement 与事实源一致性：accept/settlement/summary/state 边界 | ✅ |
 | M56 Context/Prompt 一致性修复 | 111c | ContextEmergency、hard constraints、Craft Card、human instruction 口径统一 | ✅ |
 | M57 QualityGate/Settlement 阻断修复 | 111d | budget QG、new issues 终态、summary fallback | ✅ |
-| M58 报告与 DG-2 Gate 修复 | 111e | streaming report 兼容缺失 metrics；DG-2 覆盖硬指标 | 📝 |
+| M58 报告与 DG-2 Gate 修复 | 111e | streaming report 兼容缺失 metrics；DG-2 覆盖硬指标 | ✅ |
 | M59 Context Snapshot/Metadata 修复 | 111f | Writer/Auditor 复用上下文快照；metadata 可回放 | 📝 |
 | M60 长跑性能缺陷收敛 | 111g | context assembly、Settlement prompt facts、O(N²) 热点收敛 | 📝 |
 | M61 Ch101-Ch150 验证 | 112 | 流式验证 + 决策门 DG-2 | 📝 |
@@ -499,7 +499,7 @@ ruff check src/ tests/ evals/
 - **Task 111b** : Settlement 与事实源一致性修复 — 防止 accepted/settlement/summary/state 半提交或污染 ✅
 - **Task 111c** : Context 与 Prompt 一致性修复 — 校准 ContextEmergency、hard constraints、Craft Card 和 human instruction ✅
 - **Task 111d** : QualityGate 与 Settlement 阻断项修复 — budget QG、new issues 终态、summary fallback ✅
-- **Task 111e** : Task 112 报告与 DG-2 Gate 完整性修复 — report 稳定性和决策门硬指标
+- **Task 111e** : Task 112 报告与 DG-2 Gate 完整性修复 — report 稳定性和决策门硬指标 ✅
 - **Task 111f** : Context Snapshot、Prompt 与 Metadata 一致性修复 — prompt 输入可回放、可审计
 - **Task 111g** : 长跑性能缺陷收敛 — 降低重复组装、LLM 调用和 O(N²) 热点
 - **Task 112** : Ch101-Ch150 流式验证 + 决策门 DG-2（依赖 111d-111g 完成）
