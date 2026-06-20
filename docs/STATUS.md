@@ -54,7 +54,7 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 | 最近回归测试 | **1718 passed, 1 xfailed, 1 xpassed, 14 warnings** (`pytest tests/ -q`，xfail/xpass 均为已知非阻断项) |
 | 当前 lint | **`ruff check src/ tests/` 已通过** |
 | Python | 3.11.9 |
-| 当前 Task | **V5.0 完成** — Task 120 Final Acceptance Package |
+| 当前 Task | **V5.0 完成** — Task 120 Final Acceptance Package 已交付；Task 121 已产出 V5.0 评估与 V5.1 下一步规划 |
 | 下一步建议 | **V5.0 交付完成。建议先补 Ch1-Ch150 single-run rehearsal 证据，再做 Prompt 调优；ContextEmergency/health_low 硬门禁后置预研** |
 
 > 测试口径说明：`1 xfailed` 为 Windows SQLite 并发写入限制；`1 xpassed` 为性能测试预热/冷启动差异，均为已知非阻断项。
@@ -113,7 +113,7 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 | 114b2 | **QG 收敛阻断处理 + settlement 端到端验证窗口** | 已修复 QG 收敛阻断和 rewrite 结构失败路由；Ch102/Ch103 `run-af3ba939` 完成 accept+settlement+summary | ✅ |
 | 114c | **Ch111-Ch150 分段流式验证 + DG-2** | Ch111-Ch150 40/40 成功；QG/settlement/summary 40/40；DG-2 因 Ch115/Ch120 ContextEmergency 为条件通过 | ⚠️ 条件通过 |
 
-### Phase 4 收口规划 — DG-2 条件通过后续任务（Task 115-120）
+### Phase 4 收口任务 — DG-2 条件通过后续任务（Task 115-120，已完成）
 
 | Task | 内容 | 验收条件 | 状态 |
 |------|------|---------|:----:|
@@ -133,8 +133,9 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 | Ch115/Ch120 ContextEmergency | ~~P1~~ | **Task 115 已关闭**：诊断为合理降级（`budget_used` 触发时 1.0007），新增可观测性字段 |
 | Ch147/Ch148 best-version 质量选择 | ~~P1~~ | **Task 116 已关闭**：`quality_gate_router` 路由缺陷修复，QG 通过后不再错误触发 rewrite |
 | DG-2 风险窗口复验 | ~~P1~~ | **Task 117 已关闭**：Ch115/Ch120 Emergency 未触发，Ch147/Ch148 rebound 正确，DG-2 条件通过但风险已关闭 |
-| ContinuityAuditor health 低分 | P2 | Task 118 明确记录、软复核或阻断策略 |
-| 报告入口与 Windows wrapper 漂移 | P2 | Task 119 统一报告入口并加固退出判定 |
+| ContinuityAuditor health 低分 | ~~P2~~ | **Task 118 已关闭**：P1/P2/P3 分级 + human marks 追踪；V5.1 可扩展硬门禁 |
+| 报告入口与 Windows wrapper 漂移 | ~~P2~~ | **Task 119 已关闭**：统一 `songyan report` 入口并加固 wrapper 退出判定 |
+| 一次性 Ch1-Ch150 单命令证据 | P2 | **Task 121 建议补强**：V5.0 工程验收已达成，如需严格宣称 single-run，应补 rehearsal |
 
 ---
 
@@ -188,17 +189,15 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 - `tasks/114a-settlement-fact-source-contract-fix-DONE.md` — Task 114a Settlement 事实源契约修复交付记录
 - `tasks/114b-phase1-replay-ch102-ch110-DONE.md` — Task 114b Phase 1 熔断复核记录
 - `tasks/114b2-qg-convergence-settlement-window-DONE.md` — Task 114b2 QG 收敛阻断与 settlement 端到端验证记录
-- `tasks/114-ch101-ch150-streaming-validation.md` — Task 114 umbrella 规划：114a Settlement 修复、114b Phase 1 重跑、114b2 验证窗口、114c DG-2 长跑
+- `archive/v5/plans/114-ch101-ch150-streaming-validation.md` — Task 114 umbrella 历史规划稿：114a Settlement 修复、114b Phase 1 重跑、114b2 验证窗口、114c DG-2 长跑
 - `tasks/114-ch101-ch150-streaming-validation-DONE.md` — Task 114c Ch111-Ch150 分段流式验证与 DG-2 条件通过记录
 - `tasks/115-context-emergency-review-DONE.md` — Task 115 ContextEmergency 触发复核与校准交付记录
-- `tasks/115-context-emergency-review.md` — Task 115 ContextEmergency 触发复核与校准规划
 - `tasks/116-best-version-quality-selection-fix-DONE.md` — Task 116 best-version 质量选择策略复核与修复交付记录
-- `tasks/116-best-version-quality-selection-fix.md` — Task 116 best-version 质量选择策略复核与修复规划
 - `tasks/117-dg2-risk-window-revalidation-DONE.md` — Task 117 DG-2 风险章节窗口复验交付记录
-- `tasks/117-dg2-risk-window-revalidation.md` — Task 117 DG-2 风险章节窗口复验规划
-- `tasks/118-continuity-health-governance.md` — Task 118 ContinuityAuditor health_low 治理策略规划
-- `tasks/119-reporting-wrapper-hardening.md` — Task 119 长跑报告入口与 Windows wrapper 加固规划
-- `tasks/120-v5-final-acceptance-package.md` — Task 120 V5.0 最终验收包规划
+- `tasks/118-continuity-health-governance-DONE.md` — Task 118 ContinuityAuditor health_low 治理策略交付记录
+- `tasks/119-reporting-wrapper-hardening-DONE.md` — Task 119 长跑报告入口与 Windows wrapper 加固交付记录
+- `tasks/120-v5-final-acceptance-DONE.md` — V5.0 Final Acceptance Package
+- `tasks/121-v50-goal-assessment-and-v51-plan.md` — V5.0 目标达成评估与 V5.1 下一步规划
 - `logs/chapter_runs/run-33229919.jsonl` — Ch51-Ch59 实跑指标
 
 

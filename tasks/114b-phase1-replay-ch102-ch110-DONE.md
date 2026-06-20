@@ -245,7 +245,7 @@ LLM 生成内容质量波动
 ## 参考文档
 
 - `tasks/114a-settlement-fact-source-contract-fix-DONE.md` — Task 114a 修复完成文档
-- `tasks/114-ch101-ch150-streaming-validation.md` — Task 114 umbrella 规划
+- `archive/v5/plans/114-ch101-ch150-streaming-validation.md` — Task 114 umbrella 历史规划稿
 - `logs/chapter_runs/run-385dc3e0.jsonl` — Ch103 回放 JSONL
 - `logs/chapter_runs/run-452c4f78.jsonl` — Ch102 全量重跑 JSONL
 - `logs/task114/songyan-ch103-replay-20260620-064834.out.log` — Ch103 回放日志

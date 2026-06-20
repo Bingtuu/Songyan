@@ -10,9 +10,11 @@
 
 ## 项目状态
 
-**V5.0 — Context Diet 2.0 智能遗忘架构**
+**V5.0 — Context Diet 2.0 智能遗忘架构已完成**
 
-目标：通过 TemporalCompressor + CharacterFocalDecay + SettingEvaporator + BudgetHardCeiling 四组件协同，控制信息密度，支撑 Ch1-Ch150 全自动稳定生成。Task 101~114c 已完成 Context Diet 2.0 核心组件、流式验证基础设施、评分与收敛护栏、活跃信息池控制、工作流/事实源/Context/Prompt/QualityGate/Settlement 修复，以及 Ch111-Ch150 分段流式验证。当前 DG-2 为条件通过：Ch111-Ch150 40/40 成功，QG/settlement/summary 均 40/40；后续 Task 115-120 已规划，用于收口 ContextEmergency、best-version 质量选择、风险窗口复验、health_low 治理、报告/wrapper 加固和 V5.0 Final Acceptance。
+目标：通过 TemporalCompressor + CharacterFocalDecay + SettingEvaporator + BudgetHardCeiling 四组件协同，控制信息密度，支撑 150+ 章稳定生成。Task 101~120 已完成 Context Diet 2.0 核心组件、流式验证基础设施、评分与收敛护栏、活跃信息池控制、工作流/事实源/Context/Prompt/QualityGate/Settlement 修复、Ch111-Ch150 分段验证、DG-2 风险窗口复验、health_low 治理、报告/wrapper 加固和 V5.0 Final Acceptance。
+
+当前最终口径以 `tasks/V5-README.md` 与 `docs/STATUS.md` 为准：**V5.0 工程验收通过，P0/P1 风险为 0，全量回归 1718 passed，lint 通过**。若严格要求“单命令一次性 Ch1-Ch150”，下一步建议先补 single-run rehearsal 证据，再进入 V5.1 Prompt 调优；ContextEmergency / health_low 硬门禁后置预研。
 
 ### 版本概览
 
@@ -22,20 +24,22 @@
 | V2.x | M6~M15 | 长篇支撑能力（RAG / Punch / 一致性）| 已完成 |
 | V3.x | M16~M27 | Ch1~Ch70 稳定长跑 | 已完成 |
 | V4.0 | M28~M42 | Ch1~Ch50 极限优化（81.6% 达标率）| 已完成 |
-| **V5.0** | **M43~M65** | **Context Diet 2.0 → Ch150 全自动** | **DG-2 条件通过** |
+| **V5.0** | **M43~M71** | **Context Diet 2.0 → Ch150 全自动 + Final Acceptance** | **已完成** |
 
 ### 当前关键指标
 
 | 指标 | 数值 |
 |------|------|
-| 最近回归测试 | **1676 passed, 4 skipped, 1 xfailed, 4 xpassed** (`pytest tests/ -q`，Task 116 全量回归) |
-| V5.0 当前 Task | **Task 116 已完成；Task 117-120 已规划** |
-| 前置状态 | **Task 114a/b/b2/c 完成；Task 115 ContextEmergency 关闭；Task 116 best-version 路由修复完成** |
-| 当前结论 | **DG-2 条件通过：Ch115/Ch120 ContextEmergency P1 风险已由 Task 115 关闭；Ch147/Ch148 best-version P1 风险已由 Task 116 修复 `quality_gate_router` 路由缺陷；无 P0 事实源污染** |
+| 最近回归测试 | **1718 passed, 1 xfailed, 1 xpassed, 14 warnings** (`pytest tests/ -q`，xfail/xpass 均为已知非阻断项) |
+| V5.0 当前 Task | **Task 120 已完成；Task 121 已产出 V5.0 目标评估与 V5.1 下一步规划** |
+| 前置状态 | **Task 115-120 全部完成；DG-2 风险窗口已关闭；health_low 已分级追踪；报告/wrapper 已加固** |
+| 当前结论 | **V5.0 工程验收通过：P0/P1 风险为 0；Ch111-Ch150 40/40 成功；如需证明“单命令一次性 150 章”，建议补 Ch1-Ch150 single-run rehearsal** |
 | 当前 lint | **`ruff check src/ tests/` 已通过** |
 | Task 110e 实跑 | **Ch80-Ch96 17/17 成功，QG 100%，coherence_major 0/17** |
 | V4.0 最终达标率 | Task 099: Ch2-Ch50 **81.6%** |
 | V4.x 归档 | `archive/v4/`（报告 + 任务 + 验证数据）|
+
+测试口径说明：`1 xfailed` 为 Windows SQLite 并发写入限制；`1 xpassed` 为性能测试预热/冷启动差异，均不阻塞 V5.0 验收。
 
 ### V5.0 核心决策
 
@@ -403,12 +407,12 @@ ContextManager 按 Token 预算组装 `ContextPackage`（默认 32K）：
 | M64 Phase 1 重跑 | 114b | Ch103/Ch102 回放因 QG 收敛失败提前跳过 settlement，未达出口条件 | ⚠️ |
 | M64b QG 收敛阻断处理 + settlement 验证窗口 | 114b2 | 修复当前 lineage 修复计数、QG best 回滚、rewrite 结构失败路由；Ch102/Ch103 `run-af3ba939` 端到端通过 | ✅ |
 | M65 Ch111-Ch150 验证 | 114c | Phase 2/3 分段长跑 + 决策门 DG-2；40/40 成功 | ⚠️ 条件通过 |
-| M66 ContextEmergency 复核 | 115 | 复核 Ch115/Ch120 emergency，判断合理降级、过早触发或报告误判 | 📝 |
-| M67 Best-Version 质量选择 | 116 | 复核 Ch147/Ch148，防止低分 rewrite fallback 覆盖高分 QG best | 📝 |
-| M68 DG-2 风险窗口复验 | 117 | 复跑 Ch115/Ch120/Ch147/Ch148，给出 DG-2 风险最终结论 | 📝 |
-| M69 Continuity health 治理 | 118 | 明确 health_low 的记录、软复核或阻断策略 | 📝 |
-| M70 报告与 wrapper 加固 | 119 | 统一长跑报告入口，修复 Windows wrapper 退出判定漂移 | 📝 |
-| M71 V5.0 Final Acceptance | 120 | 汇总最终验收包，明确 V5.0 通过/条件通过/不通过结论 | 📝 |
+| M66 ContextEmergency 复核 | 115 | 复核 Ch115/Ch120 emergency，确认合理降级并补可观测性 | ✅ |
+| M67 Best-Version 质量选择 | 116 | 修复 Ch147/Ch148 低分 rewrite fallback 覆盖高分 QG best 风险 | ✅ |
+| M68 DG-2 风险窗口复验 | 117 | 复跑 Ch115/Ch120/Ch147/Ch148，确认 DG-2 风险关闭 | ✅ |
+| M69 Continuity health 治理 | 118 | health_low P1/P2/P3 分级追踪，保持软复核 | ✅ |
+| M70 报告与 wrapper 加固 | 119 | 统一长跑报告入口，修复 Windows wrapper 退出判定漂移 | ✅ |
+| M71 V5.0 Final Acceptance | 120 | V5.0 最终验收通过，P0/P1 风险为 0 | ✅ |
 
 ---
 
@@ -444,7 +448,7 @@ pytest -k "not integration" -q
 
 ```bash
 pytest tests/ -q
-# Current baseline: 1676 passed, 4 skipped, 2 xfailed, 3 xpassed
+# Current baseline: 1718 passed, 1 xfailed, 1 xpassed, 14 warnings
 
 ruff check src/ tests/
 # Current baseline: All checks passed!
@@ -539,16 +543,16 @@ ruff check src/ tests/
   - 组合窗口 `run-af3ba939`：Ch102/Ch103 均完成 accept + settlement + summary，`run_logger success=True`。
 - **Task 114c** : Ch111-Ch150 已按分段方式完成，40/40 成功，QG/settlement/summary 均 40/40，DG-2 条件通过。
 
-### 已规划：V5.0 Phase 4 收口任务 — Task 115-120
+### 已完成：V5.0 Phase 4 收口任务 — Task 115-120
 
 - **Task 115** : ✅ ContextEmergency 触发复核与校准 — 诊断为合理降级（`budget_used` 触发时 1.0007），新增 `budget_used_before_emergency` 字段。
-- **Task 116** : Best-Version 质量选择策略复核与修复，聚焦 Ch147/Ch148。
-- **Task 117** : DG-2 风险章节窗口复验，复跑并确认 P1 风险是否关闭。
-- **Task 118** : ContinuityAuditor Health 低分治理策略，明确 health_low 的记录、软复核或阻断口径。
-- **Task 119** : 长跑报告入口与 Windows Wrapper 加固，统一报告入口并增强退出判定。
-- **Task 120** : V5.0 Final Acceptance Package，汇总最终验收包并给出 V5.0 结论。
+- **Task 116** : ✅ Best-Version 质量选择策略复核与修复 — 修复 QG 通过后错误进入 rewrite 的路由缺陷。
+- **Task 117** : ✅ DG-2 风险章节窗口复验 — Ch115/Ch120/Ch147/Ch148 4/4 成功，风险关闭。
+- **Task 118** : ✅ ContinuityAuditor Health 低分治理策略 — health_low P1/P2/P3 分级，human marks 可追踪。
+- **Task 119** : ✅ 长跑报告入口与 Windows Wrapper 加固 — `songyan report` 入口统一，wrapper 结果码明确。
+- **Task 120** : ✅ V5.0 Final Acceptance Package — V5.0 工程验收通过，P0/P1 风险为 0。
 
-当前建议按序启动 Task 116 → 117 → 118 → 119 → 120，Task 115 已完成（ContextEmergency P1 关闭）。V5 任务状态以 `tasks/V5-README.md` 和各 `*-DONE.md` 为准，规划稿只作为设计背景。
+当前建议：V5.0 已交付完成；如需严格宣称“单命令一次性 Ch1-Ch150”，先补 single-run rehearsal 证据，再进入 V5.1 Prompt 调优。V5 任务状态以 `tasks/V5-README.md` 和各 `*-DONE.md` 为准，规划稿已归档为设计背景。
 
 ---
 

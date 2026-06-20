@@ -159,7 +159,7 @@ ruff check src/songyan/agents/settlement_extractor/__init__.py src/songyan/agent
 - `docs/STATUS.md`
 - `README.md`
 - `docs/INDEX.md`
-- `tasks/114-ch101-ch150-streaming-validation.md`
+- `archive/v5/plans/114-ch101-ch150-streaming-validation.md`
 
 ---
 
@@ -173,4 +173,4 @@ ruff check src/songyan/agents/settlement_extractor/__init__.py src/songyan/agent
 
 ## 下一步
 
-进入 Task 114c：按 `tasks/114-ch101-ch150-streaming-validation.md` 分段执行 Ch111-Ch130、Ch131-Ch150，并生成 DG-2 报告。
+进入 Task 114c：按 `archive/v5/plans/114-ch101-ch150-streaming-validation.md` 分段执行 Ch111-Ch130、Ch131-Ch150，并生成 DG-2 报告。

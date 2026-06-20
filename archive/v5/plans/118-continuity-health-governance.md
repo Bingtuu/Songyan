@@ -186,6 +186,6 @@ class ContinuityHealthMark(BaseModel):
 ## 参考文档
 
 - `tasks/114-ch101-ch150-streaming-validation-DONE.md`
-- `tasks/117-dg2-risk-window-revalidation.md`
+- `archive/v5/plans/117-dg2-risk-window-revalidation.md`
 - `src/songyan/agents/continuity_auditor/`
 - `src/songyan/evals/streaming_report.py`

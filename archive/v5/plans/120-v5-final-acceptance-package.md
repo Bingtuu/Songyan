@@ -183,11 +183,11 @@ class FinalAcceptanceItem(BaseModel):
 
 - `tasks/V5-README.md`
 - `tasks/114-ch101-ch150-streaming-validation-DONE.md`
-- `tasks/115-context-emergency-review.md`
-- `tasks/116-best-version-quality-selection-fix.md`
-- `tasks/117-dg2-risk-window-revalidation.md`
-- `tasks/118-continuity-health-governance.md`
-- `tasks/119-reporting-wrapper-hardening.md`
+- `archive/v5/plans/115-context-emergency-review.md`
+- `archive/v5/plans/116-best-version-quality-selection-fix.md`
+- `archive/v5/plans/117-dg2-risk-window-revalidation.md`
+- `archive/v5/plans/118-continuity-health-governance.md`
+- `archive/v5/plans/119-reporting-wrapper-hardening.md`
 - `docs/STATUS.md`
 - `README.md`
 - `docs/INDEX.md`

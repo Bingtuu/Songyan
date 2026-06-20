@@ -132,4 +132,4 @@ ruff check src/songyan/agents/settlement_extractor/_validate.py src/songyan/agen
 
 ## 下一步
 
-进入 `tasks/114-ch101-ch150-streaming-validation.md` 的 **Task 114b**：Phase 1 重跑 Ch102-Ch11
+进入 `archive/v5/plans/114-ch101-ch150-streaming-validation.md` 的 **Task 114b**：Phase 1 重跑 Ch102-Ch11

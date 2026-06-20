@@ -143,7 +143,7 @@ Options:
 ## 已知限制
 
 1. **不迁移历史日志**：日志命名规范只对新日志生效，不移动历史文件。
-2. **Wrapper 模板未替换旧 wrapper**：`run_task117.ps1` 保持原样，新模板在 `scripts/run_songyan_chapter.ps1` 供后续使用。
+2. **旧 wrapper 已归档**：`run_task117.ps1` 已移入 `archive/v5/scripts/run_task117.ps1`，当前通用模板为 `scripts/run_songyan_chapter.ps1`。
 3. **`collect_continuity_health_metrics` 未在报告中调用**：Task 118 的 health 指标收集函数尚未集成到 streaming report。
 
 ---

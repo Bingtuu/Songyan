@@ -159,6 +159,6 @@ Ch102-Ch110 完成率达标，无连续 settlement 阻断，无 accepted 指向 
 ## 参考文档
 
 - `tasks/114a-settlement-fact-source-contract-fix-DONE.md` — Task 114a 修复完成文档
-- `tasks/114-ch101-ch150-streaming-validation.md` — Task 114 umbrella 规划
+- `archive/v5/plans/114-ch101-ch150-streaming-validation.md` — Task 114 umbrella 历史规划稿
 - `logs/chapter_runs/run-5105e24b.jsonl` — Ch103 失败基线
 - `AGENTS.md` —

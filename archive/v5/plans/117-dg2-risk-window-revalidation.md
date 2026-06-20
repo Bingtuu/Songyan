@@ -182,7 +182,7 @@ class RiskWindowResult(BaseModel):
 
 ## 参考文档
 
-- `tasks/115-context-emergency-review.md`
-- `tasks/116-best-version-quality-selection-fix.md`
+- `archive/v5/plans/115-context-emergency-review.md`
+- `archive/v5/plans/116-best-version-quality-selection-fix.md`
 - `tasks/114-ch101-ch150-streaming-validation-DONE.md`
 - `logs/reports/report-task114c-dg2-ch111-ch150.md`

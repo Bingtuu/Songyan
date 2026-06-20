@@ -64,7 +64,7 @@ V5.0 已完成从 Context Diet 2.0 核心组件到 150 章验证的全部主线�
 | 114a | Settlement 事实源契约修复 | ✅ 完成 | `114a-settlement-fact-source-contract-fix-DONE.md` |
 | 114b | Phase 1 重跑 Ch102-Ch110 | ⚠️ 熔断复核完成，未达出口 | `114b-phase1-replay-ch102-ch110-DONE.md` |
 | 114b2 | QG 收敛阻断处理 + settlement 验证窗口 | ✅ 完成 | `114b2-qg-convergence-settlement-window-DONE.md` |
-| 114c | Ch111-Ch150 分段流式验证 + DG-2 | ⚠️ 条件通过 | `114-ch101-ch150-streaming-validation-DONE.md` |
+| 114c | Ch111-Ch150 分段流式验证 + DG-2 | ⚠️ 条件通过，风险已关闭 | `114-ch101-ch150-streaming-validation-DONE.md` |
 | 115 | ContextEmergency 触发复核与校准 | ✅ 完成 | `115-context-emergency-review-DONE.md` |
 | 116 | Best-Version 质量选择策略复核与修复 | ✅ 完成 | `116-best-version-quality-selection-fix-DONE.md` |
 | 117 | DG-2 风险章节窗口复验 | ✅ 完成 | `117-dg2-risk-window-revalidation-DONE.md` |
@@ -82,9 +82,9 @@ V5.0 已完成从 Context Diet 2.0 核心组件到 150 章验证的全部主线�
 | Ch80-Ch96 coherence_major 修复验证 | 17/17 成功，QG 17/17，coherence_major 0/17 |
 | Ch101 修复回放 | `run-90e08243` 恢复 accepted + settlement + summary |
 | Ch102/Ch103 settlement 验证窗口 | `run-af3ba939` 完成 accept + settlement + summary |
-| Ch111-Ch150 DG-2 | 40/40 成功，QG/settlement/summary 40/40，条件通过 |
+| Ch111-Ch150 DG-2 | 40/40 成功，QG/settlement/summary 40/40，条件通过；Task 115-117 已关闭风险 |
 | 最近全量回归 | `1718 passed, 1 xfailed, 1 xpassed, 14 warnings` |
-| 当前全量 ruff | `ruff check src/ tests/` 已通过后续 lint 清理 |
+| 当前全量 ruff | `ruff check src/ tests/` 已通过 |
 
 测试口径说明：`1 xfailed` 为 Windows SQLite 并发写入限制；`1 xpassed` 为性能测试预热/冷启动差异，均不阻塞 V5.0 验收。
 
@@ -97,10 +97,11 @@ V5.0 已完成从 Context Diet 2.0 核心组件到 150 章验证的全部主线�
 | Ch115/Ch120 ContextEmergency 触发原因 | ~~P1~~ | **Task 115 已关闭**：诊断为合理降级（`budget_used` 触发时 1.0007），新增可观测性字段 |
 | Ch147/Ch148 best-version 质量选择策略 | ~~P1~~ | **Task 116 已关闭**：`quality_gate_router` 路由缺陷修复，QG 通过后不再错误触发 rewrite |
 | ContinuityAuditor health 低分只写 human marks、不阻断 accept | ~~P2~~ | **Task 118 已关闭**：软复核策略（health_low 追踪但不断路），V5.1 可扩展为硬门禁 |
+| 一次性 Ch1-Ch150 单命令证据 | P2 | V5.0 工程验收已达成；如需严格宣称 single-run，按 Task 121 建议补 rehearsal |
 
 ---
 
-## 后续规划任务
+## V5.0 收口任务完成记录
 
 Task 115-120 用于 V5.0 条件通过后的收口，不改变 Task 114c 已完成的事实口径。
 
@@ -121,4 +122,5 @@ Task 115-120 用于 V5.0 条件通过后的收口，不改变 Task 114c 已完�
 - `114b` 明确标记为失败/熔断复核记录，不再作为 Task 114 成功依据。
 - `114b2` 是 Ch102/Ch103 settlement 端到端恢复依据。
 - `114c DONE` 是 Ch111-Ch150 与 DG-2 的最终依据。
+- Task 114、114b、115-120 的历史规划稿已移入 `archive/v5/plans/`，旧 `run_task117.ps1` 已移入 `archive/v5/scripts/`。
 - 后续新增 V5 文档应优先更新本索引，再更新 `docs/STATUS.md`、`README.md`、`docs/INDEX.md`。
