@@ -2,6 +2,12 @@
 
 > 本目录存放 V5.0 已完成后的历史规划稿和被替代脚本。默认不作为当前开发入口；当前事实入口仍是 `tasks/V5-README.md`、`docs/STATUS.md` 和 `docs/INDEX.md`。
 
+## context-docs/
+
+- `AGENTS-full-20260621.md` — AGENTS 长版规则快照
+- `STATUS-full-20260621.md` — docs/STATUS 长版状态快照
+- `INDEX-full-20260621.md` — docs/INDEX 长版索引快照
+
 ## plans/
 
 - `114-ch101-ch150-streaming-validation.md` — Task 114 umbrella 历史规划稿
