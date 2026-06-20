@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import uuid
+from pathlib import Path
 
 import click
 
@@ -16,6 +17,7 @@ from songyan.db.continuity_repo import ContinuityReportRepository
 from songyan.db.human_mark_repo import HumanMarkRepository
 from songyan.db.migrations import init_schema
 from songyan.db.repository import ProjectRepository
+from songyan.evals.streaming_report import generate_report, read_run_logs, write_report
 from songyan.genres.loader import list_genre_profiles, load_genre_profile
 from songyan.models.human_mark import HumanMark
 from songyan.models.project import ProjectSetting, derive_arc_boundaries
@@ -445,6 +447,97 @@ def run(
         if result.chapters_failed:
             click.echo(f"失败: {len(result.chapters_failed)} 章")
         click.echo(f"耗时: {result.total_duration_sec:.1f} 秒")
+
+    except click.Abort:
+        raise
+    except _CLI_CATCHABLE as exc:
+        raise click.ClickException(str(exc)) from exc
+
+
+# ---------------------------------------------------------------------------
+# Task 119: Streaming report command
+# ---------------------------------------------------------------------------
+
+
+@cli.command(name="report")
+@click.option(
+    "--run-id",
+    required=True,
+    help="运行 ID（从 logs/chapter_runs/<run_id>.jsonl 读取）",
+)
+@click.option(
+    "--output",
+    "-o",
+    type=click.Path(dir_okay=False, path_type=Path),
+    default=None,
+    help="输出 markdown 路径（默认 logs/reports/report-<run_id>.md）",
+)
+@click.option(
+    "--start",
+    type=int,
+    default=None,
+    help="章节范围起始（默认从 JSONL 自动推断）",
+)
+@click.option(
+    "--end",
+    type=int,
+    default=None,
+    help="章节范围结束（默认从 JSONL 自动推断）",
+)
+def report_cmd(
+    run_id: str,
+    output: Path | None,
+    start: int | None,
+    end: int | None,
+) -> None:
+    """从 JSONL 运行日志生成流式验证 markdown 报告。
+
+    示例:
+        songyan report --run-id run-8e14bcf1
+        songyan report --run-id run-8e14bcf1 -o logs/reports/my-report.md
+    """
+    try:
+        logs = read_run_logs(run_id)
+        if not logs:
+            click.echo("警告: 未从 JSONL 中读取到任何日志记录")
+            return
+
+        # 确定章节范围
+        chapter_range: tuple[int, int] | None = None
+        if start is not None and end is not None:
+            chapter_range = (start, end)
+        else:
+            chapter_range = (
+                min(getattr(log_, "chapter_number", 0) for log_ in logs),
+                max(getattr(log_, "chapter_number", 0) for log_ in logs),
+            )
+
+        report_md = generate_report(logs, chapter_range=chapter_range)
+
+        # 一致性检查警告
+        missing_budget = [
+            getattr(log_, "chapter_number", "?")
+            for log_ in logs
+            if getattr(log_, "success", False) and getattr(log_, "budget_used", None) is None
+        ]
+        if missing_budget:
+            click.echo(f"警告: 以下成功章节缺少 budget_used: {missing_budget}")
+
+        emergency_chapters = [
+            getattr(log_, "chapter_number", "?")
+            for log_ in logs
+            if getattr(log_, "context_emergency", False)
+        ]
+        if emergency_chapters:
+            click.echo(f"警告: 以下章节触发了 ContextEmergency: {emergency_chapters}")
+
+        # 写入文件
+        if output:
+            output_path = write_report(report_md, run_id, output.parent)
+        else:
+            output_path = write_report(report_md, run_id, Path("logs/reports"))
+
+        click.echo(f"报告已生成: {output_path}")
 
     except click.Abort:
         raise

@@ -47,14 +47,14 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 
 | 指标 | 数值 |
 |------|------|
-| 状态 | **Task 118 已完成**：ContinuityAuditor health_low 三档分级策略（P1/P2/P3）实施；HumanMark 新增 version_id/severity 字段；DB migration 已添加；测试 23/23 通过；ruff/lint 全通过；全量回归 1699 passed |
-| Task 118 已完成 | 分级策略：P1=critical orphaned/state_mismatch；P2=recurring/overdue；P3=background/technical/historical；HumanMark 字段已集成到 ContinuityAuditor._generate_constraints |
+| 状态 | **Task 119 已完成**：报告入口统一（songyan report CLI + python -m songyan.evals.streaming_report）；PowerShell wrapper 加固（6 种结果码）；日志命名规范化；测试 12/12 通过；全量回归 1711 passed |
+| Task 119 已完成 | 报告入口：songyan report CLI + python -m songyan.evals.streaming_report；wrapper 加固：6 种 WRAPPER_RESULT 结果码；日志路径规范化 |
 | Task 117 已完成 | Ch115/Ch120/Ch147/Ch148 4/4 成功，rebound 保护正常，Emergency 属合理降级未触发 |
-| 最近回归测试 | **1699 passed, 4 skipped, 1 xfailed, 4 xpassed** (`pytest tests/ -q`，Task 118 全量回归) |
+| 最近回归测试 | **1711 passed, 4 skipped, 1 xfailed, 4 xpassed** (`pytest tests/ -q`，Task 119 全量回归) |
 | 当前 lint | **`ruff check src/ tests/` 已通过** |
 | Python | 3.11.9 |
-| 当前 Task | **Task 118 已完成；Task 119-120 已规划** |
-| 下一步建议 | **启动 Task 118 → 119 → 120，ContinuityAuditor health_low 治理 → 长跑报告入口 → V5.0 Final Acceptance |
+| 当前 Task | **Task 119 已完成；Task 120 已规划** |
+| 下一步建议 | **启动 Task 120，V5.0 Final Acceptance** |
 
 ---
 
@@ -118,7 +118,7 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 | 116 | **Best-Version 质量选择策略复核与修复** | Ch147/Ch148 best version 符合 QG passed best 规则；低分 rewrite fallback 不覆盖高分 best；`quality_gate_router` 路由缺陷已修复 | ✅ 完成 |
 | 117 | **DG-2 风险章节窗口复验** | Ch115/Ch120/Ch147/Ch148 4/4 成功；报告与 JSONL/DB 一致；DG-2 风险已关闭 | ✅ 完成 |
 | 118 | **ContinuityAuditor Health 低分治理策略** | health_low 可统计、可追踪、可分级；human marks 关联 project/chapter/version | ✅ 完成 |
-| 119 | **长跑报告入口与 Windows Wrapper 加固** | 报告入口统一；wrapper 正常/超时/业务完成异常均有明确结果码 | 📝 规划中 |
+| 119 | **长跑报告入口与 Windows Wrapper 加固** | 报告入口统一；songyan report CLI；wrapper 正常/超时/业务完成异常均有明确结果码 | ✅ 完成 |
 | 120 | **V5.0 Final Acceptance Package** | Task 117-119 完成；P0/P1 风险为 0；最终 pytest/ruff 与文档一致性通过 | 📝 规划中 |
 
 ---
@@ -197,6 +197,13 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 - `tasks/119-reporting-wrapper-hardening.md` — Task 119 长跑报告入口与 Windows wrapper 加固规划
 - `tasks/120-v5-final-acceptance-package.md` — Task 120 V5.0 最终验收包规划
 - `logs/chapter_runs/run-33229919.jsonl` — Ch51-Ch59 实跑指标
+
+
+
+
+
+
+
 
 
 
