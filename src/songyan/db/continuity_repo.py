@@ -76,7 +76,9 @@ class SettingTrackingRepository:
         async with get_db() as conn:
             conn.row_factory = Row
             cursor = await conn.execute(
-                "SELECT * FROM setting_tracking WHERE project_id = ? ORDER BY introduced_in_chapter",
+                "SELECT * FROM setting_tracking "
+                "WHERE project_id = ? "
+                "ORDER BY introduced_in_chapter",
                 (project_id,),
             )
             rows = await cursor.fetchall()
@@ -246,11 +248,21 @@ class ContinuityReportRepository:
                     report.report_id,
                     report.project_id,
                     report.checked_up_to_chapter,
-                    _json.dumps([s.model_dump() for s in report.orphaned_settings], ensure_ascii=False),
-                    _json.dumps([i.model_dump() for i in report.forgotten_items], ensure_ascii=False),
-                    _json.dumps([m.model_dump() for m in report.state_mismatches], ensure_ascii=False),
-                    _json.dumps([f.model_dump() for f in report.overdue_foreshadowings], ensure_ascii=False),
-                    _json.dumps([s.model_dump() for s in report.suggested_marks], ensure_ascii=False),
+                    _json.dumps(
+                        [s.model_dump() for s in report.orphaned_settings], ensure_ascii=False
+                    ),
+                    _json.dumps(
+                        [i.model_dump() for i in report.forgotten_items], ensure_ascii=False
+                    ),
+                    _json.dumps(
+                        [m.model_dump() for m in report.state_mismatches], ensure_ascii=False
+                    ),
+                    _json.dumps(
+                        [f.model_dump() for f in report.overdue_foreshadowings], ensure_ascii=False
+                    ),
+                    _json.dumps(
+                        [s.model_dump() for s in report.suggested_marks], ensure_ascii=False
+                    ),
                     report.overall_health_score,
                 ),
             )

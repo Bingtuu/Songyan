@@ -1,9 +1,11 @@
 # Task 114: Settlement 事实源修复 + Ch101-Ch150 分段流式验证
 
+> **文档状态**: umbrella 规划与执行边界记录。Task 114c 已完成，最终结论见 `tasks/114-ch101-ch150-streaming-validation-DONE.md`；V5 总状态见 `tasks/V5-README.md`。
+>
 > **Phase**: V5.0 Phase 4 — 150 章规模化验证
 > **优先级**: P0
 > **依赖**: Task 111a-111g 完成；Task 112 前置阻断修复完成；Task 113 Ch101 收敛回滚与 Settlement 阻断修复完成
-> **当前判定**: Task 114b2 已完成 Ch102/Ch103 QG 收敛阻断处理与 settlement 端到端验证；可按段启动 Task 114c
+> **当前判定**: Task 114c 已完成；Ch111-Ch150 40/40 成功，DG-2 条件通过
 > **预计工作量**: 3-5 天
 
 ---

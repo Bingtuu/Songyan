@@ -51,14 +51,15 @@ DEFAULT_FORBIDDEN_PATTERNS = [
     "不要让角色做出毫无铺垫的行为转变",
 ]
 
-_SETTING_CONSISTENCY_PATTERN = "禁止引入与种子设定无逻辑推导关系的新组织、新机构、新概念（如种子设定中没有的机构名称，就不能凭空出现）"
+_SETTING_CONSISTENCY_PATTERN = (
+    "禁止引入与种子设定无逻辑推导关系的新组织、新机构、新概念"
+    "（如种子设定中没有的机构名称，就不能凭空出现）"
+)
 
 
 def _extract_json(text: str) -> str:
     """从 LLM 响应中提取 JSON 字符串."""
-    code_block_match = re.search(
-        r"```(?:json)?\s*\n?(.*?)\n?```", text, re.DOTALL
-    )
+    code_block_match = re.search(r"```(?:json)?\s*\n?(.*?)\n?```", text, re.DOTALL)
     if code_block_match:
         return code_block_match.group(1).strip()
 
@@ -102,8 +103,7 @@ def _validate_tension(tension_data: dict[str, Any]) -> Tension | None:
         characters_involved = []
 
     return Tension(
-        tension_id=tension_data.get("tension_id", "")
-        or f"tension_{uuid.uuid4().hex[:6]}",
+        tension_id=tension_data.get("tension_id", "") or f"tension_{uuid.uuid4().hex[:6]}",
         description=(
             tension_data.get("description", "")
             if isinstance(tension_data.get("description"), str)
@@ -236,10 +236,12 @@ def _build_creative_brief(
     if isinstance(_raw_focus, list):
         for item in _raw_focus:
             if isinstance(item, dict):
-                _character_focus.append({
-                    "character_id": str(item.get("character_id", "")),
-                    "detail_level": str(item.get("detail_level", "full")),
-                })
+                _character_focus.append(
+                    {
+                        "character_id": str(item.get("character_id", "")),
+                        "detail_level": str(item.get("detail_level", "full")),
+                    }
+                )
 
     _foreshadowing_due: list[str] = []
     _raw_due = data.get("foreshadowing_due")
@@ -255,18 +257,14 @@ def _build_creative_brief(
         mode_id=data.get("mode_id", mode_id),
         chapter_goal=chapter_goal,
         creative_intent=(
-            data.get("creative_intent", "")
-            if isinstance(data.get("creative_intent"), str)
-            else ""
+            data.get("creative_intent", "") if isinstance(data.get("creative_intent"), str) else ""
         ),
         required_tensions=tensions,
         forbidden_patterns=forbidden_patterns,
         allowed_fissures=_to_str_list(data.get("allowed_fissures")),
         style_constraints=_to_str_list(data.get("style_constraints")),
         reader_contract=(
-            data.get("reader_contract", "")
-            if isinstance(data.get("reader_contract"), str)
-            else ""
+            data.get("reader_contract", "") if isinstance(data.get("reader_contract"), str) else ""
         ),
         polyphony_notes=_to_str_list(data.get("polyphony_notes")),
         punch_points=punch_points,

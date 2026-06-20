@@ -54,6 +54,7 @@ async def _seed_project(project_id: str = "p1") -> None:
 # Foreshadowing 自动归档
 # =============================================================================
 
+
 class TestArchiveOverdue:
     async def test_archives_expected_resolve_past_threshold(self, fs_db: Path) -> None:
         await _seed_project("p1")
@@ -126,6 +127,7 @@ class TestArchiveOverdue:
 # list_active 排除 archived
 # =============================================================================
 
+
 class TestListActiveExcludesArchived:
     async def test_list_active_no_archived(self, fs_db: Path) -> None:
         await _seed_project("p1")
@@ -159,6 +161,7 @@ class TestListActiveExcludesArchived:
 # HumanMemoryConfig chapter_window
 # =============================================================================
 
+
 class TestHumanMemoryConfig:
     def test_chapter_window_default(self) -> None:
         cfg = HumanMemoryConfig()
@@ -169,12 +172,22 @@ class TestHumanMemoryConfig:
 # ContinuityAuditor 输出预算化
 # =============================================================================
 
+
 class TestHealthScoreRelaxation:
     def test_strict_for_early_chapters_background(self) -> None:
         """Task 094: background 设定 orphaned 扣分极低（0.1）."""
         auditor = ContinuityAuditor()
         score = auditor._compute_health_score(
-            orphaned=[OrphanedSetting(tracking_id="t1", setting_key="k", setting_name="n", introduced_in_chapter=1, last_mentioned_chapter=2, chapters_since_mention=5)],
+            orphaned=[
+                OrphanedSetting(
+                    tracking_id="t1",
+                    setting_key="k",
+                    setting_name="n",
+                    introduced_in_chapter=1,
+                    last_mentioned_chapter=2,
+                    chapters_since_mention=5,
+                )
+            ],
             forgotten=[],
             mismatches=[],
             overdue=[],
@@ -186,7 +199,17 @@ class TestHealthScoreRelaxation:
         """Task 094: critical 设定 orphaned 扣分高（2.0）."""
         auditor = ContinuityAuditor()
         score = auditor._compute_health_score(
-            orphaned=[OrphanedSetting(tracking_id="t1", setting_key="k", setting_name="n", introduced_in_chapter=1, last_mentioned_chapter=2, chapters_since_mention=5, category="critical")],
+            orphaned=[
+                OrphanedSetting(
+                    tracking_id="t1",
+                    setting_key="k",
+                    setting_name="n",
+                    introduced_in_chapter=1,
+                    last_mentioned_chapter=2,
+                    chapters_since_mention=5,
+                    category="critical",
+                )
+            ],
             forgotten=[],
             mismatches=[],
             overdue=[],
@@ -197,7 +220,16 @@ class TestHealthScoreRelaxation:
     def test_relaxed_for_late_chapters(self) -> None:
         auditor = ContinuityAuditor()
         score = auditor._compute_health_score(
-            orphaned=[OrphanedSetting(tracking_id="t1", setting_key="k", setting_name="n", introduced_in_chapter=1, last_mentioned_chapter=2, chapters_since_mention=5)],
+            orphaned=[
+                OrphanedSetting(
+                    tracking_id="t1",
+                    setting_key="k",
+                    setting_name="n",
+                    introduced_in_chapter=1,
+                    last_mentioned_chapter=2,
+                    chapters_since_mention=5,
+                )
+            ],
             forgotten=[],
             mismatches=[],
             overdue=[],
@@ -210,7 +242,18 @@ class TestHealthScoreRelaxation:
         auditor = ContinuityAuditor()
         # 大量 critical 问题让 score 低于 0，但被 floor 到 2.0
         score = auditor._compute_health_score(
-            orphaned=[OrphanedSetting(tracking_id=f"t{i}", setting_key="k", setting_name="n", introduced_in_chapter=1, last_mentioned_chapter=2, chapters_since_mention=5, category="critical") for i in range(50)],
+            orphaned=[
+                OrphanedSetting(
+                    tracking_id=f"t{i}",
+                    setting_key="k",
+                    setting_name="n",
+                    introduced_in_chapter=1,
+                    last_mentioned_chapter=2,
+                    chapters_since_mention=5,
+                    category="critical",
+                )
+                for i in range(50)
+            ],
             forgotten=[],
             mismatches=[],
             overdue=[],
@@ -231,11 +274,24 @@ class TestGenerateConstraintsBudget:
             project_id="p1",
             checked_up_to_chapter=50,
             orphaned_settings=[
-                OrphanedSetting(tracking_id=f"t{i}", setting_key=f"k{i}", setting_name=f"n{i}", introduced_in_chapter=1, last_mentioned_chapter=2, chapters_since_mention=5)
+                OrphanedSetting(
+                    tracking_id=f"t{i}",
+                    setting_key=f"k{i}",
+                    setting_name=f"n{i}",
+                    introduced_in_chapter=1,
+                    last_mentioned_chapter=2,
+                    chapters_since_mention=5,
+                )
                 for i in range(25)
             ],
             forgotten_items=[
-                ForgottenItem(track_id=f"i{i}", character_id="c1", item_name=f"item{i}", acquired_in_chapter=1, last_used_chapter=2)
+                ForgottenItem(
+                    track_id=f"i{i}",
+                    character_id="c1",
+                    item_name=f"item{i}",
+                    acquired_in_chapter=1,
+                    last_used_chapter=2,
+                )
                 for i in range(25)
             ],
         )
@@ -270,7 +326,14 @@ class TestWriteConstraintsBudget:
             project_id="p1",
             checked_up_to_chapter=50,
             orphaned_settings=[
-                OrphanedSetting(tracking_id="t1", setting_key="k", setting_name="n", introduced_in_chapter=1, last_mentioned_chapter=2, chapters_since_mention=5)
+                OrphanedSetting(
+                    tracking_id="t1",
+                    setting_key="k",
+                    setting_name="n",
+                    introduced_in_chapter=1,
+                    last_mentioned_chapter=2,
+                    chapters_since_mention=5,
+                )
             ],
         )
         from songyan.agents.continuity_auditor._constraints import write_constraints
@@ -285,7 +348,14 @@ class TestWriteConstraintsBudget:
             project_id="p1",
             checked_up_to_chapter=50,
             orphaned_settings=[
-                OrphanedSetting(tracking_id="t1", setting_key="k", setting_name="n", introduced_in_chapter=1, last_mentioned_chapter=2, chapters_since_mention=5)
+                OrphanedSetting(
+                    tracking_id="t1",
+                    setting_key="k",
+                    setting_name="n",
+                    introduced_in_chapter=1,
+                    last_mentioned_chapter=2,
+                    chapters_since_mention=5,
+                )
             ],
         )
         from songyan.agents.continuity_auditor._constraints import write_constraints

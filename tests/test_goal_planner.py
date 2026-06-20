@@ -173,7 +173,6 @@ class TestDefineChapterGoal:
 
     async def test_successful_flow(self) -> None:
         """正常流程：LLM 返回合法 JSON → 保存 → 返回 ChapterGoal."""
-        mock_db = AsyncMock()
         project = _make_project()
         genre = _make_genre()
         mode = _make_mode()
@@ -248,7 +247,6 @@ class TestDefineChapterGoal:
 
     async def test_llm_parse_error(self) -> None:
         """LLM 返回非 JSON 时抛出 LLMResponseParseError."""
-        mock_db = AsyncMock()
         project = _make_project()
         genre = _make_genre()
         mode = _make_mode()
@@ -275,7 +273,6 @@ class TestDefineChapterGoal:
         """LLM 调用失败时抛出 LLMError."""
         from songyan.exceptions import LLMError
 
-        mock_db = AsyncMock()
         project = _make_project()
         genre = _make_genre()
         mode = _make_mode()
@@ -354,7 +351,6 @@ class TestTemperatureParam:
             new_callable=AsyncMock,
             side_effect=_capture_call,
         ):
-            mock_db = AsyncMock()
             project = _make_project()
             genre = _make_genre()
             mode = _make_mode()

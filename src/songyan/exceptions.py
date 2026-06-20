@@ -50,7 +50,7 @@ class PipelineError(SongyanError):
     pass
 
 
-class AutoHaltException(SongyanError):
+class AutoHaltException(SongyanError):  # noqa: N818
     """Task 105: 流式验证自动熔断 — 连续多章指标异常时中断生成.
 
     保留已生成章节，不破坏已有状态。

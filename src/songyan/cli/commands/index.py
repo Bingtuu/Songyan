@@ -40,9 +40,7 @@ async def _index_chapters(
     # 确定要索引的章节列表
     if chapter_numbers is None:
         heads = await head_repo.list_by_project(project_id)
-        chapter_numbers = [
-            h.chapter_number for h in heads if h.accepted_version_id
-        ]
+        chapter_numbers = [h.chapter_number for h in heads if h.accepted_version_id]
 
     total_chunks = 0
     indexed_chapters = 0
@@ -132,5 +130,14 @@ def register_index_commands(cli: click.Group) -> None:
 
         except click.Abort:
             raise
-        except (RuntimeError, OSError, ConnectionError, ValueError, TypeError, ImportError, KeyError, AttributeError) as exc:
+        except (
+            RuntimeError,
+            OSError,
+            ConnectionError,
+            ValueError,
+            TypeError,
+            ImportError,
+            KeyError,
+            AttributeError,
+        ) as exc:
             raise click.ClickException(str(exc)) from exc

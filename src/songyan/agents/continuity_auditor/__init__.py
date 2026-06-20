@@ -24,7 +24,6 @@ from songyan.models.continuity import (
     OverdueForeshadowing,
     StateMismatch,
 )
-from songyan.models.human_mark import HumanMark
 
 from ._constraints import _generate_constraints, write_constraints
 from ._scanners import (

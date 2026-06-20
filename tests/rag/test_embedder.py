@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import time
 
 import numpy as np
 import pytest
@@ -49,10 +48,8 @@ class TestEmbedderMock:
         emb = Embedder(model_name="mock")
         texts = [["text one"], ["text two"], ["text three"]]
 
-        start = time.perf_counter()
         # 并发调用 3 个 embed
         results = await asyncio.gather(*[emb.aembed(t) for t in texts])
-        elapsed = time.perf_counter() - start
 
         assert len(results) == 3
         for r in results:

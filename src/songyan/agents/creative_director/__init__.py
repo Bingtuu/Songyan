@@ -7,7 +7,6 @@ from typing import Any
 
 import structlog
 
-from songyan.db.review_repo import CreativeBriefRepository
 from songyan.exceptions import LLMError, LLMResponseParseError
 from songyan.llm.client import call_llm
 from songyan.models.chapter import ChapterGoal
@@ -17,28 +16,38 @@ from songyan.models.creative_mode import (
     CreativeModeProfile,
 )
 from songyan.models.genre import GenreProfile
+from songyan.models.project import ProjectSetting
 from songyan.models.settlement import NewSetting
 
 from ._brief_builder import (
-    DEFAULT_FORBIDDEN_PATTERNS,
-    MIN_FORBIDDEN_PATTERNS,
+    DEFAULT_FORBIDDEN_PATTERNS as DEFAULT_FORBIDDEN_PATTERNS,
+)
+from ._brief_builder import (
+    MIN_FORBIDDEN_PATTERNS as MIN_FORBIDDEN_PATTERNS,
+)
+from ._brief_builder import (
     _build_creative_brief,
-    _ensure_forbidden_patterns,
-    _extract_json,
     _parse_llm_response,
-    _validate_tension,
+)
+from ._brief_builder import (
+    _ensure_forbidden_patterns as _ensure_forbidden_patterns,
+)
+from ._brief_builder import (
+    _extract_json as _extract_json,
+)
+from ._brief_builder import (
+    _validate_tension as _validate_tension,
 )
 
 logger = structlog.get_logger(__name__)
 
-PROMPT_PATH = (
-    Path(__file__).parent.parent.parent.parent / "prompts" / "creative_director.md"
-)
+PROMPT_PATH = Path(__file__).parent.parent.parent.parent / "prompts" / "creative_director.md"
 
 
 def _load_prompt_template() -> str:
     """加载 CreativeDirector Prompt 模板 — 已迁移到工艺卡系统."""
     from songyan.prompts import get_prompt_loader
+
     return get_prompt_loader().load_card("creative_director").system_prompt
 
 
@@ -64,18 +73,13 @@ def _render_prompt(
             "protagonist_name": _get_protagonist_name(characters),
             "core_hook": project.core_hook or genre_profile.name,
             "tone": project.tone or genre_profile.name,
-            "genre_satisfaction_types": ", ".join(
-                genre_profile.satisfaction_types
-            )
+            "genre_satisfaction_types": ", ".join(genre_profile.satisfaction_types)
             if genre_profile.satisfaction_types
             else "无",
             "genre_pacing_rule": genre_profile.pacing_rule or "无特殊规则",
-            "genre_taboos": ", ".join(genre_profile.taboos)
-            if genre_profile.taboos
-            else "无",
+            "genre_taboos": ", ".join(genre_profile.taboos) if genre_profile.taboos else "无",
             "chapter_goal_json": chapter_goal.model_dump_json(indent=2),
-            "recent_summaries": previous_summary
-            or "（本章为开篇章节，无前置剧情）",
+            "recent_summaries": previous_summary or "（本章为开篇章节，无前置剧情）",
             "character_states": _format_characters(characters),
             "seed_settings_json": _format_seed_settings(seed_settings),
             "mode_constraints": _format_mode_constraints(mode_profile),
@@ -98,9 +102,7 @@ def _format_characters(characters: list[Character]) -> str:
         return "暂无角色信息"
     lines = []
     for char in characters:
-        lines.append(
-            f"- {char.name}（{char.role_type}）: {char.background or '背景未设定'}"
-        )
+        lines.append(f"- {char.name}（{char.role_type}）: {char.background or '背景未设定'}")
         if char.personality_traits:
             lines.append(f"  性格: {', '.join(char.personality_traits)}")
         if char.goals:
@@ -127,9 +129,7 @@ def _format_mode_constraints(mode_profile: CreativeModeProfile) -> str:
         for key, value in mode_profile.tolerance.items():
             lines.append(f"- 容忍阈值 {key}: {value}")
     if mode_profile.active_audit_dimensions:
-        lines.append(
-            f"- 审查维度: {', '.join(mode_profile.active_audit_dimensions)}"
-        )
+        lines.append(f"- 审查维度: {', '.join(mode_profile.active_audit_dimensions)}")
     return "\n".join(lines)
 
 
@@ -235,7 +235,8 @@ _DIALOGUE_STYLE_PROMPT_TEMPLATE = """\
 
 ## 要求
 
-1. **角色区分度**：每个角色的对话风格必须与其他角色有明显差异，读者应能通过对话内容识别说话者（即使不标注说话人）
+1. **角色区分度**：每个角色的对话风格必须与其他角色有明显差异，
+   读者应能通过对话内容识别说话者（即使不标注说话人）
 2. **性格一致性**：句式偏好、情绪表达模式必须与角色背景和性格一致
 3. **具体模式**：情绪表达必须是具体行为模式，不是笼统描述。例如："愤怒时冷笑+反问"而非"生气时大声"
 4. **口头禅**：每个角色至少给出 2 个口头禅或常用开头语
@@ -355,9 +356,7 @@ async def generate_dialogue_style_cards(
     return style_cards
 
 
-def _build_dialogue_style_card(
-    data: dict[str, Any], project_id: str
-) -> DialogueStyleCard | None:
+def _build_dialogue_style_card(data: dict[str, Any], project_id: str) -> DialogueStyleCard | None:
     """从 LLM 响应构建 DialogueStyleCard，处理缺失字段和越界值."""
     character_id = data.get("character_id", "")
     if not character_id:

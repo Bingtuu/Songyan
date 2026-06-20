@@ -146,6 +146,52 @@ python -m pytest tests/test_settlement_extractor.py tests/test_079_segmented_rev
 WRAPPER_RESULT=PASS_NORMAL_EXIT
 ```
 
+### 全量回归
+
+```bash
+python -m pytest tests/ -v
+```
+
+结果：
+
+```text
+1676 passed, 4 skipped, 2 xfailed, 3 xpassed, 11 warnings
+WRAPPER_RESULT=PASS_NORMAL_EXIT
+```
+
+```bash
+python -m pytest tests/ -q
+```
+
+结果：
+
+```text
+1676 passed, 4 skipped, 2 xfailed, 3 xpassed, 10 warnings
+WRAPPER_RESULT=PASS_NORMAL_EXIT
+```
+
+### Ruff
+
+```bash
+ruff check src/ tests/
+```
+
+Task 114c 完成当时仍有历史存量 lint。后续文档整理前已完成全量 lint 清理，当前结果为：
+
+```text
+All checks passed!
+```
+
+```bash
+ruff check src/songyan/agents/revision_handler/_segmented_revision.py src/songyan/agents/settlement_extractor/__init__.py src/songyan/workflows/_nodes.py tests/test_079_segmented_revision.py tests/test_107_convergence_guardrail.py tests/test_108_core_nodes.py tests/test_settlement_extractor.py
+```
+
+结果：
+
+```text
+All checks passed!
+```
+
 ### Task 114c 报告
 
 报告由 `songyan.evals.streaming_report.generate_report()` 基于 Ch111-Ch150 最新 JSONL 记录生成：

@@ -44,7 +44,11 @@ class TestFindTextSpan:
 class TestApplyPatchesFuzzy:
     def test_apply_patch_with_fuzzy_match(self) -> None:
         """patch 的 original_text 与 content 有微小差异时仍能应用."""
-        content = "开头\n\n陆沉攥紧了袖口。\n\n第二个，第三个，第四个。测灵石依次亮起灰白、淡黄、浅蓝的光\n\n结尾"
+        content = (
+            "开头\n\n陆沉攥紧了袖口。\n\n"
+            "第二个，第三个，第四个。测灵石依次亮起灰白、淡黄、浅蓝的光\n\n"
+            "结尾"
+        )
         patch = Patch(
             issue_id="i1",
             original_text="陆沉攥紧了袖口。\n\n第二个，第三个，第四个。测灵石依次亮起灰白、淡黄、浅篮的光",

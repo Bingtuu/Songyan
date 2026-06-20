@@ -19,16 +19,52 @@ logger = structlog.get_logger(__name__)
 
 # P1: 认知豁免 — 认知动词列表
 _COGNITIVE_PHRASES: tuple[str, ...] = (
-    "理解了", "意识到", "得出结论", "他知道", "他看到了",
-    "结论很清晰", "这意味着", "不是巧合", "必须有一个", "然后他理解了",
-    "他理解了", "林渊知道", "林渊理解了", "林渊意识到",
+    "理解了",
+    "意识到",
+    "得出结论",
+    "他知道",
+    "他看到了",
+    "结论很清晰",
+    "这意味着",
+    "不是巧合",
+    "必须有一个",
+    "然后他理解了",
+    "他理解了",
+    "林渊知道",
+    "林渊理解了",
+    "林渊意识到",
 )
 
 # P1: 动作支撑关键词（简单判断 evidence 附近是否有动作描写）
 _ACTION_KEYWORDS: tuple[str, ...] = (
-    "盯", "握", "退", "站", "滑", "按", "收", "抬", "转", "走",
-    "坐", "靠", "摸", "指", "看", "望", "低", "挤", "僵", "垂",
-    "起身", "后退", "前倾", "侧头", "收紧", "泛白", "颤抖", "停顿",
+    "盯",
+    "握",
+    "退",
+    "站",
+    "滑",
+    "按",
+    "收",
+    "抬",
+    "转",
+    "走",
+    "坐",
+    "靠",
+    "摸",
+    "指",
+    "看",
+    "望",
+    "低",
+    "挤",
+    "僵",
+    "垂",
+    "起身",
+    "后退",
+    "前倾",
+    "侧头",
+    "收紧",
+    "泛白",
+    "颤抖",
+    "停顿",
 )
 
 
@@ -137,8 +173,7 @@ def _merge_summary(rule_result: RuleAuditResult, llm_result: LLMAuditResult) -> 
     parts: list[str] = []
     parts.append(f"综合评分: {_compute_overall_score(rule_result, llm_result)}/10")
     parts.append(
-        f"AI腔: {rule_result.ai_tell_count}处 | "
-        f"疲劳词: {rule_result.fatigue_word_count}处"
+        f"AI腔: {rule_result.ai_tell_count}处 | 疲劳词: {rule_result.fatigue_word_count}处"
     )
     parts.append(f"首屏钩子: {'有' if rule_result.has_opening_hook else '无'}")
     parts.append(f"章末钩子: {'有' if rule_result.has_ending_hook else '无'}")
@@ -187,7 +222,10 @@ def _convert_rule_to_issues(
                 severity="critical",
                 evidence_quote=ending_snippet,
                 evidence_location="章节末尾",
-                issue_description="缺少章末钩子 — 当前章节结尾没有设置悬念或转折，读者缺乏继续阅读的动力。",
+                issue_description=(
+                    "缺少章末钩子 — 当前章节结尾没有设置悬念或转折，"
+                    "读者缺乏继续阅读的动力。"
+                ),
                 expected="结尾处应有悬念、冲突升级、新发现或情感冲击，迫使读者点击下一章。",
                 actual="结尾平淡收束，没有留下未解之谜或强烈的情感张力。",
                 suggested_fix="在结尾最后1-2段添加一个钩子：可以是新危机的征兆、角色发现的秘密、未预期的访客、或主角面临的艰难抉择。",
@@ -206,7 +244,10 @@ def _convert_rule_to_issues(
                 severity="critical",
                 evidence_quote=opening_snippet,
                 evidence_location="章节开头",
-                issue_description="缺少首屏钩子 — 章节开头没有在第一段建立悬念或冲突，读者容易流失。",
+                issue_description=(
+                    "缺少首屏钩子 — 章节开头没有在第一段建立悬念或冲突，"
+                    "读者容易流失。"
+                ),
                 expected="首段应直接切入动作、冲突、悬念或强烈情绪，避免铺垫和解释。",
                 actual="开头缺乏即时的叙事张力，可能以描述、解释或平淡的日常开场。",
                 suggested_fix="重写开头首段，以动作、对话、冲突或悬念切入；删除开头的背景铺垫。",
@@ -224,10 +265,14 @@ def _convert_rule_to_issues(
                     category=ReviewCategory.SHOW_DONT_TELL,
                     severity="major",
                     evidence_quote=match.matched_text,
-                    evidence_location=match.location or f"第{idx+1}处AI腔",
-                    issue_description=f"AI腔命中（模式: {match.pattern}）— 使用了过于抽象、概括或模型化的叙述方式，缺乏具体的感官细节和角色视角。",
+                    evidence_location=match.location or f"第{idx + 1}处AI腔",
+                    issue_description=(
+                        f"AI腔命中（模式: {match.pattern}）— "
+                        "使用了过于抽象、概括或模型化的叙述方式，"
+                        "缺乏具体的感官细节和角色视角。"
+                    ),
                     expected="通过角色的感官体验、动作反应和具体细节来展示情绪与状态，而非直接告诉读者。",
-                    actual=f"原文直接陈述: \"{match.matched_text}\"",
+                    actual=f'原文直接陈述: "{match.matched_text}"',
                     suggested_fix="改写成具体场景：用动作、表情、环境反应、身体感受替代抽象描述。保持角色视角。",
                     fix_type="patch",
                     confidence=0.95,
@@ -237,7 +282,7 @@ def _convert_rule_to_issues(
     # 4. 疲劳词爆发 (major) — 取前3处
     if rule_result.fatigue_word_count >= 3:
         for idx, match in enumerate(rule_result.fatigue_word_matches[:3]):
-            loc = match.locations[0] if match.locations else f"第{idx+1}处"
+            loc = match.locations[0] if match.locations else f"第{idx + 1}处"
             issues.append(
                 ReviewIssue(
                     issue_id=_next_id(),
@@ -245,10 +290,16 @@ def _convert_rule_to_issues(
                     severity="major",
                     evidence_quote=match.word,
                     evidence_location=loc,
-                    issue_description=f"疲劳词爆发 — \"{match.word}\" 累计出现 {match.count} 次，造成阅读疲劳和词汇单调感。",
+                    issue_description=(
+                        f'疲劳词爆发 — "{match.word}" 累计出现 {match.count} 次，'
+                        "造成阅读疲劳和词汇单调感。"
+                    ),
                     expected="同一概念或情绪应使用多样的表达，轮换词汇、比喻和感官通道。",
-                    actual=f"\"{match.word}\" 重复出现，缺乏语言变化。",
-                    suggested_fix=f"将部分 \"{match.word}\" 替换为同义词、比喻或具体描写；如果无法替换，删除冗余 occurrence。",
+                    actual=f'"{match.word}" 重复出现，缺乏语言变化。',
+                    suggested_fix=(
+                        f'将部分 "{match.word}" 替换为同义词、比喻或具体描写；'
+                        "如果无法替换，删除冗余 occurrence。"
+                    ),
                     fix_type="patch",
                     confidence=0.9,
                 )
@@ -258,16 +309,26 @@ def _convert_rule_to_issues(
     if rule_result.word_count_target > 0:
         excess_ratio = rule_result.word_count / rule_result.word_count_target
         if excess_ratio >= 1.2:
+            excess_percent = round((excess_ratio - 1) * 100)
             issues.append(
                 ReviewIssue(
                     issue_id=_next_id(),
                     category=ReviewCategory.NARRATIVE_PACING,
                     severity="major",
-                    evidence_quote=f"实际字数 {rule_result.word_count}，目标 {rule_result.word_count_target}，超标 {round((excess_ratio - 1) * 100)}%",
+                    evidence_quote=(
+                        f"实际字数 {rule_result.word_count}，"
+                        f"目标 {rule_result.word_count_target}，超标 {excess_percent}%"
+                    ),
                     evidence_location="全章",
-                    issue_description=f"字数严重超标 — 章节长度超出目标 {round((excess_ratio - 1) * 100)}%，可能导致节奏拖沓、读者疲劳。",
-                    expected=f"控制在目标字数 ±10% 范围内（约 {rule_result.word_count_target} 字）。",
-                    actual=f"实际 {rule_result.word_count} 字，超出 {round((excess_ratio - 1) * 100)}%。",
+                    issue_description=(
+                        f"字数严重超标 — 章节长度超出目标 {excess_percent}%，"
+                        "可能导致节奏拖沓、读者疲劳。"
+                    ),
+                    expected=(
+                        f"控制在目标字数 ±10% 范围内"
+                        f"（约 {rule_result.word_count_target} 字）。"
+                    ),
+                    actual=f"实际 {rule_result.word_count} 字，超出 {excess_percent}%。",
                     suggested_fix="删减冗余描写、重复对话、过度内心独白；压缩过渡场景；保留核心冲突和关键情节。",
                     fix_type="patch",
                     confidence=1.0,
@@ -283,7 +344,10 @@ def _convert_rule_to_issues(
                 severity="major",
                 evidence_quote="; ".join(rule_result.rhythm_issues[:3]),
                 evidence_location="全章段落结构",
-                issue_description=f"段落节奏欠佳（评分 {rule_result.paragraph_rhythm_score:.1f}/10）— 段落长度分布失衡，影响阅读呼吸感。",
+                issue_description=(
+                    f"段落节奏欠佳（评分 {rule_result.paragraph_rhythm_score:.1f}/10）— "
+                    "段落长度分布失衡，影响阅读呼吸感。"
+                ),
                 expected="段落长度应有变化：短句制造紧张，中长段落推进叙事，避免连续超长段落或过度碎片化。",
                 actual="; ".join(rule_result.rhythm_issues[:3]),
                 suggested_fix="拆分过长的叙述段落；在关键动作处使用短句/短段；合并过度碎片化的单句段落。",
@@ -317,7 +381,10 @@ def _convert_rule_to_issues(
                 severity="minor",
                 evidence_quote=f"当前共 {rule_result.scene_count} 个场景",
                 evidence_location="全章结构",
-                issue_description=f"章节场景数过多（{rule_result.scene_count} 个），可能导致叙事碎片化，读者难以沉浸。",
+                issue_description=(
+                    f"章节场景数过多（{rule_result.scene_count} 个），"
+                    "可能导致叙事碎片化，读者难以沉浸。"
+                ),
                 expected="每章 2-4 个场景为宜，每个场景应有独立的情节推进功能。",
                 actual=f"当前共 {rule_result.scene_count} 个场景。",
                 suggested_fix="合并关联度高的短场景，将次要过渡内容压缩为段落。",
@@ -327,14 +394,14 @@ def _convert_rule_to_issues(
         )
 
     # 上限保护
-    MAX_RULE_ISSUES = 5
-    if len(issues) > MAX_RULE_ISSUES:
-        issues = issues[:MAX_RULE_ISSUES]
+    max_rule_issues = 5
+    if len(issues) > max_rule_issues:
+        issues = issues[:max_rule_issues]
         logger.warning(
             "review_merger.rule_issues_capped",
             version_id=version_id,
-            total_found=len(issues) + (1 if len(issues) > MAX_RULE_ISSUES else 0),
-            cap=MAX_RULE_ISSUES,
+            total_found=len(issues) + (1 if len(issues) > max_rule_issues else 0),
+            cap=max_rule_issues,
         )
 
     return issues

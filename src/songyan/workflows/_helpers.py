@@ -24,12 +24,10 @@ from songyan.db.settlement_repo import (
 )
 from songyan.exceptions import LLMError, LLMResponseParseError
 from songyan.genres.loader import load_genre_profile
-
-logger = structlog.get_logger(__name__)
-
 from songyan.models import (
     ArcSummary,
     ChapterGoal,
+    ChapterSummary,
     ChapterVersion,
     ContextPackage,
     CreativeBrief,
@@ -41,6 +39,8 @@ from songyan.models import (
     RuleAuditResult,
     VolumeSummary,
 )
+
+logger = structlog.get_logger(__name__)
 
 
 def new_id(prefix: str) -> str:
@@ -78,8 +78,6 @@ async def load_layered_summaries(
     - 历史卷：单个 VolumeSummary（source_type="volume"），
       只取在 current_chapter 之前结束的最近一个卷
     """
-    from songyan.models import ChapterSummary
-
     result: list[ChapterSummary] = []
     covered_chapters: set[int] = set()
 

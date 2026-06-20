@@ -162,11 +162,15 @@ def _make_character_states() -> list[CharacterState]:
 def _make_summaries() -> list[ChapterSummary]:
     return [
         ChapterSummary(
-            chapter_number=1, summary="第一章摘要", key_events=["事件A"],
+            chapter_number=1,
+            summary="第一章摘要",
+            key_events=["事件A"],
             characters_appeared=["林凡", "师妹"],
         ),
         ChapterSummary(
-            chapter_number=2, summary="第二章摘要", key_events=["事件B"],
+            chapter_number=2,
+            summary="第二章摘要",
+            key_events=["事件B"],
             characters_appeared=["林凡"],
         ),
     ]
@@ -348,7 +352,7 @@ class TestBudgetPruner:
         # 验证保留的是分数最高的
         original_scores = sorted([s.importance_score for s in ctx.character_states], reverse=True)
         kept_scores = sorted([s.importance_score for s in result.character_states], reverse=True)
-        assert kept_scores == original_scores[:len(kept_scores)]
+        assert kept_scores == original_scores[: len(kept_scores)]
 
     def test_chapter_goal_always_preserved(self) -> None:
         pruner = BudgetPruner()
@@ -418,9 +422,7 @@ class TestBuildHardConstraints:
     def test_from_project_taboos(self) -> None:
         goal = ChapterGoal(chapter_number=1)
         genre = GenreProfile(id="g", name="测试")
-        project = ProjectSetting(
-            genre_id="g", protagonist_name="主角", taboos=["绿帽"]
-        )
+        project = ProjectSetting(genre_id="g", protagonist_name="主角", taboos=["绿帽"])
         constraints = _build_hard_constraints(goal, genre, project)
         taboos = [c for c in constraints if c.type == "taboo"]
         assert any(c.description == "绿帽" for c in taboos)
@@ -815,15 +817,18 @@ class TestAssembleContextPackage:
         assert ctx.recent_plot.open_threads == ["剑灵身份", "反派阴谋"]
 
 
-
 # ---------------------------------------------------------------------------
 # Phase 7: Human Mark Tests
 # ---------------------------------------------------------------------------
 class TestHumanMarksInContext:
     def test_high_priority_marks_enter_context(self) -> None:
         marks = [
-            HumanMark(mark_id="m1", project_id="p1", mark_type="setting", target_key="A", priority=9),
-            HumanMark(mark_id="m2", project_id="p1", mark_type="character", target_key="B", priority=5),
+            HumanMark(
+                mark_id="m1", project_id="p1", mark_type="setting", target_key="A", priority=9
+            ),
+            HumanMark(
+                mark_id="m2", project_id="p1", mark_type="character", target_key="B", priority=5
+            ),
         ]
         ctx = assemble_context_package(
             chapter_goal=_make_chapter_goal(),
@@ -879,8 +884,12 @@ class TestHumanMarksInContext:
             human_memory={"priority_threshold": 7, "max_marks_in_context": 10},
         )
         marks = [
-            HumanMark(mark_id="m1", project_id="p1", mark_type="setting", target_key="A", priority=6),
-            HumanMark(mark_id="m2", project_id="p1", mark_type="setting", target_key="B", priority=7),
+            HumanMark(
+                mark_id="m1", project_id="p1", mark_type="setting", target_key="A", priority=6
+            ),
+            HumanMark(
+                mark_id="m2", project_id="p1", mark_type="setting", target_key="B", priority=7
+            ),
         ]
         ctx = assemble_context_package(
             chapter_goal=_make_chapter_goal(),
@@ -906,7 +915,13 @@ class TestHumanMarksInContext:
             human_memory={"priority_threshold": 5, "max_marks_in_context": 3},
         )
         marks = [
-            HumanMark(mark_id=f"m{i}", project_id="p1", mark_type="setting", target_key=f"K{i}", priority=10 - i)
+            HumanMark(
+                mark_id=f"m{i}",
+                project_id="p1",
+                mark_type="setting",
+                target_key=f"K{i}",
+                priority=10 - i,
+            )
             for i in range(1, 6)
         ]
         ctx = assemble_context_package(
@@ -949,33 +964,55 @@ class TestHumanMarksInContext:
 class TestRankForeshadowings:
     def test_due_list_gets_highest_priority(self) -> None:
         items = [
-            ForeshadowingItem(foreshadowing_id="fs1", description="a", planted_in_chapter=1, status="planted"),
-            ForeshadowingItem(foreshadowing_id="fs2", description="b", planted_in_chapter=2, status="planted"),
-            ForeshadowingItem(foreshadowing_id="fs3", description="c", planted_in_chapter=3, status="planted"),
+            ForeshadowingItem(
+                foreshadowing_id="fs1", description="a", planted_in_chapter=1, status="planted"
+            ),
+            ForeshadowingItem(
+                foreshadowing_id="fs2", description="b", planted_in_chapter=2, status="planted"
+            ),
+            ForeshadowingItem(
+                foreshadowing_id="fs3", description="c", planted_in_chapter=3, status="planted"
+            ),
         ]
         result = _rank_foreshadowings(items, foreshadowing_due=["fs2"], current_chapter=5)
         assert result[0].foreshadowing_id == "fs2"
 
     def test_overdue_gets_high_priority(self) -> None:
         items = [
-            ForeshadowingItem(foreshadowing_id="fs1", description="a", planted_in_chapter=1, status="planted"),
-            ForeshadowingItem(foreshadowing_id="fs2", description="b", planted_in_chapter=2, status="overdue"),
+            ForeshadowingItem(
+                foreshadowing_id="fs1", description="a", planted_in_chapter=1, status="planted"
+            ),
+            ForeshadowingItem(
+                foreshadowing_id="fs2", description="b", planted_in_chapter=2, status="overdue"
+            ),
         ]
         result = _rank_foreshadowings(items, foreshadowing_due=[], current_chapter=5)
         assert result[0].foreshadowing_id == "fs2"
 
     def test_due_chapter_near_gets_priority(self) -> None:
         items = [
-            ForeshadowingItem(foreshadowing_id="fs1", description="a", planted_in_chapter=1, status="planted"),
-            ForeshadowingItem(foreshadowing_id="fs2", description="b", planted_in_chapter=2, status="planted", expected_resolve_chapter=5),
+            ForeshadowingItem(
+                foreshadowing_id="fs1", description="a", planted_in_chapter=1, status="planted"
+            ),
+            ForeshadowingItem(
+                foreshadowing_id="fs2",
+                description="b",
+                planted_in_chapter=2,
+                status="planted",
+                expected_resolve_chapter=5,
+            ),
         ]
         result = _rank_foreshadowings(items, foreshadowing_due=[], current_chapter=4)
         assert result[0].foreshadowing_id == "fs2"
 
     def test_returns_all_items_when_no_due(self) -> None:
         items = [
-            ForeshadowingItem(foreshadowing_id="fs1", description="a", planted_in_chapter=1, status="planted"),
-            ForeshadowingItem(foreshadowing_id="fs2", description="b", planted_in_chapter=2, status="planted"),
+            ForeshadowingItem(
+                foreshadowing_id="fs1", description="a", planted_in_chapter=1, status="planted"
+            ),
+            ForeshadowingItem(
+                foreshadowing_id="fs2", description="b", planted_in_chapter=2, status="planted"
+            ),
         ]
         result = _rank_foreshadowings(items, foreshadowing_due=[], current_chapter=5)
         assert len(result) == 2
@@ -988,7 +1025,8 @@ class TestBudgetPrunerFourSignals:
             chapter_goal=ChapterGoal(chapter_number=1),
             soft_references=[
                 SoftReference(
-                    type="world_setting", content=f"设定{i}",
+                    type="world_setting",
+                    content=f"设定{i}",
                     relevance_score=0.5 + i * 0.05,
                 )
                 for i in range(10)
@@ -1008,7 +1046,8 @@ class TestBudgetPrunerFourSignals:
             chapter_goal=ChapterGoal(chapter_number=1),
             soft_references=[
                 SoftReference(
-                    type="world_setting", content=f"设定{i}",
+                    type="world_setting",
+                    content=f"设定{i}",
                     relevance_score=0.9 - i * 0.05,
                 )
                 for i in range(10)
@@ -1023,16 +1062,28 @@ class TestBudgetPrunerFourSignals:
             chapter_goal=ChapterGoal(chapter_number=1),
             character_states=[
                 CharacterStateSnapshot(
-                    character_id="c1", name="主角", importance_score=1.0,
-                    current_location="A", current_cultivation="B", emotional_state="C",
+                    character_id="c1",
+                    name="主角",
+                    importance_score=1.0,
+                    current_location="A",
+                    current_cultivation="B",
+                    emotional_state="C",
                 ),
                 CharacterStateSnapshot(
-                    character_id="c2", name="配角1", importance_score=0.8,
-                    current_location="A", current_cultivation="B", emotional_state="C",
+                    character_id="c2",
+                    name="配角1",
+                    importance_score=0.8,
+                    current_location="A",
+                    current_cultivation="B",
+                    emotional_state="C",
                 ),
                 CharacterStateSnapshot(
-                    character_id="c3", name="配角2", importance_score=0.7,
-                    current_location="A", current_cultivation="B", emotional_state="C",
+                    character_id="c3",
+                    name="配角2",
+                    importance_score=0.7,
+                    current_location="A",
+                    current_cultivation="B",
+                    emotional_state="C",
                 ),
             ],
         )
@@ -1060,8 +1111,22 @@ class TestBudgetPrunerFourSignals:
 class TestCharacterFocusSnapshots:
     def test_focus_full_uses_full_snapshot(self) -> None:
         chars = [
-            Character(character_id="c1", name="主角", role_type="protagonist", relationships={}, goals=[], project_id="p1"),
-            Character(character_id="c2", name="配角", role_type="supporting", relationships={}, goals=[], project_id="p1"),
+            Character(
+                character_id="c1",
+                name="主角",
+                role_type="protagonist",
+                relationships={},
+                goals=[],
+                project_id="p1",
+            ),
+            Character(
+                character_id="c2",
+                name="配角",
+                role_type="supporting",
+                relationships={},
+                goals=[],
+                project_id="p1",
+            ),
         ]
         states = [
             CharacterState(character_id="c1", field="location", value="山门"),
@@ -1076,8 +1141,22 @@ class TestCharacterFocusSnapshots:
 
     def test_focus_compressed_uses_minimal_snapshot(self) -> None:
         chars = [
-            Character(character_id="c1", name="主角", role_type="protagonist", relationships={}, goals=[], project_id="p1"),
-            Character(character_id="c2", name="配角", role_type="supporting", relationships={}, goals=[], project_id="p1"),
+            Character(
+                character_id="c1",
+                name="主角",
+                role_type="protagonist",
+                relationships={},
+                goals=[],
+                project_id="p1",
+            ),
+            Character(
+                character_id="c2",
+                name="配角",
+                role_type="supporting",
+                relationships={},
+                goals=[],
+                project_id="p1",
+            ),
         ]
         states = [
             CharacterState(character_id="c1", field="location", value="山门"),
@@ -1094,8 +1173,22 @@ class TestCharacterFocusSnapshots:
 
     def test_focus_skip_excludes_character(self) -> None:
         chars = [
-            Character(character_id="c1", name="主角", role_type="protagonist", relationships={}, goals=[], project_id="p1"),
-            Character(character_id="c2", name="配角", role_type="supporting", relationships={}, goals=[], project_id="p1"),
+            Character(
+                character_id="c1",
+                name="主角",
+                role_type="protagonist",
+                relationships={},
+                goals=[],
+                project_id="p1",
+            ),
+            Character(
+                character_id="c2",
+                name="配角",
+                role_type="supporting",
+                relationships={},
+                goals=[],
+                project_id="p1",
+            ),
         ]
         states = [
             CharacterState(character_id="c1", field="location", value="山门"),
@@ -1108,7 +1201,14 @@ class TestCharacterFocusSnapshots:
 
     def test_no_focus_fallback_to_arc_logic(self) -> None:
         chars = [
-            Character(character_id="c1", name="主角", role_type="protagonist", relationships={}, goals=[], project_id="p1"),
+            Character(
+                character_id="c1",
+                name="主角",
+                role_type="protagonist",
+                relationships={},
+                goals=[],
+                project_id="p1",
+            ),
         ]
         states = [CharacterState(character_id="c1", field="location", value="山门")]
         snapshots = _build_character_snapshots(chars, states, character_focus=None)
@@ -1236,8 +1336,7 @@ class TestPartitionBudgets:
             chapter_goal=ChapterGoal(chapter_number=1),
             recent_plot=RecentPlot(
                 summaries=[
-                    ChapterSummary(chapter_number=i, summary="summary" * 200)
-                    for i in range(1, 11)
+                    ChapterSummary(chapter_number=i, summary="summary" * 200) for i in range(1, 11)
                 ]
             ),
         )

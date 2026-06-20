@@ -247,10 +247,6 @@ class TestBuildCharacterSnapshotsDecay:
             chars, states, current_chapter=55, last_appeared_chapters=last_appeared
         )
 
-        # 用 emotional_state 长度作为 token 代理
-        flat_len = sum(len(s.emotional_state or "") for s in snapshots_flat)
-        decay_len = sum(len(s.emotional_state or "") for s in snapshots_decay)
-
         # 由于测试数据简单，主要验证结构差异
         assert len(snapshots_flat) == 5
         assert len(snapshots_decay) == 4  # c5 skipped

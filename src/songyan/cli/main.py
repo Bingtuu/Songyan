@@ -7,9 +7,6 @@ import uuid
 
 import click
 
-# CLI 层可捕获的异常类型（排除 KeyboardInterrupt / SystemExit）
-_CLI_CATCHABLE = (RuntimeError, OSError, ConnectionError, ValueError, TypeError, ImportError, KeyError, AttributeError)
-
 from songyan.cli.commands.index import register_index_commands
 from songyan.creative_modes.registry import (
     list_creative_mode_profiles,
@@ -23,6 +20,18 @@ from songyan.genres.loader import list_genre_profiles, load_genre_profile
 from songyan.models.human_mark import HumanMark
 from songyan.models.project import ProjectSetting, derive_arc_boundaries
 from songyan.workflows.phase2_graph import run_project_pipeline
+
+# CLI 层可捕获的异常类型（排除 KeyboardInterrupt / SystemExit）
+_CLI_CATCHABLE = (
+    RuntimeError,
+    OSError,
+    ConnectionError,
+    ValueError,
+    TypeError,
+    ImportError,
+    KeyError,
+    AttributeError,
+)
 
 
 @click.group()
@@ -107,13 +116,9 @@ async def _create_project_async() -> tuple[str, ProjectSetting]:
     genre_id = _select_genre()
     title = click.prompt("项目标题", default="", show_default=False)
     protagonist_name = click.prompt("主角姓名")
-    protagonist_background = click.prompt(
-        "主角背景（可选）", default="", show_default=False
-    )
+    protagonist_background = click.prompt("主角背景（可选）", default="", show_default=False)
     core_hook = click.prompt("核心钩子（可选）", default="", show_default=False)
-    target_reader_expectation = click.prompt(
-        "目标读者预期（可选）", default="", show_default=False
-    )
+    target_reader_expectation = click.prompt("目标读者预期（可选）", default="", show_default=False)
     target_word_count = click.prompt("目标字数", default=100_000, type=int)
     tone = click.prompt("基调", default="热血")
 
@@ -165,7 +170,6 @@ def create_project() -> None:
     except _CLI_CATCHABLE as exc:
         raise click.ClickException(str(exc)) from exc
 
-
     click.echo(f"\n✓ 项目已创建: {project_id}")
     click.echo(f"  模式: {project.mode_id}")
     click.echo(f"  题材: {project.genre_id}")
@@ -192,7 +196,13 @@ def mark_cli() -> None:
 
 @mark_cli.command(name="add")
 @click.option("--project-id", required=True, help="项目 ID")
-@click.option("--type", "mark_type", required=True, type=click.Choice(["setting", "character", "foreshadowing", "custom"]), help="标记类型")
+@click.option(
+    "--type",
+    "mark_type",
+    required=True,
+    type=click.Choice(["setting", "character", "foreshadowing", "custom"]),
+    help="标记类型",
+)
 @click.option("--target", required=True, help="目标标识符")
 @click.option("--note", default="", help="备注说明")
 @click.option("--priority", default=5, type=int, help="优先级 1~10")
@@ -220,7 +230,9 @@ def mark_add(
             created_at_chapter=chapter,
         )
         asyncio.run(HumanMarkRepository().create(mark))
-        click.echo(f"✓ 标记已创建: {mark.mark_id} [{mark_type}] {target} (priority={mark.priority})")
+        click.echo(
+            f"✓ 标记已创建: {mark.mark_id} [{mark_type}] {target} (priority={mark.priority})"
+        )
     except click.Abort:
         raise
     except _CLI_CATCHABLE as exc:
@@ -229,7 +241,12 @@ def mark_add(
 
 @mark_cli.command(name="list")
 @click.option("--project-id", required=True, help="项目 ID")
-@click.option("--type", default=None, type=click.Choice(["setting", "character", "foreshadowing", "custom"]), help="按类型过滤")
+@click.option(
+    "--type",
+    default=None,
+    type=click.Choice(["setting", "character", "foreshadowing", "custom"]),
+    help="按类型过滤",
+)
 @click.option("--min-priority", default=0, type=int, help="最低优先级")
 @click.option("--suggested", is_flag=True, help="显示系统建议的标记（需 Task 043）")
 def mark_list(
@@ -268,13 +285,16 @@ def mark_list(
             click.echo("暂无标记。")
             return
 
-        click.echo(f"\n{'标记 ID':<14} {'类型':<10} {'目标':<20} {'优先级':<8} {'章节':<6} {'备注'}")
+        click.echo(
+            f"\n{'标记 ID':<14} {'类型':<10} {'目标':<20} {'优先级':<8} {'章节':<6} {'备注'}"
+        )
         click.echo("-" * 80)
         for m in marks:
             chapter = str(m.created_at_chapter or "-")
             note = m.note[:30] + "..." if len(m.note) > 30 else m.note
             click.echo(
-                f"{m.mark_id:<14} {m.mark_type:<10} {m.target_key:<20} {m.priority:<8} {chapter:<6} {note}"
+                f"{m.mark_id:<14} {m.mark_type:<10} {m.target_key:<20} "
+                f"{m.priority:<8} {chapter:<6} {note}"
             )
     except click.Abort:
         raise
@@ -357,8 +377,7 @@ def list_projects() -> None:
         return
 
     click.echo(
-        f"\n{'项目 ID':<24} {'标题':<14} {'题材':<10} "
-        f"{'模式':<10} {'主角':<10} {'创建时间'}"
+        f"\n{'项目 ID':<24} {'标题':<14} {'题材':<10} {'模式':<10} {'主角':<10} {'创建时间'}"
     )
     click.echo("-" * 84)
     for row in projects:
@@ -376,7 +395,9 @@ def list_projects() -> None:
 @click.option("--mode-id", default="webnovel", help="创作模式 ID")
 @click.option("--human-gates", default="", help="启用的 Human Gate，逗号分隔")
 @click.option("--auto-confirm", is_flag=True, help="全自动化，跳过所有 optional gate")
-@click.option("--rag-mode", default=None, type=click.Choice(["auto", "always", "never"]), help="覆盖 RAG 模式")
+@click.option(
+    "--rag-mode", default=None, type=click.Choice(["auto", "always", "never"]), help="覆盖 RAG 模式"
+)
 @click.option("--skip-rag", is_flag=True, help="禁用 RAG 检索")
 def run(
     project_id: str,
@@ -406,6 +427,7 @@ def run(
             rag_mode = "never"
         if rag_mode:
             import os
+
             os.environ["SONGYAN_RAG_MODE"] = rag_mode
             click.echo(f"RAG 模式: {rag_mode}")
 
@@ -418,7 +440,8 @@ def run(
             )
         )
 
-        click.echo(f"\n运行完成: {len(result.chapters_completed)}/{len(result.chapters_completed) + len(result.chapters_failed)} 章成功")
+        total_chapters = len(result.chapters_completed) + len(result.chapters_failed)
+        click.echo(f"\n运行完成: {len(result.chapters_completed)}/{total_chapters} 章成功")
         if result.chapters_failed:
             click.echo(f"失败: {len(result.chapters_failed)} 章")
         click.echo(f"耗时: {result.total_duration_sec:.1f} 秒")

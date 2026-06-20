@@ -108,7 +108,10 @@ class TestSettingSnapshotRepository:
 
         async with get_db() as conn:
             cursor = await conn.execute(
-                "SELECT COUNT(*) FROM setting_snapshots WHERE project_id = ? AND setting_key = ? AND lifecycle_status = 'active'",
+                "SELECT COUNT(*) FROM setting_snapshots "
+                "WHERE project_id = ? "
+                "AND setting_key = ? "
+                "AND lifecycle_status = 'active'",
                 ("p1", "key-a"),
             )
             row = await cursor.fetchone()
@@ -162,16 +165,10 @@ class TestSimilarity:
 
 
 class TestDeduplicate:
-    async def test_detects_and_archives_duplicates(
-        self, dedup_db: Path
-    ) -> None:
+    async def test_detects_and_archives_duplicates(self, dedup_db: Path) -> None:
         await _seed_project("p1")
-        await _insert_tracking(
-            "t1", "key-a", "灵石矿脉", "矿", 10, 15
-        )
-        await _insert_tracking(
-            "t2", "key-b", "灵石来源", "矿", 20, 25
-        )
+        await _insert_tracking("t1", "key-a", "灵石矿脉", "矿", 10, 15)
+        await _insert_tracking("t2", "key-b", "灵石来源", "矿", 20, 25)
         await _insert_snapshot("s1", "key-a", "灵石矿脉", "矿", lifecycle_status="active")
         await _insert_snapshot("s2", "key-b", "灵石来源", "矿", lifecycle_status="active")
 
@@ -191,12 +188,8 @@ class TestDeduplicate:
 
     async def test_preserves_oldest_master(self, dedup_db: Path) -> None:
         await _seed_project("p1")
-        await _insert_tracking(
-            "t1", "key-a", "灵石矿脉", "青云宗后山的矿", 10, 15
-        )
-        await _insert_tracking(
-            "t2", "key-b", "灵石来源", "后山有一座灵石矿", 20, 25
-        )
+        await _insert_tracking("t1", "key-a", "灵石矿脉", "青云宗后山的矿", 10, 15)
+        await _insert_tracking("t2", "key-b", "灵石来源", "后山有一座灵石矿", 20, 25)
         await _insert_snapshot("s1", "key-a", "灵石矿脉", "矿")
         await _insert_snapshot("s2", "key-b", "灵石来源", "矿")
 
@@ -213,12 +206,8 @@ class TestDeduplicate:
 
     async def test_updates_master_last_mentioned(self, dedup_db: Path) -> None:
         await _seed_project("p1")
-        await _insert_tracking(
-            "t1", "key-a", "灵石矿脉", "矿", 10, 15
-        )
-        await _insert_tracking(
-            "t2", "key-b", "灵石来源", "矿", 20, 25
-        )
+        await _insert_tracking("t1", "key-a", "灵石矿脉", "矿", 10, 15)
+        await _insert_tracking("t2", "key-b", "灵石来源", "矿", 20, 25)
         await _insert_snapshot("s1", "key-a", "灵石矿脉", "矿")
         await _insert_snapshot("s2", "key-b", "灵石来源", "矿")
 
@@ -235,12 +224,8 @@ class TestDeduplicate:
 
     async def test_archives_snapshot_too(self, dedup_db: Path) -> None:
         await _seed_project("p1")
-        await _insert_tracking(
-            "t1", "key-a", "灵石矿脉", "矿", 10, 15
-        )
-        await _insert_tracking(
-            "t2", "key-b", "灵石来源", "矿", 20, 25
-        )
+        await _insert_tracking("t1", "key-a", "灵石矿脉", "矿", 10, 15)
+        await _insert_tracking("t2", "key-b", "灵石来源", "矿", 20, 25)
         await _insert_snapshot("s1", "key-a", "灵石矿脉", "矿")
         await _insert_snapshot("s2", "key-b", "灵石来源", "矿")
 
@@ -257,12 +242,8 @@ class TestDeduplicate:
 
     async def test_no_false_positives(self, dedup_db: Path) -> None:
         await _seed_project("p1")
-        await _insert_tracking(
-            "t1", "key-a", "灵石矿脉", "矿", 10, 15
-        )
-        await _insert_tracking(
-            "t2", "key-b", "飞船引擎", "曲率驱动核心", 20, 25
-        )
+        await _insert_tracking("t1", "key-a", "灵石矿脉", "矿", 10, 15)
+        await _insert_tracking("t2", "key-b", "飞船引擎", "曲率驱动核心", 20, 25)
         await _insert_snapshot("s1", "key-a", "灵石矿脉", "矿")
         await _insert_snapshot("s2", "key-b", "飞船引擎", "核心")
 
@@ -273,12 +254,8 @@ class TestDeduplicate:
 
     async def test_skips_already_archived(self, dedup_db: Path) -> None:
         await _seed_project("p1")
-        await _insert_tracking(
-            "t1", "key-a", "灵石矿脉", "矿", 10, 15
-        )
-        await _insert_tracking(
-            "t2", "key-b", "灵石来源", "矿", 20, 25
-        )
+        await _insert_tracking("t1", "key-a", "灵石矿脉", "矿", 10, 15)
+        await _insert_tracking("t2", "key-b", "灵石来源", "矿", 20, 25)
         await _insert_snapshot("s1", "key-a", "灵石矿脉", "矿")
         await _insert_snapshot("s2", "key-b", "灵石来源", "矿")
 
@@ -320,12 +297,8 @@ async def _insert_foreshadowing(
 class TestForeshadowingPressure:
     async def test_mark_overdue(self, dedup_db: Path) -> None:
         await _seed_project("p1")
-        await _insert_foreshadowing(
-            "fs1", "伏笔1", 10, 30, "planted"
-        )
-        await _insert_foreshadowing(
-            "fs2", "伏笔2", 20, 40, "due"
-        )
+        await _insert_foreshadowing("fs1", "伏笔1", 10, 30, "planted")
+        await _insert_foreshadowing("fs2", "伏笔2", 20, 40, "due")
 
         from songyan.db.settlement_repo import ForeshadowingRepository
 

@@ -10,9 +10,11 @@ from songyan.models.rag import ChunkMetadata, TextChunk
 SCENE_MARKER_PATTERN = re.compile(r"^#{3,4}\s+Scene\s+\d+", re.IGNORECASE)
 FRONTMATTER_PATTERN = re.compile(r"^---\s*\n.*?\n---\s*\n", re.DOTALL)
 CHAPTER_TITLE_PATTERN = re.compile(r"^#\s+.*", re.MULTILINE)
-DIALOGUE_PATTERN = re.compile(r"^[\s]*[\"\""'"''].*[\"\""'"']")
+DIALOGUE_PATTERN = re.compile(r"^[\s]*[\"\"" '"' '].*["""' "']")
 # 常见中文对话标记
-DIALOGUE_MARKERS = re.compile(r"^[\s]*[（(]?[\""'"'']|[「『【〔〈《〝（]|[）)]?[\""'"'']$|[」』】〕〉》〞）]$")
+DIALOGUE_MARKERS = re.compile(
+    r"^[\s]*[（(]?[\"" '"' ']|[「『【〔〈《〝（]|[）)]?[""' "'']$|[」』】〕〉》〞）]$"
+)
 
 
 def _extract_body(content: str) -> str:
@@ -72,11 +74,11 @@ def _classify_chunk(text: str) -> Literal["narrative", "dialogue", "description"
     dialogue_lines = 0
     for line in lines:
         stripped = line.strip()
-        if stripped.startswith(("\"", "\"\"\"", "'", "''", "「", "『", "【", "（")):
+        if stripped.startswith(('"', '"""', "'", "''", "「", "『", "【", "（")):
             dialogue_lines += 1
         elif stripped.startswith("（") and stripped.endswith("）"):
             dialogue_lines += 1
-        elif "\"" in stripped and stripped.count("\"") >= 2:
+        elif '"' in stripped and stripped.count('"') >= 2:
             dialogue_lines += 1
 
     if dialogue_lines > len(lines) * 0.5:

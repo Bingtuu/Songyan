@@ -349,7 +349,6 @@ class TestGenerateCreativeBrief:
 
     async def test_successful_flow(self) -> None:
         """正常流程：Mock LLM → 解析 → 保存 → 返回."""
-        mock_db = AsyncMock()
         goal = _make_chapter_goal()
         genre = _make_genre()
         mode = _make_mode()
@@ -423,7 +422,6 @@ class TestGenerateCreativeBrief:
 
     async def test_llm_parse_error(self) -> None:
         """LLM 返回非 JSON 时抛出 LLMResponseParseError."""
-        mock_db = AsyncMock()
         goal = _make_chapter_goal()
         genre = _make_genre()
         mode = _make_mode()
@@ -452,7 +450,6 @@ class TestGenerateCreativeBrief:
 
     async def test_llm_call_error(self) -> None:
         """LLM 调用失败时抛出 LLMError."""
-        mock_db = AsyncMock()
         goal = _make_chapter_goal()
         genre = _make_genre()
         mode = _make_mode()
@@ -536,7 +533,6 @@ class TestTemperatureParam:
             new_callable=AsyncMock,
             side_effect=_capture_call,
         ):
-            mock_db = AsyncMock()
             goal = ChapterGoal(chapter_number=1)
             genre = GenreProfile(
                 id="xuanhuan",

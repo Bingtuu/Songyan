@@ -21,7 +21,9 @@ logger = structlog.get_logger(__name__)
 
 
 @lru_cache(maxsize=8)
-def _get_llm_cached(model: str, api_key: str, base_url: str, temperature: float, max_tokens: int) -> BaseChatModel:
+def _get_llm_cached(
+    model: str, api_key: str, base_url: str, temperature: float, max_tokens: int
+) -> BaseChatModel:
     """缓存 LLM 实例，避免每次调用都重新创建."""
     from langchain_litellm import ChatLiteLLM
 
@@ -138,8 +140,6 @@ async def call_llm(
             timeout=total_timeout,
         )
     except TimeoutError as e:
-        raise LLMError(
-            f"LLM 调用总超时（超过 {total_timeout} 秒）", cause=e
-        ) from e
+        raise LLMError(f"LLM 调用总超时（超过 {total_timeout} 秒）", cause=e) from e
     except LLMError:
         raise

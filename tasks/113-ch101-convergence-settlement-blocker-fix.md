@@ -1,5 +1,7 @@
 # Task 113: Ch101 收敛回滚与 Settlement 阻断修复
 
+> **文档状态**: 历史规划稿。Task 113 已完成，最终交付与验证结果见 `tasks/113-ch101-convergence-settlement-blocker-fix-DONE.md`。
+>
 > **Phase**: V5.0 Phase 4 — 150 章规模化验证前置修复
 > **优先级**: P0
 > **依赖**: Task 112 完成；Task 113 首次长跑 incident `run-6b462cb9`

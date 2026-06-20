@@ -49,7 +49,9 @@ async def retry_with_backoff(
         except retryable_exceptions as e:
             last_exception = e
             if attempt < max_retries - 1:
-                delay = min(base_delay * (2**attempt) * random.uniform(0.75, 1.25), max_delay)  # PERF-06: +jitter
+                delay = min(
+                    base_delay * (2**attempt) * random.uniform(0.75, 1.25), max_delay
+                )  # PERF-06: +jitter
                 logger.warning(
                     "llm.retry",
                     attempt=attempt + 1,

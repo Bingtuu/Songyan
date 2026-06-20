@@ -48,13 +48,20 @@ class TestMarkAdd:
         result = runner.invoke(
             cli,
             [
-                "mark", "add",
-                "--project-id", "p1",
-                "--type", "setting",
-                "--target", "120Hz干扰器",
-                "--note", "核心道具",
-                "--priority", "9",
-                "--chapter", "8",
+                "mark",
+                "add",
+                "--project-id",
+                "p1",
+                "--type",
+                "setting",
+                "--target",
+                "120Hz干扰器",
+                "--note",
+                "核心道具",
+                "--priority",
+                "9",
+                "--chapter",
+                "8",
             ],
         )
         assert result.exit_code == 0
@@ -65,11 +72,16 @@ class TestMarkAdd:
         result = runner.invoke(
             cli,
             [
-                "mark", "add",
-                "--project-id", "p1",
-                "--type", "custom",
-                "--target", "x",
-                "--priority", "15",
+                "mark",
+                "add",
+                "--project-id",
+                "p1",
+                "--type",
+                "custom",
+                "--target",
+                "x",
+                "--priority",
+                "15",
             ],
         )
         assert result.exit_code == 0
@@ -86,11 +98,33 @@ class TestMarkList:
         # Seed marks
         runner.invoke(
             cli,
-            ["mark", "add", "--project-id", "p1", "--type", "setting", "--target", "A", "--priority", "9"],
+            [
+                "mark",
+                "add",
+                "--project-id",
+                "p1",
+                "--type",
+                "setting",
+                "--target",
+                "A",
+                "--priority",
+                "9",
+            ],
         )
         runner.invoke(
             cli,
-            ["mark", "add", "--project-id", "p1", "--type", "character", "--target", "B", "--priority", "5"],
+            [
+                "mark",
+                "add",
+                "--project-id",
+                "p1",
+                "--type",
+                "character",
+                "--target",
+                "B",
+                "--priority",
+                "5",
+            ],
         )
 
         result = runner.invoke(cli, ["mark", "list", "--project-id", "p1"])
@@ -108,17 +142,13 @@ class TestMarkList:
             ["mark", "add", "--project-id", "p1", "--type", "character", "--target", "B"],
         )
 
-        result = runner.invoke(
-            cli, ["mark", "list", "--project-id", "p1", "--type", "setting"]
-        )
+        result = runner.invoke(cli, ["mark", "list", "--project-id", "p1", "--type", "setting"])
         assert result.exit_code == 0
         assert "A" in result.output
         assert "B" not in result.output
 
     def test_list_suggested_no_report(self, runner: CliRunner, mark_cli_db: Path) -> None:
-        result = runner.invoke(
-            cli, ["mark", "list", "--project-id", "p1", "--suggested"]
-        )
+        result = runner.invoke(cli, ["mark", "list", "--project-id", "p1", "--suggested"])
         assert result.exit_code == 0
         assert "暂无系统建议标记" in result.output
 
@@ -132,9 +162,7 @@ class TestMarkRemove:
         assert add_result.exit_code == 0
         mark_id = add_result.output.split("标记已创建: ")[1].split(" [")[0].strip()
 
-        result = runner.invoke(
-            cli, ["mark", "remove", "--project-id", "p1", "--mark-id", mark_id]
-        )
+        result = runner.invoke(cli, ["mark", "remove", "--project-id", "p1", "--mark-id", mark_id])
         assert result.exit_code == 0
         assert "标记已删除" in result.output
 
@@ -150,14 +178,34 @@ class TestMarkUpdatePriority:
     def test_update_priority(self, runner: CliRunner, mark_cli_db: Path) -> None:
         add_result = runner.invoke(
             cli,
-            ["mark", "add", "--project-id", "p1", "--type", "setting", "--target", "X", "--priority", "5"],
+            [
+                "mark",
+                "add",
+                "--project-id",
+                "p1",
+                "--type",
+                "setting",
+                "--target",
+                "X",
+                "--priority",
+                "5",
+            ],
         )
         assert add_result.exit_code == 0
         mark_id = add_result.output.split("标记已创建: ")[1].split(" [")[0].strip()
 
         result = runner.invoke(
             cli,
-            ["mark", "update-priority", "--project-id", "p1", "--mark-id", mark_id, "--priority", "10"],
+            [
+                "mark",
+                "update-priority",
+                "--project-id",
+                "p1",
+                "--mark-id",
+                mark_id,
+                "--priority",
+                "10",
+            ],
         )
         assert result.exit_code == 0
         assert "优先级已更新" in result.output
@@ -166,7 +214,16 @@ class TestMarkUpdatePriority:
     def test_update_priority_missing(self, runner: CliRunner, mark_cli_db: Path) -> None:
         result = runner.invoke(
             cli,
-            ["mark", "update-priority", "--project-id", "p1", "--mark-id", "missing", "--priority", "10"],
+            [
+                "mark",
+                "update-priority",
+                "--project-id",
+                "p1",
+                "--mark-id",
+                "missing",
+                "--priority",
+                "10",
+            ],
         )
         assert result.exit_code == 0
         assert "未找到标记" in result.output

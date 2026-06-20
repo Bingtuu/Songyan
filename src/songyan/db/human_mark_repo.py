@@ -106,9 +106,7 @@ class HumanMarkRepository:
                 params.append(min_chapter)
 
             # V4.0: 只返回 active；priority>=8 的 dormant 也被保留
-            conditions.append(
-                "(lifecycle_status = 'active' OR priority >= 8)"
-            )
+            conditions.append("(lifecycle_status = 'active' OR priority >= 8)")
 
             sql = (
                 "SELECT * FROM human_marks WHERE "
@@ -146,6 +144,7 @@ class HumanMarkRepository:
         priority>=8 除外。
         返回: 影响的记录数
         """
+
         async def _do(c: aiosqlite.Connection) -> int:
             cursor = await c.execute(
                 """UPDATE human_marks
@@ -189,6 +188,7 @@ class HumanMarkRepository:
         priority>=8 除外。
         返回: 影响的记录数
         """
+
         async def _do(c: aiosqlite.Connection) -> int:
             cursor = await c.execute(
                 """UPDATE human_marks
@@ -290,7 +290,9 @@ class HumanMarkRepository:
             priority=row["priority"],
             created_at_chapter=row["created_at_chapter"],
             resolved_at=None,  # Simplified: not parsing ISO string back
-            lifecycle_status=row["lifecycle_status"] if "lifecycle_status" in row.keys() else "active",
+            lifecycle_status=row["lifecycle_status"]
+            if "lifecycle_status" in row.keys()
+            else "active",
             created_at=datetime.fromisoformat(row["created_at"]),
             source=row["source"] if "source" in row.keys() else "human",
         )

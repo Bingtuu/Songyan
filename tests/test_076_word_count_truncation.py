@@ -35,9 +35,7 @@ class TestTruncationMultiScene:
     def test_truncates_last_scene(self) -> None:
         # Task 095: min_scenes=2，截断后须保留至少 2 个 scene
         # 4 个 scene，截断到 scene3 前保留 2 个 scene（300 字，在 [240, 360] 内）
-        content = _make_content(
-            ["一" * 150, "二" * 150, "三" * 200, "四" * 300]
-        )
+        content = _make_content(["一" * 150, "二" * 150, "三" * 200, "四" * 300])
         scenes = _parse_scenes(content)
         target = 300
         wc = 800
@@ -51,9 +49,7 @@ class TestTruncationMultiScene:
 
     def test_truncation_reason_contains_scene_number(self) -> None:
         # Task 095: 4 个 scene，截断到 scene3 前保留 2 个 scene（160 字，在 [160, 300] 内）
-        content = _make_content(
-            ["一" * 80, "二" * 80, "三" * 150, "四" * 150]
-        )
+        content = _make_content(["一" * 80, "二" * 80, "三" * 150, "四" * 150])
         scenes = _parse_scenes(content)
         wc = 460
         result = _enforce_word_count(content, scenes, 200, wc)
@@ -123,9 +119,7 @@ class TestEdgeCases:
 class TestSceneReParse:
     def test_truncated_scene_numbers_contiguous(self) -> None:
         # Task 095: 3 个 scene，截断到 scene3 前保留 2 个 scene（300 字）
-        content = _make_content(
-            ["正" * 150, "文" * 150, "长" * 300]
-        )
+        content = _make_content(["正" * 150, "文" * 150, "长" * 300])
         scenes = _parse_scenes(content)
         wc = 600
         result = _enforce_word_count(content, scenes, 300, wc)
@@ -136,7 +130,12 @@ class TestSceneReParse:
     def test_truncated_content_scene_boundary_aligned(self) -> None:
         # Task 095: 4 个 scene，截断到 scene4 前保留 3 个 scene（330 字）
         content = _make_content(
-            ["正文内容填充足够长度。" * 10, "正文内容填充足够长度。" * 10, "正文内容填充足够长度。" * 10, "正文内容填充足够长度。" * 50]
+            [
+                "正文内容填充足够长度。" * 10,
+                "正文内容填充足够长度。" * 10,
+                "正文内容填充足够长度。" * 10,
+                "正文内容填充足够长度。" * 50,
+            ]
         )
         scenes = _parse_scenes(content)
         wc = 888
@@ -144,6 +143,3 @@ class TestSceneReParse:
         assert result[3] is True
         last_scene = result[1][-1]
         assert "### Scene" not in last_scene["content"]
-
-
-

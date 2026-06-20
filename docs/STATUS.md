@@ -47,25 +47,28 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 
 | 指标 | 数值 |
 |------|------|
-| 状态 | **V5.0 Phase 4 — Task 114c 已完成，DG-2 条件通过** |
+| 状态 | **V5.0 Phase 4 已完成，Task 114c DG-2 条件通过** |
 | V4.0 最终达标率 (Ch2-Ch50) | **81.6%** (Task 099) ✅ |
 | Task 105b 实跑 | **Ch51-Ch100 全部成功，QG 通过率 58.0% (29/50)，DG-1 未通过** |
 | Task 110a 实跑 | **Ch80-Ch100 21/21 成功，QG 通过率 57.1% (12/21)，ContextEmergency 81.0% (17/21)** |
 | Task 110d 实跑 | **Ch80-Ch96 17/17 成功，QG 通过率 58.8% (10/17)，ContextEmergency 0.0% (0/17)；参数调优无正收益，已回滚** |
 | Task 110e 实跑 | **Ch80-Ch96 17/17 成功，QG 通过率 100% (17/17)，coherence_major 0/17，ContextEmergency 0/17；Auditor 阈值校准 + 审查上下文增强生效** |
 | Task 113 回放 | **Ch101 accepted + settlement + summary 已恢复** (`run-90e08243`) |
-| Task 114 Phase 1 | **Ch102 成功；Ch103 settlement_review 阻断** (`run-5105e24b`)，Ch104-Ch110 未执行 |
+| Task 114 Phase 1 | **历史阻断已归档**：Ch102 成功；Ch103 settlement_review 阻断 (`run-5105e24b`) |
 | Task 114a 修复 | **✅ 完成**：old_value 代码回填、quote_filter 角色名校验、run logger 多维度判定、后处理触发收紧；已由 114b2 端到端验证穿透 settlement |
 | Task 114b 验证 | **⚠️ 熔断复核完成**：Ch103/Ch102 回放因 QG 收敛失败提前 `_skip_settlement=True`，未进入 settlement；不能作为 114a 端到端通过证据 |
 | Task 114b2 验证 | **✅ 完成**：修复当前 lineage 修复计数、QG best 回滚、rewrite 结构失败路由；Ch102/Ch103 组合窗口 `run-af3ba939` 完成 accept + settlement + summary |
 | 最近回归测试 | **1676 passed, 4 skipped, 2 xfailed, 3 xpassed** (`pytest tests/ -q`，Task 114c 全量回归) |
+| 当前 lint | **`ruff check src/ tests/` 已通过后续 lint 清理** |
 | Python | 3.11.9 |
-| 当前 Task | **Task 114c 已完成：Ch111-Ch150 40/40 成功，DG-2 条件通过** |
-| 前置状态 | **Task 111a-g / 112 / 113 / 114a / 114b2 / 114c 已完成；下一步复核 ContextEmergency 与质量选择 P1 风险** |
+| 当前 Task | **Task 115-120 已规划；无进行中执行任务** |
+| 下一步建议 | **按序启动 Task 115 → 116 → 117，先关闭 DG-2 两个 P1 风险** |
 
 ---
 
 ## V5.0 路线图
+
+> 状态事实入口见 `tasks/V5-README.md`。本表只保留当前 V5 主线进度，规划稿不再作为完成状态依据。
 
 ### Phase 1 — Context Diet 2.0 核心组件（Week 1-3）
 
@@ -113,7 +116,30 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 | 114a | **Settlement 事实源契约修复** | 修复 Ch103 暴露的 `old_value` mismatch、`quote_filter` 内部 ID 误杀引用、run logger/post-processing 残留风险 | ✅ |
 | 114b | **Phase 1 重跑 Ch102-Ch110** | Ch103/Ch102 回放因 QG 收敛失败触发 `_skip_settlement=True`，未进入 settlement；未达 Phase 1 出口条件 | ⚠️ |
 | 114b2 | **QG 收敛阻断处理 + settlement 端到端验证窗口** | 已修复 QG 收敛阻断和 rewrite 结构失败路由；Ch102/Ch103 `run-af3ba939` 完成 accept+settlement+summary | ✅ |
-| 114c | **Ch111-Ch150 分段流式验证 + DG-2** | Ch111-Ch150 40/40 成功；QG/settlement/summary 40/40；DG-2 因 Ch115/Ch120 ContextEmergency 为条件通过 | ✅ |
+| 114c | **Ch111-Ch150 分段流式验证 + DG-2** | Ch111-Ch150 40/40 成功；QG/settlement/summary 40/40；DG-2 因 Ch115/Ch120 ContextEmergency 为条件通过 | ⚠️ 条件通过 |
+
+### Phase 4 收口规划 — DG-2 条件通过后续任务（Task 115-120）
+
+| Task | 内容 | 验收条件 | 状态 |
+|------|------|---------|:----:|
+| 115 | **ContextEmergency 触发复核与校准** | Ch115/Ch120 触发原因 100% 可解释；复跑章节 `accept+settlement+summary` 成功；不引入 `budget_used > 1.0` | 📝 规划中 |
+| 116 | **Best-Version 质量选择策略复核与修复** | Ch147/Ch148 final version 符合 QG passed best 规则；低分 rewrite fallback 不覆盖高分 best | 📝 规划中 |
+| 117 | **DG-2 风险章节窗口复验** | Ch115/Ch120/Ch147/Ch148 4/4 成功；报告与 JSONL/DB 一致；DG-2 风险结论明确 | 📝 规划中 |
+| 118 | **ContinuityAuditor Health 低分治理策略** | health_low 可统计、可追踪、可分级；human marks 关联 project/chapter/version | 📝 规划中 |
+| 119 | **长跑报告入口与 Windows Wrapper 加固** | 报告入口统一；wrapper 正常/超时/业务完成异常均有明确结果码 | 📝 规划中 |
+| 120 | **V5.0 Final Acceptance Package** | Task 115-119 完成；P0/P1 风险为 0；最终 pytest/ruff 与文档一致性通过 | 📝 规划中 |
+
+---
+
+## 当前遗留风险
+
+| 风险 | 级别 | 处理建议 |
+|------|------|----------|
+| Ch115/Ch120 ContextEmergency | P1 | Task 115 专项复核，判断合理降级、过早触发或报告误判 |
+| Ch147/Ch148 best-version 质量选择 | P1 | Task 116 检查 rewrite fallback 是否压过更高质量 QG best |
+| DG-2 风险窗口复验 | P1 | Task 117 复跑风险章节并给出 DG-2 最终风险结论 |
+| ContinuityAuditor health 低分 | P2 | Task 118 明确记录、软复核或阻断策略 |
+| 报告入口与 Windows wrapper 漂移 | P2 | Task 119 统一报告入口并加固退出判定 |
 
 ---
 
@@ -144,36 +170,35 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 - `archive/v4/INDEX.md` — V4.x 完整归档索引
 - `docs/INDEX.md` — 文档索引
 - `AGENTS.md` — 开发代理指令与不可违背规则
+- `tasks/V5-README.md` — V5.0 任务总索引与当前事实入口
 - `tasks/105-ch51-ch100-streaming-validation-DONE.md` — 流式验证基础设施交付记录
 - `tasks/105b-ch51-ch100-validation-restart-DONE.md` — Ch51-Ch100 验证重启交付记录
 - `tasks/107-repair-convergence-guardrail-DONE.md` — 收敛护栏与 150 章阻断缺陷修复记录
 - `tasks/108-character-lifecycle-auditor-DONE.md` — 角色退场机制记录
 - `tasks/109-setting-dedup-and-foreshadowing-pressure-DONE.md` — 设定合并与伏笔监控记录
-- `tasks/110a-character-state-tiered-compression.md` — CharacterState 分层保真压缩规划
-- `tasks/110b-setting-summary-quality-control.md` — Setting/Summary/HardConstraint 质量控制规划
-- `tasks/110c-loading-and-pruning-strategy.md` — 加载端智能过滤与分级裁剪规划
-- `tasks/110d-ch80-ch100-validation-and-tuning.md` — Ch80-Ch100 快速验证与调优规划
+- `tasks/110a-character-state-tiered-compression-DONE.md` — CharacterState 分层保真压缩交付记录
+- `tasks/110b-setting-summary-quality-control-DONE.md` — Setting/Summary/HardConstraint 质量控制交付记录
+- `tasks/110c-loading-and-pruning-strategy-DONE.md` — 加载端智能过滤与分级 ContextEmergency 交付记录
+- `tasks/110d-ch80-ch100-validation-and-tuning-DONE.md` — Ch80-Ch100 快速验证与调优记录
 - `tasks/110e-coherence-major-fix-DONE.md` — coherence_major 根因修复交付记录
-- `tasks/111a-workflow-decision-contract-fix.md` — 工作流决策契约前置修复规划
 - `tasks/111a-workflow-decision-contract-fix-DONE.md` — 工作流决策契约修复交付记录
-- `tasks/111b-settlement-state-integrity-fix.md` — Settlement 与事实源一致性前置修复规划
 - `tasks/111b-settlement-state-integrity-fix-DONE.md` — Settlement 与事实源一致性修复交付记录
-- `tasks/111c-context-prompt-consistency-fix.md` — Context 与 Prompt 一致性前置修复规划
 - `tasks/111c-context-prompt-consistency-fix-DONE.md` — Context 与 Prompt 一致性修复交付记录
-- `tasks/111d-quality-gate-settlement-blockers-fix.md` — QualityGate 与 Settlement 阻断项修复规划
 - `tasks/111d-quality-gate-settlement-blockers-fix-DONE.md` — QualityGate 与 Settlement 阻断项修复交付记录
-- `tasks/111e-task112-reporting-dg2-gate-fix.md` — Task 112 报告与 DG-2 Gate 完整性修复规划
 - `tasks/111e-task112-reporting-dg2-gate-fix-DONE.md` — Task 112 报告与 DG-2 Gate 完整性修复交付记录
-- `tasks/111f-context-snapshot-prompt-metadata-fix.md` — Context Snapshot、Prompt 与 Metadata 一致性修复规划
 - `tasks/111f-context-snapshot-prompt-metadata-fix-DONE.md` — Context Snapshot、Prompt 与 Metadata 一致性修复交付记录
-- `tasks/111g-long-run-performance-containment.md` — 长跑性能缺陷收敛规划
 - `tasks/111g-long-run-performance-containment-DONE.md` — 长跑性能缺陷收敛交付记录
-- `tasks/112-preflight-blocker-fix.md` — Task 114 前置阻断修复规划
 - `tasks/112-preflight-blocker-fix-DONE.md` — Task 114 前置阻断修复交付记录
-- `tasks/113-ch101-convergence-settlement-blocker-fix.md` — Ch101 收敛回滚与 Settlement 阻断修复记录
+- `tasks/113-ch101-convergence-settlement-blocker-fix-DONE.md` — Ch101 收敛回滚与 Settlement 阻断修复记录
 - `tasks/114a-settlement-fact-source-contract-fix-DONE.md` — Task 114a Settlement 事实源契约修复交付记录
 - `tasks/114b-phase1-replay-ch102-ch110-DONE.md` — Task 114b Phase 1 熔断复核记录
 - `tasks/114b2-qg-convergence-settlement-window-DONE.md` — Task 114b2 QG 收敛阻断与 settlement 端到端验证记录
 - `tasks/114-ch101-ch150-streaming-validation.md` — Task 114 umbrella 规划：114a Settlement 修复、114b Phase 1 重跑、114b2 验证窗口、114c DG-2 长跑
 - `tasks/114-ch101-ch150-streaming-validation-DONE.md` — Task 114c Ch111-Ch150 分段流式验证与 DG-2 条件通过记录
+- `tasks/115-context-emergency-review.md` — Task 115 ContextEmergency 触发复核与校准规划
+- `tasks/116-best-version-quality-selection-fix.md` — Task 116 best-version 质量选择策略复核与修复规划
+- `tasks/117-dg2-risk-window-revalidation.md` — Task 117 DG-2 风险章节窗口复验规划
+- `tasks/118-continuity-health-governance.md` — Task 118 ContinuityAuditor health_low 治理策略规划
+- `tasks/119-reporting-wrapper-hardening.md` — Task 119 长跑报告入口与 Windows wrapper 加固规划
+- `tasks/120-v5-final-acceptance-package.md` — Task 120 V5.0 最终验收包规划
 - `logs/chapter_runs/run-33229919.jsonl` — Ch51-Ch59 实跑指标

@@ -33,7 +33,9 @@ class TestMergeReviewsPreviousNewIssues:
         )
 
     @pytest.mark.asyncio
-    async def test_no_previous_issues(self, rule_result: RuleAuditResult, llm_result: LLMAuditResult) -> None:
+    async def test_no_previous_issues(
+        self, rule_result: RuleAuditResult, llm_result: LLMAuditResult
+    ) -> None:
         from unittest.mock import AsyncMock
 
         db = AsyncMock()
@@ -50,7 +52,9 @@ class TestMergeReviewsPreviousNewIssues:
         assert merged.issues == []
 
     @pytest.mark.asyncio
-    async def test_merges_previous_new_issues(self, rule_result: RuleAuditResult, llm_result: LLMAuditResult) -> None:
+    async def test_merges_previous_new_issues(
+        self, rule_result: RuleAuditResult, llm_result: LLMAuditResult
+    ) -> None:
         from unittest.mock import AsyncMock
 
         prev_issue = ReviewIssue(
@@ -78,7 +82,9 @@ class TestMergeReviewsPreviousNewIssues:
         assert merged.issues[0].issue_id == "rev-ai_tell-abc123"
 
     @pytest.mark.asyncio
-    async def test_merges_with_existing_issues(self, rule_result: RuleAuditResult, llm_result: LLMAuditResult) -> None:
+    async def test_merges_with_existing_issues(
+        self, rule_result: RuleAuditResult, llm_result: LLMAuditResult
+    ) -> None:
         from unittest.mock import AsyncMock
 
         llm_result_with_issue = LLMAuditResult(

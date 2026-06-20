@@ -133,7 +133,7 @@ async def write_constraints(
     """
     from songyan.db.human_mark_repo import HumanMarkRepository
 
-    MAX_CONSTRAINTS_PER_CHAPTER = 20
+    max_constraints_per_chapter = 20
 
     # 078: 检查当前章已有 unresolved constraints 数
     existing_count = 0
@@ -143,15 +143,17 @@ async def write_constraints(
             report.project_id, report.checked_up_to_chapter
         )
     except (RuntimeError, OSError, ConnectionError, ValueError, TypeError):
-        logger.warning("continuity_auditor.budget_check_failed", project_id=report.project_id)
+        logger.warning(
+            "continuity_auditor.budget_check_failed", project_id=report.project_id
+        )
 
-    if existing_count >= MAX_CONSTRAINTS_PER_CHAPTER:
+    if existing_count >= max_constraints_per_chapter:
         logger.info(
             "continuity_auditor.constraints_skipped_budget",
             project_id=report.project_id,
             chapter_number=report.checked_up_to_chapter,
             existing=existing_count,
-            limit=MAX_CONSTRAINTS_PER_CHAPTER,
+            limit=max_constraints_per_chapter,
         )
         return 0
 

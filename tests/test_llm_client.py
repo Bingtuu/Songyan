@@ -55,7 +55,9 @@ class TestCallLlm:
             return await coro()
 
         with patch("songyan.llm.client.get_llm", return_value=mock_llm):
-            with patch("songyan.llm.client.retry_with_backoff", new_callable=AsyncMock) as mock_retry:
+            with patch(
+                "songyan.llm.client.retry_with_backoff", new_callable=AsyncMock
+            ) as mock_retry:
                 mock_retry.side_effect = _passthrough
                 result = await call_llm("test prompt")
                 assert result == "Hello, world!"
@@ -80,7 +82,9 @@ class TestCallLlm:
             raise LLMError("all retries failed")
 
         with patch("songyan.llm.client.get_llm", return_value=mock_llm):
-            with patch("songyan.llm.client.retry_with_backoff", new_callable=AsyncMock) as mock_retry:
+            with patch(
+                "songyan.llm.client.retry_with_backoff", new_callable=AsyncMock
+            ) as mock_retry:
                 mock_retry.side_effect = _fail
                 with pytest.raises(LLMError):
                     await call_llm("test prompt")
@@ -95,7 +99,9 @@ class TestCallLlm:
             raise TimeoutError("too slow")
 
         with patch("songyan.llm.client.get_llm", return_value=mock_llm):
-            with patch("songyan.llm.client.retry_with_backoff", new_callable=AsyncMock) as mock_retry:
+            with patch(
+                "songyan.llm.client.retry_with_backoff", new_callable=AsyncMock
+            ) as mock_retry:
                 mock_retry.side_effect = _timeout
                 with pytest.raises(LLMError):
                     await call_llm("test prompt", max_retries=1)
