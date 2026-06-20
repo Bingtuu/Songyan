@@ -331,7 +331,6 @@ async def test_run_seed_project_mock_success(test_db, mock_call_llm) -> None:
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail(reason="CreativeBrief 模型新增 4 字段后该测试依赖的种子数据格式需同步更新")
 async def test_run_seed_project_repeatable(test_db, mock_call_llm) -> None:
     """同一配置重复执行产生不同 project_id，不冲突."""
     await reset_checkpointer()
@@ -383,7 +382,6 @@ async def test_run_seed_project_repeatable(test_db, mock_call_llm) -> None:
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail(reason="同上")
 async def test_run_seed_project_all_configs(test_db, mock_call_llm) -> None:
     """3 个种子配置均可成功导入并跑通."""
     configs = [
@@ -792,7 +790,6 @@ async def test_audit_chain_mock_under_1s(test_db, mock_call_llm) -> None:
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail(reason="metrics 键集合因 _total_revision_count 变化")
 async def test_metrics_all_keys_present(test_db, mock_call_llm) -> None:
     """EvaluationResult.metrics 包含全部 10 个键."""
     await reset_checkpointer()
