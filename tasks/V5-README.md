@@ -1,8 +1,8 @@
 # V5.0 Task 总索引
 
 > **阶段**: Context Diet 2.0 — 智能遗忘架构
-> **当前口径**: Task 114c 已完成，DG-2 条件通过
-> **最后整理**: 2026-06-20
+> **当前口径**: **V5.0 完成** — Task 115-120 全部收口，P0/P1 风险为 0
+> **最后整理**: 2026-06-21
 
 本文是 V5 阶段任务文档的事实入口。历史规划稿保留用于追溯设计边界；最终状态以本文件和各 `*-DONE.md` 为准。
 
@@ -10,13 +10,14 @@
 
 ## 总结论
 
-V5.0 已完成从 Context Diet 2.0 核心组件到 Ch111-Ch150 分段验证的主线工作。
+V5.0 已完成从 Context Diet 2.0 核心组件到 150 章验证的全部主线和收口工作。
 
-- Context Diet 2.0 四组件已落地：TemporalCompressor、CharacterFocalDecay、SettingEvaporator、BudgetHardCeiling。
-- Ch51-Ch100 流式验证基础设施已完成；DG-1 因 QG 通过率 58.0% 未通过，后续通过 Task 106-110e 收敛。
-- Task 111a-111g、112、113、114a、114b2 修复了工作流、事实源、报告、QG、settlement 和长跑性能阻断项。
-- Task 114c 分段完成 Ch111-Ch150：40/40 成功，QG/settlement/summary 均 40/40。
-- DG-2 为条件通过：Ch115/Ch120 触发 ContextEmergency，Ch147/Ch148 best-version 质量选择存在 P1 复核风险。
+- **Context Diet 2.0 四组件已落地**：TemporalCompressor、CharacterFocalDecay、SettingEvaporator、BudgetHardCeiling。
+- **Ch51-Ch100 流式验证基础设施已完成**；DG-1 因 QG 通过率 58.0% 未通过，后续通过 Task 106-110e 收敛。
+- **Task 111a-111g、112、113、114a、114b2** 修复了工作流、事实源、报告、QG、settlement 和长跑性能阻断项。
+- **Task 114c** 分段完成 Ch111-Ch150：40/40 成功，QG/settlement/summary 均 40/40。
+- **Task 115-120 完成 V5.0 收口**：DG-2 条件通过风险关闭（P1→✅）、ContinuityAuditor health_low 分级策略落地（软复核）、报告入口统一、wrapper 加固。
+- **V5.0 最终结论：P0/P1 风险为 0，全量回归 1711 passed，lint 通过。**
 
 ---
 
@@ -67,9 +68,9 @@ V5.0 已完成从 Context Diet 2.0 核心组件到 Ch111-Ch150 分段验证的�
 | 115 | ContextEmergency 触发复核与校准 | ✅ 完成 | `115-context-emergency-review-DONE.md` |
 | 116 | Best-Version 质量选择策略复核与修复 | ✅ 完成 | `116-best-version-quality-selection-fix-DONE.md` |
 | 117 | DG-2 风险章节窗口复验 | ✅ 完成 | `117-dg2-risk-window-revalidation-DONE.md` |
-| 118 | ContinuityAuditor Health 低分治理策略 | 📝 规划中 | `118-continuity-health-governance.md` |
-| 119 | 长跑报告入口与 Windows Wrapper 加固 | 📝 规划中 | `119-reporting-wrapper-hardening.md` |
-| 120 | V5.0 Final Acceptance Package | 📝 规划中 | `120-v5-final-acceptance-package.md` |
+| 118 | ContinuityAuditor Health 低分治理策略 | ✅ 完成 | `118-continuity-health-governance-DONE.md` |
+| 119 | 长跑报告入口与 Windows Wrapper 加固 | ✅ 完成 | `119-reporting-wrapper-hardening-DONE.md` |
+| 120 | V5.0 Final Acceptance Package | ✅ 完成 | `120-v5-final-acceptance-DONE.md` |
 
 ---
 
@@ -82,18 +83,18 @@ V5.0 已完成从 Context Diet 2.0 核心组件到 Ch111-Ch150 分段验证的�
 | Ch101 修复回放 | `run-90e08243` 恢复 accepted + settlement + summary |
 | Ch102/Ch103 settlement 验证窗口 | `run-af3ba939` 完成 accept + settlement + summary |
 | Ch111-Ch150 DG-2 | 40/40 成功，QG/settlement/summary 40/40，条件通过 |
-| 最近全量回归 | `1676 passed, 4 skipped, 2 xfailed, 3 xpassed` |
+| 最近全量回归 | `1711 passed, 4 skipped, 1 xfailed, 4 xpassed` |
 | 当前全量 ruff | `ruff check src/ tests/` 已通过后续 lint 清理 |
 
 ---
 
-## 仍需复核
+## 遗留项（已关闭或 V5.1 范围）
 
 | 风险 | 严重级别 | 状态 |
 |------|----------|------|
 | Ch115/Ch120 ContextEmergency 触发原因 | ~~P1~~ | **Task 115 已关闭**：诊断为合理降级（`budget_used` 触发时 1.0007），新增可观测性字段 |
 | Ch147/Ch148 best-version 质量选择策略 | ~~P1~~ | **Task 116 已关闭**：`quality_gate_router` 路由缺陷修复，QG 通过后不再错误触发 rewrite |
-| ContinuityAuditor health 低分只写 human marks、不阻断 accept | P2 | V5.1 质量复核范围 |
+| ContinuityAuditor health 低分只写 human marks、不阻断 accept | ~~P2~~ | **Task 118 已关闭**：软复核策略（health_low 追踪但不断路），V5.1 可扩展为硬门禁 |
 
 ---
 
@@ -105,10 +106,10 @@ Task 115-120 用于 V5.0 条件通过后的收口，不改变 Task 114c 已完�
 |------|--------|------|------|
 | 115 | P1 | 复核 Ch115/Ch120 ContextEmergency，判断合理降级、过早触发或报告误判 | ✅ 完成（合理降级 + `budget_used_before_emergency` 字段） |
 | 116 | P1 | 修复 Ch147/Ch148 best-version 质量选择风险，防止低分 fallback 覆盖高分 QG best | ✅ 完成（`quality_gate_router` 路由修复） |
-| 117 | P1 | 复跑 DG-2 风险章节窗口，验证 115/116 修复结果 | 📝 规划中 |
-| 118 | P2 | 明确 ContinuityAuditor health_low 的记录、软复核或阻断策略 | 📝 规划中 |
-| 119 | P2 | 统一长跑报告入口并加固 Windows wrapper 退出判定 | 📝 规划中 |
-| 120 | P2 | 汇总 V5.0 最终验收包，给出最终通过/条件通过/不通过结论 | 📝 规划中 |
+| 117 | P1 | 复跑 DG-2 风险章节窗口，验证 115/116 修复结果 | ✅ 完成（4/4 成功，DG-2 条件通过但风险关闭） |
+| 118 | P2 | 明确 ContinuityAuditor health_low 的记录、软复核或阻断策略 | ✅ 完成（health_low P1/P2/P3 分级，软复核） |
+| 119 | P2 | 统一长跑报告入口并加固 Windows wrapper 退出判定 | ✅ 完成（songyan report CLI，6 种 WRAPPER_RESULT 结果码） |
+| 120 | P2 | 汇总 V5.0 最终验收包，给出最终通过/条件通过/不通过结论 | ✅ 完成 |
 
 ---
 
