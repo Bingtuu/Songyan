@@ -328,6 +328,7 @@ async def _save_context_snapshot(
         creative_brief_id=state.get("creative_brief_id"),
         budget_used=getattr(ctx, "budget_used", None),
         context_emergency=getattr(ctx, "context_emergency", False),
+        budget_used_before_emergency=getattr(ctx, "budget_used_before_emergency", None),
         payload=ctx.model_dump(mode="json"),
     )
     await ContextSnapshotRepository().create(snapshot)
@@ -379,6 +380,7 @@ def _extract_context_metrics(ctx_pkg: Any) -> dict[str, Any]:
         "character_states_loaded": len(getattr(ctx_pkg, "character_states", [])),
         "soft_refs_loaded": len(getattr(ctx_pkg, "soft_references", [])),
         "context_emergency": getattr(ctx_pkg, "context_emergency", False),
+        "budget_used_before_emergency": getattr(ctx_pkg, "budget_used_before_emergency", None),
         "context_pressure": getattr(ctx_pkg, "context_pressure", {}),
     }
 

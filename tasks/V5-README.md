@@ -91,8 +91,8 @@ V5.0 已完成从 Context Diet 2.0 核心组件到 Ch111-Ch150 分段验证的�
 
 | 风险 | 严重级别 | 状态 |
 |------|----------|------|
-| Ch115/Ch120 ContextEmergency 触发原因 | P1 | 进入后续专项复核 |
-| Ch147/Ch148 best-version 质量选择策略 | P1 | 进入后续专项复核 |
+| Ch115/Ch120 ContextEmergency 触发原因 | ~~P1~~ | **Task 115 已关闭**：诊断为合理降级（`budget_used` 触发时 1.0007），新增可观测性字段 |
+| Ch147/Ch148 best-version 质量选择策略 | ~~P1~~ | **Task 116 已关闭**：`quality_gate_router` 路由缺陷修复，QG 通过后不再错误触发 rewrite |
 | ContinuityAuditor health 低分只写 human marks、不阻断 accept | P2 | V5.1 质量复核范围 |
 
 ---
@@ -101,14 +101,14 @@ V5.0 已完成从 Context Diet 2.0 核心组件到 Ch111-Ch150 分段验证的�
 
 Task 115-120 用于 V5.0 条件通过后的收口，不改变 Task 114c 已完成的事实口径。
 
-| Task | 优先级 | 目标 | 依赖 |
+| Task | 优先级 | 目标 | 状态 |
 |------|--------|------|------|
-| 115 | P1 | 复核 Ch115/Ch120 ContextEmergency，判断合理降级、过早触发或报告误判 | 114c |
-| 116 | P1 | 修复 Ch147/Ch148 best-version 质量选择风险，防止低分 fallback 覆盖高分 QG best | 114c、115 |
-| 117 | P1 | 复跑 DG-2 风险章节窗口，验证 115/116 修复结果 | 115、116 |
-| 118 | P2 | 明确 ContinuityAuditor health_low 的记录、软复核或阻断策略 | 117 |
-| 119 | P2 | 统一长跑报告入口并加固 Windows wrapper 退出判定 | 117 |
-| 120 | P2 | 汇总 V5.0 最终验收包，给出最终通过/条件通过/不通过结论 | 115-119 |
+| 115 | P1 | 复核 Ch115/Ch120 ContextEmergency，判断合理降级、过早触发或报告误判 | ✅ 完成（合理降级 + `budget_used_before_emergency` 字段） |
+| 116 | P1 | 修复 Ch147/Ch148 best-version 质量选择风险，防止低分 fallback 覆盖高分 QG best | ✅ 完成（`quality_gate_router` 路由修复） |
+| 117 | P1 | 复跑 DG-2 风险章节窗口，验证 115/116 修复结果 | 📝 规划中 |
+| 118 | P2 | 明确 ContinuityAuditor health_low 的记录、软复核或阻断策略 | 📝 规划中 |
+| 119 | P2 | 统一长跑报告入口并加固 Windows wrapper 退出判定 | 📝 规划中 |
+| 120 | P2 | 汇总 V5.0 最终验收包，给出最终通过/条件通过/不通过结论 | 📝 规划中 |
 
 ---
 

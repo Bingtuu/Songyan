@@ -51,6 +51,7 @@ class ChapterRunLog(BaseModel):
     character_states_loaded: int | None = None
     soft_refs_loaded: int | None = None
     context_emergency: bool = False
+    budget_used_before_emergency: float | None = None
     context_pressure: dict = Field(default_factory=dict)
     quality_gate_passed: bool | None = None
 

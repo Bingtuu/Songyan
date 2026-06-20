@@ -161,15 +161,17 @@ def quality_gate_router(state: Phase1State) -> str:
     """质量门后路由.
 
     Task 100b: 三联检失败时拦截，避免异常版本进入 human_confirm。
+    Task 116: 修复 status=rewrite 时忽略 QG 通过状态的问题。
+    只有当 status=rewrite 且 QG 未通过时才返回 rewrite。
     """
     if state.get("error"):
         return "pass"
-    status = state.get("status", "")
-    if status == "rewrite":
+    # Task 116: 检查 QG 通过状态，避免低分 rewrite 覆盖高分 QG passed best
+    if state.get("status") == "rewrite" and not state.get("_quality_gate_passed", False):
         return "rewrite"
-    if status == "rule_auditing":
+    if state.get("status") == "rule_auditing":
         return "revision_needed"
-    if status == "human_review_required":
+    if state.get("status") == "human_review_required":
         return "blocked"
     return "pass"
 

@@ -28,11 +28,11 @@
 
 | 指标 | 数值 |
 |------|------|
-| 最近回归测试 | **1676 passed, 4 skipped, 2 xfailed, 3 xpassed** (`pytest tests/ -q`，Task 114c 全量回归) |
-| V5.0 当前 Task | **Task 115-120 已规划；无进行中执行任务** |
-| 前置状态 | **Task 114a 已完成；Task 114b 熔断复核归档；Task 114b2 已通过；Task 114c Ch111-Ch150 40/40 成功** |
-| 当前结论 | **DG-2 条件通过：Ch115/Ch120 ContextEmergency 与 Ch147/Ch148 best-version P1 风险进入 Task 115-117 收口；无 P0 事实源污染** |
-| 当前 lint | **`ruff check src/ tests/` 已通过后续 lint 清理** |
+| 最近回归测试 | **1676 passed, 4 skipped, 1 xfailed, 4 xpassed** (`pytest tests/ -q`，Task 116 全量回归) |
+| V5.0 当前 Task | **Task 116 已完成；Task 117-120 已规划** |
+| 前置状态 | **Task 114a/b/b2/c 完成；Task 115 ContextEmergency 关闭；Task 116 best-version 路由修复完成** |
+| 当前结论 | **DG-2 条件通过：Ch115/Ch120 ContextEmergency P1 风险已由 Task 115 关闭；Ch147/Ch148 best-version P1 风险已由 Task 116 修复 `quality_gate_router` 路由缺陷；无 P0 事实源污染** |
+| 当前 lint | **`ruff check src/ tests/` 已通过** |
 | Task 110e 实跑 | **Ch80-Ch96 17/17 成功，QG 100%，coherence_major 0/17** |
 | V4.0 最终达标率 | Task 099: Ch2-Ch50 **81.6%** |
 | V4.x 归档 | `archive/v4/`（报告 + 任务 + 验证数据）|
@@ -541,14 +541,14 @@ ruff check src/ tests/
 
 ### 已规划：V5.0 Phase 4 收口任务 — Task 115-120
 
-- **Task 115** : ContextEmergency 触发复核与校准，聚焦 Ch115/Ch120。
+- **Task 115** : ✅ ContextEmergency 触发复核与校准 — 诊断为合理降级（`budget_used` 触发时 1.0007），新增 `budget_used_before_emergency` 字段。
 - **Task 116** : Best-Version 质量选择策略复核与修复，聚焦 Ch147/Ch148。
 - **Task 117** : DG-2 风险章节窗口复验，复跑并确认 P1 风险是否关闭。
 - **Task 118** : ContinuityAuditor Health 低分治理策略，明确 health_low 的记录、软复核或阻断口径。
 - **Task 119** : 长跑报告入口与 Windows Wrapper 加固，统一报告入口并增强退出判定。
 - **Task 120** : V5.0 Final Acceptance Package，汇总最终验收包并给出 V5.0 结论。
 
-当前建议按序启动 Task 115 → 116 → 117，先关闭 DG-2 两个 P1 风险。V5 任务状态以 `tasks/V5-README.md` 和各 `*-DONE.md` 为准，规划稿只作为设计背景。
+当前建议按序启动 Task 116 → 117 → 118 → 119 → 120，Task 115 已完成（ContextEmergency P1 关闭）。V5 任务状态以 `tasks/V5-README.md` 和各 `*-DONE.md` 为准，规划稿只作为设计背景。
 
 ---
 

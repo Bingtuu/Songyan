@@ -83,6 +83,7 @@ async def _query_context_metrics(version_id: str) -> dict:
                 "character_states_loaded": snapshot.get("character_states_loaded"),
                 "soft_refs_loaded": snapshot.get("soft_refs_loaded"),
                 "context_emergency": snapshot.get("context_emergency", False),
+                "budget_used_before_emergency": snapshot.get("budget_used_before_emergency"),
                 "context_pressure": context_pressure,
             }
     return {}
@@ -215,6 +216,7 @@ def build_chapter_run_log(
         character_states_loaded=_ctx_metrics.get("character_states_loaded"),
         soft_refs_loaded=_ctx_metrics.get("soft_refs_loaded"),
         context_emergency=_ctx_metrics.get("context_emergency", False),
+        budget_used_before_emergency=_ctx_metrics.get("budget_used_before_emergency"),
         context_pressure=_ctx_metrics.get("context_pressure", {}),
         quality_gate_passed=state.get("_quality_gate_passed", False),
         score_card=_score_card,

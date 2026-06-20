@@ -626,6 +626,9 @@ async def write_chapter(
             "character_states_loaded": len(context_package.character_states),
             "soft_refs_loaded": len(context_package.soft_references),
             "context_emergency": context_package.context_emergency,
+            "budget_used_before_emergency": getattr(
+                context_package, "budget_used_before_emergency", None
+            ),
             "assembled_at": context_package.assembled_at.isoformat()
             if hasattr(context_package.assembled_at, "isoformat")
             else str(context_package.assembled_at),

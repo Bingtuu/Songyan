@@ -230,6 +230,8 @@ class ContextPackage(BaseModel):
     context_emergency: bool = False
     # Task 110c: ContextEmergency 降级级别（1/2/3）
     context_emergency_level: int = 0
+    # Task 115: Emergency 触发前的 budget_used（用于可观测性）
+    budget_used_before_emergency: float | None = None
 
 
 class ContextSnapshot(BaseModel):
@@ -242,5 +244,6 @@ class ContextSnapshot(BaseModel):
     creative_brief_id: str | None = None
     budget_used: float | None = None
     context_emergency: bool = False
+    budget_used_before_emergency: float | None = None
     payload: dict = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=datetime.now)

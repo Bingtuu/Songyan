@@ -47,22 +47,14 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 
 | 指标 | 数值 |
 |------|------|
-| 状态 | **V5.0 Phase 4 已完成，Task 114c DG-2 条件通过** |
-| V4.0 最终达标率 (Ch2-Ch50) | **81.6%** (Task 099) ✅ |
-| Task 105b 实跑 | **Ch51-Ch100 全部成功，QG 通过率 58.0% (29/50)，DG-1 未通过** |
-| Task 110a 实跑 | **Ch80-Ch100 21/21 成功，QG 通过率 57.1% (12/21)，ContextEmergency 81.0% (17/21)** |
-| Task 110d 实跑 | **Ch80-Ch96 17/17 成功，QG 通过率 58.8% (10/17)，ContextEmergency 0.0% (0/17)；参数调优无正收益，已回滚** |
-| Task 110e 实跑 | **Ch80-Ch96 17/17 成功，QG 通过率 100% (17/17)，coherence_major 0/17，ContextEmergency 0/17；Auditor 阈值校准 + 审查上下文增强生效** |
-| Task 113 回放 | **Ch101 accepted + settlement + summary 已恢复** (`run-90e08243`) |
-| Task 114 Phase 1 | **历史阻断已归档**：Ch102 成功；Ch103 settlement_review 阻断 (`run-5105e24b`) |
-| Task 114a 修复 | **✅ 完成**：old_value 代码回填、quote_filter 角色名校验、run logger 多维度判定、后处理触发收紧；已由 114b2 端到端验证穿透 settlement |
-| Task 114b 验证 | **⚠️ 熔断复核完成**：Ch103/Ch102 回放因 QG 收敛失败提前 `_skip_settlement=True`，未进入 settlement；不能作为 114a 端到端通过证据 |
+| 状态 | **Task 116 已完成**：`quality_gate_router` 路由缺陷修复，避免低分 rewrite 覆盖高分 QG passed best；ruff 和全量回归通过 |
+| Task 115 已完成 | Ch115/Ch120 ContextEmergency 诊断为合理降级，新增 `budget_used_before_emergency` 字段改善可观测性 |
 | Task 114b2 验证 | **✅ 完成**：修复当前 lineage 修复计数、QG best 回滚、rewrite 结构失败路由；Ch102/Ch103 组合窗口 `run-af3ba939` 完成 accept + settlement + summary |
-| 最近回归测试 | **1676 passed, 4 skipped, 2 xfailed, 3 xpassed** (`pytest tests/ -q`，Task 114c 全量回归) |
-| 当前 lint | **`ruff check src/ tests/` 已通过后续 lint 清理** |
+| 最近回归测试 | **1676 passed, 4 skipped, 1 xfailed, 4 xpassed** (`pytest tests/ -q`，Task 116 全量回归) |
+| 当前 lint | **`ruff check src/ tests/` 已通过** |
 | Python | 3.11.9 |
-| 当前 Task | **Task 115-120 已规划；无进行中执行任务** |
-| 下一步建议 | **按序启动 Task 115 → 116 → 117，先关闭 DG-2 两个 P1 风险** |
+| 当前 Task | **Task 116 已完成；Task 117-120 已规划** |
+| 下一步建议 | **启动 Task 117 → 118 → 119 → 120，Task 117 复跑 Ch115/Ch120/Ch147/Ch148 验证修复结果** |
 
 ---
 
@@ -122,12 +114,12 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 
 | Task | 内容 | 验收条件 | 状态 |
 |------|------|---------|:----:|
-| 115 | **ContextEmergency 触发复核与校准** | Ch115/Ch120 触发原因 100% 可解释；复跑章节 `accept+settlement+summary` 成功；不引入 `budget_used > 1.0` | 📝 规划中 |
-| 116 | **Best-Version 质量选择策略复核与修复** | Ch147/Ch148 final version 符合 QG passed best 规则；低分 rewrite fallback 不覆盖高分 best | 📝 规划中 |
+| 115 | **ContextEmergency 触发复核与校准** | Ch115/Ch120 触发原因 100% 可解释；新增 `budget_used_before_emergency` 字段；全量回归通过 | ✅ 完成 |
+| 116 | **Best-Version 质量选择策略复核与修复** | Ch147/Ch148 best version 符合 QG passed best 规则；低分 rewrite fallback 不覆盖高分 best；`quality_gate_router` 路由缺陷已修复 | ✅ 完成 |
 | 117 | **DG-2 风险章节窗口复验** | Ch115/Ch120/Ch147/Ch148 4/4 成功；报告与 JSONL/DB 一致；DG-2 风险结论明确 | 📝 规划中 |
 | 118 | **ContinuityAuditor Health 低分治理策略** | health_low 可统计、可追踪、可分级；human marks 关联 project/chapter/version | 📝 规划中 |
 | 119 | **长跑报告入口与 Windows Wrapper 加固** | 报告入口统一；wrapper 正常/超时/业务完成异常均有明确结果码 | 📝 规划中 |
-| 120 | **V5.0 Final Acceptance Package** | Task 115-119 完成；P0/P1 风险为 0；最终 pytest/ruff 与文档一致性通过 | 📝 规划中 |
+| 120 | **V5.0 Final Acceptance Package** | Task 117-119 完成；P0/P1 风险为 0；最终 pytest/ruff 与文档一致性通过 | 📝 规划中 |
 
 ---
 
@@ -135,8 +127,8 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 
 | 风险 | 级别 | 处理建议 |
 |------|------|----------|
-| Ch115/Ch120 ContextEmergency | P1 | Task 115 专项复核，判断合理降级、过早触发或报告误判 |
-| Ch147/Ch148 best-version 质量选择 | P1 | Task 116 检查 rewrite fallback 是否压过更高质量 QG best |
+| Ch115/Ch120 ContextEmergency | ~~P1~~ | **Task 115 已关闭**：诊断为合理降级（`budget_used` 触发时 1.0007），新增可观测性字段 |
+| Ch147/Ch148 best-version 质量选择 | ~~P1~~ | **Task 116 已关闭**：`quality_gate_router` 路由缺陷修复，QG 通过后不再错误触发 rewrite |
 | DG-2 风险窗口复验 | P1 | Task 117 复跑风险章节并给出 DG-2 最终风险结论 |
 | ContinuityAuditor health 低分 | P2 | Task 118 明确记录、软复核或阻断策略 |
 | 报告入口与 Windows wrapper 漂移 | P2 | Task 119 统一报告入口并加固退出判定 |

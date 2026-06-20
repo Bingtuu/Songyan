@@ -764,6 +764,7 @@ class BudgetPruner:
         """
         before = self._estimate_package(ctx)
         level = 3
+        ctx.budget_used_before_emergency = before / budget if budget > 0 else None
 
         ctx.dialogue_style_cards = []
         ctx.human_marks = []
@@ -800,7 +801,8 @@ class BudgetPruner:
             before_tokens=before,
             after_tokens=after,
             budget=budget,
-            budget_used=after / budget if budget > 0 else 0.0,
+            budget_used_before_emergency=ctx.budget_used_before_emergency,
+            budget_used_after_emergency=after / budget if budget > 0 else 0.0,
         )
         return ctx
 
