@@ -287,6 +287,7 @@ class TestBuildStateSettlement:
 # ---------------------------------------------------------------------------
 class TestValidateSettlement:
     async def test_old_value_mismatch(self) -> None:
+        """Task 114a: old_value mismatch 不再报错，而是由代码回填 DB 事实源值."""
         content = "林凡握紧双拳，眼中燃起怒火"
         settlement = StateSettlement(
             character_updates=[
@@ -299,8 +300,10 @@ class TestValidateSettlement:
         )
         current_states = [CharacterState(character_id="c1", field="mood", value="悲伤")]
         errors = await _validate_settlement(settlement, content, current_states, [])
-        assert len(errors) == 1
-        assert "当前值为 '悲伤'" in errors[0]
+        # Task 114a: old_value 被自动回填，不再报错
+        assert errors == []
+        # 验证 old_value 已被回填为 DB 中的值
+        assert settlement.character_updates[0].old_value == "悲伤"
 
     async def test_old_value_match(self) -> None:
         content = "林凡握紧双拳"
@@ -421,6 +424,135 @@ class TestValidateSettlement:
             ]
         )
         errors = await _validate_settlement(settlement, content, [], [])
+        assert errors == []
+
+    # -----------------------------------------------------------------------
+    # Task 114a: Ch103 回归测试
+    # -----------------------------------------------------------------------
+    async def test_ch103_old_value_backfill_from_db(self) -> None:
+        """Ch103 回归：old_value 由 DB 事实源回填，不依赖 LLM 精确复现.
+
+        复现场景：LLM 输出截断的 old_value，但 DB 中有完整值。
+        修复后：验证通过，old_value 被自动回填为 DB 中的完整值。
+        """
+        db_full_value = (
+            "警觉，专注，震惊（发现守门人版本协议被修改、自己出现在失踪名单上），"
+            "决绝（决定带走终端），困惑（守门人行为诡异），警觉（观察窗出现异常暗线），"
+            "认知不适（右眼刺痛），震惊（手套在说话），愤怒（守门人封锁他），"
+            "决绝（主动接触门扉表面读取异物记忆碎片），"
+            "震惊（看到三十年前事故真相——17名研究员被空间压缩闷杀，日志被篡改），"
+            "愤怒（发现盖亚环高层掩盖真相）"
+        )
+        llm_truncated_value = (
+            "警觉（观察窗出现异常暗线），认知不适（右眼刺痛），震惊（手套在说话），"
+            "愤怒（守门人封锁他），决绝（主动接触门扉表面读取异物记忆碎片），"
+            "震惊（看到三十年前事故真相——17名研究员被空间压缩闷杀，日志被篡改），"
+            "愤怒（发现盖亚环高层掩盖真相）"
+        )
+        content = "宋言震惊地发现真相，愤怒地冲向守门人。"
+        settlement = StateSettlement(
+            character_updates=[
+                CharacterUpdate(
+                    character_id="char-ce09ac00",
+                    field="mental_state",
+                    old_value=llm_truncated_value,  # LLM 输出的截断值
+                    new_value="愤怒，决绝",
+                    source_quote="宋言震惊地发现真相",
+                )
+            ]
+        )
+        current_states = [
+            CharacterState(
+                character_id="char-ce09ac00",
+                field="mental_state",
+                value=db_full_value,  # DB 中的完整事实源
+            )
+        ]
+
+        # 修复前：验证失败，报错 old_value mismatch
+        # 修复后：验证通过，old_value 被回填为 db_full_value
+        errors = await _validate_settlement(settlement, content, current_states, [])
+        assert errors == [], f"预期无错误，实际: {errors}"
+        assert settlement.character_updates[0].old_value == db_full_value, (
+            "old_value 应被回填为 DB 中的完整值"
+        )
+
+    async def test_ch103_old_value_backfill_multiple_fields(self) -> None:
+        """Ch103 回归：多个字段同时回填 old_value."""
+        content = "宋言感到身体不适，背包里的物品散落一地。"
+        settlement = StateSettlement(
+            character_updates=[
+                CharacterUpdate(
+                    character_id="char-ce09ac00",
+                    field="mental_state",
+                    old_value="截断的心理状态",
+                    new_value="愤怒",
+                    source_quote="宋言感到身体不适",
+                ),
+                CharacterUpdate(
+                    character_id="char-ce09ac00",
+                    field="physical_state",
+                    old_value="截断的身体状态",
+                    new_value="虚弱",
+                    source_quote="身体不适",
+                ),
+                CharacterUpdate(
+                    character_id="char-ce09ac00",
+                    field="inventory",
+                    old_value="截断的物品列表",
+                    new_value="终端、手套",
+                    source_quote="物品散落一地",
+                ),
+            ]
+        )
+        current_states = [
+            CharacterState(
+                character_id="char-ce09ac00",
+                field="mental_state",
+                value="完整的心理状态：警觉、专注、震惊",
+            ),
+            CharacterState(
+                character_id="char-ce09ac00",
+                field="physical_state",
+                value="完整的身体状态：健康、有力",
+            ),
+            CharacterState(
+                character_id="char-ce09ac00",
+                field="inventory",
+                value="完整的物品列表：终端、手套、笔记本",
+            ),
+        ]
+
+        errors = await _validate_settlement(settlement, content, current_states, [])
+        assert errors == []
+        # 验证所有 old_value 都被回填
+        for i, field in enumerate(["mental_state", "physical_state", "inventory"]):
+            assert settlement.character_updates[i].old_value == current_states[i].value, (
+                f"{field} 的 old_value 未被正确回填"
+            )
+
+    async def test_ch103_old_value_backfill_with_warning(self) -> None:
+        """Ch103 回归：未知角色/字段触发校验警告，不静默掩盖.
+
+        当 LLM 输出的 old_value 与 DB 值差异过大（非截断关系），
+        或涉及未知角色/字段时，应触发警告但不阻断。
+        """
+        content = "新角色林凡出现。"
+        settlement = StateSettlement(
+            character_updates=[
+                CharacterUpdate(
+                    character_id="char-unknown",  # 未知角色
+                    field="mood",
+                    old_value="完全不相关的值",
+                    new_value="好奇",
+                    source_quote="新角色林凡出现",
+                )
+            ]
+        )
+        current_states = []  # DB 中无此角色状态
+
+        # 未知角色：验证跳过，不报错
+        errors = await _validate_settlement(settlement, content, current_states, [])
         assert errors == []
 
 
@@ -844,6 +976,11 @@ class TestExtractSettlement:
                             await extract_settlement("正文", "p1", 3, "v1")
 
     async def test_validation_fails(self) -> None:
+        """Task 114a: old_value mismatch 不再导致 validation 失败，而是自动回填.
+
+        原测试期望 old_value='错误的旧值' 与 DB 值='冷静' 不匹配时 validation 失败。
+        修复后：old_value 被自动回填为 DB 值='冷静'，validation 通过。
+        """
         content = "林凡握紧双拳，眼中燃起怒火。"
         llm_response = _make_valid_llm_response(
             character_updates=[
@@ -879,8 +1016,11 @@ class TestExtractSettlement:
                             chapter_number=3, version_id="v1",
                         )
 
-        assert result.validation_status == "needs_human_review"
-        assert len(result.validation_errors) > 0
+        # Task 114a: old_value 被自动回填，validation 通过
+        assert result.validation_status == "valid"
+        assert len(result.validation_errors) == 0
+        # 验证 old_value 已被回填为 DB 中的值
+        assert result.character_updates[0].old_value == "冷静"
 
     async def test_temperature_param(self) -> None:
         llm_response = _make_valid_llm_response(

@@ -553,7 +553,8 @@ async def extract_settlement(
         )
 
     # 4.5. source_quote 去噪（072）
-    filtered = filter_settlement_source_quotes(settlement, content)
+    # Task 114a: filter_settlement_source_quotes 现为 async，需 await
+    filtered = await filter_settlement_source_quotes(settlement, content)
     if filtered > 0:
         logger.info(
             "settlement.source_quotes_filtered",

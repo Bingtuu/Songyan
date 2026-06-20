@@ -10,8 +10,10 @@
 |:------:|------|------|
 | P0 | `AGENTS.md` | 开发代理指令与不可违背规则 |
 | P0 | `docs/STATUS.md` | 项目状态看板（当前 Task、路线图） |
-| P0 | `tasks/114-ch101-ch150-streaming-validation.md` | 当前 Task：114a Settlement 事实源契约修复；114b Phase 1 重跑；114c DG-2 长跑 |
-| P0 | `tasks/113-ch101-convergence-settlement-blocker-fix.md` | 最新完成：Ch101 收敛回滚与 Settlement 阻断修复 |
+| P0 | `tasks/114-ch101-ch150-streaming-validation.md` | 当前 Task：114a 已完成；114b 熔断复核；114b2 已完成；114c DG-2 分段长跑可启动 |
+| P0 | `tasks/114b-phase1-replay-ch102-ch110-DONE.md` | 最近复核：Task 114b Phase 1 熔断记录 |
+| P0 | `tasks/114b2-qg-convergence-settlement-window-DONE.md` | 最近完成：Task 114b2 QG 收敛阻断处理与 Ch102/Ch103 端到端验证 |
+| P0 | `tasks/113-ch101-convergence-settlement-blocker-fix.md` | 已完成：Ch101 收敛回滚与 Settlement 阻断修复 |
 | P0 | `tasks/112-preflight-blocker-fix-DONE.md` | 已完成：Task 114 前置阻断修复 |
 | P0 | `tasks/111g-long-run-performance-containment-DONE.md` | 已完成：长跑性能缺陷收敛 |
 | P0 | `tasks/111f-context-snapshot-prompt-metadata-fix-DONE.md` | 已完成：Context Snapshot、Prompt 与 Metadata 一致性 |
@@ -24,6 +26,8 @@
 | 场景 | 文件 |
 |------|------|
 | 当前执行门禁 | `tasks/114-ch101-ch150-streaming-validation.md` |
+| Task 114b 熔断复核 | `tasks/114b-phase1-replay-ch102-ch110-DONE.md` |
+| Task 114b2 完成记录 | `tasks/114b2-qg-convergence-settlement-window-DONE.md` |
 | 项目状态核对 | `docs/STATUS.md` |
 | 技术方案 | `system_prompt/development-tech-plan-v3.md`（V3 历史参考） |
 | 工程规范 | `system_prompt/ai-collaboration-guide.md` |

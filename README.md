@@ -12,7 +12,7 @@
 
 **V5.0 — Context Diet 2.0 智能遗忘架构**
 
-目标：通过 TemporalCompressor + CharacterFocalDecay + SettingEvaporator + BudgetHardCeiling 四组件协同，控制信息密度，支撑 Ch1-Ch150 全自动稳定生成。Task 101~113 已完成 Context Diet 2.0 核心组件、流式验证基础设施、统一评分体系、修复收敛护栏、角色退场机制、设定去重与伏笔监控、coherence_major 根因修复、工作流决策契约修复、Settlement 事实源修复、Context/Prompt 一致性修复、QualityGate/Settlement 阻断修复、DG-2 报告修复、Context Snapshot/Metadata 修复、长跑性能收敛、Task 114 前置阻断修复和 Ch101 收敛回滚修复。当前进入 Task 114a：Settlement 事实源契约修复；Task 114b/114c 将在 114a 通过后分段推进。
+目标：通过 TemporalCompressor + CharacterFocalDecay + SettingEvaporator + BudgetHardCeiling 四组件协同，控制信息密度，支撑 Ch1-Ch150 全自动稳定生成。Task 101~113 已完成 Context Diet 2.0 核心组件、流式验证基础设施、统一评分体系、修复收敛护栏、角色退场机制、设定去重与伏笔监控、coherence_major 根因修复、工作流决策契约修复、Settlement 事实源修复、Context/Prompt 一致性修复、QualityGate/Settlement 阻断修复、DG-2 报告修复、Context Snapshot/Metadata 修复、长跑性能收敛、Task 114 前置阻断修复和 Ch101 收敛回滚修复。Task 114a 已完成 Settlement 事实源契约修复；Task 114b 熔断复核已归档；Task 114b2 已完成 Ch102/Ch103 QG 收敛阻断处理与 settlement 端到端验证，当前可启动 Task 114c 分段长跑。
 
 ### 版本概览
 
@@ -28,10 +28,10 @@
 
 | 指标 | 数值 |
 |------|------|
-| 最近回归测试 | **1659 passed, 4 skipped, 2 xfailed, 3 xpassed** (`pytest tests/ -q`，Task 113 后全量回归) |
-| V5.0 当前 Task | **114a**（Settlement 事实源契约修复） |
-| 前置状态 | **Task 112/113 已完成；Ch101 基线已恢复；Task 114 Phase 1 在 Ch103 暴露 settlement `old_value` mismatch** |
-| 当前门禁 | **Task 114a 完成前禁止启动 Ch111-Ch150** |
+| 最近回归测试 | **1671 passed, 4 skipped, 2 xfailed, 3 xpassed** (`pytest tests/ -q`，Task 114b2 后全量回归) |
+| V5.0 当前 Task | **114c**（Ch111-Ch150 分段流式验证 + DG-2） |
+| 前置状态 | **Task 114a 已完成；Task 114b 熔断复核归档；Task 114b2 已通过 Ch102/Ch103 `run-af3ba939` 端到端验证** |
+| 当前门禁 | **按 Task 114c 分段执行 Ch111-Ch130、Ch131-Ch150；禁止一次性 40 章长跑** |
 | Task 110e 实跑 | **Ch80-Ch96 17/17 成功，QG 100%，coherence_major 0/17** |
 | V4.0 最终达标率 | Task 099: Ch2-Ch50 **81.6%** |
 | V4.x 归档 | `archive/v4/`（报告 + 任务 + 验证数据）|
@@ -398,9 +398,10 @@ ContextManager 按 Token 预算组装 `ContextPackage`（默认 32K）：
 | M60 长跑性能缺陷收敛 | 111g | context assembly、Settlement prompt facts、O(N²) 热点收敛 | ✅ |
 | M61 Task 114 前置阻断修复 | 112 | 修复 budget QG 硬门禁与 Settlement setting_key 规范化；恢复 Ch97 基线 | ✅ |
 | M62 Ch101 收敛/Settlement 阻断修复 | 113 | 修复 rebound 后 best version/head 选择；恢复 Ch101 基线 | ✅ |
-| M63 Settlement 事实源契约修复 | 114a | 修复 Ch103 `old_value` mismatch、`quote_filter` 内部 ID 误杀引用、run logger/post-processing 残留风险 | 📝 |
-| M64 Phase 1 重跑 | 114b | 先回放 Ch103，再补完 Ch102-Ch110 | ⏸️ |
-| M65 Ch111-Ch150 验证 | 114c | Phase 2/3 分段长跑 + 决策门 DG-2 | ⏸️ |
+| M63 Settlement 事实源契约修复 | 114a | 修复 Ch103 `old_value` mismatch、`quote_filter` 内部 ID 误杀引用、run logger/post-processing 残留风险 | ✅ |
+| M64 Phase 1 重跑 | 114b | Ch103/Ch102 回放因 QG 收敛失败提前跳过 settlement，未达出口条件 | ⚠️ |
+| M64b QG 收敛阻断处理 + settlement 验证窗口 | 114b2 | 修复当前 lineage 修复计数、QG best 回滚、rewrite 结构失败路由；Ch102/Ch103 `run-af3ba939` 端到端通过 | ✅ |
+| M65 Ch111-Ch150 验证 | 114c | Phase 2/3 分段长跑 + 决策门 DG-2 | 📝 |
 
 ---
 
@@ -436,7 +437,7 @@ pytest -k "not integration" -q
 
 ```bash
 pytest tests/ -q
-# Current baseline: 1659 passed, 4 skipped, 2 xfailed, 3 xpassed
+# Current baseline: 1665 passed, 4 skipped, 1 xfailed, 4 xpassed
 
 ruff check src/ tests/
 # Note: 全量 ruff 仍有历史 lint 存量；当前修复任务需保证改动文件不新增 lint。
@@ -517,13 +518,19 @@ ruff check src/ tests/
 - **Task 113** : Ch101 收敛回滚与 Settlement 阻断修复 ✅
 - 首次 Task 113 长跑窗口 `run-6b462cb9` 在 Ch101 触发 `settlement_review` 熔断；修复后通过 `run-90e08243` 恢复 Ch101 accepted、settlement 和 summary 基线。
 
-### 当前：V5.0 Phase 4 分段验证前置修复 — Task 114a
+### 当前：V5.0 Phase 4 分段验证 — Task 114c
 
-- **Task 114a** : Settlement 事实源契约修复
+- **Task 114a** : Settlement 事实源契约修复 ✅
 - Task 114 Phase 1 首次运行 `run-5105e24b` 中，Ch102 成功，Ch103 因 settlement `old_value` 与 DB 当前事实源不一致进入 `settlement_review`，Ch104-Ch110 未继续执行。
-- 当前门禁：先修复 `old_value` 回填/校正、`quote_filter` 内部 ID 误杀引用、run logger 和 settlement 后处理残留风险；114a 通过前不启动 Ch111-Ch150。
-- **Task 114b** : Phase 1 重跑 Ch102-Ch110，先回放 Ch103，再补完 Ch104-Ch110。
-- **Task 114c** : Ch111-Ch150 分段流式验证 + 决策门 DG-2，在 114b 通过后启动。
+- **Task 114b** : Phase 1 重跑 Ch102-Ch110 ⚠️
+  - Ch103 回放 `run-385dc3e0` 因 `readability_score:0.473` 触发 QG 收敛失败，提前 `_skip_settlement=True`。
+  - Ch102 重跑 `run-452c4f78` 因 `length_score:0.440` 触发 QG 收敛失败，提前 `_skip_settlement=True`。
+  - 两次运行均未进入 settlement，因此不能作为 Task 114a 端到端实跑通过证据。
+- **Task 114b2** : QG 收敛阻断处理 + settlement 端到端验证窗口 ✅
+  - 修复当前 lineage 修复计数，避免新回放继承历史 revision/rewrite 次数。
+  - 修复 QG 合格 best 回滚和 rewrite 结构失败路由。
+  - 组合窗口 `run-af3ba939`：Ch102/Ch103 均完成 accept + settlement + summary，`run_logger success=True`。
+- **当前门禁：Task 114c** : Ch111-Ch150 必须按 Ch111-Ch130、Ch131-Ch150 分段执行并生成 DG-2 报告。
 
 ---
 

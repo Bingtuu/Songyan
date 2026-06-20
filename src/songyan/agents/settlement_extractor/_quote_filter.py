@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import structlog
 
+from songyan.db.repository import CharacterRepository
 from songyan.models import StateSettlement
 
 from ._validate import _quote_in_content
@@ -54,11 +55,48 @@ def _is_valid_source_quote(quote: str, content: str, keyword: str = "") -> bool:
     return True
 
 
-def filter_settlement_source_quotes(
+async def _build_character_name_map(
+    character_ids: set[str],
+) -> dict[str, str]:
+    """构建 character_id -> 角色名 的映射.
+
+    Task 114a: quote_filter 优先使用角色名而非内部 character_id 做关键词校验.
+    角色名缺失时回退至长度与存在性校验。
+
+    Args:
+        character_ids: 需要查询的 character_id 集合
+
+    Returns:
+        character_id -> 角色名 的映射，查不到的 ID 不包含在结果中
+    """
+    name_map: dict[str, str] = {}
+    if not character_ids:
+        return name_map
+
+    char_repo = CharacterRepository()
+    for char_id in character_ids:
+        try:
+            char = await char_repo.get(char_id)
+            if char and char.name:
+                name_map[char_id] = char.name
+        except Exception as exc:
+            logger.warning(
+                "quote_filter.character_lookup_failed",
+                character_id=char_id,
+                error=str(exc),
+            )
+    return name_map
+
+
+async def filter_settlement_source_quotes(
     settlement: StateSettlement,
     content: str,
 ) -> int:
     """过滤 settlement 中所有 source_quote 噪声.
+
+    Task 114a 修复：
+    - CharacterUpdate 优先使用角色名而非内部 character_id 做关键词校验
+    - 角色名缺失时回退至长度与存在性校验，防止误杀合法引用
 
     对以下对象的 source_quote 执行过滤：
     - CharacterUpdate
@@ -76,15 +114,21 @@ def filter_settlement_source_quotes(
     """
     filtered_count = 0
 
-    # 1. CharacterUpdate
+    # 1. CharacterUpdate — Task 114a: 使用角色名替代内部 ID
+    character_ids = {u.character_id for u in settlement.character_updates}
+    name_map = await _build_character_name_map(character_ids)
+
     for update in settlement.character_updates:
+        # Task 114a: 优先使用角色名，缺失时回退至无关键词校验
+        keyword = name_map.get(update.character_id, "")
         if not _is_valid_source_quote(
-            update.source_quote, content, keyword=update.character_id
+            update.source_quote, content, keyword=keyword
         ):
             if update.source_quote:
                 logger.debug(
                     "quote_filter.character_update_filtered",
                     character_id=update.character_id,
+                    character_name=name_map.get(update.character_id),
                     field=update.field,
                     quote_length=len(update.source_quote),
                 )

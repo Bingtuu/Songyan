@@ -156,6 +156,39 @@ def build_chapter_run_log(
             k: v for k, v in _score_card_raw.items() if k in _allowed_keys
         }
 
+    # Task 114a: settlement_success 多维度判定，严禁仅依赖单一标志位
+    # 必须同时满足：
+    # 1. 章节整体成功 (success=True)
+    # 2. 不需要人工审核 (_settlement_needs_human_review=False)
+    # 3. 没有跳过 settlement (_skip_settlement=False)
+    # 4. 错误阶段不是 settlement 相关
+    # 5. 有 settlement_id 或 settlement_applied 标志（可选增强）
+    settlement_needs_review = state.get("_settlement_needs_human_review", False)
+    skip_settlement = state.get("_skip_settlement", False)
+    settlement_error_stages = {"settlement", "settlement_review", "settlement_extractor"}
+    has_settlement_error = error_stage in settlement_error_stages if error_stage else False
+    has_settlement_id = state.get("settlement_id") is not None
+
+    settlement_success = (
+        success
+        and not settlement_needs_review
+        and not skip_settlement
+        and not has_settlement_error
+        and has_settlement_id
+    )
+
+    logger.debug(
+        "run_logger.settlement_success_calculated",
+        project_id=project_id,
+        chapter_number=chapter_number,
+        success=success,
+        settlement_needs_review=settlement_needs_review,
+        skip_settlement=skip_settlement,
+        has_settlement_error=has_settlement_error,
+        has_settlement_id=has_settlement_id,
+        settlement_success=settlement_success,
+    )
+
     return ChapterRunLog(
         log_id=new_id("log"),
         run_id=run_id,
@@ -174,8 +207,8 @@ def build_chapter_run_log(
         revision_rounds=state.get("_total_revision_count", state.get("revision_round", 0)),
         content_preservation_ratio=state.get("_content_preservation_ratio"),
         continuity_health_score=continuity_health_score,
-        settlement_success=not state.get("_settlement_needs_human_review", False),
-        settlement_needs_human_review=state.get("_settlement_needs_human_review", False),
+        settlement_success=settlement_success,
+        settlement_needs_human_review=settlement_needs_review,
         summary_id=summary_id,
         summary_success=summary_id is not None,
         budget_used=_ctx_metrics.get("budget_used"),
@@ -186,7 +219,7 @@ def build_chapter_run_log(
         quality_gate_passed=state.get("_quality_gate_passed", False),
         score_card=_score_card,
         convergence_failed=state.get("_convergence_failed", False),
-        skip_settlement=state.get("_skip_settlement", False),
+        skip_settlement=skip_settlement,
         duration_sec=round(duration_sec, 2),
     )
 

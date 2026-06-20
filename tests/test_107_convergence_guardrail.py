@@ -267,6 +267,86 @@ async def test_qg_after_two_revisions_failure_rollback() -> None:
 
 
 @pytest.mark.asyncio
+async def test_qg_convergence_recovers_with_qg_pass_best_version() -> None:
+    """Task 114b2: 若存在 QG 合格 best，收敛失败应回滚并继续 settlement."""
+    version = MagicMock()
+    version.version_id = "v-current"
+    version.version_type = "revision"
+    version.word_count = 4100
+    best_version = MagicMock()
+    best_version.version_id = "v-best"
+    best_version.score_card = None
+
+    qg_pass_score_card = {
+        "version_id": "v-best",
+        "overall_score": 0.8,
+        "length": {"score": 0.6},
+        "budget": {"score": 1.0},
+        "coherence": {"score": 0.85},
+        "momentum": {"score": -1.0},
+        "readability": {"score": 0.7},
+        "flags": {
+            "length_ok": True,
+            "budget_ok": True,
+            "coherence_critical": False,
+            "coherence_major": False,
+            "momentum_present": True,
+            "readability_ok": True,
+        },
+    }
+
+    with (
+        patch("songyan.workflows._nodes.load_version", new_callable=AsyncMock) as mock_ver,
+        patch(
+            "songyan.workflows._nodes._load_chapter_repair_state",
+            new_callable=AsyncMock,
+            return_value=(2, False),
+        ),
+        patch(
+            "songyan.workflows._nodes._load_active_best_version",
+            new_callable=AsyncMock,
+            return_value=best_version,
+        ),
+        patch("songyan.workflows._nodes.ChapterHeadRepository") as mock_head_repo,
+    ):
+        mock_ver.return_value = version
+        mock_head_repo.return_value.update = AsyncMock()
+
+        result = await quality_gate_node({
+            "project_id": "p1",
+            "chapter_number": 1,
+            "current_version_id": "v-current",
+            "_was_rewritten": True,
+            "_best_version_id": "v-best",
+            "_best_score_card": qg_pass_score_card,
+            "_score_card": {
+                "version_id": "v-current",
+                "overall_score": 0.5,
+                "length": {"score": 0.44},
+                "budget": {"score": 1.0},
+                "coherence": {"score": 0.85},
+                "momentum": {"score": -1.0},
+                "readability": {"score": 0.7},
+                "flags": {
+                    "length_ok": False,
+                    "budget_ok": True,
+                    "coherence_critical": False,
+                    "coherence_major": False,
+                    "momentum_present": True,
+                    "readability_ok": True,
+                },
+            },
+        })
+
+    assert result["status"] == "human_confirm"
+    assert result["_quality_gate_passed"] is True
+    assert result["_convergence_failed"] is False
+    assert result["_skip_settlement"] is False
+    assert result["current_version_id"] == "v-best"
+    mock_head_repo.return_value.update.assert_awaited_once()
+
+
+@pytest.mark.asyncio
 async def test_qg_without_best_version_no_rollback() -> None:
     """修复耗尽但无 best_version → 明确阻断 settlement，不尝试回滚."""
     version = MagicMock()

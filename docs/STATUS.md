@@ -47,7 +47,7 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 
 | 指标 | 数值 |
 |------|------|
-| 状态 | **V5.0 Phase 4 — Task 114a Settlement 事实源契约修复准备中** |
+| 状态 | **V5.0 Phase 4 — Task 114b2 已完成，Task 114c 可启动** |
 | V4.0 最终达标率 (Ch2-Ch50) | **81.6%** (Task 099) ✅ |
 | Task 105b 实跑 | **Ch51-Ch100 全部成功，QG 通过率 58.0% (29/50)，DG-1 未通过** |
 | Task 110a 实跑 | **Ch80-Ch100 21/21 成功，QG 通过率 57.1% (12/21)，ContextEmergency 81.0% (17/21)** |
@@ -55,10 +55,13 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 | Task 110e 实跑 | **Ch80-Ch96 17/17 成功，QG 通过率 100% (17/17)，coherence_major 0/17，ContextEmergency 0/17；Auditor 阈值校准 + 审查上下文增强生效** |
 | Task 113 回放 | **Ch101 accepted + settlement + summary 已恢复** (`run-90e08243`) |
 | Task 114 Phase 1 | **Ch102 成功；Ch103 settlement_review 阻断** (`run-5105e24b`)，Ch104-Ch110 未执行 |
-| 最近回归测试 | **1659 passed, 4 skipped, 2 xfailed, 3 xpassed** (`pytest tests/ -q`，Task 113 后全量回归) |
+| Task 114a 修复 | **✅ 完成**：old_value 代码回填、quote_filter 角色名校验、run logger 多维度判定、后处理触发收紧；已由 114b2 端到端验证穿透 settlement |
+| Task 114b 验证 | **⚠️ 熔断复核完成**：Ch103/Ch102 回放因 QG 收敛失败提前 `_skip_settlement=True`，未进入 settlement；不能作为 114a 端到端通过证据 |
+| Task 114b2 验证 | **✅ 完成**：修复当前 lineage 修复计数、QG best 回滚、rewrite 结构失败路由；Ch102/Ch103 组合窗口 `run-af3ba939` 完成 accept + settlement + summary |
+| 最近回归测试 | **1671 passed, 4 skipped, 2 xfailed, 3 xpassed** (`pytest tests/ -q`，Task 114b2 后全量回归) |
 | Python | 3.11.9 |
-| 当前 Task | **Task 114a: Settlement 事实源契约修复** |
-| 前置状态 | **Task 112/113 已完成；Task 114 拆分为 114a/114b/114c，禁止在 114a 完成前启动 Ch111-Ch150** |
+| 当前 Task | **Task 114c: Ch111-Ch150 分段流式验证 + DG-2** |
+| 前置状态 | **Task 111a-g / 112 / 113 / 114a / 114b2 已完成；114b 已熔断归档；允许按段启动 Ch111-Ch150** |
 
 ---
 
@@ -107,9 +110,10 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 | 111g | **长跑性能缺陷收敛** | 减少重复 context assembly；限制 settlement prompt 事实源；收敛 O(N²) 热点 | ✅ |
 | 112 | **Task 114 前置阻断修复** | 修复 budget QG 硬门禁与 Settlement setting_key 规范化；恢复 Ch97 accepted + settlement + summary 基线 | ✅ |
 | 113 | **Ch101 收敛回滚与 Settlement 阻断修复** | 修复 rebound 后 best version/head 选择；恢复 Ch101 accepted + settlement + summary 基线；全量回归通过 | ✅ |
-| 114a | **Settlement 事实源契约修复** | 修复 Ch103 暴露的 `old_value` mismatch、`quote_filter` 内部 ID 误杀引用、run logger/post-processing 残留风险 | 📝 |
-| 114b | **Phase 1 重跑 Ch102-Ch110** | 先回放 Ch103，再补完 Ch102-Ch110；无连续 settlement 阻断后才进入 Phase 2 | ⏸️ |
-| 114c | **Ch111-Ch150 分段流式验证 + DG-2** | Phase 2 Ch111-Ch130、Phase 3 Ch131-Ch150；生成 DG-2 报告 | ⏸️ |
+| 114a | **Settlement 事实源契约修复** | 修复 Ch103 暴露的 `old_value` mismatch、`quote_filter` 内部 ID 误杀引用、run logger/post-processing 残留风险 | ✅ |
+| 114b | **Phase 1 重跑 Ch102-Ch110** | Ch103/Ch102 回放因 QG 收敛失败触发 `_skip_settlement=True`，未进入 settlement；未达 Phase 1 出口条件 | ⚠️ |
+| 114b2 | **QG 收敛阻断处理 + settlement 端到端验证窗口** | 已修复 QG 收敛阻断和 rewrite 结构失败路由；Ch102/Ch103 `run-af3ba939` 完成 accept+settlement+summary | ✅ |
+| 114c | **Ch111-Ch150 分段流式验证 + DG-2** | Phase 2 Ch111-Ch130、Phase 3 Ch131-Ch150；生成 DG-2 报告 | 📝 |
 
 ---
 
@@ -167,5 +171,8 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 - `tasks/112-preflight-blocker-fix.md` — Task 114 前置阻断修复规划
 - `tasks/112-preflight-blocker-fix-DONE.md` — Task 114 前置阻断修复交付记录
 - `tasks/113-ch101-convergence-settlement-blocker-fix.md` — Ch101 收敛回滚与 Settlement 阻断修复记录
-- `tasks/114-ch101-ch150-streaming-validation.md` — Task 114 umbrella 规划：114a Settlement 修复、114b Phase 1 重跑、114c DG-2 长跑
+- `tasks/114a-settlement-fact-source-contract-fix-DONE.md` — Task 114a Settlement 事实源契约修复交付记录
+- `tasks/114b-phase1-replay-ch102-ch110-DONE.md` — Task 114b Phase 1 熔断复核记录
+- `tasks/114b2-qg-convergence-settlement-window-DONE.md` — Task 114b2 QG 收敛阻断与 settlement 端到端验证记录
+- `tasks/114-ch101-ch150-streaming-validation.md` — Task 114 umbrella 规划：114a Settlement 修复、114b Phase 1 重跑、114b2 验证窗口、114c DG-2 长跑
 - `logs/chapter_runs/run-33229919.jsonl` — Ch51-Ch59 实跑指标

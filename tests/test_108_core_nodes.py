@@ -517,3 +517,115 @@ class TestLoadChapterRepairStateExcludesAbandoned:
         assert revision_count == 1
         assert was_rewritten is False
         mock_repo.list_by_chapter.assert_awaited_once_with("p1", 1, include_abandoned=True)
+
+    @pytest.mark.asyncio
+    async def test_current_lineage_excludes_previous_run_revisions(self) -> None:
+        """Task 114b2: 新回放 draft 不应继承历史 run 的 revision/rewrite 计数."""
+        old_draft = ChapterVersion(
+            version_id="old-draft",
+            project_id="p1",
+            chapter_number=1,
+            version_number=1,
+            version_type="draft",
+            is_abandoned=False,
+            content="old",
+        )
+        old_revision_1 = ChapterVersion(
+            version_id="old-rev-1",
+            project_id="p1",
+            chapter_number=1,
+            version_number=2,
+            version_type="revision",
+            is_abandoned=False,
+            content="old revision 1",
+            parent_version_id="old-draft",
+        )
+        old_revision_2 = ChapterVersion(
+            version_id="old-rev-2",
+            project_id="p1",
+            chapter_number=1,
+            version_number=3,
+            version_type="revision",
+            is_abandoned=False,
+            content="old revision 2",
+            parent_version_id="old-rev-1",
+        )
+        fresh_rerun_draft = ChapterVersion(
+            version_id="fresh-draft",
+            project_id="p1",
+            chapter_number=1,
+            version_number=4,
+            version_type="draft",
+            is_abandoned=False,
+            content="fresh",
+            parent_version_id=None,
+        )
+
+        mock_repo = AsyncMock()
+        mock_repo.list_by_chapter = AsyncMock(
+            return_value=[old_draft, old_revision_1, old_revision_2, fresh_rerun_draft]
+        )
+
+        with patch(
+            "songyan.workflows._nodes.ChapterVersionRepository",
+            return_value=mock_repo,
+        ):
+            revision_count, was_rewritten = await _load_chapter_repair_state(
+                "p1",
+                1,
+                "fresh-draft",
+            )
+
+        assert revision_count == 0
+        assert was_rewritten is False
+        mock_repo.list_by_chapter.assert_awaited_once_with("p1", 1, include_abandoned=True)
+
+    @pytest.mark.asyncio
+    async def test_current_lineage_counts_current_revision_chain(self) -> None:
+        """Task 114b2: 当前 parent 链上的 revision 仍应计入收敛状态."""
+        draft = ChapterVersion(
+            version_id="draft",
+            project_id="p1",
+            chapter_number=1,
+            version_number=1,
+            version_type="draft",
+            is_abandoned=False,
+            content="draft",
+        )
+        revision = ChapterVersion(
+            version_id="revision",
+            project_id="p1",
+            chapter_number=1,
+            version_number=2,
+            version_type="revision",
+            is_abandoned=False,
+            content="revision",
+            parent_version_id="draft",
+        )
+        rewrite = ChapterVersion(
+            version_id="rewrite",
+            project_id="p1",
+            chapter_number=1,
+            version_number=3,
+            version_type="draft",
+            is_abandoned=False,
+            content="rewrite",
+            parent_version_id="revision",
+        )
+
+        mock_repo = AsyncMock()
+        mock_repo.list_by_chapter = AsyncMock(return_value=[draft, revision, rewrite])
+
+        with patch(
+            "songyan.workflows._nodes.ChapterVersionRepository",
+            return_value=mock_repo,
+        ):
+            revision_count, was_rewritten = await _load_chapter_repair_state(
+                "p1",
+                1,
+                "rewrite",
+            )
+
+        assert revision_count == 1
+        assert was_rewritten is True
+        mock_repo.list_by_chapter.assert_awaited_once_with("p1", 1, include_abandoned=True)

@@ -174,6 +174,19 @@ def quality_gate_router(state: Phase1State) -> str:
     return "pass"
 
 
+def rewrite_router(state: Phase1State) -> str:
+    """rewrite 后路由.
+
+    结构完整性失败时 rewrite_node 会回滚到 best version 并进入 human_confirm；
+    结构完整时才继续审查重写稿。
+    """
+    if state.get("error"):
+        return "audit"
+    if state.get("status") == "human_confirm":
+        return "human_confirm"
+    return "audit"
+
+
 def human_confirm_router(state: Phase1State) -> str:
     """human_confirm 后路由."""
     decision = state.get("human_decision")
@@ -256,8 +269,13 @@ async def build_phase1_graph() -> Any:
     # revision_handler → rule_auditor（循环）
     builder.add_edge("revision_handler", "rule_auditor")
 
-    # rewrite → rule_auditor（重写后仍需 audit，但不再 revision）
-    builder.add_edge("rewrite", "rule_auditor")
+    # rewrite → 条件路由：结构失败回滚 best 后直接进入 human_confirm；
+    # 结构完整的重写稿仍需 audit，但不再 revision。
+    builder.add_conditional_edges(
+        "rewrite",
+        rewrite_router,
+        {"audit": "rule_auditor", "human_confirm": "human_confirm"},
+    )
 
     # Task 100b: 质量门条件边
     builder.add_conditional_edges(

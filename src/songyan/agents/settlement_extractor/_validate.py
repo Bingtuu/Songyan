@@ -68,20 +68,43 @@ async def _validate_settlement(
     chapter_number: int = 0,
     project_id: str = "",
 ) -> list[str]:
-    """验证结算结果，返回错误列表."""
+    """验证结算结果，返回错误列表.
+
+    Task 114a 修复：
+    - old_value 由 DB 事实源回填，不再依赖 LLM 精确复现
+    - 对未知角色/字段或异常变更触发校验警告，不静默掩盖
+    """
     errors: list[str] = []
 
-    # 1. 验证 character_update.old_value
+    # 1. 验证并回填 character_update.old_value
+    # Task 114a: old_value 由代码从 DB 事实源回填，不再依赖 LLM 精确复现
     state_map: dict[tuple[str, str], str] = {
         (s.character_id, s.field): s.value for s in current_states
     }
     for update in settlement.character_updates:
         key = (update.character_id, update.field)
-        if key in state_map and state_map[key] != update.old_value:
-            errors.append(
-                f"角色 {update.character_id} 的 {update.field} "
-                f"当前值为 '{state_map[key]}'，"
-                f"但结算声称 old_value='{update.old_value}'"
+        if key in state_map:
+            db_value = state_map[key]
+            if db_value != update.old_value:
+                # Task 114a: 用 DB 事实源回填 old_value
+                logger.info(
+                    "settlement.old_value_backfilled",
+                    character_id=update.character_id,
+                    field=update.field,
+                    llm_old_value_length=len(update.old_value),
+                    db_value_length=len(db_value),
+                    project_id=project_id,
+                    chapter_number=chapter_number,
+                )
+                update.old_value = db_value
+        else:
+            # 未知角色/字段：记录警告但不阻断
+            logger.warning(
+                "settlement.unknown_character_field",
+                character_id=update.character_id,
+                field=update.field,
+                project_id=project_id,
+                chapter_number=chapter_number,
             )
 
     # 2. 验证 source_quote 在正文中存在（模糊匹配）

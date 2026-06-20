@@ -26,6 +26,7 @@ from songyan.workflows.phase1_graph import (
     human_confirm_router,
     quality_gate_router,
     revision_router,
+    rewrite_router,
 )
 from songyan.workflows.review_merger import (
     _compute_overall_score,
@@ -317,6 +318,21 @@ class TestQualityGateRouter:
     def test_human_review_required_blocks_graph(self) -> None:
         state = _base_revision_state(status="human_review_required")
         assert quality_gate_router(state) == "blocked"
+
+
+class TestRewriteRouter:
+    def test_struct_failure_recovery_goes_to_human_confirm(self) -> None:
+        """Task 114b2: rewrite 结构失败回滚 best 后不得继续审查失败稿."""
+        state = _base_revision_state(status="human_confirm")
+        assert rewrite_router(state) == "human_confirm"
+
+    def test_struct_ok_rewrite_goes_to_audit(self) -> None:
+        state = _base_revision_state(status="rule_auditing")
+        assert rewrite_router(state) == "audit"
+
+    def test_error_falls_back_to_audit_path(self) -> None:
+        state = _base_revision_state(status="human_confirm", error="boom")
+        assert rewrite_router(state) == "audit"
 
 
 class TestHumanConfirmRouter:

@@ -168,6 +168,31 @@ def _score_card_for_version(
 
     return {**score_card_raw, "version_id": version_id}
 
+
+def _score_card_passes_quality_gate(score_card_raw: dict[str, Any] | None) -> bool:
+    """判断 score_card 是否满足 QualityGate 的硬门条件."""
+    if not isinstance(score_card_raw, dict):
+        return False
+    required_keys = {"length", "budget", "coherence", "momentum", "readability", "flags"}
+    if not required_keys.issubset(score_card_raw):
+        return False
+    try:
+        from songyan.models import ChapterScoreCard
+
+        score_card = ChapterScoreCard.model_validate(score_card_raw)
+    except Exception:
+        logger.warning("workflow.invalid_quality_gate_score_card", exc_info=True)
+        return False
+
+    return (
+        score_card.flags.length_ok
+        and score_card.flags.budget_ok
+        and not score_card.flags.coherence_critical
+        and not score_card.flags.coherence_major
+        and score_card.flags.momentum_present
+        and score_card.flags.readability_ok
+    )
+
 # =============================================================================
 # Editor callable（可注入，用于测试）
 # =============================================================================
@@ -410,6 +435,7 @@ async def _write_fallback_chapter_summary(
 async def _load_chapter_repair_state(
     project_id: str,
     chapter_number: int,
+    current_version_id: str | None = None,
 ) -> tuple[int, bool]:
     """从 SQLite 计算当前章节自动修复状态，作为 LangGraph state 的硬兜底."""
     versions = await ChapterVersionRepository().list_by_chapter(
@@ -417,6 +443,32 @@ async def _load_chapter_repair_state(
         chapter_number,
         include_abandoned=True,
     )
+
+    if current_version_id:
+        versions_by_id = {version.version_id: version for version in versions}
+        lineage = []
+        version = versions_by_id.get(current_version_id)
+        visited: set[str] = set()
+        while version and version.version_id not in visited:
+            visited.add(version.version_id)
+            lineage.append(version)
+            parent_id = getattr(version, "parent_version_id", None)
+            version = versions_by_id.get(parent_id) if parent_id else None
+
+        if lineage:
+            revision_count = sum(
+                1
+                for version in lineage
+                if version.version_type == "revision" and not version.is_abandoned
+            )
+            was_rewritten = any(
+                version.version_type == "draft"
+                and bool(getattr(version, "parent_version_id", None))
+                and not version.is_abandoned
+                for version in lineage
+            )
+            return revision_count, was_rewritten
+
     revision_count = sum(
         1
         for version in versions
@@ -704,6 +756,14 @@ async def rewrite_node(state: dict[str, Any]) -> dict[str, Any]:
             project_id=state["project_id"],
             chapter_number=state["chapter_number"],
         )
+        best_score_card = (
+            _score_card_for_version(
+                state.get("_best_score_card") or best_version.score_card,
+                best_version.version_id,
+            )
+            if best_version
+            else None
+        )
         if best_version:
             await ChapterVersionRepository().mark_abandoned(version.version_id)
             await ChapterHeadRepository().update(
@@ -715,6 +775,11 @@ async def rewrite_node(state: dict[str, Any]) -> dict[str, Any]:
                     status="draft",
                 )
             )
+        recovered_with_qg_pass = bool(
+            best_version
+            and best_score_card
+            and _score_card_passes_quality_gate(best_score_card)
+        )
         return {
             "current_version_id": best_version.version_id if best_version else version.version_id,
             "revision_round": 0,
@@ -723,8 +788,11 @@ async def rewrite_node(state: dict[str, Any]) -> dict[str, Any]:
             "_needs_revision": False,
             "_has_critical": False,
             "_has_major": False,
-            "_convergence_failed": True,
-            "_skip_settlement": True,
+            "_convergence_failed": not recovered_with_qg_pass,
+            "_skip_settlement": not recovered_with_qg_pass,
+            "_settlement_needs_human_review": not recovered_with_qg_pass,
+            "_quality_gate_passed": recovered_with_qg_pass,
+            "_score_card": best_score_card if recovered_with_qg_pass else state.get("_score_card"),
             "status": "human_confirm",
         }
 
@@ -915,6 +983,7 @@ async def review_merger_node(state: dict[str, Any]) -> dict[str, Any]:
     db_revision_count, db_was_rewritten = await _load_chapter_repair_state(
         state["project_id"],
         state["chapter_number"],
+        version.version_id,
     )
     rround = max(state.get("revision_round", 0), db_revision_count)
     total_revision_count = max(
@@ -1058,6 +1127,35 @@ async def review_merger_node(state: dict[str, Any]) -> dict[str, Any]:
                 "_prev_merged_issues": [i.model_dump() for i in merged.issues],
                 "status": "literary_auditing",
             }
+        # 未反弹，只有通过 QG 硬门的版本才能作为 settlement 前回滚目标。
+        # 否则会把 length/readability 等失败版本写入 best，导致收敛终点
+        # 回滚到仍然不能结算的版本。
+        if not _score_card_passes_quality_gate(score_card.model_dump()):
+            logger.info(
+                "review_merger.round_summary",
+                version_id=version.version_id,
+                revision_round=rround,
+                overall_score=current_score,
+                issues_count=current_issues,
+                has_critical=has_critical,
+                has_major=has_major,
+                action="keep_best_qg_failed",
+            )
+            return {
+                "review_report_id": report_id,
+                "revision_round": rround,
+                "_total_revision_count": total_revision_count,
+                "_was_rewritten": was_rewritten,
+                "_has_critical": has_critical,
+                "_has_major": has_major,
+                "_needs_revision": True,
+                "_current_issues_count": current_issues,
+                "_current_overall_score": current_score,
+                "_score_card": score_card.model_dump(),
+                "_prev_merged_issues": [i.model_dump() for i in merged.issues],
+                "status": "literary_auditing",
+            }
+
         # 未反弹，更新 best 为当前版本
         logger.info(
             "review_merger.round_summary",
@@ -1118,7 +1216,7 @@ async def review_merger_node(state: dict[str, Any]) -> dict[str, Any]:
     _should_save_best = (
         (needs_revision and rround == 0)
         or not state.get("_best_version_id")
-    )
+    ) and _score_card_passes_quality_gate(score_card.model_dump())
     if _should_save_best:
         result["_best_issues_count"] = current_issues
         result["_best_overall_score"] = current_score
@@ -1379,6 +1477,7 @@ async def quality_gate_node(state: dict[str, Any]) -> dict[str, Any]:
         db_revision_count, db_was_rewritten = await _load_chapter_repair_state(
             state["project_id"],
             state["chapter_number"],
+            version.version_id,
         )
         was_rewritten = state.get("_was_rewritten", False) or db_was_rewritten
 
@@ -1443,6 +1542,40 @@ async def quality_gate_node(state: dict[str, Any]) -> dict[str, Any]:
                 rollback_version=best_version_id,
                 rollback_valid=bool(active_best and active_best_score_card),
             )
+            if (
+                active_best
+                and active_best_score_card
+                and _score_card_passes_quality_gate(active_best_score_card)
+            ):
+                await ChapterHeadRepository().update(
+                    ChapterHead(
+                        project_id=state["project_id"],
+                        chapter_number=state["chapter_number"],
+                        current_version_id=active_best.version_id,
+                        accepted_version_id=None,
+                        status="draft",
+                    )
+                )
+                logger.warning(
+                    "quality_gate.recovered_by_best_version",
+                    project_id=state["project_id"],
+                    chapter_number=state["chapter_number"],
+                    failed_version_id=version.version_id,
+                    recovered_version_id=active_best.version_id,
+                    failures=failures,
+                )
+                result["_quality_gate_passed"] = True
+                result["_quality_gate_failures"] = []
+                result["_convergence_failed"] = False
+                result["_skip_settlement"] = False
+                result["_settlement_needs_human_review"] = False
+                result["_needs_revision"] = False
+                result["current_version_id"] = active_best.version_id
+                result["_best_version_id"] = active_best.version_id
+                result["_best_score_card"] = active_best_score_card
+                result["_score_card"] = active_best_score_card
+                return result
+
             result["_convergence_failed"] = True
             result["_skip_settlement"] = True
 
@@ -1822,7 +1955,8 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
         await _run_lifecycle_cleanup(state["project_id"], state["chapter_number"])
 
     # 3. RAG 向量索引（非阻塞：失败不导致 settlement 回滚）
-    if accepted_for_postprocessing or version.version_type in ("accepted", "edited"):
+    # Task 114a: 仅在本次 accept + settlement 事务成功后触发，禁止通过历史 version_type 旁路
+    if accepted_for_postprocessing:
         try:
             mode = load_creative_mode_profile(project.mode_id)
             await _index_accepted_chapter(
@@ -1841,7 +1975,8 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
             )
 
     # 4. SettingEvaporator（Task 103：语义相关性蒸发，纯规则，不调用 LLM）
-    if accepted_for_postprocessing or version.version_type in ("accepted", "edited"):
+    # Task 114a: 仅在本次 accept + settlement 事务成功后触发，禁止通过历史 version_type 旁路
+    if accepted_for_postprocessing:
         try:
             from songyan.agents.setting_evaporator import SettingEvaporator
 
@@ -1875,7 +2010,8 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
             )
 
     # 5. 分层摘要生成（069b：accept 后触发弧/卷摘要更新）
-    if accepted_for_postprocessing or version.version_type in ("accepted", "edited"):
+    # Task 114a: 仅在本次 accept + settlement 事务成功后触发，禁止通过历史 version_type 旁路
+    if accepted_for_postprocessing:
         try:
             await trigger_layered_summaries(
                 project_id=state["project_id"],
