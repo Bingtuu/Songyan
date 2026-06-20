@@ -52,7 +52,6 @@ class TestLifecycleStatus:
         for s in valid:
             assert s in ("active", "dormant", "archived")
 
-    @pytest.mark.skip(reason="同步模型测试")
     def test_transition_log_serialization(self) -> None:
         log = TransitionLog(
             table="setting_snapshots",
@@ -65,7 +64,6 @@ class TestLifecycleStatus:
         assert log.from_status == "active"
         assert log.to_status == "dormant"
 
-    @pytest.mark.skip(reason="同步模型测试")
     def test_cleanup_result_serialization(self) -> None:
         result = LifecycleCleanupResult(
             project_id="proj-1",
@@ -201,7 +199,6 @@ class TestLifecycleScheduler:
         assert len(result.transitions) == 1
         assert result.transitions[0].table == "success_table"
 
-    @pytest.mark.skip(reason="同步工具函数测试")
     def test_primary_key_column_mapping(self) -> None:
         assert _primary_key_column("setting_snapshots") == "setting_id"
         assert _primary_key_column("foreshadowings") == "foreshadowing_id"
@@ -210,7 +207,6 @@ class TestLifecycleScheduler:
         assert _primary_key_column("chapter_chunks") == "chunk_id"
         assert _primary_key_column("unknown") == "id"
 
-    @pytest.mark.skip(reason="同步测试")
     def test_register_cleaner(self, scheduler: LifecycleScheduler) -> None:
         class MockCleaner:
             @property

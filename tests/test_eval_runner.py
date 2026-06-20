@@ -753,9 +753,11 @@ async def test_single_chapter_loop_mock_under_15s(test_db, mock_call_llm) -> Non
 
 @pytest.mark.performance
 @pytest.mark.asyncio
-@pytest.mark.xfail(reason="async with 上下文与 mock LLM 响应交互需调整")
+@pytest.mark.xfail(
+    reason="冷启动下 embedding model 加载导致 resume+settlement 耗时 >20s；全量回归预热后 <1s",
+)
 async def test_audit_chain_mock_under_1s(test_db, mock_call_llm) -> None:
-    """mock 下 resume + settlement 耗时 < 1s."""
+    """mock 下 resume + settlement 耗时 < 1s（全量回归预热环境）."""
     import time
 
     await reset_checkpointer()
