@@ -47,15 +47,17 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 
 | 指标 | 数值 |
 |------|------|
-| 状态 | **V5.0 完成** — Task 120 Final Acceptance Package：P0/P1 风险为 0；全量回归 1711 passed；lint 全通过；文档一致性已验证 |
+| 状态 | **V5.0 完成** — Task 120 Final Acceptance Package：P0/P1 风险为 0；全量回归 1718 passed；lint 全通过；文档一致性已验证 |
 | Task 119 已完成 | 报告入口：songyan report CLI + 模块入口；wrapper 加固：6 种 WRAPPER_RESULT 结果码；日志路径规范化 |
-| Task 120 已完成 | V5.0 Final Acceptance Package：P0/P1 风险为 0；全量回归 1711 passed；lint 全通过；V5-README.md 已同步更新 |
+| Task 120 已完成 | V5.0 Final Acceptance Package：P0/P1 风险为 0；全量回归 1718 passed；lint 全通过；V5-README.md 已同步更新 |
 | Task 117 已完成 | Ch115/Ch120/Ch147/Ch148 4/4 成功，rebound 保护正常，Emergency 属合理降级未触发 |
-| 最近回归测试 | **1711 passed, 4 skipped, 1 xfailed, 4 xpassed** (`pytest tests/ -q`，Task 119 全量回归) |
+| 最近回归测试 | **1718 passed, 1 xfailed, 1 xpassed, 14 warnings** (`pytest tests/ -q`，xfail/xpass 均为已知非阻断项) |
 | 当前 lint | **`ruff check src/ tests/` 已通过** |
 | Python | 3.11.9 |
 | 当前 Task | **V5.0 完成** — Task 120 Final Acceptance Package |
-| 下一步建议 | **V5.0 交付完成。后续规划（V5.1）：Prompt 调优、ContextEmergency 硬门禁、角色心理模型** |
+| 下一步建议 | **V5.0 交付完成。建议先补 Ch1-Ch150 single-run rehearsal 证据，再做 Prompt 调优；ContextEmergency/health_low 硬门禁后置预研** |
+
+> 测试口径说明：`1 xfailed` 为 Windows SQLite 并发写入限制；`1 xpassed` 为性能测试预热/冷启动差异，均为已知非阻断项。
 
 ---
 
@@ -120,7 +122,7 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 | 117 | **DG-2 风险章节窗口复验** | Ch115/Ch120/Ch147/Ch148 4/4 成功；报告与 JSONL/DB 一致；DG-2 风险已关闭 | ✅ 完成 |
 | 118 | **ContinuityAuditor Health 低分治理策略** | health_low 可统计、可追踪、可分级；human marks 关联 project/chapter/version | ✅ 完成 |
 | 119 | **长跑报告入口与 Windows Wrapper 加固** | 报告入口统一；songyan report CLI；wrapper 正常/超时/业务完成异常均有明确结果码 | ✅ 完成 |
-| 120 | **V5.0 Final Acceptance Package** | Task 115-120 全部收口；P0/P1 风险为 0；全量回归 1711 passed；lint 通过 | ✅ 完成 |
+| 120 | **V5.0 Final Acceptance Package** | Task 115-120 全部收口；P0/P1 风险为 0；全量回归 1718 passed；lint 通过 | ✅ 完成 |
 
 ---
 

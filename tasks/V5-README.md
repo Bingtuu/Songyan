@@ -17,7 +17,7 @@ V5.0 已完成从 Context Diet 2.0 核心组件到 150 章验证的全部主线�
 - **Task 111a-111g、112、113、114a、114b2** 修复了工作流、事实源、报告、QG、settlement 和长跑性能阻断项。
 - **Task 114c** 分段完成 Ch111-Ch150：40/40 成功，QG/settlement/summary 均 40/40。
 - **Task 115-120 完成 V5.0 收口**：DG-2 条件通过风险关闭（P1→✅）、ContinuityAuditor health_low 分级策略落地（软复核）、报告入口统一、wrapper 加固。
-- **V5.0 最终结论：P0/P1 风险为 0，全量回归 1711 passed，lint 通过。**
+- **V5.0 最终结论：P0/P1 风险为 0，全量回归 1718 passed，lint 通过。**
 
 ---
 
@@ -83,8 +83,10 @@ V5.0 已完成从 Context Diet 2.0 核心组件到 150 章验证的全部主线�
 | Ch101 修复回放 | `run-90e08243` 恢复 accepted + settlement + summary |
 | Ch102/Ch103 settlement 验证窗口 | `run-af3ba939` 完成 accept + settlement + summary |
 | Ch111-Ch150 DG-2 | 40/40 成功，QG/settlement/summary 40/40，条件通过 |
-| 最近全量回归 | `1711 passed, 4 skipped, 1 xfailed, 4 xpassed` |
+| 最近全量回归 | `1718 passed, 1 xfailed, 1 xpassed, 14 warnings` |
 | 当前全量 ruff | `ruff check src/ tests/` 已通过后续 lint 清理 |
+
+测试口径说明：`1 xfailed` 为 Windows SQLite 并发写入限制；`1 xpassed` 为性能测试预热/冷启动差异，均不阻塞 V5.0 验收。
 
 ---
 

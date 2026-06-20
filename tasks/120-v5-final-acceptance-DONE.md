@@ -4,7 +4,7 @@
 > **优先级**: P2
 > **依赖**: Task 115-119 全部完成
 > **完成日期**: 2026-06-21
-> **测试**: 全量回归 1711 passed
+> **测试**: 全量回归 1718 passed
 > **lint**: ruff check src/ tests/ 通过
 > **文档一致性**: V5-README.md 已同步更新
 
@@ -14,7 +14,7 @@
 
 ### ✅ V5.0 通过验收
 
-**V5.0 最终结论：P0/P1 风险为 0，全量回归 1711 passed，lint 通过。**
+**V5.0 最终结论：P0/P1 风险为 0，全量回归 1718 passed，lint 通过。**
 
 ---
 
@@ -44,11 +44,16 @@
 
 ```
 pytest tests/ -q
-  1711 passed, 4 skipped, 1 xfailed, 4 xpassed
+  1718 passed, 1 xfailed, 1 xpassed, 14 warnings
 
 ruff check src/ tests/
   All checks passed!
 ```
+
+说明：
+
+- `1 xfailed` 为 Windows SQLite 并发写入限制（`test_concurrent_settlement_writes`），属于已知非阻断项。
+- `1 xpassed` 为性能测试预热/冷启动差异（`test_audit_chain_mock_under_1s`），全量回归预热后通过，冷启动单跑时因 embedding model 加载超过 20s 而 xfail。
 
 ### 条件 4：文档一致性
 
@@ -56,7 +61,7 @@ ruff check src/ tests/
 |------|--------|------|
 | `docs/STATUS.md` | V5-README.md 与 STATUS.md 任务状态一致 | ✅ 已同步 |
 | `tasks/V5-README.md` | Task 118-120 状态为 ✅ 完成 | ✅ 已更新 |
-| `tasks/V5-README.md` | 最近全量回归更新为 1711 passed | ✅ 已更新 |
+| `tasks/V5-README.md` | 最近全量回归更新为 1718 passed | ✅ 已更新 |
 | `tasks/V5-README.md` | 总结论更新为 V5.0 完成 | ✅ 已更新 |
 | `tasks/V5-README.md` | 遗留项（已关闭）部分同步 | ✅ 已更新 |
 
@@ -134,7 +139,7 @@ ruff check src/ tests/
 
 ### 代码质量
 
-- **全量回归**：1711 passed, 4 skipped, 1 xfailed, 4 xpassed
+- **全量回归**：1718 passed, 1 xfailed, 1 xpassed, 14 warnings
 - **lint**：ruff check src/ tests/ All checks passed
 - **P0 规则**：36 条不可违背规则全部遵守
 
