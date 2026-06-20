@@ -22,6 +22,8 @@ class HumanMark(BaseModel):
     lifecycle_status: str = "active"  # active | dormant | archived
     created_at: datetime = Field(default_factory=datetime.utcnow)
     source: Literal["human", "continuity_auditor"] = "human"  # 标记来源
+    version_id: str | None = None  # Task 118: 关联产生此标记的版本 ID
+    severity: Literal["P1", "P2", "P3"] | None = None  # Task 118: 连续性问题严重等级
 
 
 class SuggestedMark(BaseModel):

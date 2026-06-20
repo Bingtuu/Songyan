@@ -35,8 +35,9 @@ class HumanMarkRepository:
             await c.execute(
                 f"""{sql_prefix} human_marks (
                     mark_id, project_id, mark_type, target_key,
-                    note, priority, created_at_chapter, resolved_at, created_at, source
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    note, priority, created_at_chapter, resolved_at, created_at, source,
+                    version_id, severity
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
                     mark.mark_id,
                     mark.project_id,
@@ -48,6 +49,8 @@ class HumanMarkRepository:
                     mark.resolved_at.isoformat() if mark.resolved_at else None,
                     mark.created_at.isoformat(),
                     mark.source,
+                    mark.version_id,
+                    mark.severity,
                 ),
             )
 
@@ -295,4 +298,6 @@ class HumanMarkRepository:
             else "active",
             created_at=datetime.fromisoformat(row["created_at"]),
             source=row["source"] if "source" in row.keys() else "human",
+            version_id=row["version_id"] if "version_id" in row.keys() else None,
+            severity=row["severity"] if "severity" in row.keys() else None,
         )

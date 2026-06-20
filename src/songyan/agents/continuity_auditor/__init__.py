@@ -129,19 +129,23 @@ class ContinuityAuditor:
         """委托给独立函数以保持接口兼容."""
         return _generate_suggested_marks(orphaned, forgotten)
 
-    def _generate_constraints(self, report: ContinuityReport) -> list:
+    def _generate_constraints(
+        self, report: ContinuityReport, version_id: str | None = None
+    ) -> list:
         """委托给独立函数以保持接口兼容."""
-        return _generate_constraints(report)
+        return _generate_constraints(report, version_id)
 
     async def write_constraints(
         self,
         report: ContinuityReport,
+        version_id: str | None = None,
     ) -> int:
         """将连续性断点写入 human_marks 表，返回写入数量.
 
         委托给独立函数以保持接口兼容。
+        Task 118: 添加 version_id 参数以增强可追踪性。
         """
-        return await write_constraints(report)
+        return await write_constraints(report, version_id)
 
     def _compute_health_score(
         self,

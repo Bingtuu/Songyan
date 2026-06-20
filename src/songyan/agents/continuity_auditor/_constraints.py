@@ -19,12 +19,16 @@ MAX_OVERDUE = 10
 MAX_CONSTRAINTS_GENERATED = 30  # 078: 生成总预算
 
 
-def _generate_constraints(report: ContinuityReport) -> list[HumanMark]:
+def _generate_constraints(
+    report: ContinuityReport,
+    version_id: str | None = None,
+) -> list[HumanMark]:
     """将连续性断点转化为 HumanMark 硬约束.
 
     使用确定性 mark_id 实现幂等写入：同一断点不会重复生成。
     V3.1 Layer 2: 限制各类约束数量，防止 Ch40+ 累积到 200+ 条 human_marks。
     078: 增加生成总预算，单次生成不超过 30 条。
+    Task 118: 添加 version_id 和 severity 字段以增强可追踪性。
     """
     marks: list[HumanMark] = []
 
@@ -39,6 +43,8 @@ def _generate_constraints(report: ContinuityReport) -> list[HumanMark]:
     )[:MAX_OVERDUE]
 
     for setting in orphaned:
+        cat = getattr(setting, "category", "background")
+        severity = "P1" if cat == "critical" else ("P2" if cat == "recurring" else "P3")
         marks.append(
             HumanMark(
                 mark_id=f"cont-set-{setting.tracking_id}",
@@ -52,6 +58,8 @@ def _generate_constraints(report: ContinuityReport) -> list[HumanMark]:
                 priority=10,
                 created_at_chapter=report.checked_up_to_chapter,
                 source="continuity_auditor",
+                version_id=version_id,
+                severity=severity,
             )
         )
 
@@ -69,6 +77,8 @@ def _generate_constraints(report: ContinuityReport) -> list[HumanMark]:
                 priority=10,
                 created_at_chapter=report.checked_up_to_chapter,
                 source="continuity_auditor",
+                version_id=version_id,
+                severity="P3",
             )
         )
 
@@ -88,6 +98,8 @@ def _generate_constraints(report: ContinuityReport) -> list[HumanMark]:
                 priority=9,
                 created_at_chapter=report.checked_up_to_chapter,
                 source="continuity_auditor",
+                version_id=version_id,
+                severity="P1",
             )
         )
 
@@ -105,6 +117,8 @@ def _generate_constraints(report: ContinuityReport) -> list[HumanMark]:
                 priority=10,
                 created_at_chapter=report.checked_up_to_chapter,
                 source="continuity_auditor",
+                version_id=version_id,
+                severity="P2",
             )
         )
 
@@ -125,11 +139,13 @@ def _generate_constraints(report: ContinuityReport) -> list[HumanMark]:
 
 async def write_constraints(
     report: ContinuityReport,
+    version_id: str | None = None,
 ) -> int:
     """将连续性断点写入 human_marks 表，返回写入数量.
 
     使用 INSERT OR REPLACE 确保幂等：同一断点更新而非重复。
     078: 增加输出预算 — 每章 unresolved constraints 不超过 20 条。
+    Task 118: 添加 version_id 参数以增强可追踪性。
     """
     from songyan.db.human_mark_repo import HumanMarkRepository
 
@@ -157,7 +173,7 @@ async def write_constraints(
         )
         return 0
 
-    marks = _generate_constraints(report)
+    marks = _generate_constraints(report, version_id)
     repo = HumanMarkRepository()
     written = 0
     for mark in marks:

@@ -424,7 +424,7 @@ async def _run_single_chapter(
                         project_id=project_id,
                         up_to_chapter=chapter_number,
                     )
-                    await auditor.write_constraints(report)
+                    await auditor.write_constraints(report, version_id=final_version_id)
                     continuity_health_score = report.overall_health_score
                     if report.overall_health_score < continuity_health_threshold:
                         logger.warning(

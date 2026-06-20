@@ -432,6 +432,22 @@ async def _migrate_setting_setting_key_index(conn: aiosqlite.Connection) -> None
         "CREATE INDEX IF NOT EXISTS idx_setting_snapshots_project_key "
         "ON setting_snapshots(project_id, setting_key)"
     )
+
+
+async def _migrate_human_marks_extra_fields(conn: aiosqlite.Connection) -> None:
+    """Task 118: 为 human_marks 表添加 version_id 和 severity 列."""
+    cursor = await conn.execute("PRAGMA table_info(human_marks)")
+    cols = {row[1] for row in await cursor.fetchall()}
+    if "version_id" not in cols:
+        await conn.execute(
+            "ALTER TABLE human_marks ADD COLUMN version_id TEXT"
+        )
+    if "severity" not in cols:
+        await conn.execute(
+            "ALTER TABLE human_marks ADD COLUMN severity TEXT"
+        )
+
+
 async def init_schema(db_path: str | Path | None = None) -> None:
     """读取 schema.sql 并执行，幂等（所有 CREATE 带 IF NOT EXISTS）.
 
@@ -469,6 +485,7 @@ async def init_schema(db_path: str | Path | None = None) -> None:
         await _migrate_chapter_versions_score_card(conn)
         await _migrate_context_snapshots(conn)
         await _migrate_setting_setting_key_index(conn)
+        await _migrate_human_marks_extra_fields(conn)
         await conn.commit()
 
 
