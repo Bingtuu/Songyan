@@ -64,9 +64,9 @@ V5.0 已完成从 Context Diet 2.0 核心组件到 Ch111-Ch150 分段验证的�
 | 114b | Phase 1 重跑 Ch102-Ch110 | ⚠️ 熔断复核完成，未达出口 | `114b-phase1-replay-ch102-ch110-DONE.md` |
 | 114b2 | QG 收敛阻断处理 + settlement 验证窗口 | ✅ 完成 | `114b2-qg-convergence-settlement-window-DONE.md` |
 | 114c | Ch111-Ch150 分段流式验证 + DG-2 | ⚠️ 条件通过 | `114-ch101-ch150-streaming-validation-DONE.md` |
-| 115 | ContextEmergency 触发复核与校准 | 📝 规划中 | `115-context-emergency-review.md` |
-| 116 | Best-Version 质量选择策略复核与修复 | 📝 规划中 | `116-best-version-quality-selection-fix.md` |
-| 117 | DG-2 风险章节窗口复验 | 📝 规划中 | `117-dg2-risk-window-revalidation.md` |
+| 115 | ContextEmergency 触发复核与校准 | ✅ 完成 | `115-context-emergency-review-DONE.md` |
+| 116 | Best-Version 质量选择策略复核与修复 | ✅ 完成 | `116-best-version-quality-selection-fix-DONE.md` |
+| 117 | DG-2 风险章节窗口复验 | ✅ 完成 | `117-dg2-risk-window-revalidation-DONE.md` |
 | 118 | ContinuityAuditor Health 低分治理策略 | 📝 规划中 | `118-continuity-health-governance.md` |
 | 119 | 长跑报告入口与 Windows Wrapper 加固 | 📝 规划中 | `119-reporting-wrapper-hardening.md` |
 | 120 | V5.0 Final Acceptance Package | 📝 规划中 | `120-v5-final-acceptance-package.md` |
