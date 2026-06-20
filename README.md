@@ -12,7 +12,7 @@
 
 **V5.0 — Context Diet 2.0 智能遗忘架构**
 
-目标：通过 TemporalCompressor + CharacterFocalDecay + SettingEvaporator + BudgetHardCeiling 四组件协同，控制信息密度，支撑 Ch1-Ch150 全自动稳定生成。Task 101~113 已完成 Context Diet 2.0 核心组件、流式验证基础设施、统一评分体系、修复收敛护栏、角色退场机制、设定去重与伏笔监控、coherence_major 根因修复、工作流决策契约修复、Settlement 事实源修复、Context/Prompt 一致性修复、QualityGate/Settlement 阻断修复、DG-2 报告修复、Context Snapshot/Metadata 修复、长跑性能收敛、Task 114 前置阻断修复和 Ch101 收敛回滚修复。Task 114a 已完成 Settlement 事实源契约修复；Task 114b 熔断复核已归档；Task 114b2 已完成 Ch102/Ch103 QG 收敛阻断处理与 settlement 端到端验证，当前可启动 Task 114c 分段长跑。
+目标：通过 TemporalCompressor + CharacterFocalDecay + SettingEvaporator + BudgetHardCeiling 四组件协同，控制信息密度，支撑 Ch1-Ch150 全自动稳定生成。Task 101~113 已完成 Context Diet 2.0 核心组件、流式验证基础设施、统一评分体系、修复收敛护栏、角色退场机制、设定去重与伏笔监控、coherence_major 根因修复、工作流决策契约修复、Settlement 事实源修复、Context/Prompt 一致性修复、QualityGate/Settlement 阻断修复、DG-2 报告修复、Context Snapshot/Metadata 修复、长跑性能收敛、Task 114 前置阻断修复和 Ch101 收敛回滚修复。Task 114a 已完成 Settlement 事实源契约修复；Task 114b 熔断复核已归档；Task 114b2 已完成 Ch102/Ch103 QG 收敛阻断处理与 settlement 端到端验证；Task 114c 已完成 Ch111-Ch150 分段流式验证，DG-2 条件通过。
 
 ### 版本概览
 
@@ -28,10 +28,10 @@
 
 | 指标 | 数值 |
 |------|------|
-| 最近回归测试 | **1671 passed, 4 skipped, 2 xfailed, 3 xpassed** (`pytest tests/ -q`，Task 114b2 后全量回归) |
-| V5.0 当前 Task | **114c**（Ch111-Ch150 分段流式验证 + DG-2） |
-| 前置状态 | **Task 114a 已完成；Task 114b 熔断复核归档；Task 114b2 已通过 Ch102/Ch103 `run-af3ba939` 端到端验证** |
-| 当前门禁 | **按 Task 114c 分段执行 Ch111-Ch130、Ch131-Ch150；禁止一次性 40 章长跑** |
+| 最近回归测试 | **1676 passed, 4 skipped, 2 xfailed, 3 xpassed** (`pytest tests/ -q`，Task 114c 全量回归) |
+| V5.0 当前 Task | **114c 已完成**（Ch111-Ch150 分段流式验证 + DG-2 条件通过） |
+| 前置状态 | **Task 114a 已完成；Task 114b 熔断复核归档；Task 114b2 已通过；Task 114c Ch111-Ch150 40/40 成功** |
+| 当前门禁 | **DG-2 条件通过：Ch115/Ch120 ContextEmergency 需后续复核；无 P0 事实源污染** |
 | Task 110e 实跑 | **Ch80-Ch96 17/17 成功，QG 100%，coherence_major 0/17** |
 | V4.0 最终达标率 | Task 099: Ch2-Ch50 **81.6%** |
 | V4.x 归档 | `archive/v4/`（报告 + 任务 + 验证数据）|

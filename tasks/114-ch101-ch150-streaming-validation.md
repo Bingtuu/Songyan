@@ -182,7 +182,7 @@ Task 114b2 已完成：修复当前版本 lineage 修复计数、QG 合格 best 
   - 已修复 rewrite 结构失败后固定进入审查链路的问题
   - 已用 `run-af3ba939` 验证 Ch102/Ch103 短窗口真实穿透 settlement
 
-- [ ] **Task 114c: 剩余长跑与 DG-2**
+- [x] **Task 114c: 剩余长跑与 DG-2**
   - Phase 2: Ch111-Ch130（中规模稳定性）
   - Phase 3: Ch131-Ch150（收尾与达标率）
   - 每段结束后执行强制检查清单，确认无阻断后再启动下一段
@@ -191,7 +191,7 @@ Task 114b2 已完成：修复当前版本 lineage 修复计数、QG 合格 best 
   - 保留 JSONL chapter run metrics
   - 出现连续失败时按本 Task 熔断条件停机分析
 
-- [ ] **收集 DG-2 指标**
+- [x] **收集 DG-2 指标**
   - 成功章节数
   - QG 通过率
   - `budget_used`
@@ -201,7 +201,7 @@ Task 114b2 已完成：修复当前版本 lineage 修复计数、QG 合格 best 
   - settlement validation 状态
   - summary / lifecycle / RAG / evaporator 后置维护结果
 
-- [ ] **生成一键报告**
+- [x] **生成一键报告**
   - 输出 DG-2 报告
   - 对比 Task 105b、110d、110e 基线
   - 标明是否进入 V5.1 或继续 P0 修复
@@ -246,15 +246,15 @@ python scripts/generate_streaming_report.py --run-id <run_id>
 - [ ] Ch103 单章回放完成，accepted/settlement/summary 状态一致，或按明确契约阻断且无事实源污染
 - [ ] Phase 1 (Ch102-Ch110) 完成且无熔断触发，或熔断后已诊断并修复
 - [x] Task 114b2 完成：Ch102/Ch103 短窗口穿透 accept + settlement + summary，或明确诊断并修复新的阻断
-- [ ] Phase 2 (Ch111-Ch130) 完成且无熔断触发
-- [ ] Phase 3 (Ch131-Ch150) 完成且无熔断触发
-- [ ] 每章都有 chapter run metrics
-- [ ] 每个 accepted 章节都有 settlement + summary，除非明确 skip_settlement 且有 fallback summary
-- [ ] 每段结束后执行强制检查清单并通过
+- [x] Phase 2 (Ch111-Ch130) 完成且无熔断触发
+- [x] Phase 3 (Ch131-Ch150) 完成且无熔断触发
+- [x] 每章都有 chapter run metrics
+- [x] 每个 accepted 章节都有 settlement + summary，除非明确 skip_settlement 且有 fallback summary
+- [x] 每段结束后执行强制检查清单并通过
 
 ### Layer 4: 报告验证
-- [ ] DG-2 报告可复现统计数据
-- [ ] 报告中标明失败章节、失败原因和是否可自动恢复
+- [x] DG-2 报告可复现统计数据
+- [x] 报告中标明失败章节、失败原因和是否可自动恢复
 
 ## 验收标准（Acceptance Criteria）
 
@@ -291,9 +291,9 @@ python scripts/generate_streaming_report.py --run-id <run_id>
 
 ## 验收标准（工程流程）
 
-- [ ] 生成 `tasks/114-ch101-ch150-streaming-validation-DONE.md`
-- [ ] 更新 `docs/STATUS.md`
-- [ ] 更新 `README.md`
+- [x] 生成 `tasks/114-ch101-ch150-streaming-validation-DONE.md`
+- [x] 更新 `docs/STATUS.md`
+- [x] 更新 `README.md`
 - [ ] Git commit 包含验证报告、DONE 文档和状态更新
 
 ## 参考文档

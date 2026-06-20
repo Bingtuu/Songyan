@@ -749,7 +749,8 @@ async def rewrite_node(state: dict[str, Any]) -> dict[str, Any]:
             project_id=state["project_id"],
             chapter_number=state["chapter_number"],
         )
-        # 只有存在有效回滚目标时才废弃当前失败版本，避免 head/state 指向 abandoned。
+        # 优先回滚到 QG 合格 best；若不存在 best，也必须废弃结构失败 rewrite，
+        # 回到 rewrite 前版本，避免 head/state 指向 scene/hook 不完整版本。
         best_version_id = state.get("_best_version_id")
         best_version = await _load_active_best_version(
             version_id=best_version_id,
@@ -764,16 +765,31 @@ async def rewrite_node(state: dict[str, Any]) -> dict[str, Any]:
             if best_version
             else None
         )
-        if best_version:
+        rollback_version = best_version
+        if rollback_version is None:
+            previous_version_id = state.get("current_version_id")
+            rollback_version = await _load_active_best_version(
+                version_id=previous_version_id,
+                project_id=state["project_id"],
+                chapter_number=state["chapter_number"],
+            )
+        if rollback_version and rollback_version.version_id != version.version_id:
             await ChapterVersionRepository().mark_abandoned(version.version_id)
             await ChapterHeadRepository().update(
                 ChapterHead(
                     project_id=state["project_id"],
                     chapter_number=state["chapter_number"],
-                    current_version_id=best_version.version_id,
+                    current_version_id=rollback_version.version_id,
                     accepted_version_id=None,
                     status="draft",
                 )
+            )
+        elif not rollback_version:
+            logger.warning(
+                "rewrite.struct_integrity_no_rollback_target",
+                version_id=version.version_id,
+                project_id=state["project_id"],
+                chapter_number=state["chapter_number"],
             )
         recovered_with_qg_pass = bool(
             best_version
@@ -781,7 +797,9 @@ async def rewrite_node(state: dict[str, Any]) -> dict[str, Any]:
             and _score_card_passes_quality_gate(best_score_card)
         )
         return {
-            "current_version_id": best_version.version_id if best_version else version.version_id,
+            "current_version_id": (
+                rollback_version.version_id if rollback_version else version.version_id
+            ),
             "revision_round": 0,
             "_was_rewritten": True,
             "_rewrite_reason": f"struct_integrity_failed:{struct_fail_reason}",
@@ -1116,6 +1134,12 @@ async def review_merger_node(state: dict[str, Any]) -> dict[str, Any]:
                 "_has_critical": False,
                 "_has_major": False,
                 "_needs_revision": False,
+                "_new_issues_introduced": [],
+                "_content_preservation_ratio": None,
+                "_quality_gate_failures": [],
+                "_convergence_failed": False,
+                "_skip_settlement": False,
+                "_settlement_needs_human_review": False,
                 "_current_issues_count": best_issues,
                 "_current_overall_score": best_score or 0.0,
                 "_revision_rebound": True,
@@ -1700,7 +1724,7 @@ async def human_gate_node(state: dict[str, Any]) -> dict[str, Any]:
         _qg_passed = (
             review_passed
             if previous_qg_passed is None
-            else bool(previous_qg_passed) and review_passed
+            else bool(previous_qg_passed)
         )
 
         _rround = state.get("revision_round", 0)

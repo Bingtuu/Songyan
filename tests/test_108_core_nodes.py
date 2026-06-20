@@ -379,12 +379,24 @@ class TestReviewMergerNodeRevisionSignals:
                 "_best_issues_count": 1,
                 "_best_overall_score": 0.92,
                 "_best_score_card": best_score_card,
+                "_new_issues_introduced": [{"issue_id": "stale-new-issue"}],
+                "_content_preservation_ratio": 0.61,
+                "_quality_gate_failures": ["new_issues_introduced:1"],
+                "_convergence_failed": True,
+                "_skip_settlement": True,
+                "_settlement_needs_human_review": True,
             })
 
         assert result["current_version_id"] == "v-best"
         assert result["_best_version_id"] == "v-best"
         assert result["_score_card"] == best_score_card
         assert result["_best_score_card"] == best_score_card
+        assert result["_new_issues_introduced"] == []
+        assert result["_content_preservation_ratio"] is None
+        assert result["_quality_gate_failures"] == []
+        assert result["_convergence_failed"] is False
+        assert result["_skip_settlement"] is False
+        assert result["_settlement_needs_human_review"] is False
         mock_ver_repo.mark_abandoned.assert_awaited_once_with("v-current")
         mock_head_repo.update.assert_awaited_once()
 

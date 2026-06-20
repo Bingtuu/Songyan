@@ -68,6 +68,60 @@ async def test_rewrite_scene_count_too_low_triggers_rollback() -> None:
 
 
 @pytest.mark.asyncio
+async def test_rewrite_scene_count_too_low_without_best_rolls_back_previous() -> None:
+    """Task 114c: 无 QG best 时也不得让结构失败 rewrite 留在 head."""
+    version = MagicMock()
+    version.version_id = "v-rewrite"
+    version.scenes = [{"scene_id": "s1"}]
+    version.content = "content"
+    version.word_count = 3000
+    previous_version = MagicMock()
+    previous_version.version_id = "v-prev"
+
+    async def load_active_best(
+        *,
+        version_id: str | None,
+        project_id: str,
+        chapter_number: int,
+    ) -> MagicMock | None:
+        if version_id == "v-prev":
+            return previous_version
+        return None
+
+    with (
+        patch("songyan.workflows._nodes.write_chapter", new_callable=AsyncMock) as mock_write,
+        patch("songyan.workflows._nodes._get_context_package", new_callable=AsyncMock) as mock_ctx,
+        patch(
+            "songyan.workflows._nodes._load_active_best_version",
+            new_callable=AsyncMock,
+            side_effect=load_active_best,
+        ),
+        patch("songyan.workflows._nodes.ChapterVersionRepository") as mock_ver_repo,
+        patch("songyan.workflows._nodes.ChapterHeadRepository") as mock_head_repo,
+    ):
+        mock_write.return_value = version
+        mock_ctx.return_value = MagicMock()
+        mock_ver_repo.return_value.mark_abandoned = AsyncMock()
+        mock_head_repo.return_value.update = AsyncMock()
+
+        result = await rewrite_node({
+            "project_id": "p1",
+            "chapter_number": 1,
+            "current_version_id": "v-prev",
+            "chapter_goal_id": "g1",
+            "revision_round": 2,
+            "_total_revision_count": 2,
+        })
+
+    assert result["current_version_id"] == "v-prev"
+    assert result["_convergence_failed"] is True
+    assert result["_skip_settlement"] is True
+    assert result["_settlement_needs_human_review"] is True
+    mock_ver_repo.return_value.mark_abandoned.assert_awaited_once_with("v-rewrite")
+    mock_head_repo.return_value.update.assert_awaited_once()
+
+
+@pytest.mark.asyncio
 async def test_rewrite_missing_hooks_triggers_rollback() -> None:
     """rewrite 后缺失 ending_hook → 触发结构失败回滚."""
     version = MagicMock()
@@ -443,10 +497,12 @@ async def test_human_gate_accept_transmits_skip_settlement() -> None:
             "_convergence_failed": True,
             "_skip_settlement": True,
             "_quality_gate_passed": True,
+            "_has_major": True,
         })
 
     assert result["_convergence_failed"] is True
     assert result["_skip_settlement"] is True
+    assert result["_quality_gate_passed"] is True
 
 
 # ---------------------------------------------------------------------------

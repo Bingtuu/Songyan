@@ -12,6 +12,7 @@ from songyan.agents.settlement_extractor import (
     MAX_PROMPT_CHARACTER_STATES,
     MAX_PROMPT_FORESHADOWINGS,
     MAX_PROMPT_SETTINGS,
+    _backfill_foreshadowing_source_version_ids,
     _build_character_update,
     _build_foreshadowing_update,
     _build_new_setting,
@@ -233,8 +234,52 @@ class TestBuildForeshadowingUpdate:
         assert result is not None
         assert result.operation == "plant"
 
+    def test_non_positive_expected_resolve_chapter_becomes_none(self) -> None:
+        """Task 114c: LLM 用 0 表示未知时不得触发章节硬校验."""
+        data = {
+            "operation": "plant",
+            "description": "伏笔",
+            "expected_resolve_chapter": 0,
+        }
+        result = _build_foreshadowing_update(data)
+        assert result is not None
+        assert result.expected_resolve_chapter is None
+
+    def test_positive_expected_resolve_chapter_is_preserved(self) -> None:
+        data = {
+            "operation": "plant",
+            "description": "伏笔",
+            "expected_resolve_chapter": "130",
+        }
+        result = _build_foreshadowing_update(data)
+        assert result is not None
+        assert result.expected_resolve_chapter == 130
+
     def test_invalid_operation(self) -> None:
         assert _build_foreshadowing_update({"operation": "invalid"}) is None
+
+
+class TestBackfillForeshadowingSourceVersionIds:
+    def test_missing_source_version_id_uses_accepted_version(self) -> None:
+        """Task 114c: 伏笔来源版本由代码回填，不依赖 LLM 精确输出."""
+        settlement = StateSettlement(
+            foreshadowing_updates=[
+                ForeshadowingUpdate(operation="plant", description="伏笔"),
+                ForeshadowingUpdate(
+                    operation="resolve",
+                    description="回收伏笔",
+                    source_version_id="existing-version",
+                ),
+            ]
+        )
+
+        updated = _backfill_foreshadowing_source_version_ids(
+            settlement, "accepted-version"
+        )
+
+        assert updated == 1
+        assert settlement.foreshadowing_updates[0].source_version_id == "accepted-version"
+        assert settlement.foreshadowing_updates[1].source_version_id == "existing-version"
 
 
 class TestBuildNumericalUpdate:

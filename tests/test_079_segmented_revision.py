@@ -22,7 +22,11 @@ from songyan.models import ReviewCategory, ReviewIssue
 
 class TestSplitContentByScenes:
     def test_splits_multiple_scenes(self) -> None:
-        content = "### Scene 1\n第一段正文。\n\n### Scene 2\n第二段正文。\n\n### Scene 3\n第三段正文。"
+        content = (
+            "### Scene 1\n第一段正文。\n\n"
+            "### Scene 2\n第二段正文。\n\n"
+            "### Scene 3\n第三段正文。"
+        )
         scenes = _split_content_by_scenes(content)
         assert len(scenes) == 3
         assert scenes[0]["scene_number"] == 1
@@ -172,13 +176,44 @@ class TestRenderScenePrompt:
 class TestRunSegmentedRevision:
     @pytest.mark.asyncio
     async def test_not_enough_scenes_fallback(self) -> None:
-        """scenes < 2 时返回 segmented=False."""
+        """没有 issue 时返回 segmented=False."""
         output, content = await run_segmented_revision(
             content="单一段落，没有 scene 标题。",
             issues=[],
         )
         assert output.segmented is False
         assert content == "单一段落，没有 scene 标题。"
+
+    @pytest.mark.asyncio
+    async def test_single_scene_with_issue_uses_segmented_revision(self) -> None:
+        """Task 114c: 单 scene 章节仍可作为局部修订单元处理."""
+        content = "单一场景开头。这里有一处直接说明情绪。单一场景结尾。"
+        issues = [
+            ReviewIssue(
+                issue_id="i1",
+                category=ReviewCategory.SHOW_DONT_TELL,
+                severity="major",
+                evidence_quote="直接说明情绪",
+                evidence_location="单一场景",
+                issue_description="需要改成动作呈现",
+                fix_type="patch",
+            )
+        ]
+
+        with patch(
+            "songyan.agents.revision_handler._segmented_revision.call_llm",
+            new_callable=AsyncMock,
+        ) as mock_llm:
+            mock_llm.return_value = "单一场景开头。这里有一处攥紧袖口的动作。单一场景结尾。"
+            output, revised = await run_segmented_revision(
+                content=content,
+                issues=issues,
+            )
+
+        assert output.segmented is True
+        assert output.scenes_modified == 1
+        assert output.scenes_fallback_count == 0
+        assert "攥紧袖口" in revised
 
     @pytest.mark.asyncio
     async def test_no_mapped_issues_fallback(self) -> None:
@@ -215,7 +250,10 @@ class TestRunSegmentedRevision:
             )
         ]
 
-        with patch("songyan.agents.revision_handler._segmented_revision.call_llm", new_callable=AsyncMock) as mock_llm:
+        with patch(
+            "songyan.agents.revision_handler._segmented_revision.call_llm",
+            new_callable=AsyncMock,
+        ) as mock_llm:
             # Scene 1 无 issue，不调 LLM
             # Scene 2 有 issue，调 LLM 返回修订版
             mock_llm.return_value = "这是修改后的第二段正文。"
@@ -246,7 +284,10 @@ class TestRunSegmentedRevision:
             )
         ]
 
-        with patch("songyan.agents.revision_handler._segmented_revision.call_llm", new_callable=AsyncMock) as mock_llm:
+        with patch(
+            "songyan.agents.revision_handler._segmented_revision.call_llm",
+            new_callable=AsyncMock,
+        ) as mock_llm:
             # LLM 返回极短内容（< 50% 保留率）
             mock_llm.return_value = "短。"
             output, revised = await run_segmented_revision(

@@ -47,7 +47,7 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 
 | 指标 | 数值 |
 |------|------|
-| 状态 | **V5.0 Phase 4 — Task 114b2 已完成，Task 114c 可启动** |
+| 状态 | **V5.0 Phase 4 — Task 114c 已完成，DG-2 条件通过** |
 | V4.0 最终达标率 (Ch2-Ch50) | **81.6%** (Task 099) ✅ |
 | Task 105b 实跑 | **Ch51-Ch100 全部成功，QG 通过率 58.0% (29/50)，DG-1 未通过** |
 | Task 110a 实跑 | **Ch80-Ch100 21/21 成功，QG 通过率 57.1% (12/21)，ContextEmergency 81.0% (17/21)** |
@@ -58,10 +58,10 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 | Task 114a 修复 | **✅ 完成**：old_value 代码回填、quote_filter 角色名校验、run logger 多维度判定、后处理触发收紧；已由 114b2 端到端验证穿透 settlement |
 | Task 114b 验证 | **⚠️ 熔断复核完成**：Ch103/Ch102 回放因 QG 收敛失败提前 `_skip_settlement=True`，未进入 settlement；不能作为 114a 端到端通过证据 |
 | Task 114b2 验证 | **✅ 完成**：修复当前 lineage 修复计数、QG best 回滚、rewrite 结构失败路由；Ch102/Ch103 组合窗口 `run-af3ba939` 完成 accept + settlement + summary |
-| 最近回归测试 | **1671 passed, 4 skipped, 2 xfailed, 3 xpassed** (`pytest tests/ -q`，Task 114b2 后全量回归) |
+| 最近回归测试 | **1676 passed, 4 skipped, 2 xfailed, 3 xpassed** (`pytest tests/ -q`，Task 114c 全量回归) |
 | Python | 3.11.9 |
-| 当前 Task | **Task 114c: Ch111-Ch150 分段流式验证 + DG-2** |
-| 前置状态 | **Task 111a-g / 112 / 113 / 114a / 114b2 已完成；114b 已熔断归档；允许按段启动 Ch111-Ch150** |
+| 当前 Task | **Task 114c 已完成：Ch111-Ch150 40/40 成功，DG-2 条件通过** |
+| 前置状态 | **Task 111a-g / 112 / 113 / 114a / 114b2 / 114c 已完成；下一步复核 ContextEmergency 与质量选择 P1 风险** |
 
 ---
 
@@ -113,7 +113,7 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 | 114a | **Settlement 事实源契约修复** | 修复 Ch103 暴露的 `old_value` mismatch、`quote_filter` 内部 ID 误杀引用、run logger/post-processing 残留风险 | ✅ |
 | 114b | **Phase 1 重跑 Ch102-Ch110** | Ch103/Ch102 回放因 QG 收敛失败触发 `_skip_settlement=True`，未进入 settlement；未达 Phase 1 出口条件 | ⚠️ |
 | 114b2 | **QG 收敛阻断处理 + settlement 端到端验证窗口** | 已修复 QG 收敛阻断和 rewrite 结构失败路由；Ch102/Ch103 `run-af3ba939` 完成 accept+settlement+summary | ✅ |
-| 114c | **Ch111-Ch150 分段流式验证 + DG-2** | Phase 2 Ch111-Ch130、Phase 3 Ch131-Ch150；生成 DG-2 报告 | 📝 |
+| 114c | **Ch111-Ch150 分段流式验证 + DG-2** | Ch111-Ch150 40/40 成功；QG/settlement/summary 40/40；DG-2 因 Ch115/Ch120 ContextEmergency 为条件通过 | ✅ |
 
 ---
 
@@ -175,4 +175,5 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 - `tasks/114b-phase1-replay-ch102-ch110-DONE.md` — Task 114b Phase 1 熔断复核记录
 - `tasks/114b2-qg-convergence-settlement-window-DONE.md` — Task 114b2 QG 收敛阻断与 settlement 端到端验证记录
 - `tasks/114-ch101-ch150-streaming-validation.md` — Task 114 umbrella 规划：114a Settlement 修复、114b Phase 1 重跑、114b2 验证窗口、114c DG-2 长跑
+- `tasks/114-ch101-ch150-streaming-validation-DONE.md` — Task 114c Ch111-Ch150 分段流式验证与 DG-2 条件通过记录
 - `logs/chapter_runs/run-33229919.jsonl` — Ch51-Ch59 实跑指标

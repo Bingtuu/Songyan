@@ -329,6 +329,21 @@ def _build_new_setting(data: dict[str, Any]) -> NewSetting | None:
     )
 
 
+def _normalize_expected_resolve_chapter(value: Any) -> int | None:
+    """规范化伏笔预计回收章.
+
+    LLM 常用 0 / "" 表示未知；这类值不应进入后续“必须大于当前章”的硬校验。
+    正整数仍保留，由 validation 判断是否晚于当前章节。
+    """
+    if value is None or value == "":
+        return None
+    try:
+        chapter = int(value)
+    except (TypeError, ValueError):
+        return None
+    return chapter if chapter > 0 else None
+
+
 def _build_foreshadowing_update(data: dict[str, Any]) -> ForeshadowingUpdate | None:
     """从字典构建 ForeshadowingUpdate."""
     if not isinstance(data, dict):
@@ -340,9 +355,24 @@ def _build_foreshadowing_update(data: dict[str, Any]) -> ForeshadowingUpdate | N
         foreshadowing_id=data.get("foreshadowing_id"),
         operation=operation,  # type: ignore[arg-type]
         description=data.get("description", ""),
-        expected_resolve_chapter=data.get("expected_resolve_chapter"),
+        expected_resolve_chapter=_normalize_expected_resolve_chapter(
+            data.get("expected_resolve_chapter")
+        ),
         source_version_id=data.get("source_version_id", ""),
     )
+
+
+def _backfill_foreshadowing_source_version_ids(
+    settlement: StateSettlement,
+    version_id: str,
+) -> int:
+    """用 accepted version 回填 LLM 漏填的伏笔来源版本."""
+    updated = 0
+    for fs in settlement.foreshadowing_updates:
+        if not fs.source_version_id:
+            fs.source_version_id = version_id
+            updated += 1
+    return updated
 
 
 def _build_increment(data: dict[str, Any]) -> Any:
@@ -516,6 +546,17 @@ async def extract_settlement(
 
     # 4. 构建 StateSettlement
     settlement = _build_state_settlement(data)
+    backfilled_foreshadowings = _backfill_foreshadowing_source_version_ids(
+        settlement, version_id
+    )
+    if backfilled_foreshadowings:
+        logger.info(
+            "settlement.foreshadowing_source_version_backfilled",
+            count=backfilled_foreshadowings,
+            project_id=project_id,
+            chapter_number=chapter_number,
+            version_id=version_id,
+        )
 
     # Task 112: setting_key 必须在 validation 前规范化。
     # apply_settlement 仍保留幂等规范化作为写库前防线。

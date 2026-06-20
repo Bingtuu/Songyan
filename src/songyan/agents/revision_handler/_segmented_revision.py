@@ -258,8 +258,8 @@ async def run_segmented_revision(
     """
     scenes = _split_content_by_scenes(content)
 
-    # 无法分段（< 2 scenes）→ 直接返回空 RevisionOutput + 原始内容，让调用方回退到 patch_engine
-    if len(scenes) < 2:
+    # 无 issue 时没有局部修订目标，交给调用方回退到 patch_engine。
+    if not issues:
         logger.info("revision_handler.segmented_not_enough_scenes", scene_count=len(scenes))
         output = RevisionOutput(
             new_version_id="",
@@ -273,6 +273,12 @@ async def run_segmented_revision(
             scenes_fallback_count=0,
         )
         return output, content
+
+    # Task 114c: 单 scene 章节仍可做 scene-scoped patch。
+    # Ch120 暴露了只有 1 个 scene 时直接回退 patch_engine 会更容易触发整章输出截断；
+    # 这里保留同一套保留率守卫，只把唯一 scene 当作局部修订单元。
+    if len(scenes) == 1:
+        logger.info("revision_handler.segmented_single_scene", issue_count=len(issues))
 
     mapped, global_issues = _map_issues_to_scenes(issues, scenes, content)
     protected = protected_fissures or []
