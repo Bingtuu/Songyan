@@ -166,4 +166,4 @@ pytest tests/ -q
 
 - `archive/v5/plans/115-context-emergency-review.md` — Task 115 历史规划稿
 - `tasks/114-ch101-ch150-streaming-validation-DONE.md` — Task 114c DONE
-- `logs/reports/report-task114c-dg2-ch111-ch150.md` — DG-2 报告
+- `archive/v5/reports/report-task114c-dg2-ch111-ch150.md` — DG-2 报告

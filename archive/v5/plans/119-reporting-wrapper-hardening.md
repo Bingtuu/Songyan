@@ -180,6 +180,6 @@ class WrapperResult(BaseModel):
 ## 参考文档
 
 - `tasks/114-ch101-ch150-streaming-validation-DONE.md`
-- `logs/reports/report-task114c-dg2-ch111-ch150.md`
+- `archive/v5/reports/report-task114c-dg2-ch111-ch150.md`
 - `src/songyan/evals/streaming_report.py`
 - `AGENTS.md`

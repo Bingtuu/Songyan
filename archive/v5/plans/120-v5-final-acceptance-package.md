@@ -42,7 +42,7 @@ Task 120 是 V5.0 的最终收口任务，不再承担新功能开发。它的�
 | 证据 | 来源 |
 |------|------|
 | V5 task 状态总表 | `tasks/V5-README.md` |
-| Task 114c DG-2 报告 | `logs/reports/report-task114c-dg2-ch111-ch150.md` |
+| Task 114c DG-2 报告 | `archive/v5/reports/report-task114c-dg2-ch111-ch150.md` |
 | Task 117 风险窗口复验报告 | Task 117 DONE |
 | 全量 pytest | 最新测试输出 |
 | 全量 ruff | `ruff check src/ tests/` |

@@ -17,7 +17,7 @@ DG-2 报告结果为 **条件通过**：运行完成率、QG 通过率、budget�
 报告文件：
 
 ```text
-logs/reports/report-task114c-dg2-ch111-ch150.md
+archive/v5/reports/report-task114c-dg2-ch111-ch150.md
 ```
 
 ---
@@ -197,7 +197,7 @@ All checks passed!
 报告由 `songyan.evals.streaming_report.generate_report()` 基于 Ch111-Ch150 最新 JSONL 记录生成：
 
 ```text
-logs/reports/report-task114c-dg2-ch111-ch150.md
+archive/v5/reports/report-task114c-dg2-ch111-ch150.md
 ```
 
 报告结论：
@@ -226,7 +226,7 @@ DG-2 条件通过项需复核: ContextEmergency 次数 == 0。
 - `tests/test_107_convergence_guardrail.py`
 - `tests/test_108_core_nodes.py`
 - `tests/test_settlement_extractor.py`
-- `logs/reports/report-task114c-dg2-ch111-ch150.md`
+- `archive/v5/reports/report-task114c-dg2-ch111-ch150.md`
 - `tasks/114-ch101-ch150-streaming-validation-DONE.md`
 - `docs/STATUS.md`
 - `README.md`

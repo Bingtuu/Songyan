@@ -174,4 +174,4 @@ pytest tests/ -q
 - `archive/v5/plans/116-best-version-quality-selection-fix.md` — Task 116 历史规划稿
 - `tasks/115-context-emergency-review-DONE.md` — Task 115 DONE
 - `tasks/114-ch101-ch150-streaming-validation-DONE.md` — Task 114c DONE
-- `logs/reports/report-task114c-dg2-ch111-ch150.md` — DG-2 报告
+- `archive/v5/reports/report-task114c-dg2-ch111-ch150.md` — DG-2 报告

@@ -2,7 +2,7 @@
 
 > **Phase**: V5.0 Phase 4 — DG-2 条件通过收口
 > **优先级**: P1
-> **依赖**: Task 114c 完成；`logs/reports/report-task114c-dg2-ch111-ch150.md`
+> **依赖**: Task 114c 完成；`archive/v5/reports/report-task114c-dg2-ch111-ch150.md`
 > **预计工作量**: 1-2 天
 
 ---
@@ -175,6 +175,6 @@ class ContextEmergencyMetrics(BaseModel):
 ## 参考文档
 
 - `tasks/114-ch101-ch150-streaming-validation-DONE.md`
-- `logs/reports/report-task114c-dg2-ch111-ch150.md`
+- `archive/v5/reports/report-task114c-dg2-ch111-ch150.md`
 - `tasks/V5-README.md`
 - `docs/STATUS.md`
