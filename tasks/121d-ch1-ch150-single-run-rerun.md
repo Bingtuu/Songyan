@@ -109,8 +109,8 @@ project_pipeline.end completed=[1, 2, 3, 4, 5, 6, 7] failed=[8] final_status=par
 
 ## 7. 下一步
 
-建议创建 Task 121e，专门处理 settlement extractor 对伏笔预计回收章节的校验/回填问题：
+Task 121e 已创建并完成，专门处理 settlement extractor 对伏笔预计回收章节的校验/回填问题：
 
 - 约束：不做 Prompt 调优，不降低 settlement 校验强度。
 - 目标：当 LLM 输出的 `expected_resolution_chapter` 等于当前章节时，优先按数据库事实和章节上下文进行安全回填或转为当前章节内已回收事实，避免把可修复字段直接升级为人工 review 阻断。
-- 验证：聚焦复现 Ch8 settlement_review，再重跑 Task 121d 的 Ch1-Ch150 single-run。
+- 验证：已完成聚焦测试；下一步重跑 Ch1-Ch150 single-run，确认 Ch8 是否解除阻断。

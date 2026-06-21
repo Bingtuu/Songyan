@@ -456,6 +456,58 @@ class TestValidateSettlement:
         assert len(errors) == 1
         assert "source_version_id" in errors[0]
 
+    async def test_foreshadowing_current_chapter_expected_backfilled(self) -> None:
+        """Task 121e: 同章 expected_resolve_chapter 可安全回填为下一章."""
+        content = "正文"
+        settlement = StateSettlement(
+            foreshadowing_updates=[
+                ForeshadowingUpdate(
+                    operation="plant",
+                    description="当前章新埋伏笔",
+                    expected_resolve_chapter=8,
+                    source_version_id="v8",
+                )
+            ]
+        )
+
+        errors = await _validate_settlement(
+            settlement,
+            content,
+            [],
+            [],
+            chapter_number=8,
+            project_id="proj-test",
+        )
+
+        assert errors == []
+        assert settlement.foreshadowing_updates[0].expected_resolve_chapter == 9
+
+    async def test_foreshadowing_past_expected_still_fails(self) -> None:
+        """Task 121e: 早于当前章节的预计回收仍是硬错误."""
+        content = "正文"
+        settlement = StateSettlement(
+            foreshadowing_updates=[
+                ForeshadowingUpdate(
+                    operation="plant",
+                    description="过期伏笔",
+                    expected_resolve_chapter=7,
+                    source_version_id="v8",
+                )
+            ]
+        )
+
+        errors = await _validate_settlement(
+            settlement,
+            content,
+            [],
+            [],
+            chapter_number=8,
+            project_id="proj-test",
+        )
+
+        assert len(errors) == 1
+        assert "必须大于当前章节" in errors[0]
+
     async def test_no_current_state_no_error(self) -> None:
         """当角色在 DB 中没有状态时，old_value 验证跳过."""
         content = "正文"
