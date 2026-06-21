@@ -10,6 +10,7 @@
 | `docs/STATUS.md` | 当前状态、测试口径、下一步 |
 | `tasks/V5-README.md` | V5.0 任务事实入口 |
 | `tasks/121-v50-goal-assessment-and-v51-plan.md` | V5.0 目标评估与 V5.1 规划 |
+| `tasks/121b-ch1-ch150-single-run-rehearsal-DONE.md` | Ch1-Ch150 single-run rehearsal 结果 |
 
 ## 按场景查阅
 
@@ -21,6 +22,7 @@
 | DG-2 风险窗口复验 | `tasks/117-dg2-risk-window-revalidation-DONE.md` |
 | Ch111-Ch150 验证 | `tasks/114-ch101-ch150-streaming-validation-DONE.md` |
 | Ch102/Ch103 settlement 验证窗口 | `tasks/114b2-qg-convergence-settlement-window-DONE.md` |
+| Ch1-Ch150 single-run rehearsal | `tasks/121b-ch1-ch150-single-run-rehearsal-DONE.md` |
 | 架构手册 | `docs/architecture/04-vibe-coding-engineering.md` |
 | 技术参考 | `docs/architecture/05-tech-reference.md` |
 | Code Review | `docs/code-review-plan.md` |

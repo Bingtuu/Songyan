@@ -14,7 +14,7 @@
 
 目标：通过 TemporalCompressor + CharacterFocalDecay + SettingEvaporator + BudgetHardCeiling 四组件协同，控制信息密度，支撑 150+ 章稳定生成。Task 101~120 已完成 Context Diet 2.0 核心组件、流式验证基础设施、评分与收敛护栏、活跃信息池控制、工作流/事实源/Context/Prompt/QualityGate/Settlement 修复、Ch111-Ch150 分段验证、DG-2 风险窗口复验、health_low 治理、报告/wrapper 加固和 V5.0 Final Acceptance。
 
-当前最终口径以 `tasks/V5-README.md` 与 `docs/STATUS.md` 为准：**V5.0 工程验收通过，P0/P1 风险为 0，全量回归 1718 passed，lint 通过**。若严格要求“单命令一次性 Ch1-Ch150”，下一步建议先补 single-run rehearsal 证据，再进入 V5.1 Prompt 调优；ContextEmergency / health_low 硬门禁后置预研。
+当前最终口径以 `tasks/V5-README.md` 与 `docs/STATUS.md` 为准：**V5.0 工程验收通过，P0/P1 风险为 0，全量回归 1718 passed，lint 通过**。Task 121b 已补跑 single-run rehearsal，但 `run-21ff158b` 在 Ch5 阻断；下一步应先修复 Ch5 rewrite/settlement skip 问题，再重跑 Ch1-Ch150 single-run，之后进入 V5.1 Prompt 调优。
 
 ### 版本概览
 
@@ -30,16 +30,16 @@
 
 | 指标 | 数值 |
 |------|------|
-| 最近回归测试 | **1718 passed, 1 xfailed, 1 xpassed, 14 warnings** (`pytest tests/ -q`，xfail/xpass 均为已知非阻断项) |
-| V5.0 当前 Task | **Task 120 已完成；Task 121 已产出 V5.0 目标评估与 V5.1 下一步规划** |
+| 最近回归测试 | **1718 passed, 2 xfailed, 14 warnings** (`pytest tests/ -q`，xfail 均为已知非阻断项) |
+| V5.0 当前 Task | **Task 120 已完成；Task 121 已产出规划；Task 121b single-run rehearsal 已执行但未通过** |
 | 前置状态 | **Task 115-120 全部完成；DG-2 风险窗口已关闭；health_low 已分级追踪；报告/wrapper 已加固** |
-| 当前结论 | **V5.0 工程验收通过：P0/P1 风险为 0；Ch111-Ch150 40/40 成功；如需证明“单命令一次性 150 章”，建议补 Ch1-Ch150 single-run rehearsal** |
+| 当前结论 | **V5.0 工程验收通过：P0/P1 风险为 0；Ch111-Ch150 40/40 成功；Ch1-Ch150 single-run rehearsal 当前阻断于 Ch5** |
 | 当前 lint | **`ruff check src/ tests/` 已通过** |
 | Task 110e 实跑 | **Ch80-Ch96 17/17 成功，QG 100%，coherence_major 0/17** |
 | V4.0 最终达标率 | Task 099: Ch2-Ch50 **81.6%** |
 | V4.x 归档 | `archive/v4/`（报告 + 任务 + 验证数据）|
 
-测试口径说明：`1 xfailed` 为 Windows SQLite 并发写入限制；`1 xpassed` 为性能测试预热/冷启动差异，均不阻塞 V5.0 验收。
+测试口径说明：`2 xfailed` 为已知非阻断项，其中包含 Windows SQLite 并发写入限制，以及冷启动下 embedding model 加载导致的性能 xfail。
 
 ### V5.0 核心决策
 
@@ -448,7 +448,7 @@ pytest -k "not integration" -q
 
 ```bash
 pytest tests/ -q
-# Current baseline: 1718 passed, 1 xfailed, 1 xpassed, 14 warnings
+# Current baseline: 1718 passed, 2 xfailed, 14 warnings
 
 ruff check src/ tests/
 # Current baseline: All checks passed!
@@ -552,7 +552,7 @@ ruff check src/ tests/
 - **Task 119** : ✅ 长跑报告入口与 Windows Wrapper 加固 — `songyan report` 入口统一，wrapper 结果码明确。
 - **Task 120** : ✅ V5.0 Final Acceptance Package — V5.0 工程验收通过，P0/P1 风险为 0。
 
-当前建议：V5.0 已交付完成；如需严格宣称“单命令一次性 Ch1-Ch150”，先补 single-run rehearsal 证据，再进入 V5.1 Prompt 调优。V5 任务状态以 `tasks/V5-README.md` 和各 `*-DONE.md` 为准，规划稿已归档为设计背景。
+当前建议：V5.0 已交付完成；Task 121b 已补跑 single-run rehearsal，但 Ch5 暴露 rewrite/settlement skip 阻断。下一步先修复该阻断并重跑 single-run，再进入 V5.1 Prompt 调优。V5 任务状态以 `tasks/V5-README.md` 和各 `*-DONE.md` 为准，规划稿已归档为设计背景。
 
 ---
 
