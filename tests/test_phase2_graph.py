@@ -461,6 +461,62 @@ async def test_run_single_chapter_success_no_error_stage() -> None:
 
 
 @pytest.mark.asyncio
+async def test_run_single_chapter_ignores_stale_error_after_terminal_success() -> None:
+    """Task 121f: 终态完成后，前置非致命错误不污染章节结果."""
+    from songyan.workflows.phase2_graph import _run_single_chapter
+
+    state = {
+        "status": "done",
+        "error": "CreativeDirector LLM call failed: parse error",
+        "current_version_id": "v-18-1",
+        "settlement_id": "st-18",
+        "summary_id": "sum-18",
+        "_context_metrics": {"budget_used": 0.64, "context_emergency": False},
+        "_quality_gate_passed": True,
+    }
+    logged = SimpleNamespace(
+        budget_used=0.64,
+        context_emergency=False,
+        quality_gate_passed=True,
+    )
+
+    with (
+        patch(
+            "songyan.workflows.phase2_graph.run_chapter_pipeline",
+            new_callable=AsyncMock,
+            return_value=state,
+        ),
+        patch(
+            "songyan.workflows.phase2_graph._get_summary_text",
+            new_callable=AsyncMock,
+            return_value="summary",
+        ),
+        patch(
+            "songyan.workflows.phase2_graph.log_chapter_run",
+            new_callable=AsyncMock,
+            return_value=logged,
+        ) as mock_log,
+    ):
+        result = await _run_single_chapter(
+            project_id="p-1",
+            chapter_number=18,
+            mode_id="webnovel",
+            previous_summary="",
+            auto_confirm=True,
+            on_failure="abort",
+        )
+
+    assert result["success"] is True
+    assert result["error"] is None
+    assert result["final_version_id"] == "v-18-1"
+    assert result["quality_gate_passed"] is True
+    mock_log.assert_called_once()
+    assert mock_log.call_args.kwargs["success"] is True
+    assert mock_log.call_args.kwargs.get("error") is None
+    assert mock_log.call_args.kwargs.get("error_stage") is None
+
+
+@pytest.mark.asyncio
 async def test_run_single_chapter_returns_logged_circuit_metrics() -> None:
     """外层熔断使用写入 JSONL 的最终指标，避免与报告口径分叉."""
     from songyan.workflows.phase2_graph import _run_single_chapter

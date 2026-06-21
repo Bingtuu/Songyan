@@ -5,6 +5,7 @@ from __future__ import annotations
 import time
 from datetime import datetime
 from sqlite3 import Row
+from typing import Any
 
 import structlog
 
@@ -96,6 +97,16 @@ async def _pause_run_for_auto_halt(
 def _format_chapter_summary(chapter_number: int, summary_text: str) -> str:
     """格式化单章摘要条目，供运行结果和轻量持久化状态复用."""
     return f"第{chapter_number}章：{summary_text}"
+
+
+def _is_terminal_success_state(state: dict[str, Any]) -> bool:
+    """判断章节是否已完成可结算终态，防止前置非致命错误污染结果."""
+    return (
+        state.get("status") == "done"
+        and state.get("current_version_id") is not None
+        and state.get("settlement_id") is not None
+        and state.get("summary_id") is not None
+    )
 
 
 # =============================================================================
@@ -379,8 +390,18 @@ async def _run_single_chapter(
                     error_stage = "human_confirm"
                     break
 
-            # 检查最终状态
-            if state.get("error"):
+            # 检查最终状态。Task 121f: 若章节已经完成正文、settlement 与
+            # summary，前置 CreativeDirector 等非致命解析错误只能作为诊断，
+            # 不能污染最终章节成功判定。
+            if _is_terminal_success_state(state):
+                if state.get("error"):
+                    logger.info(
+                        "project_pipeline.stale_error_ignored_after_terminal_success",
+                        chapter_number=chapter_number,
+                        status=state.get("status"),
+                        error=state.get("error"),
+                    )
+            elif state.get("error"):
                 error_stage = state.get("status", "unknown")
                 if attempts < max_attempts:
                     logger.info(

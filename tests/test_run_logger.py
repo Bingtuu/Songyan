@@ -277,6 +277,38 @@ def test_build_chapter_run_log_failure() -> None:
     assert log.content_preservation_ratio is None
 
 
+def test_build_chapter_run_log_terminal_success_with_stale_error_ignored() -> None:
+    """Task 121f: 终态成功路径写入时 settlement_success 以 success=True 为准."""
+    started = datetime(2024, 1, 1, 12, 0, 0)
+    finished = datetime(2024, 1, 1, 12, 3, 0)
+
+    log = build_chapter_run_log(
+        run_id="run-1",
+        project_id="proj-1",
+        chapter_number=18,
+        started_at=started,
+        finished_at=finished,
+        success=True,
+        final_state={
+            "status": "done",
+            "error": "CreativeDirector LLM call failed: parse error",
+            "current_version_id": "v-18",
+            "settlement_id": "st-18",
+            "summary_id": "sum-18",
+            "_settlement_needs_human_review": False,
+            "_skip_settlement": False,
+        },
+        metrics={"word_count": 4058},
+        duration_sec=180.0,
+    )
+
+    assert log.success is True
+    assert log.error is None
+    assert log.error_stage is None
+    assert log.settlement_success is True
+    assert log.summary_success is True
+
+
 # ---------------------------------------------------------------------------
 # write_run_log
 # ---------------------------------------------------------------------------

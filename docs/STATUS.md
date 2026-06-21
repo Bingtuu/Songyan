@@ -9,7 +9,7 @@
 | 当前阶段 | **V5.0 已完成，V5.1 预研** |
 | 最终验收 | Task 120 Final Acceptance Package 已交付 |
 | 风险口径 | P0/P1 风险为 0 |
-| 最近全量测试 | `1720 passed, 1 xfailed, 1 xpassed, 14 warnings` |
+| 最近全量测试 | `1722 passed, 2 xfailed, 14 warnings` |
 | 当前 lint | `ruff check src/ tests/` 已通过 |
 | Python | 3.11.9 |
 | 事实入口 | `tasks/V5-README.md` |
@@ -17,15 +17,16 @@
 | Task 121c | 已修复 rewrite fallback 后 `_skip_settlement=True` 错误阻断 settlement 的契约 |
 | Task 121d | 已执行修复后重跑；已验证 Ch5 阻断解除，新增 Ch8 settlement_review 阻断 |
 | Task 121e | 已修复并实跑验证 Ch8 settlement 伏笔校验阻断；Ch18 暴露新阻断 |
+| Task 121f | 已修复 Ch18 CreativeDirector JSON parse failure 后的错误传播/章节状态判定契约 |
 | 重跑前清理 | 已清理缓存、`__pycache__`、旧 WAL/SHM；无 `python/pytest/songyan` 残留进程；`songyan.db` 完整性检查为 `ok` |
-| 下一步规划 | 创建 Task 121f，修复 Ch18 CreativeDirector JSON parse failure 的错误传播/章节状态判定 |
+| 下一步规划 | 重跑 Ch1-Ch150 single-run，验证 Ch18 是否解除阻断 |
 
-测试说明：`1 xfailed` 为已知非阻断项（Windows SQLite 并发写入限制）；`1 xpassed` 为冷启动 embedding model 性能 xfail 在本次热缓存条件下通过。
+测试说明：`2 xfailed` 为已知非阻断项（Windows SQLite 并发写入限制、冷启动 embedding model 性能 xfail）。
 
 ## 当前优先级
 
-1. 创建 Task 121f：处理 Ch18 CreativeDirector JSON parse failure 后仍污染最终章节状态的问题。
-2. 修复后重跑 Ch1-Ch150 single-run，继续按首个真实失败点收敛；通过后再启动 V5.1 Prompt 调优。
+1. 重跑 Ch1-Ch150 single-run，验证 Task 121f 是否解除 Ch18 状态污染阻断。
+2. 若继续暴露新阻断，按首个真实失败点收敛；通过后再启动 V5.1 Prompt 调优。
 3. ContextEmergency / health_low 硬门禁继续后置预研。
 
 ## V5.0 交付摘要
@@ -41,7 +42,7 @@
 
 | 项 | 级别 | 处理 |
 |----|------|------|
-| 一次性 Ch1-Ch150 单命令证据 | P1 | **Task 121e 重跑已越过 Ch8，但 Ch18 暴露新的 CreativeDirector JSON parse failure 状态污染阻断**。下一步创建 Task 121f |
+| 一次性 Ch1-Ch150 单命令证据 | P1 | **Task 121e 重跑已越过 Ch8；Task 121f 已修复 Ch18 CreativeDirector JSON parse failure 状态污染阻断**。下一步重跑 single-run |
 | Prompt 质量瓶颈 | V5.1 | 进入 Prompt 调优，不回填到 V5.0 |
 | health_low 硬门禁 | 预研 | 已有软复核与追踪，硬门禁后置 |
 | ContextEmergency 硬门禁 | 预研 | 保持合理降级，后置评估 |
@@ -57,4 +58,5 @@
 - Rewrite fallback settlement 修复：`tasks/121c-rewrite-fallback-settlement-contract-DONE.md`
 - 修复后 single-run 重跑：`tasks/121d-ch1-ch150-single-run-rerun.md`
 - Ch8 settlement 伏笔校验修复：`tasks/121e-ch8-settlement-foreshadowing-validation-fix-DONE.md`
+- Ch18 CreativeDirector 错误传播修复：`tasks/121f-ch18-creative-director-error-contract-DONE.md`
 - V5 归档：`archive/v5/INDEX.md`
