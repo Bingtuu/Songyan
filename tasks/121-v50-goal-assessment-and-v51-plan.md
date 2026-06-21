@@ -5,6 +5,7 @@
 > **基准提交**: `016055c`  
 > **结论**: V5.0 工程验收已达成；若严格要求“单命令一次性 Ch1-Ch150”，仍建议补一次 rehearsal 作为证据闭环。
 > **执行更新**: Task 121b 已执行 rehearsal，`run-21ff158b` 在 Ch5 阻断，详见 `tasks/121b-ch1-ch150-single-run-rehearsal-DONE.md`。
+> **修复更新**: Task 121c 已修复 rewrite fallback 后 settlement 被跳过的直接阻断，详见 `tasks/121c-rewrite-fallback-settlement-contract-DONE.md`。
 
 ---
 
@@ -34,7 +35,7 @@
 | ContinuityAuditor health_low | ✅ / P2 | 已有 P1/P2/P3 分级和 human marks 追踪；V5.0 维持软复核 |
 | 报告与 wrapper | ✅ | `songyan report` 与加固 PowerShell wrapper 已交付 |
 | P0/P1 风险 | ✅ | 当前为 0 |
-| 最新全量回归 | ✅ | 当前为 `1718 passed, 2 xfailed, 14 warnings`；本文件初稿时为 `1718 passed, 1 xfailed, 1 xpassed, 14 warnings` |
+| 最新全量回归 | ✅ | 当前为 `1718 passed, 2 xfailed, 15 warnings`；本文件初稿时为 `1718 passed, 1 xfailed, 1 xpassed, 14 warnings` |
 | 最新 lint | ✅ | `ruff check src/ tests/` 通过 |
 
 ### 测试口径说明
@@ -42,7 +43,7 @@
 最新清理后测试结果与 Task 120 完成时不同：
 
 ```text
-1718 passed, 2 xfailed, 14 warnings
+1718 passed, 2 xfailed, 15 warnings
 ```
 
 - `2 xfailed`: 已知非阻断项，包括 `test_concurrent_settlement_writes` 的 Windows SQLite 并发写入限制，以及 `test_audit_chain_mock_under_1s` 在冷启动/embedding model 加载条件下的性能 xfail。

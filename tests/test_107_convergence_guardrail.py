@@ -23,7 +23,7 @@ from songyan.workflows.phase1_graph import human_confirm_router
 
 @pytest.mark.asyncio
 async def test_rewrite_scene_count_too_low_triggers_rollback() -> None:
-    """rewrite 后 scene_count < 2 → 废弃版本，回滚 best_version，跳过 settlement."""
+    """rewrite 结构失败但回滚到 best_version → 后续 accept 仍执行 settlement."""
     version = MagicMock()
     version.version_id = "v-rewrite"
     version.scenes = [{"scene_id": "s1"}]  # 仅 1 个场景
@@ -48,18 +48,21 @@ async def test_rewrite_scene_count_too_low_triggers_rollback() -> None:
         mock_ver_repo.return_value.mark_abandoned = AsyncMock()
         mock_head_repo.return_value.update = AsyncMock()
 
-        result = await rewrite_node({
-            "project_id": "p1",
-            "chapter_number": 1,
-            "current_version_id": "v-prev",
-            "chapter_goal_id": "g1",
-            "_best_version_id": "v-best",
-            "revision_round": 2,
-            "_total_revision_count": 2,
-        })
+        result = await rewrite_node(
+            {
+                "project_id": "p1",
+                "chapter_number": 1,
+                "current_version_id": "v-prev",
+                "chapter_goal_id": "g1",
+                "_best_version_id": "v-best",
+                "revision_round": 2,
+                "_total_revision_count": 2,
+            }
+        )
 
     assert result["_convergence_failed"] is True
-    assert result["_skip_settlement"] is True
+    assert result["_skip_settlement"] is False
+    assert result["_settlement_needs_human_review"] is False
     assert result["status"] == "human_confirm"
     assert result["current_version_id"] == "v-best"
     assert "struct_integrity_failed" in result["_rewrite_reason"]
@@ -69,7 +72,7 @@ async def test_rewrite_scene_count_too_low_triggers_rollback() -> None:
 
 @pytest.mark.asyncio
 async def test_rewrite_scene_count_too_low_without_best_rolls_back_previous() -> None:
-    """Task 114c: 无 QG best 时也不得让结构失败 rewrite 留在 head."""
+    """Task 121c: 无 QG best 但可回滚前版本时，accept 后仍执行 settlement."""
     version = MagicMock()
     version.version_id = "v-rewrite"
     version.scenes = [{"scene_id": "s1"}]
@@ -104,26 +107,28 @@ async def test_rewrite_scene_count_too_low_without_best_rolls_back_previous() ->
         mock_ver_repo.return_value.mark_abandoned = AsyncMock()
         mock_head_repo.return_value.update = AsyncMock()
 
-        result = await rewrite_node({
-            "project_id": "p1",
-            "chapter_number": 1,
-            "current_version_id": "v-prev",
-            "chapter_goal_id": "g1",
-            "revision_round": 2,
-            "_total_revision_count": 2,
-        })
+        result = await rewrite_node(
+            {
+                "project_id": "p1",
+                "chapter_number": 1,
+                "current_version_id": "v-prev",
+                "chapter_goal_id": "g1",
+                "revision_round": 2,
+                "_total_revision_count": 2,
+            }
+        )
 
     assert result["current_version_id"] == "v-prev"
     assert result["_convergence_failed"] is True
-    assert result["_skip_settlement"] is True
-    assert result["_settlement_needs_human_review"] is True
+    assert result["_skip_settlement"] is False
+    assert result["_settlement_needs_human_review"] is False
     mock_ver_repo.return_value.mark_abandoned.assert_awaited_once_with("v-rewrite")
     mock_head_repo.return_value.update.assert_awaited_once()
 
 
 @pytest.mark.asyncio
 async def test_rewrite_missing_hooks_triggers_rollback() -> None:
-    """rewrite 后缺失 ending_hook → 触发结构失败回滚."""
+    """rewrite 后缺失 ending_hook → 回滚 best，accept 后仍执行 settlement."""
     version = MagicMock()
     version.version_id = "v-rewrite"
     version.scenes = [{"scene_id": "s1"}, {"scene_id": "s2"}]
@@ -158,17 +163,19 @@ async def test_rewrite_missing_hooks_triggers_rollback() -> None:
         mock_ver_repo.return_value.mark_abandoned = AsyncMock()
         mock_head_repo.return_value.update = AsyncMock()
 
-        result = await rewrite_node({
-            "project_id": "p1",
-            "chapter_number": 1,
-            "current_version_id": "v-prev",
-            "chapter_goal_id": "g1",
-            "_best_version_id": "v-best",
-            "revision_round": 2,
-        })
+        result = await rewrite_node(
+            {
+                "project_id": "p1",
+                "chapter_number": 1,
+                "current_version_id": "v-prev",
+                "chapter_goal_id": "g1",
+                "_best_version_id": "v-best",
+                "revision_round": 2,
+            }
+        )
 
     assert result["_convergence_failed"] is True
-    assert result["_skip_settlement"] is True
+    assert result["_skip_settlement"] is False
     assert "missing_ending_hook" in result["_rewrite_reason"]
 
 
@@ -202,13 +209,15 @@ async def test_rewrite_struct_ok_passes_through() -> None:
         mock_proj.return_value = MagicMock(genre_id="g1")
         mock_goal.return_value = MagicMock(word_count_target=3000)
 
-        result = await rewrite_node({
-            "project_id": "p1",
-            "chapter_number": 1,
-            "current_version_id": "v-prev",
-            "chapter_goal_id": "g1",
-            "revision_round": 2,
-        })
+        result = await rewrite_node(
+            {
+                "project_id": "p1",
+                "chapter_number": 1,
+                "current_version_id": "v-prev",
+                "chapter_goal_id": "g1",
+                "revision_round": 2,
+            }
+        )
 
     assert result["status"] == "rule_auditing"
     assert result.get("_convergence_failed", False) is False
@@ -222,7 +231,7 @@ async def test_rewrite_struct_ok_passes_through() -> None:
 
 @pytest.mark.asyncio
 async def test_qg_after_rewrite_failure_rollback_best_version() -> None:
-    """rewrite 后 QG 仍失败 → 回滚 best_version，设置收敛失败标志."""
+    """rewrite 后 QG 仍失败 → 回滚 best_version，但不跳过 settlement."""
     version = MagicMock()
     version.word_count = 3000
     best_version = MagicMock()
@@ -246,42 +255,45 @@ async def test_qg_after_rewrite_failure_rollback_best_version() -> None:
         mock_ver.return_value = version
         mock_head_repo.return_value.update = AsyncMock()
 
-        result = await quality_gate_node({
-            "project_id": "p1",
-            "chapter_number": 1,
-            "current_version_id": "v-current",
-            "_was_rewritten": True,
-            "_best_version_id": "v-best",
-            "_best_score_card": {"version_id": "v-best", "overall_score": 0.8},
-            "_score_card": {
-                "version_id": "v",
-                "overall_score": 0.5,
-                "length": {"score": 1.0},
-                "budget": {"score": 1.0},
-                "coherence": {"score": 0.5},
-                "momentum": {"score": 1.0},
-                "readability": {"score": 1.0},
-                "flags": {
-                    "length_ok": True,
-                    "budget_ok": True,
-                    "coherence_critical": True,
-                    "coherence_major": False,
-                    "momentum_present": True,
-                    "readability_ok": True,
+        result = await quality_gate_node(
+            {
+                "project_id": "p1",
+                "chapter_number": 1,
+                "current_version_id": "v-current",
+                "_was_rewritten": True,
+                "_best_version_id": "v-best",
+                "_best_score_card": {"version_id": "v-best", "overall_score": 0.8},
+                "_score_card": {
+                    "version_id": "v",
+                    "overall_score": 0.5,
+                    "length": {"score": 1.0},
+                    "budget": {"score": 1.0},
+                    "coherence": {"score": 0.5},
+                    "momentum": {"score": 1.0},
+                    "readability": {"score": 1.0},
+                    "flags": {
+                        "length_ok": True,
+                        "budget_ok": True,
+                        "coherence_critical": True,
+                        "coherence_major": False,
+                        "momentum_present": True,
+                        "readability_ok": True,
+                    },
                 },
-            },
-        })
+            }
+        )
 
     assert result["status"] == "human_confirm"
     assert result["_convergence_failed"] is True
-    assert result["_skip_settlement"] is True
+    assert result["_skip_settlement"] is False
+    assert result["_settlement_needs_human_review"] is False
     assert result["current_version_id"] == "v-best"
     mock_head_repo.return_value.update.assert_awaited_once()
 
 
 @pytest.mark.asyncio
 async def test_qg_after_two_revisions_failure_rollback() -> None:
-    """2 轮 revision 后 QG 仍失败 → 回滚 best_version."""
+    """2 轮 revision 后 QG 仍失败 → 回滚 best_version 并继续 settlement."""
     version = MagicMock()
     version.word_count = 3000
     best_version = MagicMock()
@@ -305,18 +317,21 @@ async def test_qg_after_two_revisions_failure_rollback() -> None:
         mock_ver.return_value = version
         mock_head_repo.return_value.update = AsyncMock()
 
-        result = await quality_gate_node({
-            "project_id": "p1",
-            "chapter_number": 1,
-            "current_version_id": "v-current",
-            "_best_version_id": "v-best",
-            "_best_score_card": {"version_id": "v-best", "overall_score": 0.8},
-            "_content_preservation_ratio": 0.50,
-        })
+        result = await quality_gate_node(
+            {
+                "project_id": "p1",
+                "chapter_number": 1,
+                "current_version_id": "v-current",
+                "_best_version_id": "v-best",
+                "_best_score_card": {"version_id": "v-best", "overall_score": 0.8},
+                "_content_preservation_ratio": 0.50,
+            }
+        )
 
     assert result["status"] == "human_confirm"
     assert result["_convergence_failed"] is True
-    assert result["_skip_settlement"] is True
+    assert result["_skip_settlement"] is False
+    assert result["_settlement_needs_human_review"] is False
     assert result["current_version_id"] == "v-best"
 
 
@@ -366,31 +381,33 @@ async def test_qg_convergence_recovers_with_qg_pass_best_version() -> None:
         mock_ver.return_value = version
         mock_head_repo.return_value.update = AsyncMock()
 
-        result = await quality_gate_node({
-            "project_id": "p1",
-            "chapter_number": 1,
-            "current_version_id": "v-current",
-            "_was_rewritten": True,
-            "_best_version_id": "v-best",
-            "_best_score_card": qg_pass_score_card,
-            "_score_card": {
-                "version_id": "v-current",
-                "overall_score": 0.5,
-                "length": {"score": 0.44},
-                "budget": {"score": 1.0},
-                "coherence": {"score": 0.85},
-                "momentum": {"score": -1.0},
-                "readability": {"score": 0.7},
-                "flags": {
-                    "length_ok": False,
-                    "budget_ok": True,
-                    "coherence_critical": False,
-                    "coherence_major": False,
-                    "momentum_present": True,
-                    "readability_ok": True,
+        result = await quality_gate_node(
+            {
+                "project_id": "p1",
+                "chapter_number": 1,
+                "current_version_id": "v-current",
+                "_was_rewritten": True,
+                "_best_version_id": "v-best",
+                "_best_score_card": qg_pass_score_card,
+                "_score_card": {
+                    "version_id": "v-current",
+                    "overall_score": 0.5,
+                    "length": {"score": 0.44},
+                    "budget": {"score": 1.0},
+                    "coherence": {"score": 0.85},
+                    "momentum": {"score": -1.0},
+                    "readability": {"score": 0.7},
+                    "flags": {
+                        "length_ok": False,
+                        "budget_ok": True,
+                        "coherence_critical": False,
+                        "coherence_major": False,
+                        "momentum_present": True,
+                        "readability_ok": True,
+                    },
                 },
-            },
-        })
+            }
+        )
 
     assert result["status"] == "human_confirm"
     assert result["_quality_gate_passed"] is True
@@ -418,14 +435,16 @@ async def test_qg_without_best_version_no_rollback() -> None:
         mock_ver.return_value = version
         mock_head_repo.return_value.update = AsyncMock()
 
-        result = await quality_gate_node({
-            "project_id": "p1",
-            "chapter_number": 1,
-            "current_version_id": "v-current",
-            "_was_rewritten": True,
-            "_best_version_id": None,
-            "_content_preservation_ratio": 0.50,
-        })
+        result = await quality_gate_node(
+            {
+                "project_id": "p1",
+                "chapter_number": 1,
+                "current_version_id": "v-current",
+                "_was_rewritten": True,
+                "_best_version_id": None,
+                "_content_preservation_ratio": 0.50,
+            }
+        )
 
     assert result["status"] == "human_confirm"
     assert result["_convergence_failed"] is True
@@ -490,15 +509,17 @@ async def test_human_gate_accept_transmits_skip_settlement() -> None:
         mock_ver_repo.return_value.accept_version = AsyncMock()
         mock_goal.return_value = MagicMock(word_count_target=3000)
 
-        result = await human_gate_node({
-            "project_id": "p1",
-            "chapter_number": 1,
-            "current_version_id": "v1",
-            "_convergence_failed": True,
-            "_skip_settlement": True,
-            "_quality_gate_passed": True,
-            "_has_major": True,
-        })
+        result = await human_gate_node(
+            {
+                "project_id": "p1",
+                "chapter_number": 1,
+                "current_version_id": "v1",
+                "_convergence_failed": True,
+                "_skip_settlement": True,
+                "_quality_gate_passed": True,
+                "_has_major": True,
+            }
+        )
 
     assert result["_convergence_failed"] is True
     assert result["_skip_settlement"] is True

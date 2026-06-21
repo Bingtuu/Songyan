@@ -193,6 +193,7 @@ def _score_card_passes_quality_gate(score_card_raw: dict[str, Any] | None) -> bo
         and score_card.flags.readability_ok
     )
 
+
 # =============================================================================
 # Editor callable（可注入，用于测试）
 # =============================================================================
@@ -472,14 +473,10 @@ async def _load_chapter_repair_state(
             return revision_count, was_rewritten
 
     revision_count = sum(
-        1
-        for version in versions
-        if version.version_type == "revision" and not version.is_abandoned
+        1 for version in versions if version.version_type == "revision" and not version.is_abandoned
     )
     was_rewritten = any(
-        version.version_type == "draft"
-        and version.version_number > 1
-        and not version.is_abandoned
+        version.version_type == "draft" and version.version_number > 1 and not version.is_abandoned
         for version in versions
     )
     return revision_count, was_rewritten
@@ -534,10 +531,12 @@ async def rewrite_node(state: dict[str, Any]) -> dict[str, Any]:
     # 收集前 2 轮的 issues 作为禁止清单
     avoid_list = await _build_rewrite_avoid_list(state)
     if avoid_list:
-        ctx.human_instructions.append({
-            "type": "rewrite_avoid_list",
-            "content": avoid_list,
-        })
+        ctx.human_instructions.append(
+            {
+                "type": "rewrite_avoid_list",
+                "content": avoid_list,
+            }
+        )
         logger.info(
             "rewrite.injected_avoid_list",
             issue_count=len(avoid_list),
@@ -551,23 +550,27 @@ async def rewrite_node(state: dict[str, Any]) -> dict[str, Any]:
     if goal and goal.word_count_target > 0:
         lower = int(goal.word_count_target * 0.80)
         upper = int(goal.word_count_target * 1.20)
-        ctx.human_instructions.append({
-            "type": "word_count_constraint",
-            "content": (
-                f"【重写约束】本章目标字数为 {goal.word_count_target}。 "
-                f"重写后正文必须严格控制在 {lower} ~ {upper} 字之间。 "
-                f"若场景展开后可能超标，优先减少场景数量或压缩描写，不要超额。"
-            ),
-        })
+        ctx.human_instructions.append(
+            {
+                "type": "word_count_constraint",
+                "content": (
+                    f"【重写约束】本章目标字数为 {goal.word_count_target}。 "
+                    f"重写后正文必须严格控制在 {lower} ~ {upper} 字之间。 "
+                    f"若场景展开后可能超标，优先减少场景数量或压缩描写，不要超额。"
+                ),
+            }
+        )
         # Task 095: 注入场景结构约束
-        ctx.human_instructions.append({
-            "type": "scene_structure_constraint",
-            "content": (
-                "【场景结构约束】本章必须包含至少 2 个场景，推荐 3 个。 "
-                "每个场景字数不得超过总字数的 60%。 "
-                "场景之间应有清晰的叙事转折或时空切换。"
-            ),
-        })
+        ctx.human_instructions.append(
+            {
+                "type": "scene_structure_constraint",
+                "content": (
+                    "【场景结构约束】本章必须包含至少 2 个场景，推荐 3 个。 "
+                    "每个场景字数不得超过总字数的 60%。 "
+                    "场景之间应有清晰的叙事转折或时空切换。"
+                ),
+            }
+        )
         logger.info(
             "rewrite.injected_word_count_constraint",
             word_count_target=goal.word_count_target,
@@ -591,9 +594,7 @@ async def rewrite_node(state: dict[str, Any]) -> dict[str, Any]:
 
     # 093: 对 rewrite 结果追加硬截断回退（收紧到 ±20%）
     _goal = (
-        goal
-        if "goal" in locals()
-        else await load_chapter_goal(state.get("chapter_goal_id", ""))
+        goal if "goal" in locals() else await load_chapter_goal(state.get("chapter_goal_id", ""))
     )
     if _goal and _goal.word_count_target > 0:
         _upper_soft = int(_goal.word_count_target * 1.15)  # 收紧：之前 1.20
@@ -610,8 +611,7 @@ async def rewrite_node(state: dict[str, Any]) -> dict[str, Any]:
             _was_truncated,
             _trunc_reason,
         ) = _enforce_word_count(
-            _content, _scenes, _goal.word_count_target, _word_count,
-            chapter_type=_goal.chapter_type
+            _content, _scenes, _goal.word_count_target, _word_count, chapter_type=_goal.chapter_type
         )
 
         _new_content = _content
@@ -793,10 +793,11 @@ async def rewrite_node(state: dict[str, Any]) -> dict[str, Any]:
                 project_id=state["project_id"],
                 chapter_number=state["chapter_number"],
             )
+        has_rollback_target = bool(
+            rollback_version and rollback_version.version_id != version.version_id
+        )
         recovered_with_qg_pass = bool(
-            best_version
-            and best_score_card
-            and _score_card_passes_quality_gate(best_score_card)
+            best_version and best_score_card and _score_card_passes_quality_gate(best_score_card)
         )
         return {
             "current_version_id": (
@@ -809,8 +810,8 @@ async def rewrite_node(state: dict[str, Any]) -> dict[str, Any]:
             "_has_critical": False,
             "_has_major": False,
             "_convergence_failed": not recovered_with_qg_pass,
-            "_skip_settlement": not recovered_with_qg_pass,
-            "_settlement_needs_human_review": not recovered_with_qg_pass,
+            "_skip_settlement": not has_rollback_target,
+            "_settlement_needs_human_review": not has_rollback_target,
             "_quality_gate_passed": recovered_with_qg_pass,
             "_score_card": best_score_card if recovered_with_qg_pass else state.get("_score_card"),
             "status": "human_confirm",
@@ -843,7 +844,7 @@ async def _build_rewrite_avoid_list(state: dict[str, Any]) -> list[str]:
         seen_descriptions.add(desc)
         item = desc
         if evidence:
-            item += f" — 证据：\"{evidence[:50]}\""
+            item += f' — 证据："{evidence[:50]}"'
         avoid_items.append(item)
 
     # 1. 从 _new_issues_introduced 提取
@@ -1040,9 +1041,7 @@ async def review_merger_node(state: dict[str, Any]) -> dict[str, Any]:
     # 将 score_card 持久化到版本记录（Task 106-patch）
     version.score_card = score_card.model_dump()
     try:
-        await ChapterVersionRepository().update_score_card(
-            version.version_id, version.score_card
-        )
+        await ChapterVersionRepository().update_score_card(version.version_id, version.score_card)
     except Exception as exc:
         logger.warning(
             "review_merger.save_score_card_failed",
@@ -1240,8 +1239,7 @@ async def review_merger_node(state: dict[str, Any]) -> dict[str, Any]:
         "status": "literary_auditing",
     }
     _should_save_best = (
-        (needs_revision and rround == 0)
-        or not state.get("_best_version_id")
+        (needs_revision and rround == 0) or not state.get("_best_version_id")
     ) and _score_card_passes_quality_gate(score_card.model_dump())
     if _should_save_best:
         result["_best_issues_count"] = current_issues
@@ -1406,12 +1404,14 @@ async def revision_handler_node(state: dict[str, Any]) -> dict[str, Any]:
     # 从 output 反推 data dict 供 _build_revision_output 解析
     data: dict[str, Any] = {"patches": []}
     for p in output.patches_applied:
-        data["patches"].append({
-            "issue_id": p.issue_id,
-            "original_text": p.original_text,
-            "revised_text": p.revised_text,
-            "location": p.location,
-        })
+        data["patches"].append(
+            {
+                "issue_id": p.issue_id,
+                "original_text": p.original_text,
+                "revised_text": p.revised_text,
+                "location": p.location,
+            }
+        )
     from songyan.agents.revision_handler import _build_revision_output
 
     output = _build_revision_output(
@@ -1427,7 +1427,7 @@ async def revision_handler_node(state: dict[str, Any]) -> dict[str, Any]:
     return {
         "current_version_id": new_version_id,
         "revision_round": state["revision_round"] + 1,
-            "_total_revision_count": state.get("_total_revision_count", 0) + 1,
+        "_total_revision_count": state.get("_total_revision_count", 0) + 1,
         "_content_preservation_ratio": ratio,
         "_new_issues_introduced": [i.model_dump() for i in output.new_issues_introduced],
         "status": "rule_auditing",
@@ -1480,13 +1480,9 @@ async def quality_gate_node(state: dict[str, Any]) -> dict[str, Any]:
         target = goal.word_count_target if goal else 3000
         ratio = version.word_count / target if target > 0 else 1.0
         if ratio > 1.30:
-            failures.append(
-                f"word_count_too_high:{version.word_count}:{target}:{ratio:.3f}"
-            )
+            failures.append(f"word_count_too_high:{version.word_count}:{target}:{ratio:.3f}")
         elif ratio < 0.80:
-            failures.append(
-                f"word_count_too_low:{version.word_count}:{target}:{ratio:.3f}"
-            )
+            failures.append(f"word_count_too_low:{version.word_count}:{target}:{ratio:.3f}")
 
     # 保留率检查（仅对 revision 产出，score_card 未覆盖）
     preservation = state.get("_content_preservation_ratio")
@@ -1516,16 +1512,16 @@ async def quality_gate_node(state: dict[str, Any]) -> dict[str, Any]:
             next_status = "human_review_required"
         elif was_rewritten:
             next_status = "human_confirm"
-        elif any(
-            f.startswith(("word_count_too_high:", "length_score:")) for f in failures
-        ):
+        elif any(f.startswith(("word_count_too_high:", "length_score:")) for f in failures):
             next_status = "rewrite"
         elif db_revision_count >= 2:
             next_status = "human_confirm"
         else:
             next_status = "rule_auditing"
 
-        # Task 107: 收敛终点 — 修复耗尽且 QG 仍失败，回滚 best_version 并跳过 settlement
+            # Task 121c: _skip_settlement 只表示没有可安全结算的正文版本。
+            # 修复耗尽且 QG 仍失败时，如果能回滚到 active best，后续 accept 仍必须
+            # 执行 settlement；QG 失败由 _convergence_failed / _quality_gate_passed 记录。
         result: dict[str, Any] = {
             "_quality_gate_passed": False,
             "_quality_gate_failures": failures,
@@ -1568,43 +1564,6 @@ async def quality_gate_node(state: dict[str, Any]) -> dict[str, Any]:
                 rollback_version=best_version_id,
                 rollback_valid=bool(active_best and active_best_score_card),
             )
-            if (
-                active_best
-                and active_best_score_card
-                and _score_card_passes_quality_gate(active_best_score_card)
-            ):
-                await ChapterHeadRepository().update(
-                    ChapterHead(
-                        project_id=state["project_id"],
-                        chapter_number=state["chapter_number"],
-                        current_version_id=active_best.version_id,
-                        accepted_version_id=None,
-                        status="draft",
-                    )
-                )
-                logger.warning(
-                    "quality_gate.recovered_by_best_version",
-                    project_id=state["project_id"],
-                    chapter_number=state["chapter_number"],
-                    failed_version_id=version.version_id,
-                    recovered_version_id=active_best.version_id,
-                    failures=failures,
-                )
-                result["_quality_gate_passed"] = True
-                result["_quality_gate_failures"] = []
-                result["_convergence_failed"] = False
-                result["_skip_settlement"] = False
-                result["_settlement_needs_human_review"] = False
-                result["_needs_revision"] = False
-                result["current_version_id"] = active_best.version_id
-                result["_best_version_id"] = active_best.version_id
-                result["_best_score_card"] = active_best_score_card
-                result["_score_card"] = active_best_score_card
-                return result
-
-            result["_convergence_failed"] = True
-            result["_skip_settlement"] = True
-
             if active_best and active_best_score_card:
                 await ChapterHeadRepository().update(
                     ChapterHead(
@@ -1619,6 +1578,29 @@ async def quality_gate_node(state: dict[str, Any]) -> dict[str, Any]:
                 result["_best_version_id"] = active_best.version_id
                 result["_best_score_card"] = active_best_score_card
                 result["_score_card"] = active_best_score_card
+                result["_skip_settlement"] = False
+                result["_settlement_needs_human_review"] = False
+
+                if _score_card_passes_quality_gate(active_best_score_card):
+                    logger.warning(
+                        "quality_gate.recovered_by_best_version",
+                        project_id=state["project_id"],
+                        chapter_number=state["chapter_number"],
+                        failed_version_id=version.version_id,
+                        recovered_version_id=active_best.version_id,
+                        failures=failures,
+                    )
+                    result["_quality_gate_passed"] = True
+                    result["_quality_gate_failures"] = []
+                    result["_convergence_failed"] = False
+                    result["_needs_revision"] = False
+                    return result
+
+            else:
+                result["_skip_settlement"] = True
+                result["_settlement_needs_human_review"] = True
+
+            result["_convergence_failed"] = True
 
         return result
 
@@ -1641,17 +1623,17 @@ async def human_gate_node(state: dict[str, Any]) -> dict[str, Any]:
     gate_type = state.get("_current_gate") or "human_confirm"
     existing_instructions = state.get("human_instructions", [])
 
-    decision = interrupt({
-        "version_id": version.version_id,
-        "gate_type": gate_type,
-        "content_preview": (
-            version.content[:500] + "..."
-            if len(version.content) > 500
-            else version.content
-        ),
-        "options": ["accept", "edit", "reject", "back"],
-        "human_instructions": existing_instructions,
-    })
+    decision = interrupt(
+        {
+            "version_id": version.version_id,
+            "gate_type": gate_type,
+            "content_preview": (
+                version.content[:500] + "..." if len(version.content) > 500 else version.content
+            ),
+            "options": ["accept", "edit", "reject", "back"],
+            "human_instructions": existing_instructions,
+        }
+    )
 
     if decision == "edit":
         edited_content = _open_editor(version.content)
@@ -1723,11 +1705,7 @@ async def human_gate_node(state: dict[str, Any]) -> dict[str, Any]:
             _context_metrics = _extract_context_metrics(_ctx_pkg)
         previous_qg_passed = state.get("_quality_gate_passed")
         review_passed = not state.get("_has_critical", False) and not state.get("_has_major", False)
-        _qg_passed = (
-            review_passed
-            if previous_qg_passed is None
-            else bool(previous_qg_passed)
-        )
+        _qg_passed = review_passed if previous_qg_passed is None else bool(previous_qg_passed)
 
         _rround = state.get("revision_round", 0)
         logger.info(
@@ -1831,9 +1809,7 @@ async def accept_with_settlement_boundary(
 ) -> None:
     """在同一事务内完成 settlement apply 与 accept 状态更新."""
     if settlement is not None and settlement.validation_status != "valid":
-        raise SettlementError(
-            f"Settlement validation status is {settlement.validation_status}"
-        )
+        raise SettlementError(f"Settlement validation status is {settlement.validation_status}")
 
     async with get_db() as conn:
         try:
@@ -2017,9 +1993,7 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
                 project_id=state["project_id"],
                 chapter_number=state["chapter_number"],
                 archived_count=len(archived_keys),
-                archived_keys=(
-                    archived_keys[:5] + (["..."] if len(archived_keys) > 5 else [])
-                ),
+                archived_keys=(archived_keys[:5] + (["..."] if len(archived_keys) > 5 else [])),
             )
             # 每 50 章执行一次合并扫描
             if state["chapter_number"] % 50 == 0:
