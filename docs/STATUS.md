@@ -13,18 +13,18 @@
 | 当前 lint | `ruff check src/ tests/` 已通过 |
 | Python | 3.11.9 |
 | 事实入口 | `tasks/V5-README.md` |
-| single-run rehearsal | Task 121b 已执行：`run-21ff158b`，Ch1-Ch4 成功，Ch5 阻断，最终 `partial` |
+| single-run rehearsal | Task 121b：`run-21ff158b`，Ch1-Ch4 成功，Ch5 阻断；Task 121d：`run-f749826e`，Ch1-Ch7 成功，Ch8 新阻断，最终 `partial` |
 | Task 121c | 已修复 rewrite fallback 后 `_skip_settlement=True` 错误阻断 settlement 的契约 |
-| Task 121d | 已创建修复后重跑边界；下一步使用新干净 rehearsal 项目重跑 Ch1-Ch150 |
+| Task 121d | 已执行修复后重跑；已验证 Ch5 阻断解除，新增 Ch8 settlement_review 阻断 |
 | 重跑前清理 | 已清理缓存、`__pycache__`、旧 WAL/SHM；无 `python/pytest/songyan` 残留进程；`songyan.db` 完整性检查为 `ok` |
-| 下一步规划 | 执行 Task 121d，验证 Ch5 是否解除阻断 |
+| 下一步规划 | 创建 Task 121e，修复 Ch8 settlement 伏笔预计回收章节校验/回填阻断 |
 
 测试说明：`1 xfailed` 为已知非阻断项（Windows SQLite 并发写入限制）；`1 xpassed` 为冷启动 embedding model 性能 xfail 在本次热缓存条件下通过。
 
 ## 当前优先级
 
-1. 执行 Task 121d：使用新的干净 rehearsal 项目重跑 Ch1-Ch150，验证 Task 121c 是否解除 Ch5 settlement skip 阻断。
-2. 若 single-run 继续暴露新阻断，按失败点继续收敛；通过后再启动 V5.1 Prompt 调优。
+1. 创建 Task 121e：处理 Ch8 `settlement_review` 阻断，重点是伏笔 `expected_resolution_chapter` 等于当前章节时的安全回填/分类。
+2. 修复后重跑 Ch1-Ch150 single-run，继续按首个真实失败点收敛；通过后再启动 V5.1 Prompt 调优。
 3. ContextEmergency / health_low 硬门禁继续后置预研。
 
 ## V5.0 交付摘要
@@ -40,7 +40,7 @@
 
 | 项 | 级别 | 处理 |
 |----|------|------|
-| 一次性 Ch1-Ch150 单命令证据 | P1 | **Task 121b 已执行但未通过；Task 121c 已修复直接阻断；Task 121d 已创建重跑边界**。下一步用新干净项目重跑 rehearsal |
+| 一次性 Ch1-Ch150 单命令证据 | P1 | **Task 121d 已执行但未通过；Ch5 阻断已解除，Ch8 暴露新的 settlement_review 阻断**。下一步创建 Task 121e 修复后重跑 |
 | Prompt 质量瓶颈 | V5.1 | 进入 Prompt 调优，不回填到 V5.0 |
 | health_low 硬门禁 | 预研 | 已有软复核与追踪，硬门禁后置 |
 | ContextEmergency 硬门禁 | 预研 | 保持合理降级，后置评估 |

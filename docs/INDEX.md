@@ -12,7 +12,7 @@
 | `tasks/121a-v50-goal-assessment-and-v51-plan.md` | Task 121a：V5.0 目标评估与 V5.1 规划 |
 | `tasks/121b-ch1-ch150-single-run-rehearsal-DONE.md` | Ch1-Ch150 single-run rehearsal 结果 |
 | `tasks/121c-rewrite-fallback-settlement-contract-DONE.md` | rewrite fallback 后 settlement 契约修复 |
-| `tasks/121d-ch1-ch150-single-run-rerun.md` | Task 121d：修复后 single-run 重跑边界 |
+| `tasks/121d-ch1-ch150-single-run-rerun.md` | Task 121d：修复后 single-run 重跑结果 |
 
 ## 按场景查阅
 
@@ -26,7 +26,7 @@
 | Ch102/Ch103 settlement 验证窗口 | `tasks/114b2-qg-convergence-settlement-window-DONE.md` |
 | Ch1-Ch150 single-run rehearsal | `tasks/121b-ch1-ch150-single-run-rehearsal-DONE.md` |
 | Ch5 settlement skip 修复 | `tasks/121c-rewrite-fallback-settlement-contract-DONE.md` |
-| 修复后 single-run 重跑 | `tasks/121d-ch1-ch150-single-run-rerun.md` |
+| 修复后 single-run 重跑 / Ch8 新阻断 | `tasks/121d-ch1-ch150-single-run-rerun.md` |
 | 架构手册 | `docs/architecture/04-vibe-coding-engineering.md` |
 | 技术参考 | `docs/architecture/05-tech-reference.md` |
 | Code Review | `docs/code-review-plan.md` |

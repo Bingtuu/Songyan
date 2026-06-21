@@ -14,7 +14,7 @@
 
 目标：通过 TemporalCompressor + CharacterFocalDecay + SettingEvaporator + BudgetHardCeiling 四组件协同，控制信息密度，支撑 150+ 章稳定生成。Task 101~120 已完成 Context Diet 2.0 核心组件、流式验证基础设施、评分与收敛护栏、活跃信息池控制、工作流/事实源/Context/Prompt/QualityGate/Settlement 修复、Ch111-Ch150 分段验证、DG-2 风险窗口复验、health_low 治理、报告/wrapper 加固和 V5.0 Final Acceptance。
 
-当前最终口径以 `tasks/V5-README.md` 与 `docs/STATUS.md` 为准：**V5.0 工程验收通过，P0/P1 风险为 0，全量回归 1718 passed，lint 通过**。Task 121 已统一拆分为 121a/121b/121c/121d：121b 已补跑 single-run rehearsal，但 `run-21ff158b` 在 Ch5 阻断；121c 已修复 rewrite fallback 后 settlement 被错误跳过的直接阻断；121d 已创建修复后重跑边界。下一步应使用新的干净 rehearsal 项目重跑 Ch1-Ch150 single-run，之后进入 V5.1 Prompt 调优。
+当前最终口径以 `tasks/V5-README.md` 与 `docs/STATUS.md` 为准：**V5.0 工程验收通过，P0/P1 风险为 0，全量回归 1718 passed，lint 通过**。Task 121 已统一拆分为 121a/121b/121c/121d：121b 已补跑 single-run rehearsal，但 `run-21ff158b` 在 Ch5 阻断；121c 已修复 rewrite fallback 后 settlement 被错误跳过的直接阻断；121d 已重跑 `run-f749826e`，验证 Ch5 阻断解除，但 Ch8 暴露新的 settlement_review 阻断。下一步应创建 Task 121e 修复 Ch8 settlement 伏笔预计回收章节校验/回填问题，之后再重跑 Ch1-Ch150 single-run。
 
 ### 版本概览
 
@@ -31,9 +31,9 @@
 | 指标 | 数值 |
 |------|------|
 | 最近回归测试 | **1718 passed, 1 xfailed, 1 xpassed, 14 warnings** (`pytest tests/ -q`，xfail/xpass 均为已知非阻断项) |
-| V5.0 当前 Task | **Task 120 已完成；Task 121a/121b/121c/121d 已统一划分；Task 121d 待执行重跑** |
+| V5.0 当前 Task | **Task 120 已完成；Task 121a/121b/121c/121d 已统一划分；Task 121d 已执行并暴露 Ch8 新阻断** |
 | 前置状态 | **Task 115-120 全部完成；DG-2 风险窗口已关闭；health_low 已分级追踪；报告/wrapper 已加固** |
-| 当前结论 | **V5.0 工程验收通过：P0/P1 风险为 0；Ch111-Ch150 40/40 成功；Ch1-Ch150 single-run rehearsal 已补测且 Ch5 直接阻断已修复，待重跑验证** |
+| 当前结论 | **V5.0 工程验收通过：P0/P1 风险为 0；Ch111-Ch150 40/40 成功；Ch1-Ch150 single-run rehearsal 已补测，Ch5 直接阻断已解除，当前新阻断为 Ch8 settlement_review** |
 | 当前 lint | **`ruff check src/ tests/` 已通过** |
 | Task 110e 实跑 | **Ch80-Ch96 17/17 成功，QG 100%，coherence_major 0/17** |
 | V4.0 最终达标率 | Task 099: Ch2-Ch50 **81.6%** |

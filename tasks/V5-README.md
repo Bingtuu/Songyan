@@ -1,7 +1,7 @@
 # V5.0 Task 总索引
 
 > **阶段**: Context Diet 2.0 — 智能遗忘架构
-> **当前口径**: **V5.0 完成** — Task 115-120 全部收口，P0/P1 风险为 0；Task 121a/121b/121c/121d 已统一划分，Task 121d 待执行修复后 single-run 重跑
+> **当前口径**: **V5.0 完成** — Task 115-120 全部收口，P0/P1 风险为 0；Task 121a/121b/121c/121d 已统一划分，Task 121d 已执行修复后 single-run 重跑并暴露 Ch8 新阻断
 > **最后整理**: 2026-06-21
 
 本文是 V5 阶段任务文档的事实入口。历史规划稿保留用于追溯设计边界；最终状态以本文件和各 `*-DONE.md` 为准。
@@ -21,7 +21,7 @@ V5.0 已完成从 Context Diet 2.0 核心组件到 150 章验证的全部主线�
 - **Task 121a 已完成规划判断**：V5.0 工程验收通过，但严格 single-run 证据需补强。
 - **Task 121b 已补测 single-run rehearsal**：`run-21ff158b` 从 Ch1 开始，Ch1-Ch4 成功，Ch5 阻断，未达成 Ch1-Ch150 single-run。
 - **Task 121c 已修复直接阻断**：rewrite fallback 回退到可结算版本后不再错误透传 `_skip_settlement=True`。
-- **Task 121d 已创建重跑边界**：重跑前清理完成，下一步使用新的干净 rehearsal 项目重跑 Ch1-Ch150。
+- **Task 121d 已执行重跑**：`run-f749826e` 使用新干净项目，Ch1-Ch7 成功，Ch8 `settlement_review` 阻断；Task 121c 修复已验证，Ch5 阻断解除。
 
 ---
 
@@ -78,7 +78,7 @@ V5.0 已完成从 Context Diet 2.0 核心组件到 150 章验证的全部主线�
 | 121a | V5.0 目标评估与 V5.1 下一步规划 | ✅ 完成 | `121a-v50-goal-assessment-and-v51-plan.md` |
 | 121b | Ch1-Ch150 Single-Run Rehearsal | ❌ 未通过，Ch5 阻断 | `121b-ch1-ch150-single-run-rehearsal-DONE.md` |
 | 121c | Rewrite Fallback Settlement Contract | ✅ 完成 | `121c-rewrite-fallback-settlement-contract-DONE.md` |
-| 121d | Ch1-Ch150 Single-Run Rehearsal Rerun | 待执行 | `121d-ch1-ch150-single-run-rerun.md` |
+| 121d | Ch1-Ch150 Single-Run Rehearsal Rerun | ❌ 未通过，Ch8 新阻断 | `121d-ch1-ch150-single-run-rerun.md` |
 
 ---
 
@@ -91,7 +91,7 @@ V5.0 已完成从 Context Diet 2.0 核心组件到 150 章验证的全部主线�
 | Ch101 修复回放 | `run-90e08243` 恢复 accepted + settlement + summary |
 | Ch102/Ch103 settlement 验证窗口 | `run-af3ba939` 完成 accept + settlement + summary |
 | Ch111-Ch150 DG-2 | 40/40 成功，QG/settlement/summary 40/40，条件通过；Task 115-117 已关闭风险 |
-| Ch1-Ch150 single-run rehearsal | `run-21ff158b`：Ch1-Ch4 成功，Ch5 `settlement_review` 阻断；Task 121c 已修复直接阻断；Task 121d 待使用新干净项目重跑 |
+| Ch1-Ch150 single-run rehearsal | `run-21ff158b`：Ch1-Ch4 成功，Ch5 阻断；`run-f749826e`：Ch1-Ch7 成功，Ch8 `settlement_review` 新阻断；Task 121c 修复已验证 |
 | 最近全量回归 | `1718 passed, 1 xfailed, 1 xpassed, 14 warnings` |
 | 当前全量 ruff | `ruff check src/ tests/` 已通过 |
 
@@ -106,7 +106,7 @@ V5.0 已完成从 Context Diet 2.0 核心组件到 150 章验证的全部主线�
 | Ch115/Ch120 ContextEmergency 触发原因 | ~~P1~~ | **Task 115 已关闭**：诊断为合理降级（`budget_used` 触发时 1.0007），新增可观测性字段 |
 | Ch147/Ch148 best-version 质量选择策略 | ~~P1~~ | **Task 116 已关闭**：`quality_gate_router` 路由缺陷修复，QG 通过后不再错误触发 rewrite |
 | ContinuityAuditor health 低分只写 human marks、不阻断 accept | ~~P2~~ | **Task 118 已关闭**：软复核策略（health_low 追踪但不断路），V5.1 可扩展为硬门禁 |
-| 一次性 Ch1-Ch150 单命令证据 | P1 | **Task 121b 已执行但未通过；Task 121c 已修复直接阻断；Task 121d 已创建重跑边界**，需用新干净项目重跑 rehearsal |
+| 一次性 Ch1-Ch150 单命令证据 | P1 | **Task 121d 已执行但未通过；Ch5 阻断已解除，Ch8 暴露新的 settlement_review 阻断**，需创建 Task 121e 修复后重跑 |
 
 ---
 
