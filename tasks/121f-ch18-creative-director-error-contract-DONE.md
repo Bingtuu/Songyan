@@ -96,8 +96,18 @@ python -m pytest tests/ -q
 - 全量 ruff：passed
 - 全量回归：`1722 passed, 2 xfailed, 14 warnings`
 
+补充实跑验证：
+
+- 新干净项目：`4b51384ef7f349cc973bc301b46f6d20`
+- 聚焦运行：`run-058fb9de`
+- 范围：Ch1-Ch18
+- 结果：`final_status=completed`，`completed=[1..18]`，`failed=[]`
+- Ch18：`success=true`，`settlement_success=true`，`summary_success=true`
+- 报告：`logs/reports/report-run-058fb9de.md`
+- 备注：Ch17 触发一次 `ContextEmergency`，但章节成功完成；Ch18 未复现状态污染阻断。
+
 ---
 
 ## 5. 下一步
 
-重跑 Ch1-Ch150 single-run，验证 Ch18 是否从失败转为成功，并继续记录下一处真实长跑瓶颈。
+Ch1-Ch18 聚焦验证已确认 Task 121f 生效。下一步重跑 Ch1-Ch150 single-run，继续记录下一处真实长跑瓶颈。

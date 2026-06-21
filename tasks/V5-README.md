@@ -1,7 +1,7 @@
 # V5.0 Task 总索引
 
 > **阶段**: Context Diet 2.0 — 智能遗忘架构
-> **当前口径**: **V5.0 完成** — Task 115-120 全部收口，P0/P1 风险为 0；Task 121a-121f 已统一划分，Task 121f 已修复 Ch18 CreativeDirector JSON parse failure 状态污染阻断
+> **当前口径**: **V5.0 完成** — Task 115-120 全部收口，P0/P1 风险为 0；Task 121a-121f 已统一划分，Task 121f 已修复并聚焦验证 Ch18 CreativeDirector JSON parse failure 状态污染阻断
 > **最后整理**: 2026-06-21
 
 本文是 V5 阶段任务文档的事实入口。历史规划稿保留用于追溯设计边界；最终状态以本文件和各 `*-DONE.md` 为准。
@@ -24,7 +24,7 @@ V5.0 已完成从 Context Diet 2.0 核心组件到 150 章验证的全部主线�
 - **Task 121d 已执行重跑**：`run-f749826e` 使用新干净项目，Ch1-Ch7 成功，Ch8 `settlement_review` 阻断；Task 121c 修复已验证，Ch5 阻断解除。
 - **Task 121e 已修复 Ch8 直接阻断**：同章 `expected_resolve_chapter` 自动回填到下一章，早于当前章节仍保持硬校验。
 - **Task 121e 重跑验证**：`run-0317a247` Ch1-Ch17 成功，Ch18 新阻断；Ch8 已验证解除，ContextEmergency 次数为 0。
-- **Task 121f 已修复 Ch18 直接阻断**：终态完成后，前置 CreativeDirector JSON parse failure 残留 error 不再污染章节成功判定。
+- **Task 121f 已修复并验证 Ch18 直接阻断**：终态完成后，前置 CreativeDirector JSON parse failure 残留 error 不再污染章节成功判定；`run-058fb9de` Ch1-Ch18 成功，`failed=[]`。
 
 ---
 
@@ -83,7 +83,7 @@ V5.0 已完成从 Context Diet 2.0 核心组件到 150 章验证的全部主线�
 | 121c | Rewrite Fallback Settlement Contract | ✅ 完成 | `121c-rewrite-fallback-settlement-contract-DONE.md` |
 | 121d | Ch1-Ch150 Single-Run Rehearsal Rerun | ❌ 未通过，Ch8 新阻断 | `121d-ch1-ch150-single-run-rerun.md` |
 | 121e | Ch8 Settlement Foreshadowing Validation Fix | ✅ 完成，重跑到 Ch18 新阻断 | `121e-ch8-settlement-foreshadowing-validation-fix-DONE.md` |
-| 121f | Ch18 CreativeDirector Error Contract | ✅ 完成 | `121f-ch18-creative-director-error-contract-DONE.md` |
+| 121f | Ch18 CreativeDirector Error Contract | ✅ 完成，Ch1-Ch18 聚焦验证通过 | `121f-ch18-creative-director-error-contract-DONE.md` |
 
 ---
 
@@ -96,7 +96,7 @@ V5.0 已完成从 Context Diet 2.0 核心组件到 150 章验证的全部主线�
 | Ch101 修复回放 | `run-90e08243` 恢复 accepted + settlement + summary |
 | Ch102/Ch103 settlement 验证窗口 | `run-af3ba939` 完成 accept + settlement + summary |
 | Ch111-Ch150 DG-2 | 40/40 成功，QG/settlement/summary 40/40，条件通过；Task 115-117 已关闭风险 |
-| Ch1-Ch150 single-run rehearsal | `run-21ff158b`：Ch1-Ch4 成功，Ch5 阻断；`run-f749826e`：Ch1-Ch7 成功，Ch8 阻断；`run-0317a247`：Ch1-Ch17 成功，Ch18 CreativeDirector JSON parse failure 新阻断 |
+| Ch1-Ch150 single-run rehearsal | `run-21ff158b`：Ch1-Ch4 成功，Ch5 阻断；`run-f749826e`：Ch1-Ch7 成功，Ch8 阻断；`run-0317a247`：Ch1-Ch17 成功，Ch18 CreativeDirector JSON parse failure 新阻断；`run-058fb9de`：Ch1-Ch18 聚焦验证成功 |
 | 最近全量回归 | `1722 passed, 2 xfailed, 14 warnings` |
 | 当前全量 ruff | `ruff check src/ tests/` 已通过 |
 
@@ -111,7 +111,7 @@ V5.0 已完成从 Context Diet 2.0 核心组件到 150 章验证的全部主线�
 | Ch115/Ch120 ContextEmergency 触发原因 | ~~P1~~ | **Task 115 已关闭**：诊断为合理降级（`budget_used` 触发时 1.0007），新增可观测性字段 |
 | Ch147/Ch148 best-version 质量选择策略 | ~~P1~~ | **Task 116 已关闭**：`quality_gate_router` 路由缺陷修复，QG 通过后不再错误触发 rewrite |
 | ContinuityAuditor health 低分只写 human marks、不阻断 accept | ~~P2~~ | **Task 118 已关闭**：软复核策略（health_low 追踪但不断路），V5.1 可扩展为硬门禁 |
-| 一次性 Ch1-Ch150 单命令证据 | P1 | **Task 121e 重跑已越过 Ch8；Task 121f 已修复 Ch18 CreativeDirector JSON parse failure 状态污染阻断**，需重跑 single-run |
+| 一次性 Ch1-Ch150 单命令证据 | P1 | **Task 121e 重跑已越过 Ch8；Task 121f 已通过 `run-058fb9de` 验证 Ch18 状态污染阻断解除**，需重跑 single-run |
 
 ---
 
