@@ -36,7 +36,7 @@
 | ContinuityAuditor health_low | ✅ / P2 | 已有 P1/P2/P3 分级和 human marks 追踪；V5.0 维持软复核 |
 | 报告与 wrapper | ✅ | `songyan report` 与加固 PowerShell wrapper 已交付 |
 | P0/P1 风险 | ✅ | 当前为 0 |
-| 最新全量回归 | ✅ | 当前为 `1718 passed, 2 xfailed, 15 warnings`；本文件初稿时为 `1718 passed, 1 xfailed, 1 xpassed, 14 warnings` |
+| 最新全量回归 | ✅ | 当前为 `1718 passed, 1 xfailed, 1 xpassed, 14 warnings` |
 | 最新 lint | ✅ | `ruff check src/ tests/` 通过 |
 
 ### 测试口径说明
@@ -44,10 +44,11 @@
 最新清理后测试结果与 Task 120 完成时不同：
 
 ```text
-1718 passed, 2 xfailed, 15 warnings
+1718 passed, 1 xfailed, 1 xpassed, 14 warnings
 ```
 
-- `2 xfailed`: 已知非阻断项，包括 `test_concurrent_settlement_writes` 的 Windows SQLite 并发写入限制，以及 `test_audit_chain_mock_under_1s` 在冷启动/embedding model 加载条件下的性能 xfail。
+- `1 xfailed`: 已知非阻断项，`test_concurrent_settlement_writes` 的 Windows SQLite 并发写入限制。
+- `1 xpassed`: `test_audit_chain_mock_under_1s` 的冷启动/embedding model 性能 xfail 在本次热缓存条件下通过。
 - `0 skipped`: 之前 4 个同步测试 skip 已清理为正常通过。
 
 ---

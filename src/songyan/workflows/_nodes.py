@@ -768,6 +768,7 @@ async def rewrite_node(state: dict[str, Any]) -> dict[str, Any]:
             else None
         )
         rollback_version = best_version
+        rollback_source = "active_best" if best_version else None
         if rollback_version is None:
             previous_version_id = state.get("current_version_id")
             rollback_version = await _load_active_best_version(
@@ -775,6 +776,8 @@ async def rewrite_node(state: dict[str, Any]) -> dict[str, Any]:
                 project_id=state["project_id"],
                 chapter_number=state["chapter_number"],
             )
+            if rollback_version:
+                rollback_source = "previous_version"
         if rollback_version and rollback_version.version_id != version.version_id:
             await ChapterVersionRepository().mark_abandoned(version.version_id)
             await ChapterHeadRepository().update(
@@ -798,6 +801,18 @@ async def rewrite_node(state: dict[str, Any]) -> dict[str, Any]:
         )
         recovered_with_qg_pass = bool(
             best_version and best_score_card and _score_card_passes_quality_gate(best_score_card)
+        )
+        logger.info(
+            "rewrite.struct_integrity_rollback_decision",
+            project_id=state["project_id"],
+            chapter_number=state["chapter_number"],
+            failed_version_id=version.version_id,
+            rollback_version_id=rollback_version.version_id if rollback_version else None,
+            rollback_source=rollback_source,
+            has_rollback_target=has_rollback_target,
+            recovered_with_qg_pass=recovered_with_qg_pass,
+            skip_settlement=not has_rollback_target,
+            convergence_failed=not recovered_with_qg_pass,
         )
         return {
             "current_version_id": (
@@ -1715,6 +1730,12 @@ async def human_gate_node(state: dict[str, Any]) -> dict[str, Any]:
             decision="accept",
             version_id=version.version_id,
             revision_round=_rround,
+            skip_settlement=state.get("_skip_settlement", False),
+            convergence_failed=state.get("_convergence_failed", False),
+            quality_gate_passed=_qg_passed,
+            settlement_needs_human_review=state.get(
+                "_settlement_needs_human_review", False
+            ),
         )
         return {
             "human_decision": "accept",
@@ -1854,6 +1875,19 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
     settlement_applied = False
     accepted_for_postprocessing = False
     summary_id = None
+
+    logger.info(
+        "settlement_extractor_node.contract_snapshot",
+        project_id=state["project_id"],
+        chapter_number=state["chapter_number"],
+        version_id=version.version_id,
+        skip_settlement=state.get("_skip_settlement", False),
+        convergence_failed=state.get("_convergence_failed", False),
+        quality_gate_passed=state.get("_quality_gate_passed"),
+        settlement_needs_human_review=state.get(
+            "_settlement_needs_human_review", False
+        ),
+    )
 
     # Task 111d: skipped settlement 不能再伪装为 accepted/done。
     if state.get("_skip_settlement", False):

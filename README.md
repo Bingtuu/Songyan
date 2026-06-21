@@ -30,7 +30,7 @@
 
 | 指标 | 数值 |
 |------|------|
-| 最近回归测试 | **1718 passed, 2 xfailed, 15 warnings** (`pytest tests/ -q`，xfail 均为已知非阻断项) |
+| 最近回归测试 | **1718 passed, 1 xfailed, 1 xpassed, 14 warnings** (`pytest tests/ -q`，xfail/xpass 均为已知非阻断项) |
 | V5.0 当前 Task | **Task 120 已完成；Task 121a/121b/121c/121d 已统一划分；Task 121d 待执行重跑** |
 | 前置状态 | **Task 115-120 全部完成；DG-2 风险窗口已关闭；health_low 已分级追踪；报告/wrapper 已加固** |
 | 当前结论 | **V5.0 工程验收通过：P0/P1 风险为 0；Ch111-Ch150 40/40 成功；Ch1-Ch150 single-run rehearsal 已补测且 Ch5 直接阻断已修复，待重跑验证** |
@@ -39,7 +39,7 @@
 | V4.0 最终达标率 | Task 099: Ch2-Ch50 **81.6%** |
 | V4.x 归档 | `archive/v4/`（报告 + 任务 + 验证数据）|
 
-测试口径说明：`2 xfailed` 为已知非阻断项，其中包含 Windows SQLite 并发写入限制，以及冷启动下 embedding model 加载导致的性能 xfail。
+测试口径说明：`1 xfailed` 为已知非阻断项（Windows SQLite 并发写入限制）；`1 xpassed` 为冷启动 embedding model 性能 xfail 在本次热缓存条件下通过。
 
 ### V5.0 核心决策
 
@@ -448,7 +448,7 @@ pytest -k "not integration" -q
 
 ```bash
 pytest tests/ -q
-# Current baseline: 1718 passed, 2 xfailed, 15 warnings
+# Current baseline: 1718 passed, 1 xfailed, 1 xpassed, 14 warnings
 
 ruff check src/ tests/
 # Current baseline: All checks passed!

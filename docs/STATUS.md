@@ -9,7 +9,7 @@
 | 当前阶段 | **V5.0 已完成，V5.1 预研** |
 | 最终验收 | Task 120 Final Acceptance Package 已交付 |
 | 风险口径 | P0/P1 风险为 0 |
-| 最近全量测试 | `1718 passed, 2 xfailed, 15 warnings` |
+| 最近全量测试 | `1718 passed, 1 xfailed, 1 xpassed, 14 warnings` |
 | 当前 lint | `ruff check src/ tests/` 已通过 |
 | Python | 3.11.9 |
 | 事实入口 | `tasks/V5-README.md` |
@@ -19,7 +19,7 @@
 | 重跑前清理 | 已清理缓存、`__pycache__`、旧 WAL/SHM；无 `python/pytest/songyan` 残留进程；`songyan.db` 完整性检查为 `ok` |
 | 下一步规划 | 执行 Task 121d，验证 Ch5 是否解除阻断 |
 
-测试说明：`2 xfailed` 为已知非阻断项，其中包含 Windows SQLite 并发写入限制，以及冷启动下 embedding model 加载导致的性能 xfail。
+测试说明：`1 xfailed` 为已知非阻断项（Windows SQLite 并发写入限制）；`1 xpassed` 为冷启动 embedding model 性能 xfail 在本次热缓存条件下通过。
 
 ## 当前优先级
 

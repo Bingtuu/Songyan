@@ -92,10 +92,10 @@ V5.0 已完成从 Context Diet 2.0 核心组件到 150 章验证的全部主线�
 | Ch102/Ch103 settlement 验证窗口 | `run-af3ba939` 完成 accept + settlement + summary |
 | Ch111-Ch150 DG-2 | 40/40 成功，QG/settlement/summary 40/40，条件通过；Task 115-117 已关闭风险 |
 | Ch1-Ch150 single-run rehearsal | `run-21ff158b`：Ch1-Ch4 成功，Ch5 `settlement_review` 阻断；Task 121c 已修复直接阻断；Task 121d 待使用新干净项目重跑 |
-| 最近全量回归 | `1718 passed, 2 xfailed, 15 warnings` |
+| 最近全量回归 | `1718 passed, 1 xfailed, 1 xpassed, 14 warnings` |
 | 当前全量 ruff | `ruff check src/ tests/` 已通过 |
 
-测试口径说明：`2 xfailed` 为已知非阻断项，其中包含 Windows SQLite 并发写入限制，以及冷启动下 embedding model 加载导致的性能 xfail。
+测试口径说明：`1 xfailed` 为已知非阻断项（Windows SQLite 并发写入限制）；`1 xpassed` 为冷启动 embedding model 性能 xfail 在本次热缓存条件下通过。
 
 ---
 
