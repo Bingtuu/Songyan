@@ -10,7 +10,7 @@
 
 验证 V5.0 是否具备“单命令一次性 Ch1-Ch150”的实跑证据，而不仅依赖分段长跑和风险窗口复验。
 
-验收目标来自 `tasks/121-v50-goal-assessment-and-v51-plan.md`：
+验收目标来自 `tasks/121a-v50-goal-assessment-and-v51-plan.md`：
 
 - 单一 run 覆盖 Ch1-Ch150。
 - `success_rate == 100%` 或有明确失败点。
@@ -160,4 +160,4 @@ python -m pytest tests/ -q
 - `git diff --check`: 通过，仅有 CRLF 工作区提示。
 - `scripts/run_songyan_chapter.ps1`: PowerShell parser check 通过。
 
-下一步建议先开 Task 121c：修复 Ch5 暴露的 rewrite/settlement skip 阻断，再重跑 single-run rehearsal；不要直接进入 Prompt 调优。
+后续已开 Task 121c 修复 Ch5 暴露的 rewrite/settlement skip 阻断；下一步按 Task 121d 使用新的干净 rehearsal 项目重跑 single-run rehearsal，不直接进入 Prompt 调优。

@@ -14,7 +14,7 @@
 
 目标：通过 TemporalCompressor + CharacterFocalDecay + SettingEvaporator + BudgetHardCeiling 四组件协同，控制信息密度，支撑 150+ 章稳定生成。Task 101~120 已完成 Context Diet 2.0 核心组件、流式验证基础设施、评分与收敛护栏、活跃信息池控制、工作流/事实源/Context/Prompt/QualityGate/Settlement 修复、Ch111-Ch150 分段验证、DG-2 风险窗口复验、health_low 治理、报告/wrapper 加固和 V5.0 Final Acceptance。
 
-当前最终口径以 `tasks/V5-README.md` 与 `docs/STATUS.md` 为准：**V5.0 工程验收通过，P0/P1 风险为 0，全量回归 1718 passed，lint 通过**。Task 121b 已补跑 single-run rehearsal，但 `run-21ff158b` 在 Ch5 阻断；Task 121c 已修复 rewrite fallback 后 settlement 被错误跳过的直接阻断。下一步应重跑 Ch1-Ch150 single-run，之后进入 V5.1 Prompt 调优。
+当前最终口径以 `tasks/V5-README.md` 与 `docs/STATUS.md` 为准：**V5.0 工程验收通过，P0/P1 风险为 0，全量回归 1718 passed，lint 通过**。Task 121 已统一拆分为 121a/121b/121c/121d：121b 已补跑 single-run rehearsal，但 `run-21ff158b` 在 Ch5 阻断；121c 已修复 rewrite fallback 后 settlement 被错误跳过的直接阻断；121d 已创建修复后重跑边界。下一步应使用新的干净 rehearsal 项目重跑 Ch1-Ch150 single-run，之后进入 V5.1 Prompt 调优。
 
 ### 版本概览
 
@@ -31,7 +31,7 @@
 | 指标 | 数值 |
 |------|------|
 | 最近回归测试 | **1718 passed, 2 xfailed, 15 warnings** (`pytest tests/ -q`，xfail 均为已知非阻断项) |
-| V5.0 当前 Task | **Task 120 已完成；Task 121 已产出规划；Task 121c 已修复 121b 暴露的 settlement skip 阻断** |
+| V5.0 当前 Task | **Task 120 已完成；Task 121a/121b/121c/121d 已统一划分；Task 121d 待执行重跑** |
 | 前置状态 | **Task 115-120 全部完成；DG-2 风险窗口已关闭；health_low 已分级追踪；报告/wrapper 已加固** |
 | 当前结论 | **V5.0 工程验收通过：P0/P1 风险为 0；Ch111-Ch150 40/40 成功；Ch1-Ch150 single-run rehearsal 已补测且 Ch5 直接阻断已修复，待重跑验证** |
 | 当前 lint | **`ruff check src/ tests/` 已通过** |
@@ -552,7 +552,7 @@ ruff check src/ tests/
 - **Task 119** : ✅ 长跑报告入口与 Windows Wrapper 加固 — `songyan report` 入口统一，wrapper 结果码明确。
 - **Task 120** : ✅ V5.0 Final Acceptance Package — V5.0 工程验收通过，P0/P1 风险为 0。
 
-当前建议：V5.0 已交付完成；Task 121b 已补跑 single-run rehearsal，Task 121c 已修复 Ch5 暴露的 rewrite/settlement skip 直接阻断。下一步重跑 single-run，再进入 V5.1 Prompt 调优。V5 任务状态以 `tasks/V5-README.md` 和各 `*-DONE.md` 为准，规划稿已归档为设计背景。
+当前建议：V5.0 已交付完成；Task 121b 已补跑 single-run rehearsal，Task 121c 已修复 Ch5 暴露的 rewrite/settlement skip 直接阻断，Task 121d 已定义修复后重跑边界。下一步使用新的干净 rehearsal 项目重跑 single-run，再进入 V5.1 Prompt 调优。V5 任务状态以 `tasks/V5-README.md` 和各 `*-DONE.md` 为准，规划稿已归档为设计背景。
 
 ---
 

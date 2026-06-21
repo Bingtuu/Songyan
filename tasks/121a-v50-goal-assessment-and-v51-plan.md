@@ -1,4 +1,4 @@
-# Task 121: V5.0 目标达成评估与 V5.1 下一步规划
+# Task 121a: V5.0 目标达成评估与 V5.1 下一步规划
 
 > **类型**: 评估 / 决策备忘录  
 > **日期**: 2026-06-21  
@@ -6,6 +6,7 @@
 > **结论**: V5.0 工程验收已达成；若严格要求“单命令一次性 Ch1-Ch150”，仍建议补一次 rehearsal 作为证据闭环。
 > **执行更新**: Task 121b 已执行 rehearsal，`run-21ff158b` 在 Ch5 阻断，详见 `tasks/121b-ch1-ch150-single-run-rehearsal-DONE.md`。
 > **修复更新**: Task 121c 已修复 rewrite fallback 后 settlement 被跳过的直接阻断，详见 `tasks/121c-rewrite-fallback-settlement-contract-DONE.md`。
+> **编号更新**: Task 121 拆分为 121a/121b/121c/121d；本文为 121a 评估与规划，121d 负责修复后的 single-run 重跑。
 
 ---
 
@@ -62,9 +63,11 @@
 - 不影响 V5.0 工程验收。
 - 影响对外表达“单命令一次性完成 150 章”的严格性。
 
-**建议**：
+**当前状态**：
 
-- 进入 V5.1 前先跑一次 `Task 121b / Task 122-preflight`：Ch1-Ch150 single-run rehearsal。
+- Task 121b 已执行首次 rehearsal，`run-21ff158b` 在 Ch5 阻断。
+- Task 121c 已修复直接阻断。
+- Task 121d 负责重跑 Ch1-Ch150 single-run rehearsal，验证修复是否解除 Ch5 settlement skip。
 
 ### 3.2 Prompt 质量仍是主要体验瓶颈
 
@@ -124,9 +127,9 @@ Task 115/117 的证据显示，Ch115/Ch120 的 ContextEmergency 是合理降级�
 
 ## 5. 建议的 V5.1 任务拆分
 
-### Task 121b: Ch1-Ch150 Single-Run Rehearsal
+### Task 121b: Ch1-Ch150 Single-Run Rehearsal 首轮
 
-**目标**：验证一次性 150 章运行是否真实可达。
+**目标**：验证一次性 150 章运行是否真实可达，并暴露首个明确失败点。
 
 验收：
 
@@ -134,6 +137,31 @@ Task 115/117 的证据显示，Ch115/Ch120 的 ContextEmergency 是合理降级�
 - `success_rate == 100%` 或有明确失败点。
 - 每章有 QG、settlement、summary、budget、health_low、ContextEmergency 指标。
 - 输出 `songyan report --run-id <run_id>` 报告。
+
+结果：
+
+- `run-21ff158b` 在 Ch5 阻断。
+- 结论不是“150 章已跑通”，而是“single-run rehearsal 已补测并暴露明确阻断点”。
+
+### Task 121c: Rewrite Fallback Settlement Contract
+
+**目标**：修复 Task 121b 暴露的 rewrite 回退后 settlement 被跳过问题。
+
+结果：
+
+- rewrite fallback 回退到可结算版本后不再透传 `_skip_settlement=True`。
+- `_skip_settlement` 仅表示没有可安全结算正文。
+
+### Task 121d: Ch1-Ch150 Single-Run Rehearsal 重跑
+
+**目标**：在 Task 121c 后重跑 single-run rehearsal，验证 Ch5 settlement skip 阻断是否解除，并记录新的失败点或 150 章通过证据。
+
+要求：
+
+- 重跑前清理测试残留、进程残留和可安全清理的缓存/锁文件。
+- 使用新的干净 rehearsal 项目或明确隔离的项目状态，避免复用 `proj-2375dbfc` 的 partial run 作为新证据。
+- 保留 Task 121b 的 JSONL/report 作为历史证据，不删除数据库中的 partial 记录。
+- 输出新的 `run_id`、JSONL、report 和 DONE 文档。
 
 ### Task 122: Prompt 调优一期
 

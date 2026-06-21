@@ -15,7 +15,7 @@
 - 项目状态：`docs/STATUS.md`
 - 文档路由：`docs/INDEX.md`
 - V5 任务事实：`tasks/V5-README.md`
-- V5.1 下一步：`tasks/121-v50-goal-assessment-and-v51-plan.md`
+- V5.1 下一步：`tasks/121a-v50-goal-assessment-and-v51-plan.md`
 - 历史归档：`archive/v5/INDEX.md`、`archive/v4/INDEX.md`
 
 ## 项目定位
