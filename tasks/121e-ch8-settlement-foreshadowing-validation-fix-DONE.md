@@ -79,6 +79,40 @@ python -m pytest tests/ -q
 
 ---
 
-## 5. 下一步
+## 5. 重跑验证结果
 
-重跑 Task 121d 的 Ch1-Ch150 single-run，验证 Ch8 是否越过 `settlement_review`，并继续记录下一处真实长跑瓶颈。
+已重跑 Ch1-Ch150 single-run，结果为 `partial`。
+
+| 项 | 值 |
+|----|----|
+| project_id | `59b39402b87b4147a0cdc5b2d3915aec` |
+| run_id | `run-0317a247` |
+| 章节范围 | Ch1-Ch150 |
+| 实际完成 | Ch1-Ch17 成功，Ch18 失败 |
+| JSONL | `logs/chapter_runs/run-0317a247.jsonl` |
+| report | `logs/reports/report-run-0317a247.md` |
+| wrapper stdout | `logs/task121e/songyan-task121e-ch1-ch150-rerun-after-121e-20260621-121551.out.log` |
+| wrapper result | `logs/task121e/songyan-task121e-ch1-ch150-rerun-after-121e-20260621-121551.result.txt` |
+
+关键结论：
+
+- Ch8 已成功越过旧 `settlement_review` 阻断。
+- Ch1-Ch17 均成功，且 `settlement_success=true`、`summary_success=true`、`skip_settlement=false`。
+- ContextEmergency 次数为 0。
+- Ch18 是新的首个失败点。
+
+Ch18 失败原因：
+
+```text
+CreativeDirector LLM call failed:
+LLM 返回内容无法解析为 JSON:
+Expecting ',' delimiter: line 7 column 72 (char 279)
+```
+
+补充观察：
+
+- Ch18 后续正文、settlement 和 summary 实际继续走完。
+- 日志显示 `settlement.validation_passed`、`settlement.applied`、`summary_writer.generated`。
+- 但 run logger 仍按前置 CreativeDirector 错误将 Ch18 标为失败，并写出 `settlement_success=false`。
+
+因此下一步建议创建 Task 121f，专门处理 CreativeDirector JSON parse failure 后的错误传播和章节成功判定契约：若后续正文、settlement、summary 已成功，不能让前置非致命 CreativeDirector parse error 污染最终章节状态。
