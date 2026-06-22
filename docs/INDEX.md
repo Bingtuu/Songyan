@@ -16,6 +16,14 @@
 | `tasks/121e-ch8-settlement-foreshadowing-validation-fix-DONE.md` | Task 121e：Ch8 settlement 伏笔校验修复 |
 | `tasks/121f-ch18-creative-director-error-contract-DONE.md` | Task 121f：Ch18 CreativeDirector 错误传播修复 |
 | `tasks/121g-ch1-ch150-single-run-rerun-ch115-blocker-DONE.md` | Task 121g：Ch1-Ch150 完整重跑与 Ch115 新阻断定位 |
+| `tasks/121h-ch115-quality-gate-rewrite-state-review.md` | Task 121h：Ch115 quality gate / best-version rewrite 工程修复 |
+| `tasks/121i-ch115-focused-rerun-and-quality-window.md` | Task 121i：Ch115 聚焦重跑与质量窗口复核 |
+| `tasks/121j-ch1-ch150-single-run-after-ch115-fix.md` | Task 121j：Ch115 修复后 Ch1-Ch150 full single-run |
+| `tasks/121k-prompt-quality-cleanup-plan.md` | Task 121k：Prompt / 正文质量清理 |
+| `tasks/121l-context-emergency-autohalt-review.md` | Task 121l：连续 ContextEmergency AutoHalt review |
+| `tasks/121m-qg-false-block-and-meta-tag-cleanup.md` | Task 121m：QG false 硬拦截与元标记泄漏清理 |
+| `tasks/121n-context-diet-budget-and-human-marks-lifecycle.md` | Task 121n：Context Diet 2.0 预算调整与 human_marks 生命周期优化 |
+| `tasks/121o-ch1-ch18-focused-rerun-validation.md` | Task 121o：Ch1-Ch18 聚焦验证重跑 |
 
 ## 按场景查阅
 
@@ -33,6 +41,11 @@
 | Ch8 settlement 伏笔校验修复 | `tasks/121e-ch8-settlement-foreshadowing-validation-fix-DONE.md` |
 | Ch18 CreativeDirector 错误传播修复 | `tasks/121f-ch18-creative-director-error-contract-DONE.md` |
 | Ch1-Ch150 完整重跑 / Ch115 阻断 | `tasks/121g-ch1-ch150-single-run-rerun-ch115-blocker-DONE.md` |
+| Ch115 工程修复 | `tasks/121h-ch115-quality-gate-rewrite-state-review.md` |
+| Ch115 聚焦验证 | `tasks/121i-ch115-focused-rerun-and-quality-window.md` |
+| Ch1-Ch150 修复后 full single-run | `tasks/121j-ch1-ch150-single-run-after-ch115-fix.md` |
+| Prompt / 正文质量清理 | `tasks/121k-prompt-quality-cleanup-plan.md` |
+| ContextEmergency AutoHalt review | `tasks/121l-context-emergency-autohalt-review.md` |
 | 架构手册 | `docs/architecture/04-vibe-coding-engineering.md` |
 | 技术参考 | `docs/architecture/05-tech-reference.md` |
 | Code Review | `docs/code-review-plan.md` |

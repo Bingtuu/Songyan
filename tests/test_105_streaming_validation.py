@@ -488,8 +488,8 @@ async def test_circuit_breaker_quality_gate_3_fails() -> None:
 
 
 @pytest.mark.asyncio
-async def test_circuit_breaker_emergency_3_streak() -> None:
-    """连续 3 章 context_emergency=True 触发熔断并保存暂停状态."""
+async def test_circuit_breaker_allows_successful_emergency_3_streak() -> None:
+    """连续 3 章 context_emergency=True 但均成功时不熔断."""
     from songyan.workflows.phase2_graph import run_project_pipeline
 
     async def _fake_run(**kwargs: Any) -> dict[str, Any]:
@@ -502,6 +502,8 @@ async def test_circuit_breaker_emergency_3_streak() -> None:
             "budget_used": 1.2,
             "context_emergency": True,
             "quality_gate_passed": True,
+            "settlement_success": True,
+            "summary_success": True,
         }
 
     saved_states: list[Any] = []
@@ -513,18 +515,17 @@ async def test_circuit_breaker_emergency_3_streak() -> None:
         patch("songyan.workflows.phase2_graph._run_single_chapter", side_effect=_fake_run),
         patch("songyan.workflows.phase2_graph._save_run_state", side_effect=_capture_state),
     ):
-        with pytest.raises(AutoHaltException) as exc_info:
-            await run_project_pipeline(
-                project_id="proj-001",
-                chapter_range=(1, 5),
-                auto_confirm=True,
-            )
+        result = await run_project_pipeline(
+            project_id="proj-001",
+            chapter_range=(1, 5),
+            auto_confirm=True,
+        )
 
-    assert exc_info.value.reason == "context_emergency_streak"
-    assert exc_info.value.last_chapter == 3
-    assert saved_states[-1].status == "paused"
-    assert saved_states[-1].current_chapter == 3
-    assert saved_states[-1].completed_chapters == [1, 2, 3]
+    assert result.final_status == "completed"
+    assert result.chapters_completed == [1, 2, 3, 4, 5]
+    assert saved_states[-1].status == "completed"
+    assert saved_states[-1].current_chapter == 5
+    assert saved_states[-1].completed_chapters == [1, 2, 3, 4, 5]
     assert saved_states[-1].failed_chapters == []
 
 

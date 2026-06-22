@@ -191,7 +191,7 @@ class TestLifecycleCleaners:
             logs = await cleaner.cleanup(conn, "p1", current_chapter=15)
             await conn.commit()
 
-        # m1: created_at_chapter=1 < 15-10=5 -> dormant
+        # m1: created_at_chapter=1 < 15-6=9 -> dormant
         assert len(logs) == 1
         assert logs[0].entity_id == "m1"
         assert logs[0].to_status == "dormant"

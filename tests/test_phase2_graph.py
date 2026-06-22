@@ -563,9 +563,8 @@ async def test_run_single_chapter_returns_logged_circuit_metrics() -> None:
 
 
 @pytest.mark.asyncio
-async def test_pipeline_halts_on_logged_context_emergency_streak() -> None:
-    """回归真实试跑问题：最终日志指标连续 emergency 时外层必须熔断."""
-    from songyan.exceptions import AutoHaltException
+async def test_pipeline_continues_on_successful_context_emergency_streak() -> None:
+    """连续 ContextEmergency 但章节均成功时只记录 warning，不暂停 full-run."""
     from songyan.workflows.phase2_graph import run_project_pipeline
 
     async def _fake_run(**kwargs: Any) -> dict[str, Any]:
@@ -578,6 +577,50 @@ async def test_pipeline_halts_on_logged_context_emergency_streak() -> None:
             "budget_used": 0.8,
             "context_emergency": True,
             "quality_gate_passed": True,
+            "settlement_success": True,
+            "summary_success": True,
+        }
+
+    saved_states: list[Any] = []
+
+    async def _capture_state(state: Any) -> None:
+        saved_states.append(state.model_copy(deep=True))
+
+    with (
+        patch("songyan.workflows.phase2_graph._run_single_chapter", side_effect=_fake_run),
+        patch("songyan.workflows.phase2_graph._save_run_state", side_effect=_capture_state),
+    ):
+        result = await run_project_pipeline(
+            project_id="proj-001",
+            chapter_range=(1, 5),
+            auto_confirm=True,
+        )
+
+    assert result.final_status == "completed"
+    assert result.chapters_completed == [1, 2, 3, 4, 5]
+    assert result.chapters_failed == []
+    assert saved_states[-1].status == "completed"
+
+
+@pytest.mark.asyncio
+async def test_pipeline_halts_on_degraded_context_emergency_streak() -> None:
+    """连续 ContextEmergency 伴随真实失败或质量异常时仍应熔断."""
+    from songyan.exceptions import AutoHaltException
+    from songyan.workflows.phase2_graph import run_project_pipeline
+
+    async def _fake_run(**kwargs: Any) -> dict[str, Any]:
+        chapter_number = kwargs["chapter_number"]
+        return {
+            "success": chapter_number < 3,
+            "summary_text": "summary" if chapter_number < 3 else "",
+            "error": None if chapter_number < 3 else "context overflow",
+            "final_state": {},
+            "final_version_id": f"v-{chapter_number}",
+            "budget_used": 0.8,
+            "context_emergency": True,
+            "quality_gate_passed": chapter_number < 3,
+            "settlement_success": chapter_number < 3,
+            "summary_success": chapter_number < 3,
         }
 
     saved_states: list[Any] = []
@@ -596,7 +639,8 @@ async def test_pipeline_halts_on_logged_context_emergency_streak() -> None:
                 auto_confirm=True,
             )
 
-    assert exc_info.value.reason == "context_emergency_streak"
+    assert exc_info.value.reason == "context_emergency_degraded_streak"
     assert exc_info.value.last_chapter == 3
     assert saved_states[-1].status == "paused"
-    assert saved_states[-1].completed_chapters == [1, 2, 3]
+    assert saved_states[-1].completed_chapters == [1, 2]
+    assert saved_states[-1].failed_chapters == [3]

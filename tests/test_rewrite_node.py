@@ -163,7 +163,15 @@ class TestRewriteNode:
                         "chapter_goal_id": None,
                         "creative_brief_id": None,
                         "review_report_id": None,
-                        "_new_issues_introduced": None,
+                        "_new_issues_introduced": [{"issue_id": "stale"}],
+                        "_new_issues_version_id": "v-old",
+                        "_content_preservation_ratio": 0.61,
+                        "_quality_gate_passed": False,
+                        "_quality_gate_failures": ["new_issues_introduced:1"],
+                        "_convergence_failed": True,
+                        "_skip_settlement": True,
+                        "_settlement_needs_human_review": True,
+                        "_score_card": {"version_id": "v-old"},
                     }
                     result = await rewrite_node(state)
 
@@ -172,6 +180,12 @@ class TestRewriteNode:
         assert result["revision_round"] == 0
         assert result["_needs_revision"] is False
         assert result["current_version_id"] == "v-rewrite-001"
+        assert result["_new_issues_introduced"] == []
+        assert result["_new_issues_version_id"] is None
+        assert result["_quality_gate_failures"] == []
+        assert result["_settlement_needs_human_review"] is False
+        assert result["_skip_settlement"] is False
+        assert result["_score_card"] is None
 
     @pytest.mark.asyncio
     async def test_injects_avoid_list(self) -> None:

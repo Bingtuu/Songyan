@@ -75,6 +75,9 @@ from songyan.workflows.review_merger import merge_reviews
 
 logger = structlog.get_logger(__name__)
 
+_REWRITE_ROLLBACK_SCORE_DELTA = 0.08
+_SAFE_BEST_MIN_OVERALL_SCORE = 0.82
+
 _COHERENCE_CATEGORIES: set[ReviewCategory] = {
     ReviewCategory.WORLD_CONSISTENCY,
     ReviewCategory.CHARACTER_BEHAVIOR,
@@ -192,6 +195,81 @@ def _score_card_passes_quality_gate(score_card_raw: dict[str, Any] | None) -> bo
         and score_card.flags.momentum_present
         and score_card.flags.readability_ok
     )
+
+
+def _score_card_overall(score_card_raw: dict[str, Any] | None) -> float | None:
+    if not isinstance(score_card_raw, dict):
+        return None
+    try:
+        return float(score_card_raw.get("overall_score", 0.0))
+    except (TypeError, ValueError):
+        return None
+
+
+def _score_card_is_safe_best(score_card_raw: dict[str, Any] | None) -> bool:
+    """判断 best 是否足够安全，可保护其不被低质量 rewrite 覆盖."""
+    if not isinstance(score_card_raw, dict):
+        return False
+    try:
+        from songyan.models import ChapterScoreCard
+
+        score_card = ChapterScoreCard.model_validate(score_card_raw)
+    except Exception:
+        logger.warning("workflow.invalid_safe_best_score_card", exc_info=True)
+        return False
+
+    return (
+        score_card.overall_score >= _SAFE_BEST_MIN_OVERALL_SCORE
+        and score_card.flags.length_ok
+        and score_card.flags.budget_ok
+        and not score_card.flags.coherence_critical
+    )
+
+
+def _reset_rewrite_scoped_state() -> dict[str, Any]:
+    """清理只属于上一轮 revision / quality gate 的瞬时状态."""
+    return {
+        "_new_issues_introduced": [],
+        "_new_issues_version_id": None,
+        "_content_preservation_ratio": None,
+        "_quality_gate_passed": None,
+        "_quality_gate_failures": [],
+        "_convergence_failed": False,
+        "_skip_settlement": False,
+        "_settlement_needs_human_review": False,
+        "_score_card": None,
+    }
+
+
+def _new_issues_for_current_version(
+    state: dict[str, Any],
+    current_version_id: str,
+) -> list[dict[str, Any]]:
+    """返回归属于当前版本的 new issues，过滤跨版本 stale state."""
+    new_issues = state.get("_new_issues_introduced")
+    if not new_issues or not isinstance(new_issues, list):
+        return []
+
+    issues_version_id = state.get("_new_issues_version_id")
+    if issues_version_id and issues_version_id != current_version_id:
+        logger.warning(
+            "quality_gate.ignored_stale_new_issues",
+            current_version_id=current_version_id,
+            issues_version_id=issues_version_id,
+            issue_count=len(new_issues),
+        )
+        return []
+
+    filtered: list[dict[str, Any]] = []
+    for issue in new_issues:
+        if not isinstance(issue, dict):
+            filtered.append(issue)
+            continue
+        issue_version_id = issue.get("version_id") or issue.get("current_version_id")
+        if issue_version_id and issue_version_id != current_version_id:
+            continue
+        filtered.append(issue)
+    return filtered
 
 
 # =============================================================================
@@ -819,6 +897,7 @@ async def rewrite_node(state: dict[str, Any]) -> dict[str, Any]:
                 rollback_version.version_id if rollback_version else version.version_id
             ),
             "revision_round": 0,
+            **_reset_rewrite_scoped_state(),
             "_was_rewritten": True,
             "_rewrite_reason": f"struct_integrity_failed:{struct_fail_reason}",
             "_needs_revision": False,
@@ -836,6 +915,7 @@ async def rewrite_node(state: dict[str, Any]) -> dict[str, Any]:
     return {
         "current_version_id": version.version_id,
         "revision_round": 0,
+        **_reset_rewrite_scoped_state(),
         "_was_rewritten": True,
         "_rewrite_reason": "2轮revision不收敛",
         "_needs_revision": False,
@@ -980,7 +1060,7 @@ async def review_merger_node(state: dict[str, Any]) -> dict[str, Any]:
         return {"error": "Missing audit results", "status": "review_merger"}
 
     # 058d: 反序列化上一轮 revision 引入的新问题
-    prev_new_issues_raw = state.get("_new_issues_introduced", [])
+    prev_new_issues_raw = _new_issues_for_current_version(state, version.version_id)
     previous_new_issues: list[ReviewIssue] = []
     if prev_new_issues_raw and isinstance(prev_new_issues_raw, list):
         for raw in prev_new_issues_raw:
@@ -1063,6 +1143,74 @@ async def review_merger_node(state: dict[str, Any]) -> dict[str, Any]:
             error=str(exc),
             version_id=version.version_id,
         )
+
+    if was_rewritten and best_version and best_version != version.version_id:
+        active_best = await _load_active_best_version(
+            version_id=best_version,
+            project_id=state["project_id"],
+            chapter_number=state["chapter_number"],
+        )
+        active_best_score_card = (
+            _score_card_for_version(best_score_card_raw, active_best.version_id)
+            if active_best
+            else None
+        )
+        best_overall = _score_card_overall(active_best_score_card)
+        if (
+            active_best
+            and active_best_score_card
+            and _score_card_is_safe_best(active_best_score_card)
+            and best_overall is not None
+            and current_score < best_overall - _REWRITE_ROLLBACK_SCORE_DELTA
+        ):
+            logger.warning(
+                "rewrite.low_quality_result_rollback",
+                project_id=state["project_id"],
+                chapter_number=state["chapter_number"],
+                failed_version_id=version.version_id,
+                recovered_version_id=active_best.version_id,
+                current_score=current_score,
+                best_score=best_overall,
+                delta=_REWRITE_ROLLBACK_SCORE_DELTA,
+            )
+            await ChapterVersionRepository().mark_abandoned(version.version_id)
+            await ChapterHeadRepository().update(
+                ChapterHead(
+                    project_id=state["project_id"],
+                    chapter_number=state["chapter_number"],
+                    current_version_id=active_best.version_id,
+                    accepted_version_id=None,
+                    status="draft",
+                )
+            )
+            return {
+                "review_report_id": best_report_id,
+                "revision_round": rround,
+                "_total_revision_count": total_revision_count,
+                "_was_rewritten": was_rewritten,
+                "_has_critical": False,
+                "_has_major": False,
+                "_needs_revision": False,
+                "_new_issues_introduced": [],
+                "_new_issues_version_id": None,
+                "_content_preservation_ratio": None,
+                "_quality_gate_failures": [],
+                "_quality_gate_passed": True,
+                "_convergence_failed": False,
+                "_skip_settlement": False,
+                "_settlement_needs_human_review": False,
+                "_current_issues_count": state.get("_best_issues_count"),
+                "_current_overall_score": best_overall,
+                "_revision_rebound": True,
+                "_best_version_id": active_best.version_id,
+                "_best_report_id": best_report_id,
+                "_best_score_card": active_best_score_card,
+                "current_version_id": active_best.version_id,
+                "literary_observation_id": None,
+                "_score_card": active_best_score_card,
+                "_prev_merged_issues": [],
+                "status": "literary_auditing",
+            }
 
     # Revision 反弹检测（Task 106-patch）:
     # - issues 增加 >20%
@@ -1444,7 +1592,11 @@ async def revision_handler_node(state: dict[str, Any]) -> dict[str, Any]:
         "revision_round": state["revision_round"] + 1,
         "_total_revision_count": state.get("_total_revision_count", 0) + 1,
         "_content_preservation_ratio": ratio,
-        "_new_issues_introduced": [i.model_dump() for i in output.new_issues_introduced],
+        "_new_issues_introduced": [
+            {**i.model_dump(), "version_id": new_version_id}
+            for i in output.new_issues_introduced
+        ],
+        "_new_issues_version_id": new_version_id,
         "status": "rule_auditing",
     }
 
@@ -1505,8 +1657,8 @@ async def quality_gate_node(state: dict[str, Any]) -> dict[str, Any]:
         failures.append(f"preservation_too_low:{preservation:.3f}")
 
     # 新问题检查（revision 链路特有）
-    new_issues = state.get("_new_issues_introduced")
-    has_new_issues = bool(new_issues and isinstance(new_issues, list) and len(new_issues) > 0)
+    new_issues = _new_issues_for_current_version(state, version.version_id)
+    has_new_issues = len(new_issues) > 0
     if has_new_issues:
         failures.append(f"new_issues_introduced:{len(new_issues)}")
 
@@ -1888,6 +2040,22 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
             "_settlement_needs_human_review", False
         ),
     )
+
+    # Task 121m: QG false 版本禁止进入 settlement，防止劣质上下文污染
+    _qg_passed = state.get("_quality_gate_passed")
+    if _qg_passed is False:
+        logger.warning(
+            "settlement_extractor_node.qg_false_blocked",
+            project_id=state["project_id"],
+            chapter_number=state["chapter_number"],
+            version_id=version.version_id,
+        )
+        return {
+            "settlement_id": None,
+            "summary_id": None,
+            "status": "settlement_review",
+            "_settlement_needs_human_review": True,
+        }
 
     # Task 111d: skipped settlement 不能再伪装为 accepted/done。
     if state.get("_skip_settlement", False):

@@ -109,6 +109,96 @@ def _is_terminal_success_state(state: dict[str, Any]) -> bool:
     )
 
 
+def _has_context_emergency_degradation(recent_results: list[dict[str, Any]]) -> bool:
+    """判断连续 ContextEmergency 是否伴随真实降级，避免成功降级被误熔断."""
+    for result in recent_results:
+        if not result.get("success", False):
+            return True
+        if result.get("quality_gate_passed") is False:
+            return True
+        if result.get("settlement_success") is False:
+            return True
+        if result.get("summary_success") is False:
+            return True
+    return False
+
+
+def _append_recent_result(
+    recent_results: list[dict[str, Any]],
+    chapter_number: int,
+    chapter_result: dict[str, Any],
+) -> None:
+    """记录最近章节指标，供项目级自动熔断使用."""
+    recent_results.append({
+        "chapter_number": chapter_number,
+        "success": chapter_result["success"],
+        "quality_gate_passed": chapter_result.get("quality_gate_passed", False),
+        "context_emergency": chapter_result.get("context_emergency", False),
+        "settlement_success": chapter_result.get("settlement_success"),
+        "summary_success": chapter_result.get("summary_success"),
+    })
+    if len(recent_results) > 3:
+        recent_results.pop(0)
+
+
+async def _check_auto_halt_window(
+    run_state: ProjectRunState,
+    recent_results: list[dict[str, Any]],
+    completed: list[int],
+    failed: list[int],
+    persisted_summary: str,
+    *,
+    run_id: str,
+    chapter_number: int,
+) -> None:
+    """检查项目级自动熔断窗口."""
+    if len(recent_results) < 3:
+        return
+
+    # Task 105: 自动熔断检查（跳过 quality_gate_passed=None 的章节）
+    _qg_known = [r for r in recent_results if r["quality_gate_passed"] is not None]
+    _emergencies = sum(1 for r in recent_results if r["context_emergency"])
+    if len(_qg_known) >= 3:
+        _qg_fails = sum(1 for r in _qg_known if not r["quality_gate_passed"])
+        if _qg_fails >= 3:
+            _ch_start = _qg_known[0]["chapter_number"]
+            await _pause_run_for_auto_halt(
+                run_state,
+                completed,
+                failed,
+                persisted_summary,
+            )
+            raise AutoHaltException(
+                message=f"连续 3 章质量门未通过（Ch{_ch_start}-Ch{chapter_number}）",
+                last_chapter=chapter_number,
+                reason="quality_gate_fail_streak",
+            )
+    if _emergencies >= 3:
+        _ch_start = recent_results[0]["chapter_number"]
+        if _has_context_emergency_degradation(recent_results):
+            await _pause_run_for_auto_halt(
+                run_state,
+                completed,
+                failed,
+                persisted_summary,
+            )
+            raise AutoHaltException(
+                message=(
+                    "连续 3 章触发 ContextEmergency 且伴随章节失败或质量异常"
+                    f"（Ch{_ch_start}-Ch{chapter_number}）"
+                ),
+                last_chapter=chapter_number,
+                reason="context_emergency_degraded_streak",
+            )
+        logger.warning(
+            "project_pipeline.context_emergency_success_streak",
+            run_id=run_id,
+            chapter_start=_ch_start,
+            chapter_end=chapter_number,
+            message="连续 ContextEmergency 但章节均成功完成，记录 warning 并继续",
+        )
+
+
 # =============================================================================
 # 公共 API
 # =============================================================================
@@ -212,6 +302,8 @@ async def run_project_pipeline(
             run_id=run_id,
         )
 
+        _append_recent_result(_recent_results, chapter_number, chapter_result)
+
         if chapter_result["success"]:
             completed.append(chapter_number)
             # 累加 summary
@@ -249,6 +341,15 @@ async def run_project_pipeline(
                 persisted_summary,
                 status="running",
             )
+            await _check_auto_halt_window(
+                run_state,
+                _recent_results,
+                completed,
+                failed,
+                persisted_summary,
+                run_id=run_id,
+                chapter_number=chapter_number,
+            )
             if on_failure == "abort":
                 break
             # on_failure == "retry" 已在 _run_single_chapter 中处理，
@@ -256,48 +357,15 @@ async def run_project_pipeline(
             # 当前策略：retry 一次后仍失败则终止
             break
 
-        # Task 105: 更新熔断窗口
-        _recent_results.append({
-            "chapter_number": chapter_number,
-            "success": chapter_result["success"],
-            "quality_gate_passed": chapter_result.get("quality_gate_passed", False),
-            "context_emergency": chapter_result.get("context_emergency", False),
-        })
-        if len(_recent_results) > 3:
-            _recent_results.pop(0)
-
-        # Task 105: 自动熔断检查（跳过 quality_gate_passed=None 的章节）
-        if len(_recent_results) >= 3:
-            _qg_known = [r for r in _recent_results if r["quality_gate_passed"] is not None]
-            _emergencies = sum(1 for r in _recent_results if r["context_emergency"])
-            if len(_qg_known) >= 3:
-                _qg_fails = sum(1 for r in _qg_known if not r["quality_gate_passed"])
-                if _qg_fails >= 3:
-                    _ch_start = _qg_known[0]["chapter_number"]
-                    await _pause_run_for_auto_halt(
-                        run_state,
-                        completed,
-                        failed,
-                        persisted_summary,
-                    )
-                    raise AutoHaltException(
-                        message=f"连续 3 章质量门未通过（Ch{_ch_start}-Ch{chapter_number}）",
-                        last_chapter=chapter_number,
-                        reason="quality_gate_fail_streak",
-                    )
-            if _emergencies >= 3:
-                _ch_start = _recent_results[0]["chapter_number"]
-                await _pause_run_for_auto_halt(
-                    run_state,
-                    completed,
-                    failed,
-                    persisted_summary,
-                )
-                raise AutoHaltException(
-                    message=f"连续 3 章触发 ContextEmergency（Ch{_ch_start}-Ch{chapter_number}）",
-                    last_chapter=chapter_number,
-                    reason="context_emergency_streak",
-                )
+        await _check_auto_halt_window(
+            run_state,
+            _recent_results,
+            completed,
+            failed,
+            persisted_summary,
+            run_id=run_id,
+            chapter_number=chapter_number,
+        )
 
     # ---- 收尾 ----
     duration = time.monotonic() - start_time
@@ -484,6 +552,8 @@ async def _run_single_chapter(
             logged_budget = getattr(chapter_log, "budget_used", None)
             logged_context_emergency = getattr(chapter_log, "context_emergency", None)
             logged_qg_passed = getattr(chapter_log, "quality_gate_passed", None)
+            logged_settlement_success = getattr(chapter_log, "settlement_success", None)
+            logged_summary_success = getattr(chapter_log, "summary_success", None)
             if not isinstance(logged_context_emergency, bool):
                 logged_context_emergency = _ctx_metrics.get("context_emergency", False)
             if logged_qg_passed not in (True, False, None):
@@ -499,6 +569,8 @@ async def _run_single_chapter(
                 else _ctx_metrics.get("budget_used"),
                 "context_emergency": logged_context_emergency,
                 "quality_gate_passed": logged_qg_passed,
+                "settlement_success": logged_settlement_success,
+                "summary_success": logged_summary_success,
             }
 
         except Exception:
@@ -512,6 +584,10 @@ async def _run_single_chapter(
 
     # 失败路径
     duration_sec = time.monotonic() - chapter_start
+    _ctx_metrics = final_state.get("_context_metrics", {}) if final_state else {}
+    _qg_passed = final_state.get("_quality_gate_passed") if final_state else False
+    _settlement_success = final_state.get("settlement_id") is not None if final_state else False
+    _summary_success = final_state.get("summary_id") is not None if final_state else False
     error_msg = (
         final_state.get("error")
         if final_state
@@ -536,9 +612,11 @@ async def _run_single_chapter(
         "error": error_msg,
         "final_state": final_state,
         "final_version_id": final_state.get("current_version_id") if final_state else None,
-        "budget_used": None,
-        "context_emergency": False,
-        "quality_gate_passed": False,
+        "budget_used": _ctx_metrics.get("budget_used"),
+        "context_emergency": _ctx_metrics.get("context_emergency", False),
+        "quality_gate_passed": _qg_passed,
+        "settlement_success": _settlement_success,
+        "summary_success": _summary_success,
     }
 
 

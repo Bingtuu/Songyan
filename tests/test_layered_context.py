@@ -40,19 +40,19 @@ async def _seed_project(project_id: str = "proj-test") -> None:
 # ---------------------------------------------------------------------------
 class TestDynamicBudget:
     def test_early_chapters_base_budget(self) -> None:
-        assert _dynamic_budget(1, 8000) == 8080
-        assert _dynamic_budget(10, 8000) == 8800
+        assert _dynamic_budget(1, 8000) == 8250
+        assert _dynamic_budget(10, 8000) == 10500
 
     def test_mid_chapters_boosted(self) -> None:
-        assert _dynamic_budget(11, 8000) == 8880
-        assert _dynamic_budget(50, 8000) == 12000
+        assert _dynamic_budget(11, 8000) == 10750
+        assert _dynamic_budget(50, 8000) == 20500
 
     def test_late_chapters_base_budget(self) -> None:
-        assert _dynamic_budget(51, 8000) == 12080
-        assert _dynamic_budget(100, 8000) == 16000
+        assert _dynamic_budget(51, 8000) == 20750
+        assert _dynamic_budget(100, 8000) == 33000
 
     def test_custom_base_budget(self) -> None:
-        assert _dynamic_budget(25, 5000) == 7000
+        assert _dynamic_budget(25, 5000) == 11250
 
 
 # ---------------------------------------------------------------------------

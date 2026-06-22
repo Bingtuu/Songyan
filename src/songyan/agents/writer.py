@@ -456,7 +456,9 @@ def _extract_body(llm_response: str) -> str:
     # 去除多余的空行（连续3行以上空行压缩为2行）
     text = re.sub(r"\n{4,}", "\n\n\n", text)
 
-    # 去除可见的旧版设定标记 [[新设定:...]]（HTML 注释 <!-- 新设定:... --> 保留，对读者不可见）
+    # 去除所有 HTML 注释（兜底清理元标记泄漏）
+    text = re.sub(r"<!--.*?-->", "", text, flags=re.DOTALL)
+    # 去除旧版可见标记 [[新设定:...]]（兜底）
     text = re.sub(r"\[\[新设定:[^\]]+\]\]", "", text)
 
     return text.strip()

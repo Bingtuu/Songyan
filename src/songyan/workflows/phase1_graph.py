@@ -85,6 +85,7 @@ class Phase1State(TypedDict):
     _content_preservation_ratio: float | None
     # 058d: revision 引入的新问题（序列化后的 ReviewIssue dict 列表）
     _new_issues_introduced: list[dict] | None
+    _new_issues_version_id: str | None
     _settlement_needs_human_review: bool
     # 073: 截断重写标记
     _was_rewritten: bool
@@ -372,6 +373,7 @@ async def run_chapter_pipeline(
         "_revision_rebound": False,
         "_content_preservation_ratio": None,
         "_new_issues_introduced": None,
+        "_new_issues_version_id": None,
         "_settlement_needs_human_review": False,
         "_was_rewritten": False,
         "_rewrite_reason": None,

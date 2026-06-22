@@ -452,6 +452,48 @@ async def test_qg_without_best_version_no_rollback() -> None:
     mock_head_repo.return_value.update.assert_not_awaited()
 
 
+@pytest.mark.asyncio
+async def test_qg_ignores_stale_versioned_new_issues() -> None:
+    """Task 121h: 旧版本 new issues 不得污染当前版本 quality gate."""
+    version = MagicMock()
+    version.version_id = "v-current"
+    version.word_count = 3000
+
+    with patch("songyan.workflows._nodes.load_version", new_callable=AsyncMock) as mock_ver:
+        mock_ver.return_value = version
+
+        result = await quality_gate_node(
+            {
+                "project_id": "p1",
+                "chapter_number": 1,
+                "current_version_id": "v-current",
+                "_new_issues_introduced": [{"issue_id": "old", "version_id": "v-old"}],
+                "_new_issues_version_id": "v-old",
+                "_score_card": {
+                    "version_id": "v-current",
+                    "overall_score": 0.86,
+                    "length": {"score": 0.86},
+                    "budget": {"score": 0.86},
+                    "coherence": {"score": 0.86},
+                    "momentum": {"score": 0.86},
+                    "readability": {"score": 0.86},
+                    "flags": {
+                        "length_ok": True,
+                        "budget_ok": True,
+                        "coherence_critical": False,
+                        "coherence_major": False,
+                        "momentum_present": True,
+                        "readability_ok": True,
+                    },
+                },
+            }
+        )
+
+    assert result["status"] == "human_confirm"
+    assert result["_quality_gate_passed"] is True
+    assert result["_quality_gate_failures"] == []
+
+
 # ---------------------------------------------------------------------------
 # human_confirm_router skip_settlement 分支
 # ---------------------------------------------------------------------------

@@ -97,17 +97,19 @@ def _compute_keyword_overlap(setting_name: str, setting_key: str, keywords: list
 # Dynamic Budget & Relevance
 # ---------------------------------------------------------------------------
 DEFAULT_BASE_BUDGET: int = 8000
-BUDGET_INCREMENT_PER_CHAPTER: int = 80
+BUDGET_INCREMENT_PER_CHAPTER: int = 250
 
 
 def _dynamic_budget(chapter_number: int, base_budget: int = DEFAULT_BASE_BUDGET) -> int:
     """动态预算公式: base + chapter_number * increment.
 
     验证值:
-    - Ch1  = 8080
-    - Ch50 = 12000
-    - Ch70 = 13600
-    - Ch100 = 16000
+    - Ch1  = 8250
+    - Ch10 = 10500
+    - Ch12 = 11000
+    - Ch50 = 20500
+    - Ch70 = 25500
+    - Ch100 = 33000
     """
     return base_budget + chapter_number * BUDGET_INCREMENT_PER_CHAPTER
 

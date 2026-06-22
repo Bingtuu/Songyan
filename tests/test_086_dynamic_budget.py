@@ -19,20 +19,26 @@ class TestDynamicBudget:
     """验证动态预算公式: base + chapter_number * increment."""
 
     def test_chapter_1(self) -> None:
-        assert _dynamic_budget(1) == 8080
+        assert _dynamic_budget(1) == 8250
+
+    def test_chapter_10(self) -> None:
+        assert _dynamic_budget(10) == 10500
+
+    def test_chapter_12(self) -> None:
+        assert _dynamic_budget(12) == 11000
 
     def test_chapter_50(self) -> None:
-        assert _dynamic_budget(50) == 12000
+        assert _dynamic_budget(50) == 20500
 
     def test_chapter_70(self) -> None:
-        assert _dynamic_budget(70) == 13600
+        assert _dynamic_budget(70) == 25500
 
     def test_chapter_100(self) -> None:
-        assert _dynamic_budget(100) == 16000
+        assert _dynamic_budget(100) == 33000
 
     def test_custom_base_budget(self) -> None:
         """传入自定义 base_budget 时公式仍正确."""
-        assert _dynamic_budget(50, base_budget=6000) == 6000 + 50 * 80
+        assert _dynamic_budget(50, base_budget=6000) == 6000 + 50 * 250
 
     def test_chapter_0(self) -> None:
         """第 0 章（边界）预算等于 base."""
@@ -40,7 +46,7 @@ class TestDynamicBudget:
 
     def test_constants(self) -> None:
         assert DEFAULT_BASE_BUDGET == 8000
-        assert BUDGET_INCREMENT_PER_CHAPTER == 80
+        assert BUDGET_INCREMENT_PER_CHAPTER == 250
 
 
 class TestGenreRulesByType:

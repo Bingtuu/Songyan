@@ -123,6 +123,108 @@ class TestSettlementExtractorNodeSkipSettlement:
         mock_summary_repo.create.assert_not_awaited()
 
 
+class TestSettlementExtractorNodeQGFalseBlock:
+    """settlement_extractor_node _quality_gate_passed=False 硬拦截测试."""
+
+    @pytest.mark.asyncio
+    async def test_qg_false_blocks_settlement_and_returns_review(self) -> None:
+        """QG false 时不提取 settlement，不应用 settlement，不生成 summary，进入复核态."""
+        mock_version = MagicMock()
+        mock_version.version_id = "v-qg-false-001"
+        mock_version.content = "A" * 500
+        mock_version.version_type = "accepted"
+        mock_version.word_count = 100
+
+        mock_project = MagicMock()
+        mock_project.genre_id = "scifi"
+        mock_project.mode_id = "webnovel"
+
+        mock_summary_repo = AsyncMock()
+        mock_summary_repo.create = AsyncMock()
+
+        with patch(
+            "songyan.workflows._nodes.load_version",
+            new_callable=AsyncMock,
+            return_value=mock_version,
+        ):
+            with patch(
+                "songyan.workflows._nodes.load_project",
+                new_callable=AsyncMock,
+                return_value=mock_project,
+            ):
+                with patch(
+                    "songyan.workflows._nodes.load_genre_profile",
+                    return_value=None,
+                ):
+                    with patch(
+                        "songyan.workflows._nodes.load_chapter_goal",
+                        new_callable=AsyncMock,
+                        return_value=None,
+                    ):
+                        with patch(
+                            "songyan.workflows._nodes.extract_settlement",
+                            new_callable=AsyncMock,
+                        ) as mock_extract:
+                            with patch(
+                                "songyan.workflows._nodes.apply_settlement",
+                                new_callable=AsyncMock,
+                            ) as mock_apply:
+                                with patch(
+                                    "songyan.workflows._nodes.write_chapter_summary",
+                                    new_callable=AsyncMock,
+                                ) as mock_write_summary:
+                                    with patch(
+                                        "songyan.workflows._nodes._run_lifecycle_cleanup",
+                                        new_callable=AsyncMock,
+                                    ) as mock_lifecycle:
+                                        with patch(
+                                            "songyan.workflows._nodes.accept_with_settlement_boundary",
+                                            new_callable=AsyncMock,
+                                        ) as mock_accept:
+                                            with patch(
+                                                "songyan.workflows._nodes._index_accepted_chapter",
+                                                new_callable=AsyncMock,
+                                            ):
+                                                with patch(
+                                                    "songyan.agents.setting_evaporator.SettingEvaporator",
+                                                ) as mock_evap_cls:
+                                                    mock_evap = AsyncMock()
+                                                    mock_evap.run = AsyncMock(return_value=[])
+                                                    mock_evap.merge_similar_settings = AsyncMock()
+                                                    mock_evap_cls.return_value = mock_evap
+                                                    with patch(
+                                                        "songyan.workflows._nodes.trigger_layered_summaries",
+                                                        new_callable=AsyncMock,
+                                                    ):
+                                                        with patch(
+                                                            "songyan.workflows._nodes.SummaryRepository",
+                                                            return_value=mock_summary_repo,
+                                                        ):
+                                                            state = {
+                                                                "project_id": "p1",
+                                                                "chapter_number": 1,
+                                                                "current_version_id": (
+                                                                    "v-qg-false-001"
+                                                                ),
+                                                                "chapter_goal_id": None,
+                                                                "_skip_settlement": False,
+                                                                "_quality_gate_passed": False,
+                                                            }
+                                                            node = settlement_extractor_node
+                                                            result = await node(state)
+
+        mock_extract.assert_not_awaited()
+        mock_apply.assert_not_awaited()
+        mock_write_summary.assert_not_awaited()
+        mock_lifecycle.assert_not_awaited()
+        mock_accept.assert_not_awaited()
+
+        assert result["settlement_id"] is None
+        assert result["summary_id"] is None
+        assert result["status"] == "settlement_review"
+        assert result["_settlement_needs_human_review"] is True
+
+
 class TestRewriteNodeSuccessPath:
     """rewrite_node success path 返回值测试."""
 
@@ -398,6 +500,131 @@ class TestReviewMergerNodeRevisionSignals:
         assert result["_skip_settlement"] is False
         assert result["_settlement_needs_human_review"] is False
         mock_ver_repo.mark_abandoned.assert_awaited_once_with("v-current")
+        mock_head_repo.update.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_low_quality_rewrite_rolls_back_to_safe_best(self) -> None:
+        """Task 121h: rewrite 低于安全 best 超过阈值时，即使无 major 也回滚 best."""
+        mock_version = MagicMock()
+        mock_version.version_id = "v-rewrite"
+        mock_version.content = "正文"
+
+        best_version = MagicMock()
+        best_version.version_id = "v-best"
+        best_version.project_id = "p1"
+        best_version.chapter_number = 115
+        best_version.is_abandoned = False
+        best_version.score_card = None
+
+        best_score_card = {
+            "version_id": "v-best",
+            "overall_score": 0.8776,
+            "length": {"score": 0.90},
+            "budget": {"score": 0.90},
+            "coherence": {"score": 0.90},
+            "momentum": {"score": 0.90},
+            "readability": {"score": 0.90},
+            "flags": {
+                "length_ok": True,
+                "budget_ok": True,
+                "coherence_critical": False,
+                "coherence_major": False,
+                "momentum_present": True,
+                "readability_ok": True,
+            },
+        }
+
+        current_score_card = {
+            "version_id": "v-rewrite",
+            "overall_score": 0.7335,
+            "length": {"score": 0.80},
+            "budget": {"score": 0.80},
+            "coherence": {"score": 0.85},
+            "momentum": {"score": 0.80},
+            "readability": {"score": 0.70},
+            "flags": {
+                "length_ok": True,
+                "budget_ok": True,
+                "coherence_critical": False,
+                "coherence_major": False,
+                "momentum_present": True,
+                "readability_ok": True,
+            },
+        }
+
+        mock_score_card = MagicMock()
+        mock_score_card.flags.needs_revision = False
+        mock_score_card.flags.coherence_critical = False
+        mock_score_card.flags.coherence_major = False
+        mock_score_card.overall_score = 0.7335
+        mock_score_card.model_dump.return_value = current_score_card
+        for dim_name in ("length", "budget", "coherence", "momentum", "readability"):
+            dim_mock = MagicMock()
+            dim_mock.score = current_score_card[dim_name]["score"]
+            setattr(mock_score_card, dim_name, dim_mock)
+
+        merged_mock = MagicMock()
+        merged_mock.has_critical = False
+        merged_mock.issues = []
+
+        with (
+            patch(
+                "songyan.workflows._nodes.load_version",
+                new_callable=AsyncMock,
+                return_value=mock_version,
+            ),
+            patch(
+                "songyan.workflows._nodes.load_latest_audits",
+                new_callable=AsyncMock,
+                return_value=(MagicMock(), MagicMock()),
+            ),
+            patch(
+                "songyan.workflows._nodes.merge_reviews",
+                new_callable=AsyncMock,
+                return_value=merged_mock,
+            ),
+            patch(
+                "songyan.workflows._nodes.ScoreAggregator.aggregate",
+                return_value=mock_score_card,
+            ),
+            patch(
+                "songyan.workflows._nodes._load_chapter_repair_state",
+                new_callable=AsyncMock,
+                return_value=(2, True),
+            ),
+            patch("songyan.workflows._nodes.ChapterVersionRepository") as mock_ver_repo_cls,
+            patch("songyan.workflows._nodes.ChapterHeadRepository") as mock_head_repo_cls,
+        ):
+            mock_ver_repo = AsyncMock()
+            mock_ver_repo.update_score_card = AsyncMock()
+            mock_ver_repo.get = AsyncMock(return_value=best_version)
+            mock_ver_repo.mark_abandoned = AsyncMock()
+            mock_ver_repo_cls.return_value = mock_ver_repo
+            mock_head_repo = AsyncMock()
+            mock_head_repo.update = AsyncMock()
+            mock_head_repo_cls.return_value = mock_head_repo
+
+            result = await review_merger_node({
+                "project_id": "p1",
+                "chapter_number": 115,
+                "current_version_id": "v-rewrite",
+                "revision_round": 0,
+                "_was_rewritten": True,
+                "_best_version_id": "v-best",
+                "_best_report_id": "rr-best",
+                "_best_issues_count": 0,
+                "_best_overall_score": 0.8776,
+                "_best_score_card": best_score_card,
+                "_new_issues_introduced": [],
+            })
+
+        assert result["current_version_id"] == "v-best"
+        assert result["_quality_gate_passed"] is True
+        assert result["_convergence_failed"] is False
+        assert result["_skip_settlement"] is False
+        assert result["_settlement_needs_human_review"] is False
+        assert result["_score_card"] == best_score_card
+        mock_ver_repo.mark_abandoned.assert_awaited_once_with("v-rewrite")
         mock_head_repo.update.assert_awaited_once()
 
 

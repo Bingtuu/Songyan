@@ -139,10 +139,10 @@ class HumanMarkRepository:
         self,
         project_id: str,
         current_chapter: int,
-        window: int = 10,
+        window: int = 6,
         conn: aiosqlite.Connection | None = None,
     ) -> int:
-        """将 unresolved + 10 章未提及的 human_marks 标记为 dormant.
+        """将 unresolved + 6 章未提及的 human_marks 标记为 dormant.
 
         priority>=8 除外。
         返回: 影响的记录数

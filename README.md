@@ -14,7 +14,7 @@
 
 目标：通过 TemporalCompressor + CharacterFocalDecay + SettingEvaporator + BudgetHardCeiling 四组件协同，控制信息密度，支撑 150+ 章稳定生成。Task 101~120 已完成 Context Diet 2.0 核心组件、流式验证基础设施、评分与收敛护栏、活跃信息池控制、工作流/事实源/Context/Prompt/QualityGate/Settlement 修复、Ch111-Ch150 分段验证、DG-2 风险窗口复验、health_low 治理、报告/wrapper 加固和 V5.0 Final Acceptance。
 
-当前最终口径以 `tasks/V5-README.md` 与 `docs/STATUS.md` 为准：**V5.0 工程验收通过，P0/P1 风险为 0，全量回归 1722 passed，lint 通过**。Task 121 已统一拆分为 121a-121g：121b 已补跑 single-run rehearsal，但 `run-21ff158b` 在 Ch5 阻断；121c 已修复 rewrite fallback 后 settlement 被错误跳过的直接阻断；121d 已重跑 `run-f749826e`，验证 Ch5 阻断解除，但 Ch8 暴露新的 settlement_review 阻断；121e 已修复 Ch8 settlement 伏笔预计回收章节校验/回填问题，并通过 `run-0317a247` 验证 Ch8 解除；121f 已修复 Ch18 CreativeDirector JSON parse failure 的错误传播/章节状态判定问题，并通过 `run-058fb9de` 验证 Ch1-Ch18 聚焦运行成功；121g 已完成新的干净 Ch1-Ch150 single-run，`run-0fd1456e` 取得 Ch1-Ch114 连续成功证据，但 Ch115 因 quality gate human review 阻断，最终 `partial`。下一步应创建 Task 121h 修复 Ch115 暴露的 quality gate / rewrite 状态污染问题。
+当前最终口径以 `tasks/V5-README.md` 与 `docs/STATUS.md` 为准：**V5.0 工程验收通过，P0/P1 风险为 0，全量回归 1731 passed，lint 通过**。Task 121 已从 single-run 证据补强推进到 Ch115 修复链：121b-121g 依次暴露并解除 Ch5、Ch8、Ch18、Ch115 阻断。Task 121h-121i 已完成 Ch115 工程修复与聚焦验证。Task 121j/121l 先后暴露连续 ContextEmergency AutoHalt 问题。Task 121m 已完成 QG false 硬拦截 settlement + 元标记泄漏清理；Task 121n 已完成 Context Diet 2.0 预算增量 80→250 与 human_marks 生命周期窗口 10→6；**Task 121o 已执行 `run-4ff41095` Ch1-Ch18 聚焦验证重跑，18/18 全部成功，ContextEmergency 0 次，AutoHalt 0 次，已越过 Ch13 和 Ch18**。Task 121k 负责 Prompt / 正文质量清理，可并行准备。
 
 ### 版本概览
 
@@ -30,16 +30,16 @@
 
 | 指标 | 数值 |
 |------|------|
-| 最近回归测试 | **1722 passed, 2 xfailed, 14 warnings** (`pytest tests/ -q`，xfail 均为已知非阻断项) |
-| V5.0 当前 Task | **Task 120 已完成；Task 121a-121g 已统一划分；Task 121g 已完成 Ch1-Ch150 完整重跑并定位 Ch115 新阻断** |
+| 最近回归测试 | **1731 passed, 1 xfailed, 1 xpassed, 14 warnings** (`pytest tests/ -q`) |
+| V5.0 当前 Task | **Task 120 已完成；Task 121a-121i 已完成 Ch115 修复验证；Task 121j-121l 已完成 AutoHalt 策略修复；Task 121m-121o 已完成 QG false 拦截、元标记清理、预算调整与 Ch1-Ch18 聚焦验证（18/18 成功）；下一步启动 Ch1-Ch150 full single-run；Task 121k 负责 Prompt 质量清理** |
 | 前置状态 | **Task 115-120 全部完成；DG-2 风险窗口已关闭；health_low 已分级追踪；报告/wrapper 已加固** |
-| 当前结论 | **V5.0 工程验收通过：P0/P1 风险为 0；Ch111-Ch150 40/40 成功；Ch1-Ch150 single-run 已重跑到 Ch115，`run-0fd1456e` 为 partial，下一步修复 Ch115 quality gate human review 阻断** |
+| 当前结论 | **V5.0 工程验收通过：P0/P1 风险为 0；Ch111-Ch150 40/40 成功；Task 121o `run-4ff41095` Ch1-Ch18 18/18 成功，ContextEmergency 0 次，AutoHalt 0 次，已越过 Ch13 和 Ch18；下一步启动 Ch1-Ch150 full single-run** |
 | 当前 lint | **`ruff check src/ tests/` 已通过** |
 | Task 110e 实跑 | **Ch80-Ch96 17/17 成功，QG 100%，coherence_major 0/17** |
 | V4.0 最终达标率 | Task 099: Ch2-Ch50 **81.6%** |
 | V4.x 归档 | `archive/v4/`（报告 + 任务 + 验证数据）|
 
-测试口径说明：`2 xfailed` 为已知非阻断项（Windows SQLite 并发写入限制、冷启动 embedding model 性能 xfail）。
+测试口径说明：`1 xfailed` 为已知非阻断项，`1 xpassed` 为既有标记状态变化；14 warnings 均为既有 pytest/依赖警告。
 
 ### V5.0 核心决策
 
@@ -448,7 +448,7 @@ pytest -k "not integration" -q
 
 ```bash
 pytest tests/ -q
-# Current baseline: 1722 passed, 2 xfailed, 14 warnings
+# Current baseline: 1731 passed, 1 xfailed, 1 xpassed, 14 warnings
 
 ruff check src/ tests/
 # Current baseline: All checks passed!
@@ -552,7 +552,7 @@ ruff check src/ tests/
 - **Task 119** : ✅ 长跑报告入口与 Windows Wrapper 加固 — `songyan report` 入口统一，wrapper 结果码明确。
 - **Task 120** : ✅ V5.0 Final Acceptance Package — V5.0 工程验收通过，P0/P1 风险为 0。
 
-当前建议：V5.0 已交付完成；Task 121b-121g 已持续补强 single-run 证据链，并将真实阻断从 Ch5、Ch8、Ch18 推进到 Ch115。下一步创建 Task 121h，修复 Ch115 quality gate / rewrite `_new_issues_introduced` 状态污染后，先聚焦重跑 Ch115，再重跑 Ch1-Ch150 single-run。V5 任务状态以 `tasks/V5-README.md` 和各 `*-DONE.md` 为准，规划稿已归档为设计背景。
+当前建议：V5.0 已交付完成；Task 121b-121o 已持续补强 single-run 证据链，依次解除 Ch5、Ch8、Ch18、Ch115、连续 ContextEmergency AutoHalt 阻断。**Task 121o `run-4ff41095` 已验证 Ch1-Ch18 18/18 全部成功并越过 Ch13/Ch18，ContextEmergency 0 次，AutoHalt 0 次**。下一步立即启动新的 **Ch1-Ch150 full single-run**，作为 V5.0 single-run rehearsal 的最终证据。Task 121k（Prompt / 正文质量清理）可并行准备，重点处理 writer 字数超量、中段动能波动和短段落碎片化。V5 任务状态以 `tasks/V5-README.md` 和各 `*-DONE.md` / TODO 文档为准，规划稿已归档为设计背景。
 
 ---
 
@@ -601,6 +601,12 @@ Checkpointer 模式说明：
 - `AGENTS.md` — 开发代理指令与不可违背规则
 - `docs/STATUS.md` — 项目状态看板
 - `docs/INDEX.md` — 文档索引
+- `tasks/V5-README.md` — V5 / Task 121 事实入口
+- `tasks/121h-ch115-quality-gate-rewrite-state-review.md` — Ch115 工程修复完成记录
+- `tasks/121i-ch115-focused-rerun-and-quality-window.md` — Ch115 聚焦验证完成记录
+- `tasks/121j-ch1-ch150-single-run-after-ch115-fix.md` — 修复后 full single-run partial 记录
+- `tasks/121k-prompt-quality-cleanup-plan.md` — Prompt / 正文质量清理规划
+- `tasks/121l-context-emergency-autohalt-review.md` — 连续 ContextEmergency AutoHalt 策略修复记录
 - `archive/v4/INDEX.md` — V4.x 完整归档索引
 - `archive/v3/INDEX.md` — V3.x 完整归档索引
 

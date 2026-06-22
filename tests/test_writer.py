@@ -321,6 +321,26 @@ class TestExtractBody:
         assert "### Scene 1" in result
         assert "```" not in result
 
+    def test_strips_html_comments(self) -> None:
+        text = "正文内容<!-- 新设定:物理密钥|物品|林霜 -->后续内容"
+        result = _extract_body(text)
+        assert "正文内容后续内容" == result
+        assert "<!--" not in result
+        assert "-->" not in result
+
+    def test_strips_multiline_html_comments(self) -> None:
+        text = "正文\n<!-- 新设定:玄天剑|法宝|主角 -->\n后续"
+        result = _extract_body(text)
+        assert "正文" in result
+        assert "后续" in result
+        assert "<!--" not in result
+
+    def test_strips_legacy_bracket_settings(self) -> None:
+        text = "正文[[新设定:玄天剑|法宝|主角]]后续"
+        result = _extract_body(text)
+        assert "正文后续" == result
+        assert "[[新设定" not in result
+
 
 # ---------------------------------------------------------------------------
 # Integration Tests
