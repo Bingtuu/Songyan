@@ -15,6 +15,7 @@
 | `tasks/121d-ch1-ch150-single-run-rerun.md` | Task 121d：修复后 single-run 重跑结果 |
 | `tasks/121e-ch8-settlement-foreshadowing-validation-fix-DONE.md` | Task 121e：Ch8 settlement 伏笔校验修复 |
 | `tasks/121f-ch18-creative-director-error-contract-DONE.md` | Task 121f：Ch18 CreativeDirector 错误传播修复 |
+| `tasks/121g-ch1-ch150-single-run-rerun-ch115-blocker-DONE.md` | Task 121g：Ch1-Ch150 完整重跑与 Ch115 新阻断定位 |
 
 ## 按场景查阅
 
@@ -31,6 +32,7 @@
 | 修复后 single-run 重跑 / Ch8 新阻断 | `tasks/121d-ch1-ch150-single-run-rerun.md` |
 | Ch8 settlement 伏笔校验修复 | `tasks/121e-ch8-settlement-foreshadowing-validation-fix-DONE.md` |
 | Ch18 CreativeDirector 错误传播修复 | `tasks/121f-ch18-creative-director-error-contract-DONE.md` |
+| Ch1-Ch150 完整重跑 / Ch115 阻断 | `tasks/121g-ch1-ch150-single-run-rerun-ch115-blocker-DONE.md` |
 | 架构手册 | `docs/architecture/04-vibe-coding-engineering.md` |
 | 技术参考 | `docs/architecture/05-tech-reference.md` |
 | Code Review | `docs/code-review-plan.md` |
