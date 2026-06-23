@@ -27,9 +27,9 @@
 | Task 121m | **已完成**：QG false 硬拦截 settlement + 元标记泄漏清理；`pytest` 1731 passed |
 | Task 121n | **已完成**：Context Diet 2.0 预算增量 80→250 + human_marks 生命周期窗口 10→6；`pytest` 1731 passed |
 | Task 121o | **已完成**：Ch1-Ch18 聚焦验证重跑 `run-4ff41095` **18/18 全部成功**，ContextEmergency 0 次，AutoHalt 0 次，已越过 Ch13 和 Ch18 |
-| Task 121p | **已执行**：Ch1-Ch150 full single-run `run-40ceb306`，Ch1 完成后因 RAG embedder 30s 超时而中断，修复后重跑 |
+| Task 121p | **已执行**：Ch1-Ch150 full single-run `run-40ceb306`，Ch1 完成后因 `run_project_pipeline` 未跳过已有 accepted 章节（Bug A）+ RAG 索引超时异常未捕获（Bug B）而中断 |
 | 重跑前清理 | 已清理缓存、`__pycache__`、旧 WAL/SHM；无 `python/pytest/songyan` 残留进程；`songyan.db` 完整性检查为 `ok` |
-| 下一步规划 | **Task 121p `run-40ceb306` 已启动，Ch1 完成后因 RAG embedder 30s 超时而中断；修复超时配置后重跑 Ch1-Ch150 full single-run**；Task 121k Prompt / 正文质量清理并行准备 |
+| 下一步规划 | **Task 121p `run-40ceb306` 已启动，Ch1 完成后因 pipeline 未跳过已有 accepted 章节 + RAG 索引超时异常未捕获而中断；修复 Bug A/B 后重跑 Ch1-Ch150 full single-run**；Task 121k Prompt / 正文质量清理并行准备 |
 
 测试说明：`1 xfailed` 为已知非阻断项，`1 xpassed` 为既有标记状态变化；14 warnings 均为既有 pytest/依赖警告。
 
@@ -52,7 +52,7 @@
 
 | 项 | 级别 | 处理 |
 |----|------|------|
-| 一次性 Ch1-Ch150 单命令证据 | P1 | Task 121o `run-4ff41095` 已验证 Ch1-Ch18 18/18 全部成功并越过 Ch13/Ch18；121m/121n 修复消除 degraded emergency 根因。**Task 121p `run-40ceb306` 已启动但因 RAG embedder 超时在 Ch1 后中断，修复超时后重跑** |
+| 一次性 Ch1-Ch150 单命令证据 | P1 | Task 121o `run-4ff41095` 已验证 Ch1-Ch18 18/18 全部成功并越过 Ch13/Ch18；121m/121n 修复消除 degraded emergency 根因。**Task 121p `run-40ceb306` 已启动但因 pipeline 未跳过已有 accepted 章节 + RAG 索引超时异常未捕获在 Ch1 后中断，修复后重跑** |
 | Ch115 rewrite / best-version 劣化 | P1 | **Task 121h 已完成工程修复，Task 121i `run-ce1767ff` 已验证 Ch115 不再进入 human_review_required**；safe-best 回滚主路径未在本次触发，仍由单测覆盖 |
 | 连续 ContextEmergency AutoHalt | P1 | **Task 121l 已完成策略修复；Task 121m 已完成 QG false 硬拦截；Task 121n 已完成预算调整；Task 121o 验证 Ch1-Ch18 0 次 emergency、0 次 AutoHalt。该风险已解除** |
 | Prompt 质量瓶颈 | V5.1 | Task 121k 处理正文纯净度、机械场景标题、元标记泄漏和段落碎片化 |

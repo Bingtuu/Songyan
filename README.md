@@ -14,7 +14,7 @@
 
 目标：通过 TemporalCompressor + CharacterFocalDecay + SettingEvaporator + BudgetHardCeiling 四组件协同，控制信息密度，支撑 150+ 章稳定生成。Task 101~120 已完成 Context Diet 2.0 核心组件、流式验证基础设施、评分与收敛护栏、活跃信息池控制、工作流/事实源/Context/Prompt/QualityGate/Settlement 修复、Ch111-Ch150 分段验证、DG-2 风险窗口复验、health_low 治理、报告/wrapper 加固和 V5.0 Final Acceptance。
 
-当前最终口径以 `tasks/V5-README.md` 与 `docs/STATUS.md` 为准：**V5.0 工程验收通过，P0/P1 风险为 0，全量回归 1731 passed，lint 通过**。Task 121 已从 single-run 证据补强推进到 Ch115 修复链：121b-121g 依次暴露并解除 Ch5、Ch8、Ch18、Ch115 阻断。Task 121h-121i 已完成 Ch115 工程修复与聚焦验证。Task 121j/121l 先后暴露连续 ContextEmergency AutoHalt 问题。Task 121m 已完成 QG false 硬拦截 settlement + 元标记泄漏清理；Task 121n 已完成 Context Diet 2.0 预算增量 80→250 与 human_marks 生命周期窗口 10→6；**Task 121o 已执行 `run-4ff41095` Ch1-Ch18 聚焦验证重跑，18/18 全部成功，ContextEmergency 0 次，AutoHalt 0 次，已越过 Ch13 和 Ch18**。Task 121k 负责 Prompt / 正文质量清理，可并行准备。
+当前最终口径以 `tasks/V5-README.md` 与 `docs/STATUS.md` 为准：**V5.0 工程验收通过，P0/P1 风险为 0，全量回归 1731 passed，lint 通过**。Task 121 已从 single-run 证据补强推进到 Ch115 修复链：121b-121g 依次暴露并解除 Ch5、Ch8、Ch18、Ch115 阻断。Task 121h-121i 已完成 Ch115 工程修复与聚焦验证。Task 121j/121l 先后暴露连续 ContextEmergency AutoHalt 问题。Task 121m 已完成 QG false 硬拦截 settlement + 元标记泄漏清理；Task 121n 已完成 Context Diet 2.0 预算增量 80→250 与 human_marks 生命周期窗口 10→6；**Task 121o 已执行 `run-4ff41095` Ch1-Ch18 聚焦验证重跑，18/18 全部成功，ContextEmergency 0 次，AutoHalt 0 次，已越过 Ch13 和 Ch18**。Task 121p 已启动 Ch1-Ch150 full single-run，但暴露双层根因：pipeline 未跳过已有 accepted 章节（Bug A）+ RAG 索引超时异常未捕获（Bug B），Ch1 后中断。Task 121k 负责 Prompt / 正文质量清理，可并行准备。
 
 ### 版本概览
 
@@ -31,9 +31,9 @@
 | 指标 | 数值 |
 |------|------|
 | 最近回归测试 | **1731 passed, 1 xfailed, 1 xpassed, 14 warnings** (`pytest tests/ -q`) |
-| V5.0 当前 Task | **Task 120 已完成；Task 121a-121i 已完成 Ch115 修复验证；Task 121j-121l 已完成 AutoHalt 策略修复；Task 121m-121o 已完成 QG false 拦截、元标记清理、预算调整与 Ch1-Ch18 聚焦验证（18/18 成功）；Task 121p 已启动 Ch1-Ch150 full single-run 但因 RAG embedder 超时在 Ch1 后中断，修复后重跑；Task 121k 负责 Prompt 质量清理** |
+| V5.0 当前 Task | **Task 120 已完成；Task 121a-121i 已完成 Ch115 修复验证；Task 121j-121l 已完成 AutoHalt 策略修复；Task 121m-121o 已完成 QG false 拦截、元标记清理、预算调整与 Ch1-Ch18 聚焦验证（18/18 成功）；Task 121p 已启动 Ch1-Ch150 full single-run 但因 pipeline 未跳过已有 accepted 章节 + RAG 索引超时异常未捕获在 Ch1 后中断，修复 Bug A/B 后重跑；Task 121k 负责 Prompt 质量清理** |
 | 前置状态 | **Task 115-120 全部完成；DG-2 风险窗口已关闭；health_low 已分级追踪；报告/wrapper 已加固** |
-| 当前结论 | **V5.0 工程验收通过：P0/P1 风险为 0；Ch111-Ch150 40/40 成功；Task 121o `run-4ff41095` Ch1-Ch18 18/18 成功，ContextEmergency 0 次，AutoHalt 0 次，已越过 Ch13 和 Ch18；Task 121p `run-40ceb306` 已启动但因 RAG embedder 超时在 Ch1 后中断，修复超时后重跑 Ch1-Ch150 full single-run** |
+| 当前结论 | **V5.0 工程验收通过：P0/P1 风险为 0；Ch111-Ch150 40/40 成功；Task 121o `run-4ff41095` Ch1-Ch18 18/18 成功，ContextEmergency 0 次，AutoHalt 0 次，已越过 Ch13 和 Ch18；Task 121p `run-40ceb306` 已启动但因 pipeline 未跳过已有 accepted 章节 + RAG 索引超时异常未捕获在 Ch1 后中断，修复 Bug A/B 后重跑 Ch1-Ch150 full single-run** |
 | 当前 lint | **`ruff check src/ tests/` 已通过** |
 | Task 110e 实跑 | **Ch80-Ch96 17/17 成功，QG 100%，coherence_major 0/17** |
 | V4.0 最终达标率 | Task 099: Ch2-Ch50 **81.6%** |
@@ -552,7 +552,7 @@ ruff check src/ tests/
 - **Task 119** : ✅ 长跑报告入口与 Windows Wrapper 加固 — `songyan report` 入口统一，wrapper 结果码明确。
 - **Task 120** : ✅ V5.0 Final Acceptance Package — V5.0 工程验收通过，P0/P1 风险为 0。
 
-当前建议：V5.0 已交付完成；Task 121b-121o 已持续补强 single-run 证据链，依次解除 Ch5、Ch8、Ch18、Ch115、连续 ContextEmergency AutoHalt 阻断。**Task 121o `run-4ff41095` 已验证 Ch1-Ch18 18/18 全部成功并越过 Ch13/Ch18，ContextEmergency 0 次，AutoHalt 0 次**。Task 121p 已启动新的 **Ch1-Ch150 full single-run** (`run-40ceb306`)，但 Ch1 完成后因 RAG embedder 30 秒超时而中断，修复超时配置后重跑。Task 121k（Prompt / 正文质量清理）可并行准备，重点处理 writer 字数超量、中段动能波动和短段落碎片化。V5 任务状态以 `tasks/V5-README.md` 和各 `*-DONE.md` / TODO 文档为准，规划稿已归档为设计背景。
+当前建议：V5.0 已交付完成；Task 121b-121o 已持续补强 single-run 证据链，依次解除 Ch5、Ch8、Ch18、Ch115、连续 ContextEmergency AutoHalt 阻断。**Task 121o `run-4ff41095` 已验证 Ch1-Ch18 18/18 全部成功并越过 Ch13/Ch18，ContextEmergency 0 次，AutoHalt 0 次**。Task 121p 已启动新的 **Ch1-Ch150 full single-run** (`run-40ceb306`)，但暴露双层根因：pipeline 未跳过已有 accepted 章节（Bug A）+ RAG 索引超时异常未捕获（Bug B），Ch1 后中断，修复 Bug A/B 后重跑。Task 121k（Prompt / 正文质量清理）可并行准备，重点处理 writer 字数超量、中段动能波动和短段落碎片化。V5 任务状态以 `tasks/V5-README.md` 和各 `*-DONE.md` / TODO 文档为准，规划稿已归档为设计背景。
 
 ---
 
@@ -607,7 +607,7 @@ Checkpointer 模式说明：
 - `tasks/121j-ch1-ch150-single-run-after-ch115-fix.md` — 修复后 full single-run partial 记录
 - `tasks/121k-prompt-quality-cleanup-plan.md` — Prompt / 正文质量清理规划
 - `tasks/121l-context-emergency-autohalt-review.md` — 连续 ContextEmergency AutoHalt 策略修复记录
-- `tasks/121p-ch1-ch150-single-run-rag-embedder-timeout.md` — Ch1-Ch150 full single-run RAG embedder 超时阻断记录
+- `tasks/121p-ch1-ch150-single-run-rag-embedder-timeout.md` — Ch1-Ch150 full single-run 双层根因记录（pipeline 未跳过已有 accepted 章节 + RAG 索引超时异常未捕获）
 - `archive/v4/INDEX.md` — V4.x 完整归档索引
 - `archive/v3/INDEX.md` — V3.x 完整归档索引
 

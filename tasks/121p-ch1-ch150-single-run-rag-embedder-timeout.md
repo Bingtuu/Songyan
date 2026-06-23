@@ -53,16 +53,45 @@ Ch1 的全流程实际已成功完成：
 
 ---
 
-## 4. 失败根因
+## 4. 失败根因（双层）
 
-RAG 向量索引阶段调用 `Embedder.aembed()` 时，sentence-transformers 模型首次冷加载耗时超过 30 秒，触发 `asyncio.wait_for` 超时，抛出 `CancelledError`，导致 pipeline 终止。
+### Bug A：`run_project_pipeline` 没有跳过已有 accepted 章节
 
-**代码位置**: [`src/songyan/rag/embedder.py:123`](file:///c:/Vibe%20Project/Songyan/src/songyan/rag/embedder.py#L123)
+**代码位置**: [`src/songyan/workflows/phase2_graph.py:279`](file:///c:/Vibe%20Project/Songyan/src/songyan/workflows/phase2_graph.py#L279)
+
+```python
+for chapter_number in range(start, end + 1):
+    # ... 直接调用 run_chapter_pipeline，不做任何存在性检查
+```
+
+`run_project_pipeline` 只是简单遍历 `range(start, end + 1)`，**完全没有检查 `chapter_heads` 表中是否已有 `accepted` 状态**。种子章节 Ch1（通过 `import_seed_chapter` 写入，status=`accepted`，version 1）被完全忽略，系统重新走了一遍完整 pipeline（日志中 `version_number=2` 证明了这一点）。
+
+**合理行为**：运行前查询 `chapter_heads`，跳过已有 `accepted` 的章节，直接从未完成章节继续。
+
+### Bug B：RAG 索引的超时异常未被捕获
+
+**代码位置**: [`src/songyan/workflows/_helpers.py:518`](file:///c:/Vibe%20Project/Songyan/src/songyan/workflows/_helpers.py#L518) 和 [`_nodes.py:2173`](file:///c:/Vibe%20Project/Songyan/src/songyan/workflows/_nodes.py#L2173)
+
+```python
+# _helpers.py
+except (RuntimeError, OSError, ConnectionError, ValueError, TypeError):
+    logger.exception("rag.index_failed", ...)
+
+# _nodes.py
+except (RuntimeError, OSError) as exc:
+    logger.warning("settlement_extractor_node.rag_index_failed", ...)
+```
+
+两处都只捕获了 `RuntimeError` 和 `OSError`，但 `asyncio.wait_for(timeout=30.0)` 超时抛出的是 **`asyncio.TimeoutError`** 或 **`asyncio.CancelledError`**，这两个异常**不在捕获列表中**，直接向上穿透，导致整个 `project_pipeline` 崩溃。
+
+即使代码注释写了"非阻塞：失败不导致 settlement 回滚"，超时例外完全绕过了这个保护。
+
+**底层超时位置**: [`src/songyan/rag/embedder.py:123`](file:///c:/Vibe%20Project/Songyan/src/songyan/rag/embedder.py#L123)
 
 ```python
 return await asyncio.wait_for(
     loop.run_in_executor(None, self.embed, texts),
-    timeout=30.0   # ← 首次模型加载不足
+    timeout=30.0   # ← 首次模型冷加载不足
 )
 ```
 
@@ -73,23 +102,48 @@ return await asyncio.wait_for(
 CancelledError
 ```
 
+**核心结论**：`run-40ceb306` 的失败不是因为"Ch1 需要 RAG"本身有问题，而是因为 **pipeline 没有正确识别 Ch1 已经存在**（Bug A），把它当作新章重新生成，然后在新的 RAG 索引步骤因为冷启动超时而崩溃（Bug B）。
+
 ---
 
 ## 5. 修复方案
 
-| 方案 | 操作 | 影响 |
-|------|------|------|
-| **A（推荐）** | `timeout=30.0` → `timeout=120.0`（或 180.0） | 覆盖模型首次冷加载 + 后续编码 |
-| B | 运行前预加载 embedding 模型 | 消除冷启动，但增加启动时间 |
-| C | 将 RAG 索引失败降级为 warning，不阻断 pipeline | 牺牲 RAG 检索质量，不推荐 |
+### Bug A 修复：`run_project_pipeline` 支持跳过已有 accepted 章节
+
+**方案 A1（推荐）**：在 `run_project_pipeline` 启动前，查询 `chapter_heads` 表，获取当前项目所有 `status='accepted'` 的章节号列表。遍历章节范围时，如果 `chapter_number` 在该列表中，直接跳过。
+
+```python
+# 伪代码
+accepted_chapters = await unit_of_work.chapter_heads.get_accepted_chapters(project_id)
+for chapter_number in range(start, end + 1):
+    if chapter_number in accepted_chapters:
+        logger.info("skipping_already_accepted", chapter_number=chapter_number)
+        continue
+    # ... 正常 pipeline
+```
+
+**方案 A2**：在 CLI `run` 命令层支持 `--resume` 或自动检测，只运行未完成的章节。
+
+### Bug B 修复：RAG 索引异常捕获补全 + 超时延长
+
+| 子方案 | 操作 | 影响 |
+|--------|------|------|
+| **B1（必做）** | `_helpers.py` 和 `_nodes.py` 的 catch 块增加 `asyncio.TimeoutError` | 确保超时不会阻断 pipeline |
+| **B2（推荐）** | `timeout=30.0` → `timeout=120.0`（或 180.0） | 覆盖模型首次冷加载 + 后续编码 |
+| B3 | 运行前预加载 embedding 模型 | 消除冷启动，但增加启动时间 |
+| B4 | 将 RAG 索引失败降级为 warning（已有设计意图，但异常捕获有漏洞） | 不牺牲质量，只完善异常处理 |
 
 ---
 
 ## 6. 下一步
 
-1. 执行方案 A：修改 `embedder.py` 超时配置。
-2. 重新启动 Ch1-Ch150 full single-run（新建 run_id / 复用当前项目断点续跑）。
-3. 验证 RAG 索引不再超时。
+1. **执行 Bug A 修复**：修改 `phase2_graph.py` `run_project_pipeline`，跳过已有 `accepted` 的章节。
+2. **执行 Bug B 修复**：
+   - `_helpers.py:518` catch 块增加 `asyncio.TimeoutError`
+   - `_nodes.py:2173` catch 块增加 `asyncio.TimeoutError`
+   - `embedder.py:123` `timeout=30.0` → `timeout=120.0`
+3. **单测验证**：补充 `TimeoutError` 被正确捕获的测试用例。
+4. **重新启动 Ch1-Ch150 full single-run**：使用 `proj-d860902d` 断点续跑（从 Ch2 开始），或新建项目重新验证。
 
 ---
 
