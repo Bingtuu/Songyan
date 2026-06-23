@@ -24,6 +24,7 @@
 | `tasks/121m-qg-false-block-and-meta-tag-cleanup.md` | Task 121m：QG false 硬拦截与元标记泄漏清理 |
 | `tasks/121n-context-diet-budget-and-human-marks-lifecycle.md` | Task 121n：Context Diet 2.0 预算调整与 human_marks 生命周期优化 |
 | `tasks/121o-ch1-ch18-focused-rerun-validation.md` | Task 121o：Ch1-Ch18 聚焦验证重跑 |
+| `tasks/121p-ch1-ch150-single-run-rag-embedder-timeout.md` | Task 121p：Ch1-Ch150 full single-run RAG embedder 超时阻断 |
 
 ## 按场景查阅
 
@@ -44,6 +45,7 @@
 | Ch115 工程修复 | `tasks/121h-ch115-quality-gate-rewrite-state-review.md` |
 | Ch115 聚焦验证 | `tasks/121i-ch115-focused-rerun-and-quality-window.md` |
 | Ch1-Ch150 修复后 full single-run | `tasks/121j-ch1-ch150-single-run-after-ch115-fix.md` |
+| Ch1-Ch150 RAG embedder 超时阻断 | `tasks/121p-ch1-ch150-single-run-rag-embedder-timeout.md` |
 | Prompt / 正文质量清理 | `tasks/121k-prompt-quality-cleanup-plan.md` |
 | ContextEmergency AutoHalt review | `tasks/121l-context-emergency-autohalt-review.md` |
 | 架构手册 | `docs/architecture/04-vibe-coding-engineering.md` |
