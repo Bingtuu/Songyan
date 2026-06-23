@@ -120,7 +120,7 @@ class Embedder:
         loop = asyncio.get_event_loop()
         return await asyncio.wait_for(
             loop.run_in_executor(None, self.embed, texts),
-            timeout=30.0
+            timeout=120.0
         )
 
     @classmethod

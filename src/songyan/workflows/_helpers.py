@@ -515,7 +515,7 @@ async def _index_accepted_chapter(
             chunk_count=len(chunks),
             embedding_shape=embeddings.shape,
         )
-    except (RuntimeError, OSError, ConnectionError, ValueError, TypeError):
+    except (RuntimeError, OSError, ConnectionError, ValueError, TypeError, TimeoutError):
         logger.exception(
             "rag.index_failed",
             project_id=project_id,

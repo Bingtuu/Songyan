@@ -76,7 +76,16 @@ from songyan.workflows.review_merger import merge_reviews
 logger = structlog.get_logger(__name__)
 
 _REWRITE_ROLLBACK_SCORE_DELTA = 0.08
-_SAFE_BEST_MIN_OVERALL_SCORE = 0.82
+
+
+def _safe_best_min_score(chapter_number: int) -> float:
+    """章节阶段感知的 safe-best 门槛：早期章节天然分数偏低。"""
+    if chapter_number <= 20:
+        return 0.75
+    elif chapter_number <= 50:
+        return 0.78
+    else:
+        return 0.82
 
 _COHERENCE_CATEGORIES: set[ReviewCategory] = {
     ReviewCategory.WORLD_CONSISTENCY,
@@ -206,7 +215,7 @@ def _score_card_overall(score_card_raw: dict[str, Any] | None) -> float | None:
         return None
 
 
-def _score_card_is_safe_best(score_card_raw: dict[str, Any] | None) -> bool:
+def _score_card_is_safe_best(score_card_raw: dict[str, Any] | None, chapter_number: int) -> bool:
     """判断 best 是否足够安全，可保护其不被低质量 rewrite 覆盖."""
     if not isinstance(score_card_raw, dict):
         return False
@@ -219,7 +228,27 @@ def _score_card_is_safe_best(score_card_raw: dict[str, Any] | None) -> bool:
         return False
 
     return (
-        score_card.overall_score >= _SAFE_BEST_MIN_OVERALL_SCORE
+        score_card.overall_score >= _safe_best_min_score(chapter_number)
+        and score_card.flags.length_ok
+        and score_card.flags.budget_ok
+        and not score_card.flags.coherence_critical
+    )
+
+
+def _score_card_is_degraded_acceptable(score_card_raw: dict[str, Any] | None) -> bool:
+    """判断 best 是否满足降级接受条件：分数尚可但 QG 未完全通过。"""
+    if not isinstance(score_card_raw, dict):
+        return False
+    try:
+        from songyan.models import ChapterScoreCard
+
+        score_card = ChapterScoreCard.model_validate(score_card_raw)
+    except Exception:
+        logger.warning("workflow.invalid_degraded_accept_score_card", exc_info=True)
+        return False
+
+    return (
+        score_card.overall_score >= 0.70
         and score_card.flags.length_ok
         and score_card.flags.budget_ok
         and not score_card.flags.coherence_critical
@@ -877,9 +906,21 @@ async def rewrite_node(state: dict[str, Any]) -> dict[str, Any]:
         has_rollback_target = bool(
             rollback_version and rollback_version.version_id != version.version_id
         )
+        # 使用回滚目标版本的 score_card 进行 QG 和 degraded_accept 判断
+        rollback_score_card = best_score_card
+        if rollback_score_card is None and rollback_version:
+            rollback_score_card = _score_card_for_version(
+                rollback_version.score_card,
+                rollback_version.version_id,
+            )
         recovered_with_qg_pass = bool(
-            best_version and best_score_card and _score_card_passes_quality_gate(best_score_card)
+            rollback_version
+            and rollback_score_card
+            and _score_card_passes_quality_gate(rollback_score_card)
         )
+        degraded_accept = False
+        if not recovered_with_qg_pass and rollback_score_card:
+            degraded_accept = _score_card_is_degraded_acceptable(rollback_score_card)
         logger.info(
             "rewrite.struct_integrity_rollback_decision",
             project_id=state["project_id"],
@@ -889,6 +930,7 @@ async def rewrite_node(state: dict[str, Any]) -> dict[str, Any]:
             rollback_source=rollback_source,
             has_rollback_target=has_rollback_target,
             recovered_with_qg_pass=recovered_with_qg_pass,
+            degraded_accept=degraded_accept,
             skip_settlement=not has_rollback_target,
             convergence_failed=not recovered_with_qg_pass,
         )
@@ -905,9 +947,13 @@ async def rewrite_node(state: dict[str, Any]) -> dict[str, Any]:
             "_has_major": False,
             "_convergence_failed": not recovered_with_qg_pass,
             "_skip_settlement": not has_rollback_target,
-            "_settlement_needs_human_review": not has_rollback_target,
+            "_settlement_needs_human_review": not has_rollback_target and not degraded_accept,
             "_quality_gate_passed": recovered_with_qg_pass,
-            "_score_card": best_score_card if recovered_with_qg_pass else state.get("_score_card"),
+            "_degraded_accept": degraded_accept,
+            "_score_card": (
+                rollback_score_card if (recovered_with_qg_pass or degraded_accept)
+                else state.get("_score_card")
+            ),
             "status": "human_confirm",
         }
 
@@ -1159,7 +1205,7 @@ async def review_merger_node(state: dict[str, Any]) -> dict[str, Any]:
         if (
             active_best
             and active_best_score_card
-            and _score_card_is_safe_best(active_best_score_card)
+            and _score_card_is_safe_best(active_best_score_card, state["chapter_number"])
             and best_overall is not None
             and current_score < best_overall - _REWRITE_ROLLBACK_SCORE_DELTA
         ):
@@ -1763,6 +1809,23 @@ async def quality_gate_node(state: dict[str, Any]) -> dict[str, Any]:
                     result["_needs_revision"] = False
                     return result
 
+                # Task 121q: degraded accept 路径 — 分数尚可但 QG 未完全通过
+                if _score_card_is_degraded_acceptable(active_best_score_card):
+                    logger.warning(
+                        "quality_gate.degraded_accept",
+                        project_id=state["project_id"],
+                        chapter_number=state["chapter_number"],
+                        failed_version_id=version.version_id,
+                        recovered_version_id=active_best.version_id,
+                        failures=failures,
+                    )
+                    result["_quality_gate_passed"] = False
+                    result["_convergence_failed"] = True
+                    result["_degraded_accept"] = True
+                    result["_skip_settlement"] = False
+                    result["_settlement_needs_human_review"] = False
+                    return result
+
             else:
                 result["_skip_settlement"] = True
                 result["_settlement_needs_human_review"] = True
@@ -2043,7 +2106,8 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
 
     # Task 121m: QG false 版本禁止进入 settlement，防止劣质上下文污染
     _qg_passed = state.get("_quality_gate_passed")
-    if _qg_passed is False:
+    _degraded_accept = state.get("_degraded_accept", False)
+    if _qg_passed is False and not _degraded_accept:
         logger.warning(
             "settlement_extractor_node.qg_false_blocked",
             project_id=state["project_id"],
@@ -2056,6 +2120,14 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
             "status": "settlement_review",
             "_settlement_needs_human_review": True,
         }
+
+    if _degraded_accept:
+        logger.warning(
+            "settlement_extractor_node.degraded_accept_continue",
+            project_id=state["project_id"],
+            chapter_number=state["chapter_number"],
+            version_id=version.version_id,
+        )
 
     # Task 111d: skipped settlement 不能再伪装为 accepted/done。
     if state.get("_skip_settlement", False):
@@ -2170,7 +2242,7 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
                 content=version.content,
                 rag_config=mode.rag_config,
             )
-        except (RuntimeError, OSError) as exc:
+        except (RuntimeError, OSError, TimeoutError) as exc:
             logger.warning(
                 "settlement_extractor_node.rag_index_failed",
                 error=str(exc),

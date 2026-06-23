@@ -25,6 +25,12 @@
 | `tasks/121n-context-diet-budget-and-human-marks-lifecycle.md` | Task 121n：Context Diet 2.0 预算调整与 human_marks 生命周期优化 |
 | `tasks/121o-ch1-ch18-focused-rerun-validation.md` | Task 121o：Ch1-Ch18 聚焦验证重跑 |
 | `tasks/121p-ch1-ch150-single-run-rag-embedder-timeout.md` | Task 121p：Ch1-Ch150 full single-run RAG embedder 超时阻断 |
+| `tasks/121q-safe-best-threshold-dynamic-fix.md` | Task 121q：Safe-Best 阈值动态化修复 |
+| `tasks/121r-prompt-quality-cleanup-execution.md` | Task 121r：Prompt / 正文质量清理执行 |
+| `tasks/122a-unit-test-matrix-dynamic-thresholds.md` | Task 122a：单元测试矩阵——动态阈值与降级回滚 |
+| `tasks/122b-integration-test-pipeline-scenarios.md` | Task 122b：集成测试——Pipeline 关键场景 |
+| `tasks/122c-e2e-validation-windows.md` | Task 122c：端到端验证窗口 |
+| `tasks/122d-stress-test-long-sequence-stability.md` | Task 122d：压力测试——150 章长序列稳定性 |
 
 ## 按场景查阅
 
@@ -46,7 +52,13 @@
 | Ch115 聚焦验证 | `tasks/121i-ch115-focused-rerun-and-quality-window.md` |
 | Ch1-Ch150 修复后 full single-run | `tasks/121j-ch1-ch150-single-run-after-ch115-fix.md` |
 | Ch1-Ch150 RAG embedder 超时阻断 | `tasks/121p-ch1-ch150-single-run-rag-embedder-timeout.md` |
+| Safe-Best 阈值动态化 | `tasks/121q-safe-best-threshold-dynamic-fix.md` |
 | Prompt / 正文质量清理 | `tasks/121k-prompt-quality-cleanup-plan.md` |
+| Prompt 质量清理执行 | `tasks/121r-prompt-quality-cleanup-execution.md` |
+| 单元测试矩阵 | `tasks/122a-unit-test-matrix-dynamic-thresholds.md` |
+| 集成测试场景 | `tasks/122b-integration-test-pipeline-scenarios.md` |
+| 端到端验证窗口 | `tasks/122c-e2e-validation-windows.md` |
+| 压力测试长序列 | `tasks/122d-stress-test-long-sequence-stability.md` |
 | ContextEmergency AutoHalt review | `tasks/121l-context-emergency-autohalt-review.md` |
 | 架构手册 | `docs/architecture/04-vibe-coding-engineering.md` |
 | 技术参考 | `docs/architecture/05-tech-reference.md` |

@@ -12,6 +12,7 @@ import structlog
 from songyan.agents.continuity_auditor import ContinuityAuditor
 from songyan.db.connection import get_db
 from songyan.db.project_run_repo import ProjectRunRepository
+from songyan.db.repository import ChapterHeadRepository
 from songyan.exceptions import AutoHaltException
 from songyan.models import ProjectRunResult, ProjectRunState
 from songyan.workflows._helpers import new_id
@@ -276,7 +277,28 @@ async def run_project_pipeline(
     # 重置检查指针，消除冷启动导致的首章 WAL 读一致性窗口问题
     await reset_checkpointer()
 
+    # Bug A 修复：查询已有 accepted 章节并跳过
+    chapter_head_repo = ChapterHeadRepository()
+    all_heads = await chapter_head_repo.list_by_project(project_id)
+    accepted_chapters = {
+        h.chapter_number for h in all_heads if h.status == "accepted"
+    }
+    if accepted_chapters:
+        logger.info(
+            "project_pipeline.skip_accepted_chapters",
+            project_id=project_id,
+            accepted_chapters=sorted(accepted_chapters),
+        )
+
     for chapter_number in range(start, end + 1):
+        if chapter_number in accepted_chapters:
+            logger.info(
+                "project_pipeline.skipping_already_accepted",
+                run_id=run_id,
+                chapter_number=chapter_number,
+            )
+            completed.append(chapter_number)
+            continue
         run_state.current_chapter = chapter_number
         await _save_run_state(run_state)
 
