@@ -30,8 +30,8 @@
 
 | 指标 | 数值 |
 |------|------|
-| 最近回归测试 | **1731 passed, 1 xfailed, 1 xpassed, 14 warnings** (`pytest tests/ -q`) |
-| V5.0 当前 Task | **Task 120 已完成；Task 121a-121i 已完成 Ch115 修复验证；Task 121j-121l 已完成 AutoHalt 策略修复；Task 121m-121o 已完成 QG false 拦截、元标记清理、预算调整与 Ch1-Ch18 聚焦验证；Task 121p 已完成 Bug A/B 修复；Task 121q 已完成（0.82 动态化 + degraded_accept，Ch1-Ch150 full single-run 150/150 验证通过）；Task 121r TODO（Prompt 清理执行）；Task 122a-d TODO（测试矩阵）** |
+| 最近回归测试 | **1828 passed, 2 skipped, 1 xfailed, 0 xpassed, 2 warnings** (`pytest tests/ -q`) |
+| V5.0 当前 Task | **Task 120 已完成；Task 121a-121q 全部完成；Pass 14-18 V5.1 Code Review 已完成，8 项缺口全部修复（TS-01/02/03/08、PR-05、ST-03、AG-04、TS-10）；Task 121r TODO（Prompt 清理执行）；Task 122d TODO（150 章压力测试）** |
 | 前置状态 | **Task 115-121q 全部完成；DG-2 风险窗口已关闭；health_low 已分级追踪；报告/wrapper 已加固；0.82 阈值已动态化并验证** |
 | 当前结论 | **V5.0 工程验收通过：P0/P1 风险为 0；Ch111-Ch150 40/40 成功；Task 121q full single-run `run-a2bed648` Ch1-Ch150 150/150 全部成功，ContextEmergency 0 次，AutoHalt 0 次，failed 0 次，无间隙** |
 | 当前 lint | **`ruff check src/ tests/` 已通过** |
@@ -39,7 +39,7 @@
 | V4.0 最终达标率 | Task 099: Ch2-Ch50 **81.6%** |
 | V4.x 归档 | `archive/v4/`（报告 + 任务 + 验证数据）|
 
-测试口径说明：`1 xfailed` 为已知非阻断项，`1 xpassed` 为既有标记状态变化；14 warnings 均为既有 pytest/依赖警告。
+测试口径说明：`1 xfailed` 为已知非阻断项；`0 xpassed`（Pass 14-18 已修复）；2 warnings 为 transformers DeprecationWarning（与项目代码无关）。新增 25 个测试，零回归。
 
 ### V5.0 核心决策
 
@@ -448,7 +448,7 @@ pytest -k "not integration" -q
 
 ```bash
 pytest tests/ -q
-# Current baseline: 1731 passed, 1 xfailed, 1 xpassed, 14 warnings
+# Current baseline: 1828 passed, 2 skipped, 1 xfailed, 0 xpassed, 2 warnings
 
 ruff check src/ tests/
 # Current baseline: All checks passed!
@@ -552,7 +552,7 @@ ruff check src/ tests/
 - **Task 119** : ✅ 长跑报告入口与 Windows Wrapper 加固 — `songyan report` 入口统一，wrapper 结果码明确。
 - **Task 120** : ✅ V5.0 Final Acceptance Package — V5.0 工程验收通过，P0/P1 风险为 0。
 
-当前建议：V5.0 已交付完成；Task 121b-121q 已持续补强 single-run 证据链，依次解除 Ch5、Ch8、Ch18、Ch115、连续 ContextEmergency AutoHalt、0.82 阈值早期章节阻断。**Task 121q full single-run `run-a2bed648` 已完成 Ch1-Ch150 150/150 全部成功，ContextEmergency 0 次，AutoHalt 0 次，degraded_accept 0 次，failed 0 次，无间隙**，一次性单命令最终证据已获取。Task 121r（Prompt / 正文质量清理）可并行准备。Task 122a-d（系统性测试矩阵）启动。V5 任务状态以 `tasks/V5-README.md` 和各 `*-DONE.md` / TODO 文档为准，规划稿已归档为设计背景。
+当前建议：V5.0 已交付完成；Task 121b-121q 已持续补强 single-run 证据链，依次解除 Ch5、Ch8、Ch18、Ch115、连续 ContextEmergency AutoHalt、0.82 阈值早期章节阻断。**Task 121q full single-run `run-a2bed648` 已完成 Ch1-Ch150 150/150 全部成功，ContextEmergency 0 次，AutoHalt 0 次，degraded_accept 0 次，failed 0 次，无间隙**，一次性单命令最终证据已获取。**Pass 14-18 V5.1 Code Review 已完成，全部 8 项缺口已修复**，新增 25 个测试，pytest 基线 1828 passed，零回归。Task 121r（Prompt / 正文质量清理）可并行准备。Task 122d（150 章压力测试）待启动。V5 任务状态以 `tasks/V5-README.md` 和各 `*-DONE.md` / TODO 文档为准，规划稿已归档为设计背景。
 
 ---
 

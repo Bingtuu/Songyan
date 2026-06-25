@@ -151,6 +151,10 @@ def revision_router(state: Phase1State) -> str:
     if state.get("_revision_rebound"):
         return "pass"
     max_r = state.get("_max_revision_rounds", _MAX_REVISION_ROUNDS)
+    # AG-04: 显式检查 revision 是否引入了新问题
+    new_issues = state.get("_new_issues_introduced")
+    if new_issues and rround >= max_r:
+        return "rewrite"
     if needs and rround >= max_r:
         return "rewrite"
     if needs and rround < max_r:

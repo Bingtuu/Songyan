@@ -313,6 +313,15 @@ class TestRevisionRouter:
         )
         assert revision_router(state) == "pass"
 
+    def test_new_issues_introduced_at_max_round_triggers_rewrite(self) -> None:
+        """AG-04: revision 引入新问题时，达到最大轮次后触发 rewrite."""
+        state = _base_revision_state(
+            revision_round=2,
+            _needs_revision=True,
+            _new_issues_introduced=[{"issue_id": "new1", "severity": "major"}],
+        )
+        assert revision_router(state) == "rewrite"
+
 
 class TestQualityGateRouter:
     def test_human_review_required_blocks_graph(self) -> None:

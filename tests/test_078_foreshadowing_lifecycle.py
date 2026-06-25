@@ -16,10 +16,10 @@ from songyan.models import (
     ForeshadowingItem,
     ForgottenItem,
     OrphanedSetting,
+    OverdueForeshadowing,
+    StateMismatch,
 )
 from songyan.models.creative_mode import HumanMemoryConfig
-
-pytestmark = pytest.mark.asyncio
 
 
 @pytest.fixture
@@ -56,6 +56,7 @@ async def _seed_project(project_id: str = "p1") -> None:
 
 
 class TestArchiveOverdue:
+    @pytest.mark.asyncio
     async def test_archives_expected_resolve_past_threshold(self, fs_db: Path) -> None:
         await _seed_project("p1")
         repo = ForeshadowingRepository()
@@ -89,6 +90,7 @@ class TestArchiveOverdue:
         assert "fs-old" not in ids
         assert "fs-recent" in ids
 
+    @pytest.mark.asyncio
     async def test_does_not_archive_resolved(self, fs_db: Path) -> None:
         await _seed_project("p1")
         repo = ForeshadowingRepository()
@@ -105,6 +107,7 @@ class TestArchiveOverdue:
         archived = await repo.archive_overdue("p1", current_chapter=60)
         assert archived == 0
 
+    @pytest.mark.asyncio
     async def test_archives_zero_expected(self, fs_db: Path) -> None:
         await _seed_project("p1")
         repo = ForeshadowingRepository()
@@ -129,6 +132,7 @@ class TestArchiveOverdue:
 
 
 class TestListActiveExcludesArchived:
+    @pytest.mark.asyncio
     async def test_list_active_no_archived(self, fs_db: Path) -> None:
         await _seed_project("p1")
         repo = ForeshadowingRepository()
@@ -300,6 +304,7 @@ class TestGenerateConstraintsBudget:
 
 
 class TestWriteConstraintsBudget:
+    @pytest.mark.asyncio
     async def test_skips_when_budget_exhausted(self, fs_db: Path) -> None:
         await _seed_project("p1")
         from songyan.db.human_mark_repo import HumanMarkRepository
@@ -341,6 +346,7 @@ class TestWriteConstraintsBudget:
         written = await write_constraints(report)
         assert written == 0  # 预算已耗尽，跳过写入
 
+    @pytest.mark.asyncio
     async def test_writes_when_under_budget(self, fs_db: Path) -> None:
         await _seed_project("p1")
         report = ContinuityReport(
@@ -362,3 +368,130 @@ class TestWriteConstraintsBudget:
 
         written = await write_constraints(report)
         assert written == 1  # 预算充足，正常写入
+
+
+class TestConstraintsIdempotentWrite:
+    @pytest.mark.asyncio
+    async def test_same_mark_not_duplicated(self, fs_db: Path) -> None:
+        """验证 INSERT OR REPLACE 幂等: 同一断点更新而非重复."""
+        await _seed_project("p1")
+        report = ContinuityReport(
+            report_id="r1",
+            project_id="p1",
+            checked_up_to_chapter=50,
+            orphaned_settings=[
+                OrphanedSetting(
+                    tracking_id="t1",
+                    setting_key="k",
+                    setting_name="n",
+                    introduced_in_chapter=1,
+                    last_mentioned_chapter=2,
+                    chapters_since_mention=5,
+                )
+            ],
+        )
+        from songyan.agents.continuity_auditor._constraints import write_constraints
+        from songyan.db.human_mark_repo import HumanMarkRepository
+
+        written_first = await write_constraints(report)
+        assert written_first == 1
+
+        written_second = await write_constraints(report)
+        assert written_second == 1  # 再次写入同一份报告不应失败
+
+        # 验证数据库中只有 1 条 unresolved 约束
+        repo = HumanMarkRepository()
+        count = await repo.count_unresolved_by_chapter("p1", 50)
+        assert count == 1
+
+
+class TestConstraintsRespectLimits:
+    def test_respects_max_orphaned(self) -> None:
+        """验证 MAX_ORPHANED=8 上限."""
+        report = ContinuityReport(
+            report_id="r1",
+            project_id="p1",
+            checked_up_to_chapter=50,
+            orphaned_settings=[
+                OrphanedSetting(
+                    tracking_id=f"t{i}",
+                    setting_key=f"k{i}",
+                    setting_name=f"n{i}",
+                    introduced_in_chapter=1,
+                    last_mentioned_chapter=2,
+                    chapters_since_mention=5,
+                )
+                for i in range(20)
+            ],
+        )
+        marks = _generate_constraints(report)
+        orphaned_marks = [m for m in marks if m.mark_type == "setting"]
+        assert len(orphaned_marks) == 8
+
+    def test_respects_max_forgotten(self) -> None:
+        """验证 MAX_FORGOTTEN=5 上限."""
+        report = ContinuityReport(
+            report_id="r1",
+            project_id="p1",
+            checked_up_to_chapter=50,
+            forgotten_items=[
+                ForgottenItem(
+                    track_id=f"i{i}",
+                    character_id="c1",
+                    item_name=f"item{i}",
+                    acquired_in_chapter=1,
+                    last_used_chapter=2,
+                )
+                for i in range(20)
+            ],
+        )
+        marks = _generate_constraints(report)
+        forgotten_marks = [m for m in marks if m.mark_type == "item"]
+        assert len(forgotten_marks) == 5
+
+    def test_respects_max_mismatches(self) -> None:
+        """验证 MAX_MISMATCHES=5 上限."""
+        report = ContinuityReport(
+            report_id="r1",
+            project_id="p1",
+            checked_up_to_chapter=50,
+            state_mismatches=[
+                StateMismatch(
+                    character_id=f"c{i}",
+                    field="mood",
+                    chapter_a=1,
+                    value_a="a",
+                    chapter_b=2,
+                    value_b="b",
+                    issue="矛盾",
+                )
+                for i in range(20)
+            ],
+        )
+        marks = _generate_constraints(report)
+        mismatch_marks = [m for m in marks if m.mark_type == "character"]
+        assert len(mismatch_marks) == 5
+
+    def test_respects_max_overdue(self) -> None:
+        """验证 MAX_OVERDUE=10 上限."""
+        report = ContinuityReport(
+            report_id="r1",
+            project_id="p1",
+            checked_up_to_chapter=50,
+            overdue_foreshadowings=[
+                OverdueForeshadowing(
+                    foreshadowing_id=f"fs{i}",
+                    description=f"伏笔{i}",
+                    planted_in_chapter=1,
+                    expected_resolve_chapter=10,
+                    overdue_by=i + 1,
+                )
+                for i in range(20)
+            ],
+        )
+        marks = _generate_constraints(report)
+        overdue_marks = [m for m in marks if m.mark_type == "foreshadowing"]
+        assert len(overdue_marks) == 10
+        # 验证保留的是 overdue_by 最大的（最紧急的）
+        assert overdue_marks[0].note == "伏笔 '伏笔19' 已逾期 20 章未回收" \
+            "（预期回收: 第10章），本章必须回收。"

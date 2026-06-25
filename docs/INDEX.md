@@ -61,6 +61,8 @@
 | 端到端验证窗口 | `tasks/122c-e2e-validation-windows.md` |
 | 压力测试长序列 | `tasks/122d-stress-test-long-sequence-stability.md` |
 | ContextEmergency AutoHalt review | `tasks/121l-context-emergency-autohalt-review.md` |
+| V5.1 Code Review 总规划 | `docs/reports/pass14-to-pass18-v51-review-roadmap.md` |
+| V5.1 Code Review 修复汇总 | `docs/reports/pass14-final-fix-summary.md` |
 | 架构手册 | `docs/architecture/04-vibe-coding-engineering.md` |
 | 技术参考 | `docs/architecture/05-tech-reference.md` |
 | Code Review | `docs/code-review-plan.md` |

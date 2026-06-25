@@ -5,12 +5,10 @@ Task 118: 定义 health_low 分级策略，使 continuity 信号可追踪、可�
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal
+from typing import Literal
 
-if TYPE_CHECKING:
-    import aiosqlite
-
-from songyan.db.connection import get_db
+from songyan.db.continuity_repo import ContinuityReportRepository
+from songyan.db.human_mark_repo import HumanMarkRepository
 from songyan.models.continuity import ContinuityReport
 from songyan.models.human_mark import HumanMark
 
@@ -162,8 +160,6 @@ async def collect_continuity_health_metrics(
         - human_marks_summary: {"total": N, "P1": N, "P2": N, "P3": N, "unresolved": N}
         - chapter_details: 每章详细数据列表
     """
-    import aiosqlite
-
     result: dict[str, object] = {
         "health_low_chapters": [],
         "total_reports": 0,
@@ -172,78 +168,60 @@ async def collect_continuity_health_metrics(
         "chapter_details": [],
     }
 
-    async with get_db() as conn:
-        conn.row_factory = aiosqlite.Row
+    report_repo = ContinuityReportRepository()
+    mark_repo = HumanMarkRepository()
 
-        # Query continuity reports for the chapter range
-        cursor = await conn.execute(
-            """SELECT report_id, checked_up_to_chapter, overall_health_score,
-                      orphaned_settings, forgotten_items, state_mismatches, overdue_foreshadowings
-               FROM continuity_reports
-               WHERE project_id = ? AND checked_up_to_chapter BETWEEN ? AND ?
-               ORDER BY checked_up_to_chapter""",
-            (project_id, chapter_start, chapter_end),
-        )
-        report_rows = await cursor.fetchall()
+    reports = await report_repo.list_by_chapter_range(project_id, chapter_start, chapter_end)
+    marks = await mark_repo.list_by_chapter_range(
+        project_id, chapter_start, chapter_end, source="continuity_auditor"
+    )
 
-        health_low_chapters: list[int] = []
-        chapter_details: list[dict] = []
+    health_low_chapters: list[int] = []
+    chapter_details: list[dict] = []
 
-        for row in report_rows:
-            chapter = row["checked_up_to_chapter"]
-            score = row["overall_health_score"]
-            is_health_low = score < 7.0
+    for report in reports:
+        chapter = report.checked_up_to_chapter
+        score = report.overall_health_score
+        is_health_low = score < 7.0
 
-            if is_health_low:
-                health_low_chapters.append(chapter)
+        if is_health_low:
+            health_low_chapters.append(chapter)
 
-            chapter_details.append({
-                "chapter_number": chapter,
-                "health_score": score,
-                "health_low": is_health_low,
-            })
+        chapter_details.append({
+            "chapter_number": chapter,
+            "health_score": score,
+            "health_low": is_health_low,
+        })
 
-        result["health_low_chapters"] = health_low_chapters
-        result["affected_chapters"] = health_low_chapters
-        result["total_reports"] = len(report_rows)
-        result["chapter_details"] = chapter_details
+    result["health_low_chapters"] = health_low_chapters
+    result["affected_chapters"] = health_low_chapters
+    result["total_reports"] = len(reports)
+    result["chapter_details"] = chapter_details
 
-        # Query human marks for the chapter range (from continuity_auditor source)
-        cursor = await conn.execute(
-            """SELECT mark_id, mark_type, priority, source, severity,
-                      resolved_at, created_at_chapter, version_id
-               FROM human_marks
-               WHERE project_id = ?
-                 AND created_at_chapter BETWEEN ? AND ?
-                 AND source = 'continuity_auditor'""",
-            (project_id, chapter_start, chapter_end),
-        )
-        mark_rows = await cursor.fetchall()
+    marks_summary: dict[str, int] = {
+        "total": len(marks), "P1": 0, "P2": 0, "P3": 0, "unresolved": 0
+    }
+    for mark in marks:
+        severity = mark.severity if mark.severity else classify_mark_as_severity(mark)
+        if severity == "P1":
+            marks_summary["P1"] += 1
+        elif severity == "P2":
+            marks_summary["P2"] += 1
+        else:
+            marks_summary["P3"] += 1
+        if mark.resolved_at is None:
+            marks_summary["unresolved"] += 1
 
-        marks_summary: dict[str, int] = {
-            "total": len(mark_rows), "P1": 0, "P2": 0, "P3": 0, "unresolved": 0
-        }
-        for row in mark_rows:
-            severity = row["severity"] if row["severity"] else classify_row_as_severity(row)
-            if severity == "P1":
-                marks_summary["P1"] += 1
-            elif severity == "P2":
-                marks_summary["P2"] += 1
-            else:
-                marks_summary["P3"] += 1
-            if row["resolved_at"] is None:
-                marks_summary["unresolved"] += 1
-
-        result["human_marks_summary"] = marks_summary
+    result["human_marks_summary"] = marks_summary
 
     return result
 
 
-def classify_row_as_severity(row: aiosqlite.Row) -> Literal["P1", "P2", "P3"]:
-    """从 DB row 推断 severity（用于旧记录或 DB 列缺失时）。"""
-    mark_type = row["mark_type"]
-    priority = row["priority"]
-    note = row.get("note", "") or ""
+def classify_mark_as_severity(mark: HumanMark) -> Literal["P1", "P2", "P3"]:
+    """从 HumanMark 推断 severity（用于旧记录或 DB 列缺失时）。"""
+    mark_type = mark.mark_type
+    priority = mark.priority
+    note = mark.note or ""
 
     if mark_type == "character" or "mismatch" in note.lower() or "矛盾" in note:
         return "P1"

@@ -54,6 +54,7 @@ from songyan.models.review import (
     GenericNameMatch,
     LLMAuditResult,
     MergedReviewReport,
+    MetaTagLeakMatch,
     PunchCheck,
     ReviewCategory,
     ReviewIssue,
@@ -130,6 +131,7 @@ __all__ = [
     "FatigueWordMatch",
     "GenericNameMatch",
     "LLMAuditResult",
+    "MetaTagLeakMatch",
     "MergedReviewReport",
     "PunchCheck",
     # literary

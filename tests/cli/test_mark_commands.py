@@ -12,8 +12,6 @@ from songyan.db.migrations import init_schema
 from songyan.db.repository import ProjectRepository
 from songyan.models import ProjectSetting
 
-pytestmark = pytest.mark.asyncio
-
 
 @pytest.fixture
 def runner() -> CliRunner:

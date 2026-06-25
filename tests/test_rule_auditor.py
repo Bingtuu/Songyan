@@ -420,3 +420,37 @@ class TestWordCountRatio:
         text = "测试"
         result = run_rule_audit(text, word_count_target=0)
         assert result.word_count_ratio == 0.0
+
+
+# ---------------------------------------------------------------------------
+# PR-05: MetaTagLeakMatch Tests
+# ---------------------------------------------------------------------------
+class TestMetaTagLeakMatch:
+    def test_html_comment_leak(self) -> None:
+        text = "正文开头<!-- 这是注释 -->正文结尾"
+        result = run_rule_audit(text, word_count_target=10)
+        assert result.meta_tag_count == 1
+        assert any("HTML注释" in m.pattern for m in result.meta_tag_matches)
+        assert result.meta_tag_matches[0].severity == "major"
+        assert "检测到元标记泄漏" in result.meta_tag_matches[0].message
+
+    def test_mark_tag_leak(self) -> None:
+        text = "正文<mark>高亮内容</mark>结尾"
+        result = run_rule_audit(text, word_count_target=10)
+        assert result.meta_tag_count == 1
+        assert any("Mark标签" in m.pattern for m in result.meta_tag_matches)
+        assert "<mark>高亮内容</mark>" in result.meta_tag_matches[0].matched_text
+
+    def test_meta_prefix_leak(self) -> None:
+        text = "正文\nMETA: 这是一个元标记\n结尾"
+        result = run_rule_audit(text, word_count_target=10)
+        assert result.meta_tag_count == 1
+        assert any("Meta前缀" in m.pattern for m in result.meta_tag_matches)
+        assert "major" == result.meta_tag_matches[0].severity
+
+    def test_old_style_marker_leak(self) -> None:
+        text = "正文[[旧式标记]]结尾"
+        result = run_rule_audit(text, word_count_target=10)
+        assert result.meta_tag_count == 1
+        assert any("旧式可见标记" in m.pattern for m in result.meta_tag_matches)
+        assert "[[旧式标记]]" == result.meta_tag_matches[0].matched_text

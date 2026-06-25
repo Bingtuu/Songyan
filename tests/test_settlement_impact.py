@@ -118,6 +118,15 @@ class TestImpactScore:
         # 0.5 (upheaval) + 0.4 (death) + 2*0.05 (new settings) = 1.0
         assert score == pytest.approx(1.0, abs=0.001)
 
+    def test_model_rejects_out_of_range_impact_score(self) -> None:
+        """P2-11: impact_score 必须在 0.0-1.0 范围内."""
+        from pydantic import ValidationError
+
+        with pytest.raises(ValidationError):
+            StateSettlement(impact_score=1.5)
+        with pytest.raises(ValidationError):
+            StateSettlement(impact_score=-0.1)
+
 
 class TestOpenThreadExtraction:
     def test_from_foreshadowing_plant(self) -> None:

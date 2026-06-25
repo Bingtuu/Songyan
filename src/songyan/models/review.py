@@ -86,6 +86,16 @@ class GenericNameMatch(BaseModel):
     matched_text: str
 
 
+class MetaTagLeakMatch(BaseModel):
+    """元标记泄漏命中."""
+
+    pattern: str
+    matched_text: str
+    location: str
+    severity: str = "major"
+    message: str = "检测到元标记泄漏"
+
+
 class PunchCheck(BaseModel):
     """刺激度检查结果 — Punch Engine 专用."""
 
@@ -135,6 +145,10 @@ class RuleAuditResult(BaseModel):
     # 通用角色名检测
     generic_name_matches: list[GenericNameMatch] = Field(default_factory=list)
     generic_name_count: int = 0
+
+    # 元标记泄漏检测
+    meta_tag_matches: list[MetaTagLeakMatch] = Field(default_factory=list)
+    meta_tag_count: int = 0
 
     # 数值公式检测（玄幻）
     numerical_issues: list[str] = Field(default_factory=list)

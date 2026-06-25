@@ -12,6 +12,7 @@ from songyan.db.review_repo import ReviewReportRepository
 from songyan.models import (
     GenreRules,
     MergedReviewReport,
+    MetaTagLeakMatch,
     PunchCheck,
     PunchPoint,
     RuleAuditResult,
@@ -23,6 +24,7 @@ from songyan.utils import (
     detect_ai_tells,
     detect_fatigue_words,
 )
+from songyan.utils._helpers import locate_position
 from songyan.utils.generic_names import detect_generic_names
 from songyan.utils.numerical_validator import (
     NumericalContext,
@@ -53,6 +55,38 @@ def _analyze_scene_emotion(text: str) -> str:
     if pos > neg:
         return "positive"
     return "neutral"
+
+
+_META_TAG_PATTERNS: list[tuple[str, str]] = [
+    (r"(?s)<!--.*?-->", "HTML注释"),
+    (r"(?s)<mark>.*?</mark>", "Mark标签"),
+    (r"(?im)^\s*meta:.*", "Meta前缀"),
+    (r"(?s)\[\[.*?\]\]", "旧式可见标记"),
+]
+
+
+def detect_meta_tag_leaks(text: str) -> list[MetaTagLeakMatch]:
+    """检测元标记泄漏."""
+    matches: list[MetaTagLeakMatch] = []
+    seen: set[tuple[int, int]] = set()
+    for pattern, tag_type in _META_TAG_PATTERNS:
+        for m in re.finditer(pattern, text):
+            key = (m.start(), m.end())
+            if key in seen:
+                continue
+            seen.add(key)
+            location = locate_position(text, m.start())
+            matches.append(
+                MetaTagLeakMatch(
+                    pattern=f"{tag_type}: {pattern}",
+                    matched_text=m.group(),
+                    location=location,
+                    severity="major",
+                    message="检测到元标记泄漏",
+                )
+            )
+    matches.sort(key=lambda x: text.find(x.matched_text))
+    return matches
 
 
 def _check_punch_points(
@@ -172,7 +206,11 @@ def run_rule_audit(
     generic_name_matches = detect_generic_names(content)
     generic_name_count = len(generic_name_matches)
 
-    # 8. 刺激度检查（Punch Engine）
+    # 8. 元标记泄漏检测
+    meta_tag_matches = detect_meta_tag_leaks(content)
+    meta_tag_count = len(meta_tag_matches)
+
+    # 9. 刺激度检查（Punch Engine）
     punch_check = _check_punch_points(content, punch_points or [], word_count)
 
     duration_ms = int((time.perf_counter() - start_time) * 1000)
@@ -196,6 +234,8 @@ def run_rule_audit(
         scene_count_ok=scene_count_ok,
         generic_name_matches=generic_name_matches,
         generic_name_count=generic_name_count,
+        meta_tag_matches=meta_tag_matches,
+        meta_tag_count=meta_tag_count,
         numerical_issues=numerical_issues,
         punch_check=punch_check,
         duration_ms=duration_ms,
@@ -289,6 +329,9 @@ def _compute_overall_score(result: RuleAuditResult) -> float:
     # 通用角色名扣分：每个 -0.3，最多 -1.5
     score -= min(result.generic_name_count * 0.3, 1.5)
 
+    # 元标记泄漏扣分：每个 -0.5，最多 -2
+    score -= min(result.meta_tag_count * 0.5, 2.0)
+
     # Punch Engine 扣分
     if result.punch_check.expected_punch_count > 0:
         if not result.punch_check.punch_density_ok:
@@ -323,6 +366,8 @@ def _generate_summary(result: RuleAuditResult) -> str:
     if result.generic_name_count > 0:
         names = "、".join(m.name for m in result.generic_name_matches)
         parts.append(f"发现 {result.generic_name_count} 个通用角色名（{names}）")
+    if result.meta_tag_count > 0:
+        parts.append(f"发现 {result.meta_tag_count} 处元标记泄漏")
 
     if result.punch_check.expected_punch_count > 0:
         if not result.punch_check.punch_density_ok:

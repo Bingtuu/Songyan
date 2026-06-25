@@ -130,7 +130,6 @@ class TestDynamicRelevance:
 # ArcSummary Repository
 # ---------------------------------------------------------------------------
 class TestArcSummaryRepository:
-    pytestmark = pytest.mark.asyncio
 
     @pytest.fixture(autouse=True)
     async def _init_db(self, test_db):
@@ -239,7 +238,6 @@ class TestArcSummaryRepository:
 # VolumeSummary Repository
 # ---------------------------------------------------------------------------
 class TestVolumeSummaryRepository:
-    pytestmark = pytest.mark.asyncio
 
     @pytest.fixture(autouse=True)
     async def _init_db(self, test_db):
@@ -336,7 +334,6 @@ class TestVolumeSummaryRepository:
 # PermanentScene Repository
 # ---------------------------------------------------------------------------
 class TestPermanentSceneRepository:
-    pytestmark = pytest.mark.asyncio
 
     @pytest.fixture(autouse=True)
     async def _init_db(self, test_db):

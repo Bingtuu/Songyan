@@ -120,6 +120,30 @@ class HumanMarkRepository:
             rows = await cursor.fetchall()
         return [self._row_to_mark(row) for row in rows]
 
+    async def list_by_chapter_range(
+        self,
+        project_id: str,
+        chapter_start: int,
+        chapter_end: int,
+        source: str | None = None,
+    ) -> list[HumanMark]:
+        """List marks for a project within a chapter range, optionally filtered by source."""
+        async with get_db() as conn:
+            conn.row_factory = Row
+            conditions = ["project_id = ?", "created_at_chapter BETWEEN ? AND ?"]
+            params: list = [project_id, chapter_start, chapter_end]
+            if source:
+                conditions.append("source = ?")
+                params.append(source)
+            sql = (
+                "SELECT * FROM human_marks WHERE "
+                + " AND ".join(conditions)
+                + " ORDER BY created_at_chapter, priority DESC"
+            )
+            cursor = await conn.execute(sql, params)
+            rows = await cursor.fetchall()
+        return [self._row_to_mark(row) for row in rows]
+
     async def count_unresolved_by_chapter(
         self,
         project_id: str,

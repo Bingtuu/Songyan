@@ -17,8 +17,6 @@ from songyan.db.lifecycle_scheduler import (
 )
 from songyan.db.migrations import init_schema
 
-pytestmark = pytest.mark.asyncio
-
 
 @pytest.fixture
 async def lifecycle_db(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
@@ -46,7 +44,6 @@ async def lifecycle_db(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 class TestLifecycleStatus:
     """Layer 1: 模型测试（同步测试）."""
 
-    @pytest.mark.no_asyncio
     def test_lifecycle_status_literal(self) -> None:
         valid: list[LifecycleStatus] = ["active", "dormant", "archived"]
         for s in valid:
@@ -91,6 +88,7 @@ class TestLifecycleScheduler:
     def scheduler(self) -> LifecycleScheduler:
         return LifecycleScheduler()
 
+    @pytest.mark.asyncio
     async def test_transition_happy_path(
         self, scheduler: LifecycleScheduler, lifecycle_db: Path
     ) -> None:
@@ -123,6 +121,7 @@ class TestLifecycleScheduler:
             assert row is not None
             assert row[0] == "dormant"
 
+    @pytest.mark.asyncio
     async def test_transition_status_mismatch(
         self, scheduler: LifecycleScheduler, lifecycle_db: Path
     ) -> None:
@@ -141,6 +140,7 @@ class TestLifecycleScheduler:
             )
             assert log is None  # 拒绝转换
 
+    @pytest.mark.asyncio
     async def test_transition_entity_not_found(
         self, scheduler: LifecycleScheduler, lifecycle_db: Path
     ) -> None:
@@ -151,6 +151,7 @@ class TestLifecycleScheduler:
             )
             assert log is None
 
+    @pytest.mark.asyncio
     async def test_run_cleanup_empty_cleaners(
         self, scheduler: LifecycleScheduler, lifecycle_db: Path
     ) -> None:
@@ -161,6 +162,7 @@ class TestLifecycleScheduler:
         assert len(result.transitions) == 0
         assert len(result.errors) == 0
 
+    @pytest.mark.asyncio
     async def test_run_cleanup_single_table_failure_not_cascading(
         self, scheduler: LifecycleScheduler, lifecycle_db: Path
     ) -> None:
@@ -230,36 +232,42 @@ class TestSchemaMigration:
         cols = {row[1] for row in await cursor.fetchall()}
         return column in cols
 
+    @pytest.mark.asyncio
     async def test_setting_snapshots_has_lifecycle_status(
         self, lifecycle_db: Path
     ) -> None:
         async with get_db() as conn:
             assert await self._check_column(conn, "setting_snapshots", "lifecycle_status")
 
+    @pytest.mark.asyncio
     async def test_foreshadowings_has_lifecycle_status(
         self, lifecycle_db: Path
     ) -> None:
         async with get_db() as conn:
             assert await self._check_column(conn, "foreshadowings", "lifecycle_status")
 
+    @pytest.mark.asyncio
     async def test_human_marks_has_lifecycle_status(
         self, lifecycle_db: Path
     ) -> None:
         async with get_db() as conn:
             assert await self._check_column(conn, "human_marks", "lifecycle_status")
 
+    @pytest.mark.asyncio
     async def test_character_states_has_lifecycle_status(
         self, lifecycle_db: Path
     ) -> None:
         async with get_db() as conn:
             assert await self._check_column(conn, "character_states", "lifecycle_status")
 
+    @pytest.mark.asyncio
     async def test_chapter_chunks_has_lifecycle_status(
         self, lifecycle_db: Path
     ) -> None:
         async with get_db() as conn:
             assert await self._check_column(conn, "chapter_chunks", "lifecycle_status")
 
+    @pytest.mark.asyncio
     async def test_default_value_is_active(self, lifecycle_db: Path) -> None:
         """新插入数据默认 lifecycle_status = 'active'."""
         async with get_db() as conn:
@@ -277,6 +285,7 @@ class TestSchemaMigration:
             assert row is not None
             assert row[0] == "active"
 
+    @pytest.mark.asyncio
     async def test_lifecycle_errors_table_exists(self, lifecycle_db: Path) -> None:
         async with get_db() as conn:
             cursor = await conn.execute(

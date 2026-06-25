@@ -287,6 +287,27 @@ class ContinuityReportRepository:
             row = await cursor.fetchone()
         if row is None:
             return None
+        return self._row_to_report(row)
+
+    async def list_by_chapter_range(
+        self, project_id: str, chapter_start: int, chapter_end: int
+    ) -> list[ContinuityReport]:
+        async with get_db() as conn:
+            conn.row_factory = Row
+            cursor = await conn.execute(
+                """SELECT report_id, project_id, checked_up_to_chapter,
+                          orphaned_settings, forgotten_items, state_mismatches,
+                          overdue_foreshadowings, suggested_marks, overall_health_score,
+                          created_at
+                   FROM continuity_reports
+                   WHERE project_id = ? AND checked_up_to_chapter BETWEEN ? AND ?
+                   ORDER BY checked_up_to_chapter""",
+                (project_id, chapter_start, chapter_end),
+            )
+            rows = await cursor.fetchall()
+        return [self._row_to_report(row) for row in rows]
+
+    def _row_to_report(self, row: Row) -> ContinuityReport:
         return ContinuityReport(
             report_id=row["report_id"],
             project_id=row["project_id"],
