@@ -25,7 +25,7 @@
 | 子任务 | 文档 | 状态 | 说明 |
 |--------|------|------|------|
 | 122a | [122a-unit-test-matrix-dynamic-thresholds.md](122a-unit-test-matrix-dynamic-thresholds.md) | **已完成** | 7 个边界测试已落地，pytest 通过 |
-| 122b | [122b-integration-test-pipeline-scenarios.md](122b-integration-test-pipeline-scenarios.md) | **部分完成** | Pipeline 路由、QG false、rewrite 清理、ContextEmergency、new_issues 拦截已覆盖；剩余缺口待补充 |
+| 122b | [122b-integration-test-pipeline-scenarios.md](122b-integration-test-pipeline-scenarios.md) | **已完成** | 12 个集成测试全部落地并通过，覆盖 Pipeline 路由、QG false、rewrite 清理、ContextEmergency、new_issues 拦截、degraded_accept、safe best、human_review_required gate、AutoHalt streak |
 | 122c | [122c-e2e-validation-windows.md](122c-e2e-validation-windows.md) | **部分完成** | Ch1-Ch20 E2E 已完成（28 秒重度 Mock）；**Ch40-Ch50 / Ch100-Ch110 窗口待补充** |
 | 122d | [122d-stress-test-long-sequence-stability.md](122d-stress-test-long-sequence-stability.md) | **TODO** | 150 章长序列压力测试待启动 |
 
@@ -50,7 +50,7 @@
 ## 4. 总体验收标准
 
 - [ ] 122a：7 个单元测试全部通过，pytest 全量通过，ruff 通过。
-- [ ] 122b：5 个核心场景 + 已覆盖缺口全部通过，pytest 全量通过，ruff 通过。
+- [x] 122b：5 个核心场景 + 已补充缺口全部通过，pytest 全量通过，ruff 通过。
 - [ ] 122c：三个窗口全部达标（Ch1-Ch20 ≥18/20，Ch40-Ch50 ≥8/10，Ch100-Ch110 ≥8/10）。
 - [ ] 122d：5 项压力测试全部通过，pytest 全量通过，ruff 通过。
 - [ ] 四层测试合计新增测试 ≥30 个，零回归。

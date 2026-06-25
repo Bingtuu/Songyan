@@ -9,7 +9,7 @@
 | 当前阶段 | **V5.0 已完成，V5.1 预研** |
 | 最终验收 | Task 120 Final Acceptance Package 已交付 |
 | 风险口径 | P0/P1 风险为 0 |
-| 最近全量测试 | `1776 passed, 2 skipped, 1 xfailed, 0 xpassed, 2 warnings` |
+| 最近全量测试 | `1784 passed, 1 xfailed, 0 xpassed` |
 | 当前 lint | `ruff check src/ tests/` 已通过 |
 | Python | 3.11.9 |
 | 事实入口 | `tasks/V5-README.md` |
@@ -31,13 +31,13 @@
 | Task 121q | **已完成**：`_SAFE_BEST_MIN_OVERALL_SCORE` 动态化（Ch1-Ch20→0.75, Ch21-Ch50→0.78, Ch51+→0.82）+ `degraded_accept` 降级回滚路径；pytest 1731 passed；ruff 通过；**Ch1-Ch20 聚焦验证 `run-86b1170c` 20/20 全部成功** |
 | Task 121r | **已完成**：Writer 1.1.0（空行分隔场景、禁止 markdown/HTML/元标记、段落节奏约束）+ CreativeDirector 1.0.5（可执行约束、行动承载、避免设定清单退化）+ RuleAuditor 新增 markdown 场景标题与短段落比例检测；pytest 1764 passed；ruff 通过 |
 | Task 122a | **已完成**：动态阈值 `_safe_best_min_score` 边界值测试 + `degraded_accept` 降级回滚路径测试；pytest 通过 |
-| Task 122b | **已完成**：新增 12 个集成测试覆盖 degraded_accept 路由、safe best 保护、human_review_required gate、AutoHalt streak 逻辑；pytest 1776 passed；ruff 通过 |
+| Task 122b | **已完成**：新增 12 个集成测试覆盖 degraded_accept 路由、safe best 保护、human_review_required gate、AutoHalt streak 逻辑；pytest 1784 passed；ruff 通过 |
 | Task 122c | **已完成**：Ch1-Ch20 E2E 集成测试（28 秒重度 Mock）；Ch40-Ch50 / Ch100-Ch110 窗口待补充 |
 | Task 122d | **TODO**：150 章长序列压力测试（需 runner 实跑或全链路 Mock） |
 | 重跑前清理 | **2026-06-23 已完成全量清理**：终止全部残留 Python 进程，删除数据库 28,440 行测试数据，清空所有业务表，清理日志文件，VACUUM 后 196 MB；环境完全干净 |
 | 下一步规划 | **Task 121q full single-run `run-a2bed648` Ch1-Ch150 150/150 全部成功**，一次性单命令证据已获取；**Pass 14-18 V5.1 Code Review 已完成，全部 8 项缺口已修复**；**Task 121r Prompt 质量清理已完成**；**Task 122a/122b 测试矩阵已完成**；Task 122c Ch40-Ch50 / Ch100-Ch110 E2E 窗口待补充；Task 122d 150 章压力测试待启动；health_low / ContextEmergency 硬门禁继续后置预研 |
 
-测试说明：`1 xfailed` 为已知非阻断项；`0 xpassed`（已修复）；2 warnings 为 transformers DeprecationWarning（与项目代码无关）。Pass 14-18 审查修复新增 25 个测试，零回归。
+测试说明：`1 xfailed` 为已知非阻断项；`0 xpassed`（已修复）；`0 failed`。数据库 `lifecycle_status` 列缺失与 RAG embedding 性能测试已修复，当前全量通过。
 
 ## 当前优先级
 

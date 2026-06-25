@@ -2,7 +2,7 @@
 
 > **日期**: 2026-06-23（更新于 2026-06-25）
 > **类型**: V5.1 集成测试
-> **状态**: **部分完成**
+> **状态**: **已完成**
 > **前置**: Task 121q 动态阈值逻辑落地 + 121r Prompt 清理完成
 
 ---
@@ -31,15 +31,22 @@
 - ContextEmergency 触发与降级路径
 - `_new_issues_introduced` 拦截路径
 
-### 2.2 待补充场景（状态：待完成）
+### 2.2 已补充场景（状态：已完成）
 
-| 测试名 | 场景 | 断言 | 优先级 |
-|--------|------|------|--------|
-| `test_degraded_accept_router` | QG false + score ≥ 0.70 | 路由到 degraded_accept，不进入 rewrite | P1 |
-| `test_safe_best_preserve_on_rewrite` | rewrite 后 score < best | best 版本不被覆盖，最终回退到 best | P1 |
-| `test_human_review_required_gate` | QG false + score < 0.70 + 无 best | 进入 human_review_required | P1 |
-| `test_context_emergency_degraded_streak` | 连续 3 章 emergency + QG fail | 触发 AutoHalt | P2 |
-| `test_context_emergency_single_fail` | 单章 emergency + QG pass | 不触发 AutoHalt | P2 |
+| 测试名 | 场景 | 断言 |
+|--------|------|------|
+| `test_degraded_accept_routes_to_human_confirm` | QG false + best score ≥ 0.70 | 标记 `_degraded_accept=True`，路由到 `human_confirm` |
+| `test_quality_gate_router_passes_degraded_accept` | `_degraded_accept=True` | `quality_gate_router` 返回 `"pass"` |
+| `test_safe_best_true_for_high_score` | Ch30, best score 0.85 | 高于 0.78 阈值，判定为 safe best |
+| `test_safe_best_false_below_threshold` | Ch30, best score 0.76 | 低于 0.78 阈值，不视为 safe best |
+| `test_safe_best_false_due_to_coherence_critical` | score 0.90 但 coherence_critical | 不视为 safe best |
+| `test_no_best_score_card_needs_human_review` | QG false + 无 best | 进入 `human_confirm`，`_settlement_needs_human_review=True` |
+| `test_best_below_degraded_floor_needs_human_review` | QG false + best score 0.69 (<0.70) | 不进入 degraded_accept，需人工复核 |
+| `test_context_emergency_degraded_streak_triggers_autohalt` | 连续 3 章 emergency + 1 章 QG fail | 触发 `AutoHaltException` |
+| `test_context_emergency_single_fail_does_not_trigger_autohalt` | 连续 3 章 emergency 但 QG 均通过 | 不触发 AutoHalt |
+| `test_quality_gate_fail_streak_triggers_autohalt` | 连续 3 章 QG fail（无 emergency） | 触发 AutoHalt |
+| `test_mixed_streak_no_autohalt` | 2 章 emergency + 1 章正常 | 不触发 AutoHalt |
+| `test_insufficient_window_no_autohalt` | recent_results < 3 | 不触发 AutoHalt |
 
 ---
 
@@ -98,9 +105,11 @@ ruff check src/ tests/
 
 ## 4. 当前进度
 
-- **已完成**：Pipeline 路由、QG false、rewrite 清理、ContextEmergency、new_issues 拦截均已测试。
-- **待补充**： degraded_accept 路由、safe best 保护、human_review_required gate、AutoHalt streak 逻辑。
-- **pytest 基线**：`1764 passed, 1 xfailed, 2 warnings`。
+- **已完成**：全部 12 个集成测试已落地并通过。
+  - Pipeline 路由、QG false、rewrite 清理、ContextEmergency、new_issues 拦截
+  - degraded_accept 路由、safe best 保护、human_review_required gate、AutoHalt streak 逻辑
+- **pytest 基线**：`tests/test_122b_pipeline_scenarios.py` 12/12 passed；全量 pytest 当前为 `1781 passed, 3 failed, 1 xfailed`（3 个失败与 122b 无关，系 `setting_snapshots.lifecycle_status` 列缺失导致）。
+- **ruff**：All checks passed。
 
 ---
 

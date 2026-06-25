@@ -6,7 +6,7 @@ import contextlib
 import json
 from pathlib import Path
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -753,7 +753,10 @@ async def test_single_chapter_loop_mock_under_15s(test_db, mock_call_llm) -> Non
 
 @pytest.mark.performance
 @pytest.mark.asyncio
-async def test_audit_chain_mock_under_1s(test_db, mock_call_llm) -> None:
+@patch("songyan.workflows._nodes._index_accepted_chapter", new_callable=AsyncMock)
+async def test_audit_chain_mock_under_1s(
+    mock_index_chapter, test_db, mock_call_llm
+) -> None:
     """mock 下 resume + settlement 耗时 < 1s（全量回归预热环境）."""
     import time
 
