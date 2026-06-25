@@ -130,6 +130,16 @@ def _validate_fix_type(value: str) -> str:
     return "patch"
 
 
+def _safe_float(value: Any, default: float = 0.0) -> float:
+    """安全地将值转换为 float，失败时返回默认值."""
+    try:
+        if value is None or value == "":
+            return default
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+
 def _build_issue(data: dict[str, Any], index: int) -> ReviewIssue | None:
     """从字典构建 ReviewIssue，无效时返回 None."""
     category = _validate_category(data.get("category", ""))
@@ -162,7 +172,7 @@ def _build_issue(data: dict[str, Any], index: int) -> ReviewIssue | None:
         actual=data.get("actual"),
         suggested_fix=data.get("suggested_fix"),
         fix_type=_validate_fix_type(data.get("fix_type", "patch")),  # type: ignore[arg-type]
-        confidence=float(data.get("confidence", 1.0)),
+        confidence=_safe_float(data.get("confidence"), default=1.0),
     )
 
 
@@ -228,8 +238,16 @@ async def run_llm_audit(
     prompt = _render_prompt(content, context_package)
     llm_response = await call_llm(prompt, temperature=temperature)
 
-    data = parse_llm_response(llm_response)
-    result = _build_llm_audit_result(data)
+    try:
+        data = parse_llm_response(llm_response)
+        result = _build_llm_audit_result(data)
+    except Exception:
+        logger.error(
+            "llm_auditor.parse_failed",
+            raw_response=llm_response[:2000],
+            response_length=len(llm_response),
+        )
+        raise
 
     duration_ms = int((time.perf_counter() - start_time) * 1000)
     result.duration_ms = duration_ms

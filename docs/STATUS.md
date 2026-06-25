@@ -13,7 +13,7 @@
 | 当前 lint | `ruff check src/ tests/` 已通过 |
 | Python | 3.11.9 |
 | 事实入口 | `tasks/V5-README.md` |
-| single-run rehearsal | Task 121b：`run-21ff158b`，Ch1-Ch4 成功，Ch5 阻断；Task 121d：`run-f749826e`，Ch1-Ch7 成功，Ch8 阻断；Task 121e 重跑：`run-0317a247`，Ch1-Ch17 成功，Ch18 阻断；Task 121f 聚焦验证：`run-058fb9de`，Ch1-Ch18 成功；Task 121g 完整重跑：`run-0fd1456e`，Ch1-Ch114 成功，Ch115 阻断；Task 121h 已完成工程修复；Task 121i `run-ce1767ff` Ch115 聚焦验证成功；Task 121j `run-b063b6f0` Ch1-Ch13 成功后因连续 ContextEmergency AutoHalt 暂停；Task 121l `run-08689f68` Ch1-Ch12 成功后因 Ch10-Ch12 连续 ContextEmergency 且含 QG false 按新策略暂停；Task 121o `run-4ff41095` Ch1-Ch18 全部成功 18/18，ContextEmergency 0 次，AutoHalt 0 次，已越过 Ch13 和 Ch18；Task 121p `run-2d7d96c2` 修复 Bug A/B 后重跑，Ch1-Ch3 成功，Ch4 因 0.82 阈值阻断；**Task 121q `run-86b1170c` Ch1-Ch20 聚焦验证 20/20 全部成功，ContextEmergency 0 次，degraded_accept 路径验证通过，已越过历史阻断点 Ch13/Ch14/Ch18** |
+| single-run rehearsal | Task 121b：`run-21ff158b`，Ch1-Ch4 成功，Ch5 阻断；Task 121d：`run-f749826e`，Ch1-Ch7 成功，Ch8 阻断；Task 121e 重跑：`run-0317a247`，Ch1-Ch17 成功，Ch18 阻断；Task 121f 聚焦验证：`run-058fb9de`，Ch1-Ch18 成功；Task 121g 完整重跑：`run-0fd1456e`，Ch1-Ch114 成功，Ch115 阻断；Task 121h 已完成工程修复；Task 121i `run-ce1767ff` Ch115 聚焦验证成功；Task 121j `run-b063b6f0` Ch1-Ch13 成功后因连续 ContextEmergency AutoHalt 暂停；Task 121l `run-08689f68` Ch1-Ch12 成功后因 Ch10-Ch12 连续 ContextEmergency 且含 QG false 按新策略暂停；Task 121o `run-4ff41095` Ch1-Ch18 全部成功 18/18，ContextEmergency 0 次，AutoHalt 0 次，已越过 Ch13 和 Ch18；Task 121p `run-2d7d96c2` 修复 Bug A/B 后重跑，Ch1-Ch3 成功，Ch4 因 0.82 阈值阻断；Task 121q `run-86b1170c` Ch1-Ch20 聚焦验证 20/20 全部成功；**Task 121q full single-run `run-a2bed648` Ch1-Ch150 全部成功 150/150，ContextEmergency 0 次，AutoHalt 0 次，degraded_accept 0 次，failed 0 次，无间隙** |
 | Task 121c | 已修复 rewrite fallback 后 `_skip_settlement=True` 错误阻断 settlement 的契约 |
 | Task 121d | 已执行修复后重跑；已验证 Ch5 阻断解除，新增 Ch8 settlement_review 阻断 |
 | Task 121e | 已修复并实跑验证 Ch8 settlement 伏笔校验阻断；Ch18 暴露新阻断 |
@@ -35,16 +35,16 @@
 | Task 122c | **TODO**：端到端验证窗口（Ch1-Ch20 / Ch40-Ch50 / Ch100-Ch110） |
 | Task 122d | **TODO**：压力测试——150 章长序列稳定性 |
 | 重跑前清理 | **2026-06-23 已完成全量清理**：终止全部残留 Python 进程，删除数据库 28,440 行测试数据，清空所有业务表，清理日志文件，VACUUM 后 196 MB；环境完全干净 |
-| 下一步规划 | **Task 121q 已完成，Ch1-Ch20 聚焦验证 20/20 通过**。建议立即启动 Ch1-Ch150 full single-run 获取最终证据；Task 121r Prompt 清理可并行准备；Task 122a-d 测试矩阵在 full single-run 后启动** |
+| 下一步规划 | **Task 121q full single-run `run-a2bed648` Ch1-Ch150 150/150 全部成功**，一次性单命令证据已获取；Task 121r Prompt / 正文质量清理执行（承接 121k）；Task 122a-d 系统性测试矩阵** |
 
 测试说明：`1 xfailed` 为已知非阻断项，`1 xpassed` 为既有标记状态变化；14 warnings 均为既有 pytest/依赖警告。
 
 ## 当前优先级
 
-1. **Ch1-Ch150 full single-run**：基于 Task 121q Ch1-Ch20 20/20 通过的结果，启动新的干净项目执行一次性单命令 150 章实跑，获取最终证据。
-2. **Task 121r**：Prompt / 正文质量清理可并行准备，重点解决 writer 字数超量、中段动能波动和短段落碎片化。
-3. **Task 122a-d**：系统性测试矩阵（动态阈值单元测试、Pipeline 集成测试、E2E 验证窗口、150 章压力测试）。
-4. health_low / ContextEmergency 硬门禁继续后置预研。
+1. **Task 121r**：Prompt / 正文质量清理执行（承接 121k），重点解决 writer 字数超量、中段动能波动和短段落碎片化。
+2. **Task 122a-d**：系统性测试矩阵（动态阈值单元测试、Pipeline 集成测试、E2E 验证窗口、150 章压力测试）。
+3. health_low / ContextEmergency 硬门禁继续后置预研。
+4. **Ch1-Ch150 full single-run 已完成**：`run-a2bed648` 150/150 全部成功，一次性单命令证据已获取。
 
 ## V5.0 交付摘要
 
@@ -59,7 +59,7 @@
 
 | 项 | 级别 | 处理 |
 |----|------|------|
-| 一次性 Ch1-Ch150 单命令证据 | P1 | **Task 121q `run-86b1170c` 已验证 Ch1-Ch20 20/20 全部成功**，动态阈值 0.75 档位和 degraded_accept 路径验证通过。下一步：启动 Ch1-Ch150 full single-run 获取最终证据 |
+| 一次性 Ch1-Ch150 单命令证据 | P1 | **Task 121q full single-run `run-a2bed648` 已完成**：Ch1-Ch150 150/150 全部成功，ContextEmergency 0 次，AutoHalt 0 次，degraded_accept 0 次，failed 0 次，无间隙 |
 | Ch115 rewrite / best-version 劣化 | P1 | **Task 121h 已完成工程修复，Task 121i `run-ce1767ff` 已验证 Ch115 不再进入 human_review_required**；safe-best 回滚主路径未在本次触发，仍由单测覆盖 |
 | 连续 ContextEmergency AutoHalt | P1 | **Task 121l 已完成策略修复；Task 121m 已完成 QG false 硬拦截；Task 121n 已完成预算调整；Task 121o 验证 Ch1-Ch18 0 次 emergency、0 次 AutoHalt。该风险已解除** |
 | 0.82 阈值早期章节阻断 | P1 | **Task 121q 已完成**：0.82 已动态化，并引入 `degraded_accept` 降级回滚路径 |
