@@ -24,7 +24,7 @@ from songyan.utils import (
     detect_ai_tells,
     detect_fatigue_words,
 )
-from songyan.utils._helpers import locate_position
+from songyan.utils._helpers import locate_position, split_paragraphs
 from songyan.utils.generic_names import detect_generic_names
 from songyan.utils.numerical_validator import (
     NumericalContext,
@@ -64,6 +64,11 @@ _META_TAG_PATTERNS: list[tuple[str, str]] = [
     (r"(?s)\[\[.*?\]\]", "旧式可见标记"),
 ]
 
+_MARKDOWN_SCENE_PATTERNS: list[tuple[str, str]] = [
+    (r"(?im)^\s*###\s*Scene\s+\d+.*", "Markdown场景标题"),
+    (r"(?im)^\s*Scene\s+\d+[:：].*", "裸场景标题"),
+]
+
 
 def detect_meta_tag_leaks(text: str) -> list[MetaTagLeakMatch]:
     """检测元标记泄漏."""
@@ -89,23 +94,56 @@ def detect_meta_tag_leaks(text: str) -> list[MetaTagLeakMatch]:
     return matches
 
 
+def detect_markdown_scene_titles(text: str) -> list[MetaTagLeakMatch]:
+    """检测正文中的 Markdown / 裸场景标题（观测指标）."""
+    matches: list[MetaTagLeakMatch] = []
+    seen: set[tuple[int, int]] = set()
+    for pattern, tag_type in _MARKDOWN_SCENE_PATTERNS:
+        for m in re.finditer(pattern, text):
+            key = (m.start(), m.end())
+            if key in seen:
+                continue
+            seen.add(key)
+            location = locate_position(text, m.start())
+            matches.append(
+                MetaTagLeakMatch(
+                    pattern=f"{tag_type}: {pattern}",
+                    matched_text=m.group(),
+                    location=location,
+                    severity="info",
+                    message="检测到 Markdown 场景标题（应使用空行分隔场景）",
+                )
+            )
+    matches.sort(key=lambda x: text.find(x.matched_text))
+    return matches
+
+
+def _split_scenes(text: str) -> list[str]:
+    """按空行（\n\n+）分割场景."""
+    normalized = text.replace("\r\n", "\n")
+    scenes = [block.strip() for block in re.split(r"\n\s*\n", normalized) if block.strip()]
+    return scenes if scenes else [text.strip()] if text.strip() else []
+
+
+def _short_paragraph_ratio(text: str, threshold: int = 50) -> float:
+    """计算短段落（< threshold 字）占比."""
+    paragraphs = split_paragraphs(text)
+    if not paragraphs:
+        return 0.0
+    short_count = sum(1 for p in paragraphs if len(p) < threshold)
+    return round(short_count / len(paragraphs), 3)
+
+
 def _check_punch_points(
     content: str,
     punch_points: list[PunchPoint],
     word_count: int,
 ) -> PunchCheck:
     """检查刺激点执行情况和情绪转折密度."""
-    # 按场景分割
-    scene_pattern = re.compile(r"^###\s*Scene\s+\d+", re.MULTILINE)
-    splits = list(scene_pattern.finditer(content))
-    scenes: list[str] = []
-    if not splits:
-        scenes = [content]
-    else:
-        for i, m in enumerate(splits):
-            start = m.end()
-            end = splits[i + 1].start() if i + 1 < len(splits) else len(content)
-            scenes.append(content[start:end])
+    # 按空行分割场景（与 Writer Prompt 1.1.0+ 一致）
+    scenes = _split_scenes(content)
+    if not scenes:
+        scenes = [content] if content else []
 
     # 刺激点密度
     expected = len(punch_points)
@@ -195,22 +233,29 @@ def run_rule_audit(
     word_count_ok = lower_bound <= word_count <= upper_bound
     word_count_ratio = round(word_count / word_count_target, 2) if word_count_target > 0 else 0.0
 
-    # 6. 场景数量检测
-    scene_count = len(re.findall(r"^###\s*Scene\s+\d+", content, re.MULTILINE))
+    # 6. 场景数量检测（按空行分割，与 Prompt 1.1.0+ 一致）
+    scene_count = len(_split_scenes(content))
     scene_count_ok = scene_count >= scene_count_target
 
-    # 6. 数值公式验证（占位）
+    # 7. 数值公式验证（占位）
     numerical_issues: list[str] = []
 
-    # 7. 通用角色名检测
+    # 8. 通用角色名检测
     generic_name_matches = detect_generic_names(content)
     generic_name_count = len(generic_name_matches)
 
-    # 8. 元标记泄漏检测
+    # 9. 元标记泄漏检测
     meta_tag_matches = detect_meta_tag_leaks(content)
     meta_tag_count = len(meta_tag_matches)
 
-    # 9. 刺激度检查（Punch Engine）
+    # 10. Markdown 场景标题检测（观测指标，不直接阻断）
+    markdown_scene_title_matches = detect_markdown_scene_titles(content)
+    markdown_scene_title_count = len(markdown_scene_title_matches)
+
+    # 11. 短段落比例（观测指标，不直接阻断）
+    short_paragraph_ratio = _short_paragraph_ratio(content, threshold=50)
+
+    # 12. 刺激度检查（Punch Engine）
     punch_check = _check_punch_points(content, punch_points or [], word_count)
 
     duration_ms = int((time.perf_counter() - start_time) * 1000)
@@ -236,6 +281,9 @@ def run_rule_audit(
         generic_name_count=generic_name_count,
         meta_tag_matches=meta_tag_matches,
         meta_tag_count=meta_tag_count,
+        markdown_scene_title_matches=markdown_scene_title_matches,
+        markdown_scene_title_count=markdown_scene_title_count,
+        short_paragraph_ratio=short_paragraph_ratio,
         numerical_issues=numerical_issues,
         punch_check=punch_check,
         duration_ms=duration_ms,
@@ -368,6 +416,14 @@ def _generate_summary(result: RuleAuditResult) -> str:
         parts.append(f"发现 {result.generic_name_count} 个通用角色名（{names}）")
     if result.meta_tag_count > 0:
         parts.append(f"发现 {result.meta_tag_count} 处元标记泄漏")
+    if result.markdown_scene_title_count > 0:
+        parts.append(
+            f"发现 {result.markdown_scene_title_count} 处 Markdown 场景标题（建议改为空行分隔）"
+        )
+    if result.short_paragraph_ratio > 0.50:
+        parts.append(
+            f"短段落占比偏高（{result.short_paragraph_ratio:.0%}，建议控制 <50%）"
+        )
 
     if result.punch_check.expected_punch_count > 0:
         if not result.punch_check.punch_density_ok:

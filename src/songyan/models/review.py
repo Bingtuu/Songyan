@@ -150,6 +150,13 @@ class RuleAuditResult(BaseModel):
     meta_tag_matches: list[MetaTagLeakMatch] = Field(default_factory=list)
     meta_tag_count: int = 0
 
+    # Markdown 场景标题检测（观测指标，不直接阻断）
+    markdown_scene_title_matches: list[MetaTagLeakMatch] = Field(default_factory=list)
+    markdown_scene_title_count: int = 0
+
+    # 短段落比例（<50 字，观测指标，不直接阻断）
+    short_paragraph_ratio: float = 0.0
+
     # 数值公式检测（玄幻）
     numerical_issues: list[str] = Field(default_factory=list)
 

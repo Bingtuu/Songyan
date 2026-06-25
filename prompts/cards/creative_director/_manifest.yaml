@@ -1,5 +1,5 @@
-﻿agent: "creative_director"
-default_version: "1.0.4"
+agent: "creative_director"
+default_version: "1.0.5"
 versions:
   - version: "1.0.0"
     description: "创作意图与张力地图生成"
@@ -21,3 +21,7 @@ versions:
     description: "上下文压力计四信号输出：narrative_fullness / character_focus / foreshadowing_due / focal_distance"
     tags: ["webnovel", "xuanhuan", "urban", "scifi"]
     created_at: "2026-06-11"
+  - version: "1.0.5"
+    description: "Task 121r：可执行约束 + 高概念信息行动承载 + 避免章节目标退化为设定说明清单"
+    tags: ["webnovel", "xuanhuan", "urban", "scifi"]
+    created_at: "2026-06-25"

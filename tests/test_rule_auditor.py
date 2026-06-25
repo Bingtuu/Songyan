@@ -454,3 +454,66 @@ class TestMetaTagLeakMatch:
         assert result.meta_tag_count == 1
         assert any("旧式可见标记" in m.pattern for m in result.meta_tag_matches)
         assert "[[旧式标记]]" == result.meta_tag_matches[0].matched_text
+
+
+# ---------------------------------------------------------------------------
+# Task 121r: Markdown Scene Title Detection Tests
+# ---------------------------------------------------------------------------
+class TestMarkdownSceneTitleDetection:
+    def test_markdown_scene_title_detected(self) -> None:
+        text = "### Scene 1: 凌晨三点 / C区走廊\n林凡走在走廊里。"
+        result = run_rule_audit(text, word_count_target=10)
+        assert result.markdown_scene_title_count == 1
+        assert any("Markdown场景标题" in m.pattern for m in result.markdown_scene_title_matches)
+        assert result.markdown_scene_title_matches[0].severity == "info"
+
+    def test_bare_scene_title_detected(self) -> None:
+        text = "Scene 2: 控制中心\n警报声响起。"
+        result = run_rule_audit(text, word_count_target=10)
+        assert result.markdown_scene_title_count == 1
+        assert any("裸场景标题" in m.pattern for m in result.markdown_scene_title_matches)
+
+    def test_no_scene_title(self) -> None:
+        text = "林凡握紧拳头，眼中燃烧着怒火。"
+        result = run_rule_audit(text, word_count_target=10)
+        assert result.markdown_scene_title_count == 0
+        assert result.markdown_scene_title_matches == []
+
+
+# ---------------------------------------------------------------------------
+# Task 121r: Short Paragraph Ratio Tests
+# ---------------------------------------------------------------------------
+class TestShortParagraphRatio:
+    def test_high_short_paragraph_ratio(self) -> None:
+        """大量短段落（<50字）时 ratio 应 > 0.5."""
+        paragraphs = ["短。"] * 8 + ["这是一段比较长的测试段落，用来平衡短段落的比例。"] * 2
+        text = "\n".join(paragraphs)
+        result = run_rule_audit(text, word_count_target=100)
+        assert result.short_paragraph_ratio > 0.5
+
+    def test_low_short_paragraph_ratio(self) -> None:
+        """正常段落长度时 ratio 应 < 0.5."""
+        text = (
+            "林凡握紧拳头，眼中燃烧着怒火。\"你找死！\"他怒吼一声，身形如箭般冲出。"
+            "反派冷笑一声，挥剑迎上。两人交锋，气浪翻滚，周围的建筑纷纷崩塌。"
+            "林凡渐感不支，心中暗道：必须突破！就在这时，一道金光从天而降——"
+        )
+        result = run_rule_audit(text, word_count_target=100)
+        assert result.short_paragraph_ratio < 0.5
+
+
+# ---------------------------------------------------------------------------
+# Task 121r: Scene Count by Blank Line Tests
+# ---------------------------------------------------------------------------
+class TestSceneCountWithBlankLines:
+    def test_two_scenes_by_blank_line(self) -> None:
+        text = "第一段场景的内容，描述主角进入房间。\n\n第二段场景的内容，描述主角发现线索。"
+        result = run_rule_audit(text, word_count_target=10, scene_count_target=2)
+        assert result.scene_count == 2
+        assert result.scene_count_ok is True
+
+    def test_single_scene_no_blank_line(self) -> None:
+        text = "只有一个场景的内容，没有空行分隔。"
+        result = run_rule_audit(text, word_count_target=10, scene_count_target=2)
+        assert result.scene_count == 1
+        assert result.scene_count_ok is False

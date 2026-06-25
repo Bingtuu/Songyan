@@ -1,5 +1,5 @@
-﻿agent: "writer"
-default_version: "1.0.9"
+agent: "writer"
+default_version: "1.1.0"
 versions:
   - version: "1.0.5"
     description: "Phase 5：新增风格参考分区，扩充疲劳词覆盖"
@@ -21,3 +21,7 @@ versions:
     description: "措辞回调：1.4x 超标不可接受，与 Accept 路径字数守卫协同"
     tags: ["webnovel", "xuanhuan", "urban", "scifi", "urban_fantasy", "post_apocalyptic", "mystery_noir", "wuxia"]
     created_at: "2026-06-11"
+  - version: "1.1.0"
+    description: "Task 121r：移除机械场景标题，改用空行分隔场景；禁止 markdown 标题/HTML 注释/元标记；强化段落节奏与短段落控制"
+    tags: ["webnovel", "xuanhuan", "urban", "scifi", "urban_fantasy", "post_apocalyptic", "mystery_noir", "wuxia"]
+    created_at: "2026-06-25"

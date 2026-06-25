@@ -14,7 +14,7 @@
 
 目标：通过 TemporalCompressor + CharacterFocalDecay + SettingEvaporator + BudgetHardCeiling 四组件协同，控制信息密度，支撑 150+ 章稳定生成。Task 101~120 已完成 Context Diet 2.0 核心组件、流式验证基础设施、评分与收敛护栏、活跃信息池控制、工作流/事实源/Context/Prompt/QualityGate/Settlement 修复、Ch111-Ch150 分段验证、DG-2 风险窗口复验、health_low 治理、报告/wrapper 加固和 V5.0 Final Acceptance。
 
-当前最终口径以 `tasks/V5-README.md` 与 `docs/STATUS.md` 为准：**V5.0 工程验收通过，P0/P1 风险为 0，全量回归 1731 passed，lint 通过**。**Task 121q full single-run `run-a2bed648` 已完成 Ch1-Ch150 150/150 全部成功，ContextEmergency 0 次，AutoHalt 0 次，degraded_accept 0 次，failed 0 次，无间隙**，一次性单命令证据已获取。Task 121 已从 single-run 证据补强推进到 Ch115 修复链：121b-121g 依次暴露并解除 Ch5、Ch8、Ch18、Ch115 阻断。Task 121h-121i 已完成 Ch115 工程修复与聚焦验证。Task 121j/121l 先后暴露连续 ContextEmergency AutoHalt 问题。Task 121m 已完成 QG false 硬拦截 settlement + 元标记泄漏清理；Task 121n 已完成 Context Diet 2.0 预算增量 80→250 与 human_marks 生命周期窗口 10→6；Task 121o 已执行 `run-4ff41095` Ch1-Ch18 聚焦验证重跑，18/18 全部成功。Task 121p 已修复 Bug A/B。Task 121q 已完成 0.82 阈值动态化 + `degraded_accept` 降级回滚路径。Task 121r 负责 Prompt / 正文质量清理执行（承接 121k）。Task 122a-d 负责系统性测试矩阵。
+当前最终口径以 `tasks/V5-README.md` 与 `docs/STATUS.md` 为准：**V5.0 工程验收通过，P0/P1 风险为 0，全量回归 1776 passed，lint 通过**。**Task 121q full single-run `run-a2bed648` 已完成 Ch1-Ch150 150/150 全部成功**，一次性单命令最终证据已获取。Task 121r 已完成 Prompt / 正文质量清理（Writer 1.1.0 + CreativeDirector 1.0.5 + RuleAuditor 格式检测）。Task 122a/122b 已完成系统性测试矩阵（动态阈值单元测试 + Pipeline 集成测试）。Task 122c（E2E 窗口补全）和 Task 122d（150 章压力测试）为当前待启动项。
 
 ### 版本概览
 
@@ -25,14 +25,15 @@
 | V3.x | M16~M27 | Ch1~Ch70 稳定长跑 | 已完成 |
 | V4.0 | M28~M42 | Ch1~Ch50 极限优化（81.6% 达标率）| 已完成 |
 | **V5.0** | **M43~M71** | **Context Diet 2.0 → Ch150 全自动 + Final Acceptance** | **已完成** |
+| **V5.1** | **M72~M75** | **Prompt 质量清理 + 系统性测试矩阵 + 150 章压力测试** | **预研中** |
 
 ### 当前关键指标
 
 | 指标 | 数值 |
 |------|------|
-| 最近回归测试 | **1828 passed, 2 skipped, 1 xfailed, 0 xpassed, 2 warnings** (`pytest tests/ -q`) |
-| V5.0 当前 Task | **Task 120 已完成；Task 121a-121q 全部完成；Pass 14-18 V5.1 Code Review 已完成，8 项缺口全部修复（TS-01/02/03/08、PR-05、ST-03、AG-04、TS-10）；Task 121r TODO（Prompt 清理执行）；Task 122d TODO（150 章压力测试）** |
-| 前置状态 | **Task 115-121q 全部完成；DG-2 风险窗口已关闭；health_low 已分级追踪；报告/wrapper 已加固；0.82 阈值已动态化并验证** |
+| 最近回归测试 | **1776 passed, 2 skipped, 1 xfailed, 0 xpassed, 2 warnings** (`pytest tests/ -q`) |
+| V5.0 当前 Task | **Task 120 已完成；Task 121a-121r 全部完成；Pass 14-18 V5.1 Code Review 已完成，8 项缺口全部修复（TS-01/02/03/08、PR-05、ST-03、AG-04、TS-10）；Task 122a/122b 已完成；Task 122c 待补充（Ch40-Ch50 / Ch100-Ch110）；Task 122d 待启动（150 章压力测试）** |
+| 前置状态 | **Task 115-121r 全部完成；DG-2 风险窗口已关闭；health_low 已分级追踪；报告/wrapper 已加固；0.82 阈值已动态化并验证；Prompt 质量清理已完成** |
 | 当前结论 | **V5.0 工程验收通过：P0/P1 风险为 0；Ch111-Ch150 40/40 成功；Task 121q full single-run `run-a2bed648` Ch1-Ch150 150/150 全部成功，ContextEmergency 0 次，AutoHalt 0 次，failed 0 次，无间隙** |
 | 当前 lint | **`ruff check src/ tests/` 已通过** |
 | Task 110e 实跑 | **Ch80-Ch96 17/17 成功，QG 100%，coherence_major 0/17** |
@@ -114,6 +115,10 @@ LAYER 9: 人工确认（最终门控）
 │                                 ReviewMerger                                │
 │                            MergedReviewReport                               │
 │                                       │                                     │
+│                                       ▼                                     │
+│                                   QualityGate                               │
+│                              (质量门 + 降级接受)                              │
+│                                       │                                     │
 │              ┌────────────────────────┼────────────────────────┐           │
 │              ▼                        ▼                        ▼           │
 │      LiteraryAuditor          RevisionHandler    [Rewrite]   HumanConfirm  │
@@ -145,8 +150,8 @@ V5.0: Context Diet 2.0
 │         └───────────────┼────────────────────┘              │
 │                         ▼                                   │
 │              ┌─────────────────┐                            │
-│              │  BudgetPruner   │  ← 预算裁剪 + HardCeiling   │
-│              │  + HardCeiling  │                            │
+│              │ BudgetHardCeiling│  ← 预算硬天花板 + ContextEmergency │
+│              │  (V5.0 新增)    │                            │
 │              └────────┬────────┘                            │
 └───────────────────────┼─────────────────────────────────────┘
                         │
@@ -262,23 +267,25 @@ songyan/
 
 ### 2.4 审查体系
 
-- **RuleAuditor**（代码检测）：AI 腔、疲劳词、段落长度、首屏钩子、字数统计、数值公式 + **PunchCheck**（< 200ms）
+- **RuleAuditor**（代码检测）：AI 腔、疲劳词、段落长度、首屏钩子、字数统计、数值公式、**markdown 场景标题**、**短段落比例**、**元标记泄漏** + **PunchCheck**（< 200ms）
 - **LLMAuditor**（语义审查）：角色行为一致性、叙事节奏、对话区分度、信息倾倒、设定一致性（12 维度）
 - **LiteraryAuditor**（文学性诊断）：人物工具化、概念空转、过度平滑、有价值裂隙（不阻塞流程）
 - **ContinuityAuditor**：跨章一致性审计 — orphaned / forgotten / state mismatches / overdue foreshadowings（每 3 章，非阻塞）
 - **ReviewMerger**（轻量合并）：Rule + LLM 结果合并为统一报告，加权评分，**不调用 LLM**，< 10ms
+- **QualityGate**（质量门控）：动态阈值（Ch1-Ch20→0.75, Ch21-Ch50→0.78, Ch51+→0.82）+ `degraded_accept` 降级回滚（score ≥ 0.70）
 - **RevisionHandler**（patch 修订）：从 MergedReviewReport 提取 patchable issues，保护 valuable_fissure，最多 2 轮
-- **Rewrite**（截断重写）：2 轮 revision 未收敛时，整章重写并注入 avoid-list，重写后直接放行
+- **Rewrite**（截断重写）：2 轮 revision 未收敛时，整章重写并注入 avoid-list；若 rewrite 后 score < best - 0.08 则回滚到 safe best
 
 ### 2.5 状态结算
 
-每章 accept 后必须执行 SettlementExtractor + SummaryWriter：
+每章 **accept 后**必须执行 SettlementExtractor + SummaryWriter；edit/reject/back **不触发** settlement：
 
 - 角色状态更新（old_value 必须与 DB 当前值一致）
 - 新设定快照（source_quote 必须在正文中存在，经过去噪过滤）
 - 伏笔追踪（source_version_id 必须记录）
 - 数值账本（closing_value 必须等于公式值）
 - **V5.0**: SettingEvaporator 在 Settlement 后执行，自动 archive 低 confidence 设定
+- **V5.1**: QG false 硬拦截 settlement — `quality_gate_passed=False` 时 settlement 被跳过，防止未通过质量门的污染数据进入事实源
 - 结算完成后 SummaryWriter 生成结构化摘要
 
 ### 2.6 上下文架构演进
@@ -302,7 +309,7 @@ ContextManager 按 Token 预算组装 `ContextPackage`（默认 32K）：
 | TemporalCompressor | 金字塔分层加载 | 历史信息 O(n) → O(log n) |
 | CharacterFocalDecay | 角色档案衰减 | 活跃角色池可控 |
 | SettingEvaporator | 设定语义蒸发 | active 设定数量下降 |
-| BudgetHardCeiling | 预算硬天花板 | budget_used 永不超过 1.0 |
+| **BudgetHardCeiling** | 预算硬天花板 | `budget_used > 1.0` 时触发 ContextEmergency，只保留硬约束 + 主角档案 + ChapterGoal |
 
 ---
 
@@ -448,7 +455,7 @@ pytest -k "not integration" -q
 
 ```bash
 pytest tests/ -q
-# Current baseline: 1828 passed, 2 skipped, 1 xfailed, 0 xpassed, 2 warnings
+# Current baseline: 1776 passed, 2 skipped, 1 xfailed, 0 xpassed, 2 warnings
 
 ruff check src/ tests/
 # Current baseline: All checks passed!
@@ -552,7 +559,7 @@ ruff check src/ tests/
 - **Task 119** : ✅ 长跑报告入口与 Windows Wrapper 加固 — `songyan report` 入口统一，wrapper 结果码明确。
 - **Task 120** : ✅ V5.0 Final Acceptance Package — V5.0 工程验收通过，P0/P1 风险为 0。
 
-当前建议：V5.0 已交付完成；Task 121b-121q 已持续补强 single-run 证据链，依次解除 Ch5、Ch8、Ch18、Ch115、连续 ContextEmergency AutoHalt、0.82 阈值早期章节阻断。**Task 121q full single-run `run-a2bed648` 已完成 Ch1-Ch150 150/150 全部成功，ContextEmergency 0 次，AutoHalt 0 次，degraded_accept 0 次，failed 0 次，无间隙**，一次性单命令最终证据已获取。**Pass 14-18 V5.1 Code Review 已完成，全部 8 项缺口已修复**，新增 25 个测试，pytest 基线 1828 passed，零回归。Task 121r（Prompt / 正文质量清理）可并行准备。Task 122d（150 章压力测试）待启动。V5 任务状态以 `tasks/V5-README.md` 和各 `*-DONE.md` / TODO 文档为准，规划稿已归档为设计背景。
+当前建议：V5.0 已交付完成；Task 121b-121q 已持续补强 single-run 证据链，依次解除 Ch5、Ch8、Ch18、Ch115、连续 ContextEmergency AutoHalt、0.82 阈值早期章节阻断。**Task 121q full single-run `run-a2bed648` 已完成 Ch1-Ch150 150/150 全部成功，ContextEmergency 0 次，AutoHalt 0 次，degraded_accept 0 次，failed 0 次，无间隙**，一次性单命令最终证据已获取。**Pass 14-18 V5.1 Code Review 已完成，全部 8 项缺口已修复**，新增 37 个测试（Pass 14-18 修复 25 个 + 122b 集成测试 12 个），pytest 基线 1776 passed，零回归。**Task 121r 已完成 Prompt / 正文质量清理**（Writer 1.1.0 + CreativeDirector 1.0.5 + RuleAuditor 格式检测）。**Task 122a/122b 已完成系统性测试矩阵**（动态阈值单元测试 + Pipeline 集成测试 12 个新增测试）。Task 122c（E2E 窗口补全）和 Task 122d（150 章压力测试）为当前待启动项。V5 任务状态以 `tasks/V5-README.md` 和各 `*-DONE.md` / TODO 文档为准，规划稿已归档为设计背景。
 
 ---
 
@@ -606,8 +613,11 @@ Checkpointer 模式说明：
 - `tasks/121i-ch115-focused-rerun-and-quality-window.md` — Ch115 聚焦验证完成记录
 - `tasks/121j-ch1-ch150-single-run-after-ch115-fix.md` — 修复后 full single-run partial 记录
 - `tasks/121k-prompt-quality-cleanup-plan.md` — Prompt / 正文质量清理规划
+- `tasks/121r-prompt-quality-cleanup-execution.md` — Prompt / 正文质量清理执行（Writer 1.1.0 + CD 1.0.5）
 - `tasks/121l-context-emergency-autohalt-review.md` — 连续 ContextEmergency AutoHalt 策略修复记录
-- `tasks/121p-ch1-ch150-single-run-rag-embedder-timeout.md` — Ch1-Ch150 full single-run 双层根因记录（pipeline 未跳过已有 accepted 章节 + RAG 索引超时异常未捕获）
+- `tasks/121p-ch1-ch150-single-run-rag-embedder-timeout.md` — Ch1-Ch150 full single-run 双层根因记录
+- `tasks/122-v51-systematic-test-matrix.md` — V5.1 系统性测试矩阵主文档
+- `docs/reports/pass14-final-fix-summary.md` — Pass 14-18 V5.1 Code Review 修复汇总
 - `archive/v4/INDEX.md` — V4.x 完整归档索引
 - `archive/v3/INDEX.md` — V3.x 完整归档索引
 
