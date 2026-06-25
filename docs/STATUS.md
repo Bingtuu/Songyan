@@ -10,6 +10,7 @@
 | 最终验收 | Task 120 Final Acceptance Package 已交付 |
 | 风险口径 | P0/P1 风险为 0 |
 | 最近全量测试 | `1784 passed, 1 xfailed, 0 xpassed` |
+| 最近修复 | 数据库 `lifecycle_status` 列缺失；RAG embedding 性能测试 Mock 修复 |
 | 当前 lint | `ruff check src/ tests/` 已通过 |
 | Python | 3.11.9 |
 | 事实入口 | `tasks/V5-README.md` |
