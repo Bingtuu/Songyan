@@ -16,21 +16,25 @@
 | `tasks/121e-ch8-settlement-foreshadowing-validation-fix-DONE.md` | Task 121e：Ch8 settlement 伏笔校验修复 |
 | `tasks/121f-ch18-creative-director-error-contract-DONE.md` | Task 121f：Ch18 CreativeDirector 错误传播修复 |
 | `tasks/121g-ch1-ch150-single-run-rerun-ch115-blocker-DONE.md` | Task 121g：Ch1-Ch150 完整重跑与 Ch115 新阻断定位 |
-| `tasks/121h-ch115-quality-gate-rewrite-state-review.md` | Task 121h：Ch115 quality gate / best-version rewrite 工程修复 |
-| `tasks/121i-ch115-focused-rerun-and-quality-window.md` | Task 121i：Ch115 聚焦重跑与质量窗口复核 |
-| `tasks/121j-ch1-ch150-single-run-after-ch115-fix.md` | Task 121j：Ch115 修复后 Ch1-Ch150 full single-run |
-| `tasks/121k-prompt-quality-cleanup-plan.md` | Task 121k：Prompt / 正文质量清理 |
-| `tasks/121l-context-emergency-autohalt-review.md` | Task 121l：连续 ContextEmergency AutoHalt review |
-| `tasks/121m-qg-false-block-and-meta-tag-cleanup.md` | Task 121m：QG false 硬拦截与元标记泄漏清理 |
-| `tasks/121n-context-diet-budget-and-human-marks-lifecycle.md` | Task 121n：Context Diet 2.0 预算调整与 human_marks 生命周期优化 |
-| `tasks/121o-ch1-ch18-focused-rerun-validation.md` | Task 121o：Ch1-Ch18 聚焦验证重跑 |
-| `tasks/121p-ch1-ch150-single-run-rag-embedder-timeout.md` | Task 121p：Ch1-Ch150 full single-run RAG embedder 超时阻断 |
-| `tasks/121q-safe-best-threshold-dynamic-fix.md` | Task 121q：Safe-Best 阈值动态化修复；**full single-run `run-a2bed648` Ch1-Ch150 150/150** |
-| `tasks/121r-prompt-quality-cleanup-execution.md` | Task 121r：Prompt / 正文质量清理执行 |
-| `tasks/122a-unit-test-matrix-dynamic-thresholds.md` | Task 122a：单元测试矩阵——动态阈值与降级回滚 |
-| `tasks/122b-integration-test-pipeline-scenarios.md` | Task 122b：集成测试——Pipeline 关键场景 |
-| `tasks/122c-e2e-validation-windows.md` | Task 122c：端到端验证窗口 |
-| `tasks/122d-stress-test-long-sequence-stability.md` | Task 122d：压力测试——150 章长序列稳定性 |
+| `tasks/121h-ch115-quality-gate-rewrite-state-review-DONE.md` | Task 121h：Ch115 quality gate / best-version rewrite 工程修复 |
+| `tasks/121i-ch115-focused-rerun-and-quality-window-DONE.md` | Task 121i：Ch115 聚焦重跑与质量窗口复核 |
+| `tasks/121j-ch1-ch150-single-run-after-ch115-fix-DONE.md` | Task 121j：Ch115 修复后 Ch1-Ch150 full single-run |
+| `tasks/121k-prompt-quality-cleanup-plan-DONE.md` | Task 121k：Prompt / 正文质量清理 |
+| `tasks/121l-context-emergency-autohalt-review-DONE.md` | Task 121l：连续 ContextEmergency AutoHalt review |
+| `tasks/121m-qg-false-block-and-meta-tag-cleanup-DONE.md` | Task 121m：QG false 硬拦截与元标记泄漏清理 |
+| `tasks/121n-context-diet-budget-and-human-marks-lifecycle-DONE.md` | Task 121n：Context Diet 2.0 预算调整与 human_marks 生命周期优化 |
+| `tasks/121o-ch1-ch18-focused-rerun-validation-DONE.md` | Task 121o：Ch1-Ch18 聚焦验证重跑 |
+| `tasks/121p-ch1-ch150-single-run-rag-embedder-timeout-DONE.md` | Task 121p：Ch1-Ch150 full single-run RAG embedder 超时阻断 |
+| `tasks/121q-safe-best-threshold-dynamic-fix-DONE.md` | Task 121q：Safe-Best 阈值动态化修复；**full single-run `run-a2bed648` Ch1-Ch150 150/150** |
+| `tasks/121r-prompt-quality-cleanup-execution-DONE.md` | Task 121r：Prompt / 正文质量清理执行 |
+| `tasks/122a-unit-test-matrix-dynamic-thresholds-DONE.md` | Task 122a：单元测试矩阵——动态阈值与降级回滚 |
+| `tasks/122b-integration-test-pipeline-scenarios-DONE.md` | Task 122b：集成测试——Pipeline 关键场景 |
+| `tasks/122c-e2e-validation-windows-DONE.md` | Task 122c：端到端验证窗口 |
+| `tasks/122d-stress-test-long-sequence-stability-DONE.md` | Task 122d：压力测试——150 章长序列稳定性 |
+| `tasks/123-context-emergency-health-low-gate-proposal-DONE.md` | Task 123：ContextEmergency / health_low 候选硬门禁提案 |
+| `tasks/124-context-emergency-health-low-gate-impact-analysis-DONE.md` | Task 124：候选硬门禁离线影响面分析 |
+| `tasks/125-gate-threshold-tuning-and-validation-DONE.md` | Task 125：候选硬门禁阈值调优与验证 |
+| `tasks/126-small-window-enforce-validation-DONE.md` | Task 126：候选硬门禁 enforce 模式小窗口实跑验证 |
 
 ## 按场景查阅
 
@@ -48,19 +52,26 @@
 | Ch8 settlement 伏笔校验修复 | `tasks/121e-ch8-settlement-foreshadowing-validation-fix-DONE.md` |
 | Ch18 CreativeDirector 错误传播修复 | `tasks/121f-ch18-creative-director-error-contract-DONE.md` |
 | Ch1-Ch150 完整重跑 / Ch115 阻断 | `tasks/121g-ch1-ch150-single-run-rerun-ch115-blocker-DONE.md` |
-| Ch115 工程修复 | `tasks/121h-ch115-quality-gate-rewrite-state-review.md` |
-| Ch115 聚焦验证 | `tasks/121i-ch115-focused-rerun-and-quality-window.md` |
-| Ch1-Ch150 修复后 full single-run | `tasks/121j-ch1-ch150-single-run-after-ch115-fix.md` |
-| Ch1-Ch150 RAG embedder 超时阻断 | `tasks/121p-ch1-ch150-single-run-rag-embedder-timeout.md` |
-| Ch1-Ch150 full single-run 最终证据 | `tasks/121q-safe-best-threshold-dynamic-fix.md` |
-| Safe-Best 阈值动态化 | `tasks/121q-safe-best-threshold-dynamic-fix.md` |
-| Prompt / 正文质量清理 | `tasks/121k-prompt-quality-cleanup-plan.md` |
-| Prompt 质量清理执行 | `tasks/121r-prompt-quality-cleanup-execution.md` |
-| 单元测试矩阵 | `tasks/122a-unit-test-matrix-dynamic-thresholds.md` |
-| 集成测试场景 | `tasks/122b-integration-test-pipeline-scenarios.md` |
-| 端到端验证窗口 | `tasks/122c-e2e-validation-windows.md` |
-| 压力测试长序列 | `tasks/122d-stress-test-long-sequence-stability.md` |
-| ContextEmergency AutoHalt review | `tasks/121l-context-emergency-autohalt-review.md` |
+| Ch115 工程修复 | `tasks/121h-ch115-quality-gate-rewrite-state-review-DONE.md` |
+| Ch115 聚焦验证 | `tasks/121i-ch115-focused-rerun-and-quality-window-DONE.md` |
+| Ch1-Ch150 修复后 full single-run | `tasks/121j-ch1-ch150-single-run-after-ch115-fix-DONE.md` |
+| Ch1-Ch150 RAG embedder 超时阻断 | `tasks/121p-ch1-ch150-single-run-rag-embedder-timeout-DONE.md` |
+| Ch1-Ch150 full single-run 最终证据 | `tasks/121q-safe-best-threshold-dynamic-fix-DONE.md` |
+| Safe-Best 阈值动态化 | `tasks/121q-safe-best-threshold-dynamic-fix-DONE.md` |
+| Prompt / 正文质量清理 | `tasks/121k-prompt-quality-cleanup-plan-DONE.md` |
+| Prompt 质量清理执行 | `tasks/121r-prompt-quality-cleanup-execution-DONE.md` |
+| 单元测试矩阵 | `tasks/122a-unit-test-matrix-dynamic-thresholds-DONE.md` |
+| 集成测试场景 | `tasks/122b-integration-test-pipeline-scenarios-DONE.md` |
+| 端到端验证窗口 | `tasks/122c-e2e-validation-windows-DONE.md` |
+| 压力测试长序列 | `tasks/122d-stress-test-long-sequence-stability-DONE.md` |
+| ContextEmergency AutoHalt review | `tasks/121l-context-emergency-autohalt-review-DONE.md` |
+| QG false 拦截与元标记清理 | `tasks/121m-qg-false-block-and-meta-tag-cleanup-DONE.md` |
+| Context Diet 预算与 human marks 生命周期 | `tasks/121n-context-diet-budget-and-human-marks-lifecycle-DONE.md` |
+| Ch1-Ch18 聚焦验证 | `tasks/121o-ch1-ch18-focused-rerun-validation-DONE.md` |
+| ContextEmergency / health_low 候选硬门禁 | `tasks/123-context-emergency-health-low-gate-proposal-DONE.md` |
+| 候选硬门禁影响面分析 | `tasks/124-context-emergency-health-low-gate-impact-analysis-DONE.md` |
+| 候选硬门禁阈值调优 | `tasks/125-gate-threshold-tuning-and-validation-DONE.md` |
+| 候选硬门禁 enforce 小窗口验证 | `tasks/126-small-window-enforce-validation-DONE.md` |
 | V5.1 Code Review 总规划 | `docs/reports/pass14-to-pass18-v51-review-roadmap.md` |
 | V5.1 Code Review 修复汇总 | `docs/reports/pass14-final-fix-summary.md` |
 | 架构手册 | `docs/architecture/04-vibe-coding-engineering.md` |

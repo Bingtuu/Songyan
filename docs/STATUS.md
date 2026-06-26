@@ -9,9 +9,9 @@
 | 当前阶段 | **V5.0 已完成，V5.1 预研** |
 | 最终验收 | Task 120 Final Acceptance Package 已交付 |
 | 风险口径 | P0/P1 风险为 0 |
-| 最近全量测试 | `1784 passed, 1 xfailed, 0 xpassed` |
-| 最近修复 | 数据库 `lifecycle_status` 列缺失；RAG embedding 性能测试 Mock 修复 |
-| 当前 lint | `ruff check src/ tests/` 已通过 |
+| 最近全量测试 | `1828 passed, 1 xfailed, 2 warnings` |
+| 最近修复 | Task 123 ContextEmergency / health_low 候选硬门禁（默认观测模式，16 个新单测）；Task 124 离线影响面分析；Task 125 阈值调优（P1 异常检测、health_score 跌幅、审计点 streak），新增 12 个单测；Task 126 enforce 小窗口实跑验证，Ch1–Ch19 零 gate 触发 |
+| 当前 lint | `ruff check src/ tests/ scripts/` 已通过 |
 | Python | 3.11.9 |
 | 事实入口 | `tasks/V5-README.md` |
 | single-run rehearsal | Task 121b：`run-21ff158b`，Ch1-Ch4 成功，Ch5 阻断；Task 121d：`run-f749826e`，Ch1-Ch7 成功，Ch8 阻断；Task 121e 重跑：`run-0317a247`，Ch1-Ch17 成功，Ch18 阻断；Task 121f 聚焦验证：`run-058fb9de`，Ch1-Ch18 成功；Task 121g 完整重跑：`run-0fd1456e`，Ch1-Ch114 成功，Ch115 阻断；Task 121h 已完成工程修复；Task 121i `run-ce1767ff` Ch115 聚焦验证成功；Task 121j `run-b063b6f0` Ch1-Ch13 成功后因连续 ContextEmergency AutoHalt 暂停；Task 121l `run-08689f68` Ch1-Ch12 成功后因 Ch10-Ch12 连续 ContextEmergency 且含 QG false 按新策略暂停；Task 121o `run-4ff41095` Ch1-Ch18 全部成功 18/18，ContextEmergency 0 次，AutoHalt 0 次，已越过 Ch13 和 Ch18；Task 121p `run-2d7d96c2` 修复 Bug A/B 后重跑，Ch1-Ch3 成功，Ch4 因 0.82 阈值阻断；Task 121q `run-86b1170c` Ch1-Ch20 聚焦验证 20/20 全部成功；**Task 121q full single-run `run-a2bed648` Ch1-Ch150 全部成功 150/150，ContextEmergency 0 次，AutoHalt 0 次，degraded_accept 0 次，failed 0 次，无间隙** |
@@ -34,19 +34,20 @@
 | Task 122a | **已完成**：动态阈值 `_safe_best_min_score` 边界值测试 + `degraded_accept` 降级回滚路径测试；pytest 通过 |
 | Task 122b | **已完成**：新增 12 个集成测试覆盖 degraded_accept 路由、safe best 保护、human_review_required gate、AutoHalt streak 逻辑；pytest 1784 passed；ruff 通过 |
 | Task 122c | **已完成**：Ch1-Ch20 E2E 集成测试（28 秒重度 Mock）；Ch40-Ch50 / Ch100-Ch110 窗口待补充 |
-| Task 122d | **TODO**：150 章长序列压力测试（需 runner 实跑或全链路 Mock） |
+| Task 122c | **已完成**：Ch1-Ch20 / Ch40-Ch50 / Ch100-Ch110 三个 E2E 窗口验证全部完成；`test_ch41_50_validation.py` 已补强 emergency/auto-halt 断言；`test_ch100_110_from_run_log.py` 已新增并复用 `run-a2bed648` 历史数据 |
 | 重跑前清理 | **2026-06-23 已完成全量清理**：终止全部残留 Python 进程，删除数据库 28,440 行测试数据，清空所有业务表，清理日志文件，VACUUM 后 196 MB；环境完全干净 |
-| 下一步规划 | **Task 121q full single-run `run-a2bed648` Ch1-Ch150 150/150 全部成功**，一次性单命令证据已获取；**Pass 14-18 V5.1 Code Review 已完成，全部 8 项缺口已修复**；**Task 121r Prompt 质量清理已完成**；**Task 122a/122b 测试矩阵已完成**；Task 122c Ch40-Ch50 / Ch100-Ch110 E2E 窗口待补充；Task 122d 150 章压力测试待启动；health_low / ContextEmergency 硬门禁继续后置预研 |
+| 下一步规划 | **Task 121q full single-run `run-a2bed648` Ch1-Ch150 150/150 全部成功**；**Pass 14-18 V5.1 Code Review 已完成**；**Task 121r Prompt 质量清理已完成**；**Task 122a/122b/122c/122d 测试矩阵与 E2E/压力测试已完成**；**Task 123/124/125/126 已完成**：候选硬门禁从提案、离线分析、阈值调优到 enforce 小窗口实跑验证（Ch1–Ch19 零 gate 触发），`1828 passed, 1 xfailed, 2 warnings` |
 
 测试说明：`1 xfailed` 为已知非阻断项；`0 xpassed`（已修复）；`0 failed`。数据库 `lifecycle_status` 列缺失与 RAG embedding 性能测试已修复，当前全量通过。
 
 ## 当前优先级
 
-1. **Task 122c**：E2E 验证窗口补全（Ch40-Ch50 / Ch100-Ch110）。
-2. **Task 122d**：150 章长序列压力测试（Mock 模式优先）。
-3. health_low / ContextEmergency 硬门禁继续后置预研。
-4. **Ch1-Ch150 full single-run 已完成**：`run-a2bed648` 150/150 全部成功，一次性单命令证据已获取。
-5. **Task 121r / 122a / 122b 已完成**：Prompt 清理 + 动态阈值单元测试 + Pipeline 集成测试。
+1. **Task 126 已完成**：候选硬门禁 enforce 小窗口实跑验证，Ch1–Ch19 零 gate 触发，Ch20 因 QG false block 失败。
+2. **Task 125 已完成**：候选硬门禁阈值调优与验证，`run-a2bed648` 上 `any_gate` 触发 0 章。
+3. **Task 124 已完成**：基于 `run-a2bed648` 的候选硬门禁离线影响面分析。
+4. **Task 123 已完成**：ContextEmergency / health_low 候选硬门禁实现（默认观测模式，16 个新单测）。
+5. **Ch1-Ch150 full single-run 已完成**：`run-a2bed648` 150/150 全部成功，一次性单命令证据已获取。
+6. **Task 121r / 122a / 122b / 122c / 122d 已完成**：Prompt 清理 + 动态阈值单元测试 + Pipeline 集成测试 + E2E 窗口验证 + 150 章压力测试。
 
 ## V5.0 交付摘要
 
@@ -67,8 +68,8 @@
 | 0.82 阈值早期章节阻断 | P1 | **Task 121q 已完成**：0.82 已动态化，并引入 `degraded_accept` 降级回滚路径 |
 | Prompt 质量瓶颈 | V5.1 | **Task 121r 已完成**：Writer 1.1.0 + CreativeDirector 1.0.5 + RuleAuditor 新增格式检测 |
 | Pass 14-18 Code Review 缺口 | P1 | **已完成**：TS-01/TS-02/TS-03/TS-08 测试缺口已补齐；PR-05 元标记检测已补充；ST-03 目录迁移已修复；AG-04 显式拦截已补充；TS-10 测试卫生已清理 |
-| health_low 硬门禁 | 预研 | 已有软复核与追踪，硬门禁后置 |
-| ContextEmergency 硬门禁 | 预研 | 保持合理降级，后置评估 |
+| health_low 硬门禁 | 预研 | **Task 123/124/125/126 已完成**：软复核 + 候选硬门禁实现 + 离线分析 + 阈值调优 + enforce 小窗口验证；`health_low_p1_halt`/`health_low_streak_halt` 在干净 run 中零误伤，`health_low_absolute_score_halt` 因开局期误触发暂不启用；默认仍 `gate_mode="observe"` |
+| ContextEmergency 硬门禁 | 预研 | 保持合理降级，后置评估；当前 run 中未出现 context emergency |
 
 ## 文档入口
 

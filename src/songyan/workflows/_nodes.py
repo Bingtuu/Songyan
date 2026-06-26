@@ -436,6 +436,7 @@ async def _save_context_snapshot(
         creative_brief_id=state.get("creative_brief_id"),
         budget_used=getattr(ctx, "budget_used", None),
         context_emergency=getattr(ctx, "context_emergency", False),
+        context_emergency_level=getattr(ctx, "context_emergency_level", 0),
         budget_used_before_emergency=getattr(ctx, "budget_used_before_emergency", None),
         payload=ctx.model_dump(mode="json"),
     )

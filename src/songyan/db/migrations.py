@@ -422,6 +422,20 @@ async def _migrate_context_snapshots(conn: aiosqlite.Connection) -> None:
     )
 
 
+async def _migrate_context_snapshots_emergency_fields(conn: aiosqlite.Connection) -> None:
+    """Task 123: 为 context_snapshots 添加 emergency 可观测性字段."""
+    cursor = await conn.execute("PRAGMA table_info(context_snapshots)")
+    cols = {row[1] for row in await cursor.fetchall()}
+    if "context_emergency_level" not in cols:
+        await conn.execute(
+            "ALTER TABLE context_snapshots ADD COLUMN context_emergency_level INTEGER DEFAULT 0"
+        )
+    if "budget_used_before_emergency" not in cols:
+        await conn.execute(
+            "ALTER TABLE context_snapshots ADD COLUMN budget_used_before_emergency REAL"
+        )
+
+
 async def _migrate_setting_setting_key_index(conn: aiosqlite.Connection) -> None:
     """PERF-04: 为 setting_snapshots 添加 (project_id, setting_key) 索引.
 
@@ -484,6 +498,7 @@ async def init_schema(db_path: str | Path | None = None) -> None:
         await _migrate_dialogue_style_card(conn)
         await _migrate_chapter_versions_score_card(conn)
         await _migrate_context_snapshots(conn)
+        await _migrate_context_snapshots_emergency_fields(conn)
         await _migrate_setting_setting_key_index(conn)
         await _migrate_human_marks_extra_fields(conn)
         await conn.commit()
@@ -522,6 +537,7 @@ async def run_migrations(conn: aiosqlite.Connection) -> None:
     await _migrate_project_arc_boundaries(conn)
     await _migrate_chapter_versions_score_card(conn)
     await _migrate_context_snapshots(conn)
+    await _migrate_context_snapshots_emergency_fields(conn)
     await _migrate_layered_context_tables(conn)
     await _migrate_continuity_suggested_marks(conn)
     await _migrate_human_marks(conn)

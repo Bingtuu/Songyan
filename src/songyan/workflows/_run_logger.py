@@ -124,6 +124,10 @@ def build_chapter_run_log(
     final_state: dict | None = None,
     metrics: dict | None = None,
     continuity_health_score: float | None = None,
+    continuity_health_severity: dict[str, int] | None = None,
+    gate_triggered: bool = False,
+    gate_reasons: list[str] | None = None,
+    gate_mode: str = "observe",
     duration_sec: float = 0.0,
 ) -> ChapterRunLog:
     """构建 ChapterRunLog.
@@ -208,6 +212,10 @@ def build_chapter_run_log(
         revision_rounds=state.get("_total_revision_count", state.get("revision_round", 0)),
         content_preservation_ratio=state.get("_content_preservation_ratio"),
         continuity_health_score=continuity_health_score,
+        continuity_health_severity=continuity_health_severity,
+        gate_triggered=gate_triggered,
+        gate_reasons=gate_reasons or [],
+        gate_mode=gate_mode,
         settlement_success=settlement_success,
         settlement_needs_human_review=settlement_needs_review,
         summary_id=summary_id,
@@ -261,6 +269,10 @@ async def log_chapter_run(
     final_state: dict | None = None,
     final_version_id: str | None = None,
     continuity_health_score: float | None = None,
+    continuity_health_severity: dict[str, int] | None = None,
+    gate_triggered: bool = False,
+    gate_reasons: list[str] | None = None,
+    gate_mode: str = "observe",
     duration_sec: float = 0.0,
 ) -> ChapterRunLog:
     """一站式单章运行日志记录.
@@ -287,6 +299,10 @@ async def log_chapter_run(
         final_state=final_state,
         metrics=metrics,
         continuity_health_score=continuity_health_score,
+        continuity_health_severity=continuity_health_severity,
+        gate_triggered=gate_triggered,
+        gate_reasons=gate_reasons,
+        gate_mode=gate_mode,
         duration_sec=duration_sec,
     )
 

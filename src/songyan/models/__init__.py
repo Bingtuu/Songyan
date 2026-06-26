@@ -33,6 +33,7 @@ from songyan.models.creative_mode import (
     PunchPoint,
     Tension,
 )
+from songyan.models.gate_config import GateConfig
 from songyan.models.genre import (
     EmotionArc,
     GenreProfile,
@@ -162,6 +163,8 @@ __all__ = [
     # Task 058a 新增
     "ChapterRunLog",
     "ProjectRunResult",
+    # Task 123 新增
+    "GateConfig",
     "ProjectRunState",
     "ChapterScoreCard",
     "DimensionScore",

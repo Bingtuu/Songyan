@@ -585,9 +585,10 @@ class ContextSnapshotRepository:
             await c.execute(
                 """INSERT INTO context_snapshots (
                     snapshot_id, project_id, chapter_number, chapter_goal_id,
-                    creative_brief_id, budget_used, context_emergency, payload,
+                    creative_brief_id, budget_used, context_emergency,
+                    context_emergency_level, budget_used_before_emergency, payload,
                     created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
                     snapshot.snapshot_id,
                     snapshot.project_id,
@@ -596,6 +597,8 @@ class ContextSnapshotRepository:
                     snapshot.creative_brief_id,
                     snapshot.budget_used,
                     int(snapshot.context_emergency),
+                    snapshot.context_emergency_level,
+                    snapshot.budget_used_before_emergency,
                     _to_json(snapshot.payload),
                     _dt(snapshot.created_at),
                 ),
@@ -632,6 +635,8 @@ class ContextSnapshotRepository:
             creative_brief_id=row["creative_brief_id"],
             budget_used=row["budget_used"],
             context_emergency=bool(row["context_emergency"]),
+            context_emergency_level=row["context_emergency_level"] or 0,
+            budget_used_before_emergency=row["budget_used_before_emergency"],
             payload=_from_json(row["payload"], {}),
             created_at=row["created_at"],
         )

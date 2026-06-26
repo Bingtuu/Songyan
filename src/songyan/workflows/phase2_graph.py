@@ -10,11 +10,16 @@ from typing import Any
 import structlog
 
 from songyan.agents.continuity_auditor import ContinuityAuditor
+from songyan.agents.continuity_auditor.continuity_health import classify_report
 from songyan.db.connection import get_db
 from songyan.db.project_run_repo import ProjectRunRepository
 from songyan.db.repository import ChapterHeadRepository
 from songyan.exceptions import AutoHaltException
-from songyan.models import ProjectRunResult, ProjectRunState
+from songyan.models import GateConfig, ProjectRunResult, ProjectRunState
+from songyan.workflows._gates import (
+    check_health_low_streak_gate,
+    evaluate_all_gates,
+)
 from songyan.workflows._helpers import new_id
 from songyan.workflows._run_logger import log_chapter_run
 from songyan.workflows.phase1_graph import (
@@ -128,8 +133,11 @@ def _append_recent_result(
     recent_results: list[dict[str, Any]],
     chapter_number: int,
     chapter_result: dict[str, Any],
+    gate_config: GateConfig | None = None,
 ) -> None:
     """记录最近章节指标，供项目级自动熔断使用."""
+    gate_config = gate_config or GateConfig()
+    _severity = chapter_result.get("continuity_health_severity") or {}
     recent_results.append({
         "chapter_number": chapter_number,
         "success": chapter_result["success"],
@@ -137,8 +145,14 @@ def _append_recent_result(
         "context_emergency": chapter_result.get("context_emergency", False),
         "settlement_success": chapter_result.get("settlement_success"),
         "summary_success": chapter_result.get("summary_success"),
+        "continuity_health_severity": _severity,
+        "gate_triggered": chapter_result.get("gate_triggered", False),
+        "gate_reasons": chapter_result.get("gate_reasons", []),
     })
-    if len(recent_results) > 3:
+    # Task 125: 若使用审计点 streak 窗口，需保留足够历史以覆盖 audit_window 个审计点
+    _audit_window = gate_config.health_low_streak_audit_window
+    _cap = 3 if _audit_window is None else max(3, _audit_window * 3)
+    if len(recent_results) > _cap:
         recent_results.pop(0)
 
 
@@ -151,6 +165,8 @@ async def _check_auto_halt_window(
     *,
     run_id: str,
     chapter_number: int,
+    gate_config: GateConfig | None = None,
+    previous_p1_counts: list[int] | None = None,
 ) -> None:
     """检查项目级自动熔断窗口."""
     if len(recent_results) < 3:
@@ -174,6 +190,28 @@ async def _check_auto_halt_window(
                 last_chapter=chapter_number,
                 reason="quality_gate_fail_streak",
             )
+
+    # Task 123: health_low streak 门禁
+    _hl_triggered, _hl_reasons = check_health_low_streak_gate(
+        recent_results, gate_config, previous_p1_counts=previous_p1_counts
+    )
+    if _hl_triggered:
+        _ch_start = recent_results[0]["chapter_number"]
+        await _pause_run_for_auto_halt(
+            run_state,
+            completed,
+            failed,
+            persisted_summary,
+        )
+        raise AutoHaltException(
+            message=(
+                f"连续 health_low 触发候选硬门禁（Ch{_ch_start}-Ch{chapter_number}）: "
+                f"{_hl_reasons}"
+            ),
+            last_chapter=chapter_number,
+            reason="health_low_streak_halt",
+        )
+
     if _emergencies >= 3:
         _ch_start = recent_results[0]["chapter_number"]
         if _has_context_emergency_degradation(recent_results):
@@ -214,6 +252,7 @@ async def run_project_pipeline(
     max_revision_rounds: int = 2,
     on_failure: str = "abort",  # "abort" | "retry"
     continuity_health_threshold: float = 7.0,
+    gate_config: GateConfig | None = None,
 ) -> ProjectRunResult:
     """运行多章流水线，逐章调用 Phase1Graph，自动传递上下文.
 
@@ -225,6 +264,7 @@ async def run_project_pipeline(
         max_revision_rounds: 单章最大 revision 轮数（透传给 Phase1Graph）
         on_failure: 单章失败策略："abort" 终止整批，"retry" 重试 1 次
         continuity_health_threshold: 连续性健康分阈值，低于此值触发警告
+        gate_config: Task 123 候选硬门禁配置，None 时使用默认关闭配置
 
     Returns:
         ProjectRunResult: 运行结果统计
@@ -232,6 +272,7 @@ async def run_project_pipeline(
     Raises:
         ValueError: chapter_range 非法 或 auto_confirm=False（批量模式不支持人工确认）
     """
+    gate_config = gate_config or GateConfig()
     start_time = time.monotonic()
     start, end = chapter_range
 
@@ -273,6 +314,10 @@ async def run_project_pipeline(
 
     # Task 105: 熔断历史窗口（最近 3 章的指标）
     _recent_results: list[dict] = []
+
+    # Task 125: 保存历史审计数据，供 health_low 异常检测使用
+    _previous_health_low_report: Any | None = None
+    _previous_p1_counts: list[int] = []
 
     # 重置检查指针，消除冷启动导致的首章 WAL 读一致性窗口问题
     await reset_checkpointer()
@@ -321,10 +366,20 @@ async def run_project_pipeline(
             auto_confirm=auto_confirm,
             on_failure=on_failure,
             continuity_health_threshold=continuity_health_threshold,
+            gate_config=gate_config,
             run_id=run_id,
+            previous_health_low_report=_previous_health_low_report,
+            previous_p1_counts=_previous_p1_counts,
         )
 
-        _append_recent_result(_recent_results, chapter_number, chapter_result)
+        _append_recent_result(_recent_results, chapter_number, chapter_result, gate_config)
+
+        # Task 125: 审计点章节更新历史数据，供后续 health_low 异常检测使用
+        _health_low_report = chapter_result.get("health_low_report")
+        if _health_low_report is not None:
+            _previous_health_low_report = _health_low_report
+            _severity = chapter_result.get("continuity_health_severity") or {}
+            _previous_p1_counts.append(_severity.get("P1", 0))
 
         if chapter_result["success"]:
             completed.append(chapter_number)
@@ -371,6 +426,8 @@ async def run_project_pipeline(
                 persisted_summary,
                 run_id=run_id,
                 chapter_number=chapter_number,
+                gate_config=gate_config,
+                previous_p1_counts=_previous_p1_counts,
             )
             if on_failure == "abort":
                 break
@@ -378,6 +435,24 @@ async def run_project_pipeline(
             # 如果 retry 仍失败，则记录失败并继续（还是终止取决于策略）
             # 当前策略：retry 一次后仍失败则终止
             break
+
+        # Task 123: 单章即时门禁在日志记录后由 _run_single_chapter 返回标记，
+        # 这里统一处理 enforce 模式下的 pause。
+        if chapter_result.get("gate_triggered") and gate_config.is_enforce():
+            await _pause_run_for_auto_halt(
+                run_state,
+                completed,
+                failed,
+                persisted_summary,
+            )
+            raise AutoHaltException(
+                message=(
+                    f"Ch{chapter_number} 触发候选硬门禁: "
+                    f"{chapter_result.get('gate_reasons', [])}"
+                ),
+                last_chapter=chapter_number,
+                reason=chapter_result.get("gate_reasons", ["unknown"])[0],
+            )
 
         await _check_auto_halt_window(
             run_state,
@@ -387,6 +462,8 @@ async def run_project_pipeline(
             persisted_summary,
             run_id=run_id,
             chapter_number=chapter_number,
+            gate_config=gate_config,
+            previous_p1_counts=_previous_p1_counts,
         )
 
     # ---- 收尾 ----
@@ -433,8 +510,11 @@ async def _run_single_chapter(
     on_failure: str,
     max_revision_rounds: int = 2,
     continuity_health_threshold: float = 7.0,
+    gate_config: GateConfig | None = None,
     *,
     run_id: str | None = None,
+    previous_health_low_report: Any | None = None,
+    previous_p1_counts: list[int] | None = None,
 ) -> dict:
     """运行单章，含 auto_confirm 处理和失败重试.
 
@@ -445,8 +525,12 @@ async def _run_single_chapter(
             "error": str | None,
             "final_state": dict | None,
             "final_version_id": str | None,
+            "continuity_health_severity": dict | None,
+            "gate_triggered": bool,
+            "gate_reasons": list[str],
         }
     """
+    gate_config = gate_config or GateConfig()
     started_at = datetime.now()
     chapter_start = time.monotonic()
     thread_id = new_id("thread")
@@ -528,6 +612,8 @@ async def _run_single_chapter(
             _stage = "continuity_audit"
             # ---- 每 3 章运行 ContinuityAuditor ----
             continuity_health_score: float | None = None
+            continuity_health_severity: dict[str, int] | None = None
+            health_low_report: Any | None = None
             if chapter_number % 3 == 0:
                 try:
                     auditor = ContinuityAuditor()
@@ -537,6 +623,8 @@ async def _run_single_chapter(
                     )
                     await auditor.write_constraints(report, version_id=final_version_id)
                     continuity_health_score = report.overall_health_score
+                    continuity_health_severity = classify_report(report)
+                    health_low_report = report
                     if report.overall_health_score < continuity_health_threshold:
                         logger.warning(
                             "continuity.health_low",
@@ -546,6 +634,7 @@ async def _run_single_chapter(
                             threshold=continuity_health_threshold,
                             orphaned=len(report.orphaned_settings),
                             overdue=len(report.overdue_foreshadowings),
+                            severity=continuity_health_severity,
                         )
                 except Exception as exc:
                     logger.warning(
@@ -556,6 +645,34 @@ async def _run_single_chapter(
                     )
 
             _stage = "run_logger"  # 跟踪当前阶段
+            # Task 105: 透传上下文指标供外层熔断检查
+            _ctx_metrics = final_state.get("_context_metrics", {}) if final_state else {}
+            _qg_passed = final_state.get("_quality_gate_passed") if final_state else None
+
+            # Task 123: 先构造 preliminary chapter_result，用于单章门禁判断
+            _preliminary_result: dict[str, Any] = {
+                "success": True,
+                "quality_gate_passed": _qg_passed,
+                "context_emergency": _ctx_metrics.get("context_emergency", False),
+                "settlement_success": (
+                    not final_state.get("_settlement_needs_human_review", False)
+                    and not final_state.get("_skip_settlement", False)
+                    and final_state.get("settlement_id") is not None
+                ),
+                "summary_success": final_state.get("summary_id") is not None,
+            }
+
+            # Task 123: 单章候选硬门禁判断（在写日志前完成，使日志包含 gate 信息）
+            _gate_triggered, _gate_reasons = evaluate_all_gates(
+                health_low_report=health_low_report,
+                context_metrics=_ctx_metrics,
+                chapter_result=_preliminary_result,
+                recent_results=[],
+                config=gate_config,
+                previous_health_low_report=previous_health_low_report,
+                previous_p1_counts=previous_p1_counts,
+            )
+
             chapter_log = await log_chapter_run(
                 run_id=run_id,
                 project_id=project_id,
@@ -566,11 +683,12 @@ async def _run_single_chapter(
                 final_state=final_state,
                 final_version_id=final_version_id,
                 continuity_health_score=continuity_health_score,
+                continuity_health_severity=continuity_health_severity,
+                gate_triggered=_gate_triggered,
+                gate_reasons=_gate_reasons,
+                gate_mode=gate_config.gate_mode,
                 duration_sec=duration_sec,
             )
-            # Task 105: 透传上下文指标供外层熔断检查
-            _ctx_metrics = final_state.get("_context_metrics", {}) if final_state else {}
-            _qg_passed = final_state.get("_quality_gate_passed") if final_state else None
             logged_budget = getattr(chapter_log, "budget_used", None)
             logged_context_emergency = getattr(chapter_log, "context_emergency", None)
             logged_qg_passed = getattr(chapter_log, "quality_gate_passed", None)
@@ -580,6 +698,16 @@ async def _run_single_chapter(
                 logged_context_emergency = _ctx_metrics.get("context_emergency", False)
             if logged_qg_passed not in (True, False, None):
                 logged_qg_passed = _qg_passed
+
+            if _gate_triggered:
+                logger.warning(
+                    "project_pipeline.gate_triggered",
+                    run_id=run_id,
+                    chapter_number=chapter_number,
+                    gate_mode=gate_config.gate_mode,
+                    reasons=_gate_reasons,
+                )
+
             return {
                 "success": True,
                 "summary_text": summary_text,
@@ -593,7 +721,12 @@ async def _run_single_chapter(
                 "quality_gate_passed": logged_qg_passed,
                 "settlement_success": logged_settlement_success,
                 "summary_success": logged_summary_success,
+                "continuity_health_severity": continuity_health_severity,
+                "health_low_report": health_low_report,
+                "gate_triggered": _gate_triggered,
+                "gate_reasons": _gate_reasons,
             }
+
 
         except Exception:
             logger.exception("project_pipeline.chapter_exception", chapter_number=chapter_number)
@@ -639,6 +772,9 @@ async def _run_single_chapter(
         "quality_gate_passed": _qg_passed,
         "settlement_success": _settlement_success,
         "summary_success": _summary_success,
+        "continuity_health_severity": None,
+        "gate_triggered": False,
+        "gate_reasons": [],
     }
 
 

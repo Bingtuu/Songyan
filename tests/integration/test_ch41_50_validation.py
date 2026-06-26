@@ -194,12 +194,28 @@ async def _collect_metrics(project_id: str) -> dict:
         )
         setting_with_quote = (await cursor.fetchone())[0]
 
+        cursor = await conn.execute(
+            """SELECT COUNT(*) FROM context_snapshots
+            WHERE project_id = ? AND chapter_number BETWEEN ? AND ? AND context_emergency = 1""",
+            (project_id, 41, 50),
+        )
+        context_emergency_count = (await cursor.fetchone())[0]
+
+        cursor = await conn.execute(
+            """SELECT COUNT(*) FROM chapter_heads
+            WHERE project_id = ? AND chapter_number BETWEEN ? AND ? AND status != 'accepted'""",
+            (project_id, 41, 50),
+        )
+        failed_chapter_count = (await cursor.fetchone())[0]
+
     return {
         "summary_count": summary_count,
         "character_state_count": character_state_count,
         "version_count": version_count,
         "budget_used_per_chapter": budget_data,
         "setting_with_source_quote": setting_with_quote,
+        "context_emergency_count": context_emergency_count,
+        "failed_chapter_count": failed_chapter_count,
     }
 
 
@@ -278,6 +294,14 @@ async def test_ch41_50_long_chain_validation(test_db, mock_call_llm) -> None:
     max_budget = max(d["budget_used"] for d in budget_data.values())
     assert max_budget <= 1.0, f"Budget exceeded! max={max_budget:.2%}"
 
+    # Task 122c 要求：Ch40-Ch50 ContextEmergency ≤2，AutoHalt/失败 = 0
+    assert metrics["context_emergency_count"] <= 2, (
+        f"Too many context emergencies: {metrics['context_emergency_count']}"
+    )
+    assert metrics["failed_chapter_count"] == 0, (
+        f"Unexpected failed chapters: {metrics['failed_chapter_count']}"
+    )
+
     report = {
         "validation": "Ch41-Ch50 Long Chain",
         "project_id": project_id,
@@ -291,6 +315,8 @@ async def test_ch41_50_long_chain_validation(test_db, mock_call_llm) -> None:
         "budget_used_by_chapter": {
             f"Ch{ch}": data for ch, data in budget_data.items()
         },
+        "context_emergency_count": metrics["context_emergency_count"],
+        "failed_chapter_count": metrics["failed_chapter_count"],
         "setting_with_source_quote": metrics["setting_with_source_quote"],
         "llm_mock_calls_total": mock_call_llm._call_count,  # type: ignore[attr-defined]
         "status": "PASS",

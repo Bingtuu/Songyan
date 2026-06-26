@@ -39,6 +39,12 @@ class ChapterRunLog(BaseModel):
 
     # 连续性（每3章运行一次，可能为 None）
     continuity_health_score: float | None = None
+    continuity_health_severity: dict[str, int] | None = None  # Task 123: P1/P2/P3 计数
+
+    # Task 123: 候选硬门禁触发记录
+    gate_triggered: bool = False
+    gate_reasons: list[str] = Field(default_factory=list)
+    gate_mode: str = "observe"  # "observe" | "enforce"
 
     # Settlement 状态
     settlement_success: bool = True

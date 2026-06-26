@@ -244,6 +244,7 @@ class ContextSnapshot(BaseModel):
     creative_brief_id: str | None = None
     budget_used: float | None = None
     context_emergency: bool = False
+    context_emergency_level: int = 0
     budget_used_before_emergency: float | None = None
     payload: dict = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=datetime.now)

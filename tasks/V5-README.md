@@ -1,8 +1,8 @@
 # V5.0 Task 总索引
 
 > **阶段**: Context Diet 2.0 — 智能遗忘架构
-> **当前口径**: **V5.0 完成** — Task 115-120 全部收口，P0/P1 风险为 0；Task 121a-121i 已完成 single-run 证据推进与 Ch115 修复验证，Task 121j 已暴露连续 ContextEmergency AutoHalt 新阻断，Task 121l 已完成策略修复和聚焦实跑验证，结果为 degraded emergency partial；Task 121m/121n/121o 已规划（QG false 硬拦截+元标记清理、预算与 human_marks 生命周期调整、Ch1-Ch18 聚焦验证重跑）；Task 121k 负责 Prompt 质量清理
-> **最后整理**: 2026-06-22
+> **当前口径**: **V5.0 完成，V5.1 预研收口** — Task 115-120 全部收口，P0/P1 风险为 0；Task 121 系列已完成 Ch1-Ch150 full single-run 最终证据、Prompt 质量清理、测试矩阵与硬门禁预研；Task 122a/122b/122c/122d 完成动态阈值、Pipeline 集成测试、E2E 验证窗口与 150 章长序列压力测试；Task 123/124/125/126 完成 ContextEmergency / health_low 候选硬门禁提案、离线影响面分析、阈值调优与 enforce 小窗口实跑验证，`run-a2bed648` 与 Ch1-Ch19 小窗口上 `any_gate` 均触发 0 次
+> **最后整理**: 2026-06-26
 
 本文是 V5 阶段任务文档的事实入口。历史规划稿保留用于追溯设计边界；最终状态以本文件和各 `*-DONE.md` 为准。
 
@@ -32,7 +32,21 @@ V5.0 已完成从 Context Diet 2.0 核心组件到 150 章验证的全部主线�
 - **Task 121l 已完成策略修复和聚焦实跑**：`run-08689f68` 使用新 clean project，Ch1-Ch12 全部 success，失败 0；Ch10-Ch12 连续 ContextEmergency 且 Ch10 QG false，按新 `context_emergency_degraded_streak` 策略暂停，结果 partial。
 - **Task 121m/121n/121o 已规划**：121m 负责 QG false 硬拦截 settlement + 元标记泄漏清理；121n 负责 Context Diet 2.0 预算增量调整（80→250）+ human_marks 生命周期窗口缩短（10→6）；121o 负责 121m/121n 完成后执行 Ch1-Ch18 聚焦验证重跑。
 - **Task 121k 已拆分后置质量任务**：单独处理 Prompt / 正文质量清理。
+- **Task 121m 已完成**：QG false 硬拦截 settlement + 元标记泄漏清理。
+- **Task 121n 已完成**：Context Diet 2.0 预算增量 80→250 + human_marks 生命周期窗口 10→6。
+- **Task 121o 已完成**：Ch1-Ch18 聚焦验证重跑，18/18 成功，ContextEmergency 0 次，AutoHalt 0 次。
+- **Task 121p 已完成**：修复 pipeline 未跳过已有 accepted 章节 + RAG 索引超时异常未捕获两个 Bug；`_SAFE_BEST_MIN_OVERALL_SCORE` 动态化（Ch1-Ch20→0.75, Ch21-Ch50→0.78, Ch51+→0.82）+ `degraded_accept` 降级回滚路径。
+- **Task 121q 已完成**：`run-a2bed648` Ch1-Ch150 full single-run 150/150 全部成功，ContextEmergency 0 次，AutoHalt 0 次，degraded_accept 0 次，failed 0 次，无间隙。
+- **Task 121r 已完成**：Writer 1.1.0 + CreativeDirector 1.0.5 + RuleAuditor 新增 markdown 场景标题与短段落比例检测；pytest 1764 passed。
+- **Task 122a 已完成**：`_safe_best_min_score` 边界值测试 + `degraded_accept` 降级回滚路径测试。
+- **Task 122b 已完成**：新增 12 个集成测试覆盖 degraded_accept 路由、safe best 保护、human_review_required gate、AutoHalt streak 逻辑；pytest 1784 passed。
+- **Task 122c 已完成**：Ch1-Ch20 / Ch40-Ch50 / Ch100-Ch110 三个 E2E 窗口验证完成；Ch40-Ch50 测试补强 emergency/auto-halt 断言；Ch100-Ch110 基于 `run-a2bed648` 历史数据新增离线验证测试。
 
+- **Task 122d 已完成**：新增 `tests/integration/test_122d_long_sequence_stability.py`，覆盖 150 章上下文预算趋势、human_marks 6 章蒸发、AutoHalt 真/假阳性、accepted 章节跳过 5 个压力场景；pytest 1784 passed；ruff 通过。
+- **Task 123 已完成**：ContextEmergency / health_low 候选硬门禁实现（默认观测模式），新增 `GateConfig`、`_gates.py`、`tests/test_123_gates.py` 16 个单测。
+- **Task 124 已完成**：基于 `run-a2bed648` 的候选硬门禁离线影响面分析，原始阈值触发 118/120 章；交付分析脚本、报告与 16 个单测。
+- **Task 125 已完成**：候选硬门禁阈值调优，引入 P1 异常检测、health_score 相对跌幅、审计点 streak 窗口；`run-a2bed648` 上 `any_gate` 触发 0 章；新增 `tests/test_125_gate_thresholds.py` 12 个单测；全量 pytest 1828 passed。
+- **Task 126 已完成**：候选硬门禁 enforce 模式 Ch1–Ch20 小窗口实跑验证；发现 `health_low_absolute_score_halt` 在新项目开局期误触发，禁用后 Ch1–Ch19 零 gate 触发，Ch20 因既有 QG false block 失败；交付 `scripts/run_126_enforce_validation.py`。
 ---
 
 ## 文档使用规则
@@ -92,11 +106,25 @@ V5.0 已完成从 Context Diet 2.0 核心组件到 150 章验证的全部主线�
 | 121e | Ch8 Settlement Foreshadowing Validation Fix | ✅ 完成，重跑到 Ch18 新阻断 | `121e-ch8-settlement-foreshadowing-validation-fix-DONE.md` |
 | 121f | Ch18 CreativeDirector Error Contract | ✅ 完成，Ch1-Ch18 聚焦验证通过 | `121f-ch18-creative-director-error-contract-DONE.md` |
 | 121g | Ch1-Ch150 Single-Run Rerun and Ch115 Blocker | ❌ 未通过，Ch1-Ch114 成功，Ch115 新阻断 | `121g-ch1-ch150-single-run-rerun-ch115-blocker-DONE.md` |
-| 121h | Ch115 Quality Gate / Best-Version Rewrite Contract Fix | ✅ 完成 | `121h-ch115-quality-gate-rewrite-state-review.md` |
-| 121i | Ch115 Focused Rerun and Quality Window Review | ✅ 完成，`run-ce1767ff` | `121i-ch115-focused-rerun-and-quality-window.md` |
-| 121j | Ch1-Ch150 Single-Run After Ch115 Fix | ❌ 未通过，Ch1-Ch13 成功，Ch13 后 AutoHalt | `121j-ch1-ch150-single-run-after-ch115-fix.md` |
-| 121k | Prompt Quality Cleanup Plan | TODO，V5.1 质量专项 | `121k-prompt-quality-cleanup-plan.md` |
-| 121l | ContextEmergency AutoHalt Review | ⚠️ 策略修复完成，聚焦实跑 partial | `121l-context-emergency-autohalt-review.md` |
+| 121h | Ch115 Quality Gate / Best-Version Rewrite Contract Fix | ✅ 完成 | `121h-ch115-quality-gate-rewrite-state-review-DONE.md` |
+| 121i | Ch115 Focused Rerun and Quality Window Review | ✅ 完成，`run-ce1767ff` | `121i-ch115-focused-rerun-and-quality-window-DONE.md` |
+| 121j | Ch1-Ch150 Single-Run After Ch115 Fix | ❌ 未通过，Ch1-Ch13 成功，Ch13 后 AutoHalt | `121j-ch1-ch150-single-run-after-ch115-fix-DONE.md` |
+| 121k | Prompt Quality Cleanup Plan | ✅ 完成，规划由 Task 121r 落地 | `121k-prompt-quality-cleanup-plan-DONE.md` |
+| 121l | ContextEmergency AutoHalt Review | ✅ 策略修复完成，聚焦实跑 partial | `121l-context-emergency-autohalt-review-DONE.md` |
+| 121m | QG False 硬拦截 + 元标记泄漏清理 | ✅ 完成 | `121m-qg-false-block-and-meta-tag-cleanup-DONE.md` |
+| 121n | Context Diet 预算与 human_marks 生命周期调整 | ✅ 完成 | `121n-context-diet-budget-and-human-marks-lifecycle-DONE.md` |
+| 121o | Ch1-Ch18 聚焦验证重跑 | ✅ 完成，`run-4ff41095` 18/18 | `121o-ch1-ch18-focused-rerun-validation-DONE.md` |
+| 121p | Bug A/B 修复与 RAG embedder 超时 | ✅ 完成 | `121p-ch1-ch150-single-run-rag-embedder-timeout-DONE.md` |
+| 121q | Safe-Best 动态阈值 + Ch1-Ch150 full single-run | ✅ 完成，`run-a2bed648` 150/150 | `121q-safe-best-threshold-dynamic-fix-DONE.md` |
+| 121r | Prompt 质量清理 | ✅ 完成，pytest 1764 passed | `121r-prompt-quality-cleanup-execution-DONE.md` |
+| 122a | 动态阈值与降级回滚单测 | ✅ 完成 | `122a-unit-test-matrix-dynamic-thresholds-DONE.md` |
+| 122b | Pipeline 集成测试矩阵 | ✅ 完成，pytest 1784 passed | `122b-integration-test-pipeline-scenarios-DONE.md` |
+| 122c | E2E 验证窗口补全 | ✅ 完成 | `122c-e2e-validation-windows-DONE.md` |
+| 122d | 150 章长序列压力测试 | ✅ 完成，pytest 1784 passed | `122d-stress-test-long-sequence-stability-DONE.md` |
+| 123 | ContextEmergency / health_low 候选硬门禁提案 | ✅ 完成 | `123-context-emergency-health-low-gate-proposal-DONE.md` |
+| 124 | 候选硬门禁离线影响面分析 | ✅ 完成，原始阈值触发 118/120 章 | `124-context-emergency-health-low-gate-impact-analysis-DONE.md` |
+| 125 | 候选硬门禁阈值调优与验证 | ✅ 完成，`run-a2bed648` any_gate 0 章 | `125-gate-threshold-tuning-and-validation-DONE.md` |
+| 126 | 候选硬门禁 enforce 小窗口实跑验证 | ✅ 完成，Ch1–Ch19 零 gate 触发 | `126-small-window-enforce-validation-DONE.md` |
 
 ---
 
@@ -110,11 +138,16 @@ V5.0 已完成从 Context Diet 2.0 核心组件到 150 章验证的全部主线�
 | Ch102/Ch103 settlement 验证窗口 | `run-af3ba939` 完成 accept + settlement + summary |
 | Ch111-Ch150 DG-2 | 40/40 成功，QG/settlement/summary 40/40，条件通过；Task 115-117 已关闭风险 |
 | Ch1-Ch150 single-run rehearsal | `run-21ff158b`：Ch1-Ch4 成功，Ch5 阻断；`run-f749826e`：Ch1-Ch7 成功，Ch8 阻断；`run-0317a247`：Ch1-Ch17 成功，Ch18 CreativeDirector JSON parse failure 新阻断；`run-058fb9de`：Ch1-Ch18 聚焦验证成功；`run-0fd1456e`：Ch1-Ch114 成功，Ch115 quality gate human review 阻断；`run-ce1767ff`：Ch115 聚焦验证成功；`run-b063b6f0`：Ch1-Ch13 成功，连续 ContextEmergency AutoHalt 暂停；`run-08689f68`：Task 121l 聚焦验证 Ch1-Ch12 成功，Ch10-Ch12 degraded emergency AutoHalt 暂停 |
+| Ch1-Ch150 full single-run | **Task 121q `run-a2bed648`：150/150 全部成功**，ContextEmergency 0 次，AutoHalt 0 次，degraded_accept 0 次，failed 0 次，无间隙 |
+| Task 122c E2E 窗口验证 | Ch1-Ch20（`test_ch1_20_e2e.py`，20/20）；Ch40-Ch50（`test_ch41_50_validation.py`，10/10，emergency 0，auto-halt 0）；Ch100-Ch110（`test_ch100_110_from_run_log.py`，11/11，复用 `run-a2bed648`） |
+| Task 122d 150 章压力测试 | `tests/integration/test_122d_long_sequence_stability.py`（5/5），覆盖 150 章 budget 趋势、human_marks 蒸发、AutoHalt 真/假阳性、accepted 章节跳过 |
 | Ch115 质量复盘 | `rev-115-3` 已达 `overall=0.8776` 且字数健康，但后续 rewrite 输出 7771 字并经 hard truncate 后降至 `overall=0.7335`；Task 121h 已修状态生命周期与 best-version 保护，Task 121i 已验证 Ch115 不再 human_review_required |
-| 最近全量回归 | `1725 passed, 1 xfailed, 1 xpassed, 14 warnings` |
-| 当前全量 ruff | `ruff check src/ tests/` 已通过 |
+| 最近全量回归 | `1828 passed, 1 xfailed, 2 warnings` |
+| 当前全量 ruff | `ruff check src/ tests/ scripts/analyze_124_gate_impact.py` 已通过 |
+| 候选硬门禁离线验证 | Task 124：`run-a2bed648` 原始候选阈值触发 118/120 章 |
+| 候选硬门禁阈值调优 | Task 125：`run-a2bed648` 调优后 `any_gate` 触发 0 章 |
 
-测试口径说明：`1 xfailed` 为已知非阻断项，`1 xpassed` 为既有标记状态变化；14 warnings 均为既有 pytest/依赖警告。
+测试口径说明：`1 xfailed` 为已知非阻断项，`0 xpassed`；2 warnings 均为既有 pytest/依赖警告。
 
 ---
 
@@ -124,12 +157,12 @@ V5.0 已完成从 Context Diet 2.0 核心组件到 150 章验证的全部主线�
 |------|----------|------|
 | Ch115/Ch120 ContextEmergency 触发原因 | ~~P1~~ | **Task 115 已关闭**：诊断为合理降级（`budget_used` 触发时 1.0007），新增可观测性字段 |
 | Ch147/Ch148 best-version 质量选择策略 | ~~P1~~ | **Task 116 已关闭**：`quality_gate_router` 路由缺陷修复，QG 通过后不再错误触发 rewrite |
-| ContinuityAuditor health 低分只写 human marks、不阻断 accept | ~~P2~~ | **Task 118 已关闭**：软复核策略（health_low 追踪但不断路），V5.1 可扩展为硬门禁 |
-| 一次性 Ch1-Ch150 单命令证据 | P1 | **Task 121j `run-b063b6f0` 新干净项目重跑到 Ch13，Ch1-Ch13 全成功但连续 ContextEmergency AutoHalt 暂停；Task 121l `run-08689f68` 聚焦验证到 Ch12 后按 degraded emergency 策略暂停，仍未达成 150/150；Task 121m/121n/121o 正在处理 QG false 放行、预算调整和验证重跑** |
-| 连续 ContextEmergency AutoHalt | P1 | Task 121l 已验证新策略：成功降级连续出现不再误暂停，真实降级连续窗口仍熔断；Task 121m/121n 处理 QG false 放行与上下文预算劣化 |
+| ContinuityAuditor health 低分只写 human marks、不阻断 accept | ~~P2~~ | **Task 118/123/124/125 已关闭**：health_low 软复核 + 候选硬门禁实现 + 离线影响面分析 + 阈值调优；`run-a2bed648` 上调优后 `any_gate` 触发 0 章，默认仍 `gate_mode="observe"` |
+| 一次性 Ch1-Ch150 单命令证据 | ~~P1~~ | **Task 121q `run-a2bed648` 已完成**：Ch1-Ch150 150/150 全部成功，ContextEmergency 0 次，AutoHalt 0 次，degraded_accept 0 次，failed 0 次，无间隙 |
+| 连续 ContextEmergency AutoHalt | ~~P1~~ | **已解除**：Task 121l 策略修复 + Task 121m QG false 硬拦截 + Task 121n 预算调整；Task 121o `run-4ff41095` 验证 Ch1-Ch18 0 次 emergency、0 次 AutoHalt |
 | Ch115 rewrite / best-version 劣化 | P1 | **Task 121h 已完成工程修复，Task 121i `run-ce1767ff` 已验证 Ch115 聚焦重跑成功**；safe-best 回滚主路径由单测覆盖，本次实跑未触发 rewrite |
-| QG false 版本进入 settlement | P1 | Task 121m 已规划：在 settlement_extractor_node 入口增加 QG false 硬拦截 |
-| 元标记泄漏（`<!-- 新设定 -->`） | P1 | Task 121m 已规划：清理 writer prompt 中的 HTML 注释指令，后处理强制过滤 |
+| QG false 版本进入 settlement | ~~P1~~ | **Task 121m 已完成**：settlement_extractor_node 入口增加 QG false 硬拦截 |
+| 元标记泄漏（`<!-- 新设定 -->`） | ~~P1~~ | **Task 121m 已完成**：清理 writer prompt 中的 HTML 注释指令，后处理强制过滤 |
 | 正文纯净度与段落节奏 | V5.1 | Task 121k 处理：机械场景标题、短段落碎片化、说明文堆叠 |
 
 ---
@@ -157,5 +190,6 @@ Task 115-120 用于 V5.0 条件通过后的收口，不改变 Task 114c 已完�
 - `114c DONE` 是 Ch111-Ch150 与 DG-2 的最终依据。
 - Task 114、114b、115-120 的历史规划稿已移入 `archive/v5/plans/`，旧 `run_task117.ps1` 已移入 `archive/v5/scripts/`。
 - Task 121g 已补齐 DONE 文档，明确 `run-0fd1456e` 不能作为 Ch1-Ch150 完成证据，但可作为 Ch115 首个真实阻断证据。
-- Task 121h/121i 已完成工程修复与聚焦验证；Task 121j 已执行但 partial；Task 121l 已完成策略修复和聚焦实跑，结果为 degraded emergency partial；Task 121m/121n/121o 已规划；Task 121k 保持 Prompt 调优拆分。
+- Task 121h-121r 已全部完成；Task 122a-122d 测试矩阵已完成；Task 123-125 候选硬门禁预研已完成，`run-a2bed648` 上调优后 `any_gate` 触发 0 章。
 - 后续新增 V5 文档应优先更新本索引，再更新 `docs/STATUS.md`、`README.md`、`docs/INDEX.md`。
+- 当前 V5.1 下一步建议：在受控小窗口实跑中验证 enforce 模式（如 Ch1-Ch20），或继续收集跨项目泛化数据。
