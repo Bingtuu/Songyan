@@ -35,6 +35,11 @@
 | `tasks/124-context-emergency-health-low-gate-impact-analysis-DONE.md` | Task 124：候选硬门禁离线影响面分析 |
 | `tasks/125-gate-threshold-tuning-and-validation-DONE.md` | Task 125：候选硬门禁阈值调优与验证 |
 | `tasks/126-small-window-enforce-validation-DONE.md` | Task 126：候选硬门禁 enforce 模式小窗口实跑验证 |
+| `tasks/127-health-low-score-halt-refactor.md` | Task 127：重构 `health_low_absolute_score_halt` |
+| `tasks/128-enforce-mode-ch1-ch50-validation.md` | Task 128：enforce 模式 Ch1–Ch50 验证 |
+| `tasks/129-gate-mode-default-decision.md` | Task 129：gate_mode 默认模式决策 |
+| `tasks/130-task-docs-archive-and-status-cleanup.md` | Task 130：任务文档归档与状态一致性清理 |
+| `tasks/131-v51-final-acceptance-package.md` | Task 131：V5.1 最终验收包 |
 
 ## 按场景查阅
 
@@ -48,7 +53,7 @@
 | Ch102/Ch103 settlement 验证窗口 | `tasks/114b2-qg-convergence-settlement-window-DONE.md` |
 | Ch1-Ch150 single-run rehearsal | `tasks/121b-ch1-ch150-single-run-rehearsal-DONE.md` |
 | Ch5 settlement skip 修复 | `tasks/121c-rewrite-fallback-settlement-contract-DONE.md` |
-| 修复后 single-run 重跑 / Ch8 新阻断 | `tasks/121d-ch1-ch150-single-run-rerun.md` |
+| 修复后 single-run 重跑 / Ch8 新阻断 | `tasks/121d-ch1-ch150-single-run-rerun-DONE.md` |
 | Ch8 settlement 伏笔校验修复 | `tasks/121e-ch8-settlement-foreshadowing-validation-fix-DONE.md` |
 | Ch18 CreativeDirector 错误传播修复 | `tasks/121f-ch18-creative-director-error-contract-DONE.md` |
 | Ch1-Ch150 完整重跑 / Ch115 阻断 | `tasks/121g-ch1-ch150-single-run-rerun-ch115-blocker-DONE.md` |
@@ -72,6 +77,11 @@
 | 候选硬门禁影响面分析 | `tasks/124-context-emergency-health-low-gate-impact-analysis-DONE.md` |
 | 候选硬门禁阈值调优 | `tasks/125-gate-threshold-tuning-and-validation-DONE.md` |
 | 候选硬门禁 enforce 小窗口验证 | `tasks/126-small-window-enforce-validation-DONE.md` |
+| health_low score halt 重构 | `tasks/127-health-low-score-halt-refactor.md` |
+| enforce 模式 Ch1–Ch50 验证 | `tasks/128-enforce-mode-ch1-ch50-validation.md` |
+| gate_mode 默认模式决策 | `tasks/129-gate-mode-default-decision.md` |
+| 任务文档归档与状态清理 | `tasks/130-task-docs-archive-and-status-cleanup.md` |
+| V5.1 最终验收包 | `tasks/131-v51-final-acceptance-package.md` |
 | V5.1 Code Review 总规划 | `docs/reports/pass14-to-pass18-v51-review-roadmap.md` |
 | V5.1 Code Review 修复汇总 | `docs/reports/pass14-final-fix-summary.md` |
 | 架构手册 | `docs/architecture/04-vibe-coding-engineering.md` |

@@ -10,7 +10,7 @@
 | 最终验收 | Task 120 Final Acceptance Package 已交付 |
 | 风险口径 | P0/P1 风险为 0 |
 | 最近全量测试 | `1828 passed, 1 xfailed, 2 warnings` |
-| 最近修复 | Task 123 ContextEmergency / health_low 候选硬门禁（默认观测模式，16 个新单测）；Task 124 离线影响面分析；Task 125 阈值调优（P1 异常检测、health_score 跌幅、审计点 streak），新增 12 个单测；Task 126 enforce 小窗口实跑验证，Ch1–Ch19 零 gate 触发 |
+| 最近修复 | Task 123 ContextEmergency / health_low 候选硬门禁（默认观测模式，16 个新单测）；Task 124 离线影响面分析；Task 125 阈值调优（P1 异常检测、health_score 跌幅、审计点 streak），新增 12 个单测；Task 126 enforce 小窗口实跑验证，Ch1–Ch19 零 gate 触发；Task 127–131 规划已创建 |
 | 当前 lint | `ruff check src/ tests/ scripts/` 已通过 |
 | Python | 3.11.9 |
 | 事实入口 | `tasks/V5-README.md` |
@@ -36,18 +36,18 @@
 | Task 122c | **已完成**：Ch1-Ch20 E2E 集成测试（28 秒重度 Mock）；Ch40-Ch50 / Ch100-Ch110 窗口待补充 |
 | Task 122c | **已完成**：Ch1-Ch20 / Ch40-Ch50 / Ch100-Ch110 三个 E2E 窗口验证全部完成；`test_ch41_50_validation.py` 已补强 emergency/auto-halt 断言；`test_ch100_110_from_run_log.py` 已新增并复用 `run-a2bed648` 历史数据 |
 | 重跑前清理 | **2026-06-23 已完成全量清理**：终止全部残留 Python 进程，删除数据库 28,440 行测试数据，清空所有业务表，清理日志文件，VACUUM 后 196 MB；环境完全干净 |
-| 下一步规划 | **Task 121q full single-run `run-a2bed648` Ch1-Ch150 150/150 全部成功**；**Pass 14-18 V5.1 Code Review 已完成**；**Task 121r Prompt 质量清理已完成**；**Task 122a/122b/122c/122d 测试矩阵与 E2E/压力测试已完成**；**Task 123/124/125/126 已完成**：候选硬门禁从提案、离线分析、阈值调优到 enforce 小窗口实跑验证（Ch1–Ch19 零 gate 触发），`1828 passed, 1 xfailed, 2 warnings` |
+| 下一步规划 | **Task 121q full single-run `run-a2bed648` Ch1-Ch150 150/150 全部成功**；**Pass 14-18 V5.1 Code Review 已完成**；**Task 121r Prompt 质量清理已完成**；**Task 122a/122b/122c/122d 测试矩阵与 E2E/压力测试已完成**；**Task 123/124/125/126 已完成**：候选硬门禁从提案、离线分析、阈值调优到 enforce 小窗口实跑验证（Ch1–Ch19 零 gate 触发），`1828 passed, 1 xfailed, 2 warnings`；**Task 127–131 已规划**：score halt 重构、Ch1–Ch50 enforce 验证、默认模式决策、文档归档清理、V5.1 最终验收 |
 
 测试说明：`1 xfailed` 为已知非阻断项；`0 xpassed`（已修复）；`0 failed`。数据库 `lifecycle_status` 列缺失与 RAG embedding 性能测试已修复，当前全量通过。
 
 ## 当前优先级
 
-1. **Task 126 已完成**：候选硬门禁 enforce 小窗口实跑验证，Ch1–Ch19 零 gate 触发，Ch20 因 QG false block 失败。
-2. **Task 125 已完成**：候选硬门禁阈值调优与验证，`run-a2bed648` 上 `any_gate` 触发 0 章。
-3. **Task 124 已完成**：基于 `run-a2bed648` 的候选硬门禁离线影响面分析。
-4. **Task 123 已完成**：ContextEmergency / health_low 候选硬门禁实现（默认观测模式，16 个新单测）。
-5. **Ch1-Ch150 full single-run 已完成**：`run-a2bed648` 150/150 全部成功，一次性单命令证据已获取。
-6. **Task 121r / 122a / 122b / 122c / 122d 已完成**：Prompt 清理 + 动态阈值单元测试 + Pipeline 集成测试 + E2E 窗口验证 + 150 章压力测试。
+1. **Task 127**：重构 `health_low_absolute_score_halt`（开局期误触发问题），推荐方案为"历史新低 + P1 同步激增"复合条件。
+2. **Task 128**：硬门禁 enforce 模式 Ch1–Ch50 验证，确认中段章节阈值不误伤。
+3. **Task 129**：基于 124–128 证据，决定 `gate_mode` 默认值（V5.1 推荐保持 `observe` + 暴露 CLI 参数）。
+4. **Task 130**：归档过时规划稿，更新 `docs/INDEX.md`、`docs/STATUS.md`、`tasks/V5-README.md` 指向 `-DONE.md`。
+5. **Task 131**：V5.1 最终验收包，汇总 121r–130 成果并明确 V5.2 方向。
+6. **已完成基线**：Task 121r / 122a–122d / 123–126 已完成；`run-a2bed648` Ch1–Ch150 150/150 全部成功；`1828 passed, 1 xfailed, 2 warnings`。
 
 ## V5.0 交付摘要
 
@@ -77,17 +77,26 @@
 - 文档索引：`docs/INDEX.md`
 - V5 任务事实：`tasks/V5-README.md`
 - V5.0 最终验收：`tasks/120-v5-final-acceptance-DONE.md`
-- V5.1 下一步：`tasks/121a-v50-goal-assessment-and-v51-plan.md`
+- V5.1 规划：`tasks/121a-v50-goal-assessment-and-v51-plan.md`
 - V5.1 Code Review 修复汇总：`docs/reports/pass14-final-fix-summary.md`
 - Single-run rehearsal：`tasks/121b-ch1-ch150-single-run-rehearsal-DONE.md`
 - Rewrite fallback settlement 修复：`tasks/121c-rewrite-fallback-settlement-contract-DONE.md`
-- 修复后 single-run 重跑：`tasks/121d-ch1-ch150-single-run-rerun.md`
+- 修复后 single-run 重跑：`tasks/121d-ch1-ch150-single-run-rerun-DONE.md`
 - Ch8 settlement 伏笔校验修复：`tasks/121e-ch8-settlement-foreshadowing-validation-fix-DONE.md`
 - Ch18 CreativeDirector 错误传播修复：`tasks/121f-ch18-creative-director-error-contract-DONE.md`
 - Ch1-Ch150 完整重跑 / Ch115 阻断：`tasks/121g-ch1-ch150-single-run-rerun-ch115-blocker-DONE.md`
-- Ch115 工程修复：`tasks/121h-ch115-quality-gate-rewrite-state-review.md`
-- Ch115 聚焦验证：`tasks/121i-ch115-focused-rerun-and-quality-window.md`
-- Ch1-Ch150 修复后重跑：`tasks/121j-ch1-ch150-single-run-after-ch115-fix.md`
-- Prompt 质量清理：`tasks/121k-prompt-quality-cleanup-plan.md`
-- ContextEmergency AutoHalt review：`tasks/121l-context-emergency-autohalt-review.md`
+- Ch115 工程修复：`tasks/121h-ch115-quality-gate-rewrite-state-review-DONE.md`
+- Ch115 聚焦验证：`tasks/121i-ch115-focused-rerun-and-quality-window-DONE.md`
+- Ch1-Ch150 修复后重跑：`tasks/121j-ch1-ch150-single-run-after-ch115-fix-DONE.md`
+- Prompt 质量清理：`tasks/121k-prompt-quality-cleanup-plan-DONE.md`
+- ContextEmergency AutoHalt review：`tasks/121l-context-emergency-autohalt-review-DONE.md`
+- 候选硬门禁：`tasks/123-context-emergency-health-low-gate-proposal-DONE.md`
+- 候选硬门禁阈值调优：`tasks/125-gate-threshold-tuning-and-validation-DONE.md`
+- 候选硬门禁 enforce 小窗口验证：`tasks/126-small-window-enforce-validation-DONE.md`
+- **V5.1 下一步**：
+  - Task 127：`tasks/127-health-low-score-halt-refactor.md`
+  - Task 128：`tasks/128-enforce-mode-ch1-ch50-validation.md`
+  - Task 129：`tasks/129-gate-mode-default-decision.md`
+  - Task 130：`tasks/130-task-docs-archive-and-status-cleanup.md`
+  - Task 131：`tasks/131-v51-final-acceptance-package.md`
 - V5 归档：`archive/v5/INDEX.md`
