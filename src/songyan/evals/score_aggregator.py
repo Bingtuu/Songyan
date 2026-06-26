@@ -180,6 +180,19 @@ def _compute_overall(card: ChapterScoreCard) -> float:
     return round(weighted_sum / total_weight, 4)
 
 
+def _quality_ramp_thresholds(
+    chapter_number: int, quality_ramp_chapters: int = 10
+) -> tuple[float, float]:
+    """返回质量爬坡阈值 (readability_threshold, momentum_threshold).
+
+    Task 128b: Ch1–quality_ramp_chapters 使用更宽松阈值，帮助新项目开局期
+    在约束真空下逐步爬坡；Ch11+ 恢复严格阈值。
+    """
+    if 1 <= chapter_number <= quality_ramp_chapters:
+        return 0.3, 0.3
+    return 0.6, 0.5
+
+
 class ScoreAggregator:
     """评分聚合器 — 从 Auditor 结果产出 ChapterScoreCard."""
 
@@ -190,6 +203,8 @@ class ScoreAggregator:
         llm_result: LLMAuditResult,
         budget_used: float | None = None,
         literary_result: LiteraryAuditResult | None = None,
+        chapter_number: int = 0,
+        quality_ramp_chapters: int = 10,
     ) -> ChapterScoreCard:
         """聚合评分.
 
@@ -199,6 +214,8 @@ class ScoreAggregator:
             llm_result: LLMAuditor 结果
             budget_used: 上下文 budget_used（从 ContextPackage 获取）
             literary_result: 可选的 LiteraryAuditor 结果（当前不影响分数，预留扩展）
+            chapter_number: 章节号，用于质量爬坡阈值
+            quality_ramp_chapters: 质量爬坡窗口章节数
         """
         # 1. 长度
         length_score, length_details = _score_length(rule_result)
@@ -220,6 +237,11 @@ class ScoreAggregator:
         # 预留：literary_result 的子指标可放入 details，但不影响主 score
         if literary_result is not None:
             readability_details["literary_quality_score"] = literary_result.literary_quality_score
+
+        # Task 128b: 开局期质量爬坡阈值
+        readability_threshold, momentum_threshold = _quality_ramp_thresholds(
+            chapter_number, quality_ramp_chapters
+        )
 
         card = ChapterScoreCard(
             version_id=version_id,
@@ -247,8 +269,10 @@ class ScoreAggregator:
                     or has_major
                     or (coherence_score < 0.6 and major_count > 0)
                 ),
-                momentum_present=(momentum_score >= 0.5 or momentum_score == -1.0),
-                readability_ok=readability_score >= 0.6,
+                momentum_present=(
+                    momentum_score >= momentum_threshold or momentum_score == -1.0
+                ),
+                readability_ok=readability_score >= readability_threshold,
             ),
         )
         card.overall_score = _compute_overall(card)

@@ -1,4 +1,4 @@
-"""Task 125: 候选硬门禁阈值调优单元测试."""
+"""Task 125 / Task 127: 候选硬门禁阈值调优单元测试."""
 
 from __future__ import annotations
 
@@ -52,7 +52,7 @@ def test_p1_anomaly_not_triggered_when_below_baseline() -> None:
         health_low_p1_min_absolute=20,
         health_low_p1_anomaly_factor=1.5,
     )
-    triggered, _ = check_health_low_single_gate(
+    triggered, _, _ = check_health_low_single_gate(
         report, cfg, previous_p1_counts=[20, 20, 20]
     )
     assert not triggered
@@ -66,7 +66,7 @@ def test_p1_anomaly_triggered_when_spike_above_baseline() -> None:
         health_low_p1_min_absolute=50,
         health_low_p1_anomaly_factor=1.5,
     )
-    triggered, reasons = check_health_low_single_gate(
+    triggered, reasons, _ = check_health_low_single_gate(
         report, cfg, previous_p1_counts=[20, 20, 20]
     )
     assert triggered
@@ -81,51 +81,71 @@ def test_p1_anomaly_not_triggered_below_min_absolute() -> None:
         health_low_p1_min_absolute=10,
         health_low_p1_anomaly_factor=1.5,
     )
-    triggered, _ = check_health_low_single_gate(report, cfg, previous_p1_counts=[])
+    triggered, _, _ = check_health_low_single_gate(report, cfg, previous_p1_counts=[])
     assert not triggered
 
 
 # ---------------------------------------------------------------------------
-# health_score drop gate
+# health_score halt gate (Task 127 复合条件)
 # ---------------------------------------------------------------------------
 
 
-def test_score_drop_triggered() -> None:
-    previous = _report(3, health_score=8.0)
-    current = _report(6, health_score=2.0)
+def test_score_halt_triggered_on_new_low_and_p1_spike() -> None:
+    current = _report(6, health_score=2.0, p1_count=60)
     cfg = GateConfig(
         health_low_gate_enabled=True,
-        health_low_absolute_score_halt=True,
-        health_low_score_drop_threshold=2.0,
+        health_low_score_halt_enabled=True,
+        health_low_score_halt_window=3,
+        health_low_score_halt_min_p1=20,
+        health_low_score_halt_anomaly_factor=1.8,
     )
-    triggered, reasons = check_health_low_single_gate(
-        current, cfg, previous_report=previous
+    triggered, reasons, updated_min = check_health_low_single_gate(
+        current,
+        cfg,
+        previous_p1_counts=[10, 10, 10],
+        min_health_score_so_far=8.0,
     )
     assert triggered
-    assert "dropped from 8.0 to 2.0" in reasons[0]
+    assert "health_low_score_halt" in reasons[0]
+    assert updated_min == 2.0
 
 
-def test_score_drop_not_triggered_when_rising() -> None:
-    previous = _report(3, health_score=2.0)
-    current = _report(6, health_score=8.0)
+def test_score_halt_not_triggered_when_only_new_low() -> None:
+    current = _report(6, health_score=2.0, p1_count=5)
     cfg = GateConfig(
         health_low_gate_enabled=True,
-        health_low_absolute_score_halt=True,
-        health_low_score_drop_threshold=2.0,
+        health_low_score_halt_enabled=True,
+        health_low_score_halt_window=3,
+        health_low_score_halt_min_p1=20,
+        health_low_score_halt_anomaly_factor=1.8,
     )
-    triggered, _ = check_health_low_single_gate(current, cfg, previous_report=previous)
+    triggered, _, updated_min = check_health_low_single_gate(
+        current,
+        cfg,
+        previous_p1_counts=[10, 10, 10],
+        min_health_score_so_far=8.0,
+    )
     assert not triggered
+    assert updated_min == 2.0
 
 
-def test_score_drop_not_triggered_without_previous_report() -> None:
-    current = _report(3, health_score=2.0)
+def test_score_halt_not_triggered_when_only_p1_spike() -> None:
+    current = _report(6, health_score=6.0, p1_count=60)
     cfg = GateConfig(
         health_low_gate_enabled=True,
-        health_low_absolute_score_halt=True,
-        health_low_score_drop_threshold=2.0,
+        health_low_score_halt_enabled=True,
+        health_low_score_halt_window=3,
+        health_low_score_halt_min_p1=20,
+        health_low_score_halt_anomaly_factor=1.8,
     )
-    triggered, _ = check_health_low_single_gate(current, cfg, previous_report=None)
+    triggered, _, updated_min = check_health_low_single_gate(
+        current,
+        cfg,
+        previous_p1_counts=[10, 10, 10],
+        min_health_score_so_far=5.2,
+    )
     assert not triggered
+    assert updated_min == 5.2
 
 
 # ---------------------------------------------------------------------------
@@ -139,19 +159,24 @@ def test_legacy_p1_halt_still_triggers_on_any_p1() -> None:
         health_low_gate_enabled=True,
         health_low_p1_halt=True,
     )
-    triggered, _ = check_health_low_single_gate(report, cfg)
+    triggered, _, _ = check_health_low_single_gate(report, cfg)
     assert triggered
 
 
-def test_legacy_absolute_score_halt_still_triggers() -> None:
-    report = _report(3, health_score=2.0)
+def test_score_halt_enabled_triggers_on_composite_condition() -> None:
+    report = _report(3, health_score=2.0, p1_count=60)
     cfg = GateConfig(
         health_low_gate_enabled=True,
-        health_low_absolute_score_halt=True,
-        health_low_absolute_score_threshold=3.0,
+        health_low_score_halt_enabled=True,
+        health_low_score_halt_window=3,
+        health_low_score_halt_min_p1=20,
+        health_low_score_halt_anomaly_factor=1.8,
     )
-    triggered, _ = check_health_low_single_gate(report, cfg)
+    triggered, reasons, _ = check_health_low_single_gate(
+        report, cfg, previous_p1_counts=[10], min_health_score_so_far=5.0
+    )
     assert triggered
+    assert any("health_low_score_halt" in r for r in reasons)
 
 
 # ---------------------------------------------------------------------------
@@ -227,10 +252,12 @@ def test_evaluate_all_gates_uses_previous_data() -> None:
         health_low_p1_halt=True,
         health_low_p1_min_absolute=50,
         health_low_p1_anomaly_factor=1.5,
-        health_low_absolute_score_halt=True,
-        health_low_score_drop_threshold=2.0,
+        health_low_score_halt_enabled=True,
+        health_low_score_halt_window=3,
+        health_low_score_halt_min_p1=20,
+        health_low_score_halt_anomaly_factor=1.8,
     )
-    triggered, reasons = evaluate_all_gates(
+    triggered, reasons, updated_min = evaluate_all_gates(
         health_low_report=current,
         context_metrics={"context_emergency": False},
         chapter_result={"success": True, "settlement_success": True, "summary_success": True},
@@ -238,7 +265,9 @@ def test_evaluate_all_gates_uses_previous_data() -> None:
         config=cfg,
         previous_health_low_report=previous,
         previous_p1_counts=[20, 20, 20],
+        min_health_score_so_far=8.0,
     )
     assert triggered
     assert any("health_low_p1_halt" in r for r in reasons)
-    assert any("health_low_absolute_score_halt" in r for r in reasons)
+    assert any("health_low_score_halt" in r for r in reasons)
+    assert updated_min == 2.0

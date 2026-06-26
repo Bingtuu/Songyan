@@ -1,7 +1,7 @@
 # V5.0 Task 总索引
 
 > **阶段**: Context Diet 2.0 — 智能遗忘架构
-> **当前口径**: **V5.0 完成，V5.1 预研收口** — Task 115-120 全部收口，P0/P1 风险为 0；Task 121 系列已完成 Ch1-Ch150 full single-run 最终证据、Prompt 质量清理、测试矩阵与硬门禁预研；Task 122a/122b/122c/122d 完成动态阈值、Pipeline 集成测试、E2E 验证窗口与 150 章长序列压力测试；Task 123/124/125/126 完成 ContextEmergency / health_low 候选硬门禁提案、离线影响面分析、阈值调优与 enforce 小窗口实跑验证，`run-a2bed648` 与 Ch1-Ch19 小窗口上 `any_gate` 均触发 0 次
+> **当前口径**: **V5.0 完成，V5.1 预研收口** — Task 115-120 全部收口，P0/P1 风险为 0；Task 121 系列已完成 Ch1-Ch150 full single-run 最终证据、Prompt 质量清理、测试矩阵与硬门禁预研；Task 122a/122b/122c/122d 完成动态阈值、Pipeline 集成测试、E2E 验证窗口与 150 章长序列压力测试；Task 123/124/125/126/127/128 完成 ContextEmergency / health_low 候选硬门禁提案、离线影响面分析、阈值调优、enforce 小窗口实跑验证、score halt 复合条件重构与严格模式容错/开局期质量爬坡，`run-a2bed648` 与 Ch1-Ch19 小窗口上 `any_gate` 均触发 0 次；pytest `1856 passed, 2 skipped, 1 xfailed`
 > **最后整理**: 2026-06-26
 
 本文是 V5 阶段任务文档的事实入口。历史规划稿保留用于追溯设计边界；最终状态以本文件和各 `*-DONE.md` 为准。
@@ -47,6 +47,8 @@ V5.0 已完成从 Context Diet 2.0 核心组件到 150 章验证的全部主线�
 - **Task 124 已完成**：基于 `run-a2bed648` 的候选硬门禁离线影响面分析，原始阈值触发 118/120 章；交付分析脚本、报告与 16 个单测。
 - **Task 125 已完成**：候选硬门禁阈值调优，引入 P1 异常检测、health_score 相对跌幅、审计点 streak 窗口；`run-a2bed648` 上 `any_gate` 触发 0 章；新增 `tests/test_125_gate_thresholds.py` 12 个单测；全量 pytest 1828 passed。
 - **Task 126 已完成**：候选硬门禁 enforce 模式 Ch1–Ch20 小窗口实跑验证；发现 `health_low_absolute_score_halt` 在新项目开局期误触发，禁用后 Ch1–Ch19 零 gate 触发，Ch20 因既有 QG false block 失败；交付 `scripts/run_126_enforce_validation.py`。
+- **Task 127 已完成**：候选硬门禁 score halt 条件重构，将绝对分单条件改为“P1 异常 & (相对跌幅 | streak 窗口)”复合条件；Ch1–Ch19 enforce 小窗口零 gate 触发；pytest 1842 passed。
+- **Task 128 已完成**：严格模式容错与开局期质量爬坡； settlement 对 QG false 降级为 `degraded_accept`（Ch1–Ch10）以绕过开局期 QG 过严导致的阻断，同时用 `degraded_accept` 元标记支持后续复盘；新增 RevisionHandler readability 专项修复路径；全量 pytest 1856 passed，ruff 通过。
 ---
 
 ## 文档使用规则
@@ -125,6 +127,12 @@ V5.0 已完成从 Context Diet 2.0 核心组件到 150 章验证的全部主线�
 | 124 | 候选硬门禁离线影响面分析 | ✅ 完成，原始阈值触发 118/120 章 | `124-context-emergency-health-low-gate-impact-analysis-DONE.md` |
 | 125 | 候选硬门禁阈值调优与验证 | ✅ 完成，`run-a2bed648` any_gate 0 章 | `125-gate-threshold-tuning-and-validation-DONE.md` |
 | 126 | 候选硬门禁 enforce 小窗口实跑验证 | ✅ 完成，Ch1–Ch19 零 gate 触发 | `126-small-window-enforce-validation-DONE.md` |
+| 127 | health_low score halt 复合规则重构 | ✅ 完成 | `127-health-low-score-halt-refactor-DONE.md` |
+| 128 | 严格模式容错与开局期质量爬坡 | ✅ 完成 | `128-strict-mode-fault-tolerance-and-quality-ramp-DONE.md` |
+| 129 | Enforce 模式 Ch1–Ch50 验证 | ⏸️ 待开始 | `129-enforce-mode-ch1-ch50-validation.md` |
+| 130 | gate_mode 默认决策 | ⏸️ 待开始 | `130-gate-mode-default-decision.md` |
+| 131 | Task docs archive & status cleanup | ⏸️ 待开始 | `131-task-docs-archive-and-status-cleanup.md` |
+| 132 | V5.1 final acceptance package | ⏸️ 待开始 | `132-v51-final-acceptance-package.md` |
 
 ---
 
@@ -142,7 +150,7 @@ V5.0 已完成从 Context Diet 2.0 核心组件到 150 章验证的全部主线�
 | Task 122c E2E 窗口验证 | Ch1-Ch20（`test_ch1_20_e2e.py`，20/20）；Ch40-Ch50（`test_ch41_50_validation.py`，10/10，emergency 0，auto-halt 0）；Ch100-Ch110（`test_ch100_110_from_run_log.py`，11/11，复用 `run-a2bed648`） |
 | Task 122d 150 章压力测试 | `tests/integration/test_122d_long_sequence_stability.py`（5/5），覆盖 150 章 budget 趋势、human_marks 蒸发、AutoHalt 真/假阳性、accepted 章节跳过 |
 | Ch115 质量复盘 | `rev-115-3` 已达 `overall=0.8776` 且字数健康，但后续 rewrite 输出 7771 字并经 hard truncate 后降至 `overall=0.7335`；Task 121h 已修状态生命周期与 best-version 保护，Task 121i 已验证 Ch115 不再 human_review_required |
-| 最近全量回归 | `1828 passed, 1 xfailed, 2 warnings` |
+| 最近全量回归 | `1856 passed, 2 skipped, 1 xfailed` |
 | 当前全量 ruff | `ruff check src/ tests/ scripts/analyze_124_gate_impact.py` 已通过 |
 | 候选硬门禁离线验证 | Task 124：`run-a2bed648` 原始候选阈值触发 118/120 章 |
 | 候选硬门禁阈值调优 | Task 125：`run-a2bed648` 调优后 `any_gate` 触发 0 章 |
@@ -157,11 +165,12 @@ V5.0 已完成从 Context Diet 2.0 核心组件到 150 章验证的全部主线�
 |------|----------|------|
 | Ch115/Ch120 ContextEmergency 触发原因 | ~~P1~~ | **Task 115 已关闭**：诊断为合理降级（`budget_used` 触发时 1.0007），新增可观测性字段 |
 | Ch147/Ch148 best-version 质量选择策略 | ~~P1~~ | **Task 116 已关闭**：`quality_gate_router` 路由缺陷修复，QG 通过后不再错误触发 rewrite |
-| ContinuityAuditor health 低分只写 human marks、不阻断 accept | ~~P2~~ | **Task 118/123/124/125 已关闭**：health_low 软复核 + 候选硬门禁实现 + 离线影响面分析 + 阈值调优；`run-a2bed648` 上调优后 `any_gate` 触发 0 章，默认仍 `gate_mode="observe"` |
+| ContinuityAuditor health 低分只写 human marks、不阻断 accept | ~~P2~~ | **Task 118/123/124/125/126/127 已关闭**：health_low 软复核 + 候选硬门禁实现 + 离线影响面分析 + 阈值调优 + enforce 小窗口验证 + score halt 复合条件重构；`run-a2bed648` 与 Ch1–Ch19 小窗口上 `any_gate` 触发 0 章，默认仍 `gate_mode="observe"` |
 | 一次性 Ch1-Ch150 单命令证据 | ~~P1~~ | **Task 121q `run-a2bed648` 已完成**：Ch1-Ch150 150/150 全部成功，ContextEmergency 0 次，AutoHalt 0 次，degraded_accept 0 次，failed 0 次，无间隙 |
 | 连续 ContextEmergency AutoHalt | ~~P1~~ | **已解除**：Task 121l 策略修复 + Task 121m QG false 硬拦截 + Task 121n 预算调整；Task 121o `run-4ff41095` 验证 Ch1-Ch18 0 次 emergency、0 次 AutoHalt |
 | Ch115 rewrite / best-version 劣化 | P1 | **Task 121h 已完成工程修复，Task 121i `run-ce1767ff` 已验证 Ch115 聚焦重跑成功**；safe-best 回滚主路径由单测覆盖，本次实跑未触发 rewrite |
 | QG false 版本进入 settlement | ~~P1~~ | **Task 121m 已完成**：settlement_extractor_node 入口增加 QG false 硬拦截 |
+| 开局期 QG false 在 enforce 模式下阻断后续章节 | ~~P1~~ | **Task 128 已完成**：Ch1–Ch10 QG false 触发 `degraded_accept` 标记但不阻断 settlement，RevisionHandler readability 专项修复增强开局期正文质量；明确标注为“流程绕过”而非“质量修复” |
 | 元标记泄漏（`<!-- 新设定 -->`） | ~~P1~~ | **Task 121m 已完成**：清理 writer prompt 中的 HTML 注释指令，后处理强制过滤 |
 | 正文纯净度与段落节奏 | V5.1 | Task 121k 处理：机械场景标题、短段落碎片化、说明文堆叠 |
 
@@ -190,6 +199,6 @@ Task 115-120 用于 V5.0 条件通过后的收口，不改变 Task 114c 已完�
 - `114c DONE` 是 Ch111-Ch150 与 DG-2 的最终依据。
 - Task 114、114b、115-120 的历史规划稿已移入 `archive/v5/plans/`，旧 `run_task117.ps1` 已移入 `archive/v5/scripts/`。
 - Task 121g 已补齐 DONE 文档，明确 `run-0fd1456e` 不能作为 Ch1-Ch150 完成证据，但可作为 Ch115 首个真实阻断证据。
-- Task 121h-121r 已全部完成；Task 122a-122d 测试矩阵已完成；Task 123-125 候选硬门禁预研已完成，`run-a2bed648` 上调优后 `any_gate` 触发 0 章。
+- Task 121h-121r 已全部完成；Task 122a-122d 测试矩阵已完成；Task 123-128 候选硬门禁预研与严格模式容错已完成，`run-a2bed648` 与 Ch1–Ch19 小窗口上 `any_gate` 触发 0 章；pytest `1856 passed, 2 skipped, 1 xfailed`。
 - 后续新增 V5 文档应优先更新本索引，再更新 `docs/STATUS.md`、`README.md`、`docs/INDEX.md`。
 - 当前 V5.1 下一步建议：在受控小窗口实跑中验证 enforce 模式（如 Ch1-Ch20），或继续收集跨项目泛化数据。

@@ -39,11 +39,13 @@ _CANDIDATE_CONFIGS: dict[str, GateConfig] = {
         health_low_p1_min_absolute=50,
         health_low_p1_anomaly_factor=1.8,
     ),
-    "health_low_absolute_score_halt": GateConfig(
+    "health_low_score_halt": GateConfig(
         gate_mode="enforce",
         health_low_gate_enabled=True,
-        health_low_absolute_score_halt=True,
-        health_low_score_drop_threshold=2.0,
+        health_low_score_halt_enabled=True,
+        health_low_score_halt_window=3,
+        health_low_score_halt_min_p1=20,
+        health_low_score_halt_anomaly_factor=1.8,
     ),
     "health_low_streak_halt": GateConfig(
         gate_mode="enforce",
@@ -174,6 +176,7 @@ class GateImpactAnalyzer:
         recent_results: list[dict[str, Any]],
         previous_report: Any | None,
         previous_p1_counts: list[int],
+        min_health_score_so_far: float | None,
     ) -> dict[str, list[str]]:
         """对单章应用全部候选规则，返回触发的规则及原因."""
         ctx_metrics = self._context_metrics_for(log)
@@ -182,21 +185,23 @@ class GateImpactAnalyzer:
 
         # health_low 单章规则
         if report is not None:
-            triggered_p1, reasons_p1 = check_health_low_single_gate(
+            triggered_p1, reasons_p1, _ = check_health_low_single_gate(
                 report,
                 _CANDIDATE_CONFIGS["health_low_p1_halt"],
                 previous_p1_counts=previous_p1_counts,
+                min_health_score_so_far=min_health_score_so_far,
             )
             if triggered_p1:
                 triggered["health_low_p1_halt"] = reasons_p1
 
-            triggered_abs, reasons_abs = check_health_low_single_gate(
+            triggered_score, reasons_score, _ = check_health_low_single_gate(
                 report,
-                _CANDIDATE_CONFIGS["health_low_absolute_score_halt"],
-                previous_report=previous_report,
+                _CANDIDATE_CONFIGS["health_low_score_halt"],
+                previous_p1_counts=previous_p1_counts,
+                min_health_score_so_far=min_health_score_so_far,
             )
-            if triggered_abs:
-                triggered["health_low_absolute_score_halt"] = reasons_abs
+            if triggered_score:
+                triggered["health_low_score_halt"] = reasons_score
 
         # health_low streak 规则
         triggered_streak, reasons_streak = check_health_low_streak_gate(
@@ -234,13 +239,19 @@ class GateImpactAnalyzer:
 
         previous_report: Any | None = None
         previous_p1_counts: list[int] = []
+        min_health_score_so_far: float | None = None
 
         for idx, log in enumerate(self.logs):
             chapter_number = log["chapter_number"]
             report = self.reports.get(chapter_number)
             recent_results = self._build_recent_results(idx)
             triggered = self._evaluate_chapter(
-                log, report, recent_results, previous_report, previous_p1_counts
+                log,
+                report,
+                recent_results,
+                previous_report,
+                previous_p1_counts,
+                min_health_score_so_far,
             )
 
             per_chapter[chapter_number] = {
@@ -254,6 +265,13 @@ class GateImpactAnalyzer:
                 previous_report = report
                 severity = self._severity_for_chapter(chapter_number) or {}
                 previous_p1_counts.append(severity.get("P1", 0))
+                if report.overall_health_score is not None:
+                    if min_health_score_so_far is None:
+                        min_health_score_so_far = report.overall_health_score
+                    else:
+                        min_health_score_so_far = min(
+                            min_health_score_so_far, report.overall_health_score
+                        )
 
             any_triggered = False
             for rule_name, reasons in triggered.items():
@@ -364,7 +382,7 @@ def _render_report(result: dict[str, Any]) -> str:
     lines.append("|------|----------|------------|----------------------|--------------|")
     rule_order = [
         "health_low_p1_halt",
-        "health_low_absolute_score_halt",
+        "health_low_score_halt",
         "health_low_streak_halt",
         "context_emergency_budget_ratio_halt",
         "context_emergency_failure_halt",
@@ -422,7 +440,7 @@ def _render_report(result: dict[str, Any]) -> str:
         # health_low 相关规则触发情况
         hl_count = (
             summary["health_low_p1_halt"]["count"]
-            + summary["health_low_absolute_score_halt"]["count"]
+            + summary["health_low_score_halt"]["count"]
             + summary["health_low_streak_halt"]["count"]
         )
         lines.append(

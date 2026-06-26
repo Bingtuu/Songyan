@@ -124,11 +124,11 @@ class TestSettlementExtractorNodeSkipSettlement:
 
 
 class TestSettlementExtractorNodeQGFalseBlock:
-    """settlement_extractor_node _quality_gate_passed=False 硬拦截测试."""
+    """settlement_extractor_node _quality_gate_passed=False Task 128a 降级测试."""
 
     @pytest.mark.asyncio
-    async def test_qg_false_blocks_settlement_and_returns_review(self) -> None:
-        """QG false 时不提取 settlement，不应用 settlement，不生成 summary，进入复核态."""
+    async def test_qg_false_degrades_accept_and_returns_done(self) -> None:
+        """Task 128a: QG false 时自动降级接受，不提取/应用 settlement，不生成 summary，返回 done."""
         mock_version = MagicMock()
         mock_version.version_id = "v-qg-false-001"
         mock_version.content = "A" * 500
@@ -221,8 +221,9 @@ class TestSettlementExtractorNodeQGFalseBlock:
 
         assert result["settlement_id"] is None
         assert result["summary_id"] is None
-        assert result["status"] == "settlement_review"
-        assert result["_settlement_needs_human_review"] is True
+        assert result["status"] == "done"
+        assert result["_degraded_accept"] is True
+        assert result["_settlement_needs_human_review"] is False
 
 
 class TestRewriteNodeSuccessPath:

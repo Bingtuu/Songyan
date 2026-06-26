@@ -68,6 +68,9 @@ class ChapterRunLog(BaseModel):
     convergence_failed: bool = False
     skip_settlement: bool = False
 
+    # Task 128: 严格模式容错 — QG false 降级接受，跳过 settlement 但 run 继续
+    degraded_accept: bool = False
+
     # 资源
     duration_sec: float = 0.0
 

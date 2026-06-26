@@ -309,6 +309,38 @@ def test_build_chapter_run_log_terminal_success_with_stale_error_ignored() -> No
     assert log.summary_success is True
 
 
+def test_build_chapter_run_log_degraded_accept() -> None:
+    """Task 128a: degraded_accept 章节日志正确记录并跳过 settlement."""
+    started = datetime(2024, 1, 1, 12, 0, 0)
+    finished = datetime(2024, 1, 1, 12, 3, 0)
+
+    log = build_chapter_run_log(
+        run_id="run-1",
+        project_id="proj-1",
+        chapter_number=2,
+        started_at=started,
+        finished_at=finished,
+        success=True,
+        final_state={
+            "status": "done",
+            "current_version_id": "v-2",
+            "_quality_gate_passed": False,
+            "_degraded_accept": True,
+            "_settlement_needs_human_review": False,
+            "_skip_settlement": False,
+        },
+        metrics={"word_count": 2800},
+        duration_sec=120.0,
+    )
+
+    assert log.success is True
+    assert log.degraded_accept is True
+    assert log.quality_gate_passed is False
+    assert log.settlement_success is False
+    assert log.summary_success is False
+    assert log.skip_settlement is False
+
+
 # ---------------------------------------------------------------------------
 # write_run_log
 # ---------------------------------------------------------------------------

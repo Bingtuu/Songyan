@@ -135,6 +135,9 @@ class CreativeModeProfile(BaseModel):
     # Phase 8b: RAG 自动层
     rag_config: RAGConfig = Field(default_factory=RAGConfig)
 
+    # Task 128b: 开局期质量爬坡窗口章节数（默认前 10 章使用更宽松阈值）
+    quality_ramp_chapters: int = 10
+
     @classmethod
     def from_dict(cls, data: dict) -> "CreativeModeProfile":
         """从 dict 加载（JSON 反序列化后调用）."""

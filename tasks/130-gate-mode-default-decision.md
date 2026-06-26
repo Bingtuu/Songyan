@@ -1,8 +1,8 @@
-# Task 129: 硬门禁默认模式决策
+# Task 130: 硬门禁默认模式决策
 
 > **类型**: 决策备忘录 / 工程收口  
 > **日期**: 2026-06-26  
-> **前置**: Task 124（离线影响面分析）、Task 125（阈值调优）、Task 126（Ch1–Ch20 enforce 验证）、Task 127（score halt 重构）、Task 128（Ch1–Ch50 enforce 验证）  
+> **前置**: Task 124（离线影响面分析）、Task 125（阈值调优）、Task 126（Ch1–Ch20 enforce 验证）、Task 127（score halt 重构）、Task 128（严格模式容错与质量爬坡）、Task 129（Ch1–Ch50 enforce 验证）  
 > **目标**: 基于已有证据，决定 `gate_mode` 在 V5.1 中的默认值，并形成可执行的工程结论。
 
 ---
@@ -79,19 +79,21 @@
 | Task 124 离线影响面 | ✅ 已完成 | 原始阈值触发 118/120 章；调优后 0 章 |
 | Task 125 阈值调优 | ✅ 已完成 | `run-a2bed648` 上 `any_gate` 0 触发 |
 | Task 126 Ch1–Ch20 enforce | ✅ 已完成 | 0 gate 触发（禁用 score_drop 后） |
-| Task 127 score halt 重构 | 待完成 | 解决开局期误触发 |
-| Task 128 Ch1–Ch50 enforce | 待完成 | 中段章节验证 |
+| Task 127 score halt 重构 | ✅ 已完成 | 解决开局期误触发 |
+| Task 128 严格模式容错 | 待完成 | 修复 QG false 阻断 run |
+| Task 129 Ch1–Ch50 enforce | 待完成 | 中段章节验证 |
 
 ### 4.2 决策规则
 
 ```
-IF Task 128 结果 == 成功（0 gate 触发）
+IF Task 129 结果 == 成功（0 gate 触发）
    AND Task 127 重构通过
+   AND Task 128 修复通过
 THEN V5.1 默认保持 observe，但暴露 CLI 参数
      V5.2 默认切换 enforce 的条件：完成跨项目 Ch1-Ch150 验证
-ELSE IF Task 128 出现 1 次条件成功（真异常触发）
+ELSE IF Task 129 出现 1 次条件成功（真异常触发）
 THEN V5.1 保持 observe，将 enforce 作为推荐手动选项
-ELSE IF Task 128 出现误伤
+ELSE IF Task 129 出现误伤
 THEN 回滚 Task 125/127 调优，V5.1 不推进 enforce
 ```
 
@@ -127,9 +129,10 @@ THEN 回滚 Task 125/127 调优，V5.1 不推进 enforce
 
 ```
 Task 124/125 离线分析与阈值调优 ──┐
-Task 126 Ch1-Ch20 enforce ────────┼──► Task 129 默认模式决策
-Task 127 score halt 重构 ─────────┤
-Task 128 Ch1-Ch50 enforce ────────┘
+Task 126 Ch1-Ch20 enforce ────────┤
+Task 127 score halt 重构 ─────────┼──► Task 130 默认模式决策
+Task 128 严格模式容错 ────────────┤
+Task 129 Ch1-Ch50 enforce ────────┘
 ```
 
 ---
@@ -146,7 +149,7 @@ Task 128 Ch1-Ch50 enforce ────────┘
 
 ## 9. 交付物
 
-- `tasks/129-gate-mode-default-decision-DONE.md`
+- `tasks/130-gate-mode-default-decision-DONE.md`
 - CLI 改动（如需）：`src/songyan/cli/` 相关文件
 - 新增/更新测试
 - 全量 pytest / ruff 通过记录

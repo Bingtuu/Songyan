@@ -206,20 +206,20 @@ def test_analyzer_health_low_p1_halt(script):
 
     assert result["summary"]["health_low_p1_halt"]["count"] == 1
     assert result["summary"]["health_low_p1_halt"]["first_chapter"] == 3
-    assert result["summary"]["health_low_absolute_score_halt"]["count"] == 0
+    assert result["summary"]["health_low_score_halt"]["count"] == 0
 
 
-def test_analyzer_health_low_absolute_score_halt(script):
-    """overall_health_score 相对前一次审计跌幅超过阈值时触发."""
+def test_analyzer_health_low_score_halt(script):
+    """overall_health_score 创历史新低且同章 P1 激增时触发."""
     logs = [_make_log(i) for i in range(1, 4)]
     reports = {
-        1: _make_report("proj", 1, health_score=8.0),
-        3: _make_report("proj", 3, health_score=2.0),
+        1: _make_report("proj", 1, health_score=8.0, state_mismatches=_state_mismatches(10)),
+        3: _make_report("proj", 3, health_score=2.0, state_mismatches=_state_mismatches(50)),
     }
     result = script.GateImpactAnalyzer(logs, reports).analyze()
 
-    assert result["summary"]["health_low_absolute_score_halt"]["count"] == 1
-    assert result["summary"]["health_low_absolute_score_halt"]["first_chapter"] == 3
+    assert result["summary"]["health_low_score_halt"]["count"] == 1
+    assert result["summary"]["health_low_score_halt"]["first_chapter"] == 3
 
 
 def test_analyzer_health_low_streak_halt_carries_over(script):

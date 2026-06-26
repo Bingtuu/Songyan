@@ -25,10 +25,8 @@ def _enforce_gate_config() -> GateConfig:
         health_low_p1_halt=True,
         health_low_p1_min_absolute=50,
         health_low_p1_anomaly_factor=1.8,
-        # Task 126 验证发现：新项目的 health_score 会从初始高分（10.0）随叙事累积
-        # 正常下降到 5.x，2.0 的跌幅阈值会误伤。先禁用 score_drop gate，重点验证 P1 异常与 streak。
-        health_low_absolute_score_halt=False,
-        health_low_score_drop_threshold=2.0,
+        # Task 127 重构为"历史新低 + P1 同步激增"复合条件，默认关闭。
+        health_low_score_halt_enabled=False,
         health_low_streak_halt=True,
         health_low_streak_audit_window=3,
         health_low_streak_p1_limit=250,

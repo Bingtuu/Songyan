@@ -106,6 +106,20 @@ def test_degraded_acceptable_false_for_invalid_dict() -> None:
     assert _score_card_is_degraded_acceptable({"foo": "bar"}) is False
 
 
+def test_degraded_acceptable_ramp_overall_threshold() -> None:
+    """Task 128b: 开局期 overall_score 阈值 0.55，严格期 0.70."""
+    # overall_score 0.60，hard constraints ok
+    card = _make_score_card(overall_score=0.60, coherence_major=True)
+    assert _score_card_is_degraded_acceptable(card, chapter_number=3) is True
+    assert _score_card_is_degraded_acceptable(card, chapter_number=15) is False
+
+
+def test_degraded_acceptable_ramp_boundary_chapter_10() -> None:
+    """第 10 章仍使用爬坡阈值."""
+    card = _make_score_card(overall_score=0.56, coherence_major=True)
+    assert _score_card_is_degraded_acceptable(card, chapter_number=10) is True
+
+
 # ---------------------------------------------------------------------------
 # QualityGate degraded_accept routing
 # ---------------------------------------------------------------------------
@@ -248,53 +262,16 @@ async def test_quality_gate_recovered_by_best_when_passes_qg() -> None:
 
 
 @pytest.mark.asyncio
-async def test_settlement_extractor_allows_degraded_accept() -> None:
-    """d. SettlementExtractor does not block when _degraded_accept is True."""
+async def test_settlement_extractor_skips_settlement_for_degraded_accept() -> None:
+    """d. Task 128a: degraded_accept 章节跳过 settlement，返回 done."""
     version = MagicMock()
     version.version_id = "v-1"
     version.content = "test content"
 
-    project = MagicMock()
-    project.genre_id = "scifi"
-    project.mode_id = "webnovel"
-
-    goal = MagicMock()
-
-    settlement_mock = MagicMock()
-    settlement_mock.validation_status = "valid"
-
     with (
         patch("songyan.workflows._nodes.load_version", new_callable=AsyncMock) as mock_ver,
-        patch("songyan.workflows._nodes.load_project", new_callable=AsyncMock) as mock_proj,
-        patch("songyan.workflows._nodes.load_chapter_goal", new_callable=AsyncMock) as mock_goal,
-        patch("songyan.workflows._nodes.load_genre_profile", return_value=None),
-        patch(
-            "songyan.workflows._nodes.extract_settlement",
-            new_callable=AsyncMock,
-            return_value=settlement_mock,
-        ),
-        patch(
-            "songyan.workflows._nodes.accept_with_settlement_boundary",
-            new_callable=AsyncMock,
-        ),
-        patch(
-            "songyan.workflows._nodes.write_chapter_summary",
-            new_callable=AsyncMock,
-            return_value=("sum-1", None),
-        ),
-        patch("songyan.workflows._nodes._run_lifecycle_cleanup", new_callable=AsyncMock),
-        patch("songyan.workflows._nodes._index_accepted_chapter", new_callable=AsyncMock),
-        patch("songyan.agents.setting_evaporator.SettingEvaporator") as mock_evap_cls,
-        patch(
-            "songyan.workflows._nodes.trigger_layered_summaries",
-            new_callable=AsyncMock,
-        ),
     ):
         mock_ver.return_value = version
-        mock_proj.return_value = project
-        mock_goal.return_value = goal
-        mock_evap = mock_evap_cls.return_value
-        mock_evap.run = AsyncMock(return_value=[])
 
         result = await settlement_extractor_node({
             "project_id": "p1",
@@ -305,14 +282,16 @@ async def test_settlement_extractor_allows_degraded_accept() -> None:
             "_skip_settlement": False,
         })
 
-    # Should NOT be blocked; should proceed to settlement extraction
-    assert result.get("status") != "settlement_review"
+    assert result.get("status") == "done"
+    assert result.get("_degraded_accept") is True
     assert result.get("_settlement_needs_human_review") is False
+    assert result.get("settlement_id") is None
+    assert result.get("summary_id") is None
 
 
 @pytest.mark.asyncio
-async def test_settlement_extractor_blocks_qg_false_without_degraded_accept() -> None:
-    """QG false without degraded_accept → blocked."""
+async def test_settlement_extractor_degrades_qg_false_without_degraded_accept() -> None:
+    """Task 128a: QG false without degraded_accept → 自动降级，跳过 settlement，返回 done."""
     version = MagicMock()
     version.version_id = "v-1"
     version.content = "test content"
@@ -331,6 +310,8 @@ async def test_settlement_extractor_blocks_qg_false_without_degraded_accept() ->
             "_skip_settlement": False,
         })
 
-    assert result.get("status") == "settlement_review"
-    assert result.get("_settlement_needs_human_review") is True
+    assert result.get("status") == "done"
+    assert result.get("_degraded_accept") is True
+    assert result.get("_settlement_needs_human_review") is False
     assert result.get("settlement_id") is None
+    assert result.get("summary_id") is None

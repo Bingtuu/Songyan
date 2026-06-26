@@ -24,7 +24,7 @@ def gate_config_observe() -> GateConfig:
         health_low_gate_enabled=True,
         health_low_p1_halt=True,
         health_low_streak_halt=True,
-        health_low_absolute_score_halt=True,
+        health_low_score_halt_enabled=True,
         context_emergency_gate_enabled=True,
         context_emergency_single_halt=True,
         context_emergency_failure_halt=True,
@@ -38,7 +38,7 @@ def gate_config_enforce() -> GateConfig:
         health_low_gate_enabled=True,
         health_low_p1_halt=True,
         health_low_streak_halt=True,
-        health_low_absolute_score_halt=True,
+        health_low_score_halt_enabled=True,
         context_emergency_gate_enabled=True,
         context_emergency_single_halt=True,
         context_emergency_failure_halt=True,
@@ -83,7 +83,7 @@ def test_health_low_p1_triggers_when_enabled() -> None:
         overall_health_score=5.0,
     )
     cfg = GateConfig(health_low_gate_enabled=True, health_low_p1_halt=True)
-    triggered, reasons = check_health_low_single_gate(report, cfg)
+    triggered, reasons, _ = check_health_low_single_gate(report, cfg)
     assert triggered
     assert any("health_low_p1_halt" in r for r in reasons)
 
@@ -107,25 +107,44 @@ def test_health_low_p1_no_trigger_when_disabled() -> None:
         overall_health_score=5.0,
     )
     cfg = GateConfig()
-    triggered, _ = check_health_low_single_gate(report, cfg)
+    triggered, _, _ = check_health_low_single_gate(report, cfg)
     assert not triggered
 
 
-def test_health_low_absolute_score_trigger() -> None:
+def test_health_low_score_halt_trigger() -> None:
     report = ContinuityReport(
         report_id="r1",
         project_id="p1",
         checked_up_to_chapter=6,
+        state_mismatches=[
+            StateMismatch(
+                character_id=f"c{i}",
+                field="location",
+                chapter_a=1,
+                value_a="A",
+                chapter_b=2,
+                value_b="B",
+                issue="矛盾",
+            )
+            for i in range(60)
+        ],
         overall_health_score=2.0,
     )
     cfg = GateConfig(
         health_low_gate_enabled=True,
-        health_low_absolute_score_halt=True,
-        health_low_absolute_score_threshold=3.0,
+        health_low_score_halt_enabled=True,
+        health_low_score_halt_window=3,
+        health_low_score_halt_min_p1=20,
+        health_low_score_halt_anomaly_factor=1.8,
     )
-    triggered, reasons = check_health_low_single_gate(report, cfg)
+    triggered, reasons, _ = check_health_low_single_gate(
+        report,
+        cfg,
+        previous_p1_counts=[10, 10, 10],
+        min_health_score_so_far=5.0,
+    )
     assert triggered
-    assert any("health_low_absolute_score_halt" in r for r in reasons)
+    assert any("health_low_score_halt" in r for r in reasons)
 
 
 def test_health_low_no_p1_no_trigger() -> None:
@@ -147,7 +166,7 @@ def test_health_low_no_p1_no_trigger() -> None:
         overall_health_score=6.0,
     )
     cfg = GateConfig(health_low_gate_enabled=True, health_low_p1_halt=True)
-    triggered, _ = check_health_low_single_gate(report, cfg)
+    triggered, _, _ = check_health_low_single_gate(report, cfg)
     assert not triggered
 
 
@@ -290,19 +309,21 @@ def test_evaluate_all_gates_combines_reasons() -> None:
     cfg = GateConfig(
         health_low_gate_enabled=True,
         health_low_p1_halt=True,
-        health_low_absolute_score_halt=True,
+        health_low_score_halt_enabled=True,
         context_emergency_gate_enabled=True,
         context_emergency_single_halt=True,
     )
-    triggered, reasons = evaluate_all_gates(
+    triggered, reasons, _ = evaluate_all_gates(
         health_low_report=report,
         context_metrics=ctx_metrics,
         chapter_result=chapter_result,
         recent_results=[],
         config=cfg,
+        previous_p1_counts=[],
+        min_health_score_so_far=5.0,
     )
     assert triggered
-    assert len(reasons) == 3
+    assert len(reasons) == 2
 
 
 def test_evaluate_all_gates_no_trigger_with_default_config() -> None:
@@ -325,7 +346,7 @@ def test_evaluate_all_gates_no_trigger_with_default_config() -> None:
     )
     ctx_metrics = {"context_emergency": True, "budget_used_before_emergency": 1.5}
     chapter_result = {"success": True}
-    triggered, _ = evaluate_all_gates(
+    triggered, _, _ = evaluate_all_gates(
         health_low_report=report,
         context_metrics=ctx_metrics,
         chapter_result=chapter_result,

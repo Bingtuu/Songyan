@@ -235,8 +235,16 @@ def _score_card_is_safe_best(score_card_raw: dict[str, Any] | None, chapter_numb
     )
 
 
-def _score_card_is_degraded_acceptable(score_card_raw: dict[str, Any] | None) -> bool:
-    """判断 best 是否满足降级接受条件：分数尚可但 QG 未完全通过。"""
+def _score_card_is_degraded_acceptable(
+    score_card_raw: dict[str, Any] | None,
+    chapter_number: int = 0,
+    quality_ramp_chapters: int = 10,
+) -> bool:
+    """判断 best 是否满足降级接受条件：分数尚可但 QG 未完全通过。
+
+    Task 128b: Ch1–quality_ramp_chapters 使用更宽松的 overall_score 阈值（0.55），
+    其余章节保持 0.70。
+    """
     if not isinstance(score_card_raw, dict):
         return False
     try:
@@ -247,8 +255,11 @@ def _score_card_is_degraded_acceptable(score_card_raw: dict[str, Any] | None) ->
         logger.warning("workflow.invalid_degraded_accept_score_card", exc_info=True)
         return False
 
+    min_overall = (
+        0.55 if 1 <= chapter_number <= quality_ramp_chapters else 0.70
+    )
     return (
-        score_card.overall_score >= 0.70
+        score_card.overall_score >= min_overall
         and score_card.flags.length_ok
         and score_card.flags.budget_ok
         and not score_card.flags.coherence_critical
@@ -919,9 +930,15 @@ async def rewrite_node(state: dict[str, Any]) -> dict[str, Any]:
             and rollback_score_card
             and _score_card_passes_quality_gate(rollback_score_card)
         )
+        # Task 128b: 加载 mode profile 获取质量爬坡窗口
+        _rewrite_mode = load_creative_mode_profile(state.get("mode_id", "webnovel"))
         degraded_accept = False
         if not recovered_with_qg_pass and rollback_score_card:
-            degraded_accept = _score_card_is_degraded_acceptable(rollback_score_card)
+            degraded_accept = _score_card_is_degraded_acceptable(
+                rollback_score_card,
+                chapter_number=state["chapter_number"],
+                quality_ramp_chapters=_rewrite_mode.quality_ramp_chapters,
+            )
         logger.info(
             "rewrite.struct_integrity_rollback_decision",
             project_id=state["project_id"],
@@ -1156,12 +1173,16 @@ async def review_merger_node(state: dict[str, Any]) -> dict[str, Any]:
     was_rewritten = state.get("_was_rewritten", False) or db_was_rewritten
 
     # Task 106 + 111d: 统一评分聚合，预算指标来自轻量 _context_metrics。
+    # Task 128b: 按章节号应用质量爬坡阈值。
     budget_used = _budget_used_for_scoring(state)
+    _mode = load_creative_mode_profile(state.get("mode_id", "webnovel"))
     score_card = ScoreAggregator.aggregate(
         version_id=version.version_id,
         rule_result=rule_result,
         llm_result=llm_result,
         budget_used=budget_used,
+        chapter_number=state["chapter_number"],
+        quality_ramp_chapters=_mode.quality_ramp_chapters,
     )
     has_critical, has_major, needs_revision = combine_revision_signals(
         merged_has_critical=merged_has_critical,
@@ -1552,12 +1573,14 @@ async def revision_handler_node(state: dict[str, Any]) -> dict[str, Any]:
     goal = await load_chapter_goal(state.get("chapter_goal_id", ""))
     word_count_target = goal.word_count_target if goal else 3000
 
+    # Task 128c: 传入 score_card，使 RevisionHandler 能识别 readability 问题并走专精路径
     output, revised_content = await run_revision(
         content=version.content,
         report=report,
         literary_result=literary_result,
         previous_issues=previous_issues,
         word_count_target=word_count_target,
+        score_card=state.get("_score_card"),
     )
 
     # 截断检测：若内容保留率 < 50%，跳过 revision，回退到原始版本
@@ -1810,8 +1833,14 @@ async def quality_gate_node(state: dict[str, Any]) -> dict[str, Any]:
                     result["_needs_revision"] = False
                     return result
 
-                # Task 121q: degraded accept 路径 — 分数尚可但 QG 未完全通过
-                if _score_card_is_degraded_acceptable(active_best_score_card):
+                # Task 121q + 128b: degraded accept 路径 — 分数尚可但 QG 未完全通过
+                # 质量爬坡窗口内使用更宽松阈值
+                _qg_mode = load_creative_mode_profile(state.get("mode_id", "webnovel"))
+                if _score_card_is_degraded_acceptable(
+                    active_best_score_card,
+                    chapter_number=state["chapter_number"],
+                    quality_ramp_chapters=_qg_mode.quality_ramp_chapters,
+                ):
                     logger.warning(
                         "quality_gate.degraded_accept",
                         project_id=state["project_id"],
@@ -2105,12 +2134,22 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
         ),
     )
 
-    # Task 121m: QG false 版本禁止进入 settlement，防止劣质上下文污染
+    # Task 121m + Task 128a: QG false 版本禁止进入 settlement，防止劣质上下文污染。
+    # 但 Task 128a 要求 QG false 时降级接受（degraded_accept），跳过 settlement 但不终止 run。
     _qg_passed = state.get("_quality_gate_passed")
     _degraded_accept = state.get("_degraded_accept", False)
     if _qg_passed is False and not _degraded_accept:
         logger.warning(
-            "settlement_extractor_node.qg_false_blocked",
+            "settlement_extractor_node.qg_false_degraded_accept",
+            project_id=state["project_id"],
+            chapter_number=state["chapter_number"],
+            version_id=version.version_id,
+        )
+        _degraded_accept = True
+
+    if _degraded_accept:
+        logger.warning(
+            "settlement_extractor_node.degraded_accept_skip_settlement",
             project_id=state["project_id"],
             chapter_number=state["chapter_number"],
             version_id=version.version_id,
@@ -2118,17 +2157,11 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
         return {
             "settlement_id": None,
             "summary_id": None,
-            "status": "settlement_review",
-            "_settlement_needs_human_review": True,
+            "status": "done",
+            "_degraded_accept": True,
+            "_settlement_needs_human_review": False,
+            "_skip_settlement": False,
         }
-
-    if _degraded_accept:
-        logger.warning(
-            "settlement_extractor_node.degraded_accept_continue",
-            project_id=state["project_id"],
-            chapter_number=state["chapter_number"],
-            version_id=version.version_id,
-        )
 
     # Task 111d: skipped settlement 不能再伪装为 accepted/done。
     if state.get("_skip_settlement", False):

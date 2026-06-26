@@ -1,8 +1,8 @@
-# Task 130: 任务文档归档与状态一致性清理
+# Task 131: 任务文档归档与状态一致性清理
 
 > **类型**: 工程清理 / 文档维护  
 > **日期**: 2026-06-26  
-> **前置**: Task 120–128 已完成  
+> **前置**: Task 120–130 已完成  
 > **目标**: 消除过时规划稿与 DONE 文档并存的状态混乱，确保 `docs/STATUS.md`、`docs/INDEX.md`、`tasks/V5-README.md` 指向正确的最终事实文档。
 
 ---
@@ -72,7 +72,7 @@
   - 在文档末尾增加"历史规划稿归档入口"段落。
 - [ ] `docs/STATUS.md`：
   - 检查"当前结论"表中引用的任务文档是否指向 DONE 版本。
-  - 更新"下一步规划"段落，纳入 Task 127–131。
+  - 更新"下一步规划"段落，纳入 Task 127–132。
 - [ ] `tasks/V5-README.md`：
   - 在"文档使用规则"段落中强调：规划稿已归档，状态以 `-DONE.md` 为准。
   - 更新 Task 121–126 的文档链接，全部指向 `-DONE.md`。
@@ -95,7 +95,7 @@
 
 ### 4.2 索引一致性
 - [ ] `docs/INDEX.md` 中所有 V5 任务链接指向 `-DONE.md` 或新创建的任务规划稿。
-- [ ] `docs/STATUS.md` 的"下一步规划"更新为 Task 127–131。
+- [ ] `docs/STATUS.md` 的"下一步规划"更新为 Task 127–132。
 - [ ] `tasks/V5-README.md` 的"文档使用规则"和任务状态表反映最新归档策略。
 
 ### 4.3 回归验证
@@ -108,8 +108,8 @@
 ## 5. 依赖关系
 
 ```
-Task 120-126 已完成 ──┐
-Task 127-129 规划完成 ┤──► Task 130 文档归档与状态清理 ──┬──► Task 131 V5.1 验收
+Task 120-129 已完成 ──┐
+Task 130 决策完成 ────┤──► Task 131 文档归档与状态清理 ──┬──► Task 132 V5.1 验收
                      │                                  │
 archive/ 目录已存在 ──┘                                  └──► 后续 V5.2 任务创建
 ```
@@ -129,7 +129,7 @@ archive/ 目录已存在 ──┘                                  └──►
 
 ## 7. 交付物
 
-- `tasks/130-task-docs-archive-and-status-cleanup-DONE.md`
+- `tasks/131-task-docs-archive-and-status-cleanup-DONE.md`
 - 归档文件：`archive/tasks/` 下新增的历史规划稿
 - 更新后的 `docs/INDEX.md`
 - 更新后的 `docs/STATUS.md`

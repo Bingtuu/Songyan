@@ -446,3 +446,55 @@ class TestLengthThresholdCalibration:
         card = ScoreAggregator.aggregate("v1", rule, _make_llm_result())
         assert card.length.score == 0.3
         assert card.flags.length_ok is False
+
+
+class TestQualityRamp:
+    """Task 128b: Ch1–Ch10 质量爬坡阈值测试."""
+
+    def test_ramp_readability_threshold_lower(self):
+        """开局期 readability 阈值 0.3，严格期 0.6."""
+        rule = _make_rule_result(ai_tell_count=4)  # readability score = 0.5
+        ramp_card = ScoreAggregator.aggregate(
+            "v1", rule, _make_llm_result(), chapter_number=2
+        )
+        strict_card = ScoreAggregator.aggregate(
+            "v1", rule, _make_llm_result(), chapter_number=11
+        )
+        assert ramp_card.flags.readability_ok is True
+        assert strict_card.flags.readability_ok is False
+
+    def test_ramp_momentum_threshold_lower(self):
+        """开局期 momentum 阈值 0.3，严格期 0.5."""
+        rule = _make_rule_result(
+            punch_check=PunchCheck(
+                expected_punch_count=3,
+                punch_density_ok=False,
+                emotion_switch_ok=True,
+            ),
+            has_opening_hook=True,
+            has_ending_hook=False,
+        )  # momentum score = 0.4
+        ramp_card = ScoreAggregator.aggregate(
+            "v1", rule, _make_llm_result(), chapter_number=5
+        )
+        strict_card = ScoreAggregator.aggregate(
+            "v1", rule, _make_llm_result(), chapter_number=12
+        )
+        assert ramp_card.flags.momentum_present is True
+        assert strict_card.flags.momentum_present is False
+
+    def test_ramp_boundary_chapter_10(self):
+        """第 10 章仍属于质量爬坡窗口."""
+        rule = _make_rule_result(ai_tell_count=4)
+        card = ScoreAggregator.aggregate(
+            "v1", rule, _make_llm_result(), chapter_number=10
+        )
+        assert card.flags.readability_ok is True
+
+    def test_ramp_disabled_for_chapter_0(self):
+        """chapter_number=0 视为非爬坡，使用严格阈值."""
+        rule = _make_rule_result(ai_tell_count=4)
+        card = ScoreAggregator.aggregate(
+            "v1", rule, _make_llm_result(), chapter_number=0
+        )
+        assert card.flags.readability_ok is False

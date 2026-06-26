@@ -106,11 +106,19 @@ def _format_chapter_summary(chapter_number: int, summary_text: str) -> str:
 
 
 def _is_terminal_success_state(state: dict[str, Any]) -> bool:
-    """判断章节是否已完成可结算终态，防止前置非致命错误污染结果."""
+    """判断章节是否已完成可结算终态，防止前置非致命错误污染结果.
+
+    Task 128a: degraded_accept 章节跳过 settlement/summary，但仍视为成功终态，
+    使 run 能继续下一章而不因 QG false 终止。
+    """
+    if state.get("status") != "done":
+        return False
+    if state.get("current_version_id") is None:
+        return False
+    if state.get("_degraded_accept"):
+        return True
     return (
-        state.get("status") == "done"
-        and state.get("current_version_id") is not None
-        and state.get("settlement_id") is not None
+        state.get("settlement_id") is not None
         and state.get("summary_id") is not None
     )
 
@@ -319,6 +327,9 @@ async def run_project_pipeline(
     _previous_health_low_report: Any | None = None
     _previous_p1_counts: list[int] = []
 
+    # Task 127: 保存截至目前最低 health_score，供 score halt 复合条件使用
+    _min_health_score_so_far: float | None = None
+
     # 重置检查指针，消除冷启动导致的首章 WAL 读一致性窗口问题
     await reset_checkpointer()
 
@@ -370,9 +381,15 @@ async def run_project_pipeline(
             run_id=run_id,
             previous_health_low_report=_previous_health_low_report,
             previous_p1_counts=_previous_p1_counts,
+            min_health_score_so_far=_min_health_score_so_far,
         )
 
         _append_recent_result(_recent_results, chapter_number, chapter_result, gate_config)
+
+        # Task 127: 每章运行后更新最低 health_score
+        _updated_min_score = chapter_result.get("updated_min_health_score")
+        if _updated_min_score is not None:
+            _min_health_score_so_far = _updated_min_score
 
         # Task 125: 审计点章节更新历史数据，供后续 health_low 异常检测使用
         _health_low_report = chapter_result.get("health_low_report")
@@ -515,6 +532,7 @@ async def _run_single_chapter(
     run_id: str | None = None,
     previous_health_low_report: Any | None = None,
     previous_p1_counts: list[int] | None = None,
+    min_health_score_so_far: float | None = None,
 ) -> dict:
     """运行单章，含 auto_confirm 处理和失败重试.
 
@@ -528,6 +546,7 @@ async def _run_single_chapter(
             "continuity_health_severity": dict | None,
             "gate_triggered": bool,
             "gate_reasons": list[str],
+            "updated_min_health_score": float | None,
         }
     """
     gate_config = gate_config or GateConfig()
@@ -663,7 +682,7 @@ async def _run_single_chapter(
             }
 
             # Task 123: 单章候选硬门禁判断（在写日志前完成，使日志包含 gate 信息）
-            _gate_triggered, _gate_reasons = evaluate_all_gates(
+            _gate_triggered, _gate_reasons, _updated_min_score = evaluate_all_gates(
                 health_low_report=health_low_report,
                 context_metrics=_ctx_metrics,
                 chapter_result=_preliminary_result,
@@ -671,6 +690,7 @@ async def _run_single_chapter(
                 config=gate_config,
                 previous_health_low_report=previous_health_low_report,
                 previous_p1_counts=previous_p1_counts,
+                min_health_score_so_far=min_health_score_so_far,
             )
 
             chapter_log = await log_chapter_run(
@@ -725,6 +745,7 @@ async def _run_single_chapter(
                 "health_low_report": health_low_report,
                 "gate_triggered": _gate_triggered,
                 "gate_reasons": _gate_reasons,
+                "updated_min_health_score": _updated_min_score,
             }
 
 
@@ -775,6 +796,7 @@ async def _run_single_chapter(
         "continuity_health_severity": None,
         "gate_triggered": False,
         "gate_reasons": [],
+        "updated_min_health_score": min_health_score_so_far,
     }
 
 

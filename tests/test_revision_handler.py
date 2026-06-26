@@ -25,8 +25,10 @@ from songyan.agents.revision_handler import (
 )
 from songyan.exceptions import LLMResponseParseError
 from songyan.models import (
+    AiTellMatch,
     ChapterHead,
     ChapterVersion,
+    FatigueWordMatch,
     LiteraryAuditResult,
     LiteraryObservation,
     MergedReviewReport,
@@ -1180,3 +1182,163 @@ class TestSceneMergeStrategy:
         # 不应调用 scene_merge，字数未超标
         mock_llm.assert_called_once()
         assert result.patches_applied == []
+
+
+# ---------------------------------------------------------------------------
+# Task 128c: Readability 专精修订
+# ---------------------------------------------------------------------------
+
+
+def _make_rule_result_with_readability(
+    *,
+    ai_tell_count: int = 0,
+    fatigue_word_count: int = 0,
+    paragraph_rhythm_score: float = 5.0,
+    rhythm_issues: list[str] | None = None,
+) -> RuleAuditResult:
+    ai_tell_matches = [
+        AiTellMatch(pattern=f"p{i}", matched_text=f"AI腔{i}", location=f"第{i}处")
+        for i in range(1, ai_tell_count + 1)
+    ]
+    fatigue_word_matches = [
+        FatigueWordMatch(word=f"疲劳词{i}", count=1, locations=[f"第{i}处"])
+        for i in range(1, fatigue_word_count + 1)
+    ]
+    return RuleAuditResult(
+        ai_tell_count=ai_tell_count,
+        ai_tell_matches=ai_tell_matches,
+        fatigue_word_count=fatigue_word_count,
+        fatigue_word_matches=fatigue_word_matches,
+        paragraph_rhythm_score=paragraph_rhythm_score,
+        rhythm_issues=rhythm_issues or [],
+    )
+
+
+def _make_report_with_rule_audit(
+    rule_audit: RuleAuditResult | None = None,
+    *issues: ReviewIssue,
+) -> MergedReviewReport:
+    return MergedReviewReport(
+        chapter_version_id="v-readability",
+        rule_audit=rule_audit,
+        issues=list(issues),
+    )
+
+
+class TestReadabilityDrivenRevision:
+    """Task 128c: 当 readability 未达标时进入专精修订路径."""
+
+    def test_readability_driven_by_score_card_flag(self):
+        from songyan.agents.revision_handler import _readability_driven
+
+        report = _make_report_with_rule_audit(
+            _make_rule_result_with_readability(ai_tell_count=0)
+        )
+        score_card = {"flags": {"readability_ok": False}}
+        assert _readability_driven(report, score_card) is True
+
+    def test_readability_driven_by_ai_tell_count(self):
+        from songyan.agents.revision_handler import _readability_driven
+
+        report = _make_report_with_rule_audit(
+            _make_rule_result_with_readability(ai_tell_count=2)
+        )
+        assert _readability_driven(report, None) is True
+
+    def test_readability_driven_by_fatigue_words(self):
+        from songyan.agents.revision_handler import _readability_driven
+
+        report = _make_report_with_rule_audit(
+            _make_rule_result_with_readability(fatigue_word_count=5)
+        )
+        assert _readability_driven(report, None) is True
+
+    def test_readability_driven_by_rhythm_score(self):
+        from songyan.agents.revision_handler import _readability_driven
+
+        report = _make_report_with_rule_audit(
+            _make_rule_result_with_readability(
+                paragraph_rhythm_score=3.5, rhythm_issues=["段落过长"]
+            )
+        )
+        assert _readability_driven(report, None) is True
+
+    def test_not_readability_driven_when_healthy(self):
+        from songyan.agents.revision_handler import _readability_driven
+
+        report = _make_report_with_rule_audit(
+            _make_rule_result_with_readability(
+                ai_tell_count=1, fatigue_word_count=2, paragraph_rhythm_score=5.0
+            )
+        )
+        score_card = {"flags": {"readability_ok": True}}
+        assert _readability_driven(report, score_card) is False
+
+    def test_build_readability_issues(self):
+        from songyan.agents.revision_handler import _build_readability_issues
+
+        report = _make_report_with_rule_audit(
+            _make_rule_result_with_readability(
+                ai_tell_count=2,
+                fatigue_word_count=3,
+                paragraph_rhythm_score=3.0,
+                rhythm_issues=["段落过长", "连续短句"],
+            )
+        )
+        issues = _build_readability_issues(report)
+        categories = {i.category for i in issues}
+        assert ReviewCategory.SHOW_DONT_TELL in categories
+        assert ReviewCategory.DESCRIPTION_SENSORY in categories
+        assert ReviewCategory.NARRATIVE_PACING in categories
+        assert len(issues) == 6  # 2 AI + 3 fatigue + 1 rhythm
+
+    @pytest.mark.asyncio
+    async def test_readability_driven_adds_issues_and_uses_prompt(self):
+        """readability 驱动时，即使没有原 patchable issues 也会构造 issues 并调用 LLM."""
+        content = "他感到非常愤怒。疲劳词1突然出现。这是一个很长的说明段落没有任何动作。"
+        report = _make_report_with_rule_audit(
+            _make_rule_result_with_readability(
+                ai_tell_count=2,
+                fatigue_word_count=3,
+                paragraph_rhythm_score=3.0,
+                rhythm_issues=["段落过长"],
+            )
+        )
+        score_card = {"flags": {"readability_ok": False}}
+
+        llm_response = json.dumps(
+            {
+                "content": content,
+                "patches": [
+                    {
+                        "issue_id": "rh-ai-0",
+                        "original_text": "他感到非常愤怒。",
+                        "revised_text": "他的手指攥紧了剑柄。",
+                        "location": "第1段",
+                    }
+                ],
+            },
+            ensure_ascii=False,
+        )
+
+        captured_prompts: list[str] = []
+
+        def capture_prompt(prompt: str, **kwargs: Any) -> str:
+            captured_prompts.append(prompt)
+            return llm_response
+
+        with patch(
+            "songyan.agents.revision_handler.call_llm", side_effect=capture_prompt
+        ):
+            result, revised = await run_revision(
+                content, report, score_card=score_card
+            )
+
+        assert len(captured_prompts) == 1
+        prompt = captured_prompts[0]
+        # 确认使用了 readability 专精 prompt
+        assert "readability" in prompt.lower() or "可读性" in prompt
+        assert "AI 腔命中数" in prompt or "ai_tell_count" in prompt
+        # 确认构造的 issues 被应用
+        assert len(result.patches_applied) == 1
+        assert result.patches_applied[0].issue_id == "rh-ai-0"

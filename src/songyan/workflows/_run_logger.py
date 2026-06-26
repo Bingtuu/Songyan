@@ -170,6 +170,7 @@ def build_chapter_run_log(
     # 5. 有 settlement_id 或 settlement_applied 标志（可选增强）
     settlement_needs_review = state.get("_settlement_needs_human_review", False)
     skip_settlement = state.get("_skip_settlement", False)
+    degraded_accept = state.get("_degraded_accept", False)
     settlement_error_stages = {"settlement", "settlement_review", "settlement_extractor"}
     has_settlement_error = error_stage in settlement_error_stages if error_stage else False
     has_settlement_id = state.get("settlement_id") is not None
@@ -230,6 +231,7 @@ def build_chapter_run_log(
         score_card=_score_card,
         convergence_failed=state.get("_convergence_failed", False),
         skip_settlement=skip_settlement,
+        degraded_accept=degraded_accept,
         duration_sec=round(duration_sec, 2),
     )
 

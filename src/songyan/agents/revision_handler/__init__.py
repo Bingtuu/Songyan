@@ -69,6 +69,132 @@ def _filter_patchable_issues(report: MergedReviewReport) -> list[ReviewIssue]:
     return filter_patchable_issues(report)
 
 
+def _readability_metrics_from_report(
+    report: MergedReviewReport,
+) -> dict[str, Any]:
+    """从 report 提取 readability 指标，用于渲染 readability 专精 prompt."""
+    rule_audit = report.rule_audit or RuleAuditResult()
+    return {
+        "ai_tell_count": rule_audit.ai_tell_count,
+        "fatigue_word_count": rule_audit.fatigue_word_count,
+        "paragraph_rhythm_score": getattr(rule_audit, "paragraph_rhythm_score", 5.0),
+    }
+
+
+def _readability_driven(
+    report: MergedReviewReport,
+    score_card: dict[str, Any] | None,
+) -> bool:
+    """判断是否需要进入 readability 专精修订路径.
+
+    Task 128c: 当 score_card 标记 readability_ok=False，或 report 中可读性指标
+    明显异常时，使用 readability 专精 prompt 和 issues。
+    """
+    if score_card is not None:
+        flags = score_card.get("flags") or {}
+        if flags.get("readability_ok") is False:
+            return True
+
+    rule_audit = report.rule_audit
+    if rule_audit is None:
+        return False
+
+    # 即使没有 readability_ok 标志，只要指标明显异常也进入专精路径
+    if rule_audit.ai_tell_count >= 2:
+        return True
+    if rule_audit.fatigue_word_count >= 5:
+        return True
+    rhythm_score = getattr(rule_audit, "paragraph_rhythm_score", 5.0)
+    if rhythm_score < 4.0:
+        return True
+    return False
+
+
+def _build_readability_issues(
+    report: MergedReviewReport,
+) -> list[ReviewIssue]:
+    """从 rule_audit 构造 readability-focused issues.
+
+    当原有 patchable issues 不足或 readability 未达标时，补充具体修复指令。
+    """
+    issues: list[ReviewIssue] = []
+    rule_audit = report.rule_audit
+    if rule_audit is None:
+        return issues
+
+    # AI 腔 — 取前 2 处
+    if rule_audit.ai_tell_count > 0:
+        for idx, match in enumerate(rule_audit.ai_tell_matches[:2]):
+            issues.append(
+                ReviewIssue(
+                    issue_id=f"rh-ai-{idx}",
+                    category=ReviewCategory.SHOW_DONT_TELL,
+                    severity="major",
+                    evidence_quote=match.matched_text,
+                    evidence_location=match.location or f"第{idx + 1}处AI腔",
+                    issue_description=(
+                        f"AI腔命中（模式: {match.pattern}）— 需要改为展示而非讲述。"
+                    ),
+                    expected="通过动作、感官细节、环境反应展示情绪与状态。",
+                    actual=f'原文直接陈述: "{match.matched_text}"',
+                    suggested_fix="改写成具体场景：用动作、表情、身体感受替代抽象描述。",
+                    fix_type="patch",
+                    confidence=0.95,
+                )
+            )
+
+    # 疲劳词 — 取前 3 处
+    if rule_audit.fatigue_word_count > 0:
+        for idx, match in enumerate(rule_audit.fatigue_word_matches[:3]):
+            loc = match.locations[0] if match.locations else f"第{idx + 1}处"
+            issues.append(
+                ReviewIssue(
+                    issue_id=f"rh-fatigue-{idx}",
+                    category=ReviewCategory.DESCRIPTION_SENSORY,
+                    severity="major",
+                    evidence_quote=match.word,
+                    evidence_location=loc,
+                    issue_description=(
+                        f'疲劳词 — "{match.word}" 累计出现 {match.count} 次。'
+                    ),
+                    expected="同一概念使用多样表达，轮换词汇、比喻和感官通道。",
+                    actual=f'"{match.word}" 重复出现。',
+                    suggested_fix=(
+                        f'将部分 "{match.word}" 替换为同义词、比喻或具体描写；'
+                        "无法替换时删除冗余 occurrence。"
+                    ),
+                    fix_type="patch",
+                    confidence=0.9,
+                )
+            )
+
+    # 段落节奏
+    rhythm_score = getattr(rule_audit, "paragraph_rhythm_score", 5.0)
+    if rhythm_score < 5.0 and rule_audit.rhythm_issues:
+        issues.append(
+            ReviewIssue(
+                issue_id="rh-rhythm-0",
+                category=ReviewCategory.NARRATIVE_PACING,
+                severity="major",
+                evidence_quote="; ".join(rule_audit.rhythm_issues[:3]),
+                evidence_location="全章段落结构",
+                issue_description=(
+                    f"段落节奏欠佳（评分 {rhythm_score:.1f}/10）— 需要调整段落长度分布。"
+                ),
+                expected="段落长度有变化：短句制造紧张，中长段落推进叙事。",
+                actual="; ".join(rule_audit.rhythm_issues[:3]),
+                suggested_fix=(
+                    "拆分过长叙述段落；在关键动作处使用短句/短段；"
+                    "合并过度碎片化的单句段落。"
+                ),
+                fix_type="patch",
+                confidence=0.85,
+            )
+        )
+
+    return issues
+
+
 def _extract_protected_fissures(
     literary_result: LiteraryAuditResult | None,
 ) -> list[str]:
@@ -161,20 +287,30 @@ def _render_prompt(
     issues: list[ReviewIssue],
     protected_fissures: list[str],
     previous_issues: list[ReviewIssue] | None = None,
+    *,
+    prompt_version: str | None = None,
+    readability_metrics: dict[str, Any] | None = None,
 ) -> str:
-    """渲染 RevisionHandler Prompt."""
+    """渲染 RevisionHandler Prompt.
+
+    Task 128c: 支持 readability 专精 prompt 版本和可读性指标变量。
+    """
     from songyan.prompts import get_prompt_loader
 
     loader = get_prompt_loader()
-    card = loader.load_card("revision_handler")
+    card = loader.load_card("revision_handler", version=prompt_version)
 
     content = truncate_to_tokens(content, MAX_CONTENT_TOKENS)
 
-    rendered = loader.render_card(card, {
+    variables: dict[str, Any] = {
         "content": content,
         "issues": _render_issues(issues),
         "protected_fissures": _render_protected_fissures(protected_fissures),
-    })
+    }
+    if readability_metrics is not None:
+        variables.update(readability_metrics)
+
+    rendered = loader.render_card(card, variables)
     prompt = rendered.full_prompt
 
     feedback = _render_previous_show_dont_tell_feedback(previous_issues)
@@ -415,6 +551,7 @@ async def run_revision(
     revised_rule_result: RuleAuditResult | None = None,
     previous_issues: list[ReviewIssue] | None = None,
     word_count_target: int = 3000,
+    score_card: dict[str, Any] | None = None,
 ) -> tuple[RevisionOutput, str]:
     """运行修订 — 按 issue 局部 patch，不整章重写.
 
@@ -424,13 +561,37 @@ async def run_revision(
         literary_result: 可选的 LiteraryAuditor 结果，用于保护 valuable_fissure
         temperature: LLM 温度（默认 0.3，精确修改）
         word_count_target: 目标字数（V4.0 Task 088 字数硬约束）
+        score_card: 可选的 score_card dict（Task 128c：用于判断 readability 专精路径）
 
     Returns:
         (RevisionOutput, revised_content)
     """
     start_time = time.perf_counter()
 
+    # Task 128c: 判断是否需要 readability 专精修订
+    readability_driven = _readability_driven(report, score_card)
+    readability_metrics = (
+        _readability_metrics_from_report(report) if readability_driven else None
+    )
+
     patchable_issues = _filter_patchable_issues(report)
+
+    if readability_driven:
+        rh_issues = _build_readability_issues(report)
+        # 合并并去重：保留原有 patchable issues，补充 readability 专精 issues
+        existing_ids = {i.issue_id for i in patchable_issues}
+        for issue in rh_issues:
+            if issue.issue_id not in existing_ids:
+                patchable_issues.append(issue)
+                existing_ids.add(issue.issue_id)
+        _rh_metrics: dict[str, Any] = readability_metrics or {}
+        logger.info(
+            "revision_handler.readability_driven",
+            ai_tell_count=_rh_metrics.get("ai_tell_count"),
+            fatigue_word_count=_rh_metrics.get("fatigue_word_count"),
+            paragraph_rhythm_score=_rh_metrics.get("paragraph_rhythm_score"),
+            total_issues=len(patchable_issues),
+        )
 
     if not patchable_issues:
         logger.info("revision_handler.no_patchable_issues")
@@ -489,7 +650,15 @@ async def run_revision(
             )
 
     # 回退到原有 patch_engine 路径
-    prompt = _render_prompt(content, patchable_issues, protected_fissures, previous_issues)
+    # Task 128c: readability 驱动时使用 1.1.0 专精 prompt
+    prompt = _render_prompt(
+        content,
+        patchable_issues,
+        protected_fissures,
+        previous_issues,
+        prompt_version="1.1.0" if readability_driven else None,
+        readability_metrics=readability_metrics,
+    )
 
     llm_response = await call_llm(prompt, temperature=temperature)
     data = parse_llm_response(llm_response)

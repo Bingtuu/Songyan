@@ -35,11 +35,12 @@
 | `tasks/124-context-emergency-health-low-gate-impact-analysis-DONE.md` | Task 124：候选硬门禁离线影响面分析 |
 | `tasks/125-gate-threshold-tuning-and-validation-DONE.md` | Task 125：候选硬门禁阈值调优与验证 |
 | `tasks/126-small-window-enforce-validation-DONE.md` | Task 126：候选硬门禁 enforce 模式小窗口实跑验证 |
-| `tasks/127-health-low-score-halt-refactor.md` | Task 127：重构 `health_low_absolute_score_halt` |
-| `tasks/128-enforce-mode-ch1-ch50-validation.md` | Task 128：enforce 模式 Ch1–Ch50 验证 |
-| `tasks/129-gate-mode-default-decision.md` | Task 129：gate_mode 默认模式决策 |
-| `tasks/130-task-docs-archive-and-status-cleanup.md` | Task 130：任务文档归档与状态一致性清理 |
-| `tasks/131-v51-final-acceptance-package.md` | Task 131：V5.1 最终验收包 |
+| `tasks/127-health-low-score-halt-refactor-DONE.md` | Task 127：重构 `health_low_score_halt` 复合条件 |
+| `tasks/128-strict-mode-fault-tolerance-and-quality-ramp-DONE.md` | Task 128：严格模式容错与开局期质量爬坡 |
+| `tasks/129-enforce-mode-ch1-ch50-validation.md` | Task 129：enforce 模式 Ch1–Ch50 验证 |
+| `tasks/130-gate-mode-default-decision.md` | Task 130：gate_mode 默认模式决策 |
+| `tasks/131-task-docs-archive-and-status-cleanup.md` | Task 131：任务文档归档与状态一致性清理 |
+| `tasks/132-v51-final-acceptance-package.md` | Task 132：V5.1 最终验收包 |
 
 ## 按场景查阅
 
@@ -77,11 +78,12 @@
 | 候选硬门禁影响面分析 | `tasks/124-context-emergency-health-low-gate-impact-analysis-DONE.md` |
 | 候选硬门禁阈值调优 | `tasks/125-gate-threshold-tuning-and-validation-DONE.md` |
 | 候选硬门禁 enforce 小窗口验证 | `tasks/126-small-window-enforce-validation-DONE.md` |
-| health_low score halt 重构 | `tasks/127-health-low-score-halt-refactor.md` |
-| enforce 模式 Ch1–Ch50 验证 | `tasks/128-enforce-mode-ch1-ch50-validation.md` |
-| gate_mode 默认模式决策 | `tasks/129-gate-mode-default-decision.md` |
-| 任务文档归档与状态清理 | `tasks/130-task-docs-archive-and-status-cleanup.md` |
-| V5.1 最终验收包 | `tasks/131-v51-final-acceptance-package.md` |
+| health_low score halt 重构 | `tasks/127-health-low-score-halt-refactor-DONE.md` |
+| 严格模式容错与开局期质量爬坡 | `tasks/128-strict-mode-fault-tolerance-and-quality-ramp-DONE.md` |
+| enforce 模式 Ch1–Ch50 验证 | `tasks/129-enforce-mode-ch1-ch50-validation.md` |
+| gate_mode 默认模式决策 | `tasks/130-gate-mode-default-decision.md` |
+| 任务文档归档与状态清理 | `tasks/131-task-docs-archive-and-status-cleanup.md` |
+| V5.1 最终验收包 | `tasks/132-v51-final-acceptance-package.md` |
 | V5.1 Code Review 总规划 | `docs/reports/pass14-to-pass18-v51-review-roadmap.md` |
 | V5.1 Code Review 修复汇总 | `docs/reports/pass14-final-fix-summary.md` |
 | 架构手册 | `docs/architecture/04-vibe-coding-engineering.md` |

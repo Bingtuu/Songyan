@@ -52,15 +52,25 @@ class GateConfig(BaseModel):
         ge=0,
         description="窗口内 P2 计数达到该值即触发 streak 门禁（需同时无 P1）",
     )
-    health_low_absolute_score_halt: bool = Field(
+    # Task 127: health_low score halt 复合条件（历史新低 + P1 同步激增）
+    health_low_score_halt_enabled: bool = Field(
         default=False,
-        description="overall_health_score 低于阈值时触发门禁",
+        description="是否启用 health_low score halt 复合条件门禁",
     )
-    health_low_absolute_score_threshold: float = Field(
-        default=3.0,
-        ge=0.0,
-        le=10.0,
-        description="绝对低分阈值",
+    health_low_score_halt_window: int = Field(
+        default=3,
+        ge=1,
+        description="计算 P1 近期中位数的审计点窗口大小",
+    )
+    health_low_score_halt_min_p1: int = Field(
+        default=20,
+        ge=0,
+        description="P1 计数绝对下限，避免均值极小时的小波动",
+    )
+    health_low_score_halt_anomaly_factor: float = Field(
+        default=1.8,
+        ge=1.0,
+        description="P1 计数超过近期中位数多少倍视为异常",
     )
 
     # Task 125: 更精细的 health_low 阈值，用于避免对正常叙事累积过度敏感
@@ -73,11 +83,6 @@ class GateConfig(BaseModel):
         default=None,
         ge=1.0,
         description="P1 异常门禁的滚动中位数倍数（None 表示不启用异常检测）",
-    )
-    health_low_score_drop_threshold: float | None = Field(
-        default=None,
-        ge=0.0,
-        description="overall_health_score 相对前一次审计的跌幅阈值（None 表示使用绝对阈值）",
     )
     health_low_streak_audit_window: int | None = Field(
         default=None,

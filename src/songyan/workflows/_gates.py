@@ -32,29 +32,43 @@ def check_health_low_single_gate(
     config: GateConfig | None = None,
     previous_p1_counts: list[int] | None = None,
     previous_report: ContinuityReport | None = None,
-) -> tuple[bool, list[str]]:
+    min_health_score_so_far: float | None = None,
+) -> tuple[bool, list[str], float | None]:
     """单章 health_low 即时门禁判断.
 
     Task 125 扩展：
     - 当 `health_low_p1_anomaly_factor` 配置时，P1 需同时满足最小绝对数量
       并超过最近审计点 P1 计数滚动中位数的指定倍数才触发。
-    - 当 `health_low_score_drop_threshold` 配置时，health_score 门禁改为检测
-      相对前一次审计的跌幅，而非固定绝对阈值。
+
+    Task 127 扩展：
+    - `health_low_score_halt_enabled` 改用"历史新低 + P1 同步激增"复合条件，
+      仅当当前 overall_health_score 低于历史最低值且同章 P1 超过近期中位数
+      倍数时才触发，避免开局期正常回落误伤。
 
     Args:
         report: 当前章节的 ContinuityReport。
         config: GateConfig。
-        previous_p1_counts: 之前审计点章节的 P1 计数列表，用于异常检测。
-        previous_report: 上一次审计点的 ContinuityReport，用于 score drop 检测。
+        previous_p1_counts: 之前审计点章节的 P1 计数列表，用于 P1 异常检测。
+        previous_report: 上一次审计点的 ContinuityReport（保留参数以保持调用
+            兼容，当前复合条件不再使用相对跌幅）。
+        min_health_score_so_far: 截至目前见过的最低 overall_health_score，
+            None 表示尚未有历史最低值（开局第一章）。
 
     Returns:
-        (triggered, reasons)
+        (triggered, reasons, updated_min_health_score)
     """
     config = config or _default_gate_config()
     reasons: list[str] = []
 
+    current_score = report.overall_health_score
+    updated_min_score: float | None = (
+        current_score if current_score is not None else min_health_score_so_far
+    )
+    if min_health_score_so_far is not None and current_score is not None:
+        updated_min_score = min(min_health_score_so_far, current_score)
+
     if not config.health_low_gate_enabled:
-        return False, reasons
+        return False, reasons, updated_min_score
 
     severity = classify_report(report)
 
@@ -75,27 +89,25 @@ def check_health_low_single_gate(
                 f"(state_mismatch or critical orphaned setting)"
             )
 
-    if config.health_low_absolute_score_halt and report.overall_health_score is not None:
-        current_score = report.overall_health_score
-        if config.health_low_score_drop_threshold is not None:
-            if (
-                previous_report is not None
-                and previous_report.overall_health_score is not None
-                and previous_report.overall_health_score - current_score
-                >= config.health_low_score_drop_threshold
-            ):
-                reasons.append(
-                    f"health_low_absolute_score_halt: score dropped from "
-                    f"{previous_report.overall_health_score} to {current_score} "
-                    f">= threshold={config.health_low_score_drop_threshold}"
-                )
-        elif current_score < config.health_low_absolute_score_threshold:
+    if (
+        config.health_low_score_halt_enabled
+        and current_score is not None
+        and min_health_score_so_far is not None
+        and current_score < min_health_score_so_far
+    ):
+        p1_count = severity["P1"]
+        window = config.health_low_score_halt_window
+        recent = (previous_p1_counts or [])[-window:] if previous_p1_counts else []
+        baseline = _median(recent) * config.health_low_score_halt_anomaly_factor
+        if p1_count >= config.health_low_score_halt_min_p1 and p1_count > baseline:
             reasons.append(
-                f"health_low_absolute_score_halt: score={current_score} "
-                f"< threshold={config.health_low_absolute_score_threshold}"
+                f"health_low_score_halt: score={current_score} < "
+                f"min_so_far={min_health_score_so_far} and "
+                f"P1_count={p1_count} >= min_p1={config.health_low_score_halt_min_p1} and "
+                f"> baseline*factor={baseline:.1f}"
             )
 
-    return bool(reasons), reasons
+    return bool(reasons), reasons, updated_min_score
 
 
 def check_health_low_streak_gate(
@@ -225,7 +237,8 @@ def evaluate_all_gates(
     config: GateConfig | None = None,
     previous_health_low_report: ContinuityReport | None = None,
     previous_p1_counts: list[int] | None = None,
-) -> tuple[bool, list[str]]:
+    min_health_score_so_far: float | None = None,
+) -> tuple[bool, list[str], float | None]:
     """汇总全部候选门禁判断.
 
     Args:
@@ -236,19 +249,22 @@ def evaluate_all_gates(
         config: GateConfig。
         previous_health_low_report: 上一次审计点的连续性审计报告。
         previous_p1_counts: 之前审计点章节的 P1 计数列表。
+        min_health_score_so_far: 截至目前见过的最低 overall_health_score。
 
     Returns:
-        (any_triggered, all_reasons)
+        (any_triggered, all_reasons, updated_min_health_score)
     """
     config = config or _default_gate_config()
     all_reasons: list[str] = []
+    updated_min_score: float | None = min_health_score_so_far
 
     if health_low_report is not None:
-        triggered, reasons = check_health_low_single_gate(
+        triggered, reasons, updated_min_score = check_health_low_single_gate(
             health_low_report,
             config,
             previous_p1_counts=previous_p1_counts,
             previous_report=previous_health_low_report,
+            min_health_score_so_far=min_health_score_so_far,
         )
         if triggered:
             all_reasons.extend(reasons)
@@ -265,4 +281,4 @@ def evaluate_all_gates(
     if triggered:
         all_reasons.extend(reasons)
 
-    return bool(all_reasons), all_reasons
+    return bool(all_reasons), all_reasons, updated_min_score
