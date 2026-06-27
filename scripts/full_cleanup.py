@@ -34,7 +34,7 @@ PROJECT_TABLES = [
 ]
 
 # Non-project tables to also clear
-RUN_TABLES = ["project_runs", "run_logs"]
+RUN_TABLES = ["project_runs", "run_logs", "checkpoints", "writes"]
 
 
 def clean_database() -> None:

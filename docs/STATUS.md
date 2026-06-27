@@ -10,7 +10,7 @@
 | 最终验收 | Task 120 Final Acceptance Package 已交付 |
 | 风险口径 | P0/P1 风险为 0 |
 | 最近全量测试 | `1856 passed, 2 skipped, 1 xfailed` |
-| 最近修复 | Task 123 ContextEmergency / health_low 候选硬门禁（默认观测模式，16 个新单测）；Task 124 离线影响面分析；Task 125 阈值调优（P1 异常检测、health_score 跌幅、审计点 streak），新增 12 个单测；Task 126 enforce 小窗口实跑验证，Ch1–Ch19 零 gate 触发；**Task 127 重构 `health_low_score_halt` 为"历史新低 + P1 同步激增"复合条件，新增 8 个单测，pytest 1842 passed**；**Task 128 完成**：QG false 降级接受不终止 run、Ch1–Ch10 质量爬坡阈值、RevisionHandler readability 专精路径；pytest 1843 passed；ruff 通过 |
+| 最近修复 | Task 123 ContextEmergency / health_low 候选硬门禁（默认观测模式，16 个新单测）；Task 124 离线影响面分析；Task 125 阈值调优（P1 异常检测、health_score 跌幅、审计点 streak），新增 12 个单测；Task 126 enforce 小窗口实跑验证，Ch1–Ch19 零 gate 触发；**Task 127 重构 `health_low_score_halt` 为"历史新低 + P1 同步激增"复合条件，新增 8 个单测，pytest 1842 passed**；**Task 128 完成**：QG false 降级接受不终止 run、Ch1–Ch10 质量爬坡阈值、RevisionHandler readability 专精路径；pytest 1843 passed；**Task 129 完成**：enforce 模式 Ch1–Ch50 验证，`run-89d7a2d4` Ch1–Ch15 后因 quality_gate_fail_streak 暂停，报告见 `docs/reports/task-129-enforce-validation-report.md`；ruff 通过 |
 | 当前 lint | `ruff check src/ tests/ scripts/` 已通过 |
 | Python | 3.11.9 |
 | 事实入口 | `tasks/V5-README.md` |
@@ -42,10 +42,10 @@
 
 ## 当前优先级
 
-1. **Task 129**：硬门禁 enforce 模式 Ch1–Ch50 验证，确认 128a–128c 修复后开局期与中段章节阈值不误伤。
-2. **Task 130**：基于 124–129 证据，决定 `gate_mode` 默认值（V5.1 推荐保持 `observe` + 暴露 CLI 参数）。
-3. **Task 131**：归档过时规划稿，更新 `docs/INDEX.md`、`docs/STATUS.md`、`tasks/V5-README.md` 指向 `-DONE.md`。
-4. **Task 132**：V5.1 最终验收包，汇总 121r–131 成果并明确 V5.2 方向。
+1. **Task 130**：基于 124–129 证据，决定 `gate_mode` 默认值（V5.1 推荐保持 `observe` + 暴露 CLI 参数）。
+2. **Task 131**：归档过时规划稿，更新 `docs/INDEX.md`、`docs/STATUS.md`、`tasks/V5-README.md` 指向 `-DONE.md`。
+3. **Task 132**：V5.1 最终验收包，汇总 121r–131 成果并明确 V5.2 方向。
+4. **已完成基线**：Task 129 enforce 模式 Ch1–Ch50 验证已收集到中段真实触发证据，`run-89d7a2d4` Ch1–Ch15 后因 quality_gate_fail_streak 暂停；报告见 `docs/reports/task-129-enforce-validation-report.md`。
 5. **已完成基线**：Task 121r / 122a–122d / 123–128 已完成；`run-a2bed648` Ch1–Ch150 150/150 全部成功；`1843 passed, 2 skipped, 1 xfailed`；ruff 通过。
 
 ## V5.0 交付摘要
@@ -94,7 +94,7 @@
 - 候选硬门禁 enforce 小窗口验证：`tasks/126-small-window-enforce-validation-DONE.md`
 - 重构 `health_low_score_halt`：`tasks/127-health-low-score-halt-refactor-DONE.md`
 - 严格模式容错与开局期质量爬坡：`tasks/128-strict-mode-fault-tolerance-and-quality-ramp-DONE.md`
-- enforce 模式 Ch1–Ch50 验证：`tasks/129-enforce-mode-ch1-ch50-validation.md`
+- enforce 模式 Ch1–Ch50 验证：`tasks/129-enforce-mode-ch1-ch50-validation-DONE.md`
 - gate_mode 默认模式决策：`tasks/130-gate-mode-default-decision.md`
 - 任务文档归档与状态一致性清理：`tasks/131-task-docs-archive-and-status-cleanup.md`
 - V5.1 最终验收包：`tasks/132-v51-final-acceptance-package.md`
