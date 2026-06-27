@@ -12,6 +12,7 @@ from songyan.db.repository import ChapterHeadRepository, ChapterVersionRepositor
 from songyan.llm.client import call_llm
 from songyan.models import ChapterHead, ChapterVersion, ContextPackage
 from songyan.models.human_instruction import normalize_human_instruction
+from songyan.prompts import get_prompt_loader
 from songyan.utils.scene_parser import parse_scenes as _parse_scenes
 from songyan.utils.truncation import enforce_word_count as _enforce_word_count
 from songyan.utils.truncation import hard_truncate_at_boundary
@@ -386,10 +387,12 @@ def _render_prompt(ctx: ContextPackage) -> str:
     return rendered.full_prompt
 
 
-def _extract_body(llm_response: str) -> str:
+def _extract_body(llm_response: str, strip_scene_markers: bool = False) -> str:
     """从 LLM 响应中提取正文.
 
     去除 markdown 代码块标记、前后说明文字、场景清单、核心事件等元数据。
+    Args:
+        strip_scene_markers: 为 True 时同时去除 `### Scene N` 等显式场景编号。
     """
     text = llm_response.strip()
 
@@ -406,11 +409,23 @@ def _extract_body(llm_response: str) -> str:
     text = re.sub(r"^(以下是|以下是第.*章|正文[：:]\s*)\s*", "", text, flags=re.IGNORECASE)
     text = re.sub(r"\s*(完|——完|THE END)\s*$", "", text, flags=re.IGNORECASE)
 
-    # 去除 LLM 偶尔输出的 `# 第N章` 标题行
-    text = re.sub(r"^#\s*第\s*\d+\s*章\s*\n", "", text, flags=re.MULTILINE)
+    # 去除 LLM 偶尔输出的 `# 第N章` / `## 第N章` / `### 第N章` 标题行
+    text = re.sub(r"^#+\s*第\s*\d+\s*章\s*\n?", "", text, flags=re.MULTILINE)
 
     # 将 `## Scene N` 转换为 `### Scene N`（兼容 LLM 偶尔少写一个 #）
     text = re.sub(r"^##\s*(Scene\s+\d+)", r"### \1", text, flags=re.MULTILINE | re.IGNORECASE)
+
+    # 去除 LLM 偶尔输出的占位符场景标题（如 `### Scene N`）
+    text = re.sub(r"^###\s*Scene\s+(?!\d).*$\n?", "", text, flags=re.MULTILINE | re.IGNORECASE)
+
+    # 若调用方要求，去除所有显式场景编号（Writer 1.2.0+ 禁止在正文出现场景标题）
+    if strip_scene_markers:
+        text = re.sub(
+            r"^###\s*Scene\s+\d+\s*[:：:]?\s*$\n?",
+            "",
+            text,
+            flags=re.MULTILINE | re.IGNORECASE,
+        )
 
     # 去除场景清单（从 # 场景清单 到 --- 或下一个 ### Scene）
     text = re.sub(
@@ -523,17 +538,31 @@ async def write_chapter(
         word_count_target=goal.word_count_target,
     )
 
+    # 确定当前 Writer 工艺卡版本，以启用 1.2.0+ 的多场景结构处理
+    loader = get_prompt_loader()
+    writer_card = loader.load_card("writer")
+    writer_version = writer_card.metadata.version
+    strict_scenes = writer_version >= "1.2.0"
+
     # 渲染 Prompt
     prompt = _render_prompt(context_package)
 
     # 调用 LLM
     llm_response = await call_llm(prompt, temperature=temperature, max_tokens=6000)
 
-    # 提取正文
-    content = _extract_body(llm_response)
+    # 提取正文：Writer 1.2.0+ 要求正文内禁止出现场景编号
+    content = _extract_body(llm_response, strip_scene_markers=strict_scenes)
 
-    # 解析场景
-    scenes = _parse_scenes(content)
+    # 解析场景：Writer 1.2.0+ 使用严格多场景结构参数
+    if strict_scenes:
+        scenes = _parse_scenes(
+            content,
+            min_scene_chars=600,
+            max_scene_chars=2400,
+            target_scene_chars=1800,
+        )
+    else:
+        scenes = _parse_scenes(content)
     if len(scenes) < 2:
         logger.warning(
             "writer.scenes_count_low",

@@ -12,7 +12,7 @@
 | `tasks/121a-v50-goal-assessment-and-v51-plan.md` | Task 121a：V5.0 目标评估与 V5.1 规划 |
 | `tasks/121b-ch1-ch150-single-run-rehearsal-DONE.md` | Ch1-Ch150 single-run rehearsal 结果 |
 | `tasks/121c-rewrite-fallback-settlement-contract-DONE.md` | rewrite fallback 后 settlement 契约修复 |
-| `tasks/121d-ch1-ch150-single-run-rerun.md` | Task 121d：修复后 single-run 重跑结果 |
+| `tasks/121d-ch1-ch150-single-run-rerun-DONE.md` | Task 121d：修复后 single-run 重跑结果 |
 | `tasks/121e-ch8-settlement-foreshadowing-validation-fix-DONE.md` | Task 121e：Ch8 settlement 伏笔校验修复 |
 | `tasks/121f-ch18-creative-director-error-contract-DONE.md` | Task 121f：Ch18 CreativeDirector 错误传播修复 |
 | `tasks/121g-ch1-ch150-single-run-rerun-ch115-blocker-DONE.md` | Task 121g：Ch1-Ch150 完整重跑与 Ch115 新阻断定位 |
@@ -38,9 +38,14 @@
 | `tasks/127-health-low-score-halt-refactor-DONE.md` | Task 127：重构 `health_low_score_halt` 复合条件 |
 | `tasks/128-strict-mode-fault-tolerance-and-quality-ramp-DONE.md` | Task 128：严格模式容错与开局期质量爬坡 |
 | `tasks/129-enforce-mode-ch1-ch50-validation-DONE.md` | Task 129：enforce 模式 Ch1–Ch50 验证 |
-| `tasks/130-gate-mode-default-decision.md` | Task 130：gate_mode 默认模式决策 |
-| `tasks/131-task-docs-archive-and-status-cleanup.md` | Task 131：任务文档归档与状态一致性清理 |
-| `tasks/132-v51-final-acceptance-package.md` | Task 132：V5.1 最终验收包 |
+| `tasks/130-gate-mode-default-decision-DONE.md` | Task 130：gate_mode 默认模式决策 |
+| `tasks/131-task-docs-archive-and-status-cleanup-DONE.md` | Task 131：任务文档归档与状态一致性清理 |
+| `tasks/132-v51-final-acceptance-package-DONE.md` | Task 132：V5.1 最终验收包 |
+| `tasks/133-writer-multi-scene-structure-fix-DONE.md` | Task 133：Writer 多场景结构修复（V5.2） |
+| `tasks/134-settlement-character-numerical-extraction-fix-DONE.md` | Task 134：SettlementExtractor 角色/数值提取修复（V5.2） |
+| `tasks/135-setting-recycling-and-continuity-health-governance-DONE.md` | Task 135：设定回收与 continuity health 治理（V5.2） |
+| `tasks/136-v52-enforce-ch1-ch20-validation-DONE.md` | Task 136：V5.2 enforce 模式 Ch1–Ch20 跨项目实跑验证 |
+| `tasks/137-setting-recycling-closed-loop.md` | Task 137：设定回收闭环与 tracking 刷新机制（V5.2） |
 
 ## 按场景查阅
 
@@ -81,9 +86,14 @@
 | health_low score halt 重构 | `tasks/127-health-low-score-halt-refactor-DONE.md` |
 | 严格模式容错与开局期质量爬坡 | `tasks/128-strict-mode-fault-tolerance-and-quality-ramp-DONE.md` |
 | enforce 模式 Ch1–Ch50 验证 | `tasks/129-enforce-mode-ch1-ch50-validation-DONE.md` |
-| gate_mode 默认模式决策 | `tasks/130-gate-mode-default-decision.md` |
-| 任务文档归档与状态清理 | `tasks/131-task-docs-archive-and-status-cleanup.md` |
-| V5.1 最终验收包 | `tasks/132-v51-final-acceptance-package.md` |
+| gate_mode 默认模式决策 | `tasks/130-gate-mode-default-decision-DONE.md` |
+| 任务文档归档与状态清理 | `tasks/131-task-docs-archive-and-status-cleanup-DONE.md` |
+| V5.1 最终验收包 | `tasks/132-v51-final-acceptance-package-DONE.md` |
+| Writer 多场景结构修复（V5.2） | `tasks/133-writer-multi-scene-structure-fix.md` |
+| SettlementExtractor 角色/数值提取修复（V5.2） | `tasks/134-settlement-character-numerical-extraction-fix.md` |
+| 设定回收与 continuity health 治理（V5.2） | `tasks/135-setting-recycling-and-continuity-health-governance-DONE.md` |
+| V5.2 enforce 模式 Ch1–Ch20 实跑验证 | `tasks/136-v52-enforce-ch1-ch20-validation-DONE.md` |
+| 设定回收闭环与 tracking 刷新机制（V5.2） | `tasks/137-setting-recycling-closed-loop.md` |
 | V5.1 Code Review 总规划 | `docs/reports/pass14-to-pass18-v51-review-roadmap.md` |
 | V5.1 Code Review 修复汇总 | `docs/reports/pass14-final-fix-summary.md` |
 | 架构手册 | `docs/architecture/04-vibe-coding-engineering.md` |
@@ -100,4 +110,4 @@
 - `archive/v5/plans/` — V5.0 已完成任务的历史规划稿
 - `archive/v4/INDEX.md` — V4.x 历史结论
 - `archive/v3/INDEX.md` — V3.x 历史结论
-- `archive/tasks/` — 更早历史交接报告
+- `archive/tasks/` — 历史任务规划稿与交接报告（V5.0/V5.1 已完成任务的历史规划稿已归档至此，状态以各任务 `-DONE.md` 为准）

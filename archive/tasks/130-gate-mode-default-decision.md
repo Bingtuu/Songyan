@@ -59,7 +59,7 @@
 
 1. **V5.1 默认保持 `observe`**（方案 A），因为：
    - 硬门禁是新增能力，需要先让用户/测试在观测模式下习惯其存在。
-   - Task 128 只覆盖 Ch1–Ch50，还不足以证明 Ch51–Ch150 的泛化性。
+   - Task 129 只覆盖到 Ch15，且暴露出底层提取/结构缺陷，不足以证明 Ch1–Ch150 的泛化性。
    - V5.1 核心目标是"可观测、可配置、阈值合理"，而非"默认阻断"。
 
 2. **V5.1 必须暴露 `--gate-mode` CLI 参数**（方案 E），让高级用户和风险偏好高的用户可以显式启用 enforce。
@@ -80,8 +80,8 @@
 | Task 125 阈值调优 | ✅ 已完成 | `run-a2bed648` 上 `any_gate` 0 触发 |
 | Task 126 Ch1–Ch20 enforce | ✅ 已完成 | 0 gate 触发（禁用 score_drop 后） |
 | Task 127 score halt 重构 | ✅ 已完成 | 解决开局期误触发 |
-| Task 128 严格模式容错 | 待完成 | 修复 QG false 阻断 run |
-| Task 129 Ch1–Ch50 enforce | 待完成 | 中段章节验证 |
+| Task 128 严格模式容错 | ✅ 已完成 | 修复 QG false 阻断 run；pytest 1856 passed |
+| Task 129 Ch1–Ch50 enforce | ⚠️ 条件完成 | `run-89d7a2d4` Ch1–Ch15 后因 quality_gate_fail_streak 暂停；详见 `docs/reports/task-129-enforce-validation-report.md` |
 
 ### 4.2 决策规则
 
@@ -90,12 +90,20 @@ IF Task 129 结果 == 成功（0 gate 触发）
    AND Task 127 重构通过
    AND Task 128 修复通过
 THEN V5.1 默认保持 observe，但暴露 CLI 参数
-     V5.2 默认切换 enforce 的条件：完成跨项目 Ch1-Ch150 验证
+     V5.2 默认切换 enforce 的条件：
+       1. 完成 Task 133/134/135 的底层缺陷修复；
+       2. 在至少 2 个不同 genre/mode 项目上完成 Ch1–Ch150 enforce 实跑，0 误触发。
 ELSE IF Task 129 出现 1 次条件成功（真异常触发）
-THEN V5.1 保持 observe，将 enforce 作为推荐手动选项
+THEN V5.1 保持 observe，将 enforce 作为推荐手动选项；
+     V5.2 默认切换 enforce 仍需先完成 Task 133/134/135。
 ELSE IF Task 129 出现误伤
 THEN 回滚 Task 125/127 调优，V5.1 不推进 enforce
 ```
+
+> **实际判定**：`Task 129` 在 `run-89d7a2d4` 中 Ch15 因 quality gate streak 暂停，且报告暴露出 Writer 结构退化、SettlementExtractor 角色/数值提取失败、orphaned settings 快速累积等底层缺陷。因此：
+> - **V5.1 默认保持 `observe`**；
+> - **V5.1 暴露 `--gate-mode` CLI 参数**；
+> - **V5.2 默认切换 `enforce` 被 Task 133/134/135 阻塞**，需在修复后重新完成 Ch1–Ch150 enforce 验证。
 
 ---
 
@@ -117,7 +125,7 @@ THEN 回滚 Task 125/127 调优，V5.1 不推进 enforce
 
 ## 6. 验收标准
 
-- [ ] 输出 `tasks/129-gate-mode-default-decision-DONE.md` 决策文档。
+- [ ] 输出 `tasks/130-gate-mode-default-decision-DONE.md` 决策文档。
 - [ ] 文档中明确记录选择方案 A/B/C/D/E 中的哪一个及其数据依据。
 - [ ] 若涉及 CLI 改动，新增/更新对应测试并通过 pytest。
 - [ ] 全量 pytest / ruff 通过。

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json as _json
 from sqlite3 import Row
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import structlog
 
@@ -102,19 +102,47 @@ class SettingTrackingRepository:
         else:
             await _do(conn)
 
+    async def update_status(
+        self,
+        tracking_id: str,
+        status: str,
+        conn: aiosqlite.Connection | None = None,
+    ) -> None:
+        async def _do(c: aiosqlite.Connection) -> None:
+            await c.execute(
+                """UPDATE setting_tracking
+                   SET status = ?
+                   WHERE tracking_id = ?""",
+                (status, tracking_id),
+            )
+
+        if conn is None:
+            async with get_db() as c:
+                await _do(c)
+                await c.commit()
+        else:
+            await _do(conn)
+
     async def find_orphaned(
-        self, project_id: str, up_to_chapter: int, threshold: int = 3
+        self,
+        project_id: str,
+        up_to_chapter: int,
+        threshold: int = 3,
+        categories: list[str] | None = None,
     ) -> list[dict]:
         """Find settings whose last mention is more than threshold chapters ago."""
-        async with get_db() as conn:
-            conn.row_factory = Row
-            cursor = await conn.execute(
-                """SELECT * FROM setting_tracking
+        query = """SELECT * FROM setting_tracking
                    WHERE project_id = ?
                      AND status = 'active'
-                     AND last_mentioned_chapter < ?""",
-                (project_id, up_to_chapter - threshold),
-            )
+                     AND last_mentioned_chapter < ?"""
+        params: list[Any] = [project_id, up_to_chapter - threshold]
+        if categories:
+            placeholders = ",".join("?" * len(categories))
+            query += f" AND category IN ({placeholders})"
+            params.extend(categories)
+        async with get_db() as conn:
+            conn.row_factory = Row
+            cursor = await conn.execute(query, params)
             rows = await cursor.fetchall()
         return [dict(row) for row in rows]
 

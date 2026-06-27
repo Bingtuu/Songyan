@@ -56,7 +56,13 @@ class ReviewIssue(BaseModel):
 
     # 修复建议
     suggested_fix: str | None = None
-    fix_type: Literal["patch", "rewrite_scene", "confirm", "register_setting"] = "patch"
+    fix_type: Literal[
+        "patch",
+        "rewrite_scene",
+        "scene_split",
+        "confirm",
+        "register_setting",
+    ] = "patch"
 
     # 置信度
     confidence: float = 1.0

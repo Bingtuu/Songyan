@@ -7,6 +7,7 @@ from typing import Any
 
 import structlog
 
+from songyan.db.continuity_repo import SettingTrackingRepository
 from songyan.exceptions import LLMError, LLMResponseParseError
 from songyan.llm.client import call_llm
 from songyan.models.chapter import ChapterGoal
@@ -51,8 +52,9 @@ def _load_prompt_template() -> str:
     return get_prompt_loader().load_card("creative_director").system_prompt
 
 
-def _render_prompt(
+async def _render_prompt(
     *,
+    project_id: str,
     project: ProjectSetting,
     chapter_goal: ChapterGoal,
     genre_profile: GenreProfile,
@@ -63,6 +65,10 @@ def _render_prompt(
 ) -> str:
     """渲染 CreativeDirector Prompt."""
     from songyan.prompts import render_agent_prompt
+
+    active_settings = await _load_active_settings_to_recycle(
+        project_id, chapter_goal.chapter_number
+    )
 
     return render_agent_prompt(
         "creative_director",
@@ -82,6 +88,7 @@ def _render_prompt(
             "recent_summaries": previous_summary or "（本章为开篇章节，无前置剧情）",
             "character_states": _format_characters(characters),
             "seed_settings_json": _format_seed_settings(seed_settings),
+            "active_settings_to_recycle": _format_active_settings_to_recycle(active_settings),
             "mode_constraints": _format_mode_constraints(mode_profile),
             "punch_engine_enabled": mode_profile.id == "webnovel_intense",
         },
@@ -117,6 +124,52 @@ def _format_seed_settings(seed_settings: list[NewSetting]) -> str:
     lines = []
     for s in seed_settings:
         lines.append(f"- **{s.setting_name}**（{s.setting_key}）：{s.description}")
+    return "\n".join(lines)
+
+
+async def _load_active_settings_to_recycle(
+    project_id: str,
+    chapter_number: int,
+    limit: int = 10,
+    min_silent_chapters: int = 2,
+) -> list[dict]:
+    """加载近期活跃且未被回收的设定，供 CreativeDirector 提示 Writer 回收.
+
+    Task 137: 优先展示即将成为 orphan 的设定（已沉寂 >= min_silent_chapters 章），
+    按 last_mentioned_chapter 升序排列，帮助 Writer 形成回收闭环。
+    """
+    rows = await SettingTrackingRepository().list_by_project(project_id)
+    active = [
+        dict(r)
+        for r in rows
+        if r.get("status") == "active"
+        and chapter_number - (r.get("last_mentioned_chapter") or 0) >= min_silent_chapters
+    ]
+    # 优先提示最久未被提及的设定（last_mentioned 越小越靠前）
+    active.sort(
+        key=lambda r: (
+            r.get("last_mentioned_chapter") or 0,
+            r.get("introduced_in_chapter") or 0,
+        )
+    )
+    return active[:limit]
+
+
+def _format_active_settings_to_recycle(settings: list[dict]) -> str:
+    """格式化需要回收的活跃设定列表."""
+    if not settings:
+        return "（无近期活跃设定）"
+    lines = []
+    for s in settings:
+        name = s.get("setting_name") or s.get("setting_key") or "未命名设定"
+        key = s.get("setting_key") or "无 key"
+        category = s.get("category", "background")
+        introduced = s.get("introduced_in_chapter", 0)
+        last = s.get("last_mentioned_chapter", 0)
+        lines.append(
+            f"- {name}（{key}，类别：{category}，"
+            f"引入第{introduced}章，最近提及第{last}章）"
+        )
     return "\n".join(lines)
 
 
@@ -180,7 +233,8 @@ async def generate_creative_brief(
     )
 
     # 加载并渲染 Prompt
-    prompt = _render_prompt(
+    prompt = await _render_prompt(
+        project_id=project_id,
         project=project,
         chapter_goal=chapter_goal,
         genre_profile=genre_profile,

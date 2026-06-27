@@ -286,17 +286,27 @@ class HumanMarkRepository:
             )
         return updated
 
-    async def resolve(self, mark_id: str) -> bool:
+    async def resolve(
+        self,
+        mark_id: str,
+        conn: aiosqlite.Connection | None = None,
+    ) -> bool:
         """Mark a mark as resolved (soft-resolve via timestamp)."""
         from datetime import datetime
 
-        async with get_db() as conn:
-            cursor = await conn.execute(
+        async def _do(c: aiosqlite.Connection) -> bool:
+            cursor = await c.execute(
                 "UPDATE human_marks SET resolved_at = ? WHERE mark_id = ?",
                 (datetime.utcnow().isoformat(), mark_id),
             )
-            await conn.commit()
-            updated = cursor.rowcount > 0
+            return cursor.rowcount > 0
+
+        if conn is None:
+            async with get_db() as c:
+                updated = await _do(c)
+                await c.commit()
+        else:
+            updated = await _do(conn)
         if updated:
             logger.info(
                 "repository.write",

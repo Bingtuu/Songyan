@@ -376,6 +376,7 @@ class SettingSnapshotRepository:
 
         通过 JOIN setting_tracking 判断 last_mentioned_chapter。
         is_critical（human_marks priority>=8）除外。
+        同步将 setting_tracking.status 标记为 dormant，避免 orphan 统计失真。
         返回: 影响的记录数
         """
         async def _do(c: aiosqlite.Connection) -> int:
@@ -402,6 +403,22 @@ class SettingSnapshotRepository:
                     current_chapter - window,
                     project_id,
                 ),
+            )
+            # 同步 tracking 表状态
+            await c.execute(
+                """UPDATE setting_tracking
+                SET status = 'dormant'
+                WHERE project_id = ?
+                  AND status = 'active'
+                  AND last_mentioned_chapter < ?
+                  AND setting_key NOT IN (
+                      SELECT target_key FROM human_marks
+                      WHERE project_id = ?
+                        AND priority >= 8
+                        AND mark_type = 'setting'
+                        AND lifecycle_status = 'active'
+                  )""",
+                (project_id, current_chapter - window, project_id),
             )
             return cursor.rowcount
 
@@ -465,6 +482,7 @@ class SettingSnapshotRepository:
         """将低 confidence 的 setting_snapshots 标记为 archived.
 
         V5.0 Task 103: 由 SettingEvaporator 调用，纯规则蒸发。
+        同步将 setting_tracking.status 标记为 archived，保持生命周期一致。
         """
         if not low_confidence_keys:
             return 0
@@ -479,6 +497,14 @@ class SettingSnapshotRepository:
 
         async def _do(c: aiosqlite.Connection) -> int:
             cursor = await c.execute(sql, params)
+            await c.execute(
+                f"""UPDATE setting_tracking
+                SET status = 'archived'
+                WHERE project_id = ?
+                  AND status IN ('active', 'dormant')
+                  AND setting_key IN ({placeholders})""",
+                params,
+            )
             return cursor.rowcount
 
         if conn is None:

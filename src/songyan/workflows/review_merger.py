@@ -356,8 +356,9 @@ def _convert_rule_to_issues(
             )
         )
 
-    # 7. 场景结构问题 (Task 095)
-    if rule_result.scene_count == 1:
+    # 7. 场景结构问题 (Task 095 / Task 133)
+    # 仅对字数充足且确实只有 1 个场景的章节判定为 major；短章允许单场景叙事。
+    if rule_result.scene_count == 1 and rule_result.word_count > 1500:
         issues.append(
             ReviewIssue(
                 issue_id=_next_id(),
@@ -365,11 +366,17 @@ def _convert_rule_to_issues(
                 severity="major",
                 evidence_quote=f"当前仅 {rule_result.scene_count} 个场景",
                 evidence_location="全章结构",
-                issue_description="章节仅有 1 个场景，叙事节奏可能过于集中，缺乏层次感和节奏变化。",
+                issue_description=(
+                    "章节字数充足但仅有 1 个场景，叙事节奏可能过于集中，"
+                    "缺乏层次感和节奏变化。"
+                ),
                 expected="章节应包含至少 2 个场景，通过场景切换推进叙事、调节节奏。",
                 actual=f"当前仅 {rule_result.scene_count} 个场景。",
-                suggested_fix="将长场景拆分为 2-3 个场景：在情节转折点插入场景分隔，增加叙事层次。",
-                fix_type="rewrite_scene",
+                suggested_fix=(
+                    "将长场景拆分为 2-3 个场景：在情节转折点插入空行场景分隔，"
+                    "增加叙事层次。"
+                ),
+                fix_type="scene_split",
                 confidence=0.95,
             )
         )

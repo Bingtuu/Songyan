@@ -8,6 +8,7 @@ from typing import Any
 import structlog
 
 from songyan.db.context_repo import CharacterStateRepository
+from songyan.db.repository import CharacterRepository
 from songyan.db.settlement_repo import (
     ForeshadowingRepository,
     SettingSnapshotRepository,
@@ -15,6 +16,7 @@ from songyan.db.settlement_repo import (
 from songyan.llm.client import call_llm
 from songyan.llm.parsing import parse_llm_response
 from songyan.models import (
+    Character,
     CharacterState,
     CharacterUpdate,
     ForeshadowingItem,
@@ -76,6 +78,33 @@ async def _load_current_foreshadowings(
 ) -> list[ForeshadowingItem]:
     """加载项目下活跃的伏笔."""
     return await foreshadowing_repo.list_active(project_id)
+
+
+async def _load_project_characters(
+    char_repo: CharacterRepository,
+    project_id: str,
+) -> list[Character]:
+    """加载项目下的角色档案，作为结算基线."""
+    return await char_repo.list_by_project(project_id)
+
+
+def _render_character_profiles(characters: list[Character]) -> str:
+    """渲染角色基线档案，用于 LLM 推断 old_value / opening_value."""
+    if not characters:
+        return "（无角色档案）"
+    lines: list[str] = []
+    for char in characters:
+        lines.append(f"- {char.character_id}（{char.name}，{char.role_type}）")
+        if char.background:
+            lines.append(f"  背景: {char.background}")
+        if char.personality_traits:
+            lines.append(f"  性格: {', '.join(char.personality_traits)}")
+        if char.goals:
+            lines.append(f"  目标: {', '.join(char.goals)}")
+        if char.relationships:
+            rels = ", ".join(f"{k}: {v}" for k, v in char.relationships.items())
+            lines.append(f"  关系: {rels}")
+    return "\n".join(lines)
 
 
 def _render_character_states(states: list[CharacterState]) -> str:
@@ -262,6 +291,7 @@ def _render_prompt(
     current_settings: list[NewSetting],
     current_foreshadowings: list[ForeshadowingItem],
     genre_rules: GenreRules | None,
+    characters: list[Character] | None = None,
 ) -> str:
     """渲染 SettlementExtractor Prompt."""
     from songyan.prompts import get_prompt_loader
@@ -274,6 +304,7 @@ def _render_prompt(
     rendered = loader.render_card(card, {
         "content": content,
         "version_id": version_id,
+        "character_profiles": _render_character_profiles(characters or []),
         "current_character_states": _render_character_states(current_states),
         "current_settings": _render_settings(current_settings),
         "current_foreshadowings": _render_foreshadowings(current_foreshadowings),
@@ -300,10 +331,16 @@ def _normalize_character_id(raw_id: str) -> str:
 def _build_character_update(data: dict[str, Any]) -> CharacterUpdate | None:
     """从字典构建 CharacterUpdate."""
     if not isinstance(data, dict):
+        logger.warning("settlement.parse.character_update_not_dict", data_type=type(data).__name__)
         return None
     character_id = _normalize_character_id(data.get("character_id", ""))
     field = data.get("field", "")
     if not character_id or not field:
+        logger.warning(
+            "settlement.parse.character_update_missing_key",
+            character_id=character_id,
+            field=field,
+        )
         return None
     return CharacterUpdate(
         character_id=character_id,
@@ -404,10 +441,16 @@ def _build_decrement(data: dict[str, Any]) -> Any:
 def _build_numerical_update(data: dict[str, Any]) -> NumericalUpdate | None:
     """从字典构建 NumericalUpdate."""
     if not isinstance(data, dict):
+        logger.warning("settlement.parse.numerical_update_not_dict", data_type=type(data).__name__)
         return None
     character_id = data.get("character_id", "")
     attribute_name = data.get("attribute_name", "")
     if not character_id or not attribute_name:
+        logger.warning(
+            "settlement.parse.numerical_update_missing_key",
+            character_id=character_id,
+            attribute_name=attribute_name,
+        )
         return None
     increments = [
         _build_increment(item)
@@ -426,6 +469,7 @@ def _build_numerical_update(data: dict[str, Any]) -> NumericalUpdate | None:
         increments=increments,
         decrements=decrements,
         closing_value=float(data.get("closing_value", 0.0)),
+        formula=str(data.get("formula", "")),
     )
 
 
@@ -512,6 +556,9 @@ async def extract_settlement(
     current_states = await _load_current_character_states(char_state_repo, project_id)
     current_settings = await _load_current_settings(setting_repo, project_id)
     current_foreshadowings = await _load_current_foreshadowings(foreshadowing_repo, project_id)
+    project_characters = await _load_project_characters(
+        CharacterRepository(), project_id
+    )
 
     logger.info(
         "settlement.context_loaded",
@@ -519,6 +566,7 @@ async def extract_settlement(
         states_count=len(current_states),
         settings_count=len(current_settings),
         foreshadowings_count=len(current_foreshadowings),
+        characters_count=len(project_characters),
     )
 
     prompt_states, prompt_settings, prompt_foreshadowings = _select_prompt_facts(
@@ -538,7 +586,7 @@ async def extract_settlement(
     # 2. 渲染 Prompt
     prompt = _render_prompt(
         content, version_id, prompt_states, prompt_settings,
-        prompt_foreshadowings, genre_rules,
+        prompt_foreshadowings, genre_rules, characters=project_characters,
     )
     # 3. 调用 LLM
     llm_response = await call_llm(prompt, temperature=temperature)

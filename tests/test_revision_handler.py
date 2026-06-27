@@ -1104,6 +1104,64 @@ class TestSceneSplitStrategy:
         mock_llm.assert_called_once()
         assert len(result.patches_applied) == 1
 
+    async def test_scene_split_fix_type_triggered(self) -> None:
+        """Task 133: fix_type=scene_split 的 issue 会触发结构拆分路径."""
+        content = "场景开头。" * 50
+        issue = ReviewIssue(
+            issue_id="rule-v1-001",
+            category=ReviewCategory.NARRATIVE_PACING,
+            severity="major",
+            evidence_quote="当前仅 1 个场景",
+            evidence_location="全章结构",
+            issue_description="章节仅有 1 个场景",
+            fix_type="scene_split",
+        )
+        report = MergedReviewReport(
+            chapter_version_id="v1",
+            issues=[issue],
+        )
+        split_response = "场景A。" * 100 + "\n\n" + "场景B。" * 100
+
+        with patch(
+            "songyan.agents.revision_handler._handle_scene_split",
+            return_value=split_response,
+        ) as mock_split:
+            result, revised = await run_revision(content, report)
+
+        mock_split.assert_called_once()
+        assert revised == split_response
+        assert "rule-v1-001" in result.issues_fixed
+        assert result.content_preservation_ratio >= 0.85
+
+    async def test_scene_split_fallback_when_too_short(self) -> None:
+        """Task 133: 拆分后保留率不足则回退到原文."""
+        content = "场景开头。" * 200
+        issue = ReviewIssue(
+            issue_id="rule-v1-001",
+            category=ReviewCategory.NARRATIVE_PACING,
+            severity="major",
+            evidence_quote="当前仅 1 个场景",
+            evidence_location="全章结构",
+            issue_description="章节仅有 1 个场景",
+            fix_type="scene_split",
+        )
+        report = MergedReviewReport(
+            chapter_version_id="v1",
+            issues=[issue],
+        )
+        # 拆分结果远短于原文
+        split_response = "短。"
+
+        with patch(
+            "songyan.agents.revision_handler._handle_scene_split",
+            return_value=split_response,
+        ) as mock_split:
+            result, revised = await run_revision(content, report)
+
+        mock_split.assert_called_once()
+        assert revised == content
+        assert "rule-v1-001" not in result.issues_fixed
+
 
 class TestSceneMergeStrategy:
     async def test_scene_merge_llm_path_not_triggered(self) -> None:

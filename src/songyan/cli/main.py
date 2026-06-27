@@ -19,6 +19,7 @@ from songyan.db.migrations import init_schema
 from songyan.db.repository import ProjectRepository
 from songyan.evals.streaming_report import generate_report, read_run_logs, write_report
 from songyan.genres.loader import list_genre_profiles, load_genre_profile
+from songyan.models.gate_config import GateConfig
 from songyan.models.human_mark import HumanMark
 from songyan.models.project import ProjectSetting, derive_arc_boundaries
 from songyan.workflows.phase2_graph import run_project_pipeline
@@ -401,6 +402,12 @@ def list_projects() -> None:
     "--rag-mode", default=None, type=click.Choice(["auto", "always", "never"]), help="覆盖 RAG 模式"
 )
 @click.option("--skip-rag", is_flag=True, help="禁用 RAG 检索")
+@click.option(
+    "--gate-mode",
+    default="observe",
+    type=click.Choice(["observe", "enforce"]),
+    help="候选硬门禁模式：observe 只记录，enforce 触发即暂停 run",
+)
 def run(
     project_id: str,
     chapters: str,
@@ -409,6 +416,7 @@ def run(
     auto_confirm: bool,
     rag_mode: str | None,
     skip_rag: bool,
+    gate_mode: str,
 ) -> None:
     """运行多章流水线."""
     try:
@@ -433,12 +441,16 @@ def run(
             os.environ["SONGYAN_RAG_MODE"] = rag_mode
             click.echo(f"RAG 模式: {rag_mode}")
 
+        gate_config = GateConfig.for_mode(gate_mode)
+        click.echo(f"门禁模式: {gate_mode}")
+
         result = asyncio.run(
             run_project_pipeline(
                 project_id=project_id,
                 chapter_range=chapter_range,
                 mode_id=mode_id,
                 auto_confirm=auto_confirm,
+                gate_config=gate_config,
             )
         )
 

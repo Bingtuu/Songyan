@@ -46,7 +46,7 @@ class ContinuityAuditor:
     - character state mismatch = 0
     """
 
-    ORPHANED_THRESHOLD = 3  # 3 章未提及即视为 orphaned
+    # Task 135: 阈值已迁移到 _scanners.ORPHANED_THRESHOLDS（按类别）
     FORGOTTEN_THRESHOLD = 3  # 3 章未使用即视为 forgotten
     STATE_MISMATCH_WINDOW = 2  # 2 章内剧烈变化视为 mismatch
 
@@ -158,8 +158,15 @@ class ContinuityAuditor:
         """基于问题数量计算 0-10 健康分.
 
         Task 094: 按 setting 分类加权扣分，避免一次性背景设定压低分数。
-        critical(2.0) > recurring(1.0) > background(0.1) > technical(0.05)
+        Task 135: 数量超过 10 后边际扣分递减，并设置 early-chapter floor。
         """
+
+        def _diminishing_count(count: int) -> float:
+            """超过 10 后使用平方根衰减，避免健康分被单一维度快速归零."""
+            if count <= 10:
+                return float(count)
+            return 10.0 + (count - 10) ** 0.5
+
         score = 10.0
         factor = 1.0
         if chapter_number > 30:
@@ -172,12 +179,14 @@ class ContinuityAuditor:
         orphaned_technical = sum(1 for o in orphaned if o.category == "technical")
         orphaned_historical = sum(1 for o in orphaned if o.category == "historical")
 
-        score -= orphaned_critical * 2.0 * factor
-        score -= orphaned_recurring * 1.0 * factor
-        score -= orphaned_background * 0.1 * factor
-        score -= orphaned_technical * 0.05 * factor
-        score -= orphaned_historical * 0.05 * factor
-        score -= len(forgotten) * 0.5 * factor
-        score -= len(mismatches) * 1.0 * factor
-        score -= len(overdue) * 0.3 * factor
-        return max(2.0 if chapter_number > 30 else 0.0, round(score, 1))
+        score -= _diminishing_count(orphaned_critical) * 2.0 * factor
+        score -= _diminishing_count(orphaned_recurring) * 1.0 * factor
+        score -= _diminishing_count(orphaned_background) * 0.1 * factor
+        score -= _diminishing_count(orphaned_technical) * 0.05 * factor
+        score -= _diminishing_count(orphaned_historical) * 0.05 * factor
+        score -= _diminishing_count(len(forgotten)) * 0.5 * factor
+        score -= _diminishing_count(len(mismatches)) * 1.0 * factor
+        score -= _diminishing_count(len(overdue)) * 0.3 * factor
+
+        floor = 3.0 if chapter_number <= 30 else 2.0
+        return max(floor, round(score, 1))

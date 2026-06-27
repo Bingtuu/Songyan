@@ -212,7 +212,9 @@ class TestSceneStructureIssues:
     """Tests for Task 095: scene structure issue conversion."""
 
     def test_single_scene_major_issue(self) -> None:
+        # Task 133: 字数 >1500 且单场景才触发 major scene_split issue
         rule_result = RuleAuditResult(
+            word_count=2000,
             scene_count=1,
             scene_count_ok=False,
         )
@@ -220,7 +222,18 @@ class TestSceneStructureIssues:
         scene_issues = [i for i in issues if "仅有 1 个场景" in i.issue_description]
         assert len(scene_issues) == 1
         assert scene_issues[0].severity == "major"
-        assert scene_issues[0].fix_type == "rewrite_scene"
+        assert scene_issues[0].fix_type == "scene_split"
+
+    def test_short_single_scene_no_issue(self) -> None:
+        # Task 133: 字数 <=1500 的单章节不触发场景结构问题
+        rule_result = RuleAuditResult(
+            word_count=1200,
+            scene_count=1,
+            scene_count_ok=False,
+        )
+        issues = _convert_rule_to_issues("正文", rule_result, "v1")
+        scene_issues = [i for i in issues if "仅有 1 个场景" in i.issue_description]
+        assert len(scene_issues) == 0
 
     def test_too_many_scenes_minor_issue(self) -> None:
         rule_result = RuleAuditResult(

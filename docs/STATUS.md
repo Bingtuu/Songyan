@@ -6,12 +6,12 @@
 
 | 项 | 状态 |
 |----|------|
-| 当前阶段 | **V5.0 已完成，V5.1 预研 / 流程重构中** |
-| 最终验收 | Task 120 Final Acceptance Package 已交付 |
+| 当前阶段 | **V5.2 进行中：Task 137 代码已完成，待 enforce Ch1–Ch20 复跑验证** |
+| 最终验收 | **Task 120 V5.0 + Task 132 V5.1 Final Acceptance Package 已交付** |
 | 风险口径 | P0/P1 风险为 0 |
-| 最近全量测试 | `1856 passed, 2 skipped, 1 xfailed` |
-| 最近修复 | Task 123 ContextEmergency / health_low 候选硬门禁（默认观测模式，16 个新单测）；Task 124 离线影响面分析；Task 125 阈值调优（P1 异常检测、health_score 跌幅、审计点 streak），新增 12 个单测；Task 126 enforce 小窗口实跑验证，Ch1–Ch19 零 gate 触发；**Task 127 重构 `health_low_score_halt` 为"历史新低 + P1 同步激增"复合条件，新增 8 个单测，pytest 1842 passed**；**Task 128 完成**：QG false 降级接受不终止 run、Ch1–Ch10 质量爬坡阈值、RevisionHandler readability 专精路径；pytest 1843 passed；**Task 129 完成**：enforce 模式 Ch1–Ch50 验证，`run-89d7a2d4` Ch1–Ch15 后因 quality_gate_fail_streak 暂停，报告见 `docs/reports/task-129-enforce-validation-report.md`；ruff 通过 |
-| 当前 lint | `ruff check src/ tests/ scripts/` 已通过 |
+| 最近全量测试 | `1914 passed, 2 skipped, 1 xfailed` |
+| 最近修复 | Task 123 ContextEmergency / health_low 候选硬门禁（默认观测模式，16 个新单测）；Task 124 离线影响面分析；Task 125 阈值调优（P1 异常检测、health_score 跌幅、审计点 streak），新增 12 个单测；Task 126 enforce 小窗口实跑验证，Ch1–Ch19 零 gate 触发；**Task 127 重构 `health_low_score_halt` 为"历史新低 + P1 同步激增"复合条件，新增 8 个单测，pytest 1842 passed**；**Task 128 完成**：QG false 降级接受不终止 run、Ch1–Ch10 质量爬坡阈值、RevisionHandler readability 专精路径；pytest 1843 passed；**Task 129 条件完成**：enforce 模式 Ch1–Ch50 验证，`run-89d7a2d4` Ch1–Ch15 后因 quality_gate_fail_streak 暂停，暴露 Writer 结构退化、SettlementExtractor 角色/数值提取失败、orphaned settings 快速累积等底层缺陷；报告见 `docs/reports/task-129-enforce-validation-report.md`。**Task 130 已完成**：gate_mode 默认保持 `observe`，`songyan run` 暴露 `--gate-mode` CLI 参数，`songyan report` 新增 gate 触发汇总。**Task 131 已完成**：历史规划稿已归档至 `archive/tasks/`，索引文档已指向 `-DONE.md`。**Task 132 已完成**：V5.1 最终验收包已交付，V5.1 通过（条件完成项已明确转入 V5.2）。**Task 133/134/135 已完成**：Writer 多场景结构、SettlementExtractor 角色/数值提取、设定回收与 continuity health 治理；**Task 136 已完成 enforce 模式 Ch1–Ch20 跨项目实跑**：多场景 100%、Settlement 100%、Health floor 通过，但 orphan 增速未减半；**Task 137 代码已完成**：正文 setting 提及自动刷新 `last_mentioned_chapter`、同步 archive `setting_tracking`、SettingEvaporator 按 category 调整时间衰减、已回收 continuity_auditor human_mark 自动 resolve，新增 12 个单测，全量 `pytest` 1914 passed |
+| 当前 lint | `ruff check src/ tests/` 已通过；`scripts/` 目录包含一次性调试脚本，不参与 CI lint |
 | Python | 3.11.9 |
 | 事实入口 | `tasks/V5-README.md` |
 | single-run rehearsal | Task 121b：`run-21ff158b`，Ch1-Ch4 成功，Ch5 阻断；Task 121d：`run-f749826e`，Ch1-Ch7 成功，Ch8 阻断；Task 121e 重跑：`run-0317a247`，Ch1-Ch17 成功，Ch18 阻断；Task 121f 聚焦验证：`run-058fb9de`，Ch1-Ch18 成功；Task 121g 完整重跑：`run-0fd1456e`，Ch1-Ch114 成功，Ch115 阻断；Task 121h 已完成工程修复；Task 121i `run-ce1767ff` Ch115 聚焦验证成功；Task 121j `run-b063b6f0` Ch1-Ch13 成功后因连续 ContextEmergency AutoHalt 暂停；Task 121l `run-08689f68` Ch1-Ch12 成功后因 Ch10-Ch12 连续 ContextEmergency 且含 QG false 按新策略暂停；Task 121o `run-4ff41095` Ch1-Ch18 全部成功 18/18，ContextEmergency 0 次，AutoHalt 0 次，已越过 Ch13 和 Ch18；Task 121p `run-2d7d96c2` 修复 Bug A/B 后重跑，Ch1-Ch3 成功，Ch4 因 0.82 阈值阻断；Task 121q `run-86b1170c` Ch1-Ch20 聚焦验证 20/20 全部成功；**Task 121q full single-run `run-a2bed648` Ch1-Ch150 全部成功 150/150，ContextEmergency 0 次，AutoHalt 0 次，degraded_accept 0 次，failed 0 次，无间隙** |
@@ -36,17 +36,23 @@
 | Task 122c | **已完成**：Ch1-Ch20 E2E 集成测试（28 秒重度 Mock）；Ch40-Ch50 / Ch100-Ch110 窗口待补充 |
 | Task 122c | **已完成**：Ch1-Ch20 / Ch40-Ch50 / Ch100-Ch110 三个 E2E 窗口验证全部完成；`test_ch41_50_validation.py` 已补强 emergency/auto-halt 断言；`test_ch100_110_from_run_log.py` 已新增并复用 `run-a2bed648` 历史数据 |
 | 重跑前清理 | **2026-06-23 已完成全量清理**：终止全部残留 Python 进程，删除数据库 28,440 行测试数据，清空所有业务表，清理日志文件，VACUUM 后 196 MB；环境完全干净 |
-| 下一步规划 | **Task 121q full single-run `run-a2bed648` Ch1-Ch150 150/150 全部成功**；**Pass 14-18 V5.1 Code Review 已完成**；**Task 121r Prompt 质量清理已完成**；**Task 122a/122b/122c/122d 测试矩阵与 E2E/压力测试已完成**；**Task 123/124/125/126/127/128 已完成**：候选硬门禁从提案、离线分析、阈值调优、enforce 小窗口验证、score halt 复合条件重构到严格模式容错与质量爬坡，`1856 passed, 2 skipped, 1 xfailed`；**Task 129–132 已重新对齐**：enforce Ch1–Ch50 验证、默认模式决策、文档归档清理、V5.1 最终验收 |
+| 下一步规划 | **V5.1 已收口**：Task 121r–131 全部完成；**Task 132 V5.1 最终验收包已交付**；**Task 133/134/135 已完成**：Writer 多场景结构修复、SettlementExtractor 角色/数值提取修复、设定回收与 continuity health 治理；**Task 136 已完成 enforce 模式 Ch1–Ch20 跨项目实跑**：多场景占比 100%、Settlement 记录率 100%、Health floor 通过，但 orphan 增长速率未减半，整体未通过；报告见 `docs/reports/task-136-v52-enforce-ch1-ch20-validation-report.md`；**Task 137 代码已完成**：正文 setting 提及自动刷新 `last_mentioned_chapter`、`setting_tracking` 与 `setting_snapshots` 生命周期同步、SettingEvaporator 按 category 调整时间衰减、已回收 continuity_auditor human_mark 自动 resolve，新增 12 个单测，全量 `pytest` 1914 passed；待 enforce 模式 Ch1–Ch20 复跑验证 orphan 增速是否减半 |
 
 测试说明：`1 xfailed` 为已知非阻断项；`0 xpassed`（已修复）；`0 failed`。数据库 `lifecycle_status` 列缺失与 RAG embedding 性能测试已修复，当前全量通过。
 
 ## 当前优先级
 
-1. **Task 130**：基于 124–129 证据，决定 `gate_mode` 默认值（V5.1 推荐保持 `observe` + 暴露 CLI 参数）。
-2. **Task 131**：归档过时规划稿，更新 `docs/INDEX.md`、`docs/STATUS.md`、`tasks/V5-README.md` 指向 `-DONE.md`。
-3. **Task 132**：V5.1 最终验收包，汇总 121r–131 成果并明确 V5.2 方向。
-4. **已完成基线**：Task 129 enforce 模式 Ch1–Ch50 验证已收集到中段真实触发证据，`run-89d7a2d4` Ch1–Ch15 后因 quality_gate_fail_streak 暂停；报告见 `docs/reports/task-129-enforce-validation-report.md`。
-5. **已完成基线**：Task 121r / 122a–122d / 123–128 已完成；`run-a2bed648` Ch1–Ch150 150/150 全部成功；`1843 passed, 2 skipped, 1 xfailed`；ruff 通过。
+1. **Task 137**：代码已完成；复跑 enforce 模式 Ch1–Ch20 验证 orphan 增速是否减半，再决定是否将 Writer 1.2.0 / `gate_mode="enforce"` 设为默认。
+2. **V5.2 收尾**：Task 137 验证通过后，再决定是否将 Writer 1.2.0 / `gate_mode="enforce"` 设为默认，并复跑 enforce 模式 Ch1–Ch150。
+3. **后置预研**：ContextEmergency / health_low 硬门禁（已规划为后置，不影响 V5.2 验收）。
+
+## V5.1 交付摘要
+
+- **Prompt 质量清理**：Task 121r 完成 Writer 1.1.0 + CreativeDirector 1.0.5 + RuleAuditor 格式检测。
+- **测试矩阵**：Task 122a/122b/122c/122d 完成单元、集成、E2E、150 章压力四层测试。
+- **候选硬门禁**：Task 123–130 完成实现、离线影响面分析、阈值调优、enforce 小窗口验证、score halt 重构、严格模式容错、gate_mode 默认决策；默认 `observe`，可显式启用 `enforce`。
+- **文档一致性**：Task 131 完成历史规划稿归档，索引统一指向 `-DONE.md`。
+- **V5.1 验收结论**：通过；条件完成项（Task 129 暴露的底层缺陷）已明确转入 V5.2。
 
 ## V5.0 交付摘要
 
@@ -67,8 +73,9 @@
 | 0.82 阈值早期章节阻断 | P1 | **Task 121q 已完成**：0.82 已动态化，并引入 `degraded_accept` 降级回滚路径 |
 | Prompt 质量瓶颈 | V5.1 | **Task 121r 已完成**：Writer 1.1.0 + CreativeDirector 1.0.5 + RuleAuditor 新增格式检测 |
 | Pass 14-18 Code Review 缺口 | P1 | **已完成**：TS-01/TS-02/TS-03/TS-08 测试缺口已补齐；PR-05 元标记检测已补充；ST-03 目录迁移已修复；AG-04 显式拦截已补充；TS-10 测试卫生已清理 |
-| health_low 硬门禁 | 预研 | **Task 123/124/125/126/127 已完成**：软复核 + 候选硬门禁实现 + 离线分析 + 阈值调优 + enforce 小窗口验证 + score halt 复合条件重构；`health_low_p1_halt`/`health_low_streak_halt` 在干净 run 中零误伤，`health_low_score_halt` 改为"历史新低 + P1 同步激增"复合条件；默认仍 `gate_mode="observe"` |
+| health_low 硬门禁 | 预研 | **Task 123/124/125/126/127 已完成**：软复核 + 候选硬门禁实现 + 离线分析 + 阈值调优 + enforce 小窗口验证 + score halt 复合条件重构；`health_low_p1_halt`/`health_low_streak_halt` 在干净 run 中零误伤，`health_low_score_halt` 改为"历史新低 + P1 同步激增"复合条件；默认仍 `gate_mode="observe"`。`Task 129` 暴露的底层提取/设定回收缺陷由 Task 133/134/135 跟踪 |
 | ContextEmergency 硬门禁 | 预研 | 保持合理降级，后置评估；当前 run 中未出现 context emergency |
+| enforce 模式默认启用 | V5.2 | **被 Task 133/134/135 阻塞**：需先修复 Writer 多场景结构、SettlementExtractor 角色/数值提取、设定回收与 continuity health 缺陷，再完成跨项目 Ch1–Ch150 enforce 验证 |
 
 ## 文档入口
 
@@ -95,7 +102,10 @@
 - 重构 `health_low_score_halt`：`tasks/127-health-low-score-halt-refactor-DONE.md`
 - 严格模式容错与开局期质量爬坡：`tasks/128-strict-mode-fault-tolerance-and-quality-ramp-DONE.md`
 - enforce 模式 Ch1–Ch50 验证：`tasks/129-enforce-mode-ch1-ch50-validation-DONE.md`
-- gate_mode 默认模式决策：`tasks/130-gate-mode-default-decision.md`
-- 任务文档归档与状态一致性清理：`tasks/131-task-docs-archive-and-status-cleanup.md`
-- V5.1 最终验收包：`tasks/132-v51-final-acceptance-package.md`
+- gate_mode 默认模式决策：`tasks/130-gate-mode-default-decision-DONE.md`
+- 任务文档归档与状态一致性清理：`tasks/131-task-docs-archive-and-status-cleanup-DONE.md`
+- V5.1 最终验收包：`tasks/132-v51-final-acceptance-package-DONE.md`
+- Writer 多场景结构修复：`tasks/133-writer-multi-scene-structure-fix.md`
+- SettlementExtractor 角色/数值提取修复：`tasks/134-settlement-character-numerical-extraction-fix.md`
+- 设定回收与 continuity health 治理：`tasks/135-setting-recycling-and-continuity-health-governance.md`
 - V5 归档：`archive/v5/INDEX.md`

@@ -5,13 +5,14 @@
 
 from __future__ import annotations
 
+import re
 import uuid
 
 import structlog
 
 from songyan.llm.client import call_llm
 from songyan.models import Patch, ReviewIssue, RevisionOutput, RuleAuditResult
-from songyan.utils.scene_parser import SCENE_PATTERN
+from songyan.utils.scene_parser import SCENE_PATTERN, _merge_short_blocks
 from songyan.utils.token_estimator import truncate_to_tokens
 from songyan.utils.word_count import count_chinese_words
 
@@ -22,7 +23,7 @@ MIN_PRESERVATION_RATIO = 0.85  # Task 100a: 从 0.50 提升至 0.85
 
 
 def _split_content_by_scenes(content: str) -> list[dict]:
-    """按 ### Scene N 分割为 scene 段，含原始位置信息.
+    """按 ### Scene N 或空行分块分割为 scene 段，含原始位置信息.
 
     Returns:
         [{"scene_number": int, "content": str, "start": int, "end": int, "header": str}, ...]
@@ -31,29 +32,49 @@ def _split_content_by_scenes(content: str) -> list[dict]:
         return []
 
     matches = list(SCENE_PATTERN.finditer(content))
-    if not matches:
-        return [
-            {
-                "scene_number": 1,
-                "content": content.strip(),
-                "start": 0,
-                "end": len(content),
-                "header": "",
-            }
-        ]
+    if matches:
+        scenes: list[dict] = []
+        for i, match in enumerate(matches):
+            scene_number = int(match.group(1))
+            start = match.end()
+            end = matches[i + 1].start() if i + 1 < len(matches) else len(content)
+            scene_content = content[start:end].strip()
+            scenes.append({
+                "scene_number": scene_number,
+                "content": scene_content,
+                "start": start,
+                "end": end,
+                "header": match.group(0),
+            })
+        return scenes
 
-    scenes: list[dict] = []
-    for i, match in enumerate(matches):
-        scene_number = int(match.group(1))
-        start = match.end()
-        end = matches[i + 1].start() if i + 1 < len(matches) else len(content)
-        scene_content = content[start:end].strip()
+    # Task 133: 无显式标记时按空行分块，过滤过渡碎块
+    normalized = content.replace("\r\n", "\n")
+    blocks = [block.strip() for block in re.split(r"\n\s*\n", normalized) if block.strip()]
+    merged = _merge_short_blocks(blocks)
+    if not merged:
+        return [{
+            "scene_number": 1,
+            "content": content.strip(),
+            "start": 0,
+            "end": len(content),
+            "header": "",
+        }]
+
+    scenes = []
+    cursor = 0
+    for idx, scene_content in enumerate(merged):
+        start = content.find(scene_content, cursor)
+        if start < 0:
+            start = cursor
+        end = start + len(scene_content)
+        cursor = end
         scenes.append({
-            "scene_number": scene_number,
+            "scene_number": idx + 1,
             "content": scene_content,
             "start": start,
             "end": end,
-            "header": match.group(0),
+            "header": "",
         })
     return scenes
 

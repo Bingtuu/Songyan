@@ -20,7 +20,14 @@ from songyan.models.human_mark import SuggestedMark
 logger = structlog.get_logger(__name__)
 
 
-ORPHANED_THRESHOLD = 3  # 3 章未提及即视为 orphaned
+# Task 135: 按设定类别设置不同的回收期望窗口。
+ORPHANED_THRESHOLDS: dict[str, int] = {
+    "critical": 3,
+    "recurring": 4,
+    "background": 5,
+    "technical": 7,
+    "historical": 10,
+}
 FORGOTTEN_THRESHOLD = 3  # 3 章未使用即视为 forgotten
 STATE_MISMATCH_WINDOW = 2  # 2 章内剧烈变化视为 mismatch
 
@@ -29,10 +36,17 @@ async def _find_orphaned_settings(
     project_id: str, up_to_chapter: int,
     setting_repo: SettingTrackingRepository,
 ) -> list[OrphanedSetting]:
-    """找出 last_mentioned_chapter 距离当前超过阈值的 setting."""
-    rows = await setting_repo.find_orphaned(
-        project_id, up_to_chapter, ORPHANED_THRESHOLD
-    )
+    """按类别阈值找出 last_mentioned_chapter 距离当前过远的 setting."""
+    rows: list[dict] = []
+    for category, threshold in ORPHANED_THRESHOLDS.items():
+        rows.extend(
+            await setting_repo.find_orphaned(
+                project_id,
+                up_to_chapter,
+                threshold=threshold,
+                categories=[category],
+            )
+        )
     return [
         OrphanedSetting(
             tracking_id=r["tracking_id"],

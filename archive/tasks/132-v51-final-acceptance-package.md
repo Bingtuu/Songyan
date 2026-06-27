@@ -51,7 +51,7 @@ V5.1 不是新增大功能，而是 V5.0 之后的**质量收口与可观测性�
 ## 3. 验收标准
 
 ### 3.1 成果汇总
-- [ ] 汇总 Task 121r–130 的交付物清单。
+- [ ] 汇总 Task 121r–131 的交付物清单。
 - [ ] 列出每个任务的关键 run_id、测试基线、代码改动。
 - [ ] 明确 V5.1 与 V5.0 的边界：V5.1 不改 Context Diet 2.0 核心架构，不新增 workflow 节点。
 
@@ -61,18 +61,18 @@ V5.1 不是新增大功能，而是 V5.0 之后的**质量收口与可观测性�
 - [ ] 列出 V5.1 未关闭但已可观测的风险（如 health_low 默认未 enforce、跨项目泛化性未验证）。
 
 ### 3.3 测试基线
-- [ ] 最终全量 pytest 结果（目标：保持或优于 `1828 passed, 1 xfailed, 2 warnings`）。
+- [ ] 最终全量 pytest 结果（目标：保持或优于 `1856 passed, 2 skipped, 1 xfailed`）。
 - [ ] 最终 ruff 检查结果通过。
 - [ ] 关键实跑证据：
   - `run-a2bed648`（Task 121q）：Ch1–Ch150 全部成功。
-  - `run-13bb5303`（Task 126）：Ch1–Ch19 enforce 0 gate 触发。
-  - Task 128 的 run_id（Ch1–Ch50 enforce 验证）。
+  - `run-89d7a2d4`（Task 129）：enforce 模式 Ch1–Ch15 验证，Ch15 后因 quality gate streak 暂停；详见 `docs/reports/task-129-enforce-validation-report.md`。
+  - Task 126/127/128 的验证记录见对应 `-DONE.md`。
 
 ### 3.4 文档收口
 - [ ] 更新 `docs/STATUS.md`，标记 V5.1 完成。
 - [ ] 更新 `tasks/V5-README.md`，新增 V5.1 任务状态表。
 - [ ] 更新 `docs/INDEX.md`，增加 V5.1 验收入口。
-- [ ] 输出 `tasks/131-v51-final-acceptance-package-DONE.md`。
+- [ ] 输出 `tasks/132-v51-final-acceptance-package-DONE.md`。
 
 ---
 
@@ -80,7 +80,7 @@ V5.1 不是新增大功能，而是 V5.0 之后的**质量收口与可观测性�
 
 ```
 IF Task 127-131 全部完成
-   AND 全量测试基线 ≥ 1828 passed
+   AND 全量测试基线 ≥ 1856 passed
    AND P0/P1 风险为 0
 THEN V5.1 通过验收
 ELSE IF 某项未完成但不影响核心目标
@@ -95,11 +95,11 @@ THEN V5.1 不通过，继续修复
 
 在验收文档中明确以下可选方向，但不现在执行：
 
-1. **硬门禁默认切换 enforce**：基于跨项目 Ch1–Ch150 验证（Task 133）。
-2. **Prompt 质量二期**：针对中段/后段章节的叙事体验、钩子质量、人物动机密度（Task 132）。
-3. **人工反馈闭环**：将人工复核标记反哺到 `GateConfig` 阈值调优（Task 134）。
-4. **多体裁 / 跨项目验证**：确认 Context Diet 2.0 和硬门禁在不同 genre/mode 下的泛化性。
-5. **发布与导出功能**：如 `songyan export` 生成小说稿、epub/pdf 等。
+1. **硬门禁默认切换 enforce**：先完成 Task 133/134/135 的底层缺陷修复，再基于跨项目 Ch1–Ch150 enforce 验证（Task 136）。
+2. **Prompt 质量二期**：针对中段/后段章节的叙事体验、钩子质量、人物动机密度（Task 137）。
+3. **人工反馈闭环**：将人工复核标记反哺到 `GateConfig` 阈值调优（Task 138）。
+4. **多体裁 / 跨项目验证**：确认 Context Diet 2.0 和硬门禁在不同 genre/mode 下的泛化性（Task 139）。
+5. **发布与导出功能**：如 `songyan export` 生成小说稿、epub/pdf 等（Task 140）。
 
 ---
 

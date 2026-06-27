@@ -54,7 +54,7 @@ class Decrement(BaseModel):
 
 
 class NumericalUpdate(BaseModel):
-    """数值账本变更 — 玄幻专用."""
+    """数值账本变更 — 所有题材通用."""
 
     character_id: str
     attribute_name: str  # 如 cultivation_level, spirit_stones
@@ -62,6 +62,7 @@ class NumericalUpdate(BaseModel):
     increments: list[Increment] = Field(default_factory=list)
     decrements: list[Decrement] = Field(default_factory=list)
     closing_value: float
+    formula: str = ""  # 可选：closing_value 的公式说明
 
 
 class StateSettlement(BaseModel):
@@ -72,6 +73,9 @@ class StateSettlement(BaseModel):
 
     # 新设定登记
     new_settings: list[NewSetting] = Field(default_factory=list)
+
+    # Task 137: 本章回收/再次提及的已有 setting_key 列表（代码层也会二次校验）
+    recycled_settings: list[str] = Field(default_factory=list)
 
     # 伏笔操作
     foreshadowing_updates: list[ForeshadowingUpdate] = Field(default_factory=list)

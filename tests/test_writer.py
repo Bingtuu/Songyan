@@ -262,6 +262,24 @@ class TestParseScenes:
         scenes = _parse_scenes("   \n   ")
         assert scenes == []
 
+    def test_blank_lines_long_blocks_split(self) -> None:
+        """Task 133: 无显式标记时长块按空行分成多场景."""
+        block_a = "场景A的长内容。" * 30
+        block_b = "场景B的长内容。" * 30
+        scenes = _parse_scenes(f"{block_a}\n\n{block_b}")
+        assert len(scenes) == 2
+        assert "场景A" in scenes[0]["content"]
+        assert "场景B" in scenes[1]["content"]
+
+    def test_blank_lines_short_blocks_merge(self) -> None:
+        """Task 133: 短过渡块（<80 字）合并到相邻场景."""
+        block_a = "场景A的长内容。" * 30
+        transition = "短过渡。"
+        block_b = "场景B的长内容。" * 30
+        scenes = _parse_scenes(f"{block_a}\n\n{transition}\n\n{block_b}")
+        assert len(scenes) == 2
+        assert "短过渡" in scenes[0]["content"]
+
 
 # ---------------------------------------------------------------------------
 # Word Count Tests
@@ -381,6 +399,31 @@ class TestWriteChapter:
         assert head_call.chapter_number == 1
         assert head_call.current_version_id == version.version_id
         assert head_call.status == "draft"
+
+    async def test_blank_line_scenes(self) -> None:
+        """Task 133: Writer 接受空行分隔的场景并正确解析."""
+        ctx = _make_context_package()
+        mock_version_repo = AsyncMock()
+        mock_version_repo.list_by_chapter.return_value = []
+        mock_head_repo = AsyncMock()
+        mock_head_repo.get.return_value = None
+
+        block_a = "这是第一章第一场景的内容。" * 30
+        block_b = "这是第一章第二场景的内容。" * 30
+        llm_response = f"{block_a}\n\n{block_b}"
+
+        with patch("songyan.agents.writer.call_llm", return_value=llm_response):
+            version = await write_chapter(
+                db_version=mock_version_repo,
+                db_head=mock_head_repo,
+                project_id="proj_123",
+                context_package=ctx,
+            )
+
+        assert len(version.scenes) >= 2
+        assert version.generation_metadata["scenes_count"] >= 2
+        assert "第一场景" in version.content
+        assert "第二场景" in version.content
 
     async def test_second_version(self) -> None:
         ctx = _make_context_package()

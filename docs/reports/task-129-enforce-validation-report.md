@@ -95,11 +95,14 @@
 
 **结论**：本次 enforce 模式 Ch1–Ch50 验证 **未能跑通**，在 Ch15 因 quality gate streak 触发 AutoHalt。问题集中在 Writer 结构输出、Settlement 提取、设定回收与连续性维护四个环节。
 
-**建议下一步**：
-1. **Task 130**：修复 Writer 多场景结构输出（prompt / parser 调优），确保每章至少 2 个 scene。
-2. **Task 131**：修复 SettlementExtractor 角色状态与数值台账提取，解决 `character_states` 和 `numerical_ledgers` 为空的问题。
-3. **Task 132**：优化设定回收策略，降低 orphaned settings 累积速度；或调整 continuity auditor 的评分/衰减逻辑。
-4. 在完成上述修复后，重新发起 Task 129 复跑，目标 Ch1–Ch50 无 AutoHalt。
+**建议下一步**（注意：本报告为自动生成的验证数据，后续任务编号以 `tasks/V5-README.md` 为准）：
+1. **Task 130**：基于本报告证据，做出 `gate_mode` 默认模式决策（推荐 V5.1 保持 `observe` + 暴露 CLI 参数）。
+2. **Task 131**：归档历史规划稿，更新 `docs/STATUS.md`、`docs/INDEX.md`、`tasks/V5-README.md` 与 `README.md` 指向最终事实文档。
+3. **Task 132**：汇总 V5.1 全部工作，输出 V5.1 最终验收包，并明确 V5.2 方向。
+4. **Task 133**：修复 Writer 多场景结构输出（prompt / parser 调优），确保每章至少 2 个 scene。
+5. **Task 134**：修复 SettlementExtractor 角色状态与数值台账提取，解决 `character_states` 和 `numerical_ledgers` 为空的问题。
+6. **Task 135**：优化设定回收策略，降低 orphaned settings 累积速度；或调整 continuity auditor 的评分/衰减逻辑。
+7. 在完成 Task 133/134/135 后，重新发起 enforce 模式 Ch1–Ch50 复跑，目标无 AutoHalt。
 
 ---
 

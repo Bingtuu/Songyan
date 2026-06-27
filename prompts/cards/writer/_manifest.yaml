@@ -25,3 +25,7 @@ versions:
     description: "Task 121r：移除机械场景标题，改用空行分隔场景；禁止 markdown 标题/HTML 注释/元标记；强化段落节奏与短段落控制"
     tags: ["webnovel", "xuanhuan", "urban", "scifi", "urban_fantasy", "post_apocalyptic", "mystery_noir", "wuxia"]
     created_at: "2026-06-25"
+  - version: "1.2.0"
+    description: "Task 133：强制 2-4 个场景，明确场景切换信号与最小场景字数，保持空行分隔与格式纯净度"
+    tags: ["webnovel", "xuanhuan", "urban", "scifi", "urban_fantasy", "post_apocalyptic", "mystery_noir", "wuxia"]
+    created_at: "2026-06-27"

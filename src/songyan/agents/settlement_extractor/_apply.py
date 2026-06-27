@@ -18,6 +18,7 @@ from songyan.db.continuity_repo import (
     LocationTrackerRepository,
     SettingTrackingRepository,
 )
+from songyan.db.human_mark_repo import HumanMarkRepository
 from songyan.db.layered_context_repo import PermanentSceneRepository
 from songyan.db.repository import CharacterRepository
 from songyan.db.settlement_repo import (
@@ -43,6 +44,93 @@ from ._state_compression import compress_character_state_value
 logger = structlog.get_logger(__name__)
 
 _T = TypeVar("_T")
+
+
+def _term_in_content(term: str, content: str) -> bool:
+    """判断术语是否作为独立词出现在正文中.
+
+    中文没有空格分词，因此只要术语后紧跟另一个中文字符，
+    就视为更长词的一部分，避免把「天剑」误匹配到「天剑宗」中。
+    """
+    if len(term) < 2:
+        return False
+    idx = content.find(term)
+    while idx != -1:
+        end = idx + len(term)
+        # 后接中文字符 → 属于更长词，跳过
+        followed_by_chinese = (
+            end < len(content)
+            and "\u4e00" <= content[end] <= "\u9fa5"
+        )
+        if not followed_by_chinese:
+            return True
+        idx = content.find(term, idx + 1)
+    return False
+
+
+def _detect_setting_references(
+    content: str,
+    active_settings: list[dict],
+) -> dict[str, str]:
+    """扫描正文，返回被引用的 setting_tracking_id -> setting_key 映射.
+
+    优先使用 setting_name；若 setting_name 为空或太短，则回退到 setting_key 最后一段。
+    """
+    referenced: dict[str, str] = {}
+    if not content:
+        return referenced
+
+    for setting in active_settings:
+        tracking_id = setting.get("tracking_id")
+        setting_key = setting.get("setting_key", "")
+        if not tracking_id or not setting_key:
+            continue
+
+        terms: set[str] = set()
+        name = (setting.get("setting_name") or "").strip()
+        if len(name) >= 2:
+            terms.add(name)
+
+        # setting_key 最后一段（去掉命名空间与下划线）
+        key_tail = setting_key.split(".")[-1].replace("_", "")
+        if len(key_tail) >= 2 and key_tail not in terms:
+            terms.add(key_tail)
+
+        for term in terms:
+            if _term_in_content(term, content):
+                referenced[tracking_id] = setting_key
+                break
+
+    return referenced
+
+
+async def _resolve_recycled_continuity_marks(
+    project_id: str,
+    referenced_keys: set[str],
+    human_mark_repo: HumanMarkRepository,
+    conn: aiosqlite.Connection | None = None,
+) -> int:
+    """将目标 setting 已被回收/提及的 continuity_auditor human_mark 标记为 resolved."""
+    if not referenced_keys:
+        return 0
+
+    marks = await human_mark_repo.list_by_project(
+        project_id, include_resolved=False
+    )
+    resolved_count = 0
+    for mark in marks:
+        if mark.source != "continuity_auditor":
+            continue
+        if mark.target_key in referenced_keys and mark.mark_type == "setting":
+            if await human_mark_repo.resolve(mark.mark_id, conn=conn):
+                resolved_count += 1
+                logger.info(
+                    "settlement.human_mark_resolved",
+                    mark_id=mark.mark_id,
+                    target_key=mark.target_key,
+                    project_id=project_id,
+                )
+    return resolved_count
 
 
 async def _execute_with_db_retry(
@@ -88,6 +176,7 @@ async def apply_settlement(
     setting_repo: SettingSnapshotRepository | None = None,
     foreshadowing_repo: ForeshadowingRepository | None = None,
     numerical_repo: NumericalLedgerRepository | None = None,
+    content: str | None = None,
 ) -> None:
     """将验证通过的结算结果应用到数据库 — INSERT 新快照，不 UPDATE 旧记录.
 
@@ -277,7 +366,63 @@ async def apply_settlement(
             error=str(exc),
         )
 
-    # 5+6. Continuity tracking + Permanent scenes（同一连接，调用方管理事务）
+    # 5. Task 137: 设定回收闭环 — 正文提及已存在设定时刷新 last_mentioned
+    refreshed_keys: set[str] = set()
+    if content:
+        try:
+            active_settings = [
+                s
+                for s in await setting_tracking_repo.list_by_project(project_id)
+                if s.get("status", "active") == "active"
+            ]
+            referenced = _detect_setting_references(content, active_settings)
+            for tracking_id, setting_key in referenced.items():
+                await setting_tracking_repo.update_last_mentioned(
+                    tracking_id, chapter_number, conn=conn
+                )
+                refreshed_keys.add(setting_key)
+
+            # 同时接纳 SettlementExtractor 显式报告的 recycled_settings
+            key_to_tracking = {
+                s.get("setting_key", ""): s.get("tracking_id")
+                for s in active_settings
+                if s.get("setting_key")
+            }
+            for key in set(settlement.recycled_settings or []):
+                tracking_id = key_to_tracking.get(key)
+                if tracking_id and key not in refreshed_keys:
+                    await setting_tracking_repo.update_last_mentioned(
+                        tracking_id, chapter_number, conn=conn
+                    )
+                    refreshed_keys.add(key)
+
+            if refreshed_keys:
+                logger.info(
+                    "settlement.settings_recycled",
+                    project_id=project_id,
+                    chapter_number=chapter_number,
+                    count=len(refreshed_keys),
+                    keys=sorted(refreshed_keys),
+                )
+            resolved_count = await _resolve_recycled_continuity_marks(
+                project_id, refreshed_keys, HumanMarkRepository(), conn
+            )
+            if resolved_count:
+                logger.info(
+                    "settlement.human_marks_resolved",
+                    project_id=project_id,
+                    chapter_number=chapter_number,
+                    count=resolved_count,
+                )
+        except (RuntimeError, OSError, ConnectionError, ValueError, TypeError) as exc:
+            logger.warning(
+                "settlement.recycling_detection_failed",
+                project_id=project_id,
+                chapter_number=chapter_number,
+                error=str(exc),
+            )
+
+    # 6+7. Continuity tracking + Permanent scenes（同一连接，调用方管理事务）
     try:
         await _update_continuity_tracking(
             settlement=settlement,

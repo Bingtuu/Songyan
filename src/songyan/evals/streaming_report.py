@@ -155,6 +155,15 @@ def generate_report(
     # emergency 统计
     emergency_count = sum(1 for log in successes if log.context_emergency)
 
+    # Task 130: 候选硬门禁汇总
+    gate_triggered_count = sum(1 for log in logs if log.gate_triggered)
+    gate_mode_counts: dict[str, int] = {}
+    gate_reason_counts: dict[str, int] = {}
+    for log in logs:
+        gate_mode_counts[log.gate_mode] = gate_mode_counts.get(log.gate_mode, 0) + 1
+        for reason in (log.gate_reasons or []):
+            gate_reason_counts[reason] = gate_reason_counts.get(reason, 0) + 1
+
     # 字数比例
     wc_ratios: list[float] = []
     for log in successes:
@@ -187,6 +196,10 @@ def generate_report(
         )
         dg_label = "DG-1"
 
+    gate_mode_distribution = ", ".join(
+        f"{k}={v}" for k, v in sorted(gate_mode_counts.items())
+    )
+
     lines = [
         f"# Ch{start_ch}-Ch{end_ch} 流式验证报告",
         "",
@@ -201,6 +214,8 @@ def generate_report(
         f"- **character_states 均值**: {avg_char:.1f}",
         f"- **soft_refs 均值**: {avg_soft:.1f}",
         f"- **context_emergency 次数**: {emergency_count}",
+        f"- **候选硬门禁触发**: {gate_triggered_count} 章",
+        f"- **gate_mode 分布**: {gate_mode_distribution}",
         f"- **平均 revision 轮数**: {avg_rev:.1f}",
         f"- **字数不足率 (<0.80x)**: {under_ratio:.1%}",
         f"- **字数超标率 (>1.30x)**: {over_ratio:.1%}",
@@ -236,6 +251,26 @@ def generate_report(
                 "",
             ]
         )
+
+    # Task 130: 候选硬门禁明细
+    if gate_triggered_count > 0 or gate_mode_counts:
+        lines.extend(
+            [
+                "## 候选硬门禁明细",
+                "",
+                f"- **触发章节数**: {gate_triggered_count}/{total}",
+                f"- **模式分布**: {gate_mode_distribution}",
+            ]
+        )
+        if gate_reason_counts:
+            lines.append("- **触发原因**: ")
+            for reason, count in sorted(
+                gate_reason_counts.items(), key=lambda x: x[1], reverse=True
+            ):
+                lines.append(f"  - `{reason}`: {count} 次")
+        else:
+            lines.append("- **触发原因**: （未记录具体原因）")
+        lines.append("")
 
     lines.extend(
         [

@@ -113,6 +113,26 @@ class GateConfig(BaseModel):
         description="保留已有行为：连续 3 章 ContextEmergency 且伴随降级时触发 AutoHalt",
     )
 
+    @classmethod
+    def for_mode(cls, mode: Literal["observe", "enforce"]) -> GateConfig:
+        """按运行模式返回配置.
+
+        - observe: 默认关闭所有候选硬门禁，只记录事件。
+        - enforce: 启用 Task 123/125/127 预研的候选硬门禁，触发即 pause run。
+        """
+        if mode == "enforce":
+            return cls(
+                gate_mode="enforce",
+                health_low_gate_enabled=True,
+                health_low_p1_halt=True,
+                health_low_streak_halt=True,
+                health_low_score_halt_enabled=True,
+                context_emergency_gate_enabled=True,
+                context_emergency_single_halt=True,
+                context_emergency_failure_halt=True,
+            )
+        return cls(gate_mode="observe")
+
     def is_enforce(self) -> bool:
         """当前是否为门禁模式."""
         return self.gate_mode == "enforce"

@@ -54,6 +54,7 @@ from songyan.models import (
     HumanInstruction,
     ReviewCategory,
     ReviewIssue,
+    StateSettlement,
 )
 from songyan.utils.scene_parser import parse_scenes as _parse_scenes
 from songyan.utils.truncation import enforce_word_count as _enforce_word_count
@@ -2072,6 +2073,7 @@ async def accept_with_settlement_boundary(
     chapter_number: int,
     version_id: str,
     settlement: Any | None,
+    content: str | None = None,
 ) -> None:
     """在同一事务内完成 settlement apply 与 accept 状态更新."""
     if settlement is not None and settlement.validation_status != "valid":
@@ -2086,6 +2088,7 @@ async def accept_with_settlement_boundary(
                     chapter_number=chapter_number,
                     version_id=version_id,
                     conn=conn,
+                    content=content,
                 )
             await ChapterVersionRepository().accept_version(version_id, conn=conn)
             await ChapterHeadRepository().update(
@@ -2104,7 +2107,41 @@ async def accept_with_settlement_boundary(
             raise
 
 
+def _is_effectively_empty_settlement(settlement: StateSettlement) -> bool:
+    """判定 settlement 是否未提取到角色状态与数值变更."""
+    return (
+        len(settlement.character_updates) == 0
+        and len(settlement.numerical_updates) == 0
+    )
+
+
+async def _project_has_characters(project_id: str) -> bool:
+    """项目下是否存在角色档案."""
+    characters = await CharacterRepository().list_by_project(project_id)
+    return bool(characters)
+
+
+async def _should_block_empty_settlement(
+    settlement: StateSettlement,
+    content: str,
+    project_id: str,
+    gate_mode: str,
+) -> bool:
+    """Task 134: enforce 模式下对空结算进行阻断.
+
+    observe 模式仅返回 False，保持 warning 不阻断。
+    """
+    if gate_mode != "enforce":
+        return False
+    if not _is_effectively_empty_settlement(settlement):
+        return False
+    if len(content.strip()) < 200:
+        return False
+    return await _project_has_characters(project_id)
+
+
 async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
+
     version = await load_version(state["current_version_id"])
     if version is None:
         return {"error": "Version not found", "status": "settlement_extractor"}
@@ -2198,12 +2235,28 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
                     validation_errors=settlement.validation_errors,
                 )
                 settlement_needs_review = True
+            elif await _should_block_empty_settlement(
+                settlement=settlement,
+                content=version.content,
+                project_id=state["project_id"],
+                gate_mode=state.get("gate_mode", "observe"),
+            ):
+                # Task 134: enforce 模式下空结算视为异常，进入 settlement_review
+                logger.warning(
+                    "settlement_extractor_node.empty_settlement_blocked",
+                    project_id=state["project_id"],
+                    chapter_number=state["chapter_number"],
+                    version_id=version.version_id,
+                    gate_mode=state.get("gate_mode", "observe"),
+                )
+                settlement_needs_review = True
             else:
                 await accept_with_settlement_boundary(
                     project_id=state["project_id"],
                     chapter_number=state["chapter_number"],
                     version_id=version.version_id,
                     settlement=settlement,
+                    content=version.content,
                 )
                 settlement_applied = True
                 accepted_for_postprocessing = True

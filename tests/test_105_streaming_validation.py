@@ -41,6 +41,9 @@ def _make_log(
     context_pressure: dict | None = None,
     error: str | None = None,
     error_stage: str | None = None,
+    gate_triggered: bool = False,
+    gate_mode: str = "observe",
+    gate_reasons: list[str] | None = None,
 ) -> ChapterRunLog:
     return ChapterRunLog(
         log_id=f"log-{chapter_number}",
@@ -62,6 +65,9 @@ def _make_log(
         revision_rounds=revision_rounds,
         word_count=word_count,
         context_pressure=context_pressure or {},
+        gate_triggered=gate_triggered,
+        gate_mode=gate_mode,
+        gate_reasons=gate_reasons or [],
     )
 
 
@@ -116,6 +122,36 @@ def test_generate_report_some_failures() -> None:
     report = generate_report(logs)
     assert "**达标率**: 66.7%" in report
     assert "**成功**: 2 | **失败**: 1" in report
+
+
+def test_generate_report_gate_summary() -> None:
+    """Task 130: 报告应包含候选硬门禁触发汇总."""
+    logs = [
+        _make_log(
+            chapter_number=1,
+            gate_triggered=False,
+            gate_mode="observe",
+            gate_reasons=[],
+        ),
+        _make_log(
+            chapter_number=2,
+            gate_triggered=True,
+            gate_mode="enforce",
+            gate_reasons=["health_low_p1_halt: P1_count=1"],
+        ),
+        _make_log(
+            chapter_number=3,
+            gate_triggered=True,
+            gate_mode="enforce",
+            gate_reasons=["health_low_p1_halt: P1_count=1"],
+        ),
+    ]
+    report = generate_report(logs)
+    assert "**候选硬门禁触发**: 2 章" in report
+    assert "**gate_mode 分布**: enforce=2, observe=1" in report
+    assert "## 候选硬门禁明细" in report
+    assert "**触发原因**: " in report
+    assert "health_low_p1_halt: P1_count=1" in report
 
 
 def test_generate_report_with_emergency() -> None:

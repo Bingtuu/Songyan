@@ -21,8 +21,26 @@ if TYPE_CHECKING:
 
 logger = structlog.get_logger(__name__)
 
-# V5.0 Task 103: resolve_confidence 阈值
-CONFIDENCE_ARCHIVE_THRESHOLD: float = 0.3
+# Task 135: 按设定类别设置差异化 archive 阈值。
+# critical/recurring 保留更久；background/technical/historical 更快回收。
+CONFIDENCE_ARCHIVE_THRESHOLDS: dict[str, float] = {
+    "critical": 0.25,
+    "recurring": 0.20,
+    "background": 0.15,
+    "technical": 0.12,
+    "historical": 0.10,
+}
+# Task 137: 按类别调整时间衰减分母，避免 background/technical 在 Ch20 前无法蒸发。
+CATEGORY_TIME_DENOMINATORS: dict[str, int] = {
+    "critical": 100,
+    "recurring": 80,
+    "background": 25,
+    "technical": 30,
+    "historical": 20,
+}
+# 保留旧常量，供未分类/向后兼容使用。
+CONFIDENCE_ARCHIVE_THRESHOLD: float = 0.15
+TIME_DECAY_DENOMINATOR: int = 50
 # 设定合并相似度阈值（关键词重叠度代理）
 MERGE_SIMILARITY_THRESHOLD: float = 0.9
 # 每 N 章执行一次合并扫描
@@ -38,10 +56,11 @@ def _calculate_resolve_confidence(
     """计算设定的 resolve_confidence（纯规则，<10ms/条）.
 
     公式:
-        confidence = 0.5 * (1 - chapters_since_last_reference / 50)
+        confidence = 0.5 * (1 - chapters_since_last_reference / denom)
                    + 0.3 * narrative_relevance_score
                    + 0.2 * (is_hard_constraint ? 1.0 : 0.0)
 
+    其中 denom 按 setting 类别调整（background/technical/historical 衰减更快）。
     narrative_relevance_score 使用已有 _compute_keyword_overlap 实现，
     避免调用 Embedder 保证性能。
     """
@@ -51,7 +70,9 @@ def _calculate_resolve_confidence(
 
     # 1. 时间衰减因子（最近引用离当前章节越远，confidence 越低）
     chapters_since = max(0, current_chapter - last_mentioned)
-    time_factor = max(0.0, 1.0 - chapters_since / 50.0)
+    category = setting_row.get("category", "background")
+    denom = CATEGORY_TIME_DENOMINATORS.get(category, TIME_DECAY_DENOMINATOR)
+    time_factor = max(0.0, 1.0 - chapters_since / float(denom))
 
     # 2. 叙事相关性（与当前 ChapterGoal 的关键词重叠度）
     relevance = 0.0
@@ -159,14 +180,19 @@ class SettingEvaporator:
             if not key:
                 continue
             conf = _calculate_resolve_confidence(row, current_chapter, chapter_goal)
-            if conf < CONFIDENCE_ARCHIVE_THRESHOLD:
+            category = row.get("category", "background")
+            threshold = CONFIDENCE_ARCHIVE_THRESHOLDS.get(
+                category, CONFIDENCE_ARCHIVE_THRESHOLD
+            )
+            if conf < threshold:
                 low_confidence_keys.append(key)
                 logger.info(
                     "setting_evaporator.archive_candidate",
                     project_id=project_id,
                     setting_key=key,
+                    category=category,
                     confidence=conf,
-                    threshold=CONFIDENCE_ARCHIVE_THRESHOLD,
+                    threshold=threshold,
                 )
 
         if low_confidence_keys:

@@ -72,8 +72,9 @@ class TestCalculateResolveConfidence:
         )
         conf = _calculate_resolve_confidence(row, current_chapter=60, chapter_goal=goal)
         # hard_factor = 1.0（setting_name 在 target_events 中）
-        # conf = 0.5*0.4 + 0.3*0.3 + 0.2*1.0 = 0.49
-        assert conf >= 0.4
+        # background 时间分母为 25，30 章未引用已衰减到 0
+        # conf = 0.5*0 + 0.3*0.3 + 0.2*1.0 = 0.29
+        assert conf >= 0.25
 
     def test_hard_constraint_via_keywords(self) -> None:
         """setting_name 出现在 target_events 中 → hard_constraint."""

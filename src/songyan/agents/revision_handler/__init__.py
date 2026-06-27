@@ -64,6 +64,17 @@ def filter_patchable_issues(report: MergedReviewReport) -> list[ReviewIssue]:
     ]
 
 
+def _filter_scene_split_issues(report: MergedReviewReport) -> list[ReviewIssue]:
+    """保留 fix_type=scene_split 的 major issue，用于结构拆分路径."""
+    return [
+        issue
+        for issue in report.issues
+        if issue.severity in ("critical", "major")
+        and issue.fix_type == "scene_split"
+        and bool(issue.evidence_quote.strip())
+    ]
+
+
 def _filter_patchable_issues(report: MergedReviewReport) -> list[ReviewIssue]:
     """兼容旧测试与内部调用的别名."""
     return filter_patchable_issues(report)
@@ -322,25 +333,31 @@ def _render_prompt(
 # ---------------------------------------------------------------------------
 # Scene Structure Strategies (Task 095)
 # ---------------------------------------------------------------------------
-async def _handle_scene_shortage(content: str, target_scenes: int = 2) -> str:
-    """当场景数不足时，调用 LLM 将长场景拆分为多个场景."""
-    prompt = f"""你是小说编辑。以下章节场景数不足，需要拆分为至少 {target_scenes} 个场景。
+async def _handle_scene_split(content: str, target_scenes: int = 2) -> str:
+    """当场景数不足时，调用 LLM 将长场景拆分为多个空行分隔场景.
 
-要求：
-1. 在情节转折点或时空切换处插入 ### Scene N 分隔标记
-2. 每个新场景应有独立的开始和收束
-3. 保持原有叙事连贯性和角色视角
-4. 不要删除原有内容，只在合适位置插入场景分隔
-5. 输出完整修订后的正文，不要添加解释
-
-正文：
-{content}
-"""
+    Task 133: 输出使用空行分隔，不再使用 ### Scene N 标记；
+    每个新场景至少 600 字（中文），保持原有叙事连贯性。
+    """
+    prompt = (
+        f"你是小说编辑。以下章节场景数不足，需要拆分为至少 {target_scenes} 个场景。\n\n"
+        "要求：\n"
+        "1. 在情节转折点或时空切换处插入**空行**作为场景分隔，"
+        "**禁止使用** `### Scene N`、`Scene 1:` 等任何形式的场景标题或编号。\n"
+        "2. 每个新场景应有独立的开始和收束，且字数不少于 600 字（中文）。\n"
+        "3. 保持原有叙事连贯性和角色视角，不要删除原有内容。\n"
+        "4. 输出完整修订后的正文，不要添加解释、总结、JSON 或 markdown 代码块。\n\n"
+        f"正文：\n{content}"
+    )
     llm_response = await call_llm(prompt, temperature=0.3)
     from songyan.agents.writer import _extract_body
 
     revised = _extract_body(llm_response)
     return revised if revised.strip() else content
+
+
+# 兼容旧测试与外部调用：保留旧名称
+_handle_scene_shortage = _handle_scene_split
 
 
 async def _handle_scene_overflow(content: str, target_words: int) -> str:
@@ -575,6 +592,29 @@ async def run_revision(
     )
 
     patchable_issues = _filter_patchable_issues(report)
+    scene_split_issues = _filter_scene_split_issues(report)
+
+    # Task 133: 先处理 scene_split 类型的结构问题
+    pre_fixed_issue_ids: set[str] = set()
+    if scene_split_issues:
+        split_content = await _handle_scene_split(content, target_scenes=2)
+        original_len = len(content)
+        split_len = len(split_content)
+        preservation_ratio = round(split_len / original_len, 4) if original_len > 0 else 1.0
+        if split_content.strip() and preservation_ratio >= MIN_CONTENT_RATIO:
+            content = split_content
+            pre_fixed_issue_ids = {i.issue_id for i in scene_split_issues}
+            logger.info(
+                "revision_handler.scene_split_applied",
+                issue_ids=sorted(pre_fixed_issue_ids),
+                preservation_ratio=preservation_ratio,
+            )
+        else:
+            logger.warning(
+                "revision_handler.scene_split_fallback",
+                preservation_ratio=preservation_ratio,
+                reason="content_too_short_or_empty",
+            )
 
     if readability_driven:
         rh_issues = _build_readability_issues(report)
@@ -593,14 +633,14 @@ async def run_revision(
             total_issues=len(patchable_issues),
         )
 
-    if not patchable_issues:
+    if not patchable_issues and not pre_fixed_issue_ids:
         logger.info("revision_handler.no_patchable_issues")
         duration_ms = int((time.perf_counter() - start_time) * 1000)
         new_issues = _detect_new_issues(original_rule_result, revised_rule_result)
         output = RevisionOutput(
             new_version_id="",
             patches_applied=[],
-            issues_fixed=[],
+            issues_fixed=list(pre_fixed_issue_ids),
             issues_remaining=[],
             new_issues_introduced=new_issues,
         )
@@ -799,6 +839,13 @@ async def run_revision(
         revised_rule_result=revised_rule_result,
     )
     output.content_preservation_ratio = content_preservation_ratio
+    # Task 133: 把 scene_split 已修复的 issue 计入 fixed
+    if pre_fixed_issue_ids:
+        fixed_set = set(output.issues_fixed) | pre_fixed_issue_ids
+        output.issues_fixed = sorted(fixed_set)
+        output.issues_remaining = [
+            iid for iid in output.issues_remaining if iid not in pre_fixed_issue_ids
+        ]
     return output, revised_content
 
 

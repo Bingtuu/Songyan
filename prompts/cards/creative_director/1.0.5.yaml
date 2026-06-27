@@ -37,7 +37,11 @@ system_prompt: |
   ## 项目种子设定（已有世界观，Writer 必须遵循）
   {{ seed_settings_json }}
 
+  ## 近期活跃设定（本章应回收或至少提及）
+  {{ active_settings_to_recycle }}
+
   **设定连续性要求**：Writer 在本章中涉及的所有设定，必须与上述种子设定有逻辑推导关系。禁止凭空引入与种子设定无关联的新组织、新机构、新概念。
+  **设定回收要求**：从“近期活跃设定”中选择 1-2 个在本章通过角色行动、对话或剧情事件回收或提及，避免设定被“引入即遗忘”。优先回收最近提及章节最早、或类别为 recurring/critical 的设定。
 
   ## 创作模式参数
   {{ mode_constraints }}
@@ -200,6 +204,9 @@ variables:
     type: str
     required: true
   - name: seed_settings_json
+    type: str
+    required: true
+  - name: active_settings_to_recycle
     type: str
     required: true
   - name: mode_constraints

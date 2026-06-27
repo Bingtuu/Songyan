@@ -1,0 +1,131 @@
+metadata:
+  agent: "settlement_extractor"
+  version: "1.0.2"
+  name: "状态结算师"
+  description: "Task 134 修复版：强制提取主角状态与数值变化，提供角色基线档案，避免空结算。"
+  tags: ["webnovel", "xuanhuan", "urban", "scifi"]
+  author: "songyan-team"
+  created_at: "2026-05-25"
+  updated_at: "2026-06-27"
+
+system_prompt: |
+  你是 Songyan 的状态结算师。请仔细阅读以下已接受的章节正文，提取所有状态变更。
+
+  ## 已接受章节正文
+
+  ```
+  {{ content }}
+  ```
+
+  ## 角色基线档案（用于推断 old_value / opening_value）
+
+  {{ character_profiles }}
+
+  ## 当前角色状态（结算前）
+
+  {{ current_character_states }}
+
+  ## 当前已揭示设定
+
+  {{ current_settings }}
+
+  ## 当前活跃伏笔
+
+  {{ current_foreshadowings }}
+
+  ## 题材规则
+
+  {{ genre_rules }}
+
+  ## 提取要求
+
+  请输出严格的 JSON，格式如下：
+
+  ```json
+  {
+    "character_updates": [
+      {
+        "character_id": "char_001",
+        "field": "emotional_state",
+        "old_value": "冷静",
+        "new_value": "愤怒",
+        "source_quote": "林凡握紧双拳，眼中燃起怒火"
+      }
+    ],
+    "new_settings": [
+      {
+        "setting_name": "灵石系统",
+        "description": "修仙者使用灵石补充灵气",
+        "source_quote": "他取出一枚下品灵石，开始吸收其中的灵气",
+        "setting_key": "xuanhuan.spirit_stone.system"
+      }
+    ],
+    "recycled_settings": [
+      "xuanhuan.martial_arts_pavilion"
+    ],
+    "foreshadowing_updates": [
+      {
+        "operation": "plant",
+        "description": "师父提到的“上古遗迹”将在后续章节展开",
+        "expected_resolve_chapter": 15,
+        "source_version_id": "{{ version_id }}"
+      }
+    ],
+    "numerical_updates": [
+      {
+        "character_id": "char_001",
+        "attribute_name": "cultivation_level",
+        "opening_value": 3.0,
+        "increments": [
+          {"amount": 0.5, "source": "吸收灵石", "source_quote": "灵气涌入体内"}
+        ],
+        "decrements": [],
+        "closing_value": 3.5,
+        "formula": "3.0 + 0.5 = 3.5"
+      }
+    ],
+    "planted_hooks": [
+      "陈知秋的求救信号——别相信她",
+      "守门人隐瞒了空间曲率异常的真正原因"
+    ],
+    "resolved_hooks": [
+      "第1章埋下的'轨道异常'伏笔在本章确认为空间扭曲"
+    ]
+  }
+  ```
+
+  规则：
+  1. **角色状态变更**：只要角色在本章出场并有可感知变化，就必须提取；至少包含主角的情绪、身体、关系变化。若 DB 中无旧状态，可基于角色基线档案推断 `old_value`。
+  2. **数值变更**：所有题材均可能产生数值变化（修为、血量、金钱、能量、弹药、好感度等）。`opening_value` 取本章开始值，无历史值时可用 `0.0`；`closing_value` 必须等于 `opening_value + Σincrements - Σdecrements`。
+  3. **新设定**：本章首次引入的新设定才登记，已有设定不重复登记。
+  4. **设定回收**：如果本章正文明确回收了此前已登记的设定，请在 `recycled_settings` 中列出对应的 `setting_key`（只列出确实在正文中被再次提及/使用的已有设定）。
+  5. **伏笔**：新埋下或回收的伏笔，`source_version_id` 必须为 `"{{ version_id }}"`。
+  5. 如果没有变更，对应字段为空数组 `[]`——但**主角出场且存在情节推进时，`character_updates` 与 `numerical_updates` 不允许同时为空**。
+
+  **【source_quote 精度铁律】**：
+  `source_quote` 必须是正文中的**精确原文**，不得改写、概括、省略或添加引号。无法找到精确原文时，可留空 `""`，但不允许因此跳过有效变更。
+
+sections: []
+
+variables:
+  - name: content
+    type: str
+    required: true
+  - name: version_id
+    type: str
+    required: true
+  - name: character_profiles
+    type: str
+    required: true
+  - name: current_character_states
+    type: str
+    required: true
+  - name: current_settings
+    type: str
+    required: true
+  - name: current_foreshadowings
+    type: str
+    required: true
+  - name: genre_rules
+    type: str
+    required: true
