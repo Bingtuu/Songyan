@@ -278,6 +278,9 @@ def _reset_rewrite_scoped_state() -> dict[str, Any]:
         "_convergence_failed": False,
         "_skip_settlement": False,
         "_settlement_needs_human_review": False,
+        "_settlement_version_id": None,
+        "_settlement_validation_status": None,
+        "_settlement_validation_errors": [],
         "_score_card": None,
     }
 
@@ -2157,6 +2160,9 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
     settlement_applied = False
     accepted_for_postprocessing = False
     summary_id = None
+    settlement_validation_status: str | None = None
+    settlement_validation_errors: list[str] = []
+    settlement_version_id: str | None = None
 
     logger.info(
         "settlement_extractor_node.contract_snapshot",
@@ -2197,6 +2203,9 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
             "status": "done",
             "_degraded_accept": True,
             "_settlement_needs_human_review": False,
+            "_settlement_version_id": None,
+            "_settlement_validation_status": None,
+            "_settlement_validation_errors": [],
             "_skip_settlement": False,
         }
 
@@ -2214,6 +2223,9 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
             "summary_id": None,
             "status": "settlement_review",
             "_settlement_needs_human_review": settlement_needs_review,
+            "_settlement_version_id": None,
+            "_settlement_validation_status": None,
+            "_settlement_validation_errors": [],
         }
     else:
         # 1. 提取并应用 settlement（核心操作）
@@ -2226,6 +2238,9 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
                 genre_rules=_build_genre_rules(genre, project, goal) if genre else None,
             )
             if settlement.validation_status != "valid":
+                settlement_validation_status = settlement.validation_status
+                settlement_validation_errors = list(settlement.validation_errors)
+                settlement_version_id = version.version_id
                 logger.warning(
                     "settlement_extractor_node.validation_failed_needs_review",
                     project_id=state["project_id"],
@@ -2392,4 +2407,7 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
         "summary_id": summary_id,
         "status": "settlement_review" if settlement_needs_review else "done",
         "_settlement_needs_human_review": settlement_needs_review,
+        "_settlement_version_id": settlement_version_id,
+        "_settlement_validation_status": settlement_validation_status,
+        "_settlement_validation_errors": settlement_validation_errors,
     }

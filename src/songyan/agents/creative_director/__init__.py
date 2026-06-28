@@ -8,6 +8,7 @@ from typing import Any
 import structlog
 
 from songyan.db.continuity_repo import SettingTrackingRepository
+from songyan.db.human_mark_repo import HumanMarkRepository
 from songyan.exceptions import LLMError, LLMResponseParseError
 from songyan.llm.client import call_llm
 from songyan.models.chapter import ChapterGoal
@@ -136,20 +137,45 @@ async def _load_active_settings_to_recycle(
     """加载近期活跃且未被回收的设定，供 CreativeDirector 提示 Writer 回收.
 
     Task 137: 优先展示即将成为 orphan 的设定（已沉寂 >= min_silent_chapters 章），
-    按 last_mentioned_chapter 升序排列，帮助 Writer 形成回收闭环。
+    按类别优先级与沉寂章数排序，帮助 Writer 形成回收闭环。
     """
+    category_priority = {
+        "critical": 0,
+        "recurring": 1,
+        "technical": 2,
+        "background": 3,
+        "historical": 4,
+    }
     rows = await SettingTrackingRepository().list_by_project(project_id)
+    active_marks = {
+        mark.target_key: mark.priority
+        for mark in await HumanMarkRepository().list_by_project(
+            project_id, mark_type="setting", include_resolved=False
+        )
+        if mark.source != "continuity_auditor"
+        or mark.created_at_chapter is None
+        or mark.created_at_chapter < chapter_number
+    }
     active = [
-        dict(r)
+        {
+            **dict(r),
+            "human_mark_priority": active_marks.get(str(r.get("setting_key") or ""), 0),
+        }
         for r in rows
         if r.get("status") == "active"
-        and chapter_number - (r.get("last_mentioned_chapter") or 0) >= min_silent_chapters
+        and (
+            chapter_number - (r.get("last_mentioned_chapter") or 0) >= min_silent_chapters
+            or str(r.get("setting_key") or "") in active_marks
+        )
     ]
-    # 优先提示最久未被提及的设定（last_mentioned 越小越靠前）
+    # 优先 critical/recurring 与 active human mark，再按沉寂章数从高到低排序。
     active.sort(
         key=lambda r: (
-            r.get("last_mentioned_chapter") or 0,
+            category_priority.get(str(r.get("category") or "background"), 9),
+            -(int(r.get("human_mark_priority") or 0)),
+            -(chapter_number - (r.get("last_mentioned_chapter") or 0)),
             r.get("introduced_in_chapter") or 0,
+            r.get("setting_key") or "",
         )
     )
     return active[:limit]
@@ -166,9 +192,11 @@ def _format_active_settings_to_recycle(settings: list[dict]) -> str:
         category = s.get("category", "background")
         introduced = s.get("introduced_in_chapter", 0)
         last = s.get("last_mentioned_chapter", 0)
+        mark_priority = int(s.get("human_mark_priority") or 0)
+        mark_note = f"，人工标记优先级：{mark_priority}" if mark_priority > 0 else ""
         lines.append(
             f"- {name}（{key}，类别：{category}，"
-            f"引入第{introduced}章，最近提及第{last}章）"
+            f"引入第{introduced}章，最近提及第{last}章{mark_note}）"
         )
     return "\n".join(lines)
 

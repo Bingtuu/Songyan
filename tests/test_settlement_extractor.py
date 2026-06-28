@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 import sqlite3
 from unittest.mock import AsyncMock, patch
 
@@ -300,6 +301,23 @@ class TestBuildNumericalUpdate:
     def test_missing_id(self) -> None:
         assert _build_numerical_update({"attribute_name": "level"}) is None
 
+    @pytest.mark.parametrize("empty_value", ["无", "", None])
+    def test_empty_values_do_not_crash_build(self, empty_value: object) -> None:
+        data = {
+            "character_id": "c1",
+            "attribute_name": "level",
+            "opening_value": empty_value,
+            "increments": [],
+            "decrements": [],
+            "closing_value": empty_value,
+        }
+
+        result = _build_numerical_update(data)
+
+        assert result is not None
+        assert result.opening_value == 0.0
+        assert math.isinf(result.closing_value)
+
 
 class TestBuildStateSettlement:
     def test_full(self) -> None:
@@ -444,6 +462,933 @@ class TestValidateSettlement:
         errors = await _validate_settlement(settlement, content, [], [])
         assert len(errors) == 1
         assert "closing_value" in errors[0]
+
+    async def test_empty_closing_value_reaches_formula_validation(self) -> None:
+        update = _build_numerical_update({
+            "character_id": "c1",
+            "attribute_name": "level",
+            "opening_value": "无",
+            "increments": [],
+            "decrements": [],
+            "closing_value": "无",
+        })
+        assert update is not None
+
+        errors = await _validate_settlement(
+            StateSettlement(numerical_updates=[update]),
+            "正文",
+            [],
+            [],
+        )
+
+        assert len(errors) == 1
+        assert "closing_value" in errors[0]
+
+    async def test_temperature_reading_normalized_as_snapshot(self) -> None:
+        """Task 137: 科幻温度读数不应被过度台账化为增减公式."""
+        content = "义肢温度达到四十七点三度，神经接口传来过载警告。"
+        settlement = StateSettlement(
+            numerical_updates=[
+                NumericalUpdate(
+                    character_id="lin_shen",
+                    attribute_name="义肢温度",
+                    opening_value=37.0,
+                    increments=[
+                        {
+                            "amount": 14.0,
+                            "source": "量子谐振过载",
+                            "source_quote": "义肢温度达到四十七点三度",
+                        }
+                    ],
+                    decrements=[],
+                    closing_value=47.0,
+                    formula="37 + 14 = 47",
+                )
+            ]
+        )
+
+        errors = await _validate_settlement(settlement, content, [], [])
+
+        update = settlement.numerical_updates[0]
+        assert errors == []
+        assert update.opening_value == 47.3
+        assert update.closing_value == 47.3
+        assert update.increments == []
+        assert update.decrements == []
+        assert update.formula == "telemetry_snapshot: 47.3"
+
+    @pytest.mark.parametrize(
+        ("content", "source_quote", "closing_value"),
+        [
+            ("左腿义肢的温度继续下降。52.0，51.3，50.6。", "", 50.6),
+            ("", "左腿义肢的温度继续下降。52.0。", 52.0),
+        ],
+    )
+    async def test_task138d_r2_temperature_decimal_series_normalized_as_snapshot(
+        self,
+        content: str,
+        source_quote: str,
+        closing_value: float,
+    ) -> None:
+        """Task 138d-R2: 温度关键词后的无单位小数读数可规整为 snapshot."""
+        settlement = StateSettlement(
+            numerical_updates=[
+                NumericalUpdate(
+                    character_id="lin_shen",
+                    attribute_name="left_leg_prosthetic_temperature",
+                    opening_value=54.0,
+                    increments=[],
+                    decrements=[
+                        {
+                            "amount": 1.0,
+                            "usage": "散热读数",
+                            "source_quote": source_quote,
+                        }
+                    ],
+                    closing_value=closing_value,
+                    formula="54 - 2 = snapshot",
+                )
+            ]
+        )
+
+        errors = await _validate_settlement(settlement, content, [], [])
+
+        update = settlement.numerical_updates[0]
+        assert errors == []
+        assert update.opening_value == closing_value
+        assert update.closing_value == closing_value
+        assert update.increments == []
+        assert update.decrements == []
+        assert update.formula == f"telemetry_snapshot: {closing_value}"
+
+    async def test_task138f_temperature_without_reading_evidence_is_filtered(
+        self,
+    ) -> None:
+        """Task 138f: 温度字段没有正文/source_quote 明确读数时被过滤."""
+        settlement = StateSettlement(
+            numerical_updates=[
+                NumericalUpdate(
+                    character_id="lin_shen",
+                    attribute_name="left_leg_prosthetic_temperature",
+                    opening_value=54.0,
+                    increments=[],
+                    decrements=[],
+                    closing_value=50.6,
+                    formula="left_leg_prosthetic_temperature telemetry_snapshot: 50.6",
+                )
+            ]
+        )
+
+        errors = await _validate_settlement(
+            settlement,
+            "左腿义肢的温度继续下降，但正文没有给出具体读数。",
+            [],
+            [],
+        )
+
+        assert errors == []
+        assert settlement.numerical_updates == []
+
+    async def test_task138d_r2_real_resource_ledger_formula_error_still_fails(
+        self,
+    ) -> None:
+        """Task 138d-R2: 真实资源数值不能借温度 snapshot 规则绕过硬校验."""
+        content = "冷却剂库存为 50.6，清点记录只显示消耗 2 单位。"
+        settlement = StateSettlement(
+            numerical_updates=[
+                NumericalUpdate(
+                    character_id="lin_shen",
+                    attribute_name="coolant_inventory",
+                    opening_value=54.0,
+                    increments=[],
+                    decrements=[
+                        {
+                            "amount": 2.0,
+                            "usage": "消耗",
+                            "source_quote": "清点记录只显示消耗 2 单位",
+                        }
+                    ],
+                    closing_value=50.6,
+                    formula="54 - 2 = 50.6",
+                )
+            ]
+        )
+
+        errors = await _validate_settlement(settlement, content, [], [])
+
+        assert len(errors) == 1
+        assert "coolant_inventory" in errors[0]
+        assert "closing_value" in errors[0]
+
+    @pytest.mark.parametrize(
+        ("character_id", "content", "closing_value"),
+        [
+            (
+                "lin_shen",
+                "系统正在分析她的选择，然后将这些数据与林深的神经模式进行比对。"
+                "“匹配度：68.1%。”",
+                68.1,
+            ),
+            (
+                "ss_047",
+                "您的神经模式匹配度为——数字浮现。“47.3%。”"
+                "SS-047低声重复：匹配度47.3%。",
+                47.3,
+            ),
+        ],
+    )
+    async def test_task138d_r2_neural_match_rate_normalized_as_snapshot(
+        self,
+        character_id: str,
+        content: str,
+        closing_value: float,
+    ) -> None:
+        """Task 138d-R2: neural_pattern_match_rate 明确百分比读数可规整为 snapshot."""
+        settlement = StateSettlement(
+            numerical_updates=[
+                NumericalUpdate(
+                    character_id=character_id,
+                    attribute_name="neural_pattern_match_rate",
+                    opening_value=0.0,
+                    increments=[],
+                    decrements=[],
+                    closing_value=closing_value,
+                    formula="0 + 0 = snapshot",
+                )
+            ]
+        )
+
+        errors = await _validate_settlement(settlement, content, [], [])
+
+        update = settlement.numerical_updates[0]
+        assert errors == []
+        assert update.opening_value == closing_value
+        assert update.closing_value == closing_value
+        assert update.increments == []
+        assert update.decrements == []
+        assert update.formula == f"telemetry_snapshot: {closing_value}"
+
+    async def test_task138d_r2_chinese_hour_countdown_normalized_as_snapshot(
+        self,
+    ) -> None:
+        """Task 138d-R2: 中文小时/分钟/秒倒计时读数统一换算为秒."""
+        content = "倒计时还在跳动。47小时21分03秒。"
+        settlement = StateSettlement(
+            numerical_updates=[
+                NumericalUpdate(
+                    character_id="artifact_mega_ruin",
+                    attribute_name="beacon_core_countdown",
+                    opening_value=170533.0,
+                    increments=[],
+                    decrements=[],
+                    closing_value=170463.0,
+                    formula="170533 + 0 = snapshot",
+                )
+            ]
+        )
+
+        errors = await _validate_settlement(settlement, content, [], [])
+
+        update = settlement.numerical_updates[0]
+        assert errors == []
+        assert update.opening_value == 170463.0
+        assert update.closing_value == 170463.0
+        assert update.increments == []
+        assert update.decrements == []
+        assert update.formula == "telemetry_snapshot: 170463.0"
+
+    async def test_countdown_reading_normalized_as_snapshot(self) -> None:
+        """Task 137: 倒计时读数按秒记录为快照，而不是要求编造增减台账."""
+        content = "装置表面浮现出一行倒计时数字——00:59:47，且数字开始跳动。"
+        settlement = StateSettlement(
+            numerical_updates=[
+                NumericalUpdate(
+                    character_id="lin_shen",
+                    attribute_name="义肢倒计时",
+                    opening_value=3600.0,
+                    increments=[],
+                    decrements=[
+                        {
+                            "amount": 1.0,
+                            "usage": "倒计时跳动",
+                            "source_quote": "倒计时数字——00:59:47",
+                        }
+                    ],
+                    closing_value=3587.0,
+                    formula="3600 - 1 = 3587",
+                )
+            ]
+        )
+
+        errors = await _validate_settlement(settlement, content, [], [])
+
+        update = settlement.numerical_updates[0]
+        assert errors == []
+        assert update.opening_value == 3587.0
+        assert update.closing_value == 3587.0
+        assert update.increments == []
+        assert update.decrements == []
+        assert update.formula == "telemetry_snapshot: 3587.0"
+
+    async def test_progress_percent_reading_normalized_as_snapshot(self) -> None:
+        """Task 137: 完成度百分比读数不应被编造成增减台账."""
+        content = "数据同步完成度稳定在 94.0%，备用链路没有继续推进。"
+        settlement = StateSettlement(
+            numerical_updates=[
+                NumericalUpdate(
+                    character_id="lin_shen",
+                    attribute_name="数据同步完成度",
+                    opening_value=0.0,
+                    increments=[],
+                    decrements=[],
+                    closing_value=94.0,
+                    formula="0 + 0 = 94%",
+                )
+            ]
+        )
+
+        errors = await _validate_settlement(settlement, content, [], [])
+
+        update = settlement.numerical_updates[0]
+        assert errors == []
+        assert update.opening_value == 94.0
+        assert update.closing_value == 94.0
+        assert update.increments == []
+        assert update.decrements == []
+        assert update.formula == "telemetry_snapshot: 94.0"
+
+    async def test_chinese_progress_reading_normalized_as_snapshot(self) -> None:
+        """Task 137: 中文百分比读数可作为 progress snapshot 证据."""
+        content = "同步进度已经抵达百分之九十四，界面只剩最后一道灰色校验线。"
+        settlement = StateSettlement(
+            numerical_updates=[
+                NumericalUpdate(
+                    character_id="lin_shen",
+                    attribute_name="同步进度",
+                    opening_value=0.0,
+                    increments=[],
+                    decrements=[],
+                    closing_value=94.0,
+                    formula="0 + 0 = 94",
+                )
+            ]
+        )
+
+        errors = await _validate_settlement(settlement, content, [], [])
+
+        update = settlement.numerical_updates[0]
+        assert errors == []
+        assert update.opening_value == 94.0
+        assert update.closing_value == 94.0
+        assert update.increments == []
+        assert update.decrements == []
+        assert update.formula == "telemetry_snapshot: 94.0"
+
+    @pytest.mark.parametrize(
+        ("attribute_name", "content", "source_quote", "closing_value"),
+        [
+            ("舱壁文字数量", "舱壁文字数量稳定在 128，剩余笔画不再重排。", "", 128.0),
+            ("破译文字数量", "林深确认破译文字数量达到七十二，语义链开始闭合。", "", 72.0),
+            ("自毁指令脉冲数", "", "自毁指令脉冲数为七，随后进入静默。", 7.0),
+            ("新组织生长速度", "新组织生长速度达到 2.4，创面边缘出现银色纤维。", "", 2.4),
+        ],
+    )
+    async def test_ch11_specific_telemetry_readings_normalized_as_snapshot(
+        self,
+        attribute_name: str,
+        content: str,
+        source_quote: str,
+        closing_value: float,
+    ) -> None:
+        """Task 3R.3: 仅 Ch11 明确读数类属性可作为 telemetry snapshot."""
+        settlement = StateSettlement(
+            numerical_updates=[
+                NumericalUpdate(
+                    character_id="char_001",
+                    attribute_name=attribute_name,
+                    opening_value=0.0,
+                    increments=[
+                        {
+                            "amount": 1.0,
+                            "source": "读数变化",
+                            "source_quote": source_quote,
+                        }
+                    ],
+                    decrements=[],
+                    closing_value=closing_value,
+                    formula="0 + 1 = snapshot",
+                )
+            ]
+        )
+
+        errors = await _validate_settlement(settlement, content, [], [])
+
+        update = settlement.numerical_updates[0]
+        assert errors == []
+        assert update.opening_value == closing_value
+        assert update.closing_value == closing_value
+        assert update.increments == []
+        assert update.decrements == []
+        assert update.formula == f"telemetry_snapshot: {closing_value}"
+
+    @pytest.mark.parametrize(
+        ("attribute_name", "content", "source_quote", "closing_value"),
+        [
+            ("heart_rate", "林深腕上的心率读数稳定在 142，警报还没解除。", "", 142.0),
+            (
+                "oxygen_concentration",
+                "氧气浓度降到 18.5%，面罩内侧凝出一层雾。",
+                "",
+                18.5,
+            ),
+            (
+                "chamber_pressure",
+                "",
+                "舱压维持在 0.74 个标准大气压，密封环没有继续泄漏。",
+                0.74,
+            ),
+            (
+                "emp_countdown",
+                "EMP倒计时剩余 73 秒，蓝色电弧开始沿舱壁爬行。",
+                "",
+                73.0,
+            ),
+        ],
+    )
+    async def test_task3s_telemetry_readings_normalized_as_snapshot(
+        self,
+        attribute_name: str,
+        content: str,
+        source_quote: str,
+        closing_value: float,
+    ) -> None:
+        """Task 3S.3: run-9e54a36d Ch11 遥测读数可规整为 snapshot."""
+        settlement = StateSettlement(
+            numerical_updates=[
+                NumericalUpdate(
+                    character_id="char_001",
+                    attribute_name=attribute_name,
+                    opening_value=0.0,
+                    increments=[
+                        {
+                            "amount": 1.0,
+                            "source": "遥测读数",
+                            "source_quote": source_quote,
+                        }
+                    ],
+                    decrements=[],
+                    closing_value=closing_value,
+                    formula="0 + 1 = snapshot",
+                )
+            ]
+        )
+
+        errors = await _validate_settlement(settlement, content, [], [])
+
+        update = settlement.numerical_updates[0]
+        assert errors == []
+        assert update.opening_value == closing_value
+        assert update.closing_value == closing_value
+        assert update.increments == []
+        assert update.decrements == []
+        assert update.formula == f"telemetry_snapshot: {closing_value}"
+
+    @pytest.mark.parametrize(
+        ("attribute_name", "content", "source_quote", "closing_value"),
+        [
+            ("sensor_frequency", "传感器频率稳定在 17.5 赫兹，墙内回声不再漂移。", "", 17.5),
+            ("calibration_ratio", "校准比例被锁定在 0.83，误差线随即收束。", "", 0.83),
+            (
+                "phase_offset",
+                "",
+                "相位偏移读数停在 -0.25，舱壁纹路停止抖动。",
+                -0.25,
+            ),
+        ],
+    )
+    async def test_task3t_generic_telemetry_readings_normalized_as_snapshot(
+        self,
+        attribute_name: str,
+        content: str,
+        source_quote: str,
+        closing_value: float,
+    ) -> None:
+        """Task 3T.3: frequency/ratio/phase_offset 读数可规整为 snapshot."""
+        settlement = StateSettlement(
+            numerical_updates=[
+                NumericalUpdate(
+                    character_id="char_001",
+                    attribute_name=attribute_name,
+                    opening_value=0.0,
+                    increments=[
+                        {
+                            "amount": 1.0,
+                            "source": "遥测读数",
+                            "source_quote": source_quote,
+                        }
+                    ],
+                    decrements=[],
+                    closing_value=closing_value,
+                    formula="0 + 1 = snapshot",
+                )
+            ]
+        )
+
+        errors = await _validate_settlement(settlement, content, [], [])
+
+        update = settlement.numerical_updates[0]
+        assert errors == []
+        assert update.opening_value == closing_value
+        assert update.closing_value == closing_value
+        assert update.increments == []
+        assert update.decrements == []
+        assert update.formula == f"telemetry_snapshot: {closing_value}"
+
+    @pytest.mark.parametrize(
+        ("attribute_name", "content", "source_quote", "closing_value"),
+        [
+            (
+                "laser_cutter_activation_time",
+                "laser_cutter_activation_time=0.8 秒，刀头随即完成预热。",
+                "",
+                0.8,
+            ),
+            (
+                "laser_cutter_activation_time",
+                "",
+                "激光切割器激活时间为 0.8 秒，控制台亮起绿色确认灯。",
+                0.8,
+            ),
+            ("cooling_duration", "冷却耗时稳定在 12 秒，霜线不再蔓延。", "", 12.0),
+            ("时间读数", "时间读数停在 3.5 秒，舱门锁芯终于松开。", "", 3.5),
+        ],
+    )
+    async def test_task4b_time_telemetry_readings_normalized_as_snapshot(
+        self,
+        attribute_name: str,
+        content: str,
+        source_quote: str,
+        closing_value: float,
+    ) -> None:
+        """Task 4B.3: 明确时间/耗时/激活时间读数可规整为 snapshot."""
+        settlement = StateSettlement(
+            numerical_updates=[
+                NumericalUpdate(
+                    character_id="char_001",
+                    attribute_name=attribute_name,
+                    opening_value=0.0,
+                    increments=[
+                        {
+                            "amount": 1.0,
+                            "source": "遥测读数",
+                            "source_quote": source_quote,
+                        }
+                    ],
+                    decrements=[],
+                    closing_value=closing_value,
+                    formula="0 + 1 = snapshot",
+                )
+            ]
+        )
+
+        errors = await _validate_settlement(settlement, content, [], [])
+
+        update = settlement.numerical_updates[0]
+        assert errors == []
+        assert update.opening_value == closing_value
+        assert update.closing_value == closing_value
+        assert update.increments == []
+        assert update.decrements == []
+        assert update.formula == f"telemetry_snapshot: {closing_value}"
+
+    async def test_task4b_time_formula_text_is_filtered_without_evidence(self) -> None:
+        """Task 138f: formula 自证的时间读数被过滤，不阻断结算."""
+        settlement = StateSettlement(
+            numerical_updates=[
+                NumericalUpdate(
+                    character_id="char_001",
+                    attribute_name="laser_cutter_activation_time",
+                    opening_value=0.0,
+                    increments=[],
+                    decrements=[],
+                    closing_value=0.8,
+                    formula="laser_cutter_activation_time telemetry_snapshot: 0.8",
+                )
+            ]
+        )
+
+        errors = await _validate_settlement(
+            settlement,
+            "切割器完成激活，但正文没有给出具体激活时间读数。",
+            [],
+            [],
+        )
+
+        assert errors == []
+        assert settlement.numerical_updates == []
+
+    @pytest.mark.parametrize(
+        ("attribute_name", "content", "source_quote", "closing_value"),
+        [
+            (
+                "core_chamber_door_gap",
+                "core_chamber_door_gap=2.5 厘米，门轴随即停止颤动。",
+                "",
+                2.5,
+            ),
+            (
+                "core_chamber_door_gap",
+                "",
+                "核心舱门缝读数稳定在 1.2 厘米，锁舌没有继续回弹。",
+                1.2,
+            ),
+            ("密封间隙", "密封间隙只剩 0.4 毫米，冷雾被挡在外侧。", "", 0.4),
+            ("conversion_countdown", "conversion_countdown 已经归零，红色倒计时熄灭。", "", 0.0),
+            ("conversion_countdown", "", "倒计时清零，转换舱的警报随之中止。", 0.0),
+        ],
+    )
+    async def test_task4c_gap_and_zero_countdown_normalized_as_snapshot(
+        self,
+        attribute_name: str,
+        content: str,
+        source_quote: str,
+        closing_value: float,
+    ) -> None:
+        """Task 4C.3: 门缝/间隙与倒计时归零读数可规整为 snapshot."""
+        settlement = StateSettlement(
+            numerical_updates=[
+                NumericalUpdate(
+                    character_id="char_001",
+                    attribute_name=attribute_name,
+                    opening_value=10.0,
+                    increments=[],
+                    decrements=[
+                        {
+                            "amount": 1.0,
+                            "usage": "遥测变化",
+                            "source_quote": source_quote,
+                        }
+                    ],
+                    closing_value=closing_value,
+                    formula="10 - 1 = snapshot",
+                )
+            ]
+        )
+
+        errors = await _validate_settlement(settlement, content, [], [])
+
+        update = settlement.numerical_updates[0]
+        assert errors == []
+        assert update.opening_value == closing_value
+        assert update.closing_value == closing_value
+        assert update.increments == []
+        assert update.decrements == []
+        assert update.formula == f"telemetry_snapshot: {closing_value}"
+
+    async def test_task4c_formula_text_is_filtered_without_evidence(self) -> None:
+        """Task 138f: gap/countdown 无正文读数证据时被过滤."""
+        settlement = StateSettlement(
+            numerical_updates=[
+                NumericalUpdate(
+                    character_id="char_001",
+                    attribute_name="core_chamber_door_gap",
+                    opening_value=10.0,
+                    increments=[],
+                    decrements=[],
+                    closing_value=1.2,
+                    formula="core_chamber_door_gap telemetry_snapshot: 1.2",
+                ),
+                NumericalUpdate(
+                    character_id="char_001",
+                    attribute_name="conversion_countdown",
+                    opening_value=10.0,
+                    increments=[],
+                    decrements=[],
+                    closing_value=0.0,
+                    formula="conversion_countdown telemetry_snapshot: 0",
+                ),
+            ]
+        )
+
+        errors = await _validate_settlement(
+            settlement,
+            "核心舱门仍在闭合，转换倒计时也已经停止，但正文没有给出具体读数。",
+            [],
+            [],
+        )
+
+        assert errors == []
+        assert settlement.numerical_updates == []
+
+    async def test_task3t_generic_telemetry_without_evidence_is_filtered(self) -> None:
+        """Task 138f: 读数类字段没有正文/source_quote 证据时不进入有效结算."""
+        settlement = StateSettlement(
+            numerical_updates=[
+                NumericalUpdate(
+                    character_id="char_001",
+                    attribute_name="phase_offset",
+                    opening_value=0.0,
+                    increments=[],
+                    decrements=[],
+                    closing_value=-0.25,
+                    formula="phase_offset telemetry_snapshot: -0.25",
+                )
+            ]
+        )
+
+        errors = await _validate_settlement(
+            settlement,
+            "相位仍在偏移，但正文没有给出具体相位偏移读数。",
+            [],
+            [],
+        )
+
+        assert errors == []
+        assert settlement.numerical_updates == []
+
+    async def test_task3s_formula_text_is_filtered_without_evidence(self) -> None:
+        """Task 138f: formula 自身不能作为读数证据，候选被过滤."""
+        settlement = StateSettlement(
+            numerical_updates=[
+                NumericalUpdate(
+                    character_id="char_001",
+                    attribute_name="heart_rate",
+                    opening_value=0.0,
+                    increments=[],
+                    decrements=[],
+                    closing_value=142.0,
+                    formula="heart_rate telemetry_snapshot: 142",
+                )
+            ]
+        )
+
+        errors = await _validate_settlement(
+            settlement,
+            "林深的心跳明显加快，但正文没有给出具体心率读数。",
+            [],
+            [],
+        )
+
+        assert errors == []
+        assert settlement.numerical_updates == []
+
+    async def test_specific_telemetry_without_reading_evidence_is_filtered(self) -> None:
+        """Task 138f: 白名单属性也必须有正文或 source_quote 明确读数."""
+        content = "舱壁文字继续重排，林深看见破译结果正在逼近完整。"
+        settlement = StateSettlement(
+            numerical_updates=[
+                NumericalUpdate(
+                    character_id="char_001",
+                    attribute_name="舱壁文字数量",
+                    opening_value=0.0,
+                    increments=[],
+                    decrements=[],
+                    closing_value=128.0,
+                    formula="0 + 0 = 128",
+                )
+            ]
+        )
+
+        errors = await _validate_settlement(settlement, content, [], [])
+
+        assert errors == []
+        assert settlement.numerical_updates == []
+
+    async def test_generic_quantity_still_requires_real_ledger_formula(self) -> None:
+        """Task 3R.3: 不能把所有“数量”类属性静默当作 snapshot."""
+        content = "物资数量为 7，清点记录仍显示只有一次补给入库。"
+        settlement = StateSettlement(
+            numerical_updates=[
+                NumericalUpdate(
+                    character_id="char_001",
+                    attribute_name="物资数量",
+                    opening_value=3.0,
+                    increments=[
+                        {
+                            "amount": 1.0,
+                            "source": "补给入库",
+                            "source_quote": "清点记录仍显示只有一次补给入库",
+                        }
+                    ],
+                    decrements=[],
+                    closing_value=7.0,
+                    formula="3 + 1 = 7",
+                )
+            ]
+        )
+
+        errors = await _validate_settlement(settlement, content, [], [])
+
+        assert len(errors) == 1
+        assert "closing_value" in errors[0]
+
+    async def test_task3t_real_ledger_formula_error_still_fails(self) -> None:
+        """Task 3T.3: 真实数量台账不能借 snapshot 规则绕过公式硬校验."""
+        content = "灵石数量为 7，清点记录只显示一次补给入库。"
+        settlement = StateSettlement(
+            numerical_updates=[
+                NumericalUpdate(
+                    character_id="char_001",
+                    attribute_name="灵石数量",
+                    opening_value=3.0,
+                    increments=[
+                        {
+                            "amount": 1.0,
+                            "source": "补给入库",
+                            "source_quote": "清点记录只显示一次补给入库",
+                        }
+                    ],
+                    decrements=[],
+                    closing_value=7.0,
+                    formula="3 + 1 = 7",
+                )
+            ]
+        )
+
+        errors = await _validate_settlement(settlement, content, [], [])
+
+        assert len(errors) == 1
+        assert "closing_value" in errors[0]
+
+    async def test_unevidenced_telemetry_formula_is_filtered(self) -> None:
+        """Task 138f: 没有正文读数证据时，不写入有效 telemetry 数值."""
+        content = "义肢过热，但正文没有给出具体读数。"
+        settlement = StateSettlement(
+            numerical_updates=[
+                NumericalUpdate(
+                    character_id="lin_shen",
+                    attribute_name="义肢温度",
+                    opening_value=37.0,
+                    increments=[],
+                    decrements=[],
+                    closing_value=47.0,
+                )
+            ]
+        )
+
+        errors = await _validate_settlement(settlement, content, [], [])
+
+        assert errors == []
+        assert settlement.numerical_updates == []
+
+    async def test_unevidenced_progress_formula_is_filtered(self) -> None:
+        """Task 138f: 完成度没有读数证据时，过滤无证据 numerical_update."""
+        content = "数据同步仍在进行，但正文没有给出完成度读数。"
+        settlement = StateSettlement(
+            numerical_updates=[
+                NumericalUpdate(
+                    character_id="lin_shen",
+                    attribute_name="数据同步完成度",
+                    opening_value=0.0,
+                    increments=[],
+                    decrements=[],
+                    closing_value=94.0,
+                    formula="0 + 0 = 94",
+                )
+            ]
+        )
+
+        errors = await _validate_settlement(settlement, content, [], [])
+
+        assert errors == []
+        assert settlement.numerical_updates == []
+
+    async def test_task138f_consciousness_upload_progress_without_reading_is_filtered(
+        self,
+    ) -> None:
+        """Task 138f: `run-9f87da6f` 类概念性进度条不能生成有效数值."""
+        content = (
+            "舱壁上的文字开始显示进度条。不是数字，而是图形——一个圆环正在缓慢地填满，"
+            "从底部开始，顺时针旋转。现在已经填满了大约三分之一。"
+        )
+        settlement = StateSettlement(
+            numerical_updates=[
+                NumericalUpdate(
+                    character_id="lin_shen",
+                    attribute_name="consciousness_upload_progress",
+                    opening_value=0.0,
+                    increments=[{"amount": 33.3, "source": "图形进度", "source_quote": ""}],
+                    decrements=[],
+                    closing_value=60.0,
+                    formula="0 + 33.3 = 60.0",
+                )
+            ]
+        )
+
+        errors = await _validate_settlement(settlement, content, [], [])
+
+        assert errors == []
+        assert settlement.numerical_updates == []
+
+    async def test_task138f_consciousness_upload_progress_with_reading_snapshot(
+        self,
+    ) -> None:
+        """Task 138f: 有明确百分比读数时，意识上传进度可规整为 snapshot."""
+        content = "舱壁显示意识上传进度达到 60%，红色圆环随即停住。"
+        settlement = StateSettlement(
+            numerical_updates=[
+                NumericalUpdate(
+                    character_id="lin_shen",
+                    attribute_name="consciousness_upload_progress",
+                    opening_value=0.0,
+                    increments=[{"amount": 33.3, "source": "图形进度", "source_quote": ""}],
+                    decrements=[],
+                    closing_value=60.0,
+                    formula="0 + 33.3 = 60.0",
+                )
+            ]
+        )
+
+        errors = await _validate_settlement(settlement, content, [], [])
+
+        update = settlement.numerical_updates[0]
+        assert errors == []
+        assert update.opening_value == 60.0
+        assert update.closing_value == 60.0
+        assert update.increments == []
+        assert update.decrements == []
+        assert update.formula == "telemetry_snapshot: 60.0"
+
+    @pytest.mark.parametrize(
+        ("attribute_name", "content", "closing_value"),
+        [
+            (
+                "left_leg_prosthetic_temperature",
+                "左腿义肢的温度继续下降。52.0，51.3，50.6。",
+                50.6,
+            ),
+            ("neural_pattern_match_rate", "系统显示匹配度：68.1%。", 68.1),
+            ("beacon_core_countdown", "倒计时还在跳动。47小时21分03秒。", 170463.0),
+        ],
+    )
+    async def test_task138f_replay_known_evidenced_telemetry_blockers(
+        self,
+        attribute_name: str,
+        content: str,
+        closing_value: float,
+    ) -> None:
+        """Task 138f replay/eval: 既有有证据 telemetry 阻断样本仍可通过."""
+        settlement = StateSettlement(
+            numerical_updates=[
+                NumericalUpdate(
+                    character_id="lin_shen",
+                    attribute_name=attribute_name,
+                    opening_value=0.0,
+                    increments=[],
+                    decrements=[],
+                    closing_value=closing_value,
+                    formula="0 + 0 = wrong",
+                )
+            ]
+        )
+
+        errors = await _validate_settlement(settlement, content, [], [])
+
+        assert errors == []
+        assert settlement.numerical_updates[0].closing_value == closing_value
+        assert settlement.numerical_updates[0].formula == (
+            f"telemetry_snapshot: {closing_value}"
+        )
 
     async def test_foreshadowing_empty_version_id(self) -> None:
         content = "正文"

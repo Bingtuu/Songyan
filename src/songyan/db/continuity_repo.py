@@ -27,6 +27,11 @@ logger = structlog.get_logger(__name__)
 class SettingTrackingRepository:
     """Repository for setting lifecycle tracking."""
 
+    LONG_SILENT_ARCHIVE_WINDOWS: dict[str, int] = {
+        "background": 8,
+        "technical": 10,
+    }
+
     async def create(
         self,
         tracking_id: str,
@@ -122,6 +127,123 @@ class SettingTrackingRepository:
                 await c.commit()
         else:
             await _do(conn)
+
+    async def archive_long_silent_nonessential(
+        self,
+        project_id: str,
+        current_chapter: int,
+        conn: aiosqlite.Connection | None = None,
+    ) -> int:
+        """Archive long-silent background/technical settings before orphan scoring.
+
+        Critical and recurring settings are intentionally excluded. High-priority
+        human-marked settings and explicit recovery-required rows also stay active.
+        """
+        clauses: list[str] = []
+        params: list[Any] = [project_id]
+        for category, window in self.LONG_SILENT_ARCHIVE_WINDOWS.items():
+            clauses.append("(category = ? AND last_mentioned_chapter < ?)")
+            params.extend([category, current_chapter - window])
+        if not clauses:
+            return 0
+
+        category_clause = " OR ".join(clauses)
+
+        async def _do(c: aiosqlite.Connection) -> int:
+            cursor = await c.execute(
+                f"""UPDATE setting_tracking
+                SET status = 'archived'
+                WHERE project_id = ?
+                  AND status = 'active'
+                  AND recovery_required = 0
+                  AND ({category_clause})
+                  AND setting_key NOT IN (
+                      SELECT target_key FROM human_marks
+                      WHERE project_id = ?
+                        AND mark_type = 'setting'
+                        AND lifecycle_status = 'active'
+                        AND resolved_at IS NULL
+                        AND (
+                            source != 'continuity_auditor'
+                            OR created_at_chapter IS NULL
+                            OR created_at_chapter < ?
+                        )
+                  )""",
+                (*params, project_id, current_chapter),
+            )
+            await c.execute(
+                f"""UPDATE setting_snapshots
+                SET lifecycle_status = 'archived'
+                WHERE project_id = ?
+                  AND lifecycle_status IN ('active', 'dormant')
+                  AND setting_key IN (
+                      SELECT setting_key FROM setting_tracking
+                      WHERE project_id = ?
+                        AND status = 'archived'
+                        AND ({category_clause})
+                  )""",
+                (project_id, project_id, *params[1:]),
+            )
+            return cursor.rowcount
+
+        if conn is None:
+            async with get_db() as c:
+                archived = await _do(c)
+                await c.commit()
+        else:
+            archived = await _do(conn)
+        if archived > 0:
+            logger.info(
+                "repository.write",
+                table="setting_tracking",
+                operation="archive_long_silent_nonessential",
+                project_id=project_id,
+                current_chapter=current_chapter,
+                archived_count=archived,
+            )
+        return archived
+
+    async def active_setting_mark_keys(
+        self,
+        project_id: str,
+        conn: aiosqlite.Connection | None = None,
+        *,
+        current_chapter: int | None = None,
+    ) -> set[str]:
+        """Return active unresolved setting human-mark targets for a project.
+
+        ContinuityAuditor marks created for the same chapter are diagnostics for
+        the current report; they should not become a permanent orphan exemption.
+        """
+
+        async def _do(c: aiosqlite.Connection) -> set[str]:
+            chapter_clause = ""
+            params: list[Any] = [project_id]
+            if current_chapter is not None:
+                chapter_clause = """AND (
+                    source != 'continuity_auditor'
+                    OR created_at_chapter IS NULL
+                    OR created_at_chapter < ?
+                )"""
+                params.append(current_chapter)
+            cursor = await c.execute(
+                f"""SELECT DISTINCT target_key FROM human_marks
+                WHERE project_id = ?
+                  AND mark_type = 'setting'
+                  AND lifecycle_status = 'active'
+                  AND resolved_at IS NULL
+                  AND target_key IS NOT NULL
+                  AND target_key != ''
+                  {chapter_clause}""",
+                params,
+            )
+            rows = await cursor.fetchall()
+            return {str(row[0]) for row in rows if row[0]}
+
+        if conn is None:
+            async with get_db() as c:
+                return await _do(c)
+        return await _do(conn)
 
     async def find_orphaned(
         self,

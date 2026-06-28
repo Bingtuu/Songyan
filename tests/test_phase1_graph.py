@@ -970,6 +970,9 @@ class TestSettlementExtractorNode:
 
         assert result["status"] == "settlement_review"
         assert result["_settlement_needs_human_review"] is True
+        assert result["_settlement_version_id"] == "v-invalid"
+        assert result["_settlement_validation_status"] == "needs_human_review"
+        assert result["_settlement_validation_errors"] == ["bad quote"]
         assert result["settlement_id"] is None
         assert result["summary_id"] is None
         mock_accept.assert_not_called()

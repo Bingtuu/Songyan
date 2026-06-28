@@ -87,6 +87,9 @@ class Phase1State(TypedDict):
     _new_issues_introduced: list[dict] | None
     _new_issues_version_id: str | None
     _settlement_needs_human_review: bool
+    _settlement_version_id: str | None
+    _settlement_validation_status: str | None
+    _settlement_validation_errors: list[str]
     # 073: 截断重写标记
     _was_rewritten: bool
     _rewrite_reason: str | None
@@ -379,6 +382,9 @@ async def run_chapter_pipeline(
         "_new_issues_introduced": None,
         "_new_issues_version_id": None,
         "_settlement_needs_human_review": False,
+        "_settlement_version_id": None,
+        "_settlement_validation_status": None,
+        "_settlement_validation_errors": [],
         "_was_rewritten": False,
         "_rewrite_reason": None,
         "_budget_was_enforced": False,

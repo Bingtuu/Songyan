@@ -48,6 +48,8 @@ MAX_PROMPT_CHARACTER_STATES = 40
 MAX_PROMPT_SETTINGS = 40
 MAX_PROMPT_FORESHADOWINGS = 30
 FORESHADOWING_DUE_WINDOW = 5
+_NO_NUMERICAL_VALUE_MARKERS = {"", "无", "none", "null", "n/a", "na", "未知", "不明"}
+_INVALID_CLOSING_VALUE = float("inf")
 
 
 def _load_prompt_template() -> str:
@@ -438,6 +440,18 @@ def _build_decrement(data: dict[str, Any]) -> Any:
     )
 
 
+def _coerce_numerical_value(value: Any, fallback: float) -> float:
+    """Normalize empty LLM numerical fields without bypassing validation."""
+    if value is None:
+        return fallback
+    if isinstance(value, str) and value.strip().lower() in _NO_NUMERICAL_VALUE_MARKERS:
+        return fallback
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return fallback
+
+
 def _build_numerical_update(data: dict[str, Any]) -> NumericalUpdate | None:
     """从字典构建 NumericalUpdate."""
     if not isinstance(data, dict):
@@ -465,10 +479,13 @@ def _build_numerical_update(data: dict[str, Any]) -> NumericalUpdate | None:
     return NumericalUpdate(
         character_id=character_id,
         attribute_name=attribute_name,
-        opening_value=float(data.get("opening_value", 0.0)),
+        opening_value=_coerce_numerical_value(data.get("opening_value"), 0.0),
         increments=increments,
         decrements=decrements,
-        closing_value=float(data.get("closing_value", 0.0)),
+        closing_value=_coerce_numerical_value(
+            data.get("closing_value"),
+            _INVALID_CLOSING_VALUE,
+        ),
         formula=str(data.get("formula", "")),
     )
 

@@ -37,6 +37,12 @@ async def _find_orphaned_settings(
     setting_repo: SettingTrackingRepository,
 ) -> list[OrphanedSetting]:
     """按类别阈值找出 last_mentioned_chapter 距离当前过远的 setting."""
+    get_human_marked_keys = getattr(setting_repo, "active_setting_mark_keys", None)
+    human_marked_keys = (
+        await get_human_marked_keys(project_id, current_chapter=up_to_chapter)
+        if get_human_marked_keys is not None
+        else set()
+    )
     rows: list[dict] = []
     for category, threshold in ORPHANED_THRESHOLDS.items():
         rows.extend(
@@ -47,6 +53,14 @@ async def _find_orphaned_settings(
                 categories=[category],
             )
         )
+    rows = [
+        r
+        for r in rows
+        if not (
+            r.get("category") not in {"critical", "recurring"}
+            and r.get("setting_key") in human_marked_keys
+        )
+    ]
     return [
         OrphanedSetting(
             tracking_id=r["tracking_id"],

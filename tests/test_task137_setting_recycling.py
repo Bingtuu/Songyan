@@ -6,6 +6,7 @@ from typing import Any
 
 import pytest
 
+from songyan.agents.continuity_auditor import ContinuityAuditor
 from songyan.agents.creative_director import _load_active_settings_to_recycle
 from songyan.agents.setting_evaporator import _calculate_resolve_confidence
 from songyan.agents.settlement_extractor._apply import (
@@ -48,6 +49,229 @@ class TestDetectSettingReferences:
         ]
         refs = _detect_setting_references("天剑宗弟子正在巡逻。", settings)
         assert refs == {}
+
+    def test_allows_chinese_grammar_boundary_after_term(self) -> None:
+        """Task 137: 术语后接“的”等语法边界时应刷新 last_mentioned."""
+        settings = [
+            {
+                "tracking_id": "t1",
+                "setting_key": "technology.quantum.entanglement_relay_communication",
+                "setting_name": "量子纠缠中继通信",
+                "status": "active",
+            }
+        ]
+
+        refs = _detect_setting_references(
+            "基频波形呈现标准的量子纠缠中继通信的相位偏移模式。",
+            settings,
+        )
+
+        assert refs == {
+            "t1": "technology.quantum.entanglement_relay_communication"
+        }
+
+    def test_matches_split_setting_name_aliases(self) -> None:
+        """Task 137: 复合 setting_name 可由名称片段命中."""
+        settings = [
+            {
+                "tracking_id": "t1",
+                "setting_key": "organization.expedition.team_7",
+                "setting_name": "第7远征队·静默节点",
+                "status": "active",
+            },
+            {
+                "tracking_id": "t2",
+                "setting_key": "artifact.ruin.fibonacci_time_loop",
+                "setting_name": "斐波那契周期循环（时间闭环）",
+                "status": "active",
+            },
+        ]
+
+        refs = _detect_setting_references(
+            "第7远征队在时间闭环中死亡七次。",
+            settings,
+        )
+
+        assert refs == {
+            "t1": "organization.expedition.team_7",
+            "t2": "artifact.ruin.fibonacci_time_loop",
+        }
+
+    def test_matches_e7_phase_channel_equivalent_codes(self) -> None:
+        """Task 4A.3: E-7 通道相位节点支持 E-7-θ 编号刷新."""
+        settings = [
+            {
+                "tracking_id": "t1",
+                "setting_key": "ruin.e7.phase_channel_node",
+                "setting_name": "E-7通道相位节点",
+                "description": "相位节点位于E-7维护通道。",
+                "status": "active",
+            }
+        ]
+
+        refs = _detect_setting_references(
+            "林凡把探针接入E-7-θ编号，墙上的相位噪声立刻回落。",
+            settings,
+        )
+
+        assert refs == {"t1": "ruin.e7.phase_channel_node"}
+
+    def test_matches_topology_and_self_repair_equivalent_terms(self) -> None:
+        """Task 4A.3: 空间/相位拓扑、墙壁/材料自修复等价刷新."""
+        settings = [
+            {
+                "tracking_id": "t1",
+                "setting_key": "ruin.topology.space_phase",
+                "setting_name": "空间/相位拓扑",
+                "description": "遗迹空间拓扑与相位拓扑同步偏移。",
+                "status": "active",
+            },
+            {
+                "tracking_id": "t2",
+                "setting_key": "ruin.material.wall_self_repair",
+                "setting_name": "墙壁/材料自修复",
+                "description": "墙壁材料会在受损后自修复。",
+                "status": "active",
+            },
+        ]
+
+        refs = _detect_setting_references(
+            "相位拓扑重新闭合，材料自修复也沿着裂缝开始回填。",
+            settings,
+        )
+
+        assert refs == {
+            "t1": "ruin.topology.space_phase",
+            "t2": "ruin.material.wall_self_repair",
+        }
+
+    def test_matches_chinese_seventh_expedition_alias(self) -> None:
+        """Task 4A.3: 第7远征队与第七远征队视为等价提及."""
+        settings = [
+            {
+                "tracking_id": "t1",
+                "setting_key": "organization.expedition.team_7",
+                "setting_name": "第7远征队·静默节点",
+                "status": "active",
+            }
+        ]
+
+        refs = _detect_setting_references("第七远征队的残留编号再次亮起。", settings)
+
+        assert refs == {"t1": "organization.expedition.team_7"}
+
+    def test_matches_task138c_canonical_alias_clusters(self) -> None:
+        """Task 138c: 覆盖 Ch12 剩余 orphan 的窄同簇表达."""
+        settings = [
+            {
+                "tracking_id": "t1",
+                "setting_key": "artifact.mega_ruin.surface_material",
+                "setting_name": "巨型遗迹表面材料特性",
+                "description": "巨型遗迹表面的非欧几何合金。",
+                "status": "active",
+            },
+            {
+                "tracking_id": "t2",
+                "setting_key": "location.perseus.arm_mega_ruin",
+                "setting_name": "英仙臂外侧巨型遗迹",
+                "description": "英仙臂外侧的巨型遗迹。",
+                "status": "active",
+            },
+            {
+                "tracking_id": "t3",
+                "setting_key": "signal.fibonacci.frequency_hopping_sequence",
+                "setting_name": "斐波那契频率跳变序列",
+                "description": "斐波那契序列频率激活。",
+                "status": "active",
+            },
+            {
+                "tracking_id": "t4",
+                "setting_key": "artifact.ruin.nonlocal_spacetime_marking",
+                "setting_name": "非本地时空标记系统",
+                "description": "遗迹系统的非本地时空标记。",
+                "status": "active",
+            },
+            {
+                "tracking_id": "t5",
+                "setting_key": "artifact.mega_ruin.wall_living_properties",
+                "setting_name": "遗迹墙壁活体特性",
+                "description": "墙壁上的能量纹路会响应意识。",
+                "status": "active",
+            },
+        ]
+
+        refs = _detect_setting_references(
+            "英仙臂外侧的巨型遗迹外层散出非欧几何合金碎片的气味。"
+            "墙壁上的能量纹路开始闪烁，斐波那契序列频率重新激活。"
+            "林凡确认这是欺骗遗迹系统的时空标记系统。",
+            settings,
+        )
+
+        assert refs == {
+            "t1": "artifact.mega_ruin.surface_material",
+            "t2": "location.perseus.arm_mega_ruin",
+            "t3": "signal.fibonacci.frequency_hopping_sequence",
+            "t4": "artifact.ruin.nonlocal_spacetime_marking",
+            "t5": "artifact.mega_ruin.wall_living_properties",
+        }
+
+    def test_task138c_aliases_do_not_match_broad_words(self) -> None:
+        settings = [
+            {
+                "tracking_id": "t1",
+                "setting_key": "signal.fibonacci.frequency_hopping_sequence",
+                "setting_name": "斐波那契频率跳变序列",
+                "description": "斐波那契序列频率激活。",
+                "status": "active",
+            },
+            {
+                "tracking_id": "t2",
+                "setting_key": "artifact.mega_ruin.wall_living_properties",
+                "setting_name": "遗迹墙壁活体特性",
+                "description": "墙壁上的能量纹路会响应意识。",
+                "status": "active",
+            },
+            {
+                "tracking_id": "t3",
+                "setting_key": "location.perseus.arm_mega_ruin",
+                "setting_name": "英仙臂外侧巨型遗迹",
+                "description": "英仙臂外侧的巨型遗迹。",
+                "status": "active",
+            },
+            {
+                "tracking_id": "t4",
+                "setting_key": "artifact.mega_ruin.surface_material",
+                "setting_name": "巨型遗迹表面材料特性",
+                "description": "巨型遗迹表面的非欧几何合金碎片。",
+                "status": "active",
+            },
+        ]
+
+        refs = _detect_setting_references(
+            "频率正在变化。墙壁很冷。远方有人提起巨型遗迹传闻。"
+            "裸露的能量纹路并不能说明它的表面材料。",
+            settings,
+        )
+
+        assert refs == {}
+
+    def test_task138c_r2_surface_material_matches_only_narrow_aliases(self) -> None:
+        settings = [
+            {
+                "tracking_id": "t1",
+                "setting_key": "artifact.mega_ruin.surface_material",
+                "setting_name": "巨型遗迹表面材料特性",
+                "description": "巨型遗迹表面的非欧几何合金碎片。",
+                "status": "active",
+            }
+        ]
+
+        refs = _detect_setting_references(
+            "非欧几何合金碎片的纹理与巨型遗迹表面的能量纹路互相咬合。",
+            settings,
+        )
+
+        assert refs == {"t1": "artifact.mega_ruin.surface_material"}
 
     def test_empty_content_returns_empty(self) -> None:
         settings = [
@@ -228,6 +452,79 @@ class TestApplySettlementRecycling:
         tracking = await SettingTrackingRepository().list_by_project(project_id)
         assert tracking[0]["last_mentioned_chapter"] == 7
 
+    @pytest.mark.asyncio
+    async def test_duplicate_e7_phase_cluster_refreshes_existing_without_new_tracking(
+        self, test_db: Any
+    ) -> None:
+        """Task 4A.3: E-7 同簇新设定不新增 orphan，只刷新 canonical."""
+        project_id = "proj-e7-duplicate"
+        await ProjectRepository().create(
+            ProjectSetting(
+                title="e7 duplicate",
+                genre_id="sci_fi",
+                protagonist_name="林凡",
+            ),
+            project_id,
+        )
+        await CharacterRepository().create(
+            Character(
+                character_id="char-e7",
+                project_id=project_id,
+                name="林凡",
+                role_type="protagonist",
+            )
+        )
+        existing = NewSetting(
+            setting_name="E-7通道相位节点",
+            description="E-7维护通道里的相位节点。",
+            source_quote="E-7通道相位节点",
+            setting_key="ruin.e7.phase_channel_node",
+        )
+        await SettingSnapshotRepository().create(
+            existing, project_id, "set-e7-existing"
+        )
+        await SettingTrackingRepository().create(
+            tracking_id="track-e7-existing",
+            project_id=project_id,
+            setting_key="ruin.e7.phase_channel_node",
+            setting_name="E-7通道相位节点",
+            description="E-7维护通道里的相位节点。",
+            introduced_in_chapter=6,
+            source_version_id="v-e7-old",
+            category="technical",
+        )
+
+        settlement = StateSettlement(
+            new_settings=[
+                NewSetting(
+                    setting_name="E-7-θ通道相位节点",
+                    description="E-7-θ编号对应同一个通道相位节点。",
+                    source_quote="E-7-θ编号",
+                    setting_key="ruin.e7.theta_phase_node",
+                )
+            ]
+        )
+
+        async with get_db() as conn:
+            await apply_settlement(
+                settlement,
+                project_id,
+                chapter_number=12,
+                version_id="v-e7-new",
+                conn=conn,
+                content="林凡再次校准E-7-θ编号。",
+            )
+            await conn.commit()
+
+        tracking = await SettingTrackingRepository().list_by_project(project_id)
+        assert len(tracking) == 1
+        assert tracking[0]["setting_key"] == "ruin.e7.phase_channel_node"
+        assert tracking[0]["last_mentioned_chapter"] == 12
+
+        snapshots = await SettingSnapshotRepository().list_by_project(project_id)
+        assert len(snapshots) == 1
+        assert snapshots[0].setting_key == "ruin.e7.phase_channel_node"
+
 
 class TestSettingTrackingLifecycleSync:
     """测试 setting_tracking 与 setting_snapshots 生命周期同步."""
@@ -258,6 +555,44 @@ class TestSettingTrackingLifecycleSync:
             category="background",
         )
         return project_id
+
+    async def _add_setting(
+        self,
+        project_id: str,
+        *,
+        suffix: str,
+        category: str,
+        recovery_required: bool = False,
+    ) -> None:
+        key = f"{category}.{suffix}"
+        await SettingSnapshotRepository().create(
+            NewSetting(
+                setting_name=f"{category}-{suffix}",
+                description="长期沉寂设定",
+                source_quote=f"{category}-{suffix}",
+                setting_key=key,
+            ),
+            project_id,
+            f"set-{suffix}",
+        )
+        await SettingTrackingRepository().create(
+            tracking_id=f"track-{suffix}",
+            project_id=project_id,
+            setting_key=key,
+            setting_name=f"{category}-{suffix}",
+            description="长期沉寂设定",
+            introduced_in_chapter=1,
+            source_version_id="v-old",
+            category=category,
+        )
+        if recovery_required:
+            async with get_db() as conn:
+                await conn.execute(
+                    "UPDATE setting_tracking SET recovery_required = 1 "
+                    "WHERE tracking_id = ?",
+                    (f"track-{suffix}",),
+                )
+                await conn.commit()
 
     @pytest.mark.asyncio
     async def test_archive_stale_syncs_tracking_status(
@@ -305,6 +640,145 @@ class TestSettingTrackingLifecycleSync:
             )
             row = await cursor.fetchone()
             assert row[0] == "archived"
+
+    @pytest.mark.asyncio
+    async def test_archive_long_silent_nonessential_only_archives_background_and_technical(
+        self, sync_project: str
+    ) -> None:
+        project_id = sync_project
+        await self._add_setting(project_id, suffix="tech-old", category="technical")
+        await self._add_setting(project_id, suffix="critical-old", category="critical")
+        await self._add_setting(project_id, suffix="recurring-old", category="recurring")
+        await self._add_setting(
+            project_id,
+            suffix="background-required",
+            category="background",
+            recovery_required=True,
+        )
+        await HumanMarkRepository().create(
+            HumanMark(
+                mark_id="hm-protect-background",
+                project_id=project_id,
+                mark_type="setting",
+                target_key="background.protected",
+                source="human",
+                priority=5,
+            )
+        )
+        await self._add_setting(project_id, suffix="protected", category="background")
+        await HumanMarkRepository().create(
+            HumanMark(
+                mark_id="hm-old-diagnostic",
+                project_id=project_id,
+                mark_type="setting",
+                target_key="background.old-diagnostic",
+                source="continuity_auditor",
+                created_at_chapter=9,
+                priority=5,
+            )
+        )
+        await self._add_setting(project_id, suffix="old-diagnostic", category="background")
+        await HumanMarkRepository().create(
+            HumanMark(
+                mark_id="hm-current-diagnostic",
+                project_id=project_id,
+                mark_type="setting",
+                target_key="background.current-diagnostic",
+                source="continuity_auditor",
+                created_at_chapter=12,
+                priority=5,
+            )
+        )
+        await self._add_setting(
+            project_id, suffix="current-diagnostic", category="background"
+        )
+
+        archived = await SettingTrackingRepository().archive_long_silent_nonessential(
+            project_id, current_chapter=12
+        )
+
+        assert archived == 3
+        async with get_db() as conn:
+            cursor = await conn.execute(
+                "SELECT setting_key, status FROM setting_tracking "
+                "WHERE project_id = ? ORDER BY setting_key",
+                (project_id,),
+            )
+            statuses = dict(await cursor.fetchall())
+            assert statuses["xuanhuan.old_setting"] == "archived"
+            assert statuses["technical.tech-old"] == "archived"
+            assert statuses["critical.critical-old"] == "active"
+            assert statuses["recurring.recurring-old"] == "active"
+            assert statuses["background.background-required"] == "active"
+            assert statuses["background.protected"] == "active"
+            assert statuses["background.old-diagnostic"] == "active"
+            assert statuses["background.current-diagnostic"] == "archived"
+
+            cursor = await conn.execute(
+                "SELECT setting_key, lifecycle_status FROM setting_snapshots "
+                "WHERE project_id = ? ORDER BY setting_key",
+                (project_id,),
+            )
+            snapshot_statuses = dict(await cursor.fetchall())
+            assert snapshot_statuses["xuanhuan.old_setting"] == "archived"
+            assert snapshot_statuses["technical.tech-old"] == "archived"
+            assert snapshot_statuses["background.current-diagnostic"] == "archived"
+
+    @pytest.mark.asyncio
+    async def test_continuity_auditor_archives_long_silent_nonessential_before_orphan_scan(
+        self, sync_project: str
+    ) -> None:
+        project_id = sync_project
+        await self._add_setting(project_id, suffix="tech-old", category="technical")
+        await self._add_setting(project_id, suffix="critical-old", category="critical")
+        await self._add_setting(project_id, suffix="recurring-old", category="recurring")
+        await self._add_setting(project_id, suffix="human-held", category="background")
+        await self._add_setting(project_id, suffix="critical-marked", category="critical")
+        await HumanMarkRepository().create(
+            HumanMark(
+                mark_id="hm-held-background",
+                project_id=project_id,
+                mark_type="setting",
+                target_key="background.human-held",
+                source="human",
+                priority=5,
+            )
+        )
+        await HumanMarkRepository().create(
+            HumanMark(
+                mark_id="hm-critical-marked",
+                project_id=project_id,
+                mark_type="setting",
+                target_key="critical.critical-marked",
+                source="human",
+                priority=5,
+            )
+        )
+        await self._add_setting(
+            project_id, suffix="current-diagnostic", category="background"
+        )
+        await HumanMarkRepository().create(
+            HumanMark(
+                mark_id="hm-current-diagnostic",
+                project_id=project_id,
+                mark_type="setting",
+                target_key="background.current-diagnostic",
+                source="continuity_auditor",
+                created_at_chapter=12,
+                priority=5,
+            )
+        )
+
+        report = await ContinuityAuditor().audit(project_id, up_to_chapter=12)
+
+        orphaned_keys = {item.setting_key for item in report.orphaned_settings}
+        assert "xuanhuan.old_setting" not in orphaned_keys
+        assert "technical.tech-old" not in orphaned_keys
+        assert "background.human-held" not in orphaned_keys
+        assert "background.current-diagnostic" not in orphaned_keys
+        assert "critical.critical-old" in orphaned_keys
+        assert "critical.critical-marked" in orphaned_keys
+        assert "recurring.recurring-old" in orphaned_keys
 
 
 class TestSettingEvaporatorTimeDecay:
@@ -365,9 +839,16 @@ class TestCreativeDirectorRecycleFilter:
         async def mock_list(_pid: str) -> list[dict]:
             return rows
 
+        async def mock_marks(*_args: Any, **_kwargs: Any) -> list[HumanMark]:
+            return []
+
         monkeypatch.setattr(
             "songyan.agents.creative_director.SettingTrackingRepository.list_by_project",
             staticmethod(mock_list),  # type: ignore[arg-type]
+        )
+        monkeypatch.setattr(
+            "songyan.agents.creative_director.HumanMarkRepository.list_by_project",
+            staticmethod(mock_marks),  # type: ignore[arg-type]
         )
         result = await _load_active_settings_to_recycle("p1", 5, min_silent_chapters=2)
         keys = [r["setting_key"] for r in result]
@@ -375,3 +856,206 @@ class TestCreativeDirectorRecycleFilter:
         assert "just.mentioned" not in keys
         # 按 last_mentioned 升序，沉寂设定排在最前
         assert result[0]["setting_key"] == "silent.setting"
+
+    @pytest.mark.asyncio
+    async def test_load_recycle_prioritizes_critical_before_older_background(
+        self, monkeypatch: Any
+    ) -> None:
+        rows = [
+            {
+                "setting_key": "background.old",
+                "setting_name": "很旧背景",
+                "status": "active",
+                "category": "background",
+                "introduced_in_chapter": 1,
+                "last_mentioned_chapter": 1,
+            },
+            {
+                "setting_key": "critical.recent",
+                "setting_name": "较近关键设定",
+                "status": "active",
+                "category": "critical",
+                "introduced_in_chapter": 8,
+                "last_mentioned_chapter": 8,
+            },
+            {
+                "setting_key": "critical.older",
+                "setting_name": "更旧关键设定",
+                "status": "active",
+                "category": "critical",
+                "introduced_in_chapter": 6,
+                "last_mentioned_chapter": 6,
+            },
+        ]
+
+        async def mock_list(_pid: str) -> list[dict]:
+            return rows
+
+        async def mock_marks(*_args: Any, **_kwargs: Any) -> list[HumanMark]:
+            return []
+
+        monkeypatch.setattr(
+            "songyan.agents.creative_director.SettingTrackingRepository.list_by_project",
+            staticmethod(mock_list),  # type: ignore[arg-type]
+        )
+        monkeypatch.setattr(
+            "songyan.agents.creative_director.HumanMarkRepository.list_by_project",
+            staticmethod(mock_marks),  # type: ignore[arg-type]
+        )
+        result = await _load_active_settings_to_recycle(
+            "p1", 12, limit=3, min_silent_chapters=2
+        )
+
+        assert [r["setting_key"] for r in result] == [
+            "critical.older",
+            "critical.recent",
+            "background.old",
+        ]
+
+    @pytest.mark.asyncio
+    async def test_load_recycle_includes_active_human_mark_targets(
+        self, monkeypatch: Any
+    ) -> None:
+        rows = [
+            {
+                "setting_key": "background.recent-human-held",
+                "setting_name": "人工保留世界观前提",
+                "status": "active",
+                "category": "background",
+                "introduced_in_chapter": 1,
+                "last_mentioned_chapter": 11,
+            },
+            {
+                "setting_key": "critical.recent-marked",
+                "setting_name": "关键待回收项",
+                "status": "active",
+                "category": "critical",
+                "introduced_in_chapter": 7,
+                "last_mentioned_chapter": 11,
+            },
+            {
+                "setting_key": "background.old",
+                "setting_name": "沉寂背景",
+                "status": "active",
+                "category": "background",
+                "introduced_in_chapter": 1,
+                "last_mentioned_chapter": 1,
+            },
+        ]
+
+        async def mock_list(_pid: str) -> list[dict]:
+            return rows
+
+        async def mock_marks(*_args: Any, **_kwargs: Any) -> list[HumanMark]:
+            return [
+                HumanMark(
+                    mark_id="hm-critical",
+                    project_id="p1",
+                    mark_type="setting",
+                    target_key="critical.recent-marked",
+                    source="human",
+                    priority=9,
+                ),
+                HumanMark(
+                    mark_id="hm-human-held",
+                    project_id="p1",
+                    mark_type="setting",
+                    target_key="background.recent-human-held",
+                    source="human",
+                    priority=6,
+                ),
+            ]
+
+        monkeypatch.setattr(
+            "songyan.agents.creative_director.SettingTrackingRepository.list_by_project",
+            staticmethod(mock_list),  # type: ignore[arg-type]
+        )
+        monkeypatch.setattr(
+            "songyan.agents.creative_director.HumanMarkRepository.list_by_project",
+            staticmethod(mock_marks),  # type: ignore[arg-type]
+        )
+
+        result = await _load_active_settings_to_recycle(
+            "p1", 12, limit=3, min_silent_chapters=2
+        )
+
+        assert [r["setting_key"] for r in result] == [
+            "critical.recent-marked",
+            "background.recent-human-held",
+            "background.old",
+        ]
+        assert result[0]["human_mark_priority"] == 9
+
+    @pytest.mark.asyncio
+    async def test_load_recycle_ignores_current_diagnostic_mark_but_keeps_stale_critical(
+        self, monkeypatch: Any
+    ) -> None:
+        rows = [
+            {
+                "setting_key": "critical.stale-gap",
+                "setting_name": "关键真缺口",
+                "status": "active",
+                "category": "critical",
+                "introduced_in_chapter": 7,
+                "last_mentioned_chapter": 7,
+            },
+            {
+                "setting_key": "background.current-diagnostic",
+                "setting_name": "同章诊断背景项",
+                "status": "active",
+                "category": "background",
+                "introduced_in_chapter": 4,
+                "last_mentioned_chapter": 11,
+            },
+            {
+                "setting_key": "background.old-human-held",
+                "setting_name": "历史人工保留项",
+                "status": "active",
+                "category": "background",
+                "introduced_in_chapter": 4,
+                "last_mentioned_chapter": 11,
+            },
+        ]
+
+        async def mock_list(_pid: str) -> list[dict]:
+            return rows
+
+        async def mock_marks(*_args: Any, **_kwargs: Any) -> list[HumanMark]:
+            return [
+                HumanMark(
+                    mark_id="hm-current-diagnostic",
+                    project_id="p1",
+                    mark_type="setting",
+                    target_key="background.current-diagnostic",
+                    source="continuity_auditor",
+                    created_at_chapter=12,
+                    priority=9,
+                ),
+                HumanMark(
+                    mark_id="hm-old-human-held",
+                    project_id="p1",
+                    mark_type="setting",
+                    target_key="background.old-human-held",
+                    source="continuity_auditor",
+                    created_at_chapter=9,
+                    priority=6,
+                ),
+            ]
+
+        monkeypatch.setattr(
+            "songyan.agents.creative_director.SettingTrackingRepository.list_by_project",
+            staticmethod(mock_list),  # type: ignore[arg-type]
+        )
+        monkeypatch.setattr(
+            "songyan.agents.creative_director.HumanMarkRepository.list_by_project",
+            staticmethod(mock_marks),  # type: ignore[arg-type]
+        )
+
+        result = await _load_active_settings_to_recycle(
+            "p1", 12, limit=5, min_silent_chapters=2
+        )
+
+        keys = [r["setting_key"] for r in result]
+        assert keys == ["critical.stale-gap", "background.old-human-held"]
+        assert result[0]["human_mark_priority"] == 0
+        assert result[1]["human_mark_priority"] == 6

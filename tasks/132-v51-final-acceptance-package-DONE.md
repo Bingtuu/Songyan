@@ -73,9 +73,9 @@ V5.1 是 V5.0 工程验收后的**质量收口与可观测性增强**阶段，�
 |------|------|------|
 | enforce 模式默认启用 | V5.2 | **被 Task 133/134/135 阻塞**：需先修复 Writer 多场景结构、SettlementExtractor 角色/数值提取、设定回收与 continuity health 缺陷，再完成跨项目 Ch1–Ch150 enforce 验证 |
 | 中段/后段叙事体验、钩子质量 | V5.2+ | 纳入 Prompt 质量二期（Task 137 候选） |
-| 人工反馈闭环 | V5.2+ | 将人工复核标记反哺到 `GateConfig` 阈值调优（Task 138 候选） |
-| 多体裁 / 跨项目泛化性 | V5.2+ | 确认 Context Diet 2.0 与硬门禁在不同 genre/mode 下的泛化性（Task 139 候选） |
-| 发布与导出功能 | 远期 | `songyan export` 生成小说稿、epub/pdf 等（Task 140 候选） |
+| 人工反馈闭环 | V5.2+ | 将人工复核标记反哺到 `GateConfig` 阈值调优（Task 139 候选；原 Task 138 候选顺延） |
+| 多体裁 / 跨项目泛化性 | V5.2+ | 确认 Context Diet 2.0 与硬门禁在不同 genre/mode 下的泛化性（Task 140 候选；原 Task 139 候选顺延） |
+| 发布与导出功能 | 远期 | `songyan export` 生成小说稿、epub/pdf 等（Task 141 候选；原 Task 140 候选顺延） |
 
 **V5.2  immediate 工作**：
 

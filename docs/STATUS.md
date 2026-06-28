@@ -6,11 +6,11 @@
 
 | 项 | 状态 |
 |----|------|
-| 当前阶段 | **V5.2 进行中：Task 137 代码已完成，待 enforce Ch1–Ch20 复跑验证** |
+| 当前阶段 | **V5.2 进行中：Task 138d-R2 retry3 已执行；Ch11 通过 settlement/summary/QG，Ch12 因新的环境读数类 numerical_update 停在 settlement_review，尚未生成 Ch12 continuity，仍无法验证 orphan 是否低于 baseline 16** |
 | 最终验收 | **Task 120 V5.0 + Task 132 V5.1 Final Acceptance Package 已交付** |
 | 风险口径 | P0/P1 风险为 0 |
-| 最近全量测试 | `1914 passed, 2 skipped, 1 xfailed` |
-| 最近修复 | Task 123 ContextEmergency / health_low 候选硬门禁（默认观测模式，16 个新单测）；Task 124 离线影响面分析；Task 125 阈值调优（P1 异常检测、health_score 跌幅、审计点 streak），新增 12 个单测；Task 126 enforce 小窗口实跑验证，Ch1–Ch19 零 gate 触发；**Task 127 重构 `health_low_score_halt` 为"历史新低 + P1 同步激增"复合条件，新增 8 个单测，pytest 1842 passed**；**Task 128 完成**：QG false 降级接受不终止 run、Ch1–Ch10 质量爬坡阈值、RevisionHandler readability 专精路径；pytest 1843 passed；**Task 129 条件完成**：enforce 模式 Ch1–Ch50 验证，`run-89d7a2d4` Ch1–Ch15 后因 quality_gate_fail_streak 暂停，暴露 Writer 结构退化、SettlementExtractor 角色/数值提取失败、orphaned settings 快速累积等底层缺陷；报告见 `docs/reports/task-129-enforce-validation-report.md`。**Task 130 已完成**：gate_mode 默认保持 `observe`，`songyan run` 暴露 `--gate-mode` CLI 参数，`songyan report` 新增 gate 触发汇总。**Task 131 已完成**：历史规划稿已归档至 `archive/tasks/`，索引文档已指向 `-DONE.md`。**Task 132 已完成**：V5.1 最终验收包已交付，V5.1 通过（条件完成项已明确转入 V5.2）。**Task 133/134/135 已完成**：Writer 多场景结构、SettlementExtractor 角色/数值提取、设定回收与 continuity health 治理；**Task 136 已完成 enforce 模式 Ch1–Ch20 跨项目实跑**：多场景 100%、Settlement 100%、Health floor 通过，但 orphan 增速未减半；**Task 137 代码已完成**：正文 setting 提及自动刷新 `last_mentioned_chapter`、同步 archive `setting_tracking`、SettingEvaporator 按 category 调整时间衰减、已回收 continuity_auditor human_mark 自动 resolve，新增 12 个单测，全量 `pytest` 1914 passed |
+| 最近全量测试 | `1973 passed, 1 xfailed`（2026-06-28，Task 138f Settlement 数值证据门禁修复后） |
+| 最近修复/验证 | Task 123 ContextEmergency / health_low 候选硬门禁（默认观测模式，16 个新单测）；Task 124 离线影响面分析；Task 125 阈值调优（P1 异常检测、health_score 跌幅、审计点 streak），新增 12 个单测；Task 126 enforce 小窗口实跑验证，Ch1–Ch19 零 gate 触发；**Task 127 重构 `health_low_score_halt` 为"历史新低 + P1 同步激增"复合条件，新增 8 个单测，pytest 1842 passed**；**Task 128 完成**：QG false 降级接受不终止 run、Ch1–Ch10 质量爬坡阈值、RevisionHandler readability 专精路径；pytest 1843 passed；**Task 129 条件完成**：enforce 模式 Ch1–Ch50 验证，`run-89d7a2d4` Ch1–Ch15 后因 quality_gate_fail_streak 暂停，暴露 Writer 结构退化、SettlementExtractor 角色/数值提取失败、orphaned settings 快速累积等底层缺陷；报告见 `docs/reports/task-129-enforce-validation-report.md`。**Task 130 已完成**：gate_mode 默认保持 `observe`，`songyan run` 暴露 `--gate-mode` CLI 参数，`songyan report` 新增 gate 触发汇总。**Task 131 已完成**：历史规划稿已归档至 `archive/tasks/`，索引文档已指向 `-DONE.md`。**Task 132 已完成**：V5.1 最终验收包已交付，V5.1 通过（条件完成项已明确转入 V5.2）。**Task 133/134/135 已完成**：Writer 多场景结构、SettlementExtractor 角色/数值提取、设定回收与 continuity health 治理；**Task 138f 已完成**：numerical_update evidence gate 已落地，无明确正文/source_quote 数字证据的 telemetry 候选会过滤并记录 diagnostic，真实 ledger 仍硬校验；**Task 138d-R2 retry3 已执行**：`run-0a48030b` Ch11 通过 settlement/summary/QG，Ch12 暴露有证据环境读数未命中 snapshot 分类的新阻断；全量 `pytest tests/ -q` -> `1973 passed, 1 xfailed`，`ruff check src/ tests/` 通过 |
 | 当前 lint | `ruff check src/ tests/` 已通过；`scripts/` 目录包含一次性调试脚本，不参与 CI lint |
 | Python | 3.11.9 |
 | 事实入口 | `tasks/V5-README.md` |
@@ -36,15 +36,15 @@
 | Task 122c | **已完成**：Ch1-Ch20 E2E 集成测试（28 秒重度 Mock）；Ch40-Ch50 / Ch100-Ch110 窗口待补充 |
 | Task 122c | **已完成**：Ch1-Ch20 / Ch40-Ch50 / Ch100-Ch110 三个 E2E 窗口验证全部完成；`test_ch41_50_validation.py` 已补强 emergency/auto-halt 断言；`test_ch100_110_from_run_log.py` 已新增并复用 `run-a2bed648` 历史数据 |
 | 重跑前清理 | **2026-06-23 已完成全量清理**：终止全部残留 Python 进程，删除数据库 28,440 行测试数据，清空所有业务表，清理日志文件，VACUUM 后 196 MB；环境完全干净 |
-| 下一步规划 | **V5.1 已收口**：Task 121r–131 全部完成；**Task 132 V5.1 最终验收包已交付**；**Task 133/134/135 已完成**：Writer 多场景结构修复、SettlementExtractor 角色/数值提取修复、设定回收与 continuity health 治理；**Task 136 已完成 enforce 模式 Ch1–Ch20 跨项目实跑**：多场景占比 100%、Settlement 记录率 100%、Health floor 通过，但 orphan 增长速率未减半，整体未通过；报告见 `docs/reports/task-136-v52-enforce-ch1-ch20-validation-report.md`；**Task 137 代码已完成**：正文 setting 提及自动刷新 `last_mentioned_chapter`、`setting_tracking` 与 `setting_snapshots` 生命周期同步、SettingEvaporator 按 category 调整时间衰减、已回收 continuity_auditor human_mark 自动 resolve，新增 12 个单测，全量 `pytest` 1914 passed；待 enforce 模式 Ch1–Ch20 复跑验证 orphan 增速是否减半 |
+| 下一步规划 | **Task 138d-R2 新阻断最小修复**：`run-0a48030b` 已证明 Ch11 阻断解除；下一步处理 Ch12 `channel_wall_*_period`、`knife_sheath_spring_tension_decay`、`vertical_pipe_depth`、`liquid_metal_tentacle_distance` 这类有正文读数证据但未命中 telemetry/evidence gate 的 snapshot 分类问题，修复后再用新副本 DB 复跑 Ch10-Ch12。 |
 
 测试说明：`1 xfailed` 为已知非阻断项；`0 xpassed`（已修复）；`0 failed`。数据库 `lifecycle_status` 列缺失与 RAG embedding 性能测试已修复，当前全量通过。
 
 ## 当前优先级
 
-1. **Task 137**：代码已完成；复跑 enforce 模式 Ch1–Ch20 验证 orphan 增速是否减半，再决定是否将 Writer 1.2.0 / `gate_mode="enforce"` 设为默认。
-2. **V5.2 收尾**：Task 137 验证通过后，再决定是否将 Writer 1.2.0 / `gate_mode="enforce"` 设为默认，并复跑 enforce 模式 Ch1–Ch150。
-3. **后置预研**：ContextEmergency / health_low 硬门禁（已规划为后置，不影响 V5.2 验收）。
+1. **Task 138d-R2 新阻断最小修复**：`run-0a48030b` Ch11 已通过；Ch12 QG 通过但 settlement_review 失败，需先修有明确读数证据的环境/结构 telemetry snapshot 分类，再重新副本 DB 复跑 Ch10-Ch12。
+2. **Task 137 保持活跃**：未生成新的 Ch12 continuity 前，不创建 `tasks/137-setting-recycling-closed-loop-DONE.md`。
+3. **后置默认化决策**：完整默认配置实跑与 Writer 1.2.0 / `gate_mode="enforce"` 默认化仍后置，等 Task 137 health/orphan 收口后再决定。
 
 ## V5.1 交付摘要
 
@@ -105,7 +105,15 @@
 - gate_mode 默认模式决策：`tasks/130-gate-mode-default-decision-DONE.md`
 - 任务文档归档与状态一致性清理：`tasks/131-task-docs-archive-and-status-cleanup-DONE.md`
 - V5.1 最终验收包：`tasks/132-v51-final-acceptance-package-DONE.md`
-- Writer 多场景结构修复：`tasks/133-writer-multi-scene-structure-fix.md`
-- SettlementExtractor 角色/数值提取修复：`tasks/134-settlement-character-numerical-extraction-fix.md`
-- 设定回收与 continuity health 治理：`tasks/135-setting-recycling-and-continuity-health-governance.md`
+- Writer 多场景结构修复：`tasks/133-writer-multi-scene-structure-fix-DONE.md`
+- SettlementExtractor 角色/数值提取修复：`tasks/134-settlement-character-numerical-extraction-fix-DONE.md`
+- 设定回收与 continuity health 治理：`tasks/135-setting-recycling-and-continuity-health-governance-DONE.md`
+- V5.2 Ch1-Ch20 采集窗口实跑验证：`tasks/136-v52-enforce-ch1-ch20-validation-DONE.md`
+- 设定回收闭环与 tracking 刷新机制：`tasks/137-setting-recycling-closed-loop.md`
+- 剩余 orphan 分类与证据表：`tasks/138a-remaining-orphan-classification.md`
+- 基于分类结果确定最小动作：`tasks/138b-orphan-root-cause-decision.md`
+- 剩余 orphan 最小修复：`tasks/138c-orphan-minimal-fix.md`
+- 修复后 Ch10-Ch12 聚焦复跑验证：`tasks/138d-ch10-ch12-post-fix-rerun.md`
+- 事实源同步与 Task 137 收尾判断：`tasks/138e-task137-fact-sync-and-closure.md`
+- Settlement 数值结算证据门禁工程化修复：`tasks/138f-settlement-evidence-gated-numerical-extraction.md`
 - V5 归档：`archive/v5/INDEX.md`

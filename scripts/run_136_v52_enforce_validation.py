@@ -1,16 +1,21 @@
-"""Task 136: V5.2 enforce 模式 Ch1-Ch20 跨项目实跑验证.
+"""Task 136/137: V5.2 Ch1-Ch20 采集窗口跨项目实跑验证.
 
 用法:
     python scripts/run_136_v52_enforce_validation.py
 
 说明:
-    - 从 Task 129 源项目克隆新验证项目
-    - 临时切换 Writer default_version 为 1.2.0
-    - 使用 GateConfig.for_mode("enforce") 实跑 Ch1-Ch20
+    - 从当前本地可用基线项目克隆新验证项目
+    - 临时切换 Writer default_version 为 1.2.0，并在退出时恢复运行前版本
+    - 使用 GateConfig.for_mode("enforce") 的配置底座实跑 Ch1-Ch20
+    - 为完整采集 Ch1-Ch20 指标，临时关闭 health_low 相关 halt，仅保留 ContextEmergency 门禁
     - 采集 scenes_count、character_states、numerical_ledgers、continuity health 等指标
-    - 与 Task 129 基线 run-89d7a2d4 对比
-    - 生成 docs/reports/task-136-v52-enforce-ch1-ch20-validation-report.md
-    - 运行结束后恢复 Writer default_version 为 1.1.0
+    - 与当前本地可用基线 run-a2bed648 对比
+    - 生成 docs/reports/task-137-v52-enforce-ch1-ch20-rerun-report.md
+
+注意:
+    普通 pipeline/CLI 默认仍读取 writer manifest 中的 default_version（当前为 1.1.0）。
+    复跑 Task 136/137 时必须使用本脚本，或用等效方式显式启用 Writer 1.2.0；
+    否则不会覆盖 Task 133 的多场景 Writer 修复。
 """
 
 from __future__ import annotations
@@ -34,10 +39,13 @@ from songyan.models import Character, GateConfig, ProjectSetting
 from songyan.utils.scene_parser import parse_scenes
 from songyan.workflows.phase2_graph import run_project_pipeline
 
-SOURCE_PROJECT_ID = "3cf71586df2a4b5c9170d9b1a5f059cf"
-BASELINE_RUN_ID = "run-89d7a2d4"
+SOURCE_PROJECT_ID = "e95a1fa3"
+BASELINE_RUN_ID = "run-a2bed648"
+BASELINE_LABEL = "Task 121q full single-run"
+VALIDATION_WRITER_VERSION = "1.2.0"
+VALIDATION_CHAPTER_COUNT = 20
 MANIFEST_PATH = Path("prompts/cards/writer/_manifest.yaml")
-REPORT_PATH = Path("docs/reports/task-136-v52-enforce-ch1-ch20-validation-report.md")
+REPORT_PATH = Path("docs/reports/task-137-v52-enforce-ch1-ch20-rerun-report.md")
 
 
 # ---------------------------------------------------------------------------
@@ -49,6 +57,14 @@ def _read_manifest() -> str:
 
 def _write_manifest(content: str) -> None:
     MANIFEST_PATH.write_text(content, encoding="utf-8")
+
+
+def _extract_default_version(content: str) -> str:
+    match = re.search(r'^(default_version:\s*)["\']?([\d.]+)["\']?', content, flags=re.MULTILINE)
+    if match is None:
+        msg = f"Failed to read default_version in {MANIFEST_PATH}"
+        raise RuntimeError(msg)
+    return match.group(2)
 
 
 def _replace_default_version(content: str, version: str) -> str:
@@ -66,13 +82,14 @@ def _replace_default_version(content: str, version: str) -> str:
 def _temp_writer_version(target_version: str):
     """临时切换 Writer default_version，退出时自动恢复."""
     original = _read_manifest()
+    original_version = _extract_default_version(original)
     try:
         _write_manifest(_replace_default_version(original, target_version))
-        print(f"[manifest] Writer default_version -> {target_version}")
-        yield
+        print(f"[manifest] Writer default_version {original_version} -> {target_version}")
+        yield original_version
     finally:
         _write_manifest(original)
-        print("[manifest] Writer default_version restored")
+        print(f"[manifest] Writer default_version restored to {original_version}")
 
 
 async def _clone_characters(
@@ -337,10 +354,10 @@ async def _collect_metrics(project_id: str) -> dict[str, Any]:
 # 基线指标
 # ---------------------------------------------------------------------------
 async def _load_baseline_metrics() -> dict[str, Any]:
-    """从 Task 129 源项目加载 Ch1-Ch15 基线指标."""
+    """从当前本地可用源项目加载 Ch1-Ch15 基线指标."""
     accepted = await _load_accepted_versions(SOURCE_PROJECT_ID)
     settlement_counts = await _load_settlement_counts(SOURCE_PROJECT_ID)
-    run_log = _load_run_log_metrics(SOURCE_PROJECT_ID)
+    run_log = _load_run_log_metrics(BASELINE_RUN_ID)
     continuity = await _load_continuity_reports(SOURCE_PROJECT_ID)
 
     chapters: list[dict[str, Any]] = []
@@ -379,6 +396,46 @@ async def _load_baseline_metrics() -> dict[str, Any]:
     }
 
 
+async def _validate_source_project() -> None:
+    """验证本地源项目和基线日志存在，避免开始 LLM 运行后才失败."""
+    async with get_db() as conn:
+        cursor = await conn.execute(
+            "SELECT COUNT(*) FROM projects WHERE project_id = ?",
+            (SOURCE_PROJECT_ID,),
+        )
+        source_count = (await cursor.fetchone())[0]
+        if source_count != 1:
+            msg = f"Source project not found: {SOURCE_PROJECT_ID}"
+            raise ValueError(msg)
+
+        cursor = await conn.execute(
+            """SELECT COUNT(*)
+               FROM chapter_heads
+               WHERE project_id = ?
+                 AND chapter_number BETWEEN 1 AND ?
+                 AND status = 'accepted'""",
+            (SOURCE_PROJECT_ID, VALIDATION_CHAPTER_COUNT),
+        )
+        accepted_heads = (await cursor.fetchone())[0]
+        if accepted_heads < VALIDATION_CHAPTER_COUNT:
+            msg = (
+                f"Source project {SOURCE_PROJECT_ID} has only {accepted_heads} accepted "
+                f"heads in Ch1-Ch{VALIDATION_CHAPTER_COUNT}; expected "
+                f"{VALIDATION_CHAPTER_COUNT}."
+            )
+            raise ValueError(msg)
+
+    baseline_log = _run_log_path(BASELINE_RUN_ID)
+    if not baseline_log.exists():
+        msg = f"Baseline run log not found: {baseline_log}"
+        raise FileNotFoundError(msg)
+
+    print(
+        f"[baseline] source_project={SOURCE_PROJECT_ID}, "
+        f"baseline_run={BASELINE_RUN_ID}, accepted_heads={accepted_heads}"
+    )
+
+
 # ---------------------------------------------------------------------------
 # 指标评估
 # ---------------------------------------------------------------------------
@@ -392,16 +449,21 @@ def _evaluate(metrics: dict[str, Any], baseline: dict[str, Any]) -> dict[str, An
     multi_scene_ratio = len(multi_scene_chapters) / len(scene_eligible) if scene_eligible else 0.0
     single_scene_chapters = [c for c in chapters if c["scenes_count"] < 2]
 
-    # Task 134: settlement 成功章节中 character_states + numerical_ledgers > 0
+    # Task 134: Ch1-Ch20 全窗口中 settlement/summary 成功且有记录的章节占比。
+    # 不能只以 settlement_success=True 的章节为分母，否则 settlement=False 的章节会被漏掉。
     settled_with_records = [
         c
         for c in chapters
-        if c["settlement_success"] is True and (c["character_states"] + c["numerical_ledgers"]) > 0
+        if c["settlement_success"] is True
+        and c["summary_success"] is True
+        and (c["character_states"] + c["numerical_ledgers"]) > 0
     ]
-    settlement_total = [c for c in chapters if c["settlement_success"] is True]
-    settlement_record_ratio = (
-        len(settled_with_records) / len(settlement_total) if settlement_total else 0.0
-    )
+    settlement_failed = [
+        c
+        for c in chapters
+        if c["settlement_success"] is not True or c["summary_success"] is not True
+    ]
+    settlement_record_ratio = len(settled_with_records) / VALIDATION_CHAPTER_COUNT
 
     # Task 135: orphan 增长速率
     cont_by_ch = {r["chapter"]: r for r in continuity}
@@ -428,7 +490,7 @@ def _evaluate(metrics: dict[str, Any], baseline: dict[str, Any]) -> dict[str, An
     # 总体成功率
     completed = metrics["completed_chapters"]
     failed = metrics["failed_chapters"]
-    completion_rate = len(completed) / 20
+    completion_rate = len(completed) / VALIDATION_CHAPTER_COUNT
 
     # 与基线对比（Ch1-Ch15 重叠部分）
     baseline_by_ch = {c["chapter"]: c for c in baseline["chapters"]}
@@ -458,7 +520,7 @@ def _evaluate(metrics: dict[str, Any], baseline: dict[str, Any]) -> dict[str, An
         "single_scene_chapters": [c["chapter"] for c in single_scene_chapters],
         "settlement_record_ratio": settlement_record_ratio,
         "settled_with_records": [c["chapter"] for c in settled_with_records],
-        "settlement_total": [c["chapter"] for c in settlement_total],
+        "settlement_failed_chapters": [c["chapter"] for c in settlement_failed],
         "orphan_rate_9_12": rate_9_12,
         "orphan_rate_12_15": rate_12_15,
         "orphan_rate_halved_ok": rate_halved_ok,
@@ -467,7 +529,8 @@ def _evaluate(metrics: dict[str, Any], baseline: dict[str, Any]) -> dict[str, An
         "health_ok": health_ok,
         "overlap_improvements": overlap_improvements,
         "pass_all": (
-            multi_scene_ratio >= 0.90
+            completion_rate >= 1.0
+            and multi_scene_ratio >= 0.90
             and settlement_record_ratio >= 0.95
             and (rate_halved_ok is not False)
             and health_ok
@@ -503,14 +566,20 @@ def _generate_report(
     REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
 
     lines: list[str] = []
-    lines.append("# Task 136: V5.2 enforce 模式 Ch1-Ch20 实跑验证报告")
+    lines.append("# Task 137: V5.2 Ch1-Ch20 采集窗口复跑验证报告")
     lines.append("")
     lines.append(f"- 生成时间: {datetime.now().isoformat()}")
     lines.append(f"- 验证项目 ID: `{metrics['project_id']}`")
-    lines.append(f"- 源项目 ID: `{SOURCE_PROJECT_ID}`（基线 {BASELINE_RUN_ID}）")
-    lines.append("- Writer 工艺卡: 1.2.0（验证期间临时切换，已恢复 1.1.0）")
     lines.append(
-        "- Gate 模式: enforce（本次为完整采集指标，临时关闭 health_low 相关 halt；"
+        f"- 源项目 ID: `{SOURCE_PROJECT_ID}`（{BASELINE_LABEL}，基线 {BASELINE_RUN_ID}）"
+    )
+    lines.append(
+        f"- Writer 工艺卡: {VALIDATION_WRITER_VERSION}"
+        "（验证期间临时切换，退出时恢复运行前 manifest default_version）"
+    )
+    lines.append(
+        "- Gate 配置: 基于 enforce profile 的采集窗口"
+        "（为完整采集指标，临时关闭 health_low 相关 halt；"
         "ContextEmergency 门禁仍开启）"
     )
     lines.append("")
@@ -538,10 +607,11 @@ def _generate_report(
     lines.append("## 3. Task 134 Settlement 提取验证")
     lines.append("")
     lines.append(
-        f"- Settlement 成功且含角色/数值记录占比: {_fmt(evaluation['settlement_record_ratio'])}"
+        "- Settlement+Summary 成功且含角色/数值记录占比"
+        f"（分母固定 Ch1-Ch20）: {_fmt(evaluation['settlement_record_ratio'])}"
     )
     lines.append(f"- 有记录章节: {evaluation['settled_with_records']}")
-    lines.append(f"- Settlement 成功章节: {evaluation['settlement_total']}")
+    lines.append(f"- Settlement/Summary 失败章节: {evaluation['settlement_failed_chapters']}")
     lines.append("")
 
     lines.append("## 4. Task 135 设定回收与 continuity health 验证")
@@ -588,7 +658,7 @@ def _generate_report(
         )
     lines.append("")
 
-    lines.append("## 7. 与 Task 129 基线对比（Ch1-Ch15 重叠段）")
+    lines.append(f"## 7. 与 {BASELINE_LABEL} 基线对比（Ch1-Ch15 重叠段）")
     lines.append("")
     lines.append(
         "| Ch | 基线 Scenes | 新 Scenes | 基线 Words | 新 Words | "
@@ -606,16 +676,25 @@ def _generate_report(
     lines.append("## 8. 结论与建议")
     lines.append("")
     if evaluation["pass_all"]:
-        lines.append("本次 V5.2 enforce 模式 Ch1-Ch20 实跑满足 Task 133/134/135 的验收标准。")
         lines.append(
-            "建议将 Writer 1.2.0 与 SettlementExtractor 1.0.2 设为 enforce 模式默认启用配置。"
+            "本次 V5.2 采集窗口 Ch1-Ch20 实跑满足 Task 133/134/135 的小窗口验收标准。"
+        )
+        lines.append(
+            "下一步只能进入更大窗口复验；是否将 Writer 1.2.0 或 gate_mode=\"enforce\" 设为默认，"
+            "必须另做完整默认配置实跑验证。"
         )
     else:
-        lines.append("本次 V5.2 enforce 模式 Ch1-Ch20 实跑未完全满足验收标准：")
+        lines.append("本次 V5.2 采集窗口 Ch1-Ch20 实跑未完全满足验收标准：")
         if evaluation["multi_scene_ratio"] < 0.90:
             lines.append(
                 f"- Task 133 多场景结构：多场景占比 {evaluation['multi_scene_ratio']:.1%}，"
                 f"低于 90% 目标；单场景章节为 {evaluation['single_scene_chapters']}。"
+            )
+        if evaluation["settlement_record_ratio"] < 0.95:
+            lines.append(
+                "- Task 134 Settlement 提取：全窗口 Settlement+Summary 成功且含记录占比 "
+                f"{evaluation['settlement_record_ratio']:.1%}，低于 95% 目标；"
+                f"失败章节为 {evaluation['settlement_failed_chapters']}。"
             )
         if evaluation["orphan_rate_halved_ok"] is False:
             lines.append(
@@ -636,6 +715,8 @@ def _generate_report(
 # 主流程
 # ---------------------------------------------------------------------------
 async def main() -> None:
+    await _validate_source_project()
+
     source = await ProjectRepository().get(SOURCE_PROJECT_ID)
     if source is None:
         raise ValueError(f"Source project not found: {SOURCE_PROJECT_ID}")
@@ -649,7 +730,7 @@ async def main() -> None:
     _register_character_aliases(char_aliases)
 
     gate_config = GateConfig.for_mode("enforce")
-    # Task 136 验证目标：完整跑完 Ch1-Ch20 以采集 health/orphan 指标。
+    # Task 136/137 验证目标：完整跑完 Ch1-Ch20 以采集 health/orphan 指标。
     # 默认 enforce 的 health_low 门禁在当前修复阶段对 state_mismatch/orphaned 过于敏感，
     # 会过早中断验证；因此本次验证关闭 health_low 相关 halt，仅保留 ContextEmergency
     # 门禁，跑完后再评估 health 指标是否满足 V5.2 标准。
@@ -660,7 +741,7 @@ async def main() -> None:
 
     halt_reason: str | None = None
 
-    with _temp_writer_version("1.2.0"):
+    with _temp_writer_version(VALIDATION_WRITER_VERSION):
         try:
             result = await run_project_pipeline(
                 project_id=project_id,

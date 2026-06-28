@@ -341,6 +341,47 @@ def test_build_chapter_run_log_degraded_accept() -> None:
     assert log.skip_settlement is False
 
 
+def test_build_chapter_run_log_persists_settlement_review_diagnostics() -> None:
+    """Task 4E: settlement_review 失败诊断进入 JSONL 可查询字段."""
+    started = datetime(2024, 1, 1, 12, 0, 0)
+    finished = datetime(2024, 1, 1, 12, 1, 0)
+
+    log = build_chapter_run_log(
+        run_id="run-1",
+        project_id="proj-1",
+        chapter_number=11,
+        started_at=started,
+        finished_at=finished,
+        success=False,
+        error_stage="settlement_review",
+        final_state={
+            "status": "settlement_review",
+            "current_version_id": "v-11",
+            "_settlement_needs_human_review": True,
+            "_settlement_version_id": "v-11",
+            "_settlement_validation_status": "needs_human_review",
+            "_settlement_validation_errors": [
+                "numerical_update oxygen_concentration closing_value mismatch"
+            ],
+        },
+        duration_sec=60.0,
+    )
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        with patch("songyan.workflows._run_logger._LOGS_DIR", Path(tmpdir)):
+            filepath = write_run_log(log, run_id="run-1")
+
+        data = json.loads(Path(filepath).read_text(encoding="utf-8").strip())
+
+    assert data["settlement_needs_human_review"] is True
+    assert data["settlement_success"] is False
+    assert data["settlement_version_id"] == "v-11"
+    assert data["settlement_validation_status"] == "needs_human_review"
+    assert data["settlement_validation_errors"] == [
+        "numerical_update oxygen_concentration closing_value mismatch"
+    ]
+
+
 # ---------------------------------------------------------------------------
 # write_run_log
 # ---------------------------------------------------------------------------

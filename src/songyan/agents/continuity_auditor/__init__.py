@@ -75,6 +75,17 @@ class ContinuityAuditor:
 
         report_id = f"cont_{uuid.uuid4().hex[:8]}"
 
+        archived_nonessential = await self.setting_repo.archive_long_silent_nonessential(
+            project_id, up_to_chapter
+        )
+        if archived_nonessential:
+            logger.info(
+                "continuity_auditor.archived_long_silent_nonessential",
+                project_id=project_id,
+                up_to_chapter=up_to_chapter,
+                archived_count=archived_nonessential,
+            )
+
         orphaned = await _find_orphaned_settings(
             project_id, up_to_chapter, self.setting_repo
         )

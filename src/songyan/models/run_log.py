@@ -49,6 +49,9 @@ class ChapterRunLog(BaseModel):
     # Settlement 状态
     settlement_success: bool = True
     settlement_needs_human_review: bool = False
+    settlement_version_id: str | None = None
+    settlement_validation_status: str | None = None
+    settlement_validation_errors: list[str] = Field(default_factory=list)
     summary_id: str | None = None
     summary_success: bool | None = None
 

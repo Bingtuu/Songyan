@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import re
 import sqlite3
 import uuid
 from collections.abc import Awaitable, Callable
@@ -45,27 +46,236 @@ logger = structlog.get_logger(__name__)
 
 _T = TypeVar("_T")
 
+_SETTING_REFERENCE_BOUNDARY_CHARS = set(
+    "的了着过在为是被将把从到向对于由以"
+    "中上下里内外前后间处和与及或并、，。；：！？,.!?;:()（）[]【】"
+    "\"'“”‘’ \t\r\n"
+)
+
 
 def _term_in_content(term: str, content: str) -> bool:
     """判断术语是否作为独立词出现在正文中.
 
-    中文没有空格分词，因此只要术语后紧跟另一个中文字符，
-    就视为更长词的一部分，避免把「天剑」误匹配到「天剑宗」中。
+    中文没有空格分词，因此普通中文后缀仍视为更长词，
+    但允许「术语 + 的/中/，」等语法边界，避免漏刷真实提及。
     """
     if len(term) < 2:
         return False
+    term = term.lower()
+    content = content.lower()
+    identifier_term = bool(re.search(r"[a-z0-9θ]", term))
     idx = content.find(term)
     while idx != -1:
         end = idx + len(term)
-        # 后接中文字符 → 属于更长词，跳过
-        followed_by_chinese = (
-            end < len(content)
-            and "\u4e00" <= content[end] <= "\u9fa5"
-        )
-        if not followed_by_chinese:
+        if end >= len(content) or content[end] in _SETTING_REFERENCE_BOUNDARY_CHARS:
+            return True
+        if identifier_term and not re.match(r"[a-z0-9θ]", content[end]):
+            return True
+        if len(term) >= 4 and "\u4e00" <= content[end] <= "\u9fa5":
+            return True
+        # 后接普通中文字符 → 属于更长词，跳过
+        if not ("\u4e00" <= content[end] <= "\u9fa5"):
             return True
         idx = content.find(term, idx + 1)
     return False
+
+
+def _setting_value(setting: dict[str, Any] | NewSetting, field: str) -> str:
+    if isinstance(setting, dict):
+        return str(setting.get(field) or "")
+    return str(getattr(setting, field, "") or "")
+
+
+def _compact_setting_text(text: str) -> str:
+    compact = text.lower().replace("theta", "θ").replace("第七", "第7")
+    return re.sub(r"[\s·—\-_/（）()\[\]【】,，、;；:.：]+", "", compact)
+
+
+def _setting_cluster_canonical(setting: dict[str, Any] | NewSetting) -> str | None:
+    text = " ".join(
+        [
+            _setting_value(setting, "setting_key"),
+            _setting_value(setting, "setting_name"),
+            _setting_value(setting, "description"),
+        ]
+    )
+    compact = _compact_setting_text(text)
+    if "e7" in compact and any(token in compact for token in ("通道", "相位", "节点", "拓扑")):
+        return "e7_phase_channel_node"
+    if "拓扑" in compact and ("空间" in compact or "相位" in compact):
+        return "space_phase_topology"
+    if "自修复" in compact and any(token in compact for token in ("墙壁", "墙体", "舱壁", "材料")):
+        return "wall_material_self_repair"
+    if "第7远征队" in compact:
+        return "expedition_team_7"
+    if "巨型遗迹" in compact and any(
+        token in compact for token in ("表面材料", "表面", "外层", "合金")
+    ):
+        return "mega_ruin_surface_material"
+    if "英仙臂外侧巨型遗迹" in compact:
+        return "perseus_arm_mega_ruin"
+    if "斐波那契" in compact and any(
+        token in compact for token in ("频率", "跳变序列", "frequency")
+    ):
+        return "fibonacci_frequency_sequence"
+    if "时空标记" in compact:
+        return "spacetime_marking_system"
+    if "墙壁" in compact and any(token in compact for token in ("活体", "能量纹路")):
+        return "ruin_wall_living_properties"
+    return None
+
+
+def _add_cluster_reference_terms(
+    setting: dict[str, Any] | NewSetting, terms: set[str]
+) -> None:
+    canonical = _setting_cluster_canonical(setting)
+    if canonical == "e7_phase_channel_node":
+        terms.update(
+            {
+                "E-7通道相位节点",
+                "E-7-θ通道相位节点",
+                "E-7θ通道相位节点",
+                "E-7-θ",
+                "E-7θ",
+                "E-7通道",
+                "E-7相位节点",
+                "E-7相位拓扑",
+                "E-7空间拓扑",
+            }
+        )
+    elif canonical == "space_phase_topology":
+        terms.update({"空间拓扑", "相位拓扑", "空间/相位拓扑", "空间相位拓扑"})
+    elif canonical == "wall_material_self_repair":
+        terms.update(
+            {"墙壁自修复", "材料自修复", "墙壁/材料自修复", "墙壁材料自修复", "舱壁自修复"}
+        )
+    elif canonical == "expedition_team_7":
+        terms.update({"第7远征队", "第七远征队"})
+    elif canonical == "mega_ruin_surface_material":
+        terms.update(
+            {
+                "巨型遗迹表面材料",
+                "巨型遗迹表面的能量纹路",
+                "非欧几何合金碎片",
+            }
+        )
+    elif canonical == "perseus_arm_mega_ruin":
+        terms.update(
+            {
+                "英仙臂外侧巨型遗迹",
+                "英仙臂外侧的巨型遗迹",
+                "英仙臂外侧巨型遗迹外层",
+                "英仙臂外侧的巨型遗迹外层",
+                "巨型遗迹外层",
+            }
+        )
+    elif canonical == "fibonacci_frequency_sequence":
+        terms.update(
+            {
+                "斐波那契频率跳变序列",
+                "斐波那契序列频率",
+                "斐波那契频率",
+                "频率跳变序列",
+            }
+        )
+    elif canonical == "spacetime_marking_system":
+        terms.update({"非本地时空标记", "非本地时空标记系统", "时空标记系统"})
+    elif canonical == "ruin_wall_living_properties":
+        terms.update(
+            {
+                "遗迹墙壁活体特性",
+                "墙壁活体特性",
+                "墙壁能量纹路",
+                "墙壁上的能量纹路",
+            }
+        )
+
+
+def _setting_reference_terms(setting: dict[str, Any]) -> set[str]:
+    """生成 setting 的轻量引用词集合."""
+    terms: set[str] = set()
+    name = (setting.get("setting_name") or "").strip()
+    if len(name) >= 2:
+        terms.add(name)
+        for part in re.split(r"[·—\-_/（）()\[\]【】,，、;；:\s]+", name):
+            cleaned = part.strip()
+            if len(cleaned) >= 2:
+                terms.add(cleaned)
+
+    setting_key = str(setting.get("setting_key") or "")
+    key_tail = setting_key.split(".")[-1].replace("_", "")
+    if len(key_tail) >= 2:
+        terms.add(key_tail)
+
+    _add_cluster_reference_terms(setting, terms)
+    return terms
+
+
+async def _recycle_duplicate_setting_clusters(
+    settlement: StateSettlement,
+    project_id: str,
+    chapter_number: int,
+    setting_tracking_repo: SettingTrackingRepository,
+    conn: aiosqlite.Connection | None = None,
+) -> set[str]:
+    """新设定若命中已有同簇 canonical，则刷新旧设定并跳过重复登记."""
+    if not settlement.new_settings:
+        return set()
+
+    active_settings = [
+        s
+        for s in await setting_tracking_repo.list_by_project(project_id)
+        if s.get("status", "active") == "active"
+    ]
+    canonical_to_existing: dict[str, dict[str, Any]] = {}
+    for row in active_settings:
+        canonical = _setting_cluster_canonical(row)
+        if canonical and canonical not in canonical_to_existing:
+            canonical_to_existing[canonical] = row
+
+    retained: list[NewSetting] = []
+    refreshed_keys: set[str] = set()
+    seen_new_canonicals: set[str] = set()
+    for setting in settlement.new_settings:
+        normalized_key = _normalize_setting_key(setting.setting_key, setting.setting_name)
+        if normalized_key is not None:
+            setting.setting_key = normalized_key
+        canonical = _setting_cluster_canonical(setting)
+        existing = canonical_to_existing.get(canonical or "")
+        if (
+            canonical
+            and existing
+            and existing.get("setting_key")
+            and existing.get("setting_key") != setting.setting_key
+        ):
+            await setting_tracking_repo.update_last_mentioned(
+                existing["tracking_id"], chapter_number, conn=conn
+            )
+            refreshed_keys.add(str(existing["setting_key"]))
+            logger.info(
+                "settlement.setting_duplicate_cluster_recycled",
+                project_id=project_id,
+                chapter_number=chapter_number,
+                duplicate_key=setting.setting_key,
+                canonical_key=existing["setting_key"],
+                canonical=canonical,
+            )
+            continue
+        if canonical and canonical in seen_new_canonicals:
+            logger.info(
+                "settlement.setting_duplicate_cluster_skipped",
+                project_id=project_id,
+                chapter_number=chapter_number,
+                duplicate_key=setting.setting_key,
+                canonical=canonical,
+            )
+            continue
+        retained.append(setting)
+        if canonical:
+            seen_new_canonicals.add(canonical)
+
+    settlement.new_settings = retained
+    return refreshed_keys
 
 
 def _detect_setting_references(
@@ -86,17 +296,7 @@ def _detect_setting_references(
         if not tracking_id or not setting_key:
             continue
 
-        terms: set[str] = set()
-        name = (setting.get("setting_name") or "").strip()
-        if len(name) >= 2:
-            terms.add(name)
-
-        # setting_key 最后一段（去掉命名空间与下划线）
-        key_tail = setting_key.split(".")[-1].replace("_", "")
-        if len(key_tail) >= 2 and key_tail not in terms:
-            terms.add(key_tail)
-
-        for term in terms:
+        for term in _setting_reference_terms(setting):
             if _term_in_content(term, content):
                 referenced[tracking_id] = setting_key
                 break
@@ -222,6 +422,13 @@ async def apply_settlement(
     setting_tracking_repo = SettingTrackingRepository()
     inventory_repo = InventoryTrackerRepository()
     location_repo = LocationTrackerRepository()
+    duplicate_refreshed_keys = await _recycle_duplicate_setting_clusters(
+        settlement=settlement,
+        project_id=project_id,
+        chapter_number=chapter_number,
+        setting_tracking_repo=setting_tracking_repo,
+        conn=conn,
+    )
 
     async def _apply_core(
         c: aiosqlite.Connection,
@@ -367,7 +574,7 @@ async def apply_settlement(
         )
 
     # 5. Task 137: 设定回收闭环 — 正文提及已存在设定时刷新 last_mentioned
-    refreshed_keys: set[str] = set()
+    refreshed_keys: set[str] = set(duplicate_refreshed_keys)
     if content:
         try:
             active_settings = [
@@ -388,13 +595,30 @@ async def apply_settlement(
                 for s in active_settings
                 if s.get("setting_key")
             }
+            canonical_to_setting = {
+                canonical: s
+                for s in active_settings
+                if (canonical := _setting_cluster_canonical(s))
+            }
             for key in set(settlement.recycled_settings or []):
                 tracking_id = key_to_tracking.get(key)
-                if tracking_id and key not in refreshed_keys:
+                refresh_key = key
+                if not tracking_id:
+                    canonical = _setting_cluster_canonical(
+                        {
+                            "setting_key": key,
+                            "setting_name": key,
+                            "description": key,
+                        }
+                    )
+                    setting = canonical_to_setting.get(canonical or "")
+                    tracking_id = setting.get("tracking_id") if setting else None
+                    refresh_key = setting.get("setting_key", key) if setting else key
+                if tracking_id and refresh_key not in refreshed_keys:
                     await setting_tracking_repo.update_last_mentioned(
                         tracking_id, chapter_number, conn=conn
                     )
-                    refreshed_keys.add(key)
+                    refreshed_keys.add(refresh_key)
 
             if refreshed_keys:
                 logger.info(

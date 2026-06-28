@@ -44,8 +44,16 @@
 | `tasks/133-writer-multi-scene-structure-fix-DONE.md` | Task 133：Writer 多场景结构修复（V5.2） |
 | `tasks/134-settlement-character-numerical-extraction-fix-DONE.md` | Task 134：SettlementExtractor 角色/数值提取修复（V5.2） |
 | `tasks/135-setting-recycling-and-continuity-health-governance-DONE.md` | Task 135：设定回收与 continuity health 治理（V5.2） |
-| `tasks/136-v52-enforce-ch1-ch20-validation-DONE.md` | Task 136：V5.2 enforce 模式 Ch1–Ch20 跨项目实跑验证 |
-| `tasks/137-setting-recycling-closed-loop.md` | Task 137：设定回收闭环与 tracking 刷新机制（V5.2） |
+| `tasks/136-v52-enforce-ch1-ch20-validation-DONE.md` | Task 136：V5.2 Ch1–Ch20 采集窗口跨项目实跑验证 |
+| `tasks/137-setting-recycling-closed-loop.md` | Task 137：设定回收闭环与 tracking 刷新机制（V5.2，保持活跃；138a-138f 承接收口） |
+| `tasks/138a-remaining-orphan-classification.md` | Task 138a：剩余 orphan 分类与证据表（`run-4fd48756` 的 16 个 orphan） |
+| `tasks/138b-orphan-root-cause-decision.md` | Task 138b：基于分类结果确定最小动作 |
+| `tasks/138c-orphan-minimal-fix.md` | Task 138c：剩余 orphan 最小修复 |
+| `tasks/138d-ch10-ch12-post-fix-rerun.md` | Task 138d/138d-R2：修复后 Ch10-Ch12 聚焦复跑验证（R2 最新 `run-0a48030b` Ch11 通过，Ch12 settlement_review） |
+| `tasks/138e-task137-fact-sync-and-closure.md` | Task 138e：事实源同步与 Task 137 收尾判断（已完成；Task 137 不归档） |
+| `tasks/138f-settlement-evidence-gated-numerical-extraction.md` | Task 138f：Settlement 数值结算证据门禁工程化修复（已完成） |
+| `docs/reports/task-137-v52-enforce-ch1-ch20-rerun-report.md` | Task 137：Ch1–Ch20 采集窗口复跑报告（`run-06ae5101` partial） |
+| `docs/reports/task-137-ch10-focus-validation-report.md` | Task 138d/138e/138d-R2：Ch10 起点聚焦验证报告（`run-4fd48756` completed；最新 retry `run-0a48030b` Ch11 通过，Ch12 停在 settlement_review） |
 
 ## 按场景查阅
 
@@ -89,11 +97,17 @@
 | gate_mode 默认模式决策 | `tasks/130-gate-mode-default-decision-DONE.md` |
 | 任务文档归档与状态清理 | `tasks/131-task-docs-archive-and-status-cleanup-DONE.md` |
 | V5.1 最终验收包 | `tasks/132-v51-final-acceptance-package-DONE.md` |
-| Writer 多场景结构修复（V5.2） | `tasks/133-writer-multi-scene-structure-fix.md` |
-| SettlementExtractor 角色/数值提取修复（V5.2） | `tasks/134-settlement-character-numerical-extraction-fix.md` |
+| Writer 多场景结构修复（V5.2） | `tasks/133-writer-multi-scene-structure-fix-DONE.md` |
+| SettlementExtractor 角色/数值提取修复（V5.2） | `tasks/134-settlement-character-numerical-extraction-fix-DONE.md` |
 | 设定回收与 continuity health 治理（V5.2） | `tasks/135-setting-recycling-and-continuity-health-governance-DONE.md` |
-| V5.2 enforce 模式 Ch1–Ch20 实跑验证 | `tasks/136-v52-enforce-ch1-ch20-validation-DONE.md` |
-| 设定回收闭环与 tracking 刷新机制（V5.2） | `tasks/137-setting-recycling-closed-loop.md` |
+| V5.2 Ch1–Ch20 采集窗口实跑验证 | `tasks/136-v52-enforce-ch1-ch20-validation-DONE.md` |
+| 设定回收闭环与 tracking 刷新机制（V5.2，当前活跃） | `tasks/137-setting-recycling-closed-loop.md` |
+| 剩余 orphan 分类与证据表 | `tasks/138a-remaining-orphan-classification.md` |
+| 基于分类结果确定最小动作 | `tasks/138b-orphan-root-cause-decision.md` |
+| 剩余 orphan 最小修复 | `tasks/138c-orphan-minimal-fix.md` |
+| 修复后 Ch10-Ch12 聚焦复跑验证 | `tasks/138d-ch10-ch12-post-fix-rerun.md`（R2 最新 `run-0a48030b`） |
+| 事实源同步与 Task 137 收尾判断（已完成；Task 137 不归档） | `tasks/138e-task137-fact-sync-and-closure.md` |
+| Settlement 数值结算证据门禁工程化修复（已完成） | `tasks/138f-settlement-evidence-gated-numerical-extraction.md` |
 | V5.1 Code Review 总规划 | `docs/reports/pass14-to-pass18-v51-review-roadmap.md` |
 | V5.1 Code Review 修复汇总 | `docs/reports/pass14-final-fix-summary.md` |
 | 架构手册 | `docs/architecture/04-vibe-coding-engineering.md` |

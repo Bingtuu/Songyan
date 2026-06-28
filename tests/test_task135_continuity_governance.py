@@ -115,6 +115,62 @@ class TestOrphanThresholdsByCategory:
         for category, expected in ORPHANED_THRESHOLDS.items():
             assert (expected, (category,)) in seen
 
+    @pytest.mark.asyncio
+    async def test_find_orphaned_only_exempts_preexisting_human_mark_keys(self) -> None:
+        class FakeRepo:
+            async def active_setting_mark_keys(
+                self, project_id: str, current_chapter: int | None = None
+            ) -> set[str]:
+                assert project_id == "p1"
+                assert current_chapter == 12
+                return {"background.preexisting"}
+
+            async def find_orphaned(
+                self,
+                project_id: str,
+                up_to_chapter: int,
+                threshold: int,
+                categories: list[str] | None = None,
+            ) -> list[dict]:
+                if categories == ["background"]:
+                    return [
+                        {
+                            "tracking_id": "t-pre",
+                            "setting_key": "background.preexisting",
+                            "setting_name": "preexisting",
+                            "introduced_in_chapter": 1,
+                            "last_mentioned_chapter": 1,
+                            "category": "background",
+                        },
+                        {
+                            "tracking_id": "t-diag",
+                            "setting_key": "background.current_diagnostic",
+                            "setting_name": "current diagnostic",
+                            "introduced_in_chapter": 1,
+                            "last_mentioned_chapter": 1,
+                            "category": "background",
+                        },
+                    ]
+                if categories == ["critical"]:
+                    return [
+                        {
+                            "tracking_id": "t-critical",
+                            "setting_key": "critical.preexisting",
+                            "setting_name": "critical",
+                            "introduced_in_chapter": 1,
+                            "last_mentioned_chapter": 1,
+                            "category": "critical",
+                        }
+                    ]
+                return []
+
+        result = await _find_orphaned_settings("p1", 12, FakeRepo())  # type: ignore[arg-type]
+
+        keys = {item.setting_key for item in result}
+        assert "background.preexisting" not in keys
+        assert "background.current_diagnostic" in keys
+        assert "critical.preexisting" in keys
+
 
 class TestSettingEvaporatorThresholds:
     @pytest.mark.asyncio

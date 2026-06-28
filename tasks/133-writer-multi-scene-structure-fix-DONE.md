@@ -1,6 +1,6 @@
 # Task 133: Writer 多场景结构输出修复 — DONE（代码与测试）
 
-> **状态**: 代码与测试已完成；enforce Ch1–Ch20 实跑验证待下一步执行  
+> **状态**: 代码与测试已完成；Task 136 采集窗口已验证 Writer 1.2.0 多场景结构有效
 > **日期**: 2026-06-27  
 > **前置**: Task 121r、Task 129  
 
@@ -47,11 +47,11 @@ Task 129 enforce 模式验证（`run-89d7a2d4`）发现所有章节 `scenes_coun
 
 ---
 
-## 待执行验收项
+## 实跑验收口径
 
-- 本任务验收标准中的 **enforce 模式 Ch1–Ch20 实跑验证**（`scenes_count >= 2` 占比 ≥ 90%）尚未执行。
-- 由于 Writer 1.2.0 当前非默认版本，验证前需将 `prompts/cards/writer/_manifest.yaml` 的 `default_version` 临时切换为 `"1.2.0"`，或使用 CLI/配置显式指定版本。
-- 建议下一步统一执行 V5.2 enforce 模式 Ch1–Ch20 跨项目验证，同时覆盖 Task 133/134/135 的实跑验收。
+- Task 136 通过临时切换 `prompts/cards/writer/_manifest.yaml` 的 `default_version` 为 `"1.2.0"` 完成 Ch1–Ch20 采集窗口验证，`scenes_count >= 2` 占比 100%。
+- Writer 1.2.0 当前仍非默认版本；普通 pipeline / CLI 默认读取 Writer 1.1.0，不代表 Task 133 修复被覆盖。
+- 后续 Task 137 或更大窗口复跑必须复用 Task 136 脚本，或使用等效显式 Writer 1.2.0 配置。
 
 ---
 
