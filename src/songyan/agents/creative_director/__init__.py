@@ -7,6 +7,7 @@ from typing import Any
 
 import structlog
 
+from songyan.agents.continuity_auditor._scanners import ORPHANED_THRESHOLDS
 from songyan.db.continuity_repo import SettingTrackingRepository
 from songyan.db.human_mark_repo import HumanMarkRepository
 from songyan.exceptions import LLMError, LLMResponseParseError
@@ -160,6 +161,7 @@ async def _load_active_settings_to_recycle(
         {
             **dict(r),
             "human_mark_priority": active_marks.get(str(r.get("setting_key") or ""), 0),
+            "current_chapter": chapter_number,
         }
         for r in rows
         if r.get("status") == "active"
@@ -194,9 +196,20 @@ def _format_active_settings_to_recycle(settings: list[dict]) -> str:
         last = s.get("last_mentioned_chapter", 0)
         mark_priority = int(s.get("human_mark_priority") or 0)
         mark_note = f"，人工标记优先级：{mark_priority}" if mark_priority > 0 else ""
+        silent_chapters = int(s.get("current_chapter", 0) or 0) - int(last or 0)
+        critical_note = ""
+        if (
+            category == "critical"
+            and silent_chapters >= ORPHANED_THRESHOLDS["critical"]
+        ):
+            critical_note = (
+                "，严重级别：P1，处理要求：本章必须明确回收、提及、"
+                "或给出无法回收的剧情原因"
+            )
         lines.append(
             f"- {name}（{key}，类别：{category}，"
-            f"引入第{introduced}章，最近提及第{last}章{mark_note}）"
+            f"引入第{introduced}章，最近提及第{last}章"
+            f"{mark_note}{critical_note}）"
         )
     return "\n".join(lines)
 

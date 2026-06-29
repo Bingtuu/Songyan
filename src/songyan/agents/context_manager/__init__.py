@@ -879,6 +879,7 @@ def assemble_context_package(
     foreshadowing_due: list[str] | None = None,
     focal_distance: str = "mid",
     last_appeared_chapters: dict[str, int] | None = None,
+    mandatory_references: list[dict] | None = None,
 ) -> ContextPackage:
     """组装上下文包并按 Token 预算裁剪.
 
@@ -1065,6 +1066,8 @@ def assemble_context_package(
         dialogue_style_cards=list(dialogue_style_cards or []),
         # 080: 监控字段
         character_states_total=len(character_states),
+        # Task 138h: 强制连续性约束
+        mandatory_references=list(mandatory_references or []),
     )
 
     # Phase 5: 注入风格样本（如果提供）

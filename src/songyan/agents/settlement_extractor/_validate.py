@@ -66,6 +66,14 @@ _TELEMETRY_ATTRIBUTE_KEYWORDS = (
     "door_gap",
     "间隙",
     "门缝",
+    "period",
+    "周期",
+    "decay",
+    "衰减",
+    "depth",
+    "深度",
+    "distance",
+    "距离",
 )
 _TELEMETRY_QUANTITY_ATTRIBUTE_PATTERNS = ("文字数量", "文字数", "脉冲数")
 _TELEMETRY_ALIAS_GROUPS: tuple[tuple[tuple[str, ...], tuple[str, ...]], ...] = (
@@ -104,6 +112,22 @@ _TELEMETRY_ALIAS_GROUPS: tuple[tuple[tuple[str, ...], tuple[str, ...]], ...] = (
     (
         ("gap", "door_gap", "间隙", "门缝"),
         ("gap", "door_gap", "door gap", "间隙", "门缝", "门缝读数"),
+    ),
+    (
+        ("period", "周期"),
+        ("period", "周期", "收缩周期", "舒张周期"),
+    ),
+    (
+        ("decay", "衰减"),
+        ("decay", "衰减", "张力衰减", "弹簧张力衰减"),
+    ),
+    (
+        ("depth", "深度"),
+        ("depth", "深度", "距离"),
+    ),
+    (
+        ("distance", "距离"),
+        ("distance", "距离"),
     ),
     (("脉冲数",), ("脉冲数", "指令脉冲数", "自毁指令脉冲数")),
     (("文字数量", "文字数"), ("文字数量", "文字数")),

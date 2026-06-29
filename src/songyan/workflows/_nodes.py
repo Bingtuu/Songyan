@@ -1059,6 +1059,15 @@ async def rule_auditor_node(state: dict[str, Any]) -> dict[str, Any]:
         if brief:
             punch_points = brief.punch_points
 
+    # Task 138h: 获取 mandatory_references 用于 RuleAuditor 硬约束检查
+    mandatory_references: list[dict] | None = None
+    try:
+        ctx_pkg = await _get_context_package(state)
+        if ctx_pkg:
+            mandatory_references = getattr(ctx_pkg, "mandatory_references", None)
+    except Exception:
+        logger.debug("rule_auditor_node.mandatory_references_load_skipped")
+
     result = run_rule_audit(
         content=version.content,
         genre_rules=_build_genre_rules(genre, project, goal) if genre else None,
@@ -1066,6 +1075,7 @@ async def rule_auditor_node(state: dict[str, Any]) -> dict[str, Any]:
         chapter_type=goal.chapter_type if goal else None,
         scene_count_target=max(len(version.scenes), 2) if version.scenes else 2,
         punch_points=punch_points,
+        mandatory_references=mandatory_references,
     )
     report_id = new_id("ra")
     await save_rule_audit(
@@ -1628,6 +1638,15 @@ async def revision_handler_node(state: dict[str, Any]) -> dict[str, Any]:
         if brief:
             punch_points = brief.punch_points
 
+    # Task 138h: 修订后同样需要检查 mandatory_references
+    rev_mandatory_refs: list[dict] | None = None
+    try:
+        rev_ctx_pkg = await _get_context_package(state)
+        if rev_ctx_pkg:
+            rev_mandatory_refs = getattr(rev_ctx_pkg, "mandatory_references", None)
+    except Exception:
+        logger.debug("revision_handler_node.mandatory_references_load_skipped")
+
     revised_rule_result = run_rule_audit(
         content=revised_content,
         genre_rules=_build_genre_rules(genre, project, goal) if genre else None,
@@ -1635,6 +1654,7 @@ async def revision_handler_node(state: dict[str, Any]) -> dict[str, Any]:
         chapter_type=goal.chapter_type if goal else None,
         scene_count_target=max(len(output.patches_applied), 2),
         punch_points=punch_points,
+        mandatory_references=rev_mandatory_refs,
     )
 
     # 058d: 重新构建 RevisionOutput，传入前后 RuleAuditResult

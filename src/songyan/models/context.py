@@ -218,6 +218,9 @@ class ContextPackage(BaseModel):
     # === Task 074: 角色对话风格卡 ===
     dialogue_style_cards: list[DialogueStyleCard] = Field(default_factory=list)
 
+    # === Task 138h: 强制连续性约束（critical orphan 硬回收）===
+    mandatory_references: list[dict] = Field(default_factory=list)
+
     # === 元信息 ===
     estimated_tokens: int = 0
     _budget_enforced: bool = False  # 077b: 是否触发了 BudgetPruner 硬断言

@@ -7,7 +7,10 @@ from typing import Any
 import pytest
 
 from songyan.agents.continuity_auditor import ContinuityAuditor
-from songyan.agents.creative_director import _load_active_settings_to_recycle
+from songyan.agents.creative_director import (
+    _format_active_settings_to_recycle,
+    _load_active_settings_to_recycle,
+)
 from songyan.agents.setting_evaporator import _calculate_resolve_confidence
 from songyan.agents.settlement_extractor._apply import (
     _detect_setting_references,
@@ -272,6 +275,82 @@ class TestDetectSettingReferences:
         )
 
         assert refs == {"t1": "artifact.mega_ruin.surface_material"}
+
+    @pytest.mark.parametrize(
+        "content",
+        [
+            "星图一层层地从表面材料下浮现出来。",
+            "舰体表面的涂装在遗迹表面半流体材料的反光中扭曲变形。",
+            "墙壁上的能量纹路在低温下变得更加明亮。",
+            "遗迹表面的能量纹路与星图网络同步闪烁。",
+        ],
+    )
+    def test_task138g_surface_material_ch12_evidence_refreshes(
+        self,
+        content: str,
+    ) -> None:
+        """Task 138g: Ch12 明确材料/纹路证据可刷新 surface_material."""
+        settings = [
+            {
+                "tracking_id": "t1",
+                "setting_key": "artifact.mega_ruin.surface_material",
+                "setting_name": "巨型遗迹表面材料特性",
+                "description": "遗迹表面材料为半流体，能根据压力改变密度。",
+                "status": "active",
+            }
+        ]
+
+        refs = _detect_setting_references(content, settings)
+
+        assert refs == {"t1": "artifact.mega_ruin.surface_material"}
+
+    @pytest.mark.parametrize(
+        "content",
+        [
+            "巨型遗迹仍在远处沉默。",
+            "他的手掌按在表面。",
+            "裸露的能量纹路不断闪烁。",
+            "金属表面刮出五道白痕。",
+        ],
+    )
+    def test_task138g_surface_material_broad_terms_do_not_refresh(
+        self,
+        content: str,
+    ) -> None:
+        """Task 138g: 宽泛词不能伪刷新 surface_material."""
+        settings = [
+            {
+                "tracking_id": "t1",
+                "setting_key": "artifact.mega_ruin.surface_material",
+                "setting_name": "巨型遗迹表面材料特性",
+                "description": "遗迹表面材料为半流体，能根据压力改变密度。",
+                "status": "active",
+            }
+        ]
+
+        refs = _detect_setting_references(content, settings)
+
+        assert refs == {}
+
+    def test_task138g_phase_offset_does_not_refresh_phase_flush(self) -> None:
+        """Task 138g: 弱相关“相位偏移”不能刷新相位冲刷机制."""
+        settings = [
+            {
+                "tracking_id": "t1",
+                "setting_key": "artifact.ruin.phase_flush_mechanism",
+                "setting_name": "相位冲刷机制",
+                "description": "每72分钟一次相位冲刷，纳米蜂群休眠。",
+                "status": "active",
+            }
+        ]
+
+        refs = _detect_setting_references(
+            "SS-047在死前最后三秒感知到了空间折叠的触发信号，"
+            "那是一种频率极其微弱的相位偏移。",
+            settings,
+        )
+
+        assert refs == {}
 
     def test_empty_content_returns_empty(self) -> None:
         settings = [
@@ -1059,3 +1138,341 @@ class TestCreativeDirectorRecycleFilter:
         assert keys == ["critical.stale-gap", "background.old-human-held"]
         assert result[0]["human_mark_priority"] == 0
         assert result[1]["human_mark_priority"] == 6
+
+    def test_format_recycle_marks_stale_critical_as_p1(self) -> None:
+        rendered = _format_active_settings_to_recycle(
+            [
+                {
+                    "setting_key": "organization.expedition.team_7",
+                    "setting_name": "第7远征队·静默节点",
+                    "category": "critical",
+                    "introduced_in_chapter": 4,
+                    "last_mentioned_chapter": 7,
+                    "current_chapter": 12,
+                },
+                {
+                    "setting_key": "background.old",
+                    "setting_name": "普通背景设定",
+                    "category": "background",
+                    "introduced_in_chapter": 1,
+                    "last_mentioned_chapter": 4,
+                    "current_chapter": 12,
+                },
+            ]
+        )
+
+        assert "第7远征队·静默节点" in rendered
+        assert "严重级别：P1" in rendered
+        assert "本章必须明确回收、提及、或给出无法回收的剧情原因" in rendered
+        background_line = next(
+            line for line in rendered.splitlines() if "普通背景设定" in line
+        )
+        assert "严重级别：P1" not in background_line
+
+
+class TestTask138hMandatoryReferences:
+    """Task 138h: critical orphan 强制回收闭环测试."""
+
+    @pytest.mark.asyncio
+    async def test_load_critical_mandatory_references_filters_and_sorts(
+        self,
+        monkeypatch: Any,
+    ) -> None:
+        """_load_critical_mandatory_references 返回 active+critical+达阈值项，按沉寂降序."""
+        from songyan.workflows._helpers import _load_critical_mandatory_references
+
+        mock_rows = [
+            {
+                "setting_key": "artifact.mega_ruin.surface_material",
+                "setting_name": "巨型遗迹表面材料特性",
+                "status": "active",
+                "category": "critical",
+                "last_mentioned_chapter": 3,
+                "introduced_in_chapter": 3,
+            },
+            {
+                "setting_key": "artifact.ruin.phase_flush_mechanism",
+                "setting_name": "相位冲刷机制",
+                "status": "active",
+                "category": "critical",
+                "last_mentioned_chapter": 7,
+                "introduced_in_chapter": 7,
+            },
+            {
+                "setting_key": "background.old",
+                "setting_name": "普通背景设定",
+                "status": "active",
+                "category": "background",
+                "last_mentioned_chapter": 2,
+                "introduced_in_chapter": 1,
+            },
+            {
+                "setting_key": "archived.setting",
+                "setting_name": "已归档设定",
+                "status": "archived",
+                "category": "critical",
+                "last_mentioned_chapter": 1,
+                "introduced_in_chapter": 1,
+            },
+        ]
+
+        async def mock_list(self, _project_id: str) -> list[dict]:
+            return mock_rows
+
+        monkeypatch.setattr(
+            "songyan.workflows._helpers.SettingTrackingRepository.list_by_project",
+            mock_list,
+        )
+
+        result = await _load_critical_mandatory_references("proj-test", 12)
+
+        assert len(result) == 2
+        # surface_material: 12 - 3 = 9 章沉寂
+        # phase_flush: 12 - 7 = 5 章沉寂
+        # 按降序排列
+        assert result[0]["setting_key"] == "artifact.mega_ruin.surface_material"
+        assert result[0]["silent_chapters"] == 9
+        assert result[1]["setting_key"] == "artifact.ruin.phase_flush_mechanism"
+        assert result[1]["silent_chapters"] == 5
+
+    @pytest.mark.asyncio
+    async def test_load_critical_mandatory_references_excludes_below_threshold(
+        self,
+        monkeypatch: Any,
+    ) -> None:
+        """沉寂章数 < ORPHANED_THRESHOLDS['critical']（默认 3）的项应被排除."""
+        from songyan.workflows._helpers import _load_critical_mandatory_references
+
+        mock_rows = [
+            {
+                "setting_key": "just.below.threshold",
+                "setting_name": "刚好低于阈值",
+                "status": "active",
+                "category": "critical",
+                "last_mentioned_chapter": 10,  # 12 - 10 = 2 < 3
+                "introduced_in_chapter": 8,
+            },
+        ]
+
+        async def mock_list(self, _project_id: str) -> list[dict]:
+            return mock_rows
+
+        monkeypatch.setattr(
+            "songyan.workflows._helpers.SettingTrackingRepository.list_by_project",
+            mock_list,
+        )
+
+        result = await _load_critical_mandatory_references("proj-test", 12)
+        assert result == []
+
+    def test_render_prompt_includes_mandatory_references(self) -> None:
+        """Writer _render_prompt 应在输出中包含 mandatory_references 块."""
+        from songyan.agents.writer import _render_prompt
+        from songyan.models import ChapterGoal, ContextPackage
+
+        goal = ChapterGoal(
+            chapter_number=12,
+            word_count_target=3000,
+            target_events=["测试事件"],
+            hooks=["测试钩子"],
+            obligations=["测试义务"],
+        )
+        ctx = ContextPackage(
+            chapter_goal=goal,
+            mandatory_references=[
+                {
+                    "setting_key": "artifact.mega_ruin.surface_material",
+                    "setting_name": "巨型遗迹表面材料特性",
+                    "silent_chapters": 9,
+                }
+            ],
+        )
+
+        prompt = _render_prompt(ctx)
+
+        assert "强制连续性约束" in prompt
+        assert "巨型遗迹表面材料特性" in prompt
+        assert "已沉寂 9 章" in prompt
+        assert "不是建议，而是强制约束" in prompt
+
+    def test_render_prompt_omits_empty_mandatory_references(self) -> None:
+        """当 mandatory_references 为空时，prompt 中不应出现该块."""
+        from songyan.agents.writer import _render_prompt
+        from songyan.models import ChapterGoal, ContextPackage
+
+        goal = ChapterGoal(
+            chapter_number=12,
+            word_count_target=3000,
+            target_events=["测试事件"],
+            hooks=["测试钩子"],
+            obligations=["测试义务"],
+        )
+        ctx = ContextPackage(chapter_goal=goal)
+
+        prompt = _render_prompt(ctx)
+
+        assert "强制连续性约束" not in prompt
+
+    def test_check_mandatory_references_detects_missing(self) -> None:
+        """_check_mandatory_references 应检测到正文中未提及的 reference."""
+        from songyan.agents.rule_auditor import _check_mandatory_references
+
+        content = "这是一段普通正文，没有任何设定提及。"
+        refs = [
+            {
+                "setting_key": "artifact.mega_ruin.surface_material",
+                "setting_name": "巨型遗迹表面材料特性",
+                "silent_chapters": 9,
+            },
+        ]
+        passed, issues = _check_mandatory_references(content, refs)
+        assert passed is False
+        assert len(issues) == 1
+        assert "巨型遗迹表面材料特性" in issues[0]
+
+    def test_check_mandatory_references_detects_present_by_name(self) -> None:
+        """正文中出现 setting_name 时应视为已回收."""
+        from songyan.agents.rule_auditor import _check_mandatory_references
+
+        content = "遗迹表面材料特性一致，非欧几何合金碎片在钻探点周围大量分布。"
+        refs = [
+            {
+                "setting_key": "artifact.mega_ruin.surface_material",
+                "setting_name": "表面材料特性",
+                "silent_chapters": 9,
+            },
+        ]
+        passed, issues = _check_mandatory_references(content, refs)
+        assert passed is True
+        assert issues == []
+
+    def test_check_mandatory_references_detects_present_by_key_alias(self) -> None:
+        """正文中出现 key 的最后一个 segment（如 surface_material）时应视为已回收."""
+        from songyan.agents.rule_auditor import _check_mandatory_references
+
+        content = "这次钻探发现 surface_material 与之前一致。"
+        refs = [
+            {
+                "setting_key": "artifact.mega_ruin.surface_material",
+                "setting_name": "巨型遗迹表面材料特性",
+                "silent_chapters": 9,
+            },
+        ]
+        passed, issues = _check_mandatory_references(content, refs)
+        assert passed is True
+        assert issues == []
+
+    def test_run_rule_audit_with_mandatory_references(self) -> None:
+        """run_rule_audit 传入 mandatory_references 后应正确反映检查结果."""
+        from songyan.agents.rule_auditor import (
+            _compute_overall_score,
+            run_rule_audit,
+        )
+
+        content = "普通正文，没有提及任何设定。"
+        refs = [
+            {
+                "setting_key": "artifact.mega_ruin.surface_material",
+                "setting_name": "巨型遗迹表面材料特性",
+                "silent_chapters": 9,
+            },
+            {
+                "setting_key": "artifact.ruin.phase_flush_mechanism",
+                "setting_name": "相位冲刷机制",
+                "silent_chapters": 5,
+            },
+        ]
+        result = run_rule_audit(content, mandatory_references=refs)
+        assert result.mandatory_reference_check_passed is False
+        assert len(result.mandatory_reference_issues) == 2
+        assert "巨型遗迹表面材料特性" in result.mandatory_reference_issues[0]
+        assert "相位冲刷机制" in result.mandatory_reference_issues[1]
+        # 扣分验证：每个 -1.5，最多 -3
+        score = _compute_overall_score(result)
+        assert score <= 7.0
+
+
+class TestTask138jRecycleHints:
+    """Task 138j: Writer 回收提示测试."""
+
+    def test_infer_recycle_hint_known_alias(self) -> None:
+        """_infer_recycle_hint 对已知 key_alias 返回正确提示."""
+        from songyan.workflows._helpers import _infer_recycle_hint
+
+        assert "环境描写" in _infer_recycle_hint("surface_material")
+        assert "技术原理" in _infer_recycle_hint("phase_flush_mechanism")
+        assert "团队行动" in _infer_recycle_hint("team_7")
+        assert "空间环境描写" in _infer_recycle_hint("core_space")
+        assert "墙壁的异常行为" in _infer_recycle_hint("living_wall")
+
+    def test_infer_recycle_hint_unknown_alias(self) -> None:
+        """_infer_recycle_hint 对未知 key_alias 返回兜底提示."""
+        from songyan.workflows._helpers import _infer_recycle_hint
+
+        hint = _infer_recycle_hint("unknown_setting_key")
+        assert "角色对话回顾" in hint
+        assert "环境细节呼应" in hint
+        assert "剧情事件直接触发" in hint
+
+    @pytest.mark.asyncio
+    async def test_load_critical_mandatory_references_includes_recycle_hint(
+        self,
+        monkeypatch: Any,
+    ) -> None:
+        """_load_critical_mandatory_references 返回的结果应包含 recycle_hint."""
+        from songyan.workflows._helpers import _load_critical_mandatory_references
+
+        mock_rows = [
+            {
+                "setting_key": "artifact.mega_ruin.surface_material",
+                "setting_name": "巨型遗迹表面材料特性",
+                "status": "active",
+                "category": "critical",
+                "last_mentioned_chapter": 3,
+                "introduced_in_chapter": 3,
+            },
+        ]
+
+        async def mock_list(self, _project_id: str) -> list[dict]:
+            return mock_rows
+
+        monkeypatch.setattr(
+            "songyan.workflows._helpers.SettingTrackingRepository.list_by_project",
+            mock_list,
+        )
+
+        result = await _load_critical_mandatory_references("proj-test", 12)
+
+        assert len(result) == 1
+        assert "recycle_hint" in result[0]
+        assert "环境描写" in result[0]["recycle_hint"]
+
+    def test_render_prompt_includes_recycle_hint(self) -> None:
+        """Writer _render_prompt 应在输出中包含 recycle_hint."""
+        from songyan.agents.writer import _render_prompt
+        from songyan.models import ChapterGoal, ContextPackage
+
+        goal = ChapterGoal(
+            chapter_number=12,
+            word_count_target=3000,
+            target_events=["测试事件"],
+            hooks=["测试钩子"],
+            obligations=["测试义务"],
+        )
+        ctx = ContextPackage(
+            chapter_goal=goal,
+            mandatory_references=[
+                {
+                    "setting_key": "artifact.mega_ruin.surface_material",
+                    "setting_name": "巨型遗迹表面材料特性",
+                    "silent_chapters": 9,
+                    "recycle_hint": "可通过环境描写（触感、视觉观察）来回收",
+                }
+            ],
+        )
+
+        prompt = _render_prompt(ctx)
+
+        assert "【建议】" in prompt
+        assert "环境描写（触感、视觉观察）" in prompt
+        assert "巨型遗迹表面材料特性" in prompt

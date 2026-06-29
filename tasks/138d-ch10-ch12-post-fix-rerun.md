@@ -281,4 +281,82 @@ Task 138c 完成最小修复后，需要用与 `run-4ba8de9d` 同口径的 Ch10-
 
 - 不创建 Task 138e-R2。
 - 不归档 Task 137。
-- 进入新的最小定位/修复步骤：扩展 evidence-backed snapshot 的属性分类与 alias 规则，覆盖 `period`/`周期`、`decay`/`衰减`、`depth`/`深度`、`distance`/`距离` 这类明确读数；同时保留无证据候选过滤和真实 ledger 硬校验。
+- 进入新的最小定位/修复步骤：扩展 evidence-backed snapshot 的属性分类与 alias 规则，但必须采用严格 allowlist，不允许把所有公式不闭合的 `numerical_update` 泛化降级为 snapshot。
+- allowlist 仅覆盖本轮已出现且有正文明确读数证据的环境/结构读数字段类别：
+  - `period` / `周期`：如 `channel_wall_contraction_period`、`channel_wall_relaxation_period`，证据需包含明确秒数读数。
+  - `decay` / `衰减`：如 `knife_sheath_spring_tension_decay`，证据需包含明确百分比或数值读数。
+  - `depth` / `深度`、`distance` / `距离`：如 `vertical_pipe_depth`、`liquid_metal_tentacle_distance`，证据需包含明确距离读数。
+- 测试要求必须同时覆盖正例和负例：
+  - 正例：`收缩周期：1.7秒`、`舒张周期：1.1秒`、`衰减了12%`、`距离大约二十米`、`距离：大约八米` 可规整为 evidence-backed snapshot。
+  - 负例：无正文 content 或 source_quote 明确读数时仍过滤或失败；真实 ledger 公式错误仍保持硬失败。
+- 复跑出口条件不能只看 Ch12 settlement 通过；必须使用新的 `.tmp` 副本 DB 复跑 Ch10-Ch12，并满足 Ch11/Ch12 settlement、summary、QG 全部通过，Ch12 continuity 成功生成，再比较 `orphaned < 16`。
+- 若 Ch12 continuity 生成但 `orphaned >= 16` 或 health 仍无法改善，则本次修复只能判定为 settlement 阻断解除，Task 137 仍不能收口，需继续基于新的 continuity 证据分类。
+
+### 最小修复实现
+
+- `src/songyan/agents/settlement_extractor/_validate.py`
+  - 在 telemetry attribute allowlist 中新增 `period`/`周期`、`decay`/`衰减`、`depth`/`深度`、`distance`/`距离`。
+  - 在 alias 组中仅为本轮环境/结构读数补充有限别名：`收缩周期`、`舒张周期`、`张力衰减`、`弹簧张力衰减`、`深度`、`距离`。
+  - 仍复用 Task 138f evidence gate：有明确正文/source_quote 读数才规整为 `telemetry_snapshot`；无证据候选过滤；真实 ledger 继续执行公式硬校验。
+- `tests/test_settlement_extractor.py`
+  - 新增 Ch12 retry3 五个正例：`channel_wall_contraction_period`、`channel_wall_relaxation_period`、`knife_sheath_spring_tension_decay`、`vertical_pipe_depth`、`liquid_metal_tentacle_distance`。
+  - 新增 allowlist 字段无明确读数时仍过滤的负例。
+  - 既有真实 ledger 公式错误负例继续覆盖未放宽台账硬校验。
+
+### 本地验证
+
+- `python -m pytest tests/test_settlement_extractor.py -q` -> `117 passed, 1 xfailed`
+- `ruff check src/songyan/agents/settlement_extractor/_validate.py tests/test_settlement_extractor.py` -> `All checks passed!`
+- `python -m pytest tests/ -q` -> `1979 passed, 1 xfailed, 2 warnings`
+- `ruff check src/ tests/` -> `All checks passed!`
+
+### 待复跑
+
+- 仍不能创建 Task 138e-R2。
+- 仍不能归档 Task 137。
+- 下一步必须使用新的 `.tmp` 副本 DB 复跑 Ch10-Ch12；只有 Ch12 continuity 生成后，才能比较 `orphaned < 16` 并判断 Task 137 是否有收口条件。
+
+---
+
+## Round 2 Retry 4 / run-bcee6ab6
+
+> **状态**: 已完成验证；Ch11/Ch12 settlement、summary、QG 全部通过，Ch12 continuity 已生成
+
+### 运行证据
+
+- Run ID: `run-bcee6ab6`
+- DB: `.tmp/task138d_r2_retry4_ch10_focus_20260629_101459.db`
+- 运行方式: `scripts/run_137_ch10_focus_validation.py`
+- Report: `docs/reports/task-137-ch10-focus-validation-report.md`
+- Writer manifest: 运行后已恢复为 `default_version: "1.1.0"`。
+- 进程清理: 报告生成后存在短暂 wrapper/python 残留；复查时已无该验证进程。
+
+### 结果
+
+- `project_runs.status`: `completed`
+- `current_chapter`: 12
+- `completed_chapters`: `[10, 11, 12]`
+- `failed_chapters`: `[]`
+- Ch10 head: accepted `v-10-6-4c80f8c7`
+- Ch11 head: accepted `v-11-4-ded05cbb`
+- Ch12 head: accepted `v-12-1-69152a68`
+
+### Run log
+
+- Ch11: `success=true`、`settlement_success=true`、`summary_success=true`、`quality_gate_passed=true`、`settlement_validation_errors=[]`。
+- Ch12: `success=true`、`settlement_success=true`、`summary_success=true`、`quality_gate_passed=true`、`settlement_validation_errors=[]`。
+
+### Ch12 continuity 对比
+
+| 指标 | Baseline `run-4fd48756` | Retry4 `run-bcee6ab6` | 变化 |
+|------|--------------------------|------------------------|------|
+| health | 3.0 | 3.0 | 持平 |
+| orphaned | 16 | 14 | -2 |
+| mismatches | 0 | 0 | 持平 |
+
+### 结论
+
+- Task 138d-R2 retry3 暴露的环境/结构读数类 `settlement_review` 阻断已解除。
+- Ch12 continuity 已生成，`orphaned=14`，低于 baseline 16。
+- Health 仍为 3.0，说明本轮只能证明 settlement 阻断解除和 orphan 继续下降，不能直接归档 Task 137。
+- 下一步进入 Task 137 事实同步与收口判断：基于 Ch12 continuity `health=3.0`、`orphaned=14` 判断是否需要继续分类剩余 orphan，或是否可接受为当前阶段收口口径。

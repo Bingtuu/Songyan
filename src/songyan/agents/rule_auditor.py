@@ -186,6 +186,45 @@ def _check_punch_points(
     )
 
 
+def _check_mandatory_references(
+    content: str,
+    mandatory_references: list[dict] | None,
+) -> tuple[bool, list[str]]:
+    """Task 138h: 检测正文中是否缺失 mandatory_reference 的提及.
+
+    匹配策略：检查 setting_key 的最后一个 segment 或 setting_name
+    是否在正文中出现（不区分中英文标点）。
+
+    Returns:
+        (passed, issues)
+    """
+    if not mandatory_references:
+        return True, []
+
+    issues: list[str] = []
+    text = content.lower()
+    for ref in mandatory_references:
+        key = str(ref.get("setting_key") or "").lower()
+        name = str(ref.get("setting_name") or "").lower()
+        # 取 key 的最后一个 segment 作为别名（如 surface_material）
+        key_alias = key.split(".")[-1] if key else ""
+
+        found = False
+        for candidate in (name, key_alias, key):
+            if candidate and candidate in text:
+                found = True
+                break
+
+        if not found:
+            silent = ref.get("silent_chapters", 0)
+            issues.append(
+                f'强制连续性约束未回收：{ref.get("setting_name") or key or "未命名设定"}'
+                f"（已沉寂 {silent} 章）"
+            )
+
+    return len(issues) == 0, issues
+
+
 def run_rule_audit(
     content: str,
     genre_rules: GenreRules | None = None,
@@ -194,6 +233,7 @@ def run_rule_audit(
     scene_count_target: int = 2,
     numerical_contexts: list[NumericalContext] | None = None,
     punch_points: list[PunchPoint] | None = None,
+    mandatory_references: list[dict] | None = None,
 ) -> RuleAuditResult:
     """运行规则检测（纯代码，无 LLM）.
 
@@ -258,6 +298,9 @@ def run_rule_audit(
     # 12. 刺激度检查（Punch Engine）
     punch_check = _check_punch_points(content, punch_points or [], word_count)
 
+    # 13. Task 138h: 强制连续性约束检查
+    mr_passed, mr_issues = _check_mandatory_references(content, mandatory_references)
+
     duration_ms = int((time.perf_counter() - start_time) * 1000)
 
     result = RuleAuditResult(
@@ -286,6 +329,8 @@ def run_rule_audit(
         short_paragraph_ratio=short_paragraph_ratio,
         numerical_issues=numerical_issues,
         punch_check=punch_check,
+        mandatory_reference_issues=mr_issues,
+        mandatory_reference_check_passed=mr_passed,
         duration_ms=duration_ms,
     )
 
@@ -300,6 +345,8 @@ def run_rule_audit(
         word_count_ok=word_count_ok,
         punch_density_ok=punch_check.punch_density_ok,
         emotion_switch_ok=punch_check.emotion_switch_ok,
+        mandatory_reference_check_passed=mr_passed,
+        mandatory_reference_issue_count=len(mr_issues),
         duration_ms=duration_ms,
     )
     return result
@@ -387,6 +434,10 @@ def _compute_overall_score(result: RuleAuditResult) -> float:
         if not result.punch_check.emotion_switch_ok:
             score -= 0.5
 
+    # Task 138h: 强制连续性约束扣分 — 每个缺失 -1.5，最多 -3
+    if not result.mandatory_reference_check_passed:
+        score -= min(len(result.mandatory_reference_issues) * 1.5, 3.0)
+
     return max(0.0, round(score, 1))
 
 
@@ -430,6 +481,11 @@ def _generate_summary(result: RuleAuditResult) -> str:
             parts.append("刺激点密度不足")
         if not result.punch_check.emotion_switch_ok:
             parts.append("情绪转折不足")
+
+    if not result.mandatory_reference_check_passed:
+        parts.append(
+            f"强制连续性约束未回收：{len(result.mandatory_reference_issues)} 项"
+        )
 
     if not parts:
         return "规则检测通过，未发现明显问题。"

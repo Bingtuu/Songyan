@@ -1390,6 +1390,89 @@ class TestValidateSettlement:
             f"telemetry_snapshot: {closing_value}"
         )
 
+    @pytest.mark.parametrize(
+        ("attribute_name", "content", "closing_value"),
+        [
+            (
+                "channel_wall_contraction_period",
+                "舱壁上浮出新的节律读数。收缩周期：1.7秒。",
+                1.7,
+            ),
+            (
+                "channel_wall_relaxation_period",
+                "另一行读数随即亮起。舒张周期：1.1秒。",
+                1.1,
+            ),
+            (
+                "knife_sheath_spring_tension_decay",
+                "刀鞘卡扣的弹簧张力衰减了12%。",
+                12.0,
+            ),
+            (
+                "vertical_pipe_depth",
+                "通道底部有微弱的蓝光，距离大约二十米。",
+                20.0,
+            ),
+            (
+                "liquid_metal_tentacle_distance",
+                "银白色液态金属的距离：大约八米。",
+                8.0,
+            ),
+        ],
+    )
+    async def test_task138d_r2_environment_snapshot_allowlist(
+        self,
+        attribute_name: str,
+        content: str,
+        closing_value: float,
+    ) -> None:
+        """Task 138d-R2: 明确环境/结构读数 allowlist 可规整为 snapshot."""
+        settlement = StateSettlement(
+            numerical_updates=[
+                NumericalUpdate(
+                    character_id="lin_shen",
+                    attribute_name=attribute_name,
+                    opening_value=0.0,
+                    increments=[],
+                    decrements=[],
+                    closing_value=closing_value,
+                    formula="0 + 0 = wrong",
+                )
+            ]
+        )
+
+        errors = await _validate_settlement(settlement, content, [], [])
+
+        update = settlement.numerical_updates[0]
+        assert errors == []
+        assert update.opening_value == closing_value
+        assert update.closing_value == closing_value
+        assert update.increments == []
+        assert update.decrements == []
+        assert update.formula == f"telemetry_snapshot: {closing_value}"
+
+    async def test_task138d_r2_allowlist_without_reading_is_filtered(self) -> None:
+        """Task 138d-R2: allowlist 字段无明确读数时仍不能进入有效结算."""
+        content = "舱壁的收缩周期变得紊乱，但正文没有给出秒数读数。"
+        settlement = StateSettlement(
+            numerical_updates=[
+                NumericalUpdate(
+                    character_id="lin_shen",
+                    attribute_name="channel_wall_contraction_period",
+                    opening_value=2.0,
+                    increments=[],
+                    decrements=[],
+                    closing_value=1.7,
+                    formula="2.0 + 0 = 1.7",
+                )
+            ]
+        )
+
+        errors = await _validate_settlement(settlement, content, [], [])
+
+        assert errors == []
+        assert settlement.numerical_updates == []
+
     async def test_foreshadowing_empty_version_id(self) -> None:
         content = "正文"
         settlement = StateSettlement(

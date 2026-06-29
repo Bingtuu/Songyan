@@ -169,6 +169,10 @@ class RuleAuditResult(BaseModel):
     # 刺激度检查（Punch Engine）
     punch_check: PunchCheck = Field(default_factory=PunchCheck)
 
+    # Task 138h: 强制连续性约束检查
+    mandatory_reference_issues: list[str] = Field(default_factory=list)
+    mandatory_reference_check_passed: bool = True
+
     # 处理时长
     duration_ms: int = 0
 

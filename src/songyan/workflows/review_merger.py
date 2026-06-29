@@ -212,6 +212,25 @@ def _convert_rule_to_issues(
             return text
         return text[:max_len] + "..."
 
+    # 0. Task 138h: 强制连续性约束未回收 (critical) — 放在最前面，确保不被 cap 截断
+    if not rule_result.mandatory_reference_check_passed:
+        for idx, issue_text in enumerate(rule_result.mandatory_reference_issues):
+            issues.append(
+                ReviewIssue(
+                    issue_id=_next_id(),
+                    category=ReviewCategory.WORLD_CONSISTENCY,
+                    severity="critical",
+                    evidence_quote=issue_text,
+                    evidence_location="全章",
+                    issue_description=issue_text,
+                    expected="正文中应通过角色行动、对话、环境描写或剧情事件明确回收该设定；若因剧情确实无法回收，需给出剧情豁免原因。",
+                    actual="正文中未找到该设定的明确提及。",
+                    suggested_fix="在合适位置插入该设定的提及或回收：可以通过角色对话回顾、环境细节呼应、或剧情事件直接触发。",
+                    fix_type="patch",
+                    confidence=1.0,
+                )
+            )
+
     # 1. 章末钩子缺失 (critical)
     if not rule_result.has_ending_hook:
         ending_snippet = _clamp(content[-200:]) if content else ""

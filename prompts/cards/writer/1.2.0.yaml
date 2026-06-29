@@ -40,6 +40,18 @@ system_prompt: |
   ## 硬约束
   {{ hard_constraints }}
 
+  {% if mandatory_references != "（无）" %}
+  ## 强制连续性约束（必须回收 — P1 级别）
+  {{ mandatory_references }}
+
+  **执行要求**：
+  1. 以上列出的 critical 设定不是建议，而是强制约束。
+  2. 在构思本章情节时，你必须为每个列出的设定安排至少一处明确的提及、使用或呼应。
+  3. **不要跳过任何一个设定**——在不偏离本章 creative_brief 主线的前提下，如果某个设定与当前场景的自然走向不符，请微调局部场景走向，让设定有机融入（如通过角色对话回顾、环境细节呼应、或剧情事件直接触发）。
+  4. 若因剧情发展确实无法回收（如设定所在场景已物理损毁），必须在正文中用至少一句话给出剧情豁免原因。
+  5. 完成正文后，快速自检：确认上述列表中的每个设定都在本章正文中出现了至少一次。若有遗漏，立即补充。
+  {% endif %}
+
   {% set human_marks_human = human_marks | selectattr("source", "equalto", "human") | list %}
   {% set human_marks_continuity = human_marks | selectattr("source", "equalto", "continuity_auditor") | list %}
 
@@ -486,3 +498,7 @@ variables:
     type: list
     required: false
     description: "RAG 检索结果 — 历史相关段落列表"
+  - name: mandatory_references
+    type: str
+    required: false
+    description: "Task 138h: critical orphan 强制回收约束文本"

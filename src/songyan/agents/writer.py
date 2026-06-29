@@ -332,6 +332,23 @@ def _render_prompt(ctx: ContextPackage) -> str:
             "source": hm.source,
         })
 
+    # Task 138h: mandatory_references 渲染
+    mandatory_references_text = "（无）"
+    if ctx.mandatory_references:
+        lines = []
+        lines.append(
+            "以下设定已沉寂 ≥3 章且属于 critical 级别，"
+            "本章必须明确提及、使用、或给出无法回收的剧情原因："
+        )
+        for ref in ctx.mandatory_references:
+            name = ref.get("setting_name") or ref.get("setting_key") or "未命名设定"
+            key = ref.get("setting_key") or ""
+            silent = ref.get("silent_chapters", 0)
+            hint = ref.get("recycle_hint", "")
+            hint_line = f"\n  【建议】{hint}" if hint else ""
+            lines.append(f"- {name}（{key}）：已沉寂 {silent} 章{hint_line}")
+        mandatory_references_text = "\n".join(lines)
+
     # Task 092: 计算场景字数预算
     scene_budget_text = _compute_scene_budget(
         goal.word_count_target,
@@ -377,6 +394,7 @@ def _render_prompt(ctx: ContextPackage) -> str:
         "rag_results": rag_results,
         "human_marks": human_marks,
         "dialogue_style_cards": dialogue_style_cards_text,
+        "mandatory_references": mandatory_references_text,
     }
 
     tags: list[str] = []

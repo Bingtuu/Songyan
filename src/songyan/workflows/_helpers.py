@@ -7,6 +7,7 @@ import uuid
 import structlog
 
 from songyan.db.context_repo import CharacterStateRepository, SummaryRepository
+from songyan.db.continuity_repo import SettingTrackingRepository
 from songyan.db.layered_context_repo import (
     ArcSummaryRepository,
     PermanentSceneRepository,
@@ -412,6 +413,11 @@ async def assemble_context_package(
         project_id
     )
 
+    # Task 138h: 查询 critical orphan 并注入 mandatory_references
+    mandatory_references = await _load_critical_mandatory_references(
+        project_id, chapter_number
+    )
+
     return _assemble(
         chapter_goal=chapter_goal,
         creative_brief=creative_brief,
@@ -435,7 +441,108 @@ async def assemble_context_package(
         foreshadowing_due=foreshadowing_due,
         focal_distance=focal_distance,
         last_appeared_chapters=last_appeared,
+        mandatory_references=mandatory_references,
     )
+
+
+# Task 138j: 根据 setting_key 的 alias 推断回收提示
+_RECYCLE_HINTS: dict[str, str] = {
+    "surface_material": (
+        "可通过环境描写（触感、视觉观察）、角色对话提及材料特性、"
+        "或与其他材质对比来回收"
+    ),
+    "phase_flush_mechanism": (
+        "可通过角色讨论技术原理、剧情中触发/关闭机制、"
+        "或发现机制残留痕迹来回收"
+    ),
+    "team_7": (
+        "可通过角色对话回忆团队行动、提及团队成员、"
+        "或发现团队遗留痕迹来回收"
+    ),
+    "core_space": (
+        "可通过空间环境描写、角色进入/离开核心区域的行动、"
+        "或核心区域对剧情的影响来回收"
+    ),
+    "living_wall": (
+        "可通过墙壁的异常行为描写、角色与墙壁的互动、"
+        "或墙壁对环境的改变来回收"
+    ),
+}
+
+
+def _infer_recycle_hint(key_alias: str) -> str:
+    """根据 setting_key 的最后一个 segment 返回回收提示."""
+    return _RECYCLE_HINTS.get(
+        key_alias,
+        "可通过角色对话回顾、环境细节呼应、或剧情事件直接触发来回收",
+    )
+
+
+async def _load_critical_mandatory_references(
+    project_id: str,
+    chapter_number: int,
+) -> list[dict]:
+    """Task 138h/138j: 从 SettingTrackingRepository 加载 critical orphan 作为强制回收约束.
+
+    筛选条件：
+    - status == "active"
+    - category == "critical"
+    - 沉寂章数 >= ORPHANED_THRESHOLDS["critical"]（默认 3 章）
+
+    返回格式：
+    [
+        {
+            "setting_key": str,
+            "setting_name": str,
+            "category": "critical",
+            "silent_chapters": int,
+            "introduced_in_chapter": int,
+            "last_mentioned_chapter": int,
+            "recycle_hint": str,  # Task 138j 新增
+        },
+        ...
+    ]
+    """
+    from songyan.agents.continuity_auditor._scanners import ORPHANED_THRESHOLDS
+
+    rows = await SettingTrackingRepository().list_by_project(project_id)
+    threshold = ORPHANED_THRESHOLDS.get("critical", 3)
+    result: list[dict] = []
+    for row in rows:
+        if row.get("status") != "active":
+            continue
+        if row.get("category") != "critical":
+            continue
+        last_mentioned = row.get("last_mentioned_chapter") or 0
+        silent = chapter_number - last_mentioned
+        if silent < threshold:
+            continue
+        key_alias = str(row.get("setting_key") or "").split(".")[-1]
+        result.append(
+            {
+                "setting_key": str(row.get("setting_key") or ""),
+                "setting_name": str(
+                    row.get("setting_name")
+                    or row.get("setting_key")
+                    or "未命名设定"
+                ),
+                "category": "critical",
+                "silent_chapters": silent,
+                "introduced_in_chapter": int(row.get("introduced_in_chapter") or 0),
+                "last_mentioned_chapter": last_mentioned,
+                "recycle_hint": _infer_recycle_hint(key_alias),
+            }
+        )
+    # 按沉寂章数降序排列（最紧急的在前）
+    result.sort(key=lambda r: r["silent_chapters"], reverse=True)
+    logger.info(
+        "task138h.mandatory_references_loaded",
+        project_id=project_id,
+        chapter_number=chapter_number,
+        count=len(result),
+        keys=[r["setting_key"] for r in result],
+    )
+    return result
 
 
 # ---------------------------------------------------------------------------

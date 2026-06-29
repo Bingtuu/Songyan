@@ -254,3 +254,35 @@ class TestSceneStructureIssues:
         issues = _convert_rule_to_issues("正文", rule_result, "v1")
         scene_issues = [i for i in issues if "场景" in i.issue_description]
         assert len(scene_issues) == 0
+
+
+# ---------------------------------------------------------------------------
+# Task 138h: Mandatory Reference Issues
+# ---------------------------------------------------------------------------
+class TestMandatoryReferenceIssues:
+    """Tests for Task 138h: mandatory_reference issue conversion."""
+
+    def test_converts_mandatory_reference_issues_to_critical(self) -> None:
+        """mandatory_reference_issues 应被转化为 critical severity 的 ReviewIssue."""
+        rule_result = RuleAuditResult(
+            mandatory_reference_check_passed=False,
+            mandatory_reference_issues=[
+                "强制连续性约束未回收：巨型遗迹表面材料特性（已沉寂 9 章）",
+            ],
+        )
+        issues = _convert_rule_to_issues("正文", rule_result, "v1")
+        mr_issues = [i for i in issues if i.category == ReviewCategory.WORLD_CONSISTENCY]
+        assert len(mr_issues) == 1
+        assert mr_issues[0].severity == "critical"
+        assert mr_issues[0].fix_type == "patch"
+        assert "巨型遗迹表面材料特性" in mr_issues[0].issue_description
+
+    def test_no_mandatory_reference_issues_when_passed(self) -> None:
+        """mandatory_reference_check_passed=True 时不应产生 issues."""
+        rule_result = RuleAuditResult(
+            mandatory_reference_check_passed=True,
+            mandatory_reference_issues=[],
+        )
+        issues = _convert_rule_to_issues("正文", rule_result, "v1")
+        mr_issues = [i for i in issues if i.category == ReviewCategory.WORLD_CONSISTENCY]
+        assert len(mr_issues) == 0

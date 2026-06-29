@@ -6,11 +6,11 @@
 
 | 项 | 状态 |
 |----|------|
-| 当前阶段 | **V5.2 进行中：Task 138d-R2 retry3 已执行；Ch11 通过 settlement/summary/QG，Ch12 因新的环境读数类 numerical_update 停在 settlement_review，尚未生成 Ch12 continuity，仍无法验证 orphan 是否低于 baseline 16** |
+| 当前阶段 | **V5.2 进行中：Task 138h 已启动；目标是将 critical orphan 从 CreativeDirector 建议回收升级为 Writer 硬约束 + QG/RuleAuditor 可验证拦截，解决 `run-715f7d09` 暴露的 critical recall 执行闭环不稳定问题** |
 | 最终验收 | **Task 120 V5.0 + Task 132 V5.1 Final Acceptance Package 已交付** |
 | 风险口径 | P0/P1 风险为 0 |
-| 最近全量测试 | `1973 passed, 1 xfailed`（2026-06-28，Task 138f Settlement 数值证据门禁修复后） |
-| 最近修复/验证 | Task 123 ContextEmergency / health_low 候选硬门禁（默认观测模式，16 个新单测）；Task 124 离线影响面分析；Task 125 阈值调优（P1 异常检测、health_score 跌幅、审计点 streak），新增 12 个单测；Task 126 enforce 小窗口实跑验证，Ch1–Ch19 零 gate 触发；**Task 127 重构 `health_low_score_halt` 为"历史新低 + P1 同步激增"复合条件，新增 8 个单测，pytest 1842 passed**；**Task 128 完成**：QG false 降级接受不终止 run、Ch1–Ch10 质量爬坡阈值、RevisionHandler readability 专精路径；pytest 1843 passed；**Task 129 条件完成**：enforce 模式 Ch1–Ch50 验证，`run-89d7a2d4` Ch1–Ch15 后因 quality_gate_fail_streak 暂停，暴露 Writer 结构退化、SettlementExtractor 角色/数值提取失败、orphaned settings 快速累积等底层缺陷；报告见 `docs/reports/task-129-enforce-validation-report.md`。**Task 130 已完成**：gate_mode 默认保持 `observe`，`songyan run` 暴露 `--gate-mode` CLI 参数，`songyan report` 新增 gate 触发汇总。**Task 131 已完成**：历史规划稿已归档至 `archive/tasks/`，索引文档已指向 `-DONE.md`。**Task 132 已完成**：V5.1 最终验收包已交付，V5.1 通过（条件完成项已明确转入 V5.2）。**Task 133/134/135 已完成**：Writer 多场景结构、SettlementExtractor 角色/数值提取、设定回收与 continuity health 治理；**Task 138f 已完成**：numerical_update evidence gate 已落地，无明确正文/source_quote 数字证据的 telemetry 候选会过滤并记录 diagnostic，真实 ledger 仍硬校验；**Task 138d-R2 retry3 已执行**：`run-0a48030b` Ch11 通过 settlement/summary/QG，Ch12 暴露有证据环境读数未命中 snapshot 分类的新阻断；全量 `pytest tests/ -q` -> `1973 passed, 1 xfailed`，`ruff check src/ tests/` 通过 |
+| 最近全量测试 | `1979 passed, 1 xfailed`（2026-06-29，Task 138d-R2 环境/结构读数 snapshot allowlist 修复后） |
+| 最近修复/验证 | Task 123 ContextEmergency / health_low 候选硬门禁（默认观测模式，16 个新单测）；Task 124 离线影响面分析；Task 125 阈值调优（P1 异常检测、health_score 跌幅、审计点 streak），新增 12 个单测；Task 126 enforce 小窗口实跑验证，Ch1–Ch19 零 gate 触发；**Task 127 重构 `health_low_score_halt` 为"历史新低 + P1 同步激增"复合条件，新增 8 个单测，pytest 1842 passed**；**Task 128 完成**：QG false 降级接受不终止 run、Ch1–Ch10 质量爬坡阈值、RevisionHandler readability 专精路径；pytest 1843 passed；**Task 129 条件完成**：enforce 模式 Ch1–Ch50 验证，`run-89d7a2d4` Ch1–Ch15 后因 quality_gate_fail_streak 暂停，暴露 Writer 结构退化、SettlementExtractor 角色/数值提取失败、orphaned settings 快速累积等底层缺陷；报告见 `docs/reports/task-129-enforce-validation-report.md`。**Task 130 已完成**：gate_mode 默认保持 `observe`，`songyan run` 暴露 `--gate-mode` CLI 参数，`songyan report` 新增 gate 触发汇总。**Task 131 已完成**：历史规划稿已归档至 `archive/tasks/`，索引文档已指向 `-DONE.md`。**Task 132 已完成**：V5.1 最终验收包已交付，V5.1 通过（条件完成项已明确转入 V5.2）。**Task 133/134/135 已完成**：Writer 多场景结构、SettlementExtractor 角色/数值提取、设定回收与 continuity health 治理；**Task 138f 已完成**：numerical_update evidence gate 已落地，无明确正文/source_quote 数字证据的 telemetry 候选会过滤并记录 diagnostic，真实 ledger 仍硬校验；**Task 138d-R2 retry4 已完成**：`run-bcee6ab6` Ch11/Ch12 settlement、summary、QG 全过，Ch12 continuity `health=3.0`、`orphaned=14`、`mismatches=0`；**Task 138g 已执行但未收口**：目标测试 `70 passed`、ruff 通过，`run-715f7d09` completed 但 Ch12 `health=3.0`、`orphaned=16`、critical orphan=4，证明问题不在 alias 而在 recall 执行闭环；**Task 138h 已启动**：critical orphan 强制回收闭环，文档见 `tasks/138h-critical-orphan-mandatory-recall-loop.md` |
 | 当前 lint | `ruff check src/ tests/` 已通过；`scripts/` 目录包含一次性调试脚本，不参与 CI lint |
 | Python | 3.11.9 |
 | 事实入口 | `tasks/V5-README.md` |
@@ -36,15 +36,16 @@
 | Task 122c | **已完成**：Ch1-Ch20 E2E 集成测试（28 秒重度 Mock）；Ch40-Ch50 / Ch100-Ch110 窗口待补充 |
 | Task 122c | **已完成**：Ch1-Ch20 / Ch40-Ch50 / Ch100-Ch110 三个 E2E 窗口验证全部完成；`test_ch41_50_validation.py` 已补强 emergency/auto-halt 断言；`test_ch100_110_from_run_log.py` 已新增并复用 `run-a2bed648` 历史数据 |
 | 重跑前清理 | **2026-06-23 已完成全量清理**：终止全部残留 Python 进程，删除数据库 28,440 行测试数据，清空所有业务表，清理日志文件，VACUUM 后 196 MB；环境完全干净 |
-| 下一步规划 | **Task 138d-R2 新阻断最小修复**：`run-0a48030b` 已证明 Ch11 阻断解除；下一步处理 Ch12 `channel_wall_*_period`、`knife_sheath_spring_tension_decay`、`vertical_pipe_depth`、`liquid_metal_tentacle_distance` 这类有正文读数证据但未命中 telemetry/evidence gate 的 snapshot 分类问题，修复后再用新副本 DB 复跑 Ch10-Ch12。 |
+| 下一步规划 | **Task 138h-138j 已完成**：critical orphan 强制回收闭环建立。138i 措辞硬化无效，138j `recycle_hint` 显著有效（P1 5→2，health 3.0→3.9）。接受当前边界为阶段性成果。下一步进入 **Task 138k**（长窗口 rehearsal Ch1-Ch50/100），验证改进在更长章节窗口中的稳定性，并补全 Ch1-Ch150 single-run rehearsal 证据 |
 
 测试说明：`1 xfailed` 为已知非阻断项；`0 xpassed`（已修复）；`0 failed`。数据库 `lifecycle_status` 列缺失与 RAG embedding 性能测试已修复，当前全量通过。
 
 ## 当前优先级
 
-1. **Task 138d-R2 新阻断最小修复**：`run-0a48030b` Ch11 已通过；Ch12 QG 通过但 settlement_review 失败，需先修有明确读数证据的环境/结构 telemetry snapshot 分类，再重新副本 DB 复跑 Ch10-Ch12。
-2. **Task 137 保持活跃**：未生成新的 Ch12 continuity 前，不创建 `tasks/137-setting-recycling-closed-loop-DONE.md`。
-3. **后置默认化决策**：完整默认配置实跑与 Writer 1.2.0 / `gate_mode="enforce"` 默认化仍后置，等 Task 137 health/orphan 收口后再决定。
+1. **Task 138k：长窗口 rehearsal Ch1-Ch50/100**：验证 138h-138j 改进在更长章节窗口中的稳定性。核心观察指标：critical orphan 趋势、health 趋势、settlement 通过率、QG 通过率。目标：连续 50 章 single-run 无 halt，health 维持在 ≥3.5。
+2. **Task 137 收口判断**：基于 138k 的长窗口数据，判断 Task 137 是否满足"Ch10 起点聚焦验证"的收口条件（settlement 阻断解除、健康度 floor 通过、P1 orphan 可控）。
+3. **后置默认化决策**：Writer 1.2.0 / `gate_mode="enforce"` 默认化仍后置，等 138k 长窗口数据验证后再决定。
+4. **ContextEmergency / health_low 硬门禁预研**：作为 V5.2 方向后置，等 138k 数据出炉后评估是否需要引入。
 
 ## V5.1 交付摘要
 

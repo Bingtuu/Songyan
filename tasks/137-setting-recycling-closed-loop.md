@@ -611,6 +611,31 @@ Task 136 Ch1–Ch20 采集窗口实跑显示（验证期间临时启用 Writer 1
   - Task 138f 已完成。
   - 可以重新发起新的 Task 138d-R2 Ch10-Ch12 副本 DB retry。
 
+### 4.6 2026-06-29 Task 138g critical orphan 根因复核与复跑
+
+- 背景:
+  - Task 138d-R2 retry4 `run-bcee6ab6` 已解除 settlement 阻断，Ch12 continuity 为 `health=3.0`、`orphaned=14`。
+  - health 仍为 3.0 的直接原因是剩余 3 个 critical orphan。
+- 语义复核:
+  - `artifact.mega_ruin.surface_material`: Ch12 retry4 正文曾有明确材料证据，判定为 `refresh_missing`。
+  - `organization.expedition.team_7`: Ch12 retry4 无明确证据，判定为 `planner_recall`，不 archive、不降级、不伪刷新。
+  - `artifact.ruin.phase_flush_mechanism`: Ch12 retry4 无完整机制证据，判定为 `planner_recall`，不使用裸 `相位` / `相位偏移` 刷新。
+- 代码/测试:
+  - `surface_material` 窄 alias 已补强。
+  - CreativeDirector 对 stale critical 项输出 P1 处理要求。
+  - `python -m pytest tests/test_task137_setting_recycling.py tests/test_task135_continuity_governance.py tests/test_continuity_health_governance.py -q` -> `70 passed`。
+  - `ruff check src/ tests/` -> `All checks passed!`。
+- 复跑:
+  - Run ID: `run-715f7d09`
+  - DB: `.tmp/task138g_ch10_focus_20260629_105803.db`
+  - Ch11/Ch12 settlement、summary、QG 全过，`settlement_validation_errors=[]`。
+  - Ch12 continuity: `health=3.0`、`orphaned=16`、critical orphan=4、`mismatches=0`。
+- 结论:
+  - Task 138g 未收口。
+  - `organization.expedition.team_7` 被本次 Ch12 正文提及后不再 orphan，但 `surface_material` 没有出现在本次 Ch12 正文，仍无法刷新。
+  - 新增 E-7 critical orphan，说明仅增强 CreativeDirector 提示不足以稳定落实 critical recall。
+  - 下一步应复核 Writer 输入中的连续性审计约束是否足够具体，以及 critical orphan 是否需要进入更强的 Writer/QG 前置检查；不应继续补单个 alias。
+
 ---
 
 ## 5. 风险与回滚

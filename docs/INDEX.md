@@ -49,11 +49,16 @@
 | `tasks/138a-remaining-orphan-classification.md` | Task 138a：剩余 orphan 分类与证据表（`run-4fd48756` 的 16 个 orphan） |
 | `tasks/138b-orphan-root-cause-decision.md` | Task 138b：基于分类结果确定最小动作 |
 | `tasks/138c-orphan-minimal-fix.md` | Task 138c：剩余 orphan 最小修复 |
-| `tasks/138d-ch10-ch12-post-fix-rerun.md` | Task 138d/138d-R2：修复后 Ch10-Ch12 聚焦复跑验证（R2 最新 `run-0a48030b` Ch11 通过，Ch12 settlement_review） |
+| `tasks/138d-ch10-ch12-post-fix-rerun.md` | Task 138d/138d-R2：修复后 Ch10-Ch12 聚焦复跑验证（R2 最新 `run-bcee6ab6` completed，Ch12 continuity `orphaned=14`） |
 | `tasks/138e-task137-fact-sync-and-closure.md` | Task 138e：事实源同步与 Task 137 收尾判断（已完成；Task 137 不归档） |
 | `tasks/138f-settlement-evidence-gated-numerical-extraction.md` | Task 138f：Settlement 数值结算证据门禁工程化修复（已完成） |
+| `tasks/138g-critical-orphan-root-cause-review.md` | Task 138g：critical orphan 根因复核与最小收口（已执行但未收口；`run-715f7d09` Ch12 `orphaned=16`、critical orphan=4） |
+| `tasks/138h-critical-orphan-mandatory-recall-loop.md` | Task 138h：critical orphan 强制回收闭环（已完成；子项 A+B 已落地） |
+| `tasks/138i-writer-prompt-mandatory-reference-tone-hardening.md` | Task 138i：Writer prompt 措辞硬化（已完成但效果有限） |
+| `tasks/138j-writer-mandatory-reference-recycle-hints.md` | Task 138j：Writer 回收提示（已完成；P1 5→2，health 3.0→3.9） |
+| `tasks/138k-long-window-rehearsal-ch1-ch50.md` | Task 138k：长窗口 rehearsal Ch1-Ch50/100（规划中；验证改进稳定性） |
 | `docs/reports/task-137-v52-enforce-ch1-ch20-rerun-report.md` | Task 137：Ch1–Ch20 采集窗口复跑报告（`run-06ae5101` partial） |
-| `docs/reports/task-137-ch10-focus-validation-report.md` | Task 138d/138e/138d-R2：Ch10 起点聚焦验证报告（`run-4fd48756` completed；最新 retry `run-0a48030b` Ch11 通过，Ch12 停在 settlement_review） |
+| `docs/reports/task-137-ch10-focus-validation-report.md` | Task 138d/138e/138d-R2/138g：Ch10 起点聚焦验证报告（最新 `run-715f7d09` completed，Ch12 `health=3.0`、`orphaned=16`） |
 
 ## 按场景查阅
 
@@ -105,9 +110,11 @@
 | 剩余 orphan 分类与证据表 | `tasks/138a-remaining-orphan-classification.md` |
 | 基于分类结果确定最小动作 | `tasks/138b-orphan-root-cause-decision.md` |
 | 剩余 orphan 最小修复 | `tasks/138c-orphan-minimal-fix.md` |
-| 修复后 Ch10-Ch12 聚焦复跑验证 | `tasks/138d-ch10-ch12-post-fix-rerun.md`（R2 最新 `run-0a48030b`） |
+| 修复后 Ch10-Ch12 聚焦复跑验证 | `tasks/138d-ch10-ch12-post-fix-rerun.md`（R2 最新 `run-bcee6ab6`） |
 | 事实源同步与 Task 137 收尾判断（已完成；Task 137 不归档） | `tasks/138e-task137-fact-sync-and-closure.md` |
 | Settlement 数值结算证据门禁工程化修复（已完成） | `tasks/138f-settlement-evidence-gated-numerical-extraction.md` |
+| critical orphan 根因复核与最小收口 | `tasks/138g-critical-orphan-root-cause-review.md` |
+| critical orphan 强制回收闭环（进行中） | `tasks/138h-critical-orphan-mandatory-recall-loop.md` |
 | V5.1 Code Review 总规划 | `docs/reports/pass14-to-pass18-v51-review-roadmap.md` |
 | V5.1 Code Review 修复汇总 | `docs/reports/pass14-final-fix-summary.md` |
 | 架构手册 | `docs/architecture/04-vibe-coding-engineering.md` |
