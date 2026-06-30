@@ -1,7 +1,7 @@
 # V5.0 Task 总索引
 
 > **阶段**: Context Diet 2.0 — 智能遗忘架构
-> **当前口径**: **V5.2 进行中：Task 138h 已启动；目标是将 critical orphan 从 CreativeDirector 建议回收升级为 Writer 硬约束（`mandatory_references`）+ QG/RuleAuditor 可验证拦截（`mandatory_reference_missing`），解决 `run-715f7d09` 暴露的 critical recall 执行闭环不稳定问题** — V5.1 已收口，P0/P1 风险为 0；Task 121 系列已完成 Ch1-Ch150 full single-run 最终证据、Prompt 质量清理、测试矩阵与硬门禁预研；Task 122a/122b/122c/122d 完成动态阈值、Pipeline 集成测试、E2E 验证窗口与 150 章长序列压力测试；Task 123/124/125/126/127/128 完成 ContextEmergency / health_low 候选硬门禁提案、离线影响面分析、阈值调优、enforce 小窗口实跑验证、score halt 复合条件重构、严格模式容错/开局期质量爬坡；**Task 129 条件完成**：enforce 模式 Ch1–Ch50 验证 `run-89d7a2d4` 在 Ch15 因 quality_gate_fail_streak 暂停，暴露 Writer 结构退化、SettlementExtractor 角色/数值提取失败、orphaned settings 快速累积等底层缺陷；**Task 130 已完成**：gate_mode 默认保持 `observe`，`songyan run` 暴露 `--gate-mode` CLI 参数，`songyan report` 新增 gate 触发汇总。**Task 131 已完成**：历史规划稿已归档至 `archive/tasks/`，索引文档已指向 `-DONE.md`。**Task 132 已完成**：V5.1 最终验收包已交付，V5.1 通过（条件完成项转入 V5.2）。**Task 133/134/135 已完成**：Writer 多场景结构、SettlementExtractor 角色/数值提取、设定回收与 continuity health 治理。**Task 136 已完成 Ch1–Ch20 采集窗口实跑验证**：多场景 100%、旧口径 Settlement 100%、Health floor 通过，但 orphan 增长速率未减半，整体验收未通过。Task 137 保持活跃；Task 138f 已完成 numerical_update evidence gate；Task 138d-R2 环境/结构读数 snapshot allowlist 已解除 Ch12 settlement_review 阻断；Task 138g 证明问题不在 alias 而在 recall 执行闭环；**Task 138h-138j 已完成**：子项 A+B 建立"注入+检测"闭环，138i 措辞硬化无效，138j `recycle_hint` 显著有效（P1 5→2，health 3.0→3.9）。接受当前边界为阶段性成果。**Task 138k 规划中**：长窗口 rehearsal Ch1-Ch50/100，验证改进稳定性并补全 single-run 证据。最近全量 `pytest tests/ -q` -> `2003 passed, 1 xfailed`；`ruff check src/ tests/` 通过。
+> **当前口径**: **V5.2 阶段性完成：Task 138n/138o/138p 代码改动已作为 V5.2 主干默认配置在当前工作树生效；Ch31-Ch50 长窗口延续验证全部通过（Run `run-01a32b97`），Ch50 health 8.8、P1/P2 critical orphan 0、settlement/QG 通过率 20/20；Task 138p 已完成，修复克隆项目角色 ID alias 断裂。下一步决定是否继续 Ch100+/Ch150 最终验收或执行 git commit。** — V5.1 已收口，P0/P1 风险为 0；Task 121 系列已完成 Ch1-Ch150 full single-run 最终证据、Prompt 质量清理、测试矩阵与硬门禁预研；Task 122a/122b/122c/122d 完成动态阈值、Pipeline 集成测试、E2E 验证窗口与 150 章长序列压力测试；Task 123/124/125/126/127/128 完成 ContextEmergency / health_low 候选硬门禁提案、离线影响面分析、阈值调优、enforce 小窗口实跑验证、score halt 复合条件重构、严格模式容错/开局期质量爬坡；**Task 129 条件完成**：enforce 模式 Ch1–Ch50 验证 `run-89d7a2d4` 在 Ch15 因 quality_gate_fail_streak 暂停，暴露 Writer 结构退化、SettlementExtractor 角色/数值提取失败、orphaned settings 快速累积等底层缺陷；**Task 130 已完成**：gate_mode 默认保持 `observe`，`songyan run` 暴露 `--gate-mode` CLI 参数，`songyan report` 新增 gate 触发汇总。**Task 131 已完成**：历史规划稿已归档至 `archive/tasks/`，索引文档已指向 `-DONE.md`。**Task 132 已完成**：V5.1 最终验收包已交付，V5.1 通过（条件完成项转入 V5.2）。**Task 133/134/135 已完成**：Writer 多场景结构、SettlementExtractor 角色/数值提取、设定回收与 continuity health 治理。**Task 136 已完成 Ch1–Ch20 采集窗口实跑验证**：多场景 100%、旧口径 Settlement 100%、Health floor 通过，但 orphan 增长速率未减半，整体验收未通过。Task 137 保持活跃；Task 138f 已完成 numerical_update evidence gate；Task 138d-R2 环境/结构读数 snapshot allowlist 已解除 Ch12 settlement_review 阻断；Task 138g 证明问题不在 alias 而在 recall 执行闭环；**Task 138h-138j 已完成**：子项 A+B 建立"注入+检测"闭环，138i 措辞硬化无效，138j `recycle_hint` 显著有效（P1 5→2，health 3.0→3.9）。接受当前边界为阶段性成果。**Task 138k 已完成**：长窗口 rehearsal Ch1-Ch30，验证 138h-138j 改进在 Ch21+ 仍不足以维持 health ≥ 5.0，报告见 `docs/reports/task-138k-long-window-rehearsal-report.md`。**Task 138l 已完成**：settlement 数值遥测误报修复，4 个新增单测。**Task 138m 已完成**：根因分析确认 35 个 P1 orphan 主要系 Ch20+ 新 critical 设定引入后丢弃、`MAX_ORPHANED=8` 约束预算截断、`mandatory_references` 无上限导致 Writer 过载；推荐 A+C，报告见 `docs/reports/task-138m-critical-orphan-root-cause-report.md`。**Task 138n 已完成**：A+C 代码实现、单测与 Ch1-Ch30 重跑均通过，Ch30 health 8.5 / P1=0，报告见 `docs/reports/task-138n-ch1-ch30-rerun-report.md`。**Task 138o 已完成**：Ch31-Ch50 延续验证全部通过，Ch50 health 8.8 / P1=0，报告见 `docs/reports/task-138o-ch31-ch50-long-window-validation-report.md`。
 > **最后整理**: 2026-06-29
 
 本文是 V5 阶段任务文档的事实入口。历史规划稿已统一归档到 `archive/tasks/`（部分 V5.0 收口任务在 `archive/v5/plans/`），仅在追溯设计边界时查阅；最终状态以本文件和各 `*-DONE.md` 为准。
@@ -57,7 +57,7 @@ V5.0 已完成从 Context Diet 2.0 核心组件到 150 章验证的全部主线�
 - **Task 134 已完成**：SettlementExtractor 角色状态与数值台账提取修复（V5.2）。
 - **Task 135 已完成**：设定回收与 continuity health 治理（V5.2）。
 - **Task 136 已完成 Ch1–Ch20 采集窗口实跑验证**：验证期间临时启用 Writer 1.2.0 并恢复运行前 manifest default_version；基于 enforce profile 但关闭 health_low halt；多场景 100%、旧口径 Settlement 100%、Health floor 通过，但 orphan 增长未减半；报告见 `docs/reports/task-136-v52-enforce-ch1-ch20-validation-report.md`。
-- **Task 138d-R2 retry4 已完成**：Task 137 保持活跃，不创建 `137-DONE`。`run-4fd48756` 曾完成 Ch10-Ch12，Ch12 continuity `health=3.0`、`orphaned=16`；Task 138f 已解除 `consciousness_upload_progress` 无证据数值阻断。最新 `run-bcee6ab6` 使用 `.tmp/task138d_r2_retry4_ch10_focus_20260629_101459.db`，Ch11/Ch12 accepted 且 settlement/summary/QG 全过，Ch12 continuity `health=3.0`、`orphaned=14`、`mismatches=0`。下一步进入 Task 137 事实同步与收口判断：判断剩余 orphan 是否继续分类，或是否形成当前阶段可接受口径。文档见 `tasks/138d-ch10-ch12-post-fix-rerun.md`。
+- **Task 138d-R2 retry4 已完成**：Task 137 保持活跃，不创建 `137-DONE`。`run-4fd48756` 曾完成 Ch10-Ch12，Ch12 continuity `health=3.0`、`orphaned=16`；Task 138f 已解除 `consciousness_upload_progress` 无证据数值阻断。最新 `run-bcee6ab6` 使用 `.tmp/task138d_r2_retry4_ch10_focus_20260629_101459.db`，Ch11/Ch12 accepted 且 settlement/summary/QG 全过，Ch12 continuity `health=3.0`、`orphaned=14`、`mismatches=0`。下一步进入 Task 137 事实同步与收口判断：判断剩余 orphan 是否继续分类，或是否形成当前阶段可接受口径。文档见 `tasks/138d-ch10-ch12-post-fix-rerun-DONE.md`。
 - **Task 138g 已执行但未收口**：`artifact.mega_ruin.surface_material` 窄 alias 与 CreativeDirector stale critical P1 提示已补强，目标测试 `70 passed`、ruff 通过；但 `run-715f7d09` 使用 `.tmp/task138g_ch10_focus_20260629_105803.db` 复跑 Ch10-Ch12 后，Ch11/Ch12 虽 settlement/summary/QG 全过，Ch12 continuity 仍为 `health=3.0`、`orphaned=16`、critical orphan=4。最新证据指向 critical recall 未稳定落实到 Writer 正文，下一步不应继续补单个 alias。文档见 `tasks/138g-critical-orphan-root-cause-review.md`。
 ---
 
@@ -149,18 +149,23 @@ V5.0 已完成从 Context Diet 2.0 核心组件到 150 章验证的全部主线�
 | 135 | 设定回收与 continuity health 治理 | ✅ 完成 | `135-setting-recycling-and-continuity-health-governance-DONE.md` |
 | 136 | V5.2 Ch1–Ch20 采集窗口跨项目验证 | ⚠️ 已完成，验收未通过（orphan 未减半） | `136-v52-enforce-ch1-ch20-validation-DONE.md` |
 | 137 | 设定回收闭环与 tracking 刷新机制 | ⚠️ 保持活跃；后续由 138a-138f 承接收口 | `137-setting-recycling-closed-loop.md` |
-| 138a | 剩余 orphan 分类与证据表 | ✅ 完成 | `138a-remaining-orphan-classification.md` |
-| 138b | 基于分类结果确定最小动作 | ✅ 完成 | `138b-orphan-root-cause-decision.md` |
-| 138c | 剩余 orphan 最小修复 | ✅ 完成 | `138c-orphan-minimal-fix.md` |
-| 138d | 修复后 Ch10-Ch12 聚焦复跑验证 | ✅ 完成 | `138d-ch10-ch12-post-fix-rerun.md` |
-| 138e | 事实源同步与 Task 137 收尾判断 | ✅ 完成，Task 137 不归档 | `138e-task137-fact-sync-and-closure.md` |
-| 138d-R2 | 第二轮 Ch10-Ch12 聚焦复跑验证 | ✅ 完成；`run-bcee6ab6` Ch11/Ch12 settlement、summary、QG 全过，Ch12 continuity `health=3.0`、`orphaned=14` | `138d-ch10-ch12-post-fix-rerun.md` |
-| 138f | Settlement 数值结算证据门禁工程化修复 | ✅ 完成 | `138f-settlement-evidence-gated-numerical-extraction.md` |
+| 138a | 剩余 orphan 分类与证据表 | ✅ 完成 | `138a-remaining-orphan-classification-DONE.md` |
+| 138b | 基于分类结果确定最小动作 | ✅ 完成 | `138b-orphan-root-cause-decision-DONE.md` |
+| 138c | 剩余 orphan 最小修复 | ✅ 完成 | `138c-orphan-minimal-fix-DONE.md` |
+| 138d | 修复后 Ch10-Ch12 聚焦复跑验证 | ✅ 完成 | `138d-ch10-ch12-post-fix-rerun-DONE.md` |
+| 138e | 事实源同步与 Task 137 收尾判断 | ✅ 完成，Task 137 不归档 | `138e-task137-fact-sync-and-closure-DONE.md` |
+| 138d-R2 | 第二轮 Ch10-Ch12 聚焦复跑验证 | ✅ 完成；`run-bcee6ab6` Ch11/Ch12 settlement、summary、QG 全过，Ch12 continuity `health=3.0`、`orphaned=14` | `138d-ch10-ch12-post-fix-rerun-DONE.md` |
+| 138f | Settlement 数值结算证据门禁工程化修复 | ✅ 完成 | `138f-settlement-evidence-gated-numerical-extraction-DONE.md` |
 | 138g | critical orphan 根因复核与最小收口 | ⚠️ 已执行，未收口；`run-715f7d09` completed 但 Ch12 `health=3.0`、`orphaned=16`、critical orphan=4 | `138g-critical-orphan-root-cause-review.md` |
-| 138h | critical orphan 强制回收闭环 | ✅ 已完成；子项 A+B 已落地，建立"注入+检测"双层闭环 | `138h-critical-orphan-mandatory-recall-loop.md` |
-| 138i | Writer prompt 措辞硬化 | ⚠️ 已完成但效果有限；对该模型无改善，复跑 orphaned=16 | `138i-writer-prompt-mandatory-reference-tone-hardening.md` |
-| 138j | Writer 回收提示 | ✅ 已完成；`recycle_hint` 显著有效，P1 5→2，health 3.0→3.9 | `138j-writer-mandatory-reference-recycle-hints.md` |
-| 138k | 长窗口 rehearsal Ch1-Ch50/100 | 📋 规划中；验证 138h-138j 改进在更长窗口中的稳定性 | `138k-long-window-rehearsal-ch1-ch50.md` |
+| 138h | critical orphan 强制回收闭环 | ✅ 已完成；子项 A+B 已落地，建立"注入+检测"双层闭环 | `138h-critical-orphan-mandatory-recall-loop-DONE.md` |
+| 138i | Writer prompt 措辞硬化 | ⚠️ 已完成但效果有限；对该模型无改善，复跑 orphaned=16 | `138i-writer-prompt-mandatory-reference-tone-hardening-DONE.md` |
+| 138j | Writer 回收提示 | ✅ 已完成；`recycle_hint` 显著有效，P1 5→2，health 3.0→3.9 | `138j-writer-mandatory-reference-recycle-hints-DONE.md` |
+| 138k | 长窗口 rehearsal Ch1-Ch50/100 | ✅ 已完成 Ch1-Ch30；Ch30 P1=35、health=3.0，报告见 `docs/reports/task-138k-long-window-rehearsal-report.md` | `138k-long-window-rehearsal-ch1-ch50-DONE.md` |
+| 138l | settlement 数值遥测误报修复 | ✅ 已完成；4 个新增单测 | `138l-settlement-telemetry-false-positive-fix-DONE.md` |
+| 138m | Ch21-Ch30 critical orphan 根因分析与 V5.2 边界决策 | ✅ 已完成；推荐 A+C，报告见 `docs/reports/task-138m-critical-orphan-root-cause-report.md` | `138m-critical-orphan-root-cause-and-v52-boundary.md` |
+| 138n | QG 阻断式 critical orphan revision + mandatory_reference 上限调优 | ✅ 已完成；Ch1-Ch30 重跑通过，Ch30 health 8.5 / P1=0，报告见 `docs/reports/task-138n-ch1-ch30-rerun-report.md` | `138n-qg-mandatory-reference-revision-loop-DONE.md` |
+| 138o | Ch31-Ch50 长窗口延续验证 | ✅ 已完成；Ch50 health 8.8 / P1=0 / settlement+QG 20/20，报告见 `docs/reports/task-138o-ch31-ch50-long-window-validation-report.md` | `138o-ch31-ch50-long-window-validation-DONE.md` |
+| 138p | 克隆/延续项目角色 ID alias 断裂修复 | ✅ 已完成；新增 `tests/test_task138p_character_id_alias.py`，`run_138k`/`run_138n` 已改用公共 clone 函数 | `138p-character-id-alias-in-cloned-projects-DONE.md` |
 
 ---
 
@@ -178,7 +183,7 @@ V5.0 已完成从 Context Diet 2.0 核心组件到 150 章验证的全部主线�
 | Task 122c E2E 窗口验证 | Ch1-Ch20（`test_ch1_20_e2e.py`，20/20）；Ch40-Ch50（`test_ch41_50_validation.py`，10/10，emergency 0，auto-halt 0）；Ch100-Ch110（`test_ch100_110_from_run_log.py`，11/11，复用 `run-a2bed648`） |
 | Task 122d 150 章压力测试 | `tests/integration/test_122d_long_sequence_stability.py`（5/5），覆盖 150 章 budget 趋势、human_marks 蒸发、AutoHalt 真/假阳性、accepted 章节跳过 |
 | Ch115 质量复盘 | `rev-115-3` 已达 `overall=0.8776` 且字数健康，但后续 rewrite 输出 7771 字并经 hard truncate 后降至 `overall=0.7335`；Task 121h 已修状态生命周期与 best-version 保护，Task 121i 已验证 Ch115 不再 human_review_required |
-| 最近全量回归 | `1864 passed, 2 skipped, 1 xfailed` |
+| 最近全量回归 | `2021 passed, 1 xfailed, 2 warnings` |
 | 当前全量 ruff | `ruff check src/ tests/ scripts/analyze_124_gate_impact.py` 已通过 |
 | 候选硬门禁离线验证 | Task 124：`run-a2bed648` 原始候选阈值触发 118/120 章 |
 | 候选硬门禁阈值调优 | Task 125：`run-a2bed648` 调优后 `any_gate` 触发 0 章 |
@@ -235,7 +240,7 @@ Task 115-120 用于 V5.0 条件通过后的收口，不改变 Task 114c 已完�
 - **Task 131 已完成**：历史规划稿已归档至 `archive/tasks/`，索引文档已指向 `-DONE.md`。
 - **Task 133/134/135 已完成代码与测试**：V5.2 底层缺陷修复已落地；Task 138f 完成后最新全量 pytest `1973 passed, 1 xfailed`。
 - **Task 136 已完成 Ch1–Ch20 采集窗口实跑验证**：验证期间临时启用 Writer 1.2.0 并恢复运行前 manifest default_version；基于 enforce profile 但关闭 health_low halt；多场景 100%、旧口径 Settlement 100%、Health floor 通过，但 orphan 增长速率未减半（Ch12-Ch15 高于 Ch9-Ch12），整体验收未通过；报告见 `docs/reports/task-136-v52-enforce-ch1-ch20-validation-report.md`。
-- **Task 138d-R2 retry4 已完成**：Task 137 保持活跃，不创建 `137-DONE`。`run-bcee6ab6` 使用新副本 DB 复跑 Ch10-Ch12，Ch11/Ch12 accepted 且 settlement/summary/QG 全过；Ch12 continuity 已生成，`health=3.0`、`orphaned=14`、`mismatches=0`，低于 baseline 16 但 health 未改善。下一步进入 Task 137 事实同步与收口判断。文档见 `tasks/138d-ch10-ch12-post-fix-rerun.md`。
+- **Task 138d-R2 retry4 已完成**：Task 137 保持活跃，不创建 `137-DONE`。`run-bcee6ab6` 使用新副本 DB 复跑 Ch10-Ch12，Ch11/Ch12 accepted 且 settlement/summary/QG 全过；Ch12 continuity 已生成，`health=3.0`、`orphaned=14`、`mismatches=0`，低于 baseline 16 但 health 未改善。下一步进入 Task 137 事实同步与收口判断。文档见 `tasks/138d-ch10-ch12-post-fix-rerun-DONE.md`。
 - **Task 138g 已执行但未收口**：`run-715f7d09` completed，Ch11/Ch12 settlement、summary、QG 全过，`settlement_validation_errors=[]`；Ch12 continuity `health=3.0`、`orphaned=16`、critical orphan=4，说明 critical recall 仍未稳定闭环。下一步应复核 Writer 输入中的连续性审计约束是否足够具体，而不是继续补单个 alias。
-- **Task 138h 已启动**：critical orphan 强制回收闭环。将 critical orphan 从 CreativeDirector 建议回收升级为 Writer 硬约束（`mandatory_references`）+ QG/RuleAuditor 可验证拦截（`mandatory_reference_missing`）。先实现 Writer 输入硬化（子项 A），复跑一次；若未达标再上 QG 拦截（子项 B）。聚焦 Ch10-Ch12 复跑验证，出口条件：连续两次复跑 critical orphan ≤ 1 且 health ≥ 5.0。
+- **Task 138h-138j 已完成**：critical orphan 强制回收闭环已建立。子项 A 将 critical orphan 升级为 Writer 硬约束（`mandatory_references`），子项 B 增加 QG/RuleAuditor 可验证拦截（`mandatory_reference_missing`）；138i 措辞硬化无效，138j `recycle_hint` 显著有效（P1 5→2，health 3.0→3.9）。文档见 `tasks/138h-critical-orphan-mandatory-recall-loop-DONE.md`、`tasks/138i-writer-prompt-mandatory-reference-tone-hardening-DONE.md`、`tasks/138j-writer-mandatory-reference-recycle-hints-DONE.md`。
 - 后续新增 V5 文档应优先更新本索引，再更新 `docs/STATUS.md`、`README.md`、`docs/INDEX.md`。

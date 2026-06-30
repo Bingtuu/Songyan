@@ -36,11 +36,11 @@
 
 因此 Task 137 保持活跃，当前已完成 **Task 138a-138e** 第一轮闭环；下一轮继续复用 Task 138a 入口，对 `run-4fd48756` 的 16 个 orphan 重新分类：
 
-1. `tasks/138a-remaining-orphan-classification.md`：分类最新剩余 16 个 orphan。
-2. `tasks/138b-orphan-root-cause-decision.md`：基于分类结果决定最小动作。
-3. `tasks/138c-orphan-minimal-fix.md`：实施最小修复或 human mark。
-4. `tasks/138d-ch10-ch12-post-fix-rerun.md`：用副本 DB 复跑 Ch10-Ch12。
-5. `tasks/138e-task137-fact-sync-and-closure.md`：同步事实源并决定 Task 137 归档或进入下一轮。
+1. `tasks/138a-remaining-orphan-classification-DONE.md`：分类最新剩余 16 个 orphan。
+2. `tasks/138b-orphan-root-cause-decision-DONE.md`：基于分类结果决定最小动作。
+3. `tasks/138c-orphan-minimal-fix-DONE.md`：实施最小修复或 human mark。
+4. `tasks/138d-ch10-ch12-post-fix-rerun-DONE.md`：用副本 DB 复跑 Ch10-Ch12。
+5. `tasks/138e-task137-fact-sync-and-closure-DONE.md`：同步事实源并决定 Task 137 归档或进入下一轮。
 
 原 Task 132 中提到的后置 “Task 138 候选”顺延为 Task 139；原 “Task 139 候选”顺延为 Task 140。
 
@@ -469,7 +469,7 @@ Task 136 Ch1–Ch20 采集窗口实跑显示（验证期间临时启用 Writer 1
 
 ### 4.2.21 2026-06-28 Task 138e 事实源同步与收尾判断
 
-- 同步对象: `.trae/specs/complete-v51-remaining-tasks/tasks.md`、`checklist.md`、`progress.md`、`docs/STATUS.md`、`tasks/V5-README.md`、`README.md`、`docs/INDEX.md`、`tasks/138e-task137-fact-sync-and-closure.md`、`docs/reports/task-137-ch10-focus-validation-report.md`。
+- 同步对象: `.trae/specs/complete-v51-remaining-tasks/tasks.md`、`checklist.md`、`progress.md`、`docs/STATUS.md`、`tasks/V5-README.md`、`README.md`、`docs/INDEX.md`、`tasks/138e-task137-fact-sync-and-closure-DONE.md`、`docs/reports/task-137-ch10-focus-validation-report.md`。
 - 最新证据仍以 Task 138d 为准: `run-4fd48756`、DB `.tmp/task138d_ch10_focus_20260628_201716.db`，Ch10-Ch12 completed；Ch11/Ch12 settlement、summary、quality gate 均通过，`settlement_validation_errors=[]`。
 - Continuity 判断: Ch12 orphan 从 baseline `run-4ba8de9d` 的 19 降至 16，但 `health=3.0` 持平，`forgotten=2`、`mismatches=0` 持平。
 - 验证结果: `python -m pytest tests/test_task137_setting_recycling.py tests/test_task135_continuity_governance.py tests/test_continuity_health_governance.py -q` -> `57 passed in 4.72s`；`ruff check src/ tests/` -> `All checks passed!`。

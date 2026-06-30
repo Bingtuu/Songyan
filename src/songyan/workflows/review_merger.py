@@ -212,20 +212,31 @@ def _convert_rule_to_issues(
             return text
         return text[:max_len] + "..."
 
-    # 0. Task 138h: 强制连续性约束未回收 (critical) — 放在最前面，确保不被 cap 截断
+    # 0. Task 138n: 强制连续性约束未回收 (critical) — 聚合成单个 issue 放在最前面
     if not rule_result.mandatory_reference_check_passed:
-        for idx, issue_text in enumerate(rule_result.mandatory_reference_issues):
+        missing_refs = rule_result.mandatory_reference_issues
+        missing_keys = [
+            str(ref.get("setting_key") or ref.get("setting_name") or "")
+            for ref in missing_refs
+            if isinstance(ref, dict)
+        ]
+        missing_keys = [k for k in missing_keys if k]
+        if missing_keys:
+            summary_keys = missing_keys[:10]
             issues.append(
                 ReviewIssue(
-                    issue_id=_next_id(),
+                    issue_id=f"rule-mr-{version_id}",
                     category=ReviewCategory.WORLD_CONSISTENCY,
                     severity="critical",
-                    evidence_quote=issue_text,
+                    evidence_quote="; ".join(missing_keys[:30]),
                     evidence_location="全章",
-                    issue_description=issue_text,
-                    expected="正文中应通过角色行动、对话、环境描写或剧情事件明确回收该设定；若因剧情确实无法回收，需给出剧情豁免原因。",
-                    actual="正文中未找到该设定的明确提及。",
-                    suggested_fix="在合适位置插入该设定的提及或回收：可以通过角色对话回顾、环境细节呼应、或剧情事件直接触发。",
+                    issue_description=(
+                        f"本章缺失 {len(missing_keys)} 个 critical 设定的回收："
+                        f"{summary_keys}"
+                    ),
+                    expected="正文中应通过角色行动、对话、环境描写或剧情事件明确回收上述设定。",
+                    actual="正文中未找到上述设定的明确提及。",
+                    suggested_fix="在合适位置为每个缺失设定插入一处自然提及，不要删除或重写已有正文。",
                     fix_type="patch",
                     confidence=1.0,
                 )
@@ -419,16 +430,34 @@ def _convert_rule_to_issues(
             )
         )
 
-    # 上限保护
+    # 上限保护：MR 聚合 issue 不计入 cap，始终保留
     max_rule_issues = 5
-    if len(issues) > max_rule_issues:
-        issues = issues[:max_rule_issues]
-        logger.warning(
-            "review_merger.rule_issues_capped",
-            version_id=version_id,
-            total_found=len(issues) + (1 if len(issues) > max_rule_issues else 0),
-            cap=max_rule_issues,
-        )
+    if issues and issues[0].issue_id.startswith("rule-mr-"):
+        if len(issues) > max_rule_issues + 1:
+            kept = issues[: max_rule_issues + 1]
+            dropped = issues[max_rule_issues + 1 :]
+            issues = kept
+            logger.warning(
+                "review_merger.rule_issues_capped",
+                version_id=version_id,
+                total_found=len(kept) + len(dropped),
+                cap=max_rule_issues,
+                mr_issue_kept=True,
+                dropped_issue_ids=[i.issue_id for i in dropped],
+            )
+    else:
+        if len(issues) > max_rule_issues:
+            kept = issues[:max_rule_issues]
+            dropped = issues[max_rule_issues:]
+            issues = kept
+            logger.warning(
+                "review_merger.rule_issues_capped",
+                version_id=version_id,
+                total_found=len(kept) + len(dropped),
+                cap=max_rule_issues,
+                mr_issue_kept=False,
+                dropped_issue_ids=[i.issue_id for i in dropped],
+            )
 
     return issues
 

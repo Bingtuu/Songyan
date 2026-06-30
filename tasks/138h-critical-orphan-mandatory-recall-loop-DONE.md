@@ -1,7 +1,7 @@
 # Task 138h: Critical Orphan Mandatory Recall Loop（critical 设定强制回收闭环）
 
 > **类型**: 架构增强 / Writer 硬约束 / QG 可验证规则
-> **状态**: 进行中
+> **状态**: 已完成
 > **前置**: Task 138g
 
 ## 背景

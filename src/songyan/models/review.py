@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -170,7 +170,7 @@ class RuleAuditResult(BaseModel):
     punch_check: PunchCheck = Field(default_factory=PunchCheck)
 
     # Task 138h: 强制连续性约束检查
-    mandatory_reference_issues: list[str] = Field(default_factory=list)
+    mandatory_reference_issues: list[dict[str, Any]] = Field(default_factory=list)
     mandatory_reference_check_passed: bool = True
 
     # 处理时长

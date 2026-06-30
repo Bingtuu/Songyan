@@ -381,6 +381,55 @@ async def _handle_scene_overflow(content: str, target_words: int) -> str:
     return revised if revised.strip() else content
 
 
+async def _patch_mandatory_reference_missing(
+    content: str,
+    missing_refs: list[dict],
+    word_count_target: int = 3000,
+) -> tuple[str, list[str]]:
+    """为缺失的 mandatory reference 插入自然提及.
+
+    返回修订后正文与已修复 setting_key 列表。
+    """
+    if not missing_refs:
+        return content, []
+
+    names = [
+        str(r.get("setting_name") or r.get("setting_key") or "")
+        for r in missing_refs
+    ]
+    names = [n for n in names if n]
+
+    prompt = (
+        "你是小说编辑。以下章节缺少一些前文的 critical 设定回收。"
+        "请在保持原有叙事、不删除已有内容的前提下，为每个设定在合适位置插入一处自然提及。\n\n"
+        "要求：\n"
+        "1. 只能通过角色对话、环境细节、动作触发或剧情事件来提及，禁止直接罗列设定。\n"
+        "2. 不要新增大段解释，每处提及 1-2 句话即可。\n"
+        "3. 不要改变本章主要情节走向。\n"
+        "4. 输出完整修订后的正文，不要添加解释、总结或 markdown 代码块。\n\n"
+        f"缺失设定：{names}\n\n"
+        f"正文：\n{content}"
+    )
+    llm_response = await call_llm(prompt, temperature=0.3)
+    from songyan.agents.writer import _extract_body
+
+    revised = _extract_body(llm_response) or content
+
+    fixed: list[str] = []
+    text_lower = revised.lower()
+    for r in missing_refs:
+        key = str(r.get("setting_key") or "")
+        name = str(r.get("setting_name") or "")
+        key_alias = key.split(".")[-1].lower() if key else ""
+        if key_alias and key_alias in text_lower:
+            fixed.append(key)
+        elif name and name.lower() in text_lower:
+            fixed.append(key)
+        elif key and key.lower() in text_lower:
+            fixed.append(key)
+    return revised, fixed
+
+
 def _parse_patches(data: dict[str, Any]) -> list[Patch]:
     """从字典解析 patches 列表."""
     patches: list[Patch] = []
@@ -594,6 +643,43 @@ async def run_revision(
     patchable_issues = _filter_patchable_issues(report)
     scene_split_issues = _filter_scene_split_issues(report)
 
+    # Task 138n: 先处理 mandatory_reference_missing 聚合 issue
+    mr_issues = [i for i in patchable_issues if i.issue_id.startswith("rule-mr-")]
+    other_issues = [i for i in patchable_issues if not i.issue_id.startswith("rule-mr-")]
+    mr_fixed_ids: set[str] = set()
+    if mr_issues and report.rule_audit is not None:
+        missing_refs = [
+            ref
+            for ref in (report.rule_audit.mandatory_reference_issues or [])
+            if isinstance(ref, dict)
+        ]
+        if missing_refs:
+            mr_revised, fixed_keys = await _patch_mandatory_reference_missing(
+                content, missing_refs, word_count_target
+            )
+            original_len = len(content)
+            preservation_ratio = (
+                round(len(mr_revised) / original_len, 4)
+                if original_len > 0
+                else 1.0
+            )
+            if mr_revised.strip() and preservation_ratio >= MIN_CONTENT_RATIO:
+                content = mr_revised
+                mr_fixed_ids = {i.issue_id for i in mr_issues}
+                logger.info(
+                    "revision_handler.mr_patch_applied",
+                    fixed_keys=fixed_keys,
+                    preservation_ratio=preservation_ratio,
+                    issue_ids=sorted(mr_fixed_ids),
+                )
+            else:
+                logger.warning(
+                    "revision_handler.mr_patch_fallback",
+                    preservation_ratio=preservation_ratio,
+                    reason="content_too_short_or_empty",
+                )
+    patchable_issues = other_issues
+
     # Task 133: 先处理 scene_split 类型的结构问题
     pre_fixed_issue_ids: set[str] = set()
     if scene_split_issues:
@@ -644,6 +730,10 @@ async def run_revision(
             issues_remaining=[],
             new_issues_introduced=new_issues,
         )
+        if mr_fixed_ids:
+            output.issues_fixed = sorted(
+                set(output.issues_fixed) | mr_fixed_ids
+            )
         return output, content
 
     protected_fissures = _extract_protected_fissures(literary_result)
@@ -675,6 +765,14 @@ async def run_revision(
                 if segmented_output.content_preservation_ratio >= MIN_CONTENT_RATIO:
                     output = segmented_output
                     output.new_version_id = ""
+                    if mr_fixed_ids:
+                        fixed_set = set(output.issues_fixed) | mr_fixed_ids
+                        output.issues_fixed = sorted(fixed_set)
+                        output.issues_remaining = [
+                            iid
+                            for iid in output.issues_remaining
+                            if iid not in mr_fixed_ids
+                        ]
                     return output, segmented_content
                 else:
                     logger.warning(
@@ -845,6 +943,13 @@ async def run_revision(
         output.issues_fixed = sorted(fixed_set)
         output.issues_remaining = [
             iid for iid in output.issues_remaining if iid not in pre_fixed_issue_ids
+        ]
+    # Task 138n: 把 MR patch 已修复的 issue 计入 fixed
+    if mr_fixed_ids:
+        fixed_set = set(output.issues_fixed) | mr_fixed_ids
+        output.issues_fixed = sorted(fixed_set)
+        output.issues_remaining = [
+            iid for iid in output.issues_remaining if iid not in mr_fixed_ids
         ]
     return output, revised_content
 

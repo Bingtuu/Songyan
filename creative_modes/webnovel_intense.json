@@ -60,7 +60,7 @@
   "context_pruning_strategy": "default",
   "human_memory": {
     "priority_threshold": 8,
-    "max_marks_in_context": 10
+    "max_marks_in_context": 12
   },
   "success_metrics": {
     "word_count_compliance": 0.9,

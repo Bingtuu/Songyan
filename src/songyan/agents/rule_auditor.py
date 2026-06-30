@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 import time
 import uuid
+from typing import Any
 
 import structlog
 
@@ -189,7 +190,7 @@ def _check_punch_points(
 def _check_mandatory_references(
     content: str,
     mandatory_references: list[dict] | None,
-) -> tuple[bool, list[str]]:
+) -> tuple[bool, list[dict[str, Any]]]:
     """Task 138h: 检测正文中是否缺失 mandatory_reference 的提及.
 
     匹配策略：检查 setting_key 的最后一个 segment 或 setting_name
@@ -217,9 +218,14 @@ def _check_mandatory_references(
 
         if not found:
             silent = ref.get("silent_chapters", 0)
+            setting_name = ref.get("setting_name") or key or "未命名设定"
             issues.append(
-                f'强制连续性约束未回收：{ref.get("setting_name") or key or "未命名设定"}'
-                f"（已沉寂 {silent} 章）"
+                {
+                    "setting_key": key or setting_name,
+                    "setting_name": setting_name,
+                    "silent_chapters": silent,
+                    "message": f"强制连续性约束未回收：{setting_name}（已沉寂 {silent} 章）",
+                }
             )
 
     return len(issues) == 0, issues

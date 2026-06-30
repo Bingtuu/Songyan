@@ -1,7 +1,7 @@
 # Task 138j: Writer Mandatory Reference Recycle Hints（Writer 强制回收约束附加具体回收提示）
 
 > **类型**: Prompt 调优 / 认知负荷降低
-> **状态**: 规划中
+> **状态**: 已完成
 > **前置**: Task 138i（措辞硬化）完成后执行；或 138i 效果有限时提前启动
 >
 > **边界**: 不改 Review/Settlement/Continuity 逻辑；只改 mandatory_references 的数据组装和 prompt 渲染

@@ -310,9 +310,9 @@ class TestWriteConstraintsBudget:
         from songyan.db.human_mark_repo import HumanMarkRepository
         from songyan.models.human_mark import HumanMark
 
-        # 先写入 20 条约束（达到上限）
+        # 先写入 24 条约束（达到上限）
         repo = HumanMarkRepository()
-        for i in range(20):
+        for i in range(24):
             await repo.create(
                 HumanMark(
                     mark_id=f"m{i}",
@@ -407,7 +407,9 @@ class TestConstraintsIdempotentWrite:
 
 class TestConstraintsRespectLimits:
     def test_respects_max_orphaned(self) -> None:
-        """验证 MAX_ORPHANED=8 上限."""
+        """验证 MAX_ORPHANED=12 上限."""
+        from songyan.agents.continuity_auditor._constraints import MAX_ORPHANED
+
         report = ContinuityReport(
             report_id="r1",
             project_id="p1",
@@ -426,7 +428,7 @@ class TestConstraintsRespectLimits:
         )
         marks = _generate_constraints(report)
         orphaned_marks = [m for m in marks if m.mark_type == "setting"]
-        assert len(orphaned_marks) == 8
+        assert len(orphaned_marks) == MAX_ORPHANED
 
     def test_respects_max_forgotten(self) -> None:
         """验证 MAX_FORGOTTEN=5 上限."""

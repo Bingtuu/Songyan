@@ -413,9 +413,12 @@ async def assemble_context_package(
         project_id
     )
 
-    # Task 138h: 查询 critical orphan 并注入 mandatory_references
+    # Task 138n: 查询 critical orphan 并注入 mandatory_references，带每章上限
+    scenes_count = 3
+    if creative_brief is not None and getattr(creative_brief, "punch_points", None):
+        scenes_count = max(len(creative_brief.punch_points), 3)
     mandatory_references = await _load_critical_mandatory_references(
-        project_id, chapter_number
+        project_id, chapter_number, scenes_count=scenes_count
     )
 
     return _assemble(
@@ -481,13 +484,18 @@ def _infer_recycle_hint(key_alias: str) -> str:
 async def _load_critical_mandatory_references(
     project_id: str,
     chapter_number: int,
+    scenes_count: int = 3,
+    max_mandatory_references: int | None = None,
 ) -> list[dict]:
-    """Task 138h/138j: 从 SettingTrackingRepository 加载 critical orphan 作为强制回收约束.
+    """Task 138n: 从 SettingTrackingRepository 加载 critical orphan 作为强制回收约束.
 
     筛选条件：
     - status == "active"
     - category == "critical"
     - 沉寂章数 >= ORPHANED_THRESHOLDS["critical"]（默认 3 章）
+
+    上限：默认 `min(max(scenes_count * 2, 6), 12)`，按 `silent_chapters` 降序、
+    `introduced_in_chapter` 升序保留最紧急的 N 条。
 
     返回格式：
     [
@@ -498,12 +506,15 @@ async def _load_critical_mandatory_references(
             "silent_chapters": int,
             "introduced_in_chapter": int,
             "last_mentioned_chapter": int,
-            "recycle_hint": str,  # Task 138j 新增
+            "recycle_hint": str,
         },
         ...
     ]
     """
     from songyan.agents.continuity_auditor._scanners import ORPHANED_THRESHOLDS
+
+    if max_mandatory_references is None:
+        max_mandatory_references = min(max(scenes_count * 2, 6), 12)
 
     rows = await SettingTrackingRepository().list_by_project(project_id)
     threshold = ORPHANED_THRESHOLDS.get("critical", 3)
@@ -533,12 +544,27 @@ async def _load_critical_mandatory_references(
                 "recycle_hint": _infer_recycle_hint(key_alias),
             }
         )
-    # 按沉寂章数降序排列（最紧急的在前）
-    result.sort(key=lambda r: r["silent_chapters"], reverse=True)
+    # 按 (silent_chapters, -introduced_in_chapter) 降序：最紧急且越早引入的越优先
+    result.sort(
+        key=lambda r: (r["silent_chapters"], -r["introduced_in_chapter"]),
+        reverse=True,
+    )
+    if len(result) > max_mandatory_references:
+        dropped = result[max_mandatory_references:]
+        result = result[:max_mandatory_references]
+        logger.info(
+            "task138n.mandatory_references_truncated",
+            project_id=project_id,
+            chapter_number=chapter_number,
+            scenes_count=scenes_count,
+            kept=max_mandatory_references,
+            dropped_keys=[r["setting_key"] for r in dropped],
+        )
     logger.info(
-        "task138h.mandatory_references_loaded",
+        "task138n.mandatory_references_loaded",
         project_id=project_id,
         chapter_number=chapter_number,
+        scenes_count=scenes_count,
         count=len(result),
         keys=[r["setting_key"] for r in result],
     )
@@ -547,6 +573,7 @@ async def _load_critical_mandatory_references(
 
 # ---------------------------------------------------------------------------
 # Phase 8b: RAG indexing
+
 # ---------------------------------------------------------------------------
 
 

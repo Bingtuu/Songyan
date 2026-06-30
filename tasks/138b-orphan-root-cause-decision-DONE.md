@@ -44,7 +44,7 @@ Task 138a 已输出 `run-4ba8de9d` Ch12 剩余 19 个 orphan 的分类表。Task
 
 - 只把 Task 138a 的五类统计转成处理决策。
 - 明确 Task 138c 的代码、规则、human mark 与测试输入。
-- 更新 `tasks/138b-orphan-root-cause-decision.md`、`tasks/137-setting-recycling-closed-loop.md`、`.trae/specs/complete-v51-remaining-tasks/tasks.md`。
+- 更新 `tasks/138b-orphan-root-cause-decision-DONE.md`、`tasks/137-setting-recycling-closed-loop.md`、`.trae/specs/complete-v51-remaining-tasks/tasks.md`。
 
 本轮不做:
 
@@ -86,7 +86,7 @@ Task 138a 已输出 `run-4ba8de9d` Ch12 剩余 19 个 orphan 的分类表。Task
 ### 验收指标
 
 - 代码/规则层面: 目标测试证明 7 个 alias/canonical miss 可被刷新或同簇识别；9 个 stale background/technical 中无 active human mark 的项可 archive/过滤；active human mark 项不会被静默 archive；2 个 critical 缺口进入高优先级回收输入或人工待回收事实源。
-- 文档层面: `tasks/138c-orphan-minimal-fix.md` 与 Task 137 文档记录实际改动、测试结果、风险边界和是否需要 Task 138d。
+- 文档层面: `tasks/138c-orphan-minimal-fix-DONE.md` 与 Task 137 文档记录实际改动、测试结果、风险边界和是否需要 Task 138d。
 - 复跑前置: 目标 pytest 与 `ruff check src/ tests/` 通过后，才进入 Task 138d。
 - Task 138d 运行指标: 使用副本 DB 复跑 Ch10-Ch12，至少要求 Ch11/Ch12 settlement、summary、QG 均通过，`settlement_validation_errors=[]`；Ch12 `orphaned` 必须低于 baseline 19，目标降至 8 以下或 health 脱离 `3.0`，否则回到 Task 138a 重新分类剩余项。
 
@@ -149,7 +149,7 @@ Task 138a 已输出 `run-4ba8de9d` Ch12 剩余 19 个 orphan 的分类表。Task
 
 - 将 Task 138a-R2 的 16 项分类转成 Task 138c-R2 可执行决策。
 - 明确 3 个 critical 真缺口、12 个 background/technical stale 项、1 个 alias/canonical miss 的处理方式。
-- 更新 `tasks/138b-orphan-root-cause-decision.md`、`tasks/137-setting-recycling-closed-loop.md`、`.trae/specs/complete-v51-remaining-tasks/tasks.md`、`.trae/specs/complete-v51-remaining-tasks/checklist.md`。
+- 更新 `tasks/138b-orphan-root-cause-decision-DONE.md`、`tasks/137-setting-recycling-closed-loop.md`、`.trae/specs/complete-v51-remaining-tasks/tasks.md`、`.trae/specs/complete-v51-remaining-tasks/checklist.md`。
 
 本轮不做:
 
@@ -217,7 +217,7 @@ Task 138a 已输出 `run-4ba8de9d` Ch12 剩余 19 个 orphan 的分类表。Task
   - 目标测试证明 `artifact.mega_ruin.surface_material` 的窄 alias/canonical refresh 生效，且宽泛词不误命中。
   - 目标测试证明当前 report 新建 non-critical mark 不会被误当成人工保留，复跑前已有人工保留 mark 仍受保护。
 - 文档层面:
-  - `tasks/138c-orphan-minimal-fix.md` 与 Task 137 文档记录实际改动、测试结果、风险边界和是否进入 Task 138d-R2。
+  - `tasks/138c-orphan-minimal-fix-DONE.md` 与 Task 137 文档记录实际改动、测试结果、风险边界和是否进入 Task 138d-R2。
 - 复跑前置:
   - Task 138c-R2 目标 pytest 与 `ruff check src/ tests/` 通过后，才进入 Task 138d-R2。
 - Task 138d-R2 运行指标:

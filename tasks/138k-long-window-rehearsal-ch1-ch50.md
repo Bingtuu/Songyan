@@ -1,7 +1,7 @@
 # Task 138k: 长窗口 Rehearsal Ch1-Ch50/100
 
 > **类型**: 实跑验证 / 稳定性测试
-> **状态**: 规划中
+> **状态**: 已完成（Ch1-Ch30；暴露长窗口 health 下滑，需 Task 138m 进一步决策）
 > **前置**: Task 138h-138j 已完成，critical orphan 强制回收闭环建立，138j `recycle_hint` 显著有效（P1 5→2，health 3.0→3.9）
 >
 > **边界**: 不改代码，只跑实跑；若发现新缺陷，另起 task 修复
@@ -118,4 +118,39 @@ Copy-Item "songyan.db" ".tmp/task138k_ch1_ch50_rehearsal_20260629.db"
 
 ## 实施记录
 
-（待填充）
+- **2026-06-29**: 启动 Ch1-Ch30 快速窗口 rehearsal。
+  - 脚本: `scripts/run_138k_long_window_rehearsal.py`
+  - 副本 DB: `.tmp/task138k_ch1_ch30_rehearsal_20260629.db`
+  - 源项目: `e95a1fa3`（克隆为新验证项目 `3bef1af8d54d4d0e887658516e1ed350`）
+  - Writer 版本: `1.2.0`（临时切换，退出恢复）
+  - Gate 模式: `observe`
+  - 背景任务 ID: `bash-rre5r8z9`
+  - 结果: **Ch1-Ch9 成功完成，Ch10 settlement validation 失败**（未触发 AutoHalt，run 状态 `partial`）。
+    - Ch10 错误类型：`numerical_update` closing_value 与公式值不匹配。
+    - 样例：`char_lin_shen.external_signal_pulse_width_ms closing_value (2.7) ≠ 公式值 (0.000)`。
+    - 详细报告：`docs/reports/task-138k-long-window-rehearsal-report.md`
+    - 决策点：需先定位 Ch10 settlement 失败根因，或接受 Ch1-Ch9 作为部分证据。
+- **2026-06-29**: 创建 Task 138l 修复 settlement 数值遥测误报；修复后继续使用同一副本 DB 跑 Ch10-Ch30。
+  - 任务文档：`tasks/138l-settlement-telemetry-false-positive-fix-DONE.md`
+  - 修复文件：`src/songyan/agents/settlement_extractor/_validate.py`
+  - 回归测试：`tests/test_settlement_extractor.py`（4 个新增用例）
+  - Continuation 命令：
+    ```powershell
+    $env:DATABASE_URL = "sqlite:///.tmp/task138k_ch1_ch30_rehearsal_20260629.db"
+    $env:PROJECT_ID = "3bef1af8d54d4d0e887658516e1ed350"
+    python scripts/run_138k_long_window_rehearsal.py
+    ```
+  - 背景任务 ID: `bash-9t1kkpng`（Ch13 处为跑全量 pytest 临时中断，manifest 已恢复为 1.1.0）
+- **2026-06-29**: 全量 pytest 确认无回归后恢复 continuation。
+  - 全量结果：`2007 passed, 1 xfailed, 2 warnings`
+  - `ruff check src/ tests/` 通过
+  - 新背景任务 ID: `bash-lpc56rtc`
+- **2026-06-29**: Ch1-Ch30 rehearsal 全部完成。
+  - 最终 Run ID: `run-6f2a10d3`
+  - 完成章节: 30/30，无失败，无 AutoHalt
+  - 总耗时: 4799.8s（约 80 分钟）
+  - 关键趋势:
+    - Ch9 health 7.1，P1=1
+    - Ch15 health 3.0，P1=5
+    - Ch30 health 3.0，P1=35
+  - 结论: Task 138l 修复后 settlement 无阻断；但 138h-138j 改进在 Ch21+ 无法阻止 critical orphan 快速堆积。建议启动 Task 138m 深入分析 Ch21-Ch30 的 orphan 根因并决定下一阶段方案。

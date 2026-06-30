@@ -1680,6 +1680,104 @@ class TestValidateSettlement:
         errors = await _validate_settlement(settlement, content, current_states, [])
         assert errors == []
 
+    async def test_task138l_signal_pulse_latency_coordinate_telemetry_normalized(self) -> None:
+        """Task 138l: 信号/脉冲/延迟/坐标类遥测属性按 snapshot 归一化."""
+        content = (
+            "外部信号脉冲宽度 2.7 毫秒，传输计数 6 次，"
+            "坐标误差 0.0003 角秒，节点响应延迟 11.3 毫秒。"
+        )
+        cases = [
+            ("external_signal_pulse_width_ms", 2.7),
+            ("external_signal_transmission_count", 6.0),
+            ("coordinate_error_arcseconds", 0.0003),
+            ("format_conversion_node_response_latency", 11.3),
+        ]
+        for attr_name, closing_value in cases:
+            settlement = StateSettlement(
+                numerical_updates=[
+                    NumericalUpdate(
+                        character_id="char_lin_shen",
+                        attribute_name=attr_name,
+                        opening_value=0.0,
+                        increments=[],
+                        decrements=[],
+                        closing_value=closing_value,
+                        formula="0 + 0 = 0",
+                    )
+                ]
+            )
+            errors = await _validate_settlement(settlement, content, [], [])
+            update = settlement.numerical_updates[0]
+            assert errors == [], f"{attr_name} should not error"
+            assert update.opening_value == closing_value
+            assert update.closing_value == closing_value
+            assert update.formula == f"telemetry_snapshot: {closing_value}"
+
+    async def test_task138l_telemetry_formula_fallback_filters_without_evidence(self) -> None:
+        """Task 138l: 公式声明 telemetry snapshot 但正文无读数时过滤，不报错."""
+        content = "外部信号存在，但正文没有给出脉冲宽度读数。"
+        settlement = StateSettlement(
+            numerical_updates=[
+                NumericalUpdate(
+                    character_id="char_lin_shen",
+                    attribute_name="external_signal_pulse_width_ms",
+                    opening_value=0.0,
+                    increments=[],
+                    decrements=[],
+                    closing_value=2.7,
+                    formula="telemetry snapshot",
+                )
+            ]
+        )
+        errors = await _validate_settlement(settlement, content, [], [])
+        assert errors == []
+        assert settlement.numerical_updates == []
+
+    async def test_task138l_unknown_attribute_name_but_telemetry_formula_normalized(self) -> None:
+        """Task 138l: 属性名不在关键词列表但公式声明 telemetry 时仍按 snapshot 处理."""
+        content = "custom_alpha_metric 读数为 42。"
+        settlement = StateSettlement(
+            numerical_updates=[
+                NumericalUpdate(
+                    character_id="char_001",
+                    attribute_name="custom_alpha_metric",
+                    opening_value=0.0,
+                    increments=[],
+                    decrements=[],
+                    closing_value=42.0,
+                    formula="telemetry snapshot",
+                )
+            ]
+        )
+        errors = await _validate_settlement(settlement, content, [], [])
+        update = settlement.numerical_updates[0]
+        assert errors == []
+        assert update.opening_value == 42.0
+        assert update.closing_value == 42.0
+        assert update.formula == "telemetry_snapshot: 42.0"
+
+    async def test_task138l_real_ledger_with_telemetry_formula_still_validated(self) -> None:
+        """Task 138l: 真实台账字段即便 formula 含 telemetry 也不绕过硬校验（当正文无读数时）."""
+        content = "灵石数量没有读数。"
+        settlement = StateSettlement(
+            numerical_updates=[
+                NumericalUpdate(
+                    character_id="char_001",
+                    attribute_name="spirit_stone_count",
+                    opening_value=3.0,
+                    increments=[
+                        {"amount": 1.0, "source": "采集", "source_quote": "采集到一块灵石"}
+                    ],
+                    decrements=[],
+                    closing_value=7.0,
+                    formula="telemetry snapshot",
+                )
+            ]
+        )
+        errors = await _validate_settlement(settlement, content, [], [])
+        assert len(errors) == 1
+        assert "closing_value" in errors[0]
+
 
 # ---------------------------------------------------------------------------
 # Apply Settlement Tests
@@ -2410,3 +2508,77 @@ class TestSettlementAtomicity:
                 assert row[0] == 0
         finally:
             conn_mod.settings = original_settings
+
+
+
+class TestInferSettingCategory:
+    """Task 138n: critical 分类启发式收紧."""
+
+    def _category(self, **kwargs: object) -> str:
+        from songyan.agents.settlement_extractor._apply import _infer_setting_category
+        from songyan.models import NewSetting
+
+        kwargs.setdefault("source_quote", "")
+        return _infer_setting_category(NewSetting(**kwargs))  # type: ignore[arg-type]
+
+    def test_protagonist_ability_is_critical(self) -> None:
+        assert (
+            self._category(
+                setting_key="protagonist.ability.flame",
+                setting_name="主角能力：焚天烈焰",
+                description="林渊觉醒后获得的能力",
+            )
+            == "critical"
+        )
+
+    def test_protagonist_talent_bloodline_is_critical(self) -> None:
+        assert (
+            self._category(
+                setting_key="linyuan.bloodline",
+                setting_name="林渊血脉",
+                description="传承自上古的血脉力量",
+            )
+            == "critical"
+        )
+
+    def test_english_main_protagonist_state_is_critical(self) -> None:
+        assert (
+            self._category(
+                setting_key="main_character.state",
+                setting_name="protagonist status",
+                description="描述主角当前状态",
+            )
+            == "critical"
+        )
+
+    def test_core_anchor_alone_is_background(self) -> None:
+        """仅命中核心/锚/anchor/core 不再判为 critical."""
+        assert (
+            self._category(
+                setting_key="ruins.core.anchor",
+                setting_name="遗迹核心锚点",
+                description="维持空间稳定的锚点",
+            )
+            == "background"
+        )
+
+    def test_bloodline_without_protagonist_is_background(self) -> None:
+        assert (
+            self._category(
+                setting_key="world.bloodline.old",
+                setting_name="古血脉",
+                description="一种古老传承",
+            )
+            == "background"
+        )
+
+    def test_technical_still_overrides_critical(self) -> None:
+        """technical 关键词优先于 critical 判定."""
+        assert (
+            self._category(
+                setting_key="protagonist.ability.omega",
+                setting_name="主角能力 Ω",
+                description="型号 Ω 的引擎参数",
+            )
+            == "technical"
+        )

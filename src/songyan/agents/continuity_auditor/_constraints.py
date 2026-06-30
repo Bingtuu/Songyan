@@ -12,7 +12,7 @@ from songyan.models.human_mark import HumanMark
 logger = structlog.get_logger(__name__)
 
 # 上限配置
-MAX_ORPHANED = 8
+MAX_ORPHANED = 12
 MAX_FORGOTTEN = 5
 MAX_MISMATCHES = 5
 MAX_OVERDUE = 10
@@ -149,7 +149,7 @@ async def write_constraints(
     """
     from songyan.db.human_mark_repo import HumanMarkRepository
 
-    max_constraints_per_chapter = 20
+    max_constraints_per_chapter = 24
 
     # 078: 检查当前章已有 unresolved constraints 数
     existing_count = 0

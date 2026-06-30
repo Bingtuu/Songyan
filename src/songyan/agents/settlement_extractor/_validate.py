@@ -74,6 +74,16 @@ _TELEMETRY_ATTRIBUTE_KEYWORDS = (
     "深度",
     "distance",
     "距离",
+    # Task 138l: 科幻文本中常见的遥测快照属性
+    "pulse",
+    "signal",
+    "transmission",
+    "latency",
+    "delay",
+    "coordinate",
+    "arcsecond",
+    "error",
+    "deviation",
 )
 _TELEMETRY_QUANTITY_ATTRIBUTE_PATTERNS = ("文字数量", "文字数", "脉冲数")
 _TELEMETRY_ALIAS_GROUPS: tuple[tuple[tuple[str, ...], tuple[str, ...]], ...] = (
@@ -128,6 +138,21 @@ _TELEMETRY_ALIAS_GROUPS: tuple[tuple[tuple[str, ...], tuple[str, ...]], ...] = (
     (
         ("distance", "距离"),
         ("distance", "距离"),
+    ),
+    # Task 138l: 信号 / 脉冲 / 传输
+    (
+        ("signal", "pulse", "transmission", "信号", "脉冲", "传输"),
+        ("signal", "pulse", "transmission", "信号", "脉冲", "传输"),
+    ),
+    # Task 138l: 延迟 / 响应时间
+    (
+        ("latency", "delay", "response_time", "延迟", "响应时间"),
+        ("latency", "delay", "response_time", "延迟", "响应时间"),
+    ),
+    # Task 138l: 坐标 / 误差 / 偏差
+    (
+        ("coordinate", "arcsecond", "error", "deviation", "坐标", "误差", "偏差"),
+        ("coordinate", "arcsecond", "error", "deviation", "坐标", "误差", "偏差"),
     ),
     (("脉冲数",), ("脉冲数", "指令脉冲数", "自毁指令脉冲数")),
     (("文字数量", "文字数"), ("文字数量", "文字数")),
@@ -195,6 +220,11 @@ def _is_telemetry_attribute(attribute_name: str) -> bool:
     return any(keyword in normalized for keyword in _TELEMETRY_ATTRIBUTE_KEYWORDS) or any(
         pattern in attribute_name for pattern in _TELEMETRY_QUANTITY_ATTRIBUTE_PATTERNS
     )
+
+
+def _is_telemetry_formula(formula: str) -> bool:
+    """LLM 显式声明为 telemetry snapshot 的公式也按遥测快照处理."""
+    return bool(formula) and "telemetry" in formula.lower()
 
 
 def _parse_chinese_integer(text: str) -> int | None:
@@ -403,7 +433,7 @@ def _telemetry_evidence_text(num: NumericalUpdate, content: str) -> str:
 
 
 def _find_telemetry_reading(num: NumericalUpdate, content: str) -> float | None:
-    if not _is_telemetry_attribute(num.attribute_name):
+    if not _is_telemetry_attribute(num.attribute_name) and not _is_telemetry_formula(num.formula):
         return None
 
     evidence = _telemetry_evidence_text(num, content)
@@ -441,6 +471,8 @@ def _find_telemetry_reading(num: NumericalUpdate, content: str) -> float | None:
 
 def _normalize_telemetry_snapshot(num: NumericalUpdate, content: str) -> bool:
     """把明确读数型 numerical_update 规整为快照，避免过度台账化."""
+    if not _is_telemetry_attribute(num.attribute_name) and not _is_telemetry_formula(num.formula):
+        return False
     reading = _find_telemetry_reading(num, content)
     if reading is None:
         return False
@@ -495,10 +527,15 @@ def _should_filter_unevidenced_numerical_update(
     真实 ledger 字段仍由公式硬校验阻断；这里只处理 telemetry snapshot
     候选，避免 LLM 从概念性正文推断不存在的数值。
     """
-    if not _is_telemetry_attribute(num.attribute_name):
+    if not _is_telemetry_attribute(num.attribute_name) and not _is_telemetry_formula(num.formula):
         return False
     if not _is_formula_mismatch(num):
         return False
+    # Task 138l: 公式声明 telemetry snapshot 但属性名不在关键词列表时，
+    # 只有在没有真实台账增减记录的情况下才按无证据快照过滤，避免绕过 ledger 硬校验。
+    if _is_telemetry_formula(num.formula) and not _is_telemetry_attribute(num.attribute_name):
+        if num.increments or num.decrements:
+            return False
     return _find_telemetry_reading(num, content) is None
 
 

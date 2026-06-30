@@ -1,7 +1,7 @@
 # Task 138i: Writer Prompt Mandatory Reference Tone Hardening（Writer 强制回收约束措辞硬化）
 
 > **类型**: Prompt 调优 / 软约束硬化
-> **状态**: 规划中
+> **状态**: 已完成（效果有限）
 > **前置**: Task 138h 子项 A 已完成；`run-a225b713` 证明 Writer 在收到 mandatory_references 列表后仍选择忽略 5/7 项
 >
 > **边界**: 不改代码，只改 Writer prompt 模板中的文本措辞

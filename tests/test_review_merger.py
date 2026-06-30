@@ -267,7 +267,12 @@ class TestMandatoryReferenceIssues:
         rule_result = RuleAuditResult(
             mandatory_reference_check_passed=False,
             mandatory_reference_issues=[
-                "强制连续性约束未回收：巨型遗迹表面材料特性（已沉寂 9 章）",
+                {
+                    "setting_key": "artifact.mega_ruin.surface_material",
+                    "setting_name": "巨型遗迹表面材料特性",
+                    "silent_chapters": 9,
+                    "message": "强制连续性约束未回收：巨型遗迹表面材料特性（已沉寂 9 章）",
+                },
             ],
         )
         issues = _convert_rule_to_issues("正文", rule_result, "v1")
@@ -275,7 +280,7 @@ class TestMandatoryReferenceIssues:
         assert len(mr_issues) == 1
         assert mr_issues[0].severity == "critical"
         assert mr_issues[0].fix_type == "patch"
-        assert "巨型遗迹表面材料特性" in mr_issues[0].issue_description
+        assert "artifact.mega_ruin.surface_material" in mr_issues[0].evidence_quote
 
     def test_no_mandatory_reference_issues_when_passed(self) -> None:
         """mandatory_reference_check_passed=True 时不应产生 issues."""

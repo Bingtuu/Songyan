@@ -46,19 +46,34 @@
 | `tasks/135-setting-recycling-and-continuity-health-governance-DONE.md` | Task 135：设定回收与 continuity health 治理（V5.2） |
 | `tasks/136-v52-enforce-ch1-ch20-validation-DONE.md` | Task 136：V5.2 Ch1–Ch20 采集窗口跨项目实跑验证 |
 | `tasks/137-setting-recycling-closed-loop.md` | Task 137：设定回收闭环与 tracking 刷新机制（V5.2，保持活跃；138a-138f 承接收口） |
-| `tasks/138a-remaining-orphan-classification.md` | Task 138a：剩余 orphan 分类与证据表（`run-4fd48756` 的 16 个 orphan） |
-| `tasks/138b-orphan-root-cause-decision.md` | Task 138b：基于分类结果确定最小动作 |
-| `tasks/138c-orphan-minimal-fix.md` | Task 138c：剩余 orphan 最小修复 |
-| `tasks/138d-ch10-ch12-post-fix-rerun.md` | Task 138d/138d-R2：修复后 Ch10-Ch12 聚焦复跑验证（R2 最新 `run-bcee6ab6` completed，Ch12 continuity `orphaned=14`） |
-| `tasks/138e-task137-fact-sync-and-closure.md` | Task 138e：事实源同步与 Task 137 收尾判断（已完成；Task 137 不归档） |
-| `tasks/138f-settlement-evidence-gated-numerical-extraction.md` | Task 138f：Settlement 数值结算证据门禁工程化修复（已完成） |
+| `tasks/138a-remaining-orphan-classification-DONE.md` | Task 138a：剩余 orphan 分类与证据表（`run-4fd48756` 的 16 个 orphan） |
+| `tasks/138b-orphan-root-cause-decision-DONE.md` | Task 138b：基于分类结果确定最小动作 |
+| `tasks/138c-orphan-minimal-fix-DONE.md` | Task 138c：剩余 orphan 最小修复 |
+| `tasks/138d-ch10-ch12-post-fix-rerun-DONE.md` | Task 138d/138d-R2：修复后 Ch10-Ch12 聚焦复跑验证（R2 最新 `run-bcee6ab6` completed，Ch12 continuity `orphaned=14`） |
+| `tasks/138e-task137-fact-sync-and-closure-DONE.md` | Task 138e：事实源同步与 Task 137 收尾判断（已完成；Task 137 不归档） |
+| `tasks/138f-settlement-evidence-gated-numerical-extraction-DONE.md` | Task 138f：Settlement 数值结算证据门禁工程化修复（已完成） |
 | `tasks/138g-critical-orphan-root-cause-review.md` | Task 138g：critical orphan 根因复核与最小收口（已执行但未收口；`run-715f7d09` Ch12 `orphaned=16`、critical orphan=4） |
-| `tasks/138h-critical-orphan-mandatory-recall-loop.md` | Task 138h：critical orphan 强制回收闭环（已完成；子项 A+B 已落地） |
-| `tasks/138i-writer-prompt-mandatory-reference-tone-hardening.md` | Task 138i：Writer prompt 措辞硬化（已完成但效果有限） |
-| `tasks/138j-writer-mandatory-reference-recycle-hints.md` | Task 138j：Writer 回收提示（已完成；P1 5→2，health 3.0→3.9） |
-| `tasks/138k-long-window-rehearsal-ch1-ch50.md` | Task 138k：长窗口 rehearsal Ch1-Ch50/100（规划中；验证改进稳定性） |
+| `tasks/138h-critical-orphan-mandatory-recall-loop-DONE.md` | Task 138h：critical orphan 强制回收闭环（已完成；子项 A+B 已落地） |
+| `tasks/138i-writer-prompt-mandatory-reference-tone-hardening-DONE.md` | Task 138i：Writer prompt 措辞硬化（已完成但效果有限） |
+| `tasks/138j-writer-mandatory-reference-recycle-hints-DONE.md` | Task 138j：Writer 回收提示（已完成；P1 5→2，health 3.0→3.9） |
+| `tasks/138k-long-window-rehearsal-ch1-ch50.md` | Task 138k：长窗口 rehearsal Ch1-Ch50/100（已完成 Ch1-Ch30；暴露 Ch21+ health 下滑） |
+| `tasks/138m-critical-orphan-root-cause-and-v52-boundary.md` | Task 138m：Ch21-Ch30 critical orphan 根因分析与 V5.2 边界决策（已完成；报告见 `docs/reports/task-138m-critical-orphan-root-cause-report.md`） |
+| `tasks/138n-qg-mandatory-reference-revision-loop-DONE.md` | Task 138n：QG 阻断式 critical orphan revision + mandatory_reference 上限调优（已完成；Ch30 health 8.5 / P1=0） |
+| `docs/reports/task-138n-ch1-ch30-rerun-report.md` | Task 138n：Ch1-Ch30 重跑验证报告 |
+| `tasks/138o-ch31-ch50-long-window-validation-DONE.md` | Task 138o：Ch31-Ch50 长窗口延续验证（已完成；Ch50 health 8.8 / P1=0） |
+| `docs/reports/task-138o-ch31-ch50-long-window-validation-report.md` | Task 138o：Ch31-Ch50 长窗口延续验证报告 |
+| `tasks/138p-character-id-alias-in-cloned-projects-DONE.md` | Task 138p：克隆/延续项目角色 ID alias 断裂修复（已完成；新增 `tests/test_task138p_character_id_alias.py`） |
+| `archive/v5/138m-analysis/` | Task 138m 根因分析中间数据与脚本（已归档） |
 | `docs/reports/task-137-v52-enforce-ch1-ch20-rerun-report.md` | Task 137：Ch1–Ch20 采集窗口复跑报告（`run-06ae5101` partial） |
 | `docs/reports/task-137-ch10-focus-validation-report.md` | Task 138d/138e/138d-R2/138g：Ch10 起点聚焦验证报告（最新 `run-715f7d09` completed，Ch12 `health=3.0`、`orphaned=16`） |
+
+## 长期规划（300 章目标）
+
+| 文件 | 用途 |
+|------|------|
+| `docs/300-chapter-gap-analysis.md` | 300 章卡点与解决路径（含根因：缺自顶向下叙事架构）的代码级分析（V6/V7 论证基础） |
+| `docs/v6-plan.md` | V6 阶段规划：叙事骨架 MVP + 长篇质量度量 + 可靠长跑底盘 + Task 200 系列路线图 |
+| `docs/v7-vision.md` | V7 构想：从叙事骨架到完整线索经济 + 满 Ch300 渐进验证 |
 
 ## 按场景查阅
 
@@ -107,14 +122,16 @@
 | 设定回收与 continuity health 治理（V5.2） | `tasks/135-setting-recycling-and-continuity-health-governance-DONE.md` |
 | V5.2 Ch1–Ch20 采集窗口实跑验证 | `tasks/136-v52-enforce-ch1-ch20-validation-DONE.md` |
 | 设定回收闭环与 tracking 刷新机制（V5.2，当前活跃） | `tasks/137-setting-recycling-closed-loop.md` |
-| 剩余 orphan 分类与证据表 | `tasks/138a-remaining-orphan-classification.md` |
-| 基于分类结果确定最小动作 | `tasks/138b-orphan-root-cause-decision.md` |
-| 剩余 orphan 最小修复 | `tasks/138c-orphan-minimal-fix.md` |
-| 修复后 Ch10-Ch12 聚焦复跑验证 | `tasks/138d-ch10-ch12-post-fix-rerun.md`（R2 最新 `run-bcee6ab6`） |
-| 事实源同步与 Task 137 收尾判断（已完成；Task 137 不归档） | `tasks/138e-task137-fact-sync-and-closure.md` |
-| Settlement 数值结算证据门禁工程化修复（已完成） | `tasks/138f-settlement-evidence-gated-numerical-extraction.md` |
+| 剩余 orphan 分类与证据表 | `tasks/138a-remaining-orphan-classification-DONE.md` |
+| 基于分类结果确定最小动作 | `tasks/138b-orphan-root-cause-decision-DONE.md` |
+| 剩余 orphan 最小修复 | `tasks/138c-orphan-minimal-fix-DONE.md` |
+| 修复后 Ch10-Ch12 聚焦复跑验证 | `tasks/138d-ch10-ch12-post-fix-rerun-DONE.md`（R2 最新 `run-bcee6ab6`） |
+| 事实源同步与 Task 137 收尾判断（已完成；Task 137 不归档） | `tasks/138e-task137-fact-sync-and-closure-DONE.md` |
+| Settlement 数值结算证据门禁工程化修复（已完成） | `tasks/138f-settlement-evidence-gated-numerical-extraction-DONE.md` |
 | critical orphan 根因复核与最小收口 | `tasks/138g-critical-orphan-root-cause-review.md` |
-| critical orphan 强制回收闭环（进行中） | `tasks/138h-critical-orphan-mandatory-recall-loop.md` |
+| Task 138m critical orphan 根因分析决策报告 | `docs/reports/task-138m-critical-orphan-root-cause-report.md` |
+| critical orphan 强制回收闭环（已完成；子项 A+B 已落地） | `tasks/138h-critical-orphan-mandatory-recall-loop-DONE.md` |
+| settlement 数值遥测误报修复（已完成） | `tasks/138l-settlement-telemetry-false-positive-fix-DONE.md` |
 | V5.1 Code Review 总规划 | `docs/reports/pass14-to-pass18-v51-review-roadmap.md` |
 | V5.1 Code Review 修复汇总 | `docs/reports/pass14-final-fix-summary.md` |
 | 架构手册 | `docs/architecture/04-vibe-coding-engineering.md` |

@@ -1328,7 +1328,7 @@ class TestTask138hMandatoryReferences:
         passed, issues = _check_mandatory_references(content, refs)
         assert passed is False
         assert len(issues) == 1
-        assert "巨型遗迹表面材料特性" in issues[0]
+        assert issues[0]["setting_name"] == "巨型遗迹表面材料特性"
 
     def test_check_mandatory_references_detects_present_by_name(self) -> None:
         """正文中出现 setting_name 时应视为已回收."""
@@ -1385,8 +1385,8 @@ class TestTask138hMandatoryReferences:
         result = run_rule_audit(content, mandatory_references=refs)
         assert result.mandatory_reference_check_passed is False
         assert len(result.mandatory_reference_issues) == 2
-        assert "巨型遗迹表面材料特性" in result.mandatory_reference_issues[0]
-        assert "相位冲刷机制" in result.mandatory_reference_issues[1]
+        assert "巨型遗迹表面材料特性" == result.mandatory_reference_issues[0]["setting_name"]
+        assert "相位冲刷机制" == result.mandatory_reference_issues[1]["setting_name"]
         # 扣分验证：每个 -1.5，最多 -3
         score = _compute_overall_score(result)
         assert score <= 7.0

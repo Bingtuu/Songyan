@@ -698,10 +698,15 @@ def _infer_setting_category(setting: NewSetting) -> str:
         return "technical"
 
     critical_keywords = [
-        "主角", "核心", "能力", "锚", "法则", "本源", "命格",
-        "天赋", "血脉", "传承", "main", "protagonist", "core", "anchor",
+        "主角", "protagonist", "main",
+        "命格", "天赋", "血脉", "传承",
     ]
-    if any(kw in text for kw in critical_keywords):
+    protagonist_related = [
+        "林渊", "主角", "他", "她", "能力", "状态", "命运", "目标",
+    ]
+    if any(kw in text for kw in critical_keywords) and any(
+        kw in text for kw in protagonist_related
+    ):
         return "critical"
 
     historical_keywords = [

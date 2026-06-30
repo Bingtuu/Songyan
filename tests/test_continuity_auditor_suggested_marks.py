@@ -207,3 +207,28 @@ class TestGenerateConstraints:
         marks1 = auditor._generate_constraints(report)
         marks2 = auditor._generate_constraints(report)
         assert marks1[0].mark_id == marks2[0].mark_id
+
+    def test_orphaned_cap_raised_to_12(self) -> None:
+        """Task 138n: MAX_ORPHANED 提升至 12，允许更多 critical orphan 进入 human_mark."""
+        from songyan.agents.continuity_auditor._constraints import MAX_ORPHANED
+
+        auditor = ContinuityAuditor()
+        report = ContinuityReport(
+            report_id="r1",
+            project_id="p1",
+            checked_up_to_chapter=9,
+            orphaned_settings=[
+                OrphanedSetting(
+                    tracking_id=f"t{i}",
+                    setting_key=f"K{i}",
+                    setting_name=f"K{i}",
+                    introduced_in_chapter=1,
+                    last_mentioned_chapter=2,
+                    chapters_since_mention=3,
+                )
+                for i in range(13)
+            ],
+        )
+        marks = auditor._generate_constraints(report)
+        assert len(marks) == MAX_ORPHANED
+        assert MAX_ORPHANED == 12
