@@ -166,6 +166,11 @@ V5.0 已完成从 Context Diet 2.0 核心组件到 150 章验证的全部主线�
 | 138n | QG 阻断式 critical orphan revision + mandatory_reference 上限调优 | ✅ 已完成；Ch1-Ch30 重跑通过，Ch30 health 8.5 / P1=0，报告见 `docs/reports/task-138n-ch1-ch30-rerun-report.md` | `138n-qg-mandatory-reference-revision-loop-DONE.md` |
 | 138o | Ch31-Ch50 长窗口延续验证 | ✅ 已完成；Ch50 health 8.8 / P1=0 / settlement+QG 20/20，报告见 `docs/reports/task-138o-ch31-ch50-long-window-validation-report.md` | `138o-ch31-ch50-long-window-validation-DONE.md` |
 | 138p | 克隆/延续项目角色 ID alias 断裂修复 | ✅ 已完成；新增 `tests/test_task138p_character_id_alias.py`，`run_138k`/`run_138n` 已改用公共 clone 函数 | `138p-character-id-alias-in-cloned-projects-DONE.md` |
+| 139a | V5.2 enforce 门禁配置最终审计 | ⏳ 待执行 | `139a-v52-enforce-gate-config-final-audit.md` |
+| 139b | V5.2 enforce 模式 Ch1-Ch50 复跑验证 | ⏳ 待执行 | `139b-v52-enforce-ch1-ch50-validation.md` |
+| 139c | V5.2 enforce 模式 Ch51-Ch150 长窗口验证 | ⏳ 待执行 | `139c-v52-enforce-ch51-ch150-validation.md` |
+| 139d | V5.2 默认 gate_mode 切换为 enforce 与最终验收包交付 | ⏳ 待执行 | `139d-v52-default-enforce-switch-and-final-acceptance.md` |
+| 140 | V5.2 遗留任务状态清理 | ⏳ 待执行 | `140-v52-legacy-task-cleanup.md` |
 
 ---
 

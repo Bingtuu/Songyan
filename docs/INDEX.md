@@ -63,6 +63,11 @@
 | `tasks/138o-ch31-ch50-long-window-validation-DONE.md` | Task 138o：Ch31-Ch50 长窗口延续验证（已完成；Ch50 health 8.8 / P1=0） |
 | `docs/reports/task-138o-ch31-ch50-long-window-validation-report.md` | Task 138o：Ch31-Ch50 长窗口延续验证报告 |
 | `tasks/138p-character-id-alias-in-cloned-projects-DONE.md` | Task 138p：克隆/延续项目角色 ID alias 断裂修复（已完成；新增 `tests/test_task138p_character_id_alias.py`） |
+| `tasks/139a-v52-enforce-gate-config-final-audit.md` | Task 139a：V5.2 enforce 门禁配置最终审计（待执行） |
+| `tasks/139b-v52-enforce-ch1-ch50-validation.md` | Task 139b：V5.2 enforce 模式 Ch1-Ch50 复跑验证（待执行） |
+| `tasks/139c-v52-enforce-ch51-ch150-validation.md` | Task 139c：V5.2 enforce 模式 Ch51-Ch150 长窗口验证（待执行） |
+| `tasks/139d-v52-default-enforce-switch-and-final-acceptance.md` | Task 139d：V5.2 默认 gate_mode 切换为 enforce 与最终验收包交付（待执行） |
+| `tasks/140-v52-legacy-task-cleanup.md` | Task 140：V5.2 遗留任务状态清理（待执行） |
 | `archive/v5/138m-analysis/` | Task 138m 根因分析中间数据与脚本（已归档） |
 | `docs/reports/task-137-v52-enforce-ch1-ch20-rerun-report.md` | Task 137：Ch1–Ch20 采集窗口复跑报告（`run-06ae5101` partial） |
 | `docs/reports/task-137-ch10-focus-validation-report.md` | Task 138d/138e/138d-R2/138g：Ch10 起点聚焦验证报告（最新 `run-715f7d09` completed，Ch12 `health=3.0`、`orphaned=16`） |

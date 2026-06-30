@@ -6,7 +6,7 @@
 
 | 项 | 状态 |
 |----|------|
-| 当前阶段 | **V5.2 阶段性完成：Task 138n/138o/138p 代码改动已作为 V5.2 主干默认配置提交到主分支（commit `923f286`）；Ch31-Ch50 长窗口延续验证全部通过（Run `run-01a32b97`），Ch50 health 8.8、P1/P2 critical orphan 0、settlement/QG 通过率 20/20；Task 138p 已完成，修复克隆项目角色 ID alias 断裂。V6/V7 规划文档已一并提交。下一步决定是否继续 Ch100+/Ch150 最终验收。** |
+| 当前阶段 | **V5.2 接近收口：Task 138n/138o/138p 代码改动已作为 V5.2 主干默认配置提交到主分支（commit `923f286`）；Ch31-Ch50 长窗口延续验证全部通过（Run `run-01a32b97`），Ch50 health 8.8、P1/P2 critical orphan 0、settlement/QG 通过率 20/20；Task 138p 已完成，修复克隆项目角色 ID alias 断裂。V6/V7 规划文档已一并提交。下一步执行 Task 139a-140 完成 enforce 模式默认启用与遗留清理，最终交付 V5.2 验收包。** |
 | 最终验收 | **Task 120 V5.0 + Task 132 V5.1 Final Acceptance Package 已交付** |
 | 风险口径 | P0/P1 风险为 0 |
 | 最近全量测试 | `2021 passed, 1 xfailed, 2 warnings`（Task 138n 新增单测后刷新；Ch1-Ch50 重跑/延续验证均已通过） |
