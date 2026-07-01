@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import structlog
 
@@ -14,6 +14,9 @@ from songyan.models.chapter import ChapterGoal
 from songyan.models.creative_mode import CreativeModeProfile
 from songyan.models.genre import GenreProfile
 from songyan.models.project import ProjectSetting
+
+if TYPE_CHECKING:
+    from songyan.workflows._narrative_context import NarrativeGoalContext
 
 logger = structlog.get_logger(__name__)
 
@@ -41,6 +44,31 @@ def _load_prompt_template() -> str:
     return get_prompt_loader().load_card("goal_planner").system_prompt
 
 
+def _format_thread_lines(threads: list[dict]) -> str:
+    """将线索列表格式化为 prompt 文本（空则显示"（无）"）."""
+    if not threads:
+        return "（无）"
+    lines: list[str] = []
+    for t in threads:
+        mark = "主线" if t.get("is_mainline") else "支线"
+        lines.append(
+            f"- [{t.get('thread_id', '')}] {t.get('title', '') or '（未命名线索）'}"
+            f"（{mark}，状态 {t.get('status', '')}）"
+        )
+    return "\n".join(lines)
+
+
+def _format_foreshadowing_lines(items: list[dict]) -> str:
+    """将临近伏笔列表格式化为 prompt 文本（空则显示"（无）"）."""
+    if not items:
+        return "（无）"
+    return "\n".join(
+        f"- {f.get('description', '')}"
+        f"（预计第 {f.get('expected_resolve_chapter', '?')} 章兑现）"
+        for f in items
+    )
+
+
 def _render_prompt(
     *,
     chapter_number: int,
@@ -48,34 +76,53 @@ def _render_prompt(
     genre_profile: GenreProfile,
     mode_profile: CreativeModeProfile,
     recent_summaries: str,
+    narrative_ctx: NarrativeGoalContext | None = None,
 ) -> str:
-    """渲染 GoalPlanner Prompt."""
+    """渲染 GoalPlanner Prompt.
+
+    有骨架（``narrative_ctx.has_skeleton``）时用工艺卡 1.1.0 注入弧目标/线索/伏笔；
+    否则用 1.0.0（与历史行为逐字节等价，保证无骨架回退零差异）。
+    """
     from songyan.prompts import render_agent_prompt
 
-    return render_agent_prompt(
-        "goal_planner",
-        {
-            "chapter_number": chapter_number,
-            "genre_name": genre_profile.name,
-            "mode_name": mode_profile.name,
-            "protagonist_name": project.protagonist_name,
-            "protagonist_background": project.protagonist_background or "未设定",
-            "core_hook": project.core_hook or "未设定",
-            "tone": project.tone,
-            "target_reader_expectation": project.target_reader_expectation or "未设定",
-            "taboos": ", ".join(project.taboos) if project.taboos else "无",
-            "genre_pacing_rule": genre_profile.pacing_rule or "无特殊规则",
-            "genre_satisfaction_types": ", ".join(genre_profile.satisfaction_types)
-            if genre_profile.satisfaction_types
-            else "无",
-            "genre_chapter_types": ", ".join(genre_profile.chapter_types)
-            if genre_profile.chapter_types
-            else "常规",
-            "mode_constraints": _format_mode_constraints(mode_profile),
-            "recent_summaries": recent_summaries
-            or "（本章为开篇章节，无前置剧情）",
-        },
-    )
+    variables: dict[str, Any] = {
+        "chapter_number": chapter_number,
+        "genre_name": genre_profile.name,
+        "mode_name": mode_profile.name,
+        "protagonist_name": project.protagonist_name,
+        "protagonist_background": project.protagonist_background or "未设定",
+        "core_hook": project.core_hook or "未设定",
+        "tone": project.tone,
+        "target_reader_expectation": project.target_reader_expectation or "未设定",
+        "taboos": ", ".join(project.taboos) if project.taboos else "无",
+        "genre_pacing_rule": genre_profile.pacing_rule or "无特殊规则",
+        "genre_satisfaction_types": ", ".join(genre_profile.satisfaction_types)
+        if genre_profile.satisfaction_types
+        else "无",
+        "genre_chapter_types": ", ".join(genre_profile.chapter_types)
+        if genre_profile.chapter_types
+        else "常规",
+        "mode_constraints": _format_mode_constraints(mode_profile),
+        "recent_summaries": recent_summaries
+        or "（本章为开篇章节，无前置剧情）",
+    }
+
+    if narrative_ctx is not None and narrative_ctx.has_skeleton:
+        variables.update(
+            {
+                "arc_goal": narrative_ctx.arc_goal or "（未指定）",
+                "open_threads": _format_thread_lines(narrative_ctx.open_threads),
+                "threads_to_resolve": _format_thread_lines(
+                    narrative_ctx.threads_to_resolve
+                ),
+                "due_foreshadowings": _format_foreshadowing_lines(
+                    narrative_ctx.due_foreshadowings
+                ),
+            }
+        )
+        return render_agent_prompt("goal_planner", variables, version="1.1.0")
+
+    return render_agent_prompt("goal_planner", variables, version="1.0.0")
 
 
 def _format_mode_constraints(mode_profile: CreativeModeProfile) -> str:
@@ -189,6 +236,7 @@ async def define_chapter_goal(
     chapter_number: int,
     previous_summary: str = "",
     character_states: list[dict] | None = None,
+    narrative_ctx: NarrativeGoalContext | None = None,
     *,
     temperature: float = 0.7,
 ) -> ChapterGoal:
@@ -207,6 +255,8 @@ async def define_chapter_goal(
         chapter_number: 章节号
         previous_summary: 最近剧情摘要
         character_states: 角色当前状态快照（可选，当前版本不注入 Prompt）
+        narrative_ctx: V6 叙事骨架派生上下文（可选）。``has_skeleton=True`` 时从弧
+            规划派生并回填 ``derived_from_arc``；``None`` 或无骨架时走等价旧路径。
 
     Returns:
         生成的章节目标
@@ -221,6 +271,7 @@ async def define_chapter_goal(
         project_title=project.title,
         genre=genre_profile.id,
         mode=mode_profile.id,
+        has_skeleton=bool(narrative_ctx and narrative_ctx.has_skeleton),
     )
 
     # 加载并渲染 Prompt
@@ -230,6 +281,7 @@ async def define_chapter_goal(
         genre_profile=genre_profile,
         mode_profile=mode_profile,
         recent_summaries=previous_summary,
+        narrative_ctx=narrative_ctx,
     )
 
     # 调用 LLM
@@ -254,6 +306,9 @@ async def define_chapter_goal(
     goal = _build_chapter_goal(data, chapter_number, genre_profile)
     # 注入 previous_summary（LLM 可能不返回此字段）
     goal.previous_summary = previous_summary
+    # V6 Task 143：有骨架时回填派生来源弧，供 report 追溯"章节目标→ArcPlan"
+    if narrative_ctx is not None and narrative_ctx.has_skeleton:
+        goal.derived_from_arc = narrative_ctx.arc_index
 
     logger.info(
         "goal_planner.complete",
@@ -261,6 +316,7 @@ async def define_chapter_goal(
         word_count_target=goal.word_count_target,
         chapter_type=goal.chapter_type,
         event_count=len(goal.target_events),
+        derived_from_arc=goal.derived_from_arc,
     )
 
     return goal

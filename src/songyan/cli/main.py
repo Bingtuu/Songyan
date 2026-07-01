@@ -9,6 +9,7 @@ from pathlib import Path
 import click
 
 from songyan.cli.commands.index import register_index_commands
+from songyan.cli.outline_import import load_outline_file
 from songyan.creative_modes.registry import (
     list_creative_mode_profiles,
     load_creative_mode_profile,
@@ -16,8 +17,10 @@ from songyan.creative_modes.registry import (
 from songyan.db.continuity_repo import ContinuityReportRepository
 from songyan.db.human_mark_repo import HumanMarkRepository
 from songyan.db.migrations import init_schema
+from songyan.db.narrative_repo import NarrativeRepository
 from songyan.db.repository import ProjectRepository
 from songyan.evals.streaming_report import generate_report, read_run_logs, write_report
+from songyan.exceptions import SongyanError
 from songyan.genres.loader import list_genre_profiles, load_genre_profile
 from songyan.models.gate_config import GateConfig
 from songyan.models.human_mark import HumanMark
@@ -111,8 +114,13 @@ def _select_sub_genre(genre_id: str) -> str | None:
     return None
 
 
-async def _create_project_async() -> tuple[str, ProjectSetting]:
-    """异步执行项目创建逻辑."""
+async def _create_project_async(outline_file: str | None = None) -> tuple[str, ProjectSetting]:
+    """异步执行项目创建逻辑.
+
+    Args:
+        outline_file: 可选的全书大纲 JSON 文件路径。缺省（None）时项目创建行为
+            与现状完全一致，不写任何叙事骨架表。
+    """
     await init_schema()
 
     mode_id = _select_mode()
@@ -160,16 +168,32 @@ async def _create_project_async() -> tuple[str, ProjectSetting]:
     repo = ProjectRepository()
     await repo.create(project, project_id)
 
+    # Task 142: 可选大纲导入（缺省不执行，保持旧行为逐字节等价）
+    if outline_file:
+        outline, arcs, threads = load_outline_file(outline_file, project_id)
+        await NarrativeRepository().import_outline(project_id, outline, arcs, threads)
+        click.echo(
+            f"  已导入大纲: {len(arcs)} 个弧规划, {len(threads)} 条线索"
+        )
+
     return project_id, project
 
 
 @cli.command()
-def create_project() -> None:
-    """交互式创建小说项目."""
+@click.option(
+    "--outline-file",
+    type=click.Path(exists=True),
+    default=None,
+    help="可选：全书大纲 JSON 文件，导入 StoryOutline/ArcPlan/PlotThread",
+)
+def create_project(outline_file: str | None) -> None:
+    """交互式创建小说项目（可选 --outline-file 导入全书大纲）."""
     try:
-        project_id, project = asyncio.run(_create_project_async())
+        project_id, project = asyncio.run(_create_project_async(outline_file))
     except click.Abort:
         raise
+    except SongyanError as exc:
+        raise click.ClickException(str(exc)) from exc
     except _CLI_CATCHABLE as exc:
         raise click.ClickException(str(exc)) from exc
 
@@ -550,6 +574,46 @@ def report_cmd(
             output_path = write_report(report_md, run_id, Path("logs/reports"))
 
         click.echo(f"报告已生成: {output_path}")
+
+    except click.Abort:
+        raise
+    except _CLI_CATCHABLE as exc:
+        raise click.ClickException(str(exc)) from exc
+
+
+@cli.command(name="metrics")
+@click.option("--project-id", required=True, help="项目 ID（从 SQLite 事实源读逐章度量）")
+@click.option("--chapters", required=True, help="章节范围，如 1-150")
+@click.option(
+    "--output",
+    "-o",
+    type=click.Path(dir_okay=False, path_type=Path),
+    default=None,
+    help="输出 markdown 路径（默认 logs/reports/metrics-<project_id>.md）",
+)
+def metrics_cmd(project_id: str, chapters: str, output: Path | None) -> None:
+    """从 SQLite 事实源生成 V6 阶段 A 长期度量报告（DB 支撑，可复算历史 DB）。
+
+    示例:
+        songyan metrics --project-id mynovel --chapters 1-150
+        # 复算历史库：先用 DATABASE_URL 覆盖指向 .tmp/task138n_ch1_ch30_rerun.db
+    """
+    from songyan.evals.db_metrics import render_stage_a_metrics
+
+    try:
+        if "-" in chapters:
+            start_s, end_s = chapters.split("-", 1)
+            start, end = int(start_s), int(end_s)
+        else:
+            start = end = int(chapters)
+
+        report_md = asyncio.run(render_stage_a_metrics(project_id, start, end))
+
+        out_dir = output.parent if output else Path("logs/reports")
+        out_dir.mkdir(parents=True, exist_ok=True)
+        out_path = output if output else out_dir / f"metrics-{project_id}.md"
+        out_path.write_text(report_md, encoding="utf-8")
+        click.echo(f"度量报告已生成: {out_path}")
 
     except click.Abort:
         raise

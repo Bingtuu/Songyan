@@ -25,3 +25,7 @@ versions:
     description: "Task 121r：可执行约束 + 高概念信息行动承载 + 避免章节目标退化为设定说明清单"
     tags: ["webnovel", "xuanhuan", "urban", "scifi"]
     created_at: "2026-06-25"
+  - version: "1.0.6"
+    description: "V6 Task 144：注入线索经济约束（应推进/应收束线索、非必要不开新线）"
+    tags: ["webnovel", "xuanhuan", "urban", "scifi"]
+    created_at: "2026-07-01"

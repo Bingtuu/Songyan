@@ -269,6 +269,24 @@ class SettingTrackingRepository:
         return [dict(row) for row in rows]
 
 
+    async def new_settings_by_chapter(
+        self, project_id: str, start: int, end: int
+    ) -> list[dict]:
+        """按章统计新登记设定数（供 T7：category='critical' AND introduced_in_chapter=N）."""
+        async with get_db() as conn:
+            conn.row_factory = Row
+            cursor = await conn.execute(
+                """SELECT introduced_in_chapter, category, COUNT(*) AS count
+                   FROM setting_tracking
+                   WHERE project_id = ?
+                     AND introduced_in_chapter BETWEEN ? AND ?
+                   GROUP BY introduced_in_chapter, category""",
+                (project_id, start, end),
+            )
+            rows = await cursor.fetchall()
+        return [dict(row) for row in rows]
+
+
 class InventoryTrackerRepository:
     """Repository for inventory/item tracking."""
 

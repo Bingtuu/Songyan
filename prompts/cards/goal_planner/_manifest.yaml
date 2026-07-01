@@ -5,3 +5,7 @@ versions:
     description: "基础章节目标制定工艺卡"
     tags: ["webnovel", "xuanhuan", "urban", "scifi"]
     created_at: "2026-05-25"
+  - version: "1.1.0"
+    description: "注入叙事骨架（弧目标/未收束线索/临近伏笔），支持自顶向下派生（V6 Task 143）"
+    tags: ["webnovel", "xuanhuan", "urban", "scifi"]
+    created_at: "2026-07-01"

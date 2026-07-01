@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import sqlite3
 import subprocess
 import tempfile
 import uuid
@@ -73,6 +74,8 @@ from songyan.workflows._helpers import (
     new_id,
     trigger_layered_summaries,
 )
+from songyan.workflows._narrative_context import load_narrative_goal_context
+from songyan.workflows._thread_economy import update_plot_threads_after_settlement
 from songyan.workflows.review_merger import merge_reviews
 
 logger = structlog.get_logger(__name__)
@@ -357,6 +360,10 @@ async def goal_planner_node(state: dict[str, Any]) -> dict[str, Any]:
     genre = load_genre_profile(project.genre_id)
     mode = load_creative_mode_profile(project.mode_id)
     try:
+        # V6 Task 143：加载自顶向下叙事骨架上下文（无骨架时 has_skeleton=False，回退旧行为）
+        narrative_ctx = await load_narrative_goal_context(
+            state["project_id"], state["chapter_number"]
+        )
         goal = await define_chapter_goal(
             project_id=state["project_id"],
             project=project,
@@ -364,6 +371,7 @@ async def goal_planner_node(state: dict[str, Any]) -> dict[str, Any]:
             mode_profile=mode,
             chapter_number=state["chapter_number"],
             previous_summary=state.get("previous_summary", ""),
+            narrative_ctx=narrative_ctx,
         )
         goal_id = new_id("gp")
         await ChapterGoalRepository().create(goal, goal_id, state["project_id"])
@@ -390,6 +398,10 @@ async def creative_director_node(state: dict[str, Any]) -> dict[str, Any]:
     seed_settings = await SettingSnapshotRepository().list_by_project(state["project_id"])
 
     try:
+        # V6 Task 144：加载叙事骨架上下文，注入线索经济约束（无骨架时回退 1.0.5）
+        narrative_ctx = await load_narrative_goal_context(
+            state["project_id"], state["chapter_number"]
+        )
         brief = await generate_creative_brief(
             project_id=state["project_id"],
             project=project,
@@ -398,6 +410,7 @@ async def creative_director_node(state: dict[str, Any]) -> dict[str, Any]:
             mode_profile=mode,
             characters=characters,
             seed_settings=seed_settings,
+            narrative_ctx=narrative_ctx,
         )
         brief_id = new_id("cb")
         await CreativeBriefRepository().create(
@@ -2470,6 +2483,31 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
         except (RuntimeError, OSError, ConnectionError) as exc:
             logger.warning(
                 "settlement_extractor_node.layered_summary_failed",
+                error=str(exc),
+                project_id=state["project_id"],
+                chapter_number=state["chapter_number"],
+            )
+
+    # 6. V6 Task 144：PlotThread 状态跟随更新（依据 settlement 证据推进线索状态）
+    #    非阻塞：失败不影响 settlement/summary；仅骨架项目有线索时生效
+    if accepted_for_postprocessing and settlement is not None:
+        try:
+            changed_threads = await update_plot_threads_after_settlement(
+                project_id=state["project_id"],
+                chapter_number=state["chapter_number"],
+                version_id=version.version_id,
+                settlement=settlement,
+            )
+            if changed_threads:
+                logger.info(
+                    "settlement_extractor_node.plot_threads_updated",
+                    project_id=state["project_id"],
+                    chapter_number=state["chapter_number"],
+                    changed_threads=changed_threads,
+                )
+        except (RuntimeError, OSError, ConnectionError, sqlite3.OperationalError) as exc:
+            logger.warning(
+                "settlement_extractor_node.plot_thread_update_failed",
                 error=str(exc),
                 project_id=state["project_id"],
                 chapter_number=state["chapter_number"],

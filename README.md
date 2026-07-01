@@ -297,7 +297,7 @@ Songyan 的开发历程按能力演进划分，而不是按内部任务编号展
 | 150 章验证 | 验证系统能否支撑长篇规模生成 | Context Diet 2.0、分层压缩、角色衰减、设定蒸发、预算硬上限通过长序列验证 | 已完成 |
 | 质量加固 | 提升输出质量和失败恢复能力 | 补充系统性测试、严格模式、降级接受、safe best 回退和报告入口 | 已完成 |
 | 事实源治理 | 确保长期记录的角色状态、设定和数字信息可信 | 强化 Settlement 证据校验、设定回收、连续性健康检查；enforce 默认启用并取得 Ch1–Ch150 150/150 证据 | 已完成（V5.2） |
-| 叙事骨架与度量 | 补齐自顶向下叙事架构，并让长篇质量可度量 | 全书大纲 / 弧规划 / 线索经济 MVP、跨章质量指标、run 级续跑 | 进行中（V6） |
+| 叙事骨架与度量 | 补齐自顶向下叙事架构，并让长篇质量可度量 | 全书大纲 / 弧规划 / 线索经济 MVP（阶段 0）、跨章质量度量入库 orphan/T7/质量债/文学趋势/伏笔兑现率（阶段 A） | 进行中（V6：阶段 0+A 已完成，B/C/D 待做） |
 
 ---
 ## 4. 快速开始
@@ -353,6 +353,8 @@ ruff check src/ tests/
 | 质量审查体系 | 已包含规则审查、语义审查、文学性诊断、质量评分、局部修订和 safe best 回退 | `src/songyan/agents/` |
 | 状态结算与摘要 | 已支持 accepted 后的角色状态、设定、伏笔、数值和摘要结算，并持续加强证据校验 | `tasks/138f-settlement-evidence-gated-numerical-extraction-DONE.md` |
 | 连续性健康检查 | 已支持跨章扫描孤立设定、遗忘伏笔和状态冲突；当前仍在治理剩余边界问题 | `tasks/137-setting-recycling-closed-loop.md` |
+| 叙事骨架数据模型（V6 阶段 0） | 已交付 `StoryOutline` / `ArcPlan` / `PlotThread` 前置规划模型、三张表与 `NarrativeRepository`（含线索生命周期状态机）；`create-project --outline-file` 可导入全书大纲；GoalPlanner 从弧规划自顶向下派生章节目标（`derived_from_arc`）；CreativeDirector 注入线索经济约束、settlement 后自动推进线索状态；无骨架均回退旧行为 | `tasks/141-narrative-skeleton-data-model-DONE.md` … `tasks/144-thread-economy-mvp-DONE.md` |
+| 长篇质量度量（V6 阶段 A） | 新增 `songyan metrics`（DB 支撑、可复算历史库）：orphan 绝对量/新 critical 速率(T7)/质量债账本/文学趋势/弧级伏笔兑现率+长程台账；`run_quality_debt` 表；阈值 T3/T6/T8 已用历史 DB 复算冻结（T4/T5 延后长跑实测）。复现了被 health 指标掩盖的 orphan 累积与长程伏笔失效 | `tasks/145-orphan-and-critical-rate-metrics-DONE.md` … `tasks/148z-stage-a-threshold-calibration-DONE.md`、`docs/reports/v6-stageA-threshold-calibration.md` |
 | 自动化验证 | 已建立单元、集成、E2E 和长序列压力测试；最近全量测试见状态板 | `tests/`、`docs/STATUS.md` |
 
 仍在治理的指标包括：剩余 orphan 设定、部分环境读数类状态结算、以及完整默认配置下的更大范围复跑。这些属于当前开发工作，不应写成已交付指标。

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import time
 from datetime import datetime
-from sqlite3 import Row
+from sqlite3 import OperationalError, Row
 from typing import Any
 
 import structlog
@@ -82,6 +82,31 @@ async def _persist_run_progress(
     if status is not None:
         run_state.status = status
     await _save_run_state(run_state)
+
+
+async def _upsert_quality_debt(run_id: str, project_id: str) -> None:
+    """读取本 run 的 JSONL 日志聚合质量债并 upsert run_quality_debt（V6 Task 146，非阻塞）.
+
+    每章调用一次（增量），使被 kill 的 run 也留有截至当前的质量债汇总。
+    """
+    try:
+        from songyan.db.run_quality_debt_repo import RunQualityDebtRepository
+        from songyan.evals.db_metrics import compute_quality_debt, quality_debt_row
+        from songyan.evals.streaming_report import read_run_logs
+
+        logs = read_run_logs(run_id)
+        if not logs:
+            return
+        report = compute_quality_debt(logs)
+        await RunQualityDebtRepository().upsert(
+            quality_debt_row(run_id, project_id, report)
+        )
+    except (RuntimeError, OSError, ConnectionError, OperationalError) as exc:
+        logger.warning(
+            "project_pipeline.quality_debt_upsert_failed",
+            run_id=run_id,
+            error=str(exc),
+        )
 
 
 async def _pause_run_for_auto_halt(
@@ -385,6 +410,9 @@ async def run_project_pipeline(
         )
 
         _append_recent_result(_recent_results, chapter_number, chapter_result, gate_config)
+
+        # V6 Task 146: 每章增量更新 run 级质量债账本（非阻塞）
+        await _upsert_quality_debt(run_id, project_id)
 
         # Task 127: 每章运行后更新最低 health_score
         _updated_min_score = chapter_result.get("updated_min_health_score")

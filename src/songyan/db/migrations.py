@@ -49,6 +49,12 @@ _EXPECTED_TABLES: list[str] = [
     "chapter_chunks",
     # V4.0: 数据生命周期管理
     "lifecycle_errors",
+    # V6 阶段 0: 叙事骨架（前置规划）
+    "story_outlines",
+    "arc_plans",
+    "plot_threads",
+    # V6 阶段 A: run 级质量债
+    "run_quality_debt",
 ]
 
 
@@ -462,6 +468,102 @@ async def _migrate_human_marks_extra_fields(conn: aiosqlite.Connection) -> None:
         )
 
 
+# ---------------------------------------------------------------------------
+# V6 阶段 0 迁移 — 叙事骨架（前置规划）
+# ---------------------------------------------------------------------------
+
+async def _migrate_narrative_skeleton(conn: aiosqlite.Connection) -> None:
+    """创建叙事骨架三张表（story_outlines / arc_plans / plot_threads）.
+
+    区别于回顾型 arc_summaries：这三张表承载 **前置规划**（全书大纲、弧目标、
+    线索生命周期），供 V6 GoalPlanner 自顶向下派生章节目标与追踪线索兑现。
+    """
+    tables = [
+        """CREATE TABLE IF NOT EXISTS story_outlines (
+            project_id          TEXT PRIMARY KEY REFERENCES projects(project_id) ON DELETE CASCADE,
+            core_conflict       TEXT DEFAULT '',
+            mainline_synopsis   TEXT DEFAULT '',
+            themes              TEXT DEFAULT '[]',
+            intended_ending     TEXT DEFAULT '',
+            created_at          TEXT DEFAULT (datetime('now')),
+            updated_at          TEXT DEFAULT (datetime('now'))
+        )""",
+        """CREATE TABLE IF NOT EXISTS arc_plans (
+            arc_id              TEXT PRIMARY KEY,
+            project_id          TEXT NOT NULL REFERENCES projects(project_id) ON DELETE CASCADE,
+            arc_index           INTEGER NOT NULL,
+            start_chapter       INTEGER NOT NULL,
+            end_chapter         INTEGER NOT NULL,
+            arc_goal            TEXT DEFAULT '',
+            threads_to_open     TEXT DEFAULT '[]',
+            threads_to_resolve  TEXT DEFAULT '[]',
+            is_mainline         INTEGER DEFAULT 0,
+            created_at          TEXT DEFAULT (datetime('now'))
+        )""",
+        """CREATE TABLE IF NOT EXISTS plot_threads (
+            thread_id               TEXT PRIMARY KEY,
+            project_id              TEXT NOT NULL REFERENCES projects(project_id) ON DELETE CASCADE,
+            title                   TEXT DEFAULT '',
+            description             TEXT DEFAULT '',
+            is_mainline             INTEGER DEFAULT 0,
+            opened_chapter          INTEGER,
+            expected_resolve_arc    INTEGER,
+            status                  TEXT DEFAULT 'planned',
+            last_status_chapter     INTEGER,
+            last_status_version_id  TEXT,
+            created_at              TEXT DEFAULT (datetime('now')),
+            updated_at              TEXT DEFAULT (datetime('now'))
+        )""",
+    ]
+    for sql in tables:
+        await conn.execute(sql)
+    indexes = [
+        "CREATE INDEX IF NOT EXISTS idx_arc_plans_project ON arc_plans(project_id)",
+        "CREATE INDEX IF NOT EXISTS idx_arc_plans_index "
+        "ON arc_plans(project_id, arc_index)",
+        "CREATE INDEX IF NOT EXISTS idx_arc_plans_chapter "
+        "ON arc_plans(project_id, start_chapter, end_chapter)",
+        "CREATE INDEX IF NOT EXISTS idx_plot_threads_project ON plot_threads(project_id)",
+        "CREATE INDEX IF NOT EXISTS idx_plot_threads_status "
+        "ON plot_threads(project_id, status)",
+    ]
+    for sql in indexes:
+        await conn.execute(sql)
+
+
+async def _migrate_chapter_goal_derived_from_arc(conn: aiosqlite.Connection) -> None:
+    """为 chapter_goals 添加 derived_from_arc 列（V6 Task 143，可追溯派生弧）."""
+    cursor = await conn.execute("PRAGMA table_info(chapter_goals)")
+    cols = {row[1] for row in await cursor.fetchall()}
+    if "derived_from_arc" not in cols:
+        await conn.execute(
+            "ALTER TABLE chapter_goals ADD COLUMN derived_from_arc INTEGER"
+        )
+
+
+async def _migrate_run_quality_debt(conn: aiosqlite.Connection) -> None:
+    """创建 run 级质量债汇总表（V6 Task 146）."""
+    await conn.execute(
+        """CREATE TABLE IF NOT EXISTS run_quality_debt (
+            run_id                    TEXT PRIMARY KEY
+                                          REFERENCES project_runs(run_id) ON DELETE CASCADE,
+            project_id                TEXT NOT NULL,
+            total_chapters            INTEGER DEFAULT 0,
+            degraded_count            INTEGER DEFAULT 0,
+            convergence_failed_count  INTEGER DEFAULT 0,
+            qg_false_count            INTEGER DEFAULT 0,
+            degraded_ratio            REAL DEFAULT 0,
+            convergence_ratio         REAL DEFAULT 0,
+            t4_breached               INTEGER DEFAULT 0,
+            updated_at                TEXT DEFAULT (datetime('now'))
+        )"""
+    )
+    await conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_run_quality_debt_project "
+        "ON run_quality_debt(project_id)"
+    )
+
+
 async def init_schema(db_path: str | Path | None = None) -> None:
     """读取 schema.sql 并执行，幂等（所有 CREATE 带 IF NOT EXISTS）.
 
@@ -501,6 +603,9 @@ async def init_schema(db_path: str | Path | None = None) -> None:
         await _migrate_context_snapshots_emergency_fields(conn)
         await _migrate_setting_setting_key_index(conn)
         await _migrate_human_marks_extra_fields(conn)
+        await _migrate_narrative_skeleton(conn)
+        await _migrate_chapter_goal_derived_from_arc(conn)
+        await _migrate_run_quality_debt(conn)
         await conn.commit()
 
 
@@ -548,4 +653,7 @@ async def run_migrations(conn: aiosqlite.Connection) -> None:
     await _migrate_setting_category(conn)
     await _migrate_chapter_versions_score_card(conn)
     await _migrate_setting_setting_key_index(conn)
+    await _migrate_narrative_skeleton(conn)
+    await _migrate_chapter_goal_derived_from_arc(conn)
+    await _migrate_run_quality_debt(conn)
     logger.info("migrations.run_all", status="complete")

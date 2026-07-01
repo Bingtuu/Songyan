@@ -46,6 +46,12 @@ from songyan.models.genre import (
 from songyan.models.human_instruction import HumanInstruction
 from songyan.models.human_mark import HumanMark, SuggestedMark
 from songyan.models.literary import LiteraryAuditResult, LiteraryObservation
+from songyan.models.narrative import (
+    ArcPlan,
+    PlotThread,
+    PlotThreadStatus,
+    StoryOutline,
+)
 from songyan.models.project import ProjectSetting
 from songyan.models.project_run import ProjectRunResult, ProjectRunState
 from songyan.models.rag import ChunkMetadata, RAGConfig, RetrievedChunk, TextChunk
@@ -124,6 +130,11 @@ __all__ = [
     "VolumeSummary",
     "PermanentScene",
     "OpenThread",
+    # V6 阶段 0 新增：叙事骨架（前置规划）
+    "StoryOutline",
+    "ArcPlan",
+    "PlotThread",
+    "PlotThreadStatus",
     # review
     "ReviewCategory",
     "ReviewIssue",

@@ -346,8 +346,8 @@ class ChapterGoalRepository:
                 """INSERT INTO chapter_goals (
                     goal_id, project_id, chapter_number, previous_summary,
                     target_events, emotional_arc, hooks, obligations,
-                    word_count_target, chapter_type
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    word_count_target, chapter_type, derived_from_arc
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
                     goal_id,
                     project_id,
@@ -359,6 +359,7 @@ class ChapterGoalRepository:
                     _to_json(goal.obligations),
                     goal.word_count_target,
                     goal.chapter_type,
+                    goal.derived_from_arc,
                 ),
             )
 
@@ -389,6 +390,7 @@ class ChapterGoalRepository:
             obligations=_from_json(row["obligations"], []),
             word_count_target=row["word_count_target"],
             chapter_type=row["chapter_type"],
+            derived_from_arc=row["derived_from_arc"],
         )
 
     async def get_by_chapter(self, project_id: str, chapter_number: int) -> ChapterGoal | None:
@@ -413,6 +415,7 @@ class ChapterGoalRepository:
             obligations=_from_json(row["obligations"], []),
             word_count_target=row["word_count_target"],
             chapter_type=row["chapter_type"],
+            derived_from_arc=row["derived_from_arc"],
         )
 
 

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import structlog
 
@@ -21,6 +21,9 @@ from songyan.models.creative_mode import (
 from songyan.models.genre import GenreProfile
 from songyan.models.project import ProjectSetting
 from songyan.models.settlement import NewSetting
+
+if TYPE_CHECKING:
+    from songyan.workflows._narrative_context import NarrativeGoalContext
 
 from ._brief_builder import (
     DEFAULT_FORBIDDEN_PATTERNS as DEFAULT_FORBIDDEN_PATTERNS,
@@ -54,6 +57,28 @@ def _load_prompt_template() -> str:
     return get_prompt_loader().load_card("creative_director").system_prompt
 
 
+def _format_thread_constraints(narrative_ctx: NarrativeGoalContext) -> str:
+    """构建线索经济约束文本（本章应推进/应收束线索、非必要不开新线）."""
+    def _fmt(threads: list[dict]) -> str:
+        if not threads:
+            return "（无）"
+        return "\n".join(
+            f"- [{t.get('thread_id', '')}] {t.get('title', '') or '（未命名线索）'}"
+            f"（{'主线' if t.get('is_mainline') else '支线'}，状态 {t.get('status', '')}）"
+            for t in threads
+        )
+
+    return (
+        f"本章应推进的线索（优先通过角色行动/冲突推进，而非旁白交代）：\n"
+        f"{_fmt(narrative_ctx.open_threads)}\n"
+        f"本章应收束的线索：\n"
+        f"{_fmt(narrative_ctx.threads_to_resolve)}\n"
+        "**线索经济要求**：优先推进/收束上述已开启线索；"
+        "除非剧情必需，非必要不开启新线索、不引入新的 critical 设定；"
+        "新开线索必须服务于当前弧目标。"
+    )
+
+
 async def _render_prompt(
     *,
     project_id: str,
@@ -64,37 +89,48 @@ async def _render_prompt(
     characters: list[Character],
     previous_summary: str,
     seed_settings: list[NewSetting],
+    narrative_ctx: NarrativeGoalContext | None = None,
 ) -> str:
-    """渲染 CreativeDirector Prompt."""
+    """渲染 CreativeDirector Prompt.
+
+    有骨架且存在待推进/收束线索时用工艺卡 1.0.6 注入线索经济约束；否则用 1.0.5
+    （与历史行为逐字节等价，保证无骨架回退零差异）。
+    """
     from songyan.prompts import render_agent_prompt
 
     active_settings = await _load_active_settings_to_recycle(
         project_id, chapter_goal.chapter_number
     )
 
-    return render_agent_prompt(
-        "creative_director",
-        {
-            "mode_id": mode_profile.id,
-            "genre_name": genre_profile.name,
-            "mode_name": mode_profile.name,
-            "protagonist_name": _get_protagonist_name(characters),
-            "core_hook": project.core_hook or genre_profile.name,
-            "tone": project.tone or genre_profile.name,
-            "genre_satisfaction_types": ", ".join(genre_profile.satisfaction_types)
-            if genre_profile.satisfaction_types
-            else "无",
-            "genre_pacing_rule": genre_profile.pacing_rule or "无特殊规则",
-            "genre_taboos": ", ".join(genre_profile.taboos) if genre_profile.taboos else "无",
-            "chapter_goal_json": chapter_goal.model_dump_json(indent=2),
-            "recent_summaries": previous_summary or "（本章为开篇章节，无前置剧情）",
-            "character_states": _format_characters(characters),
-            "seed_settings_json": _format_seed_settings(seed_settings),
-            "active_settings_to_recycle": _format_active_settings_to_recycle(active_settings),
-            "mode_constraints": _format_mode_constraints(mode_profile),
-            "punch_engine_enabled": mode_profile.id == "webnovel_intense",
-        },
+    variables = {
+        "mode_id": mode_profile.id,
+        "genre_name": genre_profile.name,
+        "mode_name": mode_profile.name,
+        "protagonist_name": _get_protagonist_name(characters),
+        "core_hook": project.core_hook or genre_profile.name,
+        "tone": project.tone or genre_profile.name,
+        "genre_satisfaction_types": ", ".join(genre_profile.satisfaction_types)
+        if genre_profile.satisfaction_types
+        else "无",
+        "genre_pacing_rule": genre_profile.pacing_rule or "无特殊规则",
+        "genre_taboos": ", ".join(genre_profile.taboos) if genre_profile.taboos else "无",
+        "chapter_goal_json": chapter_goal.model_dump_json(indent=2),
+        "recent_summaries": previous_summary or "（本章为开篇章节，无前置剧情）",
+        "character_states": _format_characters(characters),
+        "seed_settings_json": _format_seed_settings(seed_settings),
+        "active_settings_to_recycle": _format_active_settings_to_recycle(active_settings),
+        "mode_constraints": _format_mode_constraints(mode_profile),
+        "punch_engine_enabled": mode_profile.id == "webnovel_intense",
+    }
+
+    has_threads = narrative_ctx is not None and narrative_ctx.has_skeleton and (
+        narrative_ctx.open_threads or narrative_ctx.threads_to_resolve
     )
+    if has_threads:
+        variables["thread_constraints"] = _format_thread_constraints(narrative_ctx)
+        return render_agent_prompt("creative_director", variables, version="1.0.6")
+
+    return render_agent_prompt("creative_director", variables, version="1.0.5")
 
 
 def _get_protagonist_name(characters: list[Character]) -> str:
@@ -239,6 +275,7 @@ async def generate_creative_brief(
     characters: list[Character],
     previous_summary: str = "",
     seed_settings: list[NewSetting] | None = None,
+    narrative_ctx: NarrativeGoalContext | None = None,
     *,
     temperature: float = 0.7,
 ) -> CreativeBrief:
@@ -283,6 +320,7 @@ async def generate_creative_brief(
         characters=characters,
         previous_summary=previous_summary,
         seed_settings=seed_settings or [],
+        narrative_ctx=narrative_ctx,
     )
 
     # 调用 LLM

@@ -19,6 +19,8 @@ class ChapterGoal(BaseModel):
     obligations: list[str] = Field(default_factory=list)
     word_count_target: int = Field(3000, ge=500, le=20000)
     chapter_type: str = ""  # 从 GenreProfile.chapter_types 中选
+    # V6 阶段 0 / Task 143：本章目标派生自哪个 ArcPlan.arc_index（无骨架时为 None）
+    derived_from_arc: int | None = None
 
 
 class ChapterVersion(BaseModel):

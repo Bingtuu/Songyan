@@ -1,7 +1,7 @@
 # V6 Task 总索引
 
 > **阶段**: 叙事骨架 MVP + 长篇质量度量 + 可靠长跑底盘
-> **当前口径**: **V6 已立项启动**。前置 V5（V5.0/V5.1/V5.2）已完整完成并验收（Ch1-Ch150 150/150 accept，`failed=[]`，无 AutoHalt，continuity health=8.5）。V6 论证基础见 `docs/300-chapter-gap-analysis.md`，阶段规划见 `docs/v6-plan.md`，验收阈值见 v6-plan §1.4（T1-T8）。任务编号沿用连续编号惯例（V5 收尾于 Task 140），本阶段从 **Task 141** 起连续编号（Task 141-159）。
+> **当前口径**: **V6 进行中——阶段 0（叙事骨架 MVP，Task 141-144）与阶段 A（长篇质量度量，Task 145-148 + 148z 阈值标定）工程实现均已完成并全量回归（2099 passed）**。前置 V5（V5.0/V5.1/V5.2）已完整完成并验收（Ch1-Ch150 150/150 accept，`failed=[]`，无 AutoHalt，continuity health=8.5）。V6 论证基础见 `docs/300-chapter-gap-analysis.md`，阶段规划见 `docs/v6-plan.md`，验收阈值见 v6-plan §1.4（T1-T8，⚙ 阈值已在 148z 冻结/延后）。任务编号沿用连续编号惯例（V5 收尾于 Task 140），本阶段从 **Task 141** 起连续编号（Task 141-159）。
 > **最后整理**: 2026-07-01
 
 本文是 V6 阶段任务文档的事实入口。V5 阶段事实入口见 `tasks/V5-README.md`；历史规划稿统一归档到 `archive/`，仅在追溯设计边界时查阅。V6 各任务最终状态以本文件和各 `*-DONE.md` 为准。
@@ -24,7 +24,7 @@ V6 通过 = 同时满足以下五项（阈值与术语见 `docs/v6-plan.md` §1.
 | 维度 | 判据 |
 |------|------|
 | **N（骨架）** | 项目可携带全书大纲/弧规划；GoalPlanner 输入包含弧上下文；Ch1-Ch50 至少一条主线线索完成 T1 定义的可追溯状态跃迁 |
-| **D（度量）** | orphan 绝对量、新 critical 产生速率、质量债、文学趋势、弧级伏笔兑现率五类长期指标入库且可在 `songyan report` 查看 |
+| **D（度量）** | orphan 绝对量、新 critical 产生速率、质量债、文学趋势、弧级伏笔兑现率五类长期指标入库且可在 `songyan report`/`songyan metrics` 查看 |
 | **S（源头收敛）** | 满足 T6 的 orphan 斜率下降 + 归因判据（用"新 critical 产生速率下降"证明非靠录入丢弃） |
 | **R（可靠）** | 单条命令无人值守完成 Ch1-Ch100，中途人为 kill 后可 run 级 resume 续完 |
 | **V（验证）** | 在 V5.2 + 骨架管线上取得 Ch1-Ch150 连续运行证据（非旧 `run-a2bed648`），全程满足 T3/T4/T5 红线 |
@@ -39,19 +39,20 @@ V6 通过 = 同时满足以下五项（阈值与术语见 `docs/v6-plan.md` §1.
 
 | Task | 名称 | 状态 | 事实文档 |
 |------|------|:----:|----------|
-| 141 | 叙事骨架数据模型（StoryOutline / ArcPlan / PlotThread；拆 141a/b/c） | ◻ 规划中 | `tasks/141-narrative-skeleton-data-model.md` |
-| 142 | 项目创建可携带大纲 | ◻ 规划中 | `tasks/142-project-outline-import.md` |
-| 143 | GoalPlanner 自顶向下派生（拆 143a/b） | ◻ 规划中 | `tasks/143-goal-planner-topdown-derivation.md` |
-| 144 | 线索经济约束（MVP） | ◻ 规划中 | `tasks/144-thread-economy-mvp.md` |
+| 141 | 叙事骨架数据模型（StoryOutline / ArcPlan / PlotThread；拆 141a/b/c） | ✅ 完成 | `tasks/141-narrative-skeleton-data-model-DONE.md` |
+| 142 | 项目创建可携带大纲 | ✅ 完成 | `tasks/142-project-outline-import-DONE.md` |
+| 143 | GoalPlanner 自顶向下派生（拆 143a/b） | ✅ 完成 | `tasks/143-goal-planner-topdown-derivation-DONE.md` |
+| 144 | 线索经济约束（MVP） | ✅ 完成 | `tasks/144-thread-economy-mvp-DONE.md` |
 
 ### 阶段 A：度量同步（让指标说真话 + 让骨架可判定）
 
 | Task | 名称 | 状态 | 事实文档 |
 |------|------|:----:|----------|
-| 145 | orphan 绝对量 + 新 critical 产生速率监控 | ◻ 规划中 | `docs/v6-plan.md` §3 阶段 A |
-| 146 | 质量债账本 | ◻ 规划中 | `docs/v6-plan.md` §3 阶段 A |
-| 147 | 文学质量趋势化 | ◻ 规划中 | `docs/v6-plan.md` §3 阶段 A |
-| 148 | 弧级伏笔兑现率 + 长程伏笔台账 | ◻ 规划中 | `docs/v6-plan.md` §3 阶段 A |
+| 145 | orphan 绝对量 + 新 critical 产生速率监控 | ✅ 完成 | `tasks/145-orphan-and-critical-rate-metrics-DONE.md` |
+| 146 | 质量债账本 | ✅ 完成 | `tasks/146-quality-debt-ledger-DONE.md` |
+| 147 | 文学质量趋势化 | ✅ 完成 | `tasks/147-literary-quality-trend-DONE.md` |
+| 148 | 弧级伏笔兑现率 + 长程伏笔台账 | ✅ 完成 | `tasks/148-arc-foreshadowing-fulfillment-DONE.md` |
+| 148z | 阶段 A 出口：阈值标定报告（T3/T4/T5/T6/T8 冻结） | ✅ 完成 | `tasks/148z-stage-a-threshold-calibration-DONE.md` |
 
 ### 阶段 B：末端治理（缓解症状）
 

@@ -25,7 +25,7 @@
 
 V6 通过 = 同时满足以下五项（所有阈值与术语见 §1.4，由不在场的人也能独立判真假）：
 - **N（骨架）**：项目可携带全书大纲 / 弧规划；GoalPlanner 输入包含弧上下文（可在 `context_snapshots` 验证）；Ch1-Ch50 内至少一条「主线线索」完成 §1.4-T1 定义的可追溯状态跃迁；
-- **D（度量）**：orphan 绝对量、新 critical 产生速率、质量债、文学趋势、弧级伏笔兑现率五类长期指标已入库且可在 `songyan report` 查看；
+- **D（度量）**：orphan 绝对量、新 critical 产生速率、质量债、文学趋势、弧级伏笔兑现率五类长期指标已入库且可在 `songyan report`/`songyan metrics` 查看；
 - **S（源头收敛）**：满足 §1.4-T6 的 orphan 斜率下降 + 归因判据（用「新 critical 产生速率下降」证明非靠录入丢弃）；
 - **R（可靠）**：单条命令无人值守完成 **Ch1-Ch100**（"完成"见 §1.4-T2），中途人为 kill 后可 run 级 resume 续完，无需人工改命令/清理；
 - **V（验证）**：在 V5.2 + 骨架管线上取得 **Ch1-Ch150** 连续运行证据（非旧 `run-a2bed648`），且全程满足 §1.4 的红线（T3/T4/T5）。
@@ -38,7 +38,7 @@ V6 通过 = 同时满足以下五项（所有阈值与术语见 §1.4，由不�
 |----|------------|--------------------|
 | **T1** ✓ | 主线线索「可追溯状态跃迁」 | `ArcPlan` 标注为 `is_mainline=true` 的 `PlotThread`，在弧窗口内发生 `opened→advanced` 或 `advanced→resolved` 状态变更，且每次变更可在 report 中定位到具体章节号与 source_version_id |
 | **T2** ✓ | 「完成 / 跑通」 N 章 | 目标区间每章都产出 `accepted` 或 `edited` head（`degraded_accept` 计入"完成"但同时计入质量债 T4）；`failed` 或未解决的 `human_review_required` 均算未完成 |
-| **T3** ⚙ | 文学趋势「红线」 | 任一文学维度（character_autonomy / conceptual_idling 等）的滑动窗口（W=5 章）均值，相对该 run 前 10 章基线下降 **≥20%** 即触红线 |
+| **T3** ⚙ | 文学趋势「红线」 | 任一文学维度（character_autonomy / conceptual_grounding 等；对应 `literary_observations` 列 `character_autonomy_score` / `conceptual_grounding_score` / `fissure_preservation_score`，注意 `conceptual_idling` 是 observation 类型而非列）的滑动窗口（W=5 章）均值，相对该 run 前 10 章基线下降 **≥20%** 即触红线 |
 | **T4** ⚙ | 质量债「红线」 | 任一连续 50 章窗口内：`degraded_accept` 占比 **≤20%** 且 `convergence_failed` 占比 **≤10%**；超出即触红线 |
 | **T5** ⚙ | DB / 性能「红线」 | Ch100 时 DB 文件 **≤300MB**（150 章基线 196MB）；单次连续性扫描查询耗时 **≤ 基线 1.5×** |
 | **T6** ⚙ | orphan 斜率下降 + 归因 | (a) Ch50-Ch100 窗口 orphan 绝对总量线性斜率 **≤ 138n 基线斜率 ×0.5**；(b) P1(critical) orphan 全程 **=0**；(c) 归因：「每章新 critical 产生速率」(T7) 相对 138k 基线下降幅度 **≥ orphan 斜率下降幅度的 50%**，且因录入降级被丢弃/降级的 critical 设定数 **≤ 同窗口新增 critical 总数的 15%** |
@@ -46,6 +46,12 @@ V6 通过 = 同时满足以下五项（所有阈值与术语见 §1.4，由不�
 | **T8** ⚙ | 趋势窗口 N | 文学/指标"连续下滑"检测窗口 **N=5 章**（与现有 gate `streak_window=3` 区分：gate 看审计点，趋势看章） |
 
 > 阈值校准纪律：⚙ 阈值在阶段 A 出口用历史 DB 复算实际分布后，若发现首版值明显不合理（如 138n 基线本身已超红线），须在标定报告中记录并调整，再冻结为 V6 正式口径——**不允许在长跑撞红线后临时放宽**。
+>
+> **阶段 A 标定冻结（2026-07-01，Task 148z，见 `docs/reports/v6-stageA-threshold-calibration.md`）**：
+> - **T3 冻结**：W=5 均值相对前 10 章基线降 ≥20%（a2bed648 历史 run 触线、30 章健康 run 不触线，口径有效）。
+> - **T6(a) 冻结**：Ch50-100 窗 orphan 斜率 ≤ **3.14/章**（=138n 基线 6.2836×0.5）；**T6(b)** P1 critical orphan=0；**T6c** T7 基线=1.767/章（138k rehearsal），降幅比值手工核算，"被降级 critical ≤15%" 子句延后至 Task 149。
+> - **T8 冻结**：N=5。
+> - **T4 / T5 延后实测**：degraded/convergence 历史不可得（仅 qg_false，≈0-3%）→ 延后至 Task 157 首窗；DB/性能红线延后至长跑（Task 156/158，干净 150ch 基线 ≈196MB 待重测）。
 
 ---
 
@@ -90,7 +96,7 @@ V6 通过 = 同时满足以下五项（所有阈值与术语见 §1.4，由不�
 
 | Task | 名称 | 目标 | 验收标准 |
 |------|------|------|----------|
-| **145** | orphan 绝对量 + 新 critical 产生速率监控 | 在 ContinuityReport / `songyan report` 暴露 orphan **绝对总数**及分类分布的逐章曲线（与 health_score 解耦），并新增「每章新 critical 产生速率」（T7，写入侧）曲线 | 复跑 138n 数据可还原出 orphan 总量斜率与 T7 速率两条独立曲线；report 输出 orphan 总数/critical/P3 + T7 共四条曲线；单测覆盖两类统计口径 |
+| **145** | orphan 绝对量 + 新 critical 产生速率监控 | 在 ContinuityReport / `songyan report`/`songyan metrics` 暴露 orphan **绝对总数**及分类分布的逐章曲线（与 health_score 解耦），并新增「每章新 critical 产生速率」（T7，写入侧）曲线 | 复跑 138n 数据可还原出 orphan 总量斜率与 T7 速率两条独立曲线；report 输出 orphan 总数/critical/P3 + T7 共四条曲线；单测覆盖两类统计口径 |
 | **146** | 质量债账本 | 跨章累计 `degraded_accept` / `convergence_failed` / QG=false 章数，持久化到 run 级表 | run 结束可查"降级接受章列表 + 各占比"；report 新增质量债汇总段并按 T4 口径标红线；单测覆盖累计 |
 | **147** | 文学质量趋势化 | LiteraryAuditor 维度**已入库**（`literary_observations` 表已有 `character_autonomy_score` / `conceptual_grounding_score` / `fissure_preservation_score`）；本 Task 加按章节范围回读 + 滑动窗口（W=5）趋势查询 | 新增趋势查询；可按 T3/T8 口径检出"连续 N=5 章某维度均值下滑 ≥20%"；不改变 accept 流程（仍只诊断） |
 | **148** | 弧级伏笔兑现率 + 长程伏笔台账 | 基于阶段 0 的 PlotThread/ArcPlan，统计弧级伏笔兑现率；暴露长程未兑现伏笔 (source, expected, 跨度, 状态)，标记被"逾期归档"而非真兑现的伏笔 | report 可列弧级兑现率与"被系统遗忘"伏笔数；单测覆盖 overdue/archived 区分 |

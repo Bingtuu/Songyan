@@ -301,6 +301,21 @@ class ForeshadowingRepository:
         return await _do(conn)
 
 
+    async def list_with_lifecycle(self, project_id: str) -> list[dict]:
+        """返回伏笔（含 lifecycle_status），用于真兑现 vs 逾期归档区分（V6 Task 148）."""
+        async with get_db() as conn:
+            conn.row_factory = Row
+            cursor = await conn.execute(
+                """SELECT foreshadowing_id, description, planted_in_chapter,
+                          expected_resolve_chapter, status, lifecycle_status
+                   FROM foreshadowings WHERE project_id = ?
+                   ORDER BY planted_in_chapter, foreshadowing_id""",
+                (project_id,),
+            )
+            rows = await cursor.fetchall()
+        return [dict(row) for row in rows]
+
+
 class SettingSnapshotRepository:
     """Repository for setting snapshots."""
 

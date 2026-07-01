@@ -254,3 +254,37 @@ class LiteraryObservationRepository:
             summary=row["summary"],
             duration_ms=row["duration_ms"],
         )
+
+    async def list_scores_by_chapter_range(
+        self, project_id: str, start: int, end: int
+    ) -> list[dict]:
+        """按章回读文学四维度分数（JOIN chapter_versions，每章取最新一条 observation）.
+
+        literary_observations 无 chapter_number，经 version_id → chapter_versions 关联；
+        每章可能多版本/多次审查，取 created_at 最新的一条。
+        """
+        async with get_db() as conn:
+            conn.row_factory = Row
+            cursor = await conn.execute(
+                """SELECT cv.chapter_number AS chapter,
+                          lo.literary_quality_score,
+                          lo.character_autonomy_score,
+                          lo.conceptual_grounding_score,
+                          lo.fissure_preservation_score
+                   FROM literary_observations lo
+                   JOIN chapter_versions cv ON lo.version_id = cv.version_id
+                   WHERE cv.project_id = ?
+                     AND cv.chapter_number BETWEEN ? AND ?
+                   ORDER BY cv.chapter_number, lo.created_at DESC, lo.observation_id DESC""",
+                (project_id, start, end),
+            )
+            rows = await cursor.fetchall()
+        seen: set[int] = set()
+        result: list[dict] = []
+        for row in rows:
+            chapter = row["chapter"]
+            if chapter in seen:
+                continue
+            seen.add(chapter)
+            result.append(dict(row))
+        return result
