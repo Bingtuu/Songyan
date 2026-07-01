@@ -6,14 +6,16 @@
 
 | 项 | 状态 |
 |----|------|
-| 当前阶段 | **V5.2 已完成：默认 gate_mode 切换为 `enforce`，`songyan run` 未指定 `--gate-mode` 时默认使用 enforce 模式。enforce 模式 Ch1-Ch150 完整验证通过：`run-813a9ed7` Ch1-Ch50 50/50 accept；`run-df933dbf` Ch51-Ch150 100/100 accept；Ch80 经 Task 139h 修复后重跑（`run-7b45c17d`）成功 accept。最终 150/150 章节 accepted，`failed=[]`，无 AutoHalt，continuity health=8.5。Task 139d 最终验收包已交付。** |
+| 当前阶段 | **V6 已立项启动**：叙事骨架 MVP + 长篇质量度量 + 可靠长跑底盘，Task 141-159，事实入口 `tasks/V6-README.md`，规划 `docs/v6-plan.md`，论证基础 `docs/300-chapter-gap-analysis.md`。前置 V5.2 已完成验收（下行）。 |
+| V5.2 验收结论 | **V5.2 已完成：默认 gate_mode 切换为 `enforce`，`songyan run` 未指定 `--gate-mode` 时默认使用 enforce 模式。enforce 模式 Ch1-Ch150 完整验证通过：`run-813a9ed7` Ch1-Ch50 50/50 accept；`run-df933dbf` Ch51-Ch150 100/100 accept；Ch80 经 Task 139h 修复后重跑（`run-7b45c17d`）成功 accept。最终 150/150 章节 accepted，`failed=[]`，无 AutoHalt，continuity health=8.5。Task 139d 最终验收包已交付。** |
 | 最终验收 | **Task 120 V5.0 + Task 132 V5.1 + Task 139d V5.2 Final Acceptance Package 已交付** |
 | 风险口径 | P0/P1 风险为 0 |
 | 最近全量测试 | `2036 passed, 1 xfailed, 2 warnings`（Task 139d 最终验证后）；`ruff check src/ tests/` 通过 |
 | 最近修复/验证 | Task 123 ContextEmergency / health_low 候选硬门禁（默认观测模式，16 个新单测）；Task 124 离线影响面分析；Task 125 阈值调优（P1 异常检测、health_score 跌幅、审计点 streak），新增 12 个单测；Task 126 enforce 小窗口实跑验证，Ch1–Ch19 零 gate 触发；**Task 127 重构 `health_low_score_halt` 为"历史新低 + P1 同步激增"复合条件，新增 8 个单测，pytest 1842 passed**；**Task 128 完成**：QG false 降级接受不终止 run、Ch1–Ch10 质量爬坡阈值、RevisionHandler readability 专精路径；pytest 1843 passed；**Task 129 条件完成**：enforce 模式 Ch1–Ch50 验证，`run-89d7a2d4` Ch1–Ch15 后因 quality_gate_fail_streak 暂停，暴露 Writer 结构退化、SettlementExtractor 角色/数值提取失败、orphaned settings 快速累积等底层缺陷；报告见 `docs/reports/task-129-enforce-validation-report.md`。**Task 130 已完成**：gate_mode 默认保持 `observe`，`songyan run` 暴露 `--gate-mode` CLI 参数，`songyan report` 新增 gate 触发汇总。**Task 131 已完成**：历史规划稿已归档至 `archive/tasks/`，索引文档已指向 `-DONE.md`。**Task 132 已完成**：V5.1 最终验收包已交付，V5.1 通过（条件完成项已明确转入 V5.2）。**Task 133/134/135 已完成**：Writer 多场景结构、SettlementExtractor 角色/数值提取、设定回收与 continuity health 治理；**Task 138f 已完成**：numerical_update evidence gate 已落地，无明确正文/source_quote 数字证据的 telemetry 候选会过滤并记录 diagnostic，真实 ledger 仍硬校验；**Task 138d-R2 retry4 已完成**：`run-bcee6ab6` Ch11/Ch12 settlement、summary、QG 全过，Ch12 continuity `health=3.0`、`orphaned=14`、`mismatches=0`；**Task 138g 已执行但未收口**：目标测试 `70 passed`、ruff 通过，`run-715f7d09` completed 但 Ch12 `health=3.0`、`orphaned=16`、critical orphan=4，证明问题不在 alias 而在 recall 执行闭环；**Task 138h-138j 已完成**：critical orphan 强制回收闭环建立，138i 措辞硬化无效，138j `recycle_hint` 显著有效，文档见 `tasks/138h-critical-orphan-mandatory-recall-loop-DONE.md`；**Task 138l 已完成**：settlement 数值遥测误报修复，4 个新增单测，`tasks/138l-settlement-telemetry-false-positive-fix-DONE.md`；**Task 138k 已完成**：Ch1-Ch30 长窗口 rehearsal（Run `run-6f2a10d3`）全部完成 30/30，无 AutoHalt，但 Ch21+ health 下滑、Ch30 P1=35，报告见 `docs/reports/task-138k-long-window-rehearsal-report.md`**；**Task 138m 已完成**：根因分析确认 35 个 P1 orphan 主要系 Ch20+ 新 critical 设定引入后丢弃、`MAX_ORPHANED=8` 约束预算截断、`mandatory_references` 无上限导致 Writer 过载；推荐 A+C，报告见 `docs/reports/task-138m-critical-orphan-root-cause-report.md`，后续任务 `tasks/138n-qg-mandatory-reference-revision-loop-DONE.md`** |
 | 当前 lint | `ruff check src/ tests/` 已通过；`scripts/` 目录包含一次性调试脚本，不参与 CI lint |
 | Python | 3.11.9 |
-| 事实入口 | `tasks/V5-README.md` |
+| 后续阶段 | **V6 已立项启动**：叙事骨架 MVP + 长篇质量度量 + 可靠长跑底盘，Task 141-159，事实入口 `tasks/V6-README.md`，规划 `docs/v6-plan.md`，论证基础 `docs/300-chapter-gap-analysis.md` |
+| 事实入口 | V5 阶段：`tasks/V5-README.md`；V6 阶段：`tasks/V6-README.md` |
 | single-run rehearsal | Task 121b：`run-21ff158b`，Ch1-Ch4 成功，Ch5 阻断；Task 121d：`run-f749826e`，Ch1-Ch7 成功，Ch8 阻断；Task 121e 重跑：`run-0317a247`，Ch1-Ch17 成功，Ch18 阻断；Task 121f 聚焦验证：`run-058fb9de`，Ch1-Ch18 成功；Task 121g 完整重跑：`run-0fd1456e`，Ch1-Ch114 成功，Ch115 阻断；Task 121h 已完成工程修复；Task 121i `run-ce1767ff` Ch115 聚焦验证成功；Task 121j `run-b063b6f0` Ch1-Ch13 成功后因连续 ContextEmergency AutoHalt 暂停；Task 121l `run-08689f68` Ch1-Ch12 成功后因 Ch10-Ch12 连续 ContextEmergency 且含 QG false 按新策略暂停；Task 121o `run-4ff41095` Ch1-Ch18 全部成功 18/18，ContextEmergency 0 次，AutoHalt 0 次，已越过 Ch13 和 Ch18；Task 121p `run-2d7d96c2` 修复 Bug A/B 后重跑，Ch1-Ch3 成功，Ch4 因 0.82 阈值阻断；Task 121q `run-86b1170c` Ch1-Ch20 聚焦验证 20/20 全部成功；**Task 121q full single-run `run-a2bed648` Ch1-Ch150 全部成功 150/150，ContextEmergency 0 次，AutoHalt 0 次，degraded_accept 0 次，failed 0 次，无间隙** |
 | Task 121c | 已修复 rewrite fallback 后 `_skip_settlement=True` 错误阻断 settlement 的契约 |
 | Task 121d | 已执行修复后重跑；已验证 Ch5 阻断解除，新增 Ch8 settlement_review 阻断 |
@@ -35,15 +37,16 @@
 | Task 122b | **已完成**：新增 12 个集成测试覆盖 degraded_accept 路由、safe best 保护、human_review_required gate、AutoHalt streak 逻辑；pytest 1784 passed；ruff 通过 |
 | Task 122c | **已完成**：Ch1-Ch20 E2E 集成测试（28 秒重度 Mock）；Ch40-Ch50 / Ch100-Ch110 窗口待补充 |
 | Task 122c | **已完成**：Ch1-Ch20 / Ch40-Ch50 / Ch100-Ch110 三个 E2E 窗口验证全部完成；`test_ch41_50_validation.py` 已补强 emergency/auto-halt 断言；`test_ch100_110_from_run_log.py` 已新增并复用 `run-a2bed648` 历史数据 |
-| 重跑前清理 | **2026-06-23 已完成全量清理**：终止全部残留 Python 进程，删除数据库 28,440 行测试数据，清空所有业务表，清理日志文件，VACUUM 后 196 MB；环境完全干净 |
-| 下一步规划 | **V5.2 已全部收口**；进入 V6/V7 叙事骨架与长篇质量度量规划，见 `docs/v6-plan.md` 与 `docs/v7-vision.md`。 |
+| 重跑前清理 | **2026-07-01（V6 启动准备）**：VACUUM 清空主库 `songyan.db` 全部业务数据（144821 行 → 0，schema 保留），374MB → 0.41MB；删除 `logs/` + `projects/*/logs/` 共 342 个运行日志；清理 `.tmp/` 中 V5.2 中间过程 DB 与 0 字节临时文件（保留 138n/138k V6 校准依赖与 139b_rerun2 验收证据 DB）；归档 pass1-18 + handover 到 `archive/v5/reports/`，删除与 archive/v3 重复的 v3.1_ch* 报告。此前 2026-06-23 亦有一次全量清理记录。 |
+| 下一步规划 | **V6 已立项启动**，事实入口 `tasks/V6-README.md`。首批开工：阶段 0（Task 141 叙事骨架数据模型 → 144）与阶段 A（Task 145 度量）同期推进；阶段 B 末端治理必须待骨架+度量落地后才能开工。规划见 `docs/v6-plan.md` 与 `docs/v7-vision.md`。 |
 
 测试说明：`1 xfailed` 为已知非阻断项；`0 xpassed`（已修复）；`0 failed`。数据库 `lifecycle_status` 列缺失与 RAG embedding 性能测试已修复，当前全量通过。
 
 ## 当前优先级
 
-1. **V6 规划预研**：叙事骨架 MVP、长篇质量度量、可靠长跑底盘，见 `docs/v6-plan.md` 与 `docs/v7-vision.md`。
-2. **持续回归**：后续改动继续执行 `pytest tests/ -q` + `ruff check src/ tests/`。
+1. **V6 阶段 0 + A 启动**：Task 141-144 叙事骨架 MVP 与 Task 145-148 度量同步同期推进，事实入口 `tasks/V6-README.md`，规划 `docs/v6-plan.md`。
+2. **阶段 A 出口标定报告**：用 138n/138k 历史 DB 复算校准 v6-plan §1.4 的 ⚙ 阈值（T3/T4/T5/T6/T8），冻结为 V6 正式口径，必须先于任何末端治理。
+3. **持续回归**：后续改动继续执行 `pytest tests/ -q` + `ruff check src/ tests/`。
 
 ## V5.1 交付摘要
 
@@ -81,10 +84,14 @@
 - 开发代理规则：`AGENTS.md`
 - 项目概览与阶段入口：`README.md`
 - 文档索引：`docs/INDEX.md`
+- V6 任务事实：`tasks/V6-README.md`
+- V6 阶段规划：`docs/v6-plan.md`
+- V6 论证基础（300 章 gap 分析）：`docs/300-chapter-gap-analysis.md`
+- V7 构想：`docs/v7-vision.md`
 - V5 任务事实：`tasks/V5-README.md`
-- V5.0 最终验收：`tasks/120-v5-final-acceptance-DONE.md`
+- V5.0 最终验收：`archive/tasks/120-v5-final-acceptance-DONE.md`
 - V5.1 规划：`tasks/121a-v50-goal-assessment-and-v51-plan.md`
-- V5.1 Code Review 修复汇总：`docs/reports/pass14-final-fix-summary.md`
+- V5.1 Code Review 修复汇总（已归档）：`archive/v5/reports/pass14-final-fix-summary.md`
 - Single-run rehearsal：`tasks/121b-ch1-ch150-single-run-rehearsal-DONE.md`
 - Rewrite fallback settlement 修复：`tasks/121c-rewrite-fallback-settlement-contract-DONE.md`
 - 修复后 single-run 重跑：`tasks/121d-ch1-ch150-single-run-rerun-DONE.md`

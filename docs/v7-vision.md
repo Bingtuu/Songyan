@@ -81,7 +81,7 @@ V7 的验证不是"一次跑 300 章"，而是**渐进式爬坡**，每一级都
 
 仅当产品目标包含"换题材也能高质量长跑"时纳入 V7（否则可独立成 V8 或不做）。
 
-需解决 `docs/300-chapter-gap-analysis.md` §6 列出的半硬编码：
+需解决 `docs/300-chapter-gap-analysis.md` §7 列出的半硬编码：
 - settlement 设定簇 canonical 词表外置为 genre 配置；
 - 数值 telemetry/evidence allowlist 由 genre JSON 注入而非写死；
 - 主角名等项目专属信息从代码移到 project 档案。

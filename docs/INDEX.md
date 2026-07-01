@@ -8,6 +8,7 @@
 |------|------|
 | `AGENTS.md` | 开发代理短指令与不可违背规则 |
 | `docs/STATUS.md` | 当前状态、测试口径、下一步 |
+| `tasks/V6-README.md` | **V6 任务事实入口（当前阶段）**：叙事骨架 MVP + 度量 + 长跑底盘，Task 141-159 |
 | `tasks/V5-README.md` | V5.0 任务事实入口 |
 | `tasks/121a-v50-goal-assessment-and-v51-plan.md` | Task 121a：V5.0 目标评估与 V5.1 规划 |
 | `tasks/121b-ch1-ch150-single-run-rehearsal-DONE.md` | Ch1-Ch150 single-run rehearsal 结果 |
@@ -76,7 +77,7 @@
 | `docs/reports/task-139d-v52-final-acceptance-package.md` | Task 139d：V5.2 最终验收包（已验收；Ch1-Ch150 150/150 accept） |
 | `tasks/139g-v52-settlement-llm-timeout-fix.md` | Task 139g：V5.2 settlement LLM 超时修复（已完成） |
 | `tasks/139h-v52-ch80-revision-word-count-blowup-fix.md` | Task 139h：V5.2 Ch80 revision 字数膨胀修复（已完成；`run-7b45c17d` Ch80 accept，生成 `v-80-12-e017e643`） |
-| `tasks/140-v52-legacy-task-cleanup.md` | Task 140：V5.2 遗留任务状态清理（已完成） |
+| `tasks/140-v52-legacy-task-cleanup-DONE.md` | Task 140：V5.2 遗留任务状态清理（已完成） |
 | `archive/v5/138m-analysis/` | Task 138m 根因分析中间数据与脚本（已归档） |
 | `docs/reports/task-137-v52-enforce-ch1-ch20-rerun-report.md` | Task 137：Ch1–Ch20 采集窗口复跑报告（`run-06ae5101` partial） |
 | `docs/reports/task-137-ch10-focus-validation-report.md` | Task 138d/138e/138d-R2/138g：Ch10 起点聚焦验证报告（最新 `run-715f7d09` completed，Ch12 `health=3.0`、`orphaned=16`） |
@@ -85,20 +86,21 @@
 
 | 文件 | 用途 |
 |------|------|
+| `tasks/V6-README.md` | **V6 任务事实入口**：Task 141-159 状态、阶段验收判定、依赖关系与执行纪律 |
 | `docs/300-chapter-gap-analysis.md` | 300 章卡点与解决路径（含根因：缺自顶向下叙事架构）的代码级分析（V6/V7 论证基础） |
-| `docs/v6-plan.md` | V6 阶段规划：叙事骨架 MVP + 长篇质量度量 + 可靠长跑底盘 + Task 200 系列路线图 |
+| `docs/v6-plan.md` | V6 阶段规划：叙事骨架 MVP + 长篇质量度量 + 可靠长跑底盘 + Task 141-159 路线图 |
 | `docs/v7-vision.md` | V7 构想：从叙事骨架到完整线索经济 + 满 Ch300 渐进验证 |
 
 ## 按场景查阅
 
 | 场景 | 文件 |
 |------|------|
-| V5.0 最终是否通过 | `tasks/120-v5-final-acceptance-DONE.md` |
-| 报告入口 / wrapper | `tasks/119-reporting-wrapper-hardening-DONE.md` |
-| health_low 治理 | `tasks/118-continuity-health-governance-DONE.md` |
-| DG-2 风险窗口复验 | `tasks/117-dg2-risk-window-revalidation-DONE.md` |
-| Ch111-Ch150 验证 | `tasks/114-ch101-ch150-streaming-validation-DONE.md` |
-| Ch102/Ch103 settlement 验证窗口 | `tasks/114b2-qg-convergence-settlement-window-DONE.md` |
+| V5.0 最终是否通过 | `archive/tasks/120-v5-final-acceptance-DONE.md` |
+| 报告入口 / wrapper | `archive/tasks/119-reporting-wrapper-hardening-DONE.md` |
+| health_low 治理 | `archive/tasks/118-continuity-health-governance-DONE.md` |
+| DG-2 风险窗口复验 | `archive/tasks/117-dg2-risk-window-revalidation-DONE.md` |
+| Ch111-Ch150 验证 | `archive/tasks/114-ch101-ch150-streaming-validation-DONE.md` |
+| Ch102/Ch103 settlement 验证窗口 | `archive/tasks/114b2-qg-convergence-settlement-window-DONE.md` |
 | Ch1-Ch150 single-run rehearsal | `tasks/121b-ch1-ch150-single-run-rehearsal-DONE.md` |
 | Ch5 settlement skip 修复 | `tasks/121c-rewrite-fallback-settlement-contract-DONE.md` |
 | 修复后 single-run 重跑 / Ch8 新阻断 | `tasks/121d-ch1-ch150-single-run-rerun-DONE.md` |
@@ -146,8 +148,8 @@
 | Task 138m critical orphan 根因分析决策报告 | `docs/reports/task-138m-critical-orphan-root-cause-report.md` |
 | critical orphan 强制回收闭环（已完成；子项 A+B 已落地） | `tasks/138h-critical-orphan-mandatory-recall-loop-DONE.md` |
 | settlement 数值遥测误报修复（已完成） | `tasks/138l-settlement-telemetry-false-positive-fix-DONE.md` |
-| V5.1 Code Review 总规划 | `docs/reports/pass14-to-pass18-v51-review-roadmap.md` |
-| V5.1 Code Review 修复汇总 | `docs/reports/pass14-final-fix-summary.md` |
+| V5.1 Code Review 总规划（已归档） | `archive/v5/reports/pass14-to-pass18-v51-review-roadmap.md` |
+| V5.1 Code Review 修复汇总（已归档） | `archive/v5/reports/pass14-final-fix-summary.md` |
 | 架构手册 | `docs/architecture/04-vibe-coding-engineering.md` |
 | 技术参考 | `docs/architecture/05-tech-reference.md` |
 | Code Review | `docs/code-review-plan.md` |

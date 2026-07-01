@@ -6,7 +6,7 @@
 
 1. 读取 `AGENTS.md`。
 2. 读取 `docs/STATUS.md`。
-3. 若任务指定 Task，读取对应 `tasks/<id>-*.md` 或相关 `*-DONE.md`。
+3. 若任务指定 Task，读取对应 `tasks/<id>-*.md` 或相关 `*-DONE.md`；V1-V5.0 早期任务（001-120）已归档到 `archive/tasks/`。
 4. 用 5-8 行说明任务边界，再改代码或文档。
 5. 默认按现有架构和文档事实源推进，不重复扫描归档目录。
 
@@ -14,17 +14,20 @@
 
 - 项目状态：`docs/STATUS.md`
 - 文档路由：`docs/INDEX.md`
-- V5 任务事实：`tasks/V5-README.md`
-- V5.1 下一步：`tasks/121a-v50-goal-assessment-and-v51-plan.md`
-- 历史归档：`archive/v5/INDEX.md`、`archive/v4/INDEX.md`
+- V6 任务事实（当前阶段）：`tasks/V6-README.md`
+- V6 阶段规划：`docs/v6-plan.md`；论证基础：`docs/300-chapter-gap-analysis.md`
+- V5 历史任务事实：`tasks/V5-README.md`
+- 历史归档：`archive/v5/INDEX.md`、`archive/v4/INDEX.md`；V1-V5.0 早期任务见 `archive/tasks/`
 
 ## 项目定位
 
-V5.0 目标已经工程验收通过：通过 Context Diet 2.0 支撑长篇生成，P0/P1 风险为 0。下一步优先级是：
+V5（V5.0/V5.1/V5.2）已全部工程验收通过：Context Diet 2.0 支撑长篇生成，enforce 默认启用，Ch1-Ch150 150/150 accept，P0/P1 风险为 0。
 
-1. 补 Ch1-Ch150 single-run rehearsal 证据。
-2. 进入 V5.1 Prompt 调优。
-3. 后置预研 ContextEmergency / health_low 硬门禁。
+当前进入 **V6**（Task 141-159）：给系统装上最小可用的叙事骨架（自顶向下大纲 / 弧 / 线索经济 MVP），同步建立长篇质量度量，并补足无人值守长跑底盘，目标验证到 Ch100-150。首批优先级：
+
+1. 阶段 0：叙事骨架数据模型（StoryOutline / ArcPlan / PlotThread）与 GoalPlanner 自顶向下派生（Task 141-144）。
+2. 阶段 A：orphan 绝对量 / 新 critical 速率 / 质量债 / 文学趋势 / 弧级伏笔兑现率入库度量（Task 145-148）。
+3. 阶段 B/C：末端治理与 run 级断点续跑（须待骨架 + 度量落地后再开工）。
 
 ## 不可违背规则
 
@@ -87,7 +90,7 @@ V5.0 目标已经工程验收通过：通过 Context Diet 2.0 支撑长篇生成
 - IO 操作优先 async/await。
 - 日志用 structlog，不用 print。
 - 错误处理用自定义异常，不用裸 except。
-- 不新增无用抽象；V5.0 不新增 Genre / Mode / Agent / Workflow 节点。
+- 不新增无用抽象。V6 允许新增叙事骨架相关模型/表（StoryOutline / ArcPlan / PlotThread）与度量入库逻辑，但仍遵守 MVP 边界：不做自动重规划闭环、不新增 Genre / Mode / Agent / Workflow 节点（除非规划稿明确要求）；无大纲项目必须能回退旧行为。
 
 ## 验证要求
 

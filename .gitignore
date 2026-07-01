@@ -9,6 +9,11 @@ data/
 *.sqlite
 *.sqlite3
 
+# Scratch / temporary work products (test DBs, metrics, one-off outputs)
+.tmp/
+docs/superpowers/
+projects/*/logs/
+
 # Environment
 .env
 .venv/

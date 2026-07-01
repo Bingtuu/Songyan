@@ -46,7 +46,7 @@ V5.0 已完成从 Context Diet 2.0 核心组件到 150 章验证的全部主线�
 - **Task 123 已完成**：ContextEmergency / health_low 候选硬门禁实现（默认观测模式），新增 `GateConfig`、`_gates.py`、`tests/test_123_gates.py` 16 个单测。
 - **Task 124 已完成**：基于 `run-a2bed648` 的候选硬门禁离线影响面分析，原始阈值触发 118/120 章；交付分析脚本、报告与 16 个单测。
 - **Task 125 已完成**：候选硬门禁阈值调优，引入 P1 异常检测、health_score 相对跌幅、审计点 streak 窗口；`run-a2bed648` 上 `any_gate` 触发 0 章；新增 `tests/test_125_gate_thresholds.py` 12 个单测；全量 pytest 1828 passed。
-- **Task 126 已完成**：候选硬门禁 enforce 模式 Ch1–Ch20 小窗口实跑验证；发现 `health_low_absolute_score_halt` 在新项目开局期误触发，禁用后 Ch1–Ch19 零 gate 触发，Ch20 因既有 QG false block 失败；交付 `scripts/run_126_enforce_validation.py`。
+- **Task 126 已完成**：候选硬门禁 enforce 模式 Ch1–Ch20 小窗口实跑验证；发现 `health_low_absolute_score_halt` 在新项目开局期误触发，禁用后 Ch1–Ch19 零 gate 触发，Ch20 因既有 QG false block 失败；交付 `archive/v5/scripts/run_126_enforce_validation.py`。
 - **Task 127 已完成**：候选硬门禁 score halt 条件重构，将绝对分单条件改为“P1 异常 & (相对跌幅 | streak 窗口)”复合条件；Ch1–Ch19 enforce 小窗口零 gate 触发；pytest 1842 passed。
 - **Task 128 已完成**：严格模式容错与开局期质量爬坡； settlement 对 QG false 降级为 `degraded_accept`（Ch1–Ch10）以绕过开局期 QG 过严导致的阻断，同时用 `degraded_accept` 元标记支持后续复盘；新增 RevisionHandler readability 专项修复路径；全量 pytest 1856 passed，ruff 通过。
 - **Task 129 条件完成**：enforce 模式 Ch1–Ch50 验证 `run-89d7a2d4` Ch1–Ch15 后因 quality_gate_fail_streak 暂停；报告见 `docs/reports/task-129-enforce-validation-report.md`；暴露的底层缺陷由 Task 133/134/135 跟踪。
@@ -174,7 +174,7 @@ V5.0 已完成从 Context Diet 2.0 核心组件到 150 章验证的全部主线�
 | 139d | V5.2 默认 gate_mode 切换为 enforce 与最终验收包交付 | ✅ 已完成；CLI 默认 `gate_mode` 切为 `enforce`，最终验收包已交付 | `139d-v52-default-enforce-switch-and-final-acceptance.md` |
 | 139g | V5.2 settlement LLM 超时修复 | ✅ 已完成 | `139g-v52-settlement-llm-timeout-fix.md` |
 | 139h | V5.2 Ch80 revision 字数膨胀修复 | ✅ 已完成；`run-7b45c17d` Ch80 重跑 accept，生成 `v-80-12-e017e643`，4094 字 | `139h-v52-ch80-revision-word-count-blowup-fix.md` |
-| 140 | V5.2 遗留任务状态清理 | ✅ 已完成 | `140-v52-legacy-task-cleanup.md` |
+| 140 | V5.2 遗留任务状态清理 | ✅ 已完成 | `140-v52-legacy-task-cleanup-DONE.md` |
 
 ---
 
@@ -193,7 +193,7 @@ V5.0 已完成从 Context Diet 2.0 核心组件到 150 章验证的全部主线�
 | Task 122d 150 章压力测试 | `tests/integration/test_122d_long_sequence_stability.py`（5/5），覆盖 150 章 budget 趋势、human_marks 蒸发、AutoHalt 真/假阳性、accepted 章节跳过 |
 | Ch115 质量复盘 | `rev-115-3` 已达 `overall=0.8776` 且字数健康，但后续 rewrite 输出 7771 字并经 hard truncate 后降至 `overall=0.7335`；Task 121h 已修状态生命周期与 best-version 保护，Task 121i 已验证 Ch115 不再 human_review_required |
 | 最近全量回归 | `2036 passed, 1 xfailed, 2 warnings` |
-| 当前全量 ruff | `ruff check src/ tests/ scripts/analyze_124_gate_impact.py` 已通过 |
+| 当前全量 ruff | `ruff check src/ tests/` 已通过（一次性脚本已归档至 `archive/v5/scripts/`，不参与 CI lint） |
 | 候选硬门禁离线验证 | Task 124：`run-a2bed648` 原始候选阈值触发 118/120 章 |
 | 候选硬门禁阈值调优 | Task 125：`run-a2bed648` 调优后 `any_gate` 触发 0 章 |
 | enforce 模式 Ch1–Ch50 验证 | Task 139b：`run-813a9ed7` Ch1–Ch50 50/50 accept，无 AutoHalt；旧 Task 129 `run-89d7a2d4` 见 `docs/reports/task-129-enforce-validation-report.md` |\n| enforce 模式 Ch51–Ch150 验证 | Task 139c：`run-df933dbf` Ch51–Ch150 100/100 accept（含 Ch80 修复后 `run-7b45c17d`），`failed=[]` |\n| enforce 模式 Ch1–Ch150 最终证据 | **Task 139d：150/150 accept**，`failed=[]`，无 AutoHalt，continuity health=8.5，orphaned=20，forgotten=3，mismatches=0，overdue=0 |
