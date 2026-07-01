@@ -39,10 +39,10 @@ V6 通过 = 同时满足以下五项（阈值与术语见 `docs/v6-plan.md` §1.
 
 | Task | 名称 | 状态 | 事实文档 |
 |------|------|:----:|----------|
-| 141 | 叙事骨架数据模型（StoryOutline / ArcPlan / PlotThread） | ◻ 规划中 | `docs/v6-plan.md` §3 阶段 0 |
-| 142 | 项目创建可携带大纲 | ◻ 规划中 | `docs/v6-plan.md` §3 阶段 0 |
-| 143 | GoalPlanner 自顶向下派生 | ◻ 规划中 | `docs/v6-plan.md` §3 阶段 0 |
-| 144 | 线索经济约束（MVP） | ◻ 规划中 | `docs/v6-plan.md` §3 阶段 0 |
+| 141 | 叙事骨架数据模型（StoryOutline / ArcPlan / PlotThread；拆 141a/b/c） | ◻ 规划中 | `tasks/141-narrative-skeleton-data-model.md` |
+| 142 | 项目创建可携带大纲 | ◻ 规划中 | `tasks/142-project-outline-import.md` |
+| 143 | GoalPlanner 自顶向下派生（拆 143a/b） | ◻ 规划中 | `tasks/143-goal-planner-topdown-derivation.md` |
+| 144 | 线索经济约束（MVP） | ◻ 规划中 | `tasks/144-thread-economy-mvp.md` |
 
 ### 阶段 A：度量同步（让指标说真话 + 让骨架可判定）
 

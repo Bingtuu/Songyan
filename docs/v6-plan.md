@@ -61,6 +61,12 @@ V6 通过 = 同时满足以下五项（所有阈值与术语见 §1.4，由不�
 
 ## 3. Task 拆分路线图
 
+> **代码核实修正（2026-07-01，Task 141-144 文档创建时回写）**：创建阶段 0 任务文档前对主干代码做了核实，发现本规划初稿有 4 处假设与真实代码不符，据实修正如下（详细以各 `tasks/14x-*.md` 为准）：
+> 1. **`songyan report` 当前不读 continuity DB**（`cli/main.py` `report_cmd` 只读 JSONL run logs 生成流式验证报告）。因此阶段 A（Task 145-148）"在 songyan report 暴露度量"需先建立"report 读取 DB 逐章度量"的能力——这是阶段 A 的**真实前置 gap**，非纯展示改动。
+> 2. **LiteraryAuditor 已入库**：`literary_observations` 表已有 `character_autonomy_score` / `conceptual_grounding_score` / `fissure_preservation_score` 列。故 Task 147 是"加趋势查询 + 滑动窗口"，非"从零入库"，工作量小于初稿描述。注意维度名是 **`conceptual_grounding_score`**，`conceptual_idling` 仅是 observation type（存于 observations JSON），非独立列。
+> 3. **continuity_reports 无逐章计数列**：该表只存 JSON blob（orphaned_settings/forgotten_items 等），orphan 计数是运行时 `classify_report` 派生。故 Task 145 画"逐章曲线"需新增逐章度量的持久化设计（时间序列或逐章 continuity 记录），不能假设已有计数列。
+> 4. **命名冲突**：已存在 `OpenThread`（context.py，settlement 运行时提取的开放线索，无状态机）。V6 新增的 `PlotThread`（前置规划线索，有 `opened/advanced/resolved` 状态机）必须独立共存、不合并；`ArcPlan`（前置规划）亦区别于回顾型 `ArcSummary`。详见 `tasks/141-narrative-skeleton-data-model.md` 的「关键区分」表。
+
 ### 阶段 0：最小叙事骨架 MVP（治本起点）
 
 > 目标：把章节目标从"反应式只看上一章 120 字"升级为"自顶向下从全书大纲 / 弧规划派生"，并建立最小的"线索开启-兑现"追踪。这是减少 orphan 与让文学质量可度量的共同前提。
@@ -80,12 +86,13 @@ V6 通过 = 同时满足以下五项（所有阈值与术语见 §1.4，由不�
 ### 阶段 A：度量同步（让指标说真话 + 让骨架可判定）
 
 > 目标：把"被掩盖的退化"暴露出来，并为骨架效果提供判据。与阶段 0 同期推进。
+> **前置 gap（代码核实）**：`songyan report` 现只读 JSONL run logs，不读 continuity DB。阶段 A 第一步须先建立"report 从 DB 读取逐章度量"的能力，否则 Task 145-148 的曲线无处展示。此前置工作计入 Task 145。
 
 | Task | 名称 | 目标 | 验收标准 |
 |------|------|------|----------|
 | **145** | orphan 绝对量 + 新 critical 产生速率监控 | 在 ContinuityReport / `songyan report` 暴露 orphan **绝对总数**及分类分布的逐章曲线（与 health_score 解耦），并新增「每章新 critical 产生速率」（T7，写入侧）曲线 | 复跑 138n 数据可还原出 orphan 总量斜率与 T7 速率两条独立曲线；report 输出 orphan 总数/critical/P3 + T7 共四条曲线；单测覆盖两类统计口径 |
 | **146** | 质量债账本 | 跨章累计 `degraded_accept` / `convergence_failed` / QG=false 章数，持久化到 run 级表 | run 结束可查"降级接受章列表 + 各占比"；report 新增质量债汇总段并按 T4 口径标红线；单测覆盖累计 |
-| **147** | 文学质量趋势化 | 将 LiteraryAuditor 的 character_autonomy / conceptual_idling 等维度入库，提供按章节范围回读 + 滑动窗口（W=5）趋势 | 新增趋势查询；可按 T3/T8 口径检出"连续 N=5 章某维度均值下滑 ≥20%"；不改变 accept 流程（仍只诊断） |
+| **147** | 文学质量趋势化 | LiteraryAuditor 维度**已入库**（`literary_observations` 表已有 `character_autonomy_score` / `conceptual_grounding_score` / `fissure_preservation_score`）；本 Task 加按章节范围回读 + 滑动窗口（W=5）趋势查询 | 新增趋势查询；可按 T3/T8 口径检出"连续 N=5 章某维度均值下滑 ≥20%"；不改变 accept 流程（仍只诊断） |
 | **148** | 弧级伏笔兑现率 + 长程伏笔台账 | 基于阶段 0 的 PlotThread/ArcPlan，统计弧级伏笔兑现率；暴露长程未兑现伏笔 (source, expected, 跨度, 状态)，标记被"逾期归档"而非真兑现的伏笔 | report 可列弧级兑现率与"被系统遗忘"伏笔数；单测覆盖 overdue/archived 区分 |
 
 **阶段 A 出口**：用现有 138n / 138k 历史 DB 跑一遍新度量，复现"orphan 总量持续上涨""质量债累积"等被旧指标掩盖的现象；**并产出 §1.4 标定报告**——用历史分布校准全部 ⚙ 阈值（T3/T4/T5/T6/T8）并冻结为 V6 正式口径。**这一步必须先于任何末端治理。**
