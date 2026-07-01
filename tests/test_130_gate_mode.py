@@ -41,11 +41,11 @@ class TestGateModeHelp:
         assert "enforce" in result.output
 
 
-class TestGateModeObserve:
-    """默认 / observe 模式测试."""
+class TestGateModeDefault:
+    """默认 enforce 模式测试."""
 
     @patch("songyan.cli.main.run_project_pipeline")
-    def test_default_uses_observe(
+    def test_default_uses_enforce(
         self,
         mock_pipeline: AsyncMock,
         runner: CliRunner,
@@ -63,14 +63,23 @@ class TestGateModeObserve:
             ],
         )
         assert result.exit_code == 0, result.output
-        assert "门禁模式: observe" in result.output
+        assert "门禁模式: enforce" in result.output
         assert mock_pipeline.called
         _, kwargs = mock_pipeline.call_args
         gate_config = kwargs.get("gate_config")
         assert gate_config is not None
-        assert gate_config.is_observe()
-        assert not gate_config.health_low_gate_enabled
-        assert not gate_config.context_emergency_gate_enabled
+        assert gate_config.is_enforce()
+        assert gate_config.health_low_gate_enabled
+        assert gate_config.health_low_p1_halt
+        assert gate_config.health_low_streak_halt
+        assert gate_config.health_low_score_halt_enabled
+        assert gate_config.context_emergency_gate_enabled
+        assert gate_config.context_emergency_single_halt
+        assert gate_config.context_emergency_failure_halt
+
+
+class TestGateModeObserve:
+    """observe 模式测试."""
 
     @patch("songyan.cli.main.run_project_pipeline")
     def test_explicit_observe(

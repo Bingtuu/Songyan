@@ -606,7 +606,11 @@ async def extract_settlement(
         prompt_foreshadowings, genre_rules, characters=project_characters,
     )
     # 3. 调用 LLM
-    llm_response = await call_llm(prompt, temperature=temperature)
+    # Task 139e: settlement prompt 较重（10K+ tokens），给单次调用更宽松的超时，
+    # 同时减少重试次数，避免总等待时间过长。
+    llm_response = await call_llm(
+        prompt, temperature=temperature, timeout=120, max_retries=2
+    )
     data = parse_llm_response(llm_response)
 
     # 4. 构建 StateSettlement

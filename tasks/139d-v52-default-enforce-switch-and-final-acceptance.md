@@ -1,8 +1,8 @@
 # Task 139d：V5.2 默认 gate_mode 切换为 enforce 与最终验收包交付
 
 > **类型**: 配置切换 / 最终验收
-> **状态**: 待执行
-> **前置**: Task 139b 和 139c 已完成，Ch1-Ch150 enforce 验证全部通过。
+> **状态**: 🔄 执行中（代码已落地；Task 139c Ch51-Ch82 已完成，Ch80 为 draft；Task 139h 已修复 Ch80 字数膨胀；Ch83-Ch150 续跑 `run-df933dbf` 已跑到 Ch107，待完成后重跑 Ch80 并交付验收包）
+> **前置**: Task 139b 已完成；Task 139c 执行中。
 > **依赖**: `songyan run` CLI 参数解析、`GateConfig` 默认值、`docs/STATUS.md`、`tasks/V5-README.md`。
 
 ## 背景
@@ -19,19 +19,19 @@ V5.2 的核心目标之一是 **默认启用 enforce 模式**。Task 130 已为 
 
 ## 验收标准
 
-- [ ] 修改 CLI 默认参数：未指定 `--gate-mode` 时，`songyan run` 默认使用 `enforce`。
-- [ ] 更新 `cli_help.txt` 或相关 help 文本，说明默认 enforce 模式。
-- [ ] 运行全量 `pytest tests/ -q`，确保默认切换无回归（≥ 2023 passed，1 xfailed）。
-- [ ] 运行 `ruff check src/ tests/` 通过。
-- [ ] 更新 `docs/STATUS.md`：V5.2 完成，风险口径 P0/P1 为 0，默认 gate_mode=enforce。
-- [ ] 更新 `tasks/V5-README.md`：标记 enforce 模式默认启用为 ✅，更新最终验收口径。
+- [x] 修改 CLI 默认参数：未指定 `--gate-mode` 时，`songyan run` 默认使用 `enforce`。
+- [x] 更新 help 文本（`src/songyan/cli/main.py` 内 `--gate-mode` 说明）。
+- [ ] 运行全量 `pytest tests/ -q`，确保默认切换无回归（≥ 2035 passed，1 xfailed）。
+- [x] 运行 `ruff check src/ tests/` 通过。
+- [x] 更新 `docs/STATUS.md`：当前阶段已同步为 139c 验证中 / 139d 代码已落地。
+- [x] 更新 `tasks/V5-README.md`：已标记 139b 完成、139c 执行中、139d 代码已落地。
 - [ ] 生成 V5.2 最终验收包文档 `docs/reports/task-139d-v52-final-acceptance-package.md`，包含：
    - 138n/138o/138p 改动摘要；
    - 139b/c enforce Ch1-Ch150 验证结果；
    - 默认 enforce 切换说明；
    - 全量测试与 lint 结果。
-- [ ] 更新 `docs/INDEX.md`。
-- [ ] 本任务文件转 DONE。
+- [x] 更新 `docs/INDEX.md`。
+- [ ] 本任务文件转 DONE（待 139c 通过后）。
 
 ## 实现步骤
 

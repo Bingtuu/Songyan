@@ -322,6 +322,26 @@ class TestRevisionRouter:
         )
         assert revision_router(state) == "rewrite"
 
+    def test_revision_rebound_with_mandatory_reference_failure_triggers_rewrite(self) -> None:
+        """Task 139f: revision 反弹后若回滚版本 mandatory reference 未通过，必须 rewrite."""
+        state = _base_revision_state(
+            revision_round=1,
+            _needs_revision=False,
+            _revision_rebound=True,
+            _mandatory_reference_check_passed=False,
+        )
+        assert revision_router(state) == "rewrite"
+
+    def test_revision_rebound_with_mandatory_reference_passed_goes_pass(self) -> None:
+        """Task 139f: revision 反弹后若回滚版本 mandatory reference 通过，正常 pass."""
+        state = _base_revision_state(
+            revision_round=1,
+            _needs_revision=False,
+            _revision_rebound=True,
+            _mandatory_reference_check_passed=True,
+        )
+        assert revision_router(state) == "pass"
+
 
 class TestQualityGateRouter:
     def test_human_review_required_blocks_graph(self) -> None:

@@ -20,9 +20,14 @@ if TYPE_CHECKING:
 logger = structlog.get_logger(__name__)
 
 
-@lru_cache(maxsize=8)
+@lru_cache(maxsize=16)
 def _get_llm_cached(
-    model: str, api_key: str, base_url: str, temperature: float, max_tokens: int
+    model: str,
+    api_key: str,
+    base_url: str,
+    temperature: float,
+    max_tokens: int,
+    timeout: int,
 ) -> BaseChatModel:
     """缓存 LLM 实例，避免每次调用都重新创建."""
     from langchain_litellm import ChatLiteLLM
@@ -33,11 +38,13 @@ def _get_llm_cached(
         base_url=base_url,
         temperature=temperature,
         max_tokens=max_tokens,
-        timeout=60,
+        timeout=timeout,
     )
 
 
-def get_llm(temperature: float = 0.7, max_tokens: int = 4096) -> BaseChatModel:
+def get_llm(
+    temperature: float = 0.7, max_tokens: int = 4096, timeout: int = 60
+) -> BaseChatModel:
     """获取配置好的 LLM 实例（带缓存）.
 
     使用 litellm 统一接口，通过环境变量或 settings 配置模型参数。
@@ -46,6 +53,7 @@ def get_llm(temperature: float = 0.7, max_tokens: int = 4096) -> BaseChatModel:
     Args:
         temperature: 采样温度
         max_tokens: 最大输出 token 数（默认 4096）
+        timeout: 单次 LLM 调用超时秒数（默认 60）
 
     Returns:
         配置好的 ChatLiteLLM 实例
@@ -74,6 +82,7 @@ def get_llm(temperature: float = 0.7, max_tokens: int = 4096) -> BaseChatModel:
             base_url=base_url,
             temperature=temperature,
             max_tokens=max_tokens,
+            timeout=timeout,
         )
     except (ImportError, ValueError, TypeError, RuntimeError, ConnectionError) as e:
         msg = f"LLM 初始化失败 (model={model}): {e}"
@@ -84,6 +93,7 @@ def get_llm(temperature: float = 0.7, max_tokens: int = 4096) -> BaseChatModel:
         model=model,
         base_url=base_url,
         temperature=temperature,
+        timeout=timeout,
     )
     return llm
 
@@ -94,6 +104,7 @@ async def call_llm(
     temperature: float = 0.7,
     max_tokens: int = 4096,
     max_retries: int = 3,
+    timeout: int = 60,
 ) -> str:
     """调用 LLM 并返回文本响应.
 
@@ -104,6 +115,7 @@ async def call_llm(
         temperature: 采样温度
         max_tokens: 最大输出 token 数（默认 4096）
         max_retries: 最大重试次数
+        timeout: 单次 LLM 调用超时秒数（默认 60）
 
     Returns:
         LLM 返回的文本内容
@@ -111,7 +123,7 @@ async def call_llm(
     Raises:
         LLMError: 调用失败（重试后仍失败）
     """
-    llm = get_llm(temperature=temperature, max_tokens=max_tokens)
+    llm = get_llm(temperature=temperature, max_tokens=max_tokens, timeout=timeout)
 
     async def _invoke() -> str:
         try:
@@ -127,8 +139,8 @@ async def call_llm(
             raise LLMError(f"LLM 调用失败: {e}", cause=e) from e
 
     try:
-        # 总超时 = 单次超时 60s * 最大重试次数 + 退避延迟缓冲
-        total_timeout = 60 * max_retries + 30
+        # 总超时 = 单次超时 * 最大重试次数 + 退避延迟缓冲
+        total_timeout = timeout * max_retries + 30
         return await asyncio.wait_for(
             retry_with_backoff(
                 _invoke,

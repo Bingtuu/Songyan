@@ -116,10 +116,13 @@ class TestEnforceRevisionWordCount:
         assert adjusted is False
         assert reason == "revision_accepted"
 
-    def _test_single_scene_no_truncate(self) -> None:
-        """只有 1 个 scene 且超上限 → _enforce_word_count 拒绝截断，保留原始 revision."""
+    def test_no_scene_headers_hard_truncated(self) -> None:
+        """Writer 1.1.0 使用空行分场景（无 ### Scene 头）时，revision 超标应硬截断兜底."""
         target = 3000
-        content = "正文" * 3000  # 6000 字，远超 1.20x，但只有一个 scene
+        upper = int(target * 1.20)
+        # 模拟无 scene header 的正文：连续段落，总计 4000 字
+        paragraphs = ["正文" * 100 for _ in range(20)]
+        content = "\n\n".join(paragraphs)
         scenes = [{"content": content}]
         original = "正文" * 1500
 
@@ -127,8 +130,8 @@ class TestEnforceRevisionWordCount:
             _enforce_revision_word_count(content, scenes, original, target)
         )
 
-        # _enforce_word_count 因 scene < 2 拒绝截断
         assert adjusted is True
-        assert "_disallowed_by_scene_structure" in reason
-        # 内容不变（截断被拒绝）
-        assert result_content == content
+        assert reason == "revision_hard_truncated_at_boundary"
+        assert wc <= upper
+        assert count_chinese_words(result_content) == wc
+

@@ -150,8 +150,18 @@ def revision_router(state: Phase1State) -> str:
     # rewrite 是最后一次自动修复；重写后不再进入 revision，避免同章循环生成。
     if was_rewritten:
         return "pass"
-    # 修订反弹后也不再进入 revision，避免无限循环（如 Ch100）
+    # 修订反弹后也不再进入 revision，避免无限循环（如 Ch100）。
+    # Task 139f: 但若回滚目标版本仍存在 mandatory reference 未通过，必须强制重写，
+    # 否则 critical orphan 会被直接 accept，触发 enforce health_low_p1_halt。
     if state.get("_revision_rebound"):
+        if state.get("_mandatory_reference_check_passed") is False:
+            logger.warning(
+                "revision_router.rebound_with_mandatory_reference_failure",
+                project_id=state.get("project_id"),
+                chapter_number=state.get("chapter_number"),
+                current_version_id=state.get("current_version_id"),
+            )
+            return "rewrite"
         return "pass"
     max_r = state.get("_max_revision_rounds", _MAX_REVISION_ROUNDS)
     # AG-04: 显式检查 revision 是否引入了新问题

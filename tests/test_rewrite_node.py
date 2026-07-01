@@ -6,7 +6,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from songyan.workflows._nodes import _build_rewrite_avoid_list, rewrite_node
+from songyan.workflows._nodes import (
+    _build_rewrite_avoid_list,
+    rewrite_node,
+)
 from songyan.workflows.phase1_graph import revision_router
 
 
@@ -339,3 +342,107 @@ class TestRewriteNode:
         assert mock_version.content != long_content
         # scenes 应被重新解析
         assert len(mock_version.scenes) >= 0
+
+
+class TestRewriteNodeMandatoryReferences:
+    """Task 139e: rewrite_node 必须继承 mandatory references."""
+
+    @pytest.mark.asyncio
+    async def test_injects_mandatory_references(self) -> None:
+        """存在 critical orphan 时，rewrite_node 应注入 mandatory_references 约束."""
+        mock_ctx = AsyncMock()
+        mock_ctx.human_instructions = []
+        mock_ctx.creative_brief = None
+
+        mock_version = MagicMock()
+        mock_version.version_id = "v-rewrite-mr"
+        mock_version.content = "测试内容。"
+        mock_version.word_count = 10
+        mock_version.scenes = []
+
+        mr = [
+            {
+                "setting_key": "scifi.main_deck.chen_luo_log",
+                "setting_name": "陈洛日志（黑匣子）",
+                "category": "critical",
+                "silent_chapters": 4,
+                "introduced_in_chapter": 13,
+                "last_mentioned_chapter": 17,
+            }
+        ]
+
+        with patch(
+            "songyan.workflows._nodes.write_chapter",
+            new_callable=AsyncMock,
+            return_value=mock_version,
+        ):
+            with patch(
+                "songyan.workflows._nodes._get_context_package",
+                new_callable=AsyncMock,
+                return_value=mock_ctx,
+            ):
+                with patch(
+                    "songyan.workflows._nodes._load_critical_mandatory_references",
+                    new_callable=AsyncMock,
+                    return_value=mr,
+                ):
+                    state = {
+                        "project_id": "p1",
+                        "chapter_number": 21,
+                        "chapter_goal_id": None,
+                        "creative_brief_id": None,
+                        "review_report_id": None,
+                        "_new_issues_introduced": None,
+                    }
+                    result = await rewrite_node(state)
+
+        assert result["_was_rewritten"] is True
+        types = [h["type"] for h in mock_ctx.human_instructions]
+        assert "mandatory_references" in types
+        mr_instr = next(
+            h for h in mock_ctx.human_instructions if h["type"] == "mandatory_references"
+        )
+        assert "陈洛日志" in mr_instr["content"]
+        assert "scifi.main_deck.chen_luo_log" not in mr_instr["content"]
+
+    @pytest.mark.asyncio
+    async def test_no_mandatory_references_when_empty(self) -> None:
+        """无 critical orphan 时，rewrite_node 不注入 mandatory_references 约束."""
+        mock_ctx = AsyncMock()
+        mock_ctx.human_instructions = []
+        mock_ctx.creative_brief = None
+
+        mock_version = MagicMock()
+        mock_version.version_id = "v-rewrite-no-mr"
+        mock_version.content = "测试内容。"
+        mock_version.word_count = 10
+        mock_version.scenes = []
+
+        with patch(
+            "songyan.workflows._nodes.write_chapter",
+            new_callable=AsyncMock,
+            return_value=mock_version,
+        ):
+            with patch(
+                "songyan.workflows._nodes._get_context_package",
+                new_callable=AsyncMock,
+                return_value=mock_ctx,
+            ):
+                with patch(
+                    "songyan.workflows._nodes._load_critical_mandatory_references",
+                    new_callable=AsyncMock,
+                    return_value=[],
+                ):
+                    state = {
+                        "project_id": "p1",
+                        "chapter_number": 1,
+                        "chapter_goal_id": None,
+                        "creative_brief_id": None,
+                        "review_report_id": None,
+                        "_new_issues_introduced": None,
+                    }
+                    result = await rewrite_node(state)
+
+        assert result["_was_rewritten"] is True
+        types = [h["type"] for h in mock_ctx.human_instructions]
+        assert "mandatory_references" not in types

@@ -404,9 +404,9 @@ def list_projects() -> None:
 @click.option("--skip-rag", is_flag=True, help="禁用 RAG 检索")
 @click.option(
     "--gate-mode",
-    default="observe",
+    default="enforce",
     type=click.Choice(["observe", "enforce"]),
-    help="候选硬门禁模式：observe 只记录，enforce 触发即暂停 run",
+    help="候选硬门禁模式：enforce 触发即暂停 run（默认），observe 只记录不暂停",
 )
 def run(
     project_id: str,

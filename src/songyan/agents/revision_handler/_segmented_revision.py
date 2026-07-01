@@ -475,6 +475,33 @@ def _enforce_revision_word_count(
         content, scenes, wc, _, reason = _enforce_word_count(
             revision_content, revision_scenes, target_word_count, current
         )
+
+        # Writer 1.1.0 使用空行分场景，正文中没有 ### Scene N 头，
+        # _enforce_word_count 会返回 no_scene_headers_found 且不做截断。
+        # 此时使用 Writer 同款的 hard_truncate_at_boundary 兜底，避免 revision 后字数失控。
+        if reason in (
+            "no_scene_headers_found",
+            "_disallowed_by_scene_structure",
+            "_no_scenes_found",
+        ):
+            from songyan.utils.truncation import hard_truncate_at_boundary
+
+            content = hard_truncate_at_boundary(revision_content, upper)
+            scenes = _parse_scenes(content)
+            wc = count_chinese_words(content)
+            preservation = len(content) / len(revision_content) if revision_content else 1.0
+            if preservation < min_preserve_ratio:
+                original_scenes = _parse_scenes(original_content)
+                original_wc = count_chinese_words(original_content)
+                return (
+                    original_content,
+                    original_scenes,
+                    original_wc,
+                    True,
+                    "revision_truncated_preservation_too_low_fallback",
+                )
+            return content, scenes, wc, True, "revision_hard_truncated_at_boundary"
+
         # 保留率验证：二次截断后保留率仍 ≥ min_preserve_ratio (0.85)
         preservation = len(content) / len(revision_content) if revision_content else 1.0
         if preservation < min_preserve_ratio:

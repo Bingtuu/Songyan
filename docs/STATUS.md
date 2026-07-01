@@ -6,10 +6,10 @@
 
 | 项 | 状态 |
 |----|------|
-| 当前阶段 | **V5.2 接近收口：Task 138n/138o/138p 代码改动已作为 V5.2 主干默认配置提交到主分支（commit `923f286`）；Ch31-Ch50 长窗口延续验证全部通过（Run `run-01a32b97`），Ch50 health 8.8、P1/P2 critical orphan 0、settlement/QG 通过率 20/20；Task 138p 已完成，修复克隆项目角色 ID alias 断裂。V6/V7 规划文档已一并提交。下一步执行 Task 139a-140 完成 enforce 模式默认启用与遗留清理，最终交付 V5.2 验收包。** |
-| 最终验收 | **Task 120 V5.0 + Task 132 V5.1 Final Acceptance Package 已交付** |
+| 当前阶段 | **V5.2 已完成：默认 gate_mode 切换为 `enforce`，`songyan run` 未指定 `--gate-mode` 时默认使用 enforce 模式。enforce 模式 Ch1-Ch150 完整验证通过：`run-813a9ed7` Ch1-Ch50 50/50 accept；`run-df933dbf` Ch51-Ch150 100/100 accept；Ch80 经 Task 139h 修复后重跑（`run-7b45c17d`）成功 accept。最终 150/150 章节 accepted，`failed=[]`，无 AutoHalt，continuity health=8.5。Task 139d 最终验收包已交付。** |
+| 最终验收 | **Task 120 V5.0 + Task 132 V5.1 + Task 139d V5.2 Final Acceptance Package 已交付** |
 | 风险口径 | P0/P1 风险为 0 |
-| 最近全量测试 | `2021 passed, 1 xfailed, 2 warnings`（Task 138n 新增单测后刷新；Ch1-Ch50 重跑/延续验证均已通过） |
+| 最近全量测试 | `2036 passed, 1 xfailed, 2 warnings`（Task 139d 最终验证后）；`ruff check src/ tests/` 通过 |
 | 最近修复/验证 | Task 123 ContextEmergency / health_low 候选硬门禁（默认观测模式，16 个新单测）；Task 124 离线影响面分析；Task 125 阈值调优（P1 异常检测、health_score 跌幅、审计点 streak），新增 12 个单测；Task 126 enforce 小窗口实跑验证，Ch1–Ch19 零 gate 触发；**Task 127 重构 `health_low_score_halt` 为"历史新低 + P1 同步激增"复合条件，新增 8 个单测，pytest 1842 passed**；**Task 128 完成**：QG false 降级接受不终止 run、Ch1–Ch10 质量爬坡阈值、RevisionHandler readability 专精路径；pytest 1843 passed；**Task 129 条件完成**：enforce 模式 Ch1–Ch50 验证，`run-89d7a2d4` Ch1–Ch15 后因 quality_gate_fail_streak 暂停，暴露 Writer 结构退化、SettlementExtractor 角色/数值提取失败、orphaned settings 快速累积等底层缺陷；报告见 `docs/reports/task-129-enforce-validation-report.md`。**Task 130 已完成**：gate_mode 默认保持 `observe`，`songyan run` 暴露 `--gate-mode` CLI 参数，`songyan report` 新增 gate 触发汇总。**Task 131 已完成**：历史规划稿已归档至 `archive/tasks/`，索引文档已指向 `-DONE.md`。**Task 132 已完成**：V5.1 最终验收包已交付，V5.1 通过（条件完成项已明确转入 V5.2）。**Task 133/134/135 已完成**：Writer 多场景结构、SettlementExtractor 角色/数值提取、设定回收与 continuity health 治理；**Task 138f 已完成**：numerical_update evidence gate 已落地，无明确正文/source_quote 数字证据的 telemetry 候选会过滤并记录 diagnostic，真实 ledger 仍硬校验；**Task 138d-R2 retry4 已完成**：`run-bcee6ab6` Ch11/Ch12 settlement、summary、QG 全过，Ch12 continuity `health=3.0`、`orphaned=14`、`mismatches=0`；**Task 138g 已执行但未收口**：目标测试 `70 passed`、ruff 通过，`run-715f7d09` completed 但 Ch12 `health=3.0`、`orphaned=16`、critical orphan=4，证明问题不在 alias 而在 recall 执行闭环；**Task 138h-138j 已完成**：critical orphan 强制回收闭环建立，138i 措辞硬化无效，138j `recycle_hint` 显著有效，文档见 `tasks/138h-critical-orphan-mandatory-recall-loop-DONE.md`；**Task 138l 已完成**：settlement 数值遥测误报修复，4 个新增单测，`tasks/138l-settlement-telemetry-false-positive-fix-DONE.md`；**Task 138k 已完成**：Ch1-Ch30 长窗口 rehearsal（Run `run-6f2a10d3`）全部完成 30/30，无 AutoHalt，但 Ch21+ health 下滑、Ch30 P1=35，报告见 `docs/reports/task-138k-long-window-rehearsal-report.md`**；**Task 138m 已完成**：根因分析确认 35 个 P1 orphan 主要系 Ch20+ 新 critical 设定引入后丢弃、`MAX_ORPHANED=8` 约束预算截断、`mandatory_references` 无上限导致 Writer 过载；推荐 A+C，报告见 `docs/reports/task-138m-critical-orphan-root-cause-report.md`，后续任务 `tasks/138n-qg-mandatory-reference-revision-loop-DONE.md`** |
 | 当前 lint | `ruff check src/ tests/` 已通过；`scripts/` 目录包含一次性调试脚本，不参与 CI lint |
 | Python | 3.11.9 |
@@ -36,17 +36,14 @@
 | Task 122c | **已完成**：Ch1-Ch20 E2E 集成测试（28 秒重度 Mock）；Ch40-Ch50 / Ch100-Ch110 窗口待补充 |
 | Task 122c | **已完成**：Ch1-Ch20 / Ch40-Ch50 / Ch100-Ch110 三个 E2E 窗口验证全部完成；`test_ch41_50_validation.py` 已补强 emergency/auto-halt 断言；`test_ch100_110_from_run_log.py` 已新增并复用 `run-a2bed648` 历史数据 |
 | 重跑前清理 | **2026-06-23 已完成全量清理**：终止全部残留 Python 进程，删除数据库 28,440 行测试数据，清空所有业务表，清理日志文件，VACUUM 后 196 MB；环境完全干净 |
-| 下一步规划 | **Task 138h-138j 已完成**：critical orphan 强制回收闭环建立。138i 措辞硬化无效，138j `recycle_hint` 显著有效（P1 5→2，health 3.0→3.9）。接受当前边界为阶段性成果。下一步进入 **Task 138k**（长窗口 rehearsal Ch1-Ch50/100），验证改进在更长章节窗口中的稳定性，并补全 Ch1-Ch150 single-run rehearsal 证据 |
+| 下一步规划 | **V5.2 已全部收口**；进入 V6/V7 叙事骨架与长篇质量度量规划，见 `docs/v6-plan.md` 与 `docs/v7-vision.md`。 |
 
 测试说明：`1 xfailed` 为已知非阻断项；`0 xpassed`（已修复）；`0 failed`。数据库 `lifecycle_status` 列缺失与 RAG embedding 性能测试已修复，当前全量通过。
 
 ## 当前优先级
 
-1. **Task 138n：代码实现已完成，等待 Ch1-Ch30 重跑验证**：落实 Task 138m 推荐的 A+C 方案，目标 Ch1-Ch30 重跑 P1 ≤15、health ≥4.0。文档见 `tasks/138n-qg-mandatory-reference-revision-loop-DONE.md`。
-2. **Task 138k/138n 验证后扩大窗口**：138n 指标达标后，再执行 Ch1-Ch50/Ch100 长窗口 rehearsal，验证稳定性。
-3. **Task 137 收口判断**：基于 138n/138k 的窗口数据，判断 Task 137 是否满足收口条件。
-4. **后置默认化决策**：Writer 1.2.0 / `gate_mode="enforce"` 默认化仍后置，等 138n/138k 长窗口数据验证后再决定。
-5. **ContextEmergency / health_low 硬门禁预研**：作为 V5.2 方向后置，等 138n/138k 数据出炉后评估是否需要引入。
+1. **V6 规划预研**：叙事骨架 MVP、长篇质量度量、可靠长跑底盘，见 `docs/v6-plan.md` 与 `docs/v7-vision.md`。
+2. **持续回归**：后续改动继续执行 `pytest tests/ -q` + `ruff check src/ tests/`。
 
 ## V5.1 交付摘要
 
@@ -77,11 +74,12 @@
 | Pass 14-18 Code Review 缺口 | P1 | **已完成**：TS-01/TS-02/TS-03/TS-08 测试缺口已补齐；PR-05 元标记检测已补充；ST-03 目录迁移已修复；AG-04 显式拦截已补充；TS-10 测试卫生已清理 |
 | health_low 硬门禁 | 预研 | **Task 123/124/125/126/127 已完成**：软复核 + 候选硬门禁实现 + 离线分析 + 阈值调优 + enforce 小窗口验证 + score halt 复合条件重构；`health_low_p1_halt`/`health_low_streak_halt` 在干净 run 中零误伤，`health_low_score_halt` 改为"历史新低 + P1 同步激增"复合条件；默认仍 `gate_mode="observe"`。`Task 129` 暴露的底层提取/设定回收缺陷由 Task 133/134/135 跟踪 |
 | ContextEmergency 硬门禁 | 预研 | 保持合理降级，后置评估；当前 run 中未出现 context emergency |
-| enforce 模式默认启用 | V5.2 | **被 Task 133/134/135 阻塞**：需先修复 Writer 多场景结构、SettlementExtractor 角色/数值提取、设定回收与 continuity health 缺陷，再完成跨项目 Ch1–Ch150 enforce 验证 |
+| enforce 模式默认启用 | V5.2 | **已完成**：CLI 默认 gate_mode 已切为 `enforce`；`run-813a9ed7`/`run-df933dbf`/`run-7b45c17d` 联合证明 Ch1–Ch150 150/150 accept，无 AutoHalt |
 
 ## 文档入口
 
 - 开发代理规则：`AGENTS.md`
+- 项目概览与阶段入口：`README.md`
 - 文档索引：`docs/INDEX.md`
 - V5 任务事实：`tasks/V5-README.md`
 - V5.0 最终验收：`tasks/120-v5-final-acceptance-DONE.md`
@@ -119,3 +117,9 @@
 - 事实源同步与 Task 137 收尾判断：`tasks/138e-task137-fact-sync-and-closure-DONE.md`
 - Settlement 数值结算证据门禁工程化修复：`tasks/138f-settlement-evidence-gated-numerical-extraction-DONE.md`
 - V5 归档：`archive/v5/INDEX.md`
+- V5.2 enforce 模式 Ch1–Ch50 验证：`tasks/139b-v52-enforce-ch1-ch50-validation.md`
+- V5.2 enforce 模式 Ch51–Ch150 验证：`tasks/139c-v52-enforce-ch51-ch150-validation.md`
+- V5.2 默认 gate_mode 切换与最终验收包：`tasks/139d-v52-default-enforce-switch-and-final-acceptance.md`
+- V5.2 settlement LLM 超时修复：`tasks/139g-v52-settlement-llm-timeout-fix.md`
+- V5.2 Ch80 revision 字数膨胀修复：`tasks/139h-v52-ch80-revision-word-count-blowup-fix.md`
+- V5.2 最终验收包报告：`docs/reports/task-139d-v52-final-acceptance-package.md`

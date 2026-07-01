@@ -1,9 +1,10 @@
 # Task 138g: critical orphan 根因复核与最小收口
 
 > **类型**: 语义复核 / 最小代码修复 / 聚焦复跑
-> **状态**: 进行中
+> **状态**: 已关闭
 > **前置**: Task 138d-R2 retry4
 
+> **V5.2 收口说明**：本任务未单独收口，critical orphan 的根因分析与修复由 Task 138m/138n/138o 完成并验证。
 ## 背景
 
 Task 138d-R2 retry4 已证明 settlement 阻断解除：

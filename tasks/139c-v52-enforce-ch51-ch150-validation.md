@@ -1,13 +1,19 @@
 # Task 139c：V5.2 Enforce 模式 Ch51-Ch150 长窗口验证
 
 > **类型**: 实跑验证
-> **状态**: 待执行
+> **状态**: 部分执行中（Ch51-Ch82 已跑完：`run-c68a1384`；Ch83-Ch150 续跑 `run-df933dbf` 后台任务 `bash-czk4qg4d` 已跑到 Ch107）
 > **前置**: Task 139b 已完成，Ch1-Ch50 enforce 验证通过。
 > **依赖**: Task 139b 创建的项目、enforce 模式、V5.2 主干默认配置。
 
 ## 背景
 
 Task 121q 已在 `observe` 模式下完成 Ch1-Ch150 full single-run（`run-a2bed648`），但那是旧配置。要默认启用 enforce 模式，必须证明：在长窗口（Ch51-Ch150）下，gate 仍不会因为正常的 continuity 波动、budget 压力或 QG 抖动而误触发。
+
+## 执行进度
+
+- **Ch51-Ch82**: `run-c68a1384` 完成。Ch51-Ch79 / Ch81-Ch82 全部 accept；Ch80 为 draft/degraded_accept（ratio 1.34，ending_hook=0）。
+- **Ch83-Ch150 续跑**: `run-df933dbf`（后台任务 `bash-czk4qg4d`）进行中，已完 Ch83-Ch106 全部 accept，当前跑到 Ch107。
+- **阻塞项**: Ch80 字数膨胀问题已由 Task 139h 修复，待本续跑完成后单独重跑 Ch80。
 
 ## 目标
 

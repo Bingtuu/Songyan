@@ -1,7 +1,7 @@
 # Task 140：V5.2 遗留任务状态清理
 
 > **类型**: 文档整理 / 状态收口
-> **状态**: 待执行
+> **状态**: 已完成
 > **前置**: Task 138p 已完成，V5.2 主干默认配置已提交。
 > **依赖**: `tasks/V5-README.md`、`docs/INDEX.md`。
 
@@ -21,14 +21,14 @@ V5-README 中还有几个任务处于“活跃/未收口/验收未通过”状�
 
 ## 验收标准
 
-- [ ] 在 `tasks/V5-README.md` 的任务表中：
+- [x] 在 `tasks/V5-README.md` 的任务表中：
    - Task 137 状态改为“已关闭；工作由 138a-138f 承接完成”。
    - Task 138g 状态改为“已关闭；路径转入 138m/138n/138o 并解决”。
    - Task 136 状态改为“已完成；当时验收未通过，但后续 138n/138o 已提供长窗口修复证据”。
-- [ ] 在对应任务文件（`tasks/137-setting-recycling-closed-loop.md`、`tasks/138g-critical-orphan-root-cause-review.md`、`tasks/136-v52-enforce-ch1-ch20-validation-DONE.md`）顶部追加说明，指出后续覆盖任务。
-- [ ] 若合适，将 `tasks/137-setting-recycling-closed-loop.md` 和 `tasks/138g-critical-orphan-root-cause-review.md` 重命名为 `-DONE.md` 或 `-SUPERSEDED.md`。考虑到 138e 已说明 Task 137 不归档，可保持原文件名但更新状态。
-- [ ] 更新 `docs/INDEX.md`（如需要）。
-- [ ] 本任务文件转 DONE。
+- [x] 在对应任务文件（`tasks/137-setting-recycling-closed-loop.md`、`tasks/138g-critical-orphan-root-cause-review.md`、`tasks/136-v52-enforce-ch1-ch20-validation-DONE.md`）顶部追加说明，指出后续覆盖任务。
+- [x] 保持 `tasks/137-setting-recycling-closed-loop.md` 和 `tasks/138g-critical-orphan-root-cause-review.md` 原文件名（138e 已说明 Task 137 不归档），仅更新状态说明。
+- [x] 更新 `docs/INDEX.md`。
+- [x] 本任务文件转 DONE。
 
 ## 实现步骤
 

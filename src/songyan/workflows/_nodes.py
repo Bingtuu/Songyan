@@ -62,6 +62,7 @@ from songyan.utils.truncation import hard_truncate_at_boundary as _hard_truncate
 from songyan.utils.word_count import count_chinese_words as _count_chinese_words
 from songyan.workflows._helpers import (
     _index_accepted_chapter,
+    _load_critical_mandatory_references,
     assemble_context_package,
     load_chapter_goal,
     load_creative_brief,
@@ -667,6 +668,38 @@ async def rewrite_node(state: dict[str, Any]) -> dict[str, Any]:
             chapter_number=state["chapter_number"],
         )
 
+    # Task 139e: rewrite 时必须继承 mandatory references，否则 critical orphan 回收会丢失
+    _creative_brief = getattr(ctx, "creative_brief", None)
+    _scenes_count = 3
+    if _creative_brief is not None and getattr(_creative_brief, "punch_points", None):
+        _scenes_count = max(len(_creative_brief.punch_points), 3)
+    _mandatory_refs = await _load_critical_mandatory_references(
+        state["project_id"], state["chapter_number"], scenes_count=_scenes_count
+    )
+    if _mandatory_refs:
+        _mr_names = [
+            str(r.get("setting_name") or r.get("setting_key") or "")
+            for r in _mandatory_refs
+        ]
+        _mr_names = [n for n in _mr_names if n]
+        ctx.human_instructions.append(
+            {
+                "type": "mandatory_references",
+                "content": (
+                    "【强制回收约束】本章必须自然提及以下关键设定（至少一处）：\n"
+                    + "\n".join(f"- {name}" for name in _mr_names)
+                    + "\n可通过角色对话、环境细节、动作触发或剧情事件来提及，禁止直接罗列。"
+                ),
+            }
+        )
+        logger.info(
+            "rewrite.injected_mandatory_references",
+            project_id=state["project_id"],
+            chapter_number=state["chapter_number"],
+            count=len(_mandatory_refs),
+            keys=[r["setting_key"] for r in _mandatory_refs],
+        )
+
     # 093: 注入字数硬约束 — rewrite 时目标收紧到 ±20%
     # 之前为 ±25%，导致达标初稿在 rewrite 后被破坏到超标状态
     goal = await load_chapter_goal(state.get("chapter_goal_id", ""))
@@ -1265,6 +1298,15 @@ async def review_merger_node(state: dict[str, Any]) -> dict[str, Any]:
                     status="draft",
                 )
             )
+            # Task 139f: 回滚目标版本也必须满足 mandatory reference 约束
+            _rollback_rule = await ReviewReportRepository().get_by_version(
+                active_best.version_id, audit_type="rule"
+            )
+            _rollback_mr_passed = (
+                _rollback_rule.rule_audit.mandatory_reference_check_passed
+                if _rollback_rule and _rollback_rule.rule_audit
+                else True
+            )
             return {
                 "review_report_id": best_report_id,
                 "revision_round": rround,
@@ -1291,6 +1333,7 @@ async def review_merger_node(state: dict[str, Any]) -> dict[str, Any]:
                 "literary_observation_id": None,
                 "_score_card": active_best_score_card,
                 "_prev_merged_issues": [],
+                "_mandatory_reference_check_passed": _rollback_mr_passed,
                 "status": "literary_auditing",
             }
 
@@ -1372,6 +1415,15 @@ async def review_merger_node(state: dict[str, Any]) -> dict[str, Any]:
                     status="draft",
                 )
             )
+            # Task 139f: 回滚目标版本也必须满足 mandatory reference 约束
+            _rollback_rule = await ReviewReportRepository().get_by_version(
+                active_best.version_id, audit_type="rule"
+            )
+            _rollback_mr_passed = (
+                _rollback_rule.rule_audit.mandatory_reference_check_passed
+                if _rollback_rule and _rollback_rule.rule_audit
+                else True
+            )
             return {
                 "review_report_id": best_report_id,
                 "revision_round": rround,
@@ -1395,6 +1447,7 @@ async def review_merger_node(state: dict[str, Any]) -> dict[str, Any]:
                 "literary_observation_id": None,
                 "_score_card": active_best_score_card,
                 "_prev_merged_issues": [i.model_dump() for i in merged.issues],
+                "_mandatory_reference_check_passed": _rollback_mr_passed,
                 "status": "literary_auditing",
             }
         # 未反弹，只有通过 QG 硬门的版本才能作为 settlement 前回滚目标。
