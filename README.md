@@ -297,7 +297,7 @@ Songyan 的开发历程按能力演进划分，而不是按内部任务编号展
 | 150 章验证 | 验证系统能否支撑长篇规模生成 | Context Diet 2.0、分层压缩、角色衰减、设定蒸发、预算硬上限通过长序列验证 | 已完成 |
 | 质量加固 | 提升输出质量和失败恢复能力 | 补充系统性测试、严格模式、降级接受、safe best 回退和报告入口 | 已完成 |
 | 事实源治理 | 确保长期记录的角色状态、设定和数字信息可信 | 强化 Settlement 证据校验、设定回收、连续性健康检查；enforce 默认启用并取得 Ch1–Ch150 150/150 证据 | 已完成（V5.2） |
-| 叙事骨架与度量 | 补齐自顶向下叙事架构，并让长篇质量可度量 | 全书大纲 / 弧规划 / 线索经济 MVP（阶段 0）、跨章质量度量入库 orphan/T7/质量债/文学趋势/伏笔兑现率（阶段 A）、末端治理降低 critical 误判与 orphan 累积（阶段 B）、无人值守长跑底盘 run 级 resume / LLM 限流预算 / 失败隔离 / DB 维护（阶段 C） | 进行中（V6：阶段 0+A+B+C 已完成，D 待做） |
+| 叙事骨架与度量 | 补齐自顶向下叙事架构，并让长篇质量可度量 | 全书大纲 / 弧规划 / 线索经济 MVP（阶段 0）、跨章质量度量入库 orphan/T7/质量债/文学趋势/伏笔兑现率（阶段 A）、末端治理降低 critical 误判与 orphan 累积（阶段 B）、无人值守长跑底盘 run 级 resume / LLM 限流预算 / 失败隔离 / DB 维护（阶段 C） | 进行中（V6：阶段 0+A+B 已完成，阶段 C 工程实现已完成、长跑实跑归阶段 D，阶段 D 待做） |
 
 ---
 ## 4. 快速开始
@@ -370,7 +370,7 @@ V6 首批工作按阶段推进：
 1. **叙事骨架 MVP（阶段 0）**：新增全书大纲 / 弧规划 / 线索（PlotThread）前置规划模型，让章节目标从骨架派生，而非只看上一章摘要。✅ 已完成。
 2. **长篇质量度量（阶段 A）**：把 orphan 绝对量、新 critical 产生速率、质量债、文学趋势、弧级伏笔兑现率等指标入库并可在报告查看，先让指标说真话。✅ 已完成。
 3. **末端治理（阶段 B）**：在骨架与度量落地后收敛 orphan 源头——录入侧降级、critical 分类收紧、MR 自适应上限与相关性排序、critical 设定显式 resolve/abandon 出口。✅ 已完成。
-4. **长跑底盘（阶段 C）**：run 级断点续跑 ✅ 已完成、LLM 限流预算 ✅ 已完成、失败隔离 ✅ 已完成、DB 维护 ✅ 已完成，支撑无人值守 Ch100–150 长跑。✅ 已完成。
+4. **长跑底盘（阶段 C）**：run 级断点续跑 ✅、LLM 限流预算 ✅、失败隔离 ✅、DB 维护 ✅ 四项工程实现均已完成，为无人值守 Ch100–150 长跑打底；无人值守 Ch100 实跑与 kill→resume 续跑的证据归阶段 D（Task 158）采集。✅ 工程实现已完成。
 5. **长窗口验证（阶段 D）**：在 V5.2 + 骨架 + 末端治理 + 长跑底盘合入后，取得 Ch1–Ch150 连续运行证据。◻ 待做。
 
 README 不维护实时任务状态。当前进度、测试结果和下一步执行项请查看 [`docs/STATUS.md`](docs/STATUS.md)；V6 任务事实入口见 [`tasks/V6-README.md`](tasks/V6-README.md)。
@@ -400,7 +400,9 @@ songyan run --project-id mynovel --chapters 1-5 --auto-confirm --mode-id literar
 
 ## 8. 恢复失败章节
 
-Songyan 支持断点续跑（SQLite checkpoint）：
+Songyan 支持断点续跑（SQLite checkpoint）。有两种方式：
+
+**方式一 — 隐式跳过（沿用已久）**：重跑同一章节范围，系统自动检测已 `accepted` 的章节并跳过。
 
 1. 查阅 `logs/` 目录下的 JSONL 运行日志，找到失败章节的 `chapter_number`
 2. 使用 `--chapters` 参数从失败章节重新运行，系统自动检测已完成的章节并跳过
@@ -408,6 +410,13 @@ Songyan 支持断点续跑（SQLite checkpoint）：
 ```bash
 # 假设 Ch1-Ch3 已完成，Ch4 失败：
 songyan run --project-id mynovel --chapters 4-30 --auto-confirm
+```
+
+**方式二 — 显式 run 级续跑（V6 阶段 C / Task 153 新增）**：崩溃或人为 kill 后，用 `--resume`（复用该项目最近一次未完成的 run）或 `--run-id <id>`（指定 run）续跑。resume 以 `accepted` head 为唯一完成事实源、从 `summaries` 表重建累积摘要，并在重算前清理孤儿 checkpoint；被质量熔断暂停（`paused`）的 run 也可续跑，但门禁仍会生效。
+
+```bash
+# 中途 kill 后，用同一命令 --resume 续完：
+songyan run --project-id mynovel --chapters 1-100 --auto-confirm --resume
 ```
 
 Checkpointer 模式说明：
