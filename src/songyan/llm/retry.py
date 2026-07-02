@@ -10,7 +10,8 @@ from typing import Any, TypeVar
 
 import structlog
 
-from songyan.exceptions import LLMError
+from songyan.config import settings
+from songyan.exceptions import LLMError, LLMRateLimitError
 
 logger = structlog.get_logger(__name__)
 
@@ -49,9 +50,13 @@ async def retry_with_backoff(
         except retryable_exceptions as e:
             last_exception = e
             if attempt < max_retries - 1:
-                delay = min(
-                    base_delay * (2**attempt) * random.uniform(0.75, 1.25), max_delay
-                )  # PERF-06: +jitter
+                retry_after = getattr(e, "retry_after", None)
+                if retry_after is not None and isinstance(e, LLMRateLimitError):
+                    delay = min(retry_after, settings.llm_rate_limit_max_wait)
+                else:
+                    delay = min(
+                        base_delay * (2**attempt) * random.uniform(0.75, 1.25), max_delay
+                    )  # PERF-06: +jitter
                 logger.warning(
                     "llm.retry",
                     attempt=attempt + 1,
@@ -62,6 +67,8 @@ async def retry_with_backoff(
                 await asyncio.sleep(delay)
 
     msg = f"LLM 调用失败，已重试 {max_retries} 次: {last_exception}"
+    if isinstance(last_exception, LLMError):
+        raise last_exception
     raise LLMError(msg, cause=last_exception)
 
 

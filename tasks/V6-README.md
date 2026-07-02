@@ -2,7 +2,7 @@
 
 > **阶段**: 叙事骨架 MVP + 长篇质量度量 + 可靠长跑底盘
 > **当前口径**: **V6 进行中——阶段 0（叙事骨架 MVP，Task 141-144）与阶段 A（长篇质量度量，Task 145-148 + 148z 阈值标定）工程实现均已完成并全量回归（2099 passed）**。前置 V5（V5.0/V5.1/V5.2）已完整完成并验收（Ch1-Ch150 150/150 accept，`failed=[]`，无 AutoHalt，continuity health=8.5）。V6 论证基础见 `docs/300-chapter-gap-analysis.md`，阶段规划见 `docs/v6-plan.md`，验收阈值见 v6-plan §1.4（T1-T8，⚙ 阈值已在 148z 冻结/延后）。任务编号沿用连续编号惯例（V5 收尾于 Task 140），本阶段从 **Task 141** 起连续编号（Task 141-159）。
-> **最后整理**: 2026-07-01
+> **最后整理**: 2026-07-02（阶段 C 任务文档 153-156 已创建）
 
 本文是 V6 阶段任务文档的事实入口。V5 阶段事实入口见 `tasks/V5-README.md`；历史规划稿统一归档到 `archive/`，仅在追溯设计边界时查阅。V6 各任务最终状态以本文件和各 `*-DONE.md` 为准。
 
@@ -70,10 +70,10 @@ V6 通过 = 同时满足以下五项（阈值与术语见 `docs/v6-plan.md` §1.
 
 | Task | 名称 | 状态 | 事实文档 |
 |------|------|:----:|----------|
-| 153 | run 级断点续跑 | ◻ 规划中 | `docs/v6-plan.md` §3 阶段 C |
-| 154 | LLM 限流感知与全局预算 | ◻ 规划中 | `docs/v6-plan.md` §3 阶段 C |
-| 155 | 失败隔离策略 | ◻ 规划中 | `docs/v6-plan.md` §3 阶段 C |
-| 156 | 运行中 DB 维护 | ◻ 规划中 | `docs/v6-plan.md` §3 阶段 C |
+| 153 | run 级断点续跑（拆 153a/b） | ✅ 完成 | `tasks/153-run-level-resume-DONE.md` |
+| 154 | LLM 限流感知与全局预算（拆 154a/b） | ✅ 完成 | `tasks/154-llm-rate-limit-and-budget-DONE.md` |
+| 155 | 失败隔离策略（拆 155a/b；on_failure 默认改 isolate） | ✅ 完成 | `tasks/155-failure-isolation-DONE.md` |
+| 156 | 运行中 DB 维护（拆 156a/b） | ✅ 完成 | `tasks/156-in-run-db-maintenance-DONE.md` |
 
 ### 阶段 D：长窗口验证
 

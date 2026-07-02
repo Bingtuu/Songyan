@@ -358,6 +358,7 @@ async def run_chapter_pipeline(
     config = {
         "configurable": {"thread_id": thread_id},
         "recursion_limit": 100,
+        "metadata": {"project_id": project_id, "chapter_number": chapter_number},
     }
 
     initial_state: Phase1State = {

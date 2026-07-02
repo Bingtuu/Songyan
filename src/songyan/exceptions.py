@@ -25,6 +25,36 @@ class LLMResponseParseError(LLMError):
     """LLM response could not be parsed as expected format."""
 
 
+class LLMRateLimitError(LLMError):
+    """HTTP 429 / 限流；携带服务器建议的 Retry-After（秒）."""
+
+    def __init__(
+        self,
+        message: str,
+        retry_after: float | None = None,
+        raw_response: str | None = None,
+        cause: Exception | None = None,
+    ) -> None:
+        super().__init__(message, raw_response=raw_response, cause=cause)
+        self.retry_after = retry_after
+
+
+class LLMBudgetExceededError(SongyanError):  # noqa: N818
+    """单 run LLM 调用/预算耗尽的可观测熔断（保留已生成章节）."""
+
+    def __init__(
+        self,
+        message: str,
+        used_calls: int,
+        budget: int,
+        last_chapter: int,
+    ) -> None:
+        super().__init__(message)
+        self.used_calls = used_calls
+        self.budget = budget
+        self.last_chapter = last_chapter
+
+
 class GoalPlanningError(SongyanError):
     """Goal planning failed to produce valid output."""
 

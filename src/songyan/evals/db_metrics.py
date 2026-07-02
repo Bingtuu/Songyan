@@ -23,8 +23,14 @@ from songyan.db.continuity_repo import (
 )
 from songyan.db.narrative_repo import NarrativeRepository
 from songyan.db.review_repo import LiteraryObservationRepository
+from songyan.db.run_db_metrics_repo import RunDbMetricsRepository
 from songyan.db.run_quality_debt_repo import RunQualityDebtRepository, RunQualityDebtRow
 from songyan.db.settlement_repo import ForeshadowingRepository
+from songyan.evals.db_maintenance_metrics import (
+    DbSizeMetrics,
+    check_t5_latency_redline,
+    check_t5_size_redline,
+)
 from songyan.models.run_log import ChapterRunLog
 
 # --------------------------------------------------------------------------- #
@@ -246,6 +252,7 @@ async def render_stage_a_metrics(project_id: str, start: int, end: int) -> str:
     literary_trend = detect_literary_trend(literary_points)
     arc_fulfillment = await _guard(collect_arc_fulfillment(project_id), [])
     ledger = await _guard(collect_long_range_ledger(project_id, end), [])
+    db_samples = await _guard(collect_db_maintenance_samples(project_id, start, end), [])
     header = f"# V6 阶段 A 度量报告 — 项目 {project_id}（Ch{start}-Ch{end}）\n"
     return "\n\n".join(
         [
@@ -257,6 +264,7 @@ async def render_stage_a_metrics(project_id: str, start: int, end: int) -> str:
             render_literary_section(literary_points, literary_trend),
             render_arc_fulfillment_section(arc_fulfillment),
             render_foreshadowing_ledger_section(ledger),
+            render_db_maintenance_section(db_samples),
         ]
     )
 
@@ -671,4 +679,69 @@ def render_foreshadowing_ledger_section(rows: list[ForeshadowingLedgerRow]) -> s
             f"| {r.foreshadowing_id} | {r.planted_in_chapter} | {exp} "
             f"| {r.span} | {r.status} | {mark} |"
         )
+    return "\n".join(lines)
+
+
+async def collect_db_maintenance_samples(
+    project_id: str,
+    start: int,
+    end: int,
+    repo: RunDbMetricsRepository | None = None,
+) -> list[dict]:
+    """读取 run_db_metrics 遥测样本，按章范围过滤."""
+    repo = repo or RunDbMetricsRepository()
+    return await repo.list_by_project(project_id, chapter_start=start, chapter_end=end)
+
+
+def render_db_maintenance_section(samples: list[dict]) -> str:
+    """T5：DB 尺寸与连续性扫描耗时红线判定."""
+    lines = ["## DB 维护遥测（T5：尺寸 ≤300MB；扫描耗时 ≤ 基线 1.5×）", ""]
+    if not samples:
+        lines.append("（无 run_db_metrics 遥测样本）")
+        return "\n".join(lines)
+
+    lines.append("| 章 | DB(MB) | WAL(KB) | pages | scan(ms) | 尺寸红线 | 耗时红线 |")
+    lines.append("|----|--------|---------|-------|----------|----------|----------|")
+
+    # 基线取前 10 个有效样本的 scan_latency_ms 均值（与 T3 基线精神一致）
+    baseline_values = [
+        float(s["scan_latency_ms"]) for s in samples[:10] if s.get("scan_latency_ms") is not None
+    ]
+    baseline_ms = sum(baseline_values) / len(baseline_values) if baseline_values else 0.0
+
+    size_breaches: list[int] = []
+    latency_breaches: list[int] = []
+    for s in samples:
+        db_mb = int(s["db_size_bytes"]) / (1024 * 1024)
+        wal_kb = int(s["wal_size_bytes"]) / 1024
+        scan_ms = float(s["scan_latency_ms"])
+        size_red = check_t5_size_redline(
+            DbSizeMetrics(
+                db_size_bytes=int(s["db_size_bytes"]),
+                wal_size_bytes=int(s["wal_size_bytes"]),
+                page_count=int(s["page_count"]),
+                page_size=int(s["page_size"]),
+            )
+        )
+        latency_red = check_t5_latency_redline(scan_ms, baseline_ms)
+        if size_red:
+            size_breaches.append(int(s["chapter_number"]))
+        if latency_red:
+            latency_breaches.append(int(s["chapter_number"]))
+        lines.append(
+            f"| {s['chapter_number']} | {db_mb:.2f} | {wal_kb:.1f} "
+            f"| {s['page_count']} | {scan_ms:.3f} | "
+            f"{'🔴' if size_red else '✓'} | {'🔴' if latency_red else '✓'} |"
+        )
+
+    lines.append("")
+    lines.append(f"- 扫描耗时基线（前 {len(baseline_values)} 样本均值）：**{baseline_ms:.3f} ms**")
+    if size_breaches:
+        lines.append(f"- 🔴 DB 尺寸超 300MB 样本章：{size_breaches}")
+    else:
+        lines.append("- ✓ DB 尺寸未超 300MB 红线")
+    if latency_breaches:
+        lines.append(f"- 🔴 扫描耗时超基线 1.5× 样本章：{latency_breaches}")
+    else:
+        lines.append("- ✓ 扫描耗时未超基线 1.5× 红线")
     return "\n".join(lines)

@@ -432,6 +432,22 @@ def list_projects() -> None:
     type=click.Choice(["observe", "enforce"]),
     help="候选硬门禁模式：enforce 触发即暂停 run（默认），observe 只记录不暂停",
 )
+@click.option(
+    "--on-failure",
+    default="isolate",
+    type=click.Choice(["abort", "retry", "isolate"]),
+    help="单章失败策略：isolate 隔离并继续（默认），abort 终止整批，retry 重试一次",
+)
+@click.option(
+    "--resume",
+    is_flag=True,
+    help="复用该项目最近一次未完成的 run 进行断点续跑",
+)
+@click.option(
+    "--run-id",
+    default=None,
+    help="显式指定要续跑的 run_id（优先级高于 --resume）",
+)
 def run(
     project_id: str,
     chapters: str,
@@ -441,6 +457,9 @@ def run(
     rag_mode: str | None,
     skip_rag: bool,
     gate_mode: str,
+    on_failure: str,
+    resume: bool,
+    run_id: str | None,
 ) -> None:
     """运行多章流水线."""
     try:
@@ -475,13 +494,16 @@ def run(
                 mode_id=mode_id,
                 auto_confirm=auto_confirm,
                 gate_config=gate_config,
+                on_failure=on_failure,
+                resume=resume,
+                run_id=run_id,
             )
         )
 
         total_chapters = len(result.chapters_completed) + len(result.chapters_failed)
         click.echo(f"\n运行完成: {len(result.chapters_completed)}/{total_chapters} 章成功")
         if result.chapters_failed:
-            click.echo(f"失败: {len(result.chapters_failed)} 章")
+            click.echo(f"失败: {result.chapters_failed}")  # 列出失败章号清单
         click.echo(f"耗时: {result.total_duration_sec:.1f} 秒")
 
     except click.Abort:

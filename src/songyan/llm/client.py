@@ -4,13 +4,14 @@ from __future__ import annotations
 
 import asyncio
 import os
+from contextvars import ContextVar
 from functools import lru_cache
 from typing import TYPE_CHECKING
 
 import structlog
 
 from songyan.config import settings
-from songyan.exceptions import LLMError
+from songyan.exceptions import LLMBudgetExceededError, LLMError, LLMRateLimitError
 from songyan.llm.retry import retry_with_backoff
 
 if TYPE_CHECKING:
@@ -18,6 +19,58 @@ if TYPE_CHECKING:
     from langchain_core.messages import BaseMessage
 
 logger = structlog.get_logger(__name__)
+
+# per-run LLM 调用计数（非进程级单例，随 async context 生命周期）
+_llm_call_count: ContextVar[int] = ContextVar("llm_call_count", default=0)
+_llm_budget_last_chapter: ContextVar[int] = ContextVar("llm_budget_last_chapter", default=0)
+
+
+def reset_llm_call_count() -> None:
+    """重置当前 run 的 LLM 调用计数（在 run 开始时调用）."""
+    _llm_call_count.set(0)
+
+
+def set_llm_budget_last_chapter(chapter_number: int) -> None:
+    """设置预算熔断异常中记录的最近章号."""
+    _llm_budget_last_chapter.set(chapter_number)
+
+
+def get_llm_call_count() -> int:
+    """获取当前 run 已用 LLM 调用数."""
+    return _llm_call_count.get(0)
+
+
+def _extract_retry_after(exc: Exception) -> float | None:
+    """从异常中提取 Retry-After（秒）."""
+    headers: dict[str, str] | None = None
+    for attr in ("headers", "response", "litellm_headers"):
+        obj = getattr(exc, attr, None)
+        if obj is None:
+            continue
+        if attr == "response":
+            headers = getattr(obj, "headers", None)
+        else:
+            headers = obj if isinstance(obj, dict) else None
+        if headers:
+            for key in ("retry-after", "Retry-After"):
+                value = headers.get(key)
+                if value:
+                    try:
+                        return float(value)
+                    except (ValueError, TypeError):
+                        return None
+    return None
+
+
+def _is_rate_limit_error(exc: Exception) -> bool:
+    """判断异常是否为 429 / 限流."""
+    status_code = getattr(exc, "status_code", None)
+    if status_code == 429:
+        return True
+    # litellm 常见限流异常名
+    if type(exc).__name__ in ("RateLimitError", "RateLimitExceededError"):
+        return True
+    return False
 
 
 @lru_cache(maxsize=16)
@@ -103,18 +156,18 @@ async def call_llm(
     *,
     temperature: float = 0.7,
     max_tokens: int = 4096,
-    max_retries: int = 3,
+    max_retries: int | None = None,
     timeout: int = 60,
 ) -> str:
     """调用 LLM 并返回文本响应.
 
-    自带指数退避重试。
+    自带限流感知退避重试；启用 llm_run_call_budget 时按 run 级计数熔断。
 
     Args:
         prompt: 发送给 LLM 的提示文本
         temperature: 采样温度
         max_tokens: 最大输出 token 数（默认 4096）
-        max_retries: 最大重试次数
+        max_retries: 最大重试次数；None 时使用 settings.llm_max_retries
         timeout: 单次 LLM 调用超时秒数（默认 60）
 
     Returns:
@@ -122,7 +175,24 @@ async def call_llm(
 
     Raises:
         LLMError: 调用失败（重试后仍失败）
+        LLMBudgetExceededError: 单 run 调用预算耗尽
     """
+    if max_retries is None:
+        max_retries = settings.llm_max_retries
+
+    budget = settings.llm_run_call_budget
+    if budget > 0:
+        count = _llm_call_count.get(0) + 1
+        if count > budget:
+            last_chapter = _llm_budget_last_chapter.get(0)
+            raise LLMBudgetExceededError(
+                message=f"单 run LLM 调用预算耗尽（{budget} 次），已用 {count - 1} 次",
+                used_calls=count - 1,
+                budget=budget,
+                last_chapter=last_chapter,
+            )
+        _llm_call_count.set(count)
+
     llm = get_llm(temperature=temperature, max_tokens=max_tokens, timeout=timeout)
 
     async def _invoke() -> str:
@@ -135,6 +205,13 @@ async def call_llm(
             # 编程错误（参数类型、配置错误等），直接抛出，不重试
             raise
         except Exception as e:
+            if _is_rate_limit_error(e):
+                retry_after = _extract_retry_after(e)
+                raise LLMRateLimitError(
+                    f"LLM 调用被限流: {e}",
+                    retry_after=retry_after,
+                    cause=e,
+                ) from e
             # 网络/API 瞬态错误，包装为 LLMError 以便重试
             raise LLMError(f"LLM 调用失败: {e}", cause=e) from e
 

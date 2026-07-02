@@ -297,7 +297,7 @@ Songyan 的开发历程按能力演进划分，而不是按内部任务编号展
 | 150 章验证 | 验证系统能否支撑长篇规模生成 | Context Diet 2.0、分层压缩、角色衰减、设定蒸发、预算硬上限通过长序列验证 | 已完成 |
 | 质量加固 | 提升输出质量和失败恢复能力 | 补充系统性测试、严格模式、降级接受、safe best 回退和报告入口 | 已完成 |
 | 事实源治理 | 确保长期记录的角色状态、设定和数字信息可信 | 强化 Settlement 证据校验、设定回收、连续性健康检查；enforce 默认启用并取得 Ch1–Ch150 150/150 证据 | 已完成（V5.2） |
-| 叙事骨架与度量 | 补齐自顶向下叙事架构，并让长篇质量可度量 | 全书大纲 / 弧规划 / 线索经济 MVP（阶段 0）、跨章质量度量入库 orphan/T7/质量债/文学趋势/伏笔兑现率（阶段 A）、末端治理降低 critical 误判与 orphan 累积（阶段 B：录入侧降级、分类收紧、MR 自适应、显式 resolve/abandon） | 进行中（V6：阶段 0+A+B 已完成，C/D 待做） |
+| 叙事骨架与度量 | 补齐自顶向下叙事架构，并让长篇质量可度量 | 全书大纲 / 弧规划 / 线索经济 MVP（阶段 0）、跨章质量度量入库 orphan/T7/质量债/文学趋势/伏笔兑现率（阶段 A）、末端治理降低 critical 误判与 orphan 累积（阶段 B）、无人值守长跑底盘 run 级 resume / LLM 限流预算 / 失败隔离 / DB 维护（阶段 C） | 进行中（V6：阶段 0+A+B+C 已完成，D 待做） |
 
 ---
 ## 4. 快速开始
@@ -348,7 +348,7 @@ ruff check src/ tests/
 |------|----------|----------|
 | 150 章长篇生成链路 | 已完成一次 Ch1-Ch150 全流程验证，150/150 章节成功 | `tasks/121q-safe-best-threshold-dynamic-fix-DONE.md` |
 | 单章生成闭环 | 已支持章节目标、创作简报、上下文组装、正文生成、审查、修订、质量门和人工确认 | `src/songyan/workflows/phase1_graph.py` |
-| 多章节运行与恢复 | 已支持章节范围运行、跳过已接受章节、run log、自动暂停和断点续跑 | `src/songyan/workflows/phase2_graph.py` |
+| 多章节运行与恢复 | 已支持章节范围运行、跳过已接受章节、run log、自动暂停；新增 run 级断点续跑（`--resume`/`--run-id`）与孤儿 checkpoint 清理 | `src/songyan/workflows/phase2_graph.py`、`tasks/153-run-level-resume-DONE.md` |
 | 上下文预算控制 | 已落地分层摘要、角色衰减、设定蒸发和预算硬上限，支撑长篇上下文压缩 | `archive/tasks/120-v5-final-acceptance-DONE.md` |
 | 质量审查体系 | 已包含规则审查、语义审查、文学性诊断、质量评分、局部修订和 safe best 回退 | `src/songyan/agents/` |
 | 状态结算与摘要 | 已支持 accepted 后的角色状态、设定、伏笔、数值和摘要结算，并持续加强证据校验 | `tasks/138f-settlement-evidence-gated-numerical-extraction-DONE.md` |
@@ -370,7 +370,7 @@ V6 首批工作按阶段推进：
 1. **叙事骨架 MVP（阶段 0）**：新增全书大纲 / 弧规划 / 线索（PlotThread）前置规划模型，让章节目标从骨架派生，而非只看上一章摘要。✅ 已完成。
 2. **长篇质量度量（阶段 A）**：把 orphan 绝对量、新 critical 产生速率、质量债、文学趋势、弧级伏笔兑现率等指标入库并可在报告查看，先让指标说真话。✅ 已完成。
 3. **末端治理（阶段 B）**：在骨架与度量落地后收敛 orphan 源头——录入侧降级、critical 分类收紧、MR 自适应上限与相关性排序、critical 设定显式 resolve/abandon 出口。✅ 已完成。
-4. **长跑底盘（阶段 C）**：run 级断点续跑、LLM 限流、失败隔离、DB 维护，支撑无人值守 Ch100–150 长跑。◻ 待做。
+4. **长跑底盘（阶段 C）**：run 级断点续跑 ✅ 已完成、LLM 限流预算 ✅ 已完成、失败隔离 ✅ 已完成、DB 维护 ✅ 已完成，支撑无人值守 Ch100–150 长跑。✅ 已完成。
 5. **长窗口验证（阶段 D）**：在 V5.2 + 骨架 + 末端治理 + 长跑底盘合入后，取得 Ch1–Ch150 连续运行证据。◻ 待做。
 
 README 不维护实时任务状态。当前进度、测试结果和下一步执行项请查看 [`docs/STATUS.md`](docs/STATUS.md)；V6 任务事实入口见 [`tasks/V6-README.md`](tasks/V6-README.md)。

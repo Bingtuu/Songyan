@@ -55,6 +55,8 @@ _EXPECTED_TABLES: list[str] = [
     "plot_threads",
     # V6 阶段 A: run 级质量债
     "run_quality_debt",
+    # V6 阶段 C: run 级 DB 维护遥测
+    "run_db_metrics",
 ]
 
 
@@ -579,6 +581,32 @@ async def _migrate_run_quality_debt(conn: aiosqlite.Connection) -> None:
     )
 
 
+async def _migrate_run_db_metrics(conn: aiosqlite.Connection) -> None:
+    """创建 run 级 DB 维护遥测表（V6 Task 156）."""
+    await conn.execute(
+        """CREATE TABLE IF NOT EXISTS run_db_metrics (
+            sample_id         TEXT PRIMARY KEY,
+            run_id            TEXT NOT NULL,
+            project_id        TEXT NOT NULL
+                                  REFERENCES projects(project_id) ON DELETE CASCADE,
+            chapter_number    INTEGER NOT NULL,
+            db_size_bytes     INTEGER NOT NULL,
+            wal_size_bytes    INTEGER NOT NULL,
+            page_count        INTEGER NOT NULL,
+            page_size         INTEGER NOT NULL,
+            scan_latency_ms   REAL NOT NULL,
+            created_at        TEXT DEFAULT (datetime('now'))
+        )"""
+    )
+    await conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_run_db_metrics_run ON run_db_metrics(run_id)"
+    )
+    await conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_run_db_metrics_project_chapter "
+        "ON run_db_metrics(project_id, chapter_number)"
+    )
+
+
 async def init_schema(db_path: str | Path | None = None) -> None:
     """读取 schema.sql 并执行，幂等（所有 CREATE 带 IF NOT EXISTS）.
 
@@ -622,6 +650,7 @@ async def init_schema(db_path: str | Path | None = None) -> None:
         await _migrate_chapter_goal_derived_from_arc(conn)
         await _migrate_run_quality_debt(conn)
         await _migrate_setting_tracking_lifecycle_columns(conn)
+        await _migrate_run_db_metrics(conn)
         await conn.commit()
 
 
@@ -673,4 +702,5 @@ async def run_migrations(conn: aiosqlite.Connection) -> None:
     await _migrate_chapter_goal_derived_from_arc(conn)
     await _migrate_run_quality_debt(conn)
     await _migrate_setting_tracking_lifecycle_columns(conn)
+    await _migrate_run_db_metrics(conn)
     logger.info("migrations.run_all", status="complete")

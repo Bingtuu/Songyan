@@ -74,6 +74,43 @@ async def reset_checkpointer_instance(cp: BaseCheckpointSaver | None) -> None:
     gc.collect()
 
 
+async def prune_orphan_checkpoints(project_id: str, active_thread_ids: set[str]) -> int:
+    """删除不再属于当前项目任何未完成章的残留 checkpoint 行.
+
+    仅清理 metadata 中带有 project_id 的 checkpoint 行；旧版无 project_id 的
+    行不会被误删。返回实际删除条数，幂等。
+    """
+    if settings.checkpointer_mode == "memory":
+        return 0
+
+    import aiosqlite
+
+    db_path = str(get_db_path())
+    async with aiosqlite.connect(db_path) as conn:
+        await conn.execute("PRAGMA foreign_keys = ON")
+        await conn.execute("PRAGMA busy_timeout = 5000")
+        if active_thread_ids:
+            placeholders = ",".join("?" for _ in active_thread_ids)
+            cursor = await conn.execute(
+                f"""
+                DELETE FROM checkpoints
+                WHERE json_extract(metadata, '$.project_id') = ?
+                  AND thread_id NOT IN ({placeholders})
+                """,
+                (project_id, *list(active_thread_ids)),
+            )
+        else:
+            cursor = await conn.execute(
+                """
+                DELETE FROM checkpoints
+                WHERE json_extract(metadata, '$.project_id') = ?
+                """,
+                (project_id,),
+            )
+        await conn.commit()
+    return cursor.rowcount or 0
+
+
 async def reset_checkpointer() -> None:
     """兼容旧接口：重置共享 checkpointer（测试用）."""
     global _checkpointer_instance

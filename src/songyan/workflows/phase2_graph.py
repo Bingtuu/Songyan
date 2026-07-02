@@ -14,7 +14,13 @@ from songyan.agents.continuity_auditor.continuity_health import classify_report
 from songyan.db.connection import get_db
 from songyan.db.project_run_repo import ProjectRunRepository
 from songyan.db.repository import ChapterHeadRepository
-from songyan.exceptions import AutoHaltException
+from songyan.db.run_db_metrics_repo import RunDbMetricsRepository
+from songyan.evals.db_maintenance_metrics import (
+    check_t5_size_redline,
+    collect_db_size_metrics,
+    measure_continuity_scan_latency,
+)
+from songyan.exceptions import AutoHaltException, LLMBudgetExceededError
 from songyan.models import GateConfig, ProjectRunResult, ProjectRunState
 from songyan.workflows._gates import (
     check_health_low_streak_gate,
@@ -36,17 +42,30 @@ logger = structlog.get_logger(__name__)
 # =============================================================================
 
 
-async def _get_previous_summary(project_id: str, chapter_number: int) -> str:
-    """获取上一章的 plot_summary（用于注入下一章的 previous_summary）."""
+async def _get_previous_summary(
+    project_id: str,
+    chapter_number: int,
+    *,
+    latest_successful_chapter: int | None = None,
+) -> str:
+    """获取上一章的 plot_summary（用于注入下一章的 previous_summary）.
+
+    失败隔离模式下，通过 latest_successful_chapter 回退到最近成功章的摘要。
+    """
     if chapter_number <= 1:
         return ""
+    source_chapter = (
+        latest_successful_chapter
+        if latest_successful_chapter is not None
+        else chapter_number - 1
+    )
     async with get_db() as conn:
         conn.row_factory = Row
         cursor = await conn.execute(
             """SELECT plot_summary FROM summaries
             WHERE project_id = ? AND chapter_number = ?
             ORDER BY created_at DESC LIMIT 1""",
-            (project_id, chapter_number - 1),
+            (project_id, source_chapter),
         )
         row = await cursor.fetchone()
     text = row["plot_summary"] if row else ""
@@ -122,6 +141,81 @@ async def _upsert_quality_debt(run_id: str, project_id: str) -> None:
 
 # 质量债增量刷新周期（章）：避免每章全量重读日志的 O(n²)（#2）。
 _QUALITY_DEBT_FLUSH_INTERVAL = 10
+
+# Task 156: DB 物理维护周期（章）：wal_checkpoint + optimize；VACUUM 按遥测触发。
+_DB_MAINTENANCE_INTERVAL = 10
+_DB_VACUUM_SIZE_THRESHOLD_BYTES = 200 * 1024 * 1024  # 200MB，T5 预留缓冲
+
+
+async def _run_db_maintenance(
+    run_id: str,
+    project_id: str,
+    chapter_number: int,
+    *,
+    final: bool = False,
+) -> None:
+    """章节边界的物理层维护（非阻塞）：采样遥测 + wal_checkpoint(TRUNCATE) + optimize.
+
+    用独立短连接，避开写事务；失败仅告警不中断 run。VACUUM 仅在收尾且尺寸超阈时
+    尝试，避免长跑中途做整库重写。
+    """
+    try:
+        # 1) 采样 DB 尺寸与连续性扫描耗时遥测
+        size_metrics = await collect_db_size_metrics()
+        scan_latency_ms = await measure_continuity_scan_latency(
+            project_id, chapter_number
+        )
+        await RunDbMetricsRepository().create(
+            run_id=run_id,
+            project_id=project_id,
+            chapter_number=chapter_number,
+            db_size_bytes=size_metrics.db_size_bytes,
+            wal_size_bytes=size_metrics.wal_size_bytes,
+            page_count=size_metrics.page_count,
+            page_size=size_metrics.page_size,
+            scan_latency_ms=scan_latency_ms,
+        )
+
+        logger.info(
+            "project_pipeline.db_telemetry_sampled",
+            run_id=run_id,
+            chapter_number=chapter_number,
+            db_size_bytes=size_metrics.db_size_bytes,
+            wal_size_bytes=size_metrics.wal_size_bytes,
+            scan_latency_ms=round(scan_latency_ms, 3),
+            t5_size_redline=check_t5_size_redline(size_metrics),
+        )
+
+        # 2) 物理维护：截断 WAL + 优化查询计划
+        async with get_db() as conn:
+            await conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+            await conn.execute("PRAGMA optimize")
+
+        # 3) 收尾阶段且尺寸超阈时尝试整库 VACUUM（不在中途执行）
+        if final and check_t5_size_redline(
+            size_metrics, max_db_bytes=_DB_VACUUM_SIZE_THRESHOLD_BYTES
+        ):
+            async with get_db() as conn:
+                await conn.execute("VACUUM")
+            logger.info(
+                "project_pipeline.db_vacuum_executed",
+                run_id=run_id,
+                db_size_bytes=size_metrics.db_size_bytes,
+            )
+    except (
+        RuntimeError,
+        OSError,
+        ConnectionError,
+        OperationalError,
+        ValueError,
+    ) as exc:
+        logger.warning(
+            "project_pipeline.db_maintenance_failed",
+            run_id=run_id,
+            chapter_number=chapter_number,
+            final=final,
+            error=str(exc),
+        )
 
 
 async def _pause_run_for_auto_halt(
@@ -287,6 +381,70 @@ async def _check_auto_halt_window(
 
 
 # =============================================================================
+# Resume helpers
+# =============================================================================
+
+
+async def _find_resume_run(
+    project_id: str,
+    *,
+    resume: bool = False,
+    run_id: str | None = None,
+) -> ProjectRunState | None:
+    """根据 resume/run_id 找到待恢复的运行记录."""
+    repo = ProjectRunRepository()
+    if run_id:
+        existing = await repo.get(run_id)
+        if existing is None:
+            raise ValueError(f"指定的 run_id 不存在: {run_id}")
+        if existing.project_id != project_id:
+            raise ValueError(
+                f"run_id {run_id} 不属于项目 {project_id}"
+            )
+        return existing
+    if resume:
+        runs = await repo.list_by_project(project_id)
+        if not runs:
+            return None
+        return runs[0]
+    return None
+
+
+def _compute_resume_start(
+    start: int,
+    end: int,
+    accepted_chapters: set[int],
+) -> int:
+    """以 accepted head 为唯一完成事实源，计算 resume 起点.
+
+    返回原始范围内第一个不在 accepted 集合的章号；若全部已完成则返回 end+1。
+    """
+    for chapter_number in range(start, end + 1):
+        if chapter_number not in accepted_chapters:
+            return chapter_number
+    return end + 1
+
+
+async def _rebuild_accumulated_summary(
+    project_id: str,
+    accepted_chapters: set[int],
+) -> tuple[str, list[str]]:
+    """从 summaries 表逐章重建已 accept 章的累积摘要.
+
+    返回 (最近单章摘要, 按章号排序的格式化摘要片段列表)。
+    """
+    parts: list[str] = []
+    persisted = ""
+    for chapter_number in sorted(accepted_chapters):
+        summary_text = await _get_summary_text(project_id, chapter_number)
+        if summary_text:
+            formatted = _format_chapter_summary(chapter_number, summary_text)
+            parts.append(formatted)
+            persisted = formatted
+    return persisted, parts
+
+
+# =============================================================================
 # 公共 API
 # =============================================================================
 
@@ -298,9 +456,11 @@ async def run_project_pipeline(
     *,
     auto_confirm: bool = False,
     max_revision_rounds: int = 2,
-    on_failure: str = "abort",  # "abort" | "retry"
+    on_failure: str = "isolate",  # "abort" | "retry" | "isolate"
     continuity_health_threshold: float = 7.0,
     gate_config: GateConfig | None = None,
+    resume: bool = False,
+    run_id: str | None = None,
 ) -> ProjectRunResult:
     """运行多章流水线，逐章调用 Phase1Graph，自动传递上下文.
 
@@ -310,9 +470,11 @@ async def run_project_pipeline(
         mode_id: 创作模式 ID
         auto_confirm: 是否自动接受每章（跳过 human_confirm 中断）
         max_revision_rounds: 单章最大 revision 轮数（透传给 Phase1Graph）
-        on_failure: 单章失败策略："abort" 终止整批，"retry" 重试 1 次
+        on_failure: 单章失败策略："isolate" 隔离并继续（默认），"abort" 终止整批，"retry" 重试 1 次
         continuity_health_threshold: 连续性健康分阈值，低于此值触发警告
         gate_config: Task 123 候选硬门禁配置，None 时使用默认关闭配置
+        resume: 复用该项目最近一次未完成的 run 进行断点续跑
+        run_id: 显式指定要续跑的 run_id（优先级高于 resume）
 
     Returns:
         ProjectRunResult: 运行结果统计
@@ -334,31 +496,102 @@ async def run_project_pipeline(
             "auto_confirm=False is not supported in batch mode. "
             "Set auto_confirm=True to run chapters automatically."
         )
+    if run_id is not None and resume:
+        # run_id 已显式指定时，resume 标志冗余但不冲突
+        resume = False
 
-    run_id = new_id("run")
-    run_state = ProjectRunState(
-        run_id=run_id,
-        project_id=project_id,
-        chapter_range_start=start,
-        chapter_range_end=end,
-        current_chapter=start,
-        status="running",
+    # Bug A 修复：查询已有 accepted 章节并跳过（以 accepted head 为唯一完成事实源）
+    chapter_head_repo = ChapterHeadRepository()
+    all_heads = await chapter_head_repo.list_by_project(project_id)
+    accepted_chapters = {
+        h.chapter_number for h in all_heads if h.status == "accepted"
+    }
+    if accepted_chapters:
+        logger.info(
+            "project_pipeline.skip_accepted_chapters",
+            project_id=project_id,
+            accepted_chapters=sorted(accepted_chapters),
+        )
+
+    # ---- run 级断点续跑 ----
+    existing_run = await _find_resume_run(
+        project_id, resume=resume, run_id=run_id
     )
-    await _save_run_state(run_state)
+    if existing_run is not None and existing_run.status == "completed":
+        logger.info(
+            "project_pipeline.resume_already_completed",
+            run_id=existing_run.run_id,
+            project_id=project_id,
+        )
+        return ProjectRunResult(
+            project_id=project_id,
+            run_id=existing_run.run_id,
+            chapters_completed=existing_run.completed_chapters,
+            chapters_failed=existing_run.failed_chapters,
+            total_duration_sec=0.0,
+            final_status="completed",
+            accumulated_summary=existing_run.accumulated_summary,
+        )
 
-    logger.info(
-        "project_pipeline.start",
-        run_id=run_id,
-        project_id=project_id,
-        chapter_range=chapter_range,
-        mode_id=mode_id,
-        auto_confirm=auto_confirm,
+    if existing_run is not None:
+        run_id = existing_run.run_id
+        run_state = existing_run
+        previous_status = run_state.status
+        run_state.status = "running"
+        run_state.chapter_range_start = start
+        run_state.chapter_range_end = end
+        resume_start = _compute_resume_start(start, end, accepted_chapters)
+        persisted_summary, accumulated_summary_parts = (
+            await _rebuild_accumulated_summary(project_id, accepted_chapters)
+        )
+        # 范围内失败章会被重跑，故从失败清单中移除；范围外保留
+        failed = [
+            c
+            for c in existing_run.failed_chapters
+            if not (start <= c <= end)
+        ]
+        logger.info(
+            "project_pipeline.resume",
+            run_id=run_id,
+            project_id=project_id,
+            previous_status=previous_status,
+            completed_count=len(accepted_chapters),
+            resume_start=resume_start,
+        )
+        if previous_status == "paused":
+            logger.warning(
+                "project_pipeline.resume_from_paused",
+                run_id=run_id,
+                reason="上次运行因质量熔断被暂停；resume 将续跑，门禁仍会生效",
+            )
+    else:
+        run_id = new_id("run")
+        run_state = ProjectRunState(
+            run_id=run_id,
+            project_id=project_id,
+            chapter_range_start=start,
+            chapter_range_end=end,
+            current_chapter=start,
+            status="running",
+        )
+        await _save_run_state(run_state)
+        failed: list[int] = []
+        accumulated_summary_parts: list[str] = []
+        persisted_summary = ""
+        resume_start = start
+        logger.info(
+            "project_pipeline.start",
+            run_id=run_id,
+            project_id=project_id,
+            chapter_range=chapter_range,
+            mode_id=mode_id,
+            auto_confirm=auto_confirm,
+        )
+
+    # 以 accepted head 为完成事实源，预填充 completed；循环内遇到已 accept 章直接跳过
+    completed: list[int] = sorted(
+        c for c in accepted_chapters if start <= c <= end
     )
-
-    completed: list[int] = []
-    failed: list[int] = []
-    accumulated_summary_parts: list[str] = []
-    persisted_summary = ""
 
     # Task 105: 熔断历史窗口（最近 3 章的指标）
     _recent_results: list[dict] = []
@@ -373,33 +606,46 @@ async def run_project_pipeline(
     # 重置检查指针，消除冷启动导致的首章 WAL 读一致性窗口问题
     await reset_checkpointer()
 
-    # Bug A 修复：查询已有 accepted 章节并跳过
-    chapter_head_repo = ChapterHeadRepository()
-    all_heads = await chapter_head_repo.list_by_project(project_id)
-    accepted_chapters = {
-        h.chapter_number for h in all_heads if h.status == "accepted"
-    }
-    if accepted_chapters:
+    # Task 154: 每 run 开始时重置 LLM 调用计数，使预算熔断按 run 隔离
+    from songyan.llm.client import reset_llm_call_count
+
+    reset_llm_call_count()
+
+    # resume 时清理该项目孤儿 checkpoint；in-flight 章会在重算前获得新 thread_id
+    if existing_run is not None:
+        from songyan.workflows.checkpointer import prune_orphan_checkpoints
+
+        pruned = await prune_orphan_checkpoints(project_id, active_thread_ids=set())
         logger.info(
-            "project_pipeline.skip_accepted_chapters",
-            project_id=project_id,
-            accepted_chapters=sorted(accepted_chapters),
+            "project_pipeline.pruned_orphan_checkpoints",
+            run_id=run_id,
+            pruned_count=pruned,
         )
 
-    for chapter_number in range(start, end + 1):
+    # Task 155: 维护"最近成功摘要"游标，失败章不推进游标
+    _latest_successful_chapter: int | None = None
+
+    for chapter_number in range(resume_start, end + 1):
         if chapter_number in accepted_chapters:
             logger.info(
                 "project_pipeline.skipping_already_accepted",
                 run_id=run_id,
                 chapter_number=chapter_number,
             )
-            completed.append(chapter_number)
             continue
         run_state.current_chapter = chapter_number
         await _save_run_state(run_state)
 
         # 获取上一章 summary 作为当前章的 previous_summary
-        previous_summary = await _get_previous_summary(project_id, chapter_number)
+        # isolate 模式下失败章不推进游标，回退到最近成功章摘要
+        if on_failure == "isolate" and _latest_successful_chapter is not None:
+            previous_summary = await _get_previous_summary(
+                project_id,
+                chapter_number,
+                latest_successful_chapter=_latest_successful_chapter,
+            )
+        else:
+            previous_summary = await _get_previous_summary(project_id, chapter_number)
 
         logger.info(
             "project_pipeline.chapter_start",
@@ -408,21 +654,42 @@ async def run_project_pipeline(
             previous_summary_length=len(previous_summary),
         )
 
+        # Task 154: 预算熔断异常记录当前章号
+        from songyan.llm.client import set_llm_budget_last_chapter
+
+        set_llm_budget_last_chapter(chapter_number)
+
         # ---- 执行单章 ----
-        chapter_result = await _run_single_chapter(
-            project_id=project_id,
-            chapter_number=chapter_number,
-            mode_id=mode_id,
-            previous_summary=previous_summary,
-            auto_confirm=auto_confirm,
-            on_failure=on_failure,
-            continuity_health_threshold=continuity_health_threshold,
-            gate_config=gate_config,
-            run_id=run_id,
-            previous_health_low_report=_previous_health_low_report,
-            previous_p1_counts=_previous_p1_counts,
-            min_health_score_so_far=_min_health_score_so_far,
-        )
+        try:
+            chapter_result = await _run_single_chapter(
+                project_id=project_id,
+                chapter_number=chapter_number,
+                mode_id=mode_id,
+                previous_summary=previous_summary,
+                auto_confirm=auto_confirm,
+                on_failure=on_failure,
+                continuity_health_threshold=continuity_health_threshold,
+                gate_config=gate_config,
+                run_id=run_id,
+                previous_health_low_report=_previous_health_low_report,
+                previous_p1_counts=_previous_p1_counts,
+                min_health_score_so_far=_min_health_score_so_far,
+            )
+        except LLMBudgetExceededError as exc:
+            await _pause_run_for_auto_halt(
+                run_state,
+                completed,
+                failed,
+                persisted_summary,
+            )
+            logger.error(
+                "project_pipeline.budget_exceeded",
+                run_id=run_id,
+                used_calls=exc.used_calls,
+                budget=exc.budget,
+                last_chapter=exc.last_chapter,
+            )
+            raise
 
         _append_recent_result(_recent_results, chapter_number, chapter_result, gate_config)
 
@@ -431,6 +698,10 @@ async def run_project_pipeline(
         # _QUALITY_DEBT_FLUSH_INTERVAL 章刷新一次，run 收尾再兜底刷新一次。
         if chapter_number % _QUALITY_DEBT_FLUSH_INTERVAL == 0:
             await _upsert_quality_debt(run_id, project_id)
+
+        # Task 156: 章节边界物理层维护 + 遥测采样（非阻塞）。
+        if chapter_number % _DB_MAINTENANCE_INTERVAL == 0:
+            await _run_db_maintenance(run_id, project_id, chapter_number)
 
         # Task 127: 每章运行后更新最低 health_score
         _updated_min_score = chapter_result.get("updated_min_health_score")
@@ -446,6 +717,7 @@ async def run_project_pipeline(
 
         if chapter_result["success"]:
             completed.append(chapter_number)
+            _latest_successful_chapter = chapter_number
             # 累加 summary
             summary_text = chapter_result.get("summary_text", "")
             if summary_text:
@@ -494,9 +766,11 @@ async def run_project_pipeline(
             )
             if on_failure == "abort":
                 break
+            if on_failure == "isolate":
+                # 失败章不推进"最近成功摘要"游标
+                continue
             # on_failure == "retry" 已在 _run_single_chapter 中处理，
-            # 如果 retry 仍失败，则记录失败并继续（还是终止取决于策略）
-            # 当前策略：retry 一次后仍失败则终止
+            # 如果 retry 仍失败，则记录失败并终止（与 abort 同效）
             break
 
         # Task 123: 单章即时门禁在日志记录后由 _run_single_chapter 返回标记，
@@ -536,6 +810,11 @@ async def run_project_pipeline(
     # #2 兜底：run 结束时刷新一次质量债，保证 completed/partial run 均有完整汇总
     # （周期刷新可能未覆盖最后不足 _QUALITY_DEBT_FLUSH_INTERVAL 章的尾段）。
     await _upsert_quality_debt(run_id, project_id)
+
+    # Task 156: run 收尾再执行一次 DB 维护 + 遥测采样；尺寸超阈时尝试 VACUUM。
+    await _run_db_maintenance(
+        run_id, project_id, run_state.current_chapter or end, final=True
+    )
 
     await _persist_run_progress(
         run_state,
@@ -799,6 +1078,8 @@ async def _run_single_chapter(
             }
 
 
+        except LLMBudgetExceededError:
+            raise
         except Exception:
             logger.exception("project_pipeline.chapter_exception", chapter_number=chapter_number)
             error_stage = error_stage or _stage or "exception"

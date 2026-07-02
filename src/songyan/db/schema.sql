@@ -471,3 +471,22 @@ CREATE TABLE IF NOT EXISTS chapter_chunks (
 );
 CREATE INDEX IF NOT EXISTS idx_chunks_project ON chapter_chunks(project_id, chapter_number);
 CREATE INDEX IF NOT EXISTS idx_chunks_lifecycle ON chapter_chunks(project_id, lifecycle_status);
+
+-- ============================================================
+-- 23. run_db_metrics — 运行中 DB 维护遥测（V6 Task 156）
+-- ============================================================
+CREATE TABLE IF NOT EXISTS run_db_metrics (
+    sample_id         TEXT PRIMARY KEY,
+    run_id            TEXT NOT NULL,
+    project_id        TEXT NOT NULL REFERENCES projects(project_id) ON DELETE CASCADE,
+    chapter_number    INTEGER NOT NULL,
+    db_size_bytes     INTEGER NOT NULL,
+    wal_size_bytes    INTEGER NOT NULL,
+    page_count        INTEGER NOT NULL,
+    page_size         INTEGER NOT NULL,
+    scan_latency_ms   REAL NOT NULL,
+    created_at        TEXT DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_run_db_metrics_run ON run_db_metrics(run_id);
+CREATE INDEX IF NOT EXISTS idx_run_db_metrics_project_chapter
+    ON run_db_metrics(project_id, chapter_number);
