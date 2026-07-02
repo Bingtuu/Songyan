@@ -2,7 +2,7 @@
 
 > **阶段**: 叙事骨架 MVP + 长篇质量度量 + 可靠长跑底盘
 > **当前口径**: **V6 进行中——阶段 0（叙事骨架 MVP，Task 141-144）与阶段 A（长篇质量度量，Task 145-148 + 148z 阈值标定）工程实现均已完成并全量回归（2099 passed）**。前置 V5（V5.0/V5.1/V5.2）已完整完成并验收（Ch1-Ch150 150/150 accept，`failed=[]`，无 AutoHalt，continuity health=8.5）。V6 论证基础见 `docs/300-chapter-gap-analysis.md`，阶段规划见 `docs/v6-plan.md`，验收阈值见 v6-plan §1.4（T1-T8，⚙ 阈值已在 148z 冻结/延后）。任务编号沿用连续编号惯例（V5 收尾于 Task 140），本阶段从 **Task 141** 起连续编号（Task 141-159）。
-> **最后整理**: 2026-07-02（阶段 C 任务文档 153-156 已创建）
+> **最后整理**: 2026-07-02（阶段 C 已完成；阶段 D 任务文档 157-159 已创建）
 
 本文是 V6 阶段任务文档的事实入口。V5 阶段事实入口见 `tasks/V5-README.md`；历史规划稿统一归档到 `archive/`，仅在追溯设计边界时查阅。V6 各任务最终状态以本文件和各 `*-DONE.md` 为准。
 
@@ -79,9 +79,9 @@ V6 通过 = 同时满足以下五项（阈值与术语见 `docs/v6-plan.md` §1.
 
 | Task | 名称 | 状态 | 事实文档 |
 |------|------|:----:|----------|
-| 157 | Ch1-Ch50 集成验证 | ◻ 规划中 | `docs/v6-plan.md` §3 阶段 D |
-| 158 | Ch1-Ch100 长跑验证 | ◻ 规划中 | `docs/v6-plan.md` §3 阶段 D |
-| 159 | Ch1-Ch150 治理管线复现 | ◻ 规划中 | `docs/v6-plan.md` §3 阶段 D |
+| 157 | Ch1-Ch50 集成验证 + V6 验收判据 harness（拆 157a/b） | 🔄 进行中（157a harness + Layer 2 单测已完成；157b 实跑待执行） | `tasks/157-ch1-ch50-integration-validation.md`、`tasks/157-ch1-ch50-integration-validation-DONE.md` |
+| 158 | Ch1-Ch100 长跑验证 + kill→resume + T5 冻结（拆 158a/b） | ◻ 规划中 | `tasks/158-ch1-ch100-long-run-validation.md` |
+| 159 | Ch1-Ch150 治理管线复现 + V6 阶段验收（拆 159a/b） | ◻ 规划中 | `tasks/159-ch1-ch150-governance-pipeline-replication.md` |
 
 ---
 

@@ -253,20 +253,24 @@ async def render_stage_a_metrics(project_id: str, start: int, end: int) -> str:
     arc_fulfillment = await _guard(collect_arc_fulfillment(project_id), [])
     ledger = await _guard(collect_long_range_ledger(project_id, end), [])
     db_samples = await _guard(collect_db_maintenance_samples(project_id, start, end), [])
+    # 局部导入避免与 v6_acceptance 循环引用（v6_acceptance 已导入本模块）
+    from songyan.evals.v6_acceptance import evaluate_v6_acceptance, render_v6_acceptance_section
+    acceptance = await _guard(evaluate_v6_acceptance(project_id, start, end), None)
     header = f"# V6 阶段 A 度量报告 — 项目 {project_id}（Ch{start}-Ch{end}）\n"
-    return "\n\n".join(
-        [
-            header,
-            render_setting_lifecycle_section(lifecycle),
-            render_orphan_section(orphan_points),
-            render_critical_rate_section(critical_points),
-            render_run_quality_debt_section(debt_rows),
-            render_literary_section(literary_points, literary_trend),
-            render_arc_fulfillment_section(arc_fulfillment),
-            render_foreshadowing_ledger_section(ledger),
-            render_db_maintenance_section(db_samples),
-        ]
-    )
+    sections = [
+        header,
+        render_setting_lifecycle_section(lifecycle),
+        render_orphan_section(orphan_points),
+        render_critical_rate_section(critical_points),
+        render_run_quality_debt_section(debt_rows),
+        render_literary_section(literary_points, literary_trend),
+        render_arc_fulfillment_section(arc_fulfillment),
+        render_foreshadowing_ledger_section(ledger),
+        render_db_maintenance_section(db_samples),
+    ]
+    if acceptance is not None:
+        sections.append(render_v6_acceptance_section(acceptance))
+    return "\n\n".join(sections)
 
 
 # --------------------------------------------------------------------------- #
