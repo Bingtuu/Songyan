@@ -106,6 +106,10 @@ CREATE TABLE IF NOT EXISTS setting_tracking (
     status                  TEXT DEFAULT 'active',
     recovery_required       INTEGER DEFAULT 0,
     source_version_id       TEXT,
+    resolved_chapter        INTEGER,
+    resolved_version_id     TEXT,
+    abandoned_chapter       INTEGER,
+    abandoned_reason        TEXT,
     category                TEXT DEFAULT 'background' CHECK(category IN ('critical', 'recurring', 'background', 'technical', 'historical'))
 );
 CREATE INDEX IF NOT EXISTS idx_tracking_project ON setting_tracking(project_id);

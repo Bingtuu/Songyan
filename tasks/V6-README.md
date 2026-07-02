@@ -58,12 +58,15 @@ V6 通过 = 同时满足以下五项（阈值与术语见 `docs/v6-plan.md` §1.
 
 | Task | 名称 | 状态 | 事实文档 |
 |------|------|:----:|----------|
-| 149 | 录入侧降级（非硬丢弃） | ◻ 规划中 | `docs/v6-plan.md` §3 阶段 B |
-| 150 | `_infer_setting_category` 收紧 | ◻ 规划中 | `docs/v6-plan.md` §3 阶段 B |
-| 151 | MR 上限自适应 + 相关性排序 | ◻ 规划中 | `docs/v6-plan.md` §3 阶段 B |
-| 152 | critical 显式 resolve/作废出口 | ◻ 规划中 | `docs/v6-plan.md` §3 阶段 B |
+| 149 | 录入侧降级（超额 critical 转候选，非硬丢弃；拆 149a/b） | ✅ 完成 | `tasks/149-input-side-demotion-DONE.md` |
+| 150 | `_infer_setting_category` 收紧（双命中 + 去硬编码主角名） | ✅ 完成 | `tasks/150-infer-category-tightening-DONE.md` |
+| 151 | MR 上限自适应 + 相关性排序（拆 151a/b） | ✅ 完成 | `tasks/151-mr-adaptive-cap-and-relevance-DONE.md` |
+| 152 | critical 显式 resolve/作废出口（拆 152a/b） | ✅ 完成 | `tasks/152-critical-explicit-resolve-abandon-DONE.md` |
+
+> **阶段 B 工程实现已收口**：Task 149-152 全部合入主干，`resolved`/`abandoned` 为 critical 设定提供显式回收出口，与逾期归档在 metrics 中可区分。Ch1-Ch50 Layer 3 复跑验证（T6b P1=0）待 Task 157 执行。
 
 ### 阶段 C：工程加固（无人值守长跑）
+
 
 | Task | 名称 | 状态 | 事实文档 |
 |------|------|:----:|----------|

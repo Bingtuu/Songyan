@@ -42,6 +42,7 @@ class SettingTrackingRepository:
         introduced_in_chapter: int,
         source_version_id: str | None = None,
         category: str = "background",
+        status: str = "active",
         conn: aiosqlite.Connection | None = None,
     ) -> None:
         async def _do(c: aiosqlite.Connection) -> None:
@@ -49,8 +50,8 @@ class SettingTrackingRepository:
                 """INSERT INTO setting_tracking (
                     tracking_id, project_id, setting_key, setting_name,
                     description, introduced_in_chapter, last_mentioned_chapter,
-                    source_version_id, category
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    source_version_id, category, status
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
                     tracking_id,
                     project_id,
@@ -61,6 +62,7 @@ class SettingTrackingRepository:
                     introduced_in_chapter,
                     source_version_id,
                     category,
+                    status,
                 ),
             )
 
@@ -75,19 +77,27 @@ class SettingTrackingRepository:
             table="setting_tracking",
             operation="insert",
             tracking_id=tracking_id,
+            status=status,
         )
 
-    async def list_by_project(self, project_id: str) -> list[dict]:
-        async with get_db() as conn:
-            conn.row_factory = Row
-            cursor = await conn.execute(
+    async def list_by_project(
+        self, project_id: str, conn: aiosqlite.Connection | None = None
+    ) -> list[dict]:
+        async def _do(c: aiosqlite.Connection) -> list[dict]:
+            c.row_factory = Row
+            cursor = await c.execute(
                 "SELECT * FROM setting_tracking "
                 "WHERE project_id = ? "
                 "ORDER BY introduced_in_chapter",
                 (project_id,),
             )
             rows = await cursor.fetchall()
-        return [dict(row) for row in rows]
+            return [dict(row) for row in rows]
+
+        if conn is None:
+            async with get_db() as c:
+                return await _do(c)
+        return await _do(conn)
 
     async def update_last_mentioned(
         self, tracking_id: str, chapter: int, conn: aiosqlite.Connection | None = None
@@ -127,6 +137,146 @@ class SettingTrackingRepository:
                 await c.commit()
         else:
             await _do(conn)
+
+    async def promote_to_active(
+        self,
+        tracking_id: str,
+        chapter: int,
+        source_version_id: str,
+        conn: aiosqlite.Connection | None = None,
+    ) -> None:
+        """候选设定回升为正式（candidate -> active），写回被引用章/版本."""
+
+        async def _do(c: aiosqlite.Connection) -> None:
+            await c.execute(
+                """UPDATE setting_tracking
+                   SET status = 'active',
+                       last_mentioned_chapter = ?,
+                       source_version_id = ?
+                   WHERE tracking_id = ?""",
+                (chapter, source_version_id, tracking_id),
+            )
+
+        if conn is None:
+            async with get_db() as c:
+                await _do(c)
+                await c.commit()
+        else:
+            await _do(conn)
+        logger.info(
+            "repository.write",
+            table="setting_tracking",
+            operation="promote_to_active",
+            tracking_id=tracking_id,
+            chapter=chapter,
+            source_version_id=source_version_id,
+        )
+
+    async def resolve_setting(
+        self,
+        tracking_id: str,
+        chapter: int,
+        source_version_id: str,
+        conn: aiosqlite.Connection | None = None,
+    ) -> None:
+        """Mark a critical setting as resolved after it is addressed in the plot.
+
+        Valid transitions: active/candidate -> resolved.
+        Writes resolved_chapter and resolved_version_id for traceability.
+        """
+        _terminal_statuses = {"resolved", "abandoned"}
+
+        async def _do(c: aiosqlite.Connection) -> None:
+            c.row_factory = Row
+            cursor = await c.execute(
+                "SELECT status FROM setting_tracking WHERE tracking_id = ?",
+                (tracking_id,),
+            )
+            row = await cursor.fetchone()
+            if row is None:
+                raise ValueError(f"setting tracking not found: {tracking_id}")
+            current: str = row["status"]
+            if current in _terminal_statuses:
+                raise ValueError(
+                    f"illegal resolve transition {current} -> resolved "
+                    f"(tracking_id={tracking_id})"
+                )
+            await c.execute(
+                """UPDATE setting_tracking
+                   SET status = 'resolved',
+                       resolved_chapter = ?,
+                       resolved_version_id = ?
+                   WHERE tracking_id = ?""",
+                (chapter, source_version_id, tracking_id),
+            )
+
+        if conn is None:
+            async with get_db() as c:
+                await _do(c)
+                await c.commit()
+        else:
+            await _do(conn)
+        logger.info(
+            "repository.write",
+            table="setting_tracking",
+            operation="resolve_setting",
+            tracking_id=tracking_id,
+            chapter=chapter,
+            source_version_id=source_version_id,
+        )
+
+    async def abandon_setting(
+        self,
+        tracking_id: str,
+        chapter: int,
+        reason: str,
+        conn: aiosqlite.Connection | None = None,
+    ) -> None:
+        """Mark a critical setting as abandoned (explicitly discarded).
+
+        Valid transitions: active/candidate -> abandoned.
+        Writes abandoned_chapter and abandoned_reason.
+        """
+        _terminal_statuses = {"resolved", "abandoned"}
+
+        async def _do(c: aiosqlite.Connection) -> None:
+            c.row_factory = Row
+            cursor = await c.execute(
+                "SELECT status FROM setting_tracking WHERE tracking_id = ?",
+                (tracking_id,),
+            )
+            row = await cursor.fetchone()
+            if row is None:
+                raise ValueError(f"setting tracking not found: {tracking_id}")
+            current: str = row["status"]
+            if current in _terminal_statuses:
+                raise ValueError(
+                    f"illegal abandon transition {current} -> abandoned "
+                    f"(tracking_id={tracking_id})"
+                )
+            await c.execute(
+                """UPDATE setting_tracking
+                   SET status = 'abandoned',
+                       abandoned_chapter = ?,
+                       abandoned_reason = ?
+                   WHERE tracking_id = ?""",
+                (chapter, reason, tracking_id),
+            )
+
+        if conn is None:
+            async with get_db() as c:
+                await _do(c)
+                await c.commit()
+        else:
+            await _do(conn)
+        logger.info(
+            "repository.write",
+            table="setting_tracking",
+            operation="abandon_setting",
+            tracking_id=tracking_id,
+            chapter=chapter,
+            reason=reason,
+        )
 
     async def archive_long_silent_nonessential(
         self,

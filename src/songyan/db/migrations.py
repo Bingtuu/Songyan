@@ -394,6 +394,21 @@ async def _migrate_setting_category(conn: aiosqlite.Connection) -> None:
     )
 
 
+async def _migrate_setting_tracking_lifecycle_columns(conn: aiosqlite.Connection) -> None:
+    """Task 152: 为 setting_tracking 添加 resolved/abandoned 可追溯列."""
+    cursor = await conn.execute("PRAGMA table_info(setting_tracking)")
+    cols = {row[1] for row in await cursor.fetchall()}
+    for col, dtype in (
+        ("resolved_chapter", "INTEGER"),
+        ("resolved_version_id", "TEXT"),
+        ("abandoned_chapter", "INTEGER"),
+        ("abandoned_reason", "TEXT"),
+    ):
+        if col not in cols:
+            await conn.execute(
+                f"ALTER TABLE setting_tracking ADD COLUMN {col} {dtype}"
+            )
+
 
 async def _migrate_chapter_versions_score_card(conn: aiosqlite.Connection) -> None:
     """为 chapter_versions 表添加 score_card 列（Task 106 评分体系）."""
@@ -606,6 +621,7 @@ async def init_schema(db_path: str | Path | None = None) -> None:
         await _migrate_narrative_skeleton(conn)
         await _migrate_chapter_goal_derived_from_arc(conn)
         await _migrate_run_quality_debt(conn)
+        await _migrate_setting_tracking_lifecycle_columns(conn)
         await conn.commit()
 
 
@@ -656,4 +672,5 @@ async def run_migrations(conn: aiosqlite.Connection) -> None:
     await _migrate_narrative_skeleton(conn)
     await _migrate_chapter_goal_derived_from_arc(conn)
     await _migrate_run_quality_debt(conn)
+    await _migrate_setting_tracking_lifecycle_columns(conn)
     logger.info("migrations.run_all", status="complete")

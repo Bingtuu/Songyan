@@ -21,7 +21,7 @@ from songyan.db.continuity_repo import (
 )
 from songyan.db.human_mark_repo import HumanMarkRepository
 from songyan.db.layered_context_repo import PermanentSceneRepository
-from songyan.db.repository import CharacterRepository
+from songyan.db.repository import CharacterRepository, ProjectRepository
 from songyan.db.settlement_repo import (
     ForeshadowingRepository,
     NumericalLedgerRepository,
@@ -33,6 +33,7 @@ from songyan.models import (
     ForeshadowingItem,
     NewSetting,
     PermanentScene,
+    ProjectSetting,
     StateSettlement,
 )
 
@@ -685,8 +686,16 @@ async def apply_settlement(
         )
 
 
-def _infer_setting_category(setting: NewSetting) -> str:
-    """Task 094: 根据 setting 内容推断分类."""
+def _infer_setting_category(
+    setting: NewSetting,
+    *,
+    protagonist_names: set[str] | None = None,
+) -> str:
+    """根据 setting 内容推断分类.
+
+    ``critical`` 判定需同时命中 ``critical_keywords`` 与主角标识集合；
+    不再硬编码主角名，主角名由调用方从项目档案注入。
+    """
     text = f"{setting.setting_key} {setting.setting_name} {setting.description}".lower()
 
     technical_keywords = [
@@ -701,11 +710,14 @@ def _infer_setting_category(setting: NewSetting) -> str:
         "主角", "protagonist", "main",
         "命格", "天赋", "血脉", "传承",
     ]
-    protagonist_related = [
-        "林渊", "主角", "他", "她", "能力", "状态", "命运", "目标",
-    ]
+    if protagonist_names:
+        protagonist_terms = {name.lower() for name in protagonist_names if name}
+    else:
+        protagonist_terms = {
+            "主角", "主人公", "protagonist", "命定之人", "全书核心",
+        }
     if any(kw in text for kw in critical_keywords) and any(
-        kw in text for kw in protagonist_related
+        term in text for term in protagonist_terms
     ):
         return "critical"
 
@@ -717,6 +729,18 @@ def _infer_setting_category(setting: NewSetting) -> str:
         return "historical"
 
     return "background"
+
+
+def _build_protagonist_names(project: ProjectSetting | None) -> set[str]:
+    """Build protagonist name set from project; falls back to generic terms."""
+    names: set[str] = set()
+    if project and project.protagonist_name:
+        names.add(project.protagonist_name)
+        if len(project.protagonist_name) >= 2:
+            names.add(project.protagonist_name[:2])
+        return names
+    names.update({"主角", "主人公", "protagonist", "命定之人", "全书核心"})
+    return names
 
 
 async def _update_continuity_tracking(
@@ -734,6 +758,9 @@ async def _update_continuity_tracking(
 
     当传入 conn 时，所有写操作在同一个连接中执行（减少 WAL 锁竞争）。
     """
+    project = await ProjectRepository().get(project_id)
+    protagonist_names = _build_protagonist_names(project)
+
     # 5.1 Setting tracking
     existing_settings = await setting_tracking_repo.list_by_project(project_id)
     existing_keys = {s["setting_key"]: s for s in existing_settings}
@@ -746,7 +773,9 @@ async def _update_continuity_tracking(
             )
         else:
             tracking_id = f"track-{project_id}-{uuid.uuid4().hex[:8]}"
-            category = _infer_setting_category(setting)
+            category = _infer_setting_category(
+                setting, protagonist_names=protagonist_names
+            )
             await setting_tracking_repo.create(
                 tracking_id=tracking_id,
                 project_id=project_id,

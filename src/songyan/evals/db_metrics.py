@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+from collections import Counter
 from pathlib import Path
 
 from pydantic import BaseModel
@@ -51,6 +52,15 @@ class CriticalRatePoint(BaseModel):
     chapter: int
     new_critical: int
     new_total: int
+
+
+class SettingLifecycleMetrics(BaseModel):
+    """setting_tracking 生命周期分布（Task 152：区分显式 resolve/abandon 与归档）."""
+
+    active_count: int
+    resolved_count: int      # status == 'resolved'：剧情已交代收束
+    abandoned_count: int     # status == 'abandoned'：显式废弃
+    archived_count: int      # status == 'archived'：逾期/被遗忘
 
 
 # --------------------------------------------------------------------------- #
@@ -131,6 +141,22 @@ async def collect_new_critical_rate(
     ]
 
 
+async def collect_setting_lifecycle_metrics(
+    project_id: str,
+    repo: SettingTrackingRepository | None = None,
+) -> SettingLifecycleMetrics:
+    """统计 setting_tracking 各终态数量，区分显式回收与逾期归档."""
+    repo = repo or SettingTrackingRepository()
+    rows = await repo.list_by_project(project_id)
+    counts = Counter(str(row.get("status", "active")) for row in rows)
+    return SettingLifecycleMetrics(
+        active_count=counts.get("active", 0),
+        resolved_count=counts.get("resolved", 0),
+        abandoned_count=counts.get("abandoned", 0),
+        archived_count=counts.get("archived", 0),
+    )
+
+
 # --------------------------------------------------------------------------- #
 # Slope + rendering
 # --------------------------------------------------------------------------- #
@@ -187,6 +213,18 @@ def render_critical_rate_section(points: list[CriticalRatePoint]) -> str:
     return "\n".join(lines)
 
 
+def render_setting_lifecycle_section(metrics: SettingLifecycleMetrics | None) -> str:
+    lines = ["## setting 生命周期分布（显式 resolve / 显式 abandon / 逾期归档）", ""]
+    if metrics is None:
+        lines.append("（无 setting_tracking 数据）")
+        return "\n".join(lines)
+    lines.append(f"- active（仍在监测）：**{metrics.active_count}**")
+    lines.append(f"- resolved（显式剧情收束）：**{metrics.resolved_count}**")
+    lines.append(f"- abandoned（显式废弃）：**{metrics.abandoned_count}**")
+    lines.append(f"- archived（逾期/被遗忘）：**{metrics.archived_count}**")
+    return "\n".join(lines)
+
+
 async def _guard(awaitable, fallback):
     """执行 collector；表缺失（历史 DB 无该 V6 表）时返回 fallback（优雅降级）."""
     try:
@@ -202,6 +240,7 @@ async def render_stage_a_metrics(project_id: str, start: int, end: int) -> str:
     """
     orphan_points = await _guard(collect_orphan_metrics(project_id, start, end), [])
     critical_points = await _guard(collect_new_critical_rate(project_id, start, end), [])
+    lifecycle = await _guard(collect_setting_lifecycle_metrics(project_id), None)
     debt_rows = await _guard(RunQualityDebtRepository().list_by_project(project_id), [])
     literary_points = await _guard(collect_literary_scores(project_id, start, end), [])
     literary_trend = detect_literary_trend(literary_points)
@@ -211,6 +250,7 @@ async def render_stage_a_metrics(project_id: str, start: int, end: int) -> str:
     return "\n\n".join(
         [
             header,
+            render_setting_lifecycle_section(lifecycle),
             render_orphan_section(orphan_points),
             render_critical_rate_section(critical_points),
             render_run_quality_debt_section(debt_rows),

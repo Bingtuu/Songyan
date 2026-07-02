@@ -2514,12 +2514,17 @@ class TestSettlementAtomicity:
 class TestInferSettingCategory:
     """Task 138n: critical 分类启发式收紧."""
 
-    def _category(self, **kwargs: object) -> str:
+    def _category(
+        self, *, protagonist_names: set[str] | None = None, **kwargs: object
+    ) -> str:
         from songyan.agents.settlement_extractor._apply import _infer_setting_category
         from songyan.models import NewSetting
 
         kwargs.setdefault("source_quote", "")
-        return _infer_setting_category(NewSetting(**kwargs))  # type: ignore[arg-type]
+        return _infer_setting_category(
+            NewSetting(**kwargs),  # type: ignore[arg-type]
+            protagonist_names=protagonist_names,
+        )
 
     def test_protagonist_ability_is_critical(self) -> None:
         assert (
@@ -2537,6 +2542,7 @@ class TestInferSettingCategory:
                 setting_key="linyuan.bloodline",
                 setting_name="林渊血脉",
                 description="传承自上古的血脉力量",
+                protagonist_names={"林渊"},
             )
             == "critical"
         )

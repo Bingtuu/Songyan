@@ -62,6 +62,7 @@ from songyan.utils.truncation import enforce_word_count as _enforce_word_count
 from songyan.utils.truncation import hard_truncate_at_boundary as _hard_truncate_at_boundary
 from songyan.utils.word_count import count_chinese_words as _count_chinese_words
 from songyan.workflows._helpers import (
+    _compute_mandatory_reference_inputs,
     _index_accepted_chapter,
     _load_critical_mandatory_references,
     assemble_context_package,
@@ -73,6 +74,11 @@ from songyan.workflows._helpers import (
     load_version,
     new_id,
     trigger_layered_summaries,
+)
+from songyan.workflows._input_side_governance import (
+    demote_overflow_new_settings,
+    promote_candidate_settings_after_settlement,
+    resolve_settings_after_settlement,
 )
 from songyan.workflows._narrative_context import load_narrative_goal_context
 from songyan.workflows._thread_economy import update_plot_threads_after_settlement
@@ -686,8 +692,15 @@ async def rewrite_node(state: dict[str, Any]) -> dict[str, Any]:
     _scenes_count = 3
     if _creative_brief is not None and getattr(_creative_brief, "punch_points", None):
         _scenes_count = max(len(_creative_brief.punch_points), 3)
+    _active_critical_count, _mainline_thread_keys = await _compute_mandatory_reference_inputs(
+        state["project_id"], state["chapter_number"]
+    )
     _mandatory_refs = await _load_critical_mandatory_references(
-        state["project_id"], state["chapter_number"], scenes_count=_scenes_count
+        state["project_id"],
+        state["chapter_number"],
+        scenes_count=_scenes_count,
+        active_critical_count=_active_critical_count,
+        mainline_thread_keys=_mainline_thread_keys,
     )
     if _mandatory_refs:
         _mr_names = [
@@ -2507,6 +2520,7 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
                 )
         except (
             SongyanError,
+            ValueError,
             RuntimeError,
             OSError,
             ConnectionError,
@@ -2514,6 +2528,71 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
         ) as exc:
             logger.warning(
                 "settlement_extractor_node.plot_thread_update_failed",
+                error=str(exc),
+                project_id=state["project_id"],
+                chapter_number=state["chapter_number"],
+            )
+
+    # 7. V6 Task 149：录入侧降级与候选回升（超额 critical 转 candidate，后续章证据命中回升）
+    #    非阻塞：失败不影响 settlement/summary/plot_thread
+    if accepted_for_postprocessing and settlement is not None:
+        try:
+            demoted_keys = await demote_overflow_new_settings(
+                project_id=state["project_id"],
+                chapter_number=state["chapter_number"],
+                version_id=version.version_id,
+                settlement=settlement,
+            )
+            if demoted_keys:
+                logger.info(
+                    "settlement_extractor_node.input_side_demotion_done",
+                    project_id=state["project_id"],
+                    chapter_number=state["chapter_number"],
+                    demoted_count=len(demoted_keys),
+                    demoted_keys=demoted_keys,
+                )
+
+            promoted_keys = await promote_candidate_settings_after_settlement(
+                project_id=state["project_id"],
+                chapter_number=state["chapter_number"],
+                version_id=version.version_id,
+                settlement=settlement,
+            )
+            if promoted_keys:
+                logger.info(
+                    "settlement_extractor_node.input_side_promotion_done",
+                    project_id=state["project_id"],
+                    chapter_number=state["chapter_number"],
+                    promoted_count=len(promoted_keys),
+                    promoted_keys=promoted_keys,
+                )
+
+            # 8. V6 Task 152：依据 settlement 收束证据 resolve 相关 critical 设定
+            #    非阻塞：失败不影响 settlement/summary/plot_thread/input_side
+            resolved_settings = await resolve_settings_after_settlement(
+                project_id=state["project_id"],
+                chapter_number=state["chapter_number"],
+                version_id=version.version_id,
+                settlement=settlement,
+            )
+            if resolved_settings:
+                logger.info(
+                    "settlement_extractor_node.resolved_settings",
+                    project_id=state["project_id"],
+                    chapter_number=state["chapter_number"],
+                    resolved_count=len(resolved_settings),
+                    resolved_settings=resolved_settings,
+                )
+        except (
+            SongyanError,
+            ValueError,
+            RuntimeError,
+            OSError,
+            ConnectionError,
+            sqlite3.Error,
+        ) as exc:
+            logger.warning(
+                "settlement_extractor_node.input_side_governance_failed",
                 error=str(exc),
                 project_id=state["project_id"],
                 chapter_number=state["chapter_number"],

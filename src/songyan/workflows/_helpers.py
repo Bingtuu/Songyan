@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sqlite3
 import uuid
 
 import structlog
@@ -40,6 +41,7 @@ from songyan.models import (
     RuleAuditResult,
     VolumeSummary,
 )
+from songyan.workflows._narrative_context import NarrativeGoalContext, load_narrative_goal_context
 
 logger = structlog.get_logger(__name__)
 
@@ -413,12 +415,19 @@ async def assemble_context_package(
         project_id
     )
 
-    # Task 138n: 查询 critical orphan 并注入 mandatory_references，带每章上限
+    # Task 138n/151: 查询 critical orphan 并注入 mandatory_references，带自适应上限与主线相关性排序
     scenes_count = 3
     if creative_brief is not None and getattr(creative_brief, "punch_points", None):
         scenes_count = max(len(creative_brief.punch_points), 3)
+    active_critical_count, mainline_thread_keys = await _compute_mandatory_reference_inputs(
+        project_id, chapter_number
+    )
     mandatory_references = await _load_critical_mandatory_references(
-        project_id, chapter_number, scenes_count=scenes_count
+        project_id,
+        chapter_number,
+        scenes_count=scenes_count,
+        active_critical_count=active_critical_count,
+        mainline_thread_keys=mainline_thread_keys,
     )
 
     return _assemble(
@@ -481,21 +490,78 @@ def _infer_recycle_hint(key_alias: str) -> str:
     )
 
 
+def _extract_mainline_thread_keys(narrative_ctx: NarrativeGoalContext | None) -> set[str]:
+    """Extract mainline thread keys (thread_id + title) from narrative context."""
+    if narrative_ctx is None or not narrative_ctx.has_skeleton:
+        return set()
+    keys: set[str] = set()
+    for thread in (*narrative_ctx.open_threads, *narrative_ctx.threads_to_resolve):
+        if thread.get("is_mainline"):
+            keys.add(str(thread.get("thread_id") or ""))
+            keys.add(str(thread.get("title") or ""))
+    return {k for k in keys if k}
+
+
+async def _compute_mandatory_reference_inputs(
+    project_id: str,
+    chapter_number: int,
+) -> tuple[int, set[str]]:
+    """Compute inputs for adaptive MR cap and relevance sorting.
+
+    Returns:
+        (active_critical_count, mainline_thread_keys)
+    """
+    active_critical_count = 0
+    try:
+        rows = await SettingTrackingRepository().list_by_project(project_id)
+        active_critical_count = sum(
+            1
+            for row in rows
+            if row.get("status") == "active" and row.get("category") == "critical"
+        )
+    except sqlite3.OperationalError:
+        logger.warning(
+            "task151.setting_tracking_query_failed",
+            project_id=project_id,
+            chapter_number=chapter_number,
+        )
+
+    mainline_keys: set[str] = set()
+    try:
+        narrative_ctx = await load_narrative_goal_context(project_id, chapter_number)
+        mainline_keys = _extract_mainline_thread_keys(narrative_ctx)
+    except sqlite3.OperationalError:
+        logger.warning(
+            "task151.narrative_context_query_failed",
+            project_id=project_id,
+            chapter_number=chapter_number,
+        )
+
+    return active_critical_count, mainline_keys
+
+
 async def _load_critical_mandatory_references(
     project_id: str,
     chapter_number: int,
     scenes_count: int = 3,
     max_mandatory_references: int | None = None,
+    *,
+    active_critical_count: int | None = None,
+    mainline_thread_keys: set[str] | None = None,
 ) -> list[dict]:
-    """Task 138n: 从 SettingTrackingRepository 加载 critical orphan 作为强制回收约束.
+    """Task 138n/151: 从 SettingTrackingRepository 加载 critical orphan 作为强制回收约束.
 
     筛选条件：
     - status == "active"
     - category == "critical"
     - 沉寂章数 >= ORPHANED_THRESHOLDS["critical"]（默认 3 章）
 
-    上限：默认 `min(max(scenes_count * 2, 6), 12)`，按 `silent_chapters` 降序、
-    `introduced_in_chapter` 升序保留最紧急的 N 条。
+    上限：默认自适应计算 ``cap = min(max(active_critical_count,
+    scenes_count * 2, 6), 16)``；也可通过 ``max_mandatory_references`` 显式覆盖。
+
+    排序：主线相关（setting_key/name 与 mainline_thread_keys 子串匹配）优先；
+    其次按 ``silent_chapters`` 降序、``introduced_in_chapter`` 升序保留最紧急的 N 条。
+    无骨架 / 无线索时退化为旧排序 ``(silent_chapters, -introduced_in_chapter)``。
 
     返回格式：
     [
@@ -514,10 +580,14 @@ async def _load_critical_mandatory_references(
     from songyan.agents.continuity_auditor._scanners import ORPHANED_THRESHOLDS
 
     if max_mandatory_references is None:
-        max_mandatory_references = min(max(scenes_count * 2, 6), 12)
+        base_count = active_critical_count if active_critical_count is not None else 0
+        max_mandatory_references = min(max(base_count, scenes_count * 2, 6), 16)
 
     rows = await SettingTrackingRepository().list_by_project(project_id)
     threshold = ORPHANED_THRESHOLDS.get("critical", 3)
+    mainline_keys = mainline_thread_keys or set()
+    mainline_keys_lower = {k.lower() for k in mainline_keys if k}
+
     result: list[dict] = []
     for row in rows:
         if row.get("status") != "active":
@@ -528,27 +598,43 @@ async def _load_critical_mandatory_references(
         silent = chapter_number - last_mentioned
         if silent < threshold:
             continue
-        key_alias = str(row.get("setting_key") or "").split(".")[-1]
+        setting_key = str(row.get("setting_key") or "")
+        setting_name = str(
+            row.get("setting_name") or row.get("setting_key") or "未命名设定"
+        )
+        key_alias = setting_key.split(".")[-1]
+
+        haystacks = {setting_key.lower(), setting_name.lower()}
+        is_mainline_related = False
+        if mainline_keys_lower:
+            for mainline_key in mainline_keys_lower:
+                for haystack in haystacks:
+                    if mainline_key in haystack or haystack in mainline_key:
+                        is_mainline_related = True
+                        break
+                if is_mainline_related:
+                    break
+
         result.append(
             {
-                "setting_key": str(row.get("setting_key") or ""),
-                "setting_name": str(
-                    row.get("setting_name")
-                    or row.get("setting_key")
-                    or "未命名设定"
-                ),
+                "setting_key": setting_key,
+                "setting_name": setting_name,
                 "category": "critical",
                 "silent_chapters": silent,
                 "introduced_in_chapter": int(row.get("introduced_in_chapter") or 0),
                 "last_mentioned_chapter": last_mentioned,
                 "recycle_hint": _infer_recycle_hint(key_alias),
+                "is_mainline_related": is_mainline_related,
             }
         )
-    # 按 (silent_chapters, -introduced_in_chapter) 降序：最紧急且越早引入的越优先
+
+    # 按 (主线相关, 沉默章数, -引入章) 降序：主线相关优先，其次最紧急且越早引入的越优先
     result.sort(
-        key=lambda r: (r["silent_chapters"], -r["introduced_in_chapter"]),
+        key=lambda r: (r["is_mainline_related"], r["silent_chapters"], -r["introduced_in_chapter"]),
         reverse=True,
     )
+
+    mainline_related_count = sum(1 for r in result if r["is_mainline_related"])
     if len(result) > max_mandatory_references:
         dropped = result[max_mandatory_references:]
         result = result[:max_mandatory_references]
@@ -557,6 +643,9 @@ async def _load_critical_mandatory_references(
             project_id=project_id,
             chapter_number=chapter_number,
             scenes_count=scenes_count,
+            adaptive_cap=max_mandatory_references,
+            active_critical_count=active_critical_count,
+            mainline_related_count=mainline_related_count,
             kept=max_mandatory_references,
             dropped_keys=[r["setting_key"] for r in dropped],
         )
@@ -565,6 +654,9 @@ async def _load_critical_mandatory_references(
         project_id=project_id,
         chapter_number=chapter_number,
         scenes_count=scenes_count,
+        adaptive_cap=max_mandatory_references,
+        active_critical_count=active_critical_count,
+        mainline_related_count=mainline_related_count,
         count=len(result),
         keys=[r["setting_key"] for r in result],
     )

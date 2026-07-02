@@ -297,7 +297,7 @@ Songyan 的开发历程按能力演进划分，而不是按内部任务编号展
 | 150 章验证 | 验证系统能否支撑长篇规模生成 | Context Diet 2.0、分层压缩、角色衰减、设定蒸发、预算硬上限通过长序列验证 | 已完成 |
 | 质量加固 | 提升输出质量和失败恢复能力 | 补充系统性测试、严格模式、降级接受、safe best 回退和报告入口 | 已完成 |
 | 事实源治理 | 确保长期记录的角色状态、设定和数字信息可信 | 强化 Settlement 证据校验、设定回收、连续性健康检查；enforce 默认启用并取得 Ch1–Ch150 150/150 证据 | 已完成（V5.2） |
-| 叙事骨架与度量 | 补齐自顶向下叙事架构，并让长篇质量可度量 | 全书大纲 / 弧规划 / 线索经济 MVP（阶段 0）、跨章质量度量入库 orphan/T7/质量债/文学趋势/伏笔兑现率（阶段 A） | 进行中（V6：阶段 0+A 已完成，B/C/D 待做） |
+| 叙事骨架与度量 | 补齐自顶向下叙事架构，并让长篇质量可度量 | 全书大纲 / 弧规划 / 线索经济 MVP（阶段 0）、跨章质量度量入库 orphan/T7/质量债/文学趋势/伏笔兑现率（阶段 A）、末端治理降低 critical 误判与 orphan 累积（阶段 B：录入侧降级、分类收紧、MR 自适应、显式 resolve/abandon） | 进行中（V6：阶段 0+A+B 已完成，C/D 待做） |
 
 ---
 ## 4. 快速开始
@@ -355,6 +355,7 @@ ruff check src/ tests/
 | 连续性健康检查 | 已支持跨章扫描孤立设定、遗忘伏笔和状态冲突；当前仍在治理剩余边界问题 | `tasks/137-setting-recycling-closed-loop.md` |
 | 叙事骨架数据模型（V6 阶段 0） | 已交付 `StoryOutline` / `ArcPlan` / `PlotThread` 前置规划模型、三张表与 `NarrativeRepository`（含线索生命周期状态机）；`create-project --outline-file` 可导入全书大纲；GoalPlanner 从弧规划自顶向下派生章节目标（`derived_from_arc`）；CreativeDirector 注入线索经济约束、settlement 后自动推进线索状态；无骨架均回退旧行为 | `tasks/141-narrative-skeleton-data-model-DONE.md` … `tasks/144-thread-economy-mvp-DONE.md` |
 | 长篇质量度量（V6 阶段 A） | 新增 `songyan metrics`（DB 支撑、可复算历史库）：orphan 绝对量/新 critical 速率(T7)/质量债账本/文学趋势/弧级伏笔兑现率+长程台账；`run_quality_debt` 表；阈值 T3/T6/T8 已用历史 DB 复算冻结（T4/T5 延后长跑实测）。复现了被 health 指标掩盖的 orphan 累积与长程伏笔失效 | `tasks/145-orphan-and-critical-rate-metrics-DONE.md` … `tasks/148z-stage-a-threshold-calibration-DONE.md`、`docs/reports/v6-stageA-threshold-calibration.md` |
+| 末端治理（V6 阶段 B） | 录入侧降级（超额 critical 转 candidate，可回升）、`_infer_setting_category` 去硬编码主角名并收紧双命中、MR 上限自适应 + 主线相关性排序、critical 设定显式 resolve/abandon 终态；为阶段 D 长窗口验证降低 orphan 源头 | `tasks/149-input-side-demotion-DONE.md` … `tasks/152-critical-explicit-resolve-abandon-DONE.md` |
 | 自动化验证 | 已建立单元、集成、E2E 和长序列压力测试；最近全量测试见状态板 | `tests/`、`docs/STATUS.md` |
 
 仍在治理的指标包括：剩余 orphan 设定、部分环境读数类状态结算、以及完整默认配置下的更大范围复跑。这些属于当前开发工作，不应写成已交付指标。
@@ -366,9 +367,11 @@ Songyan 的长篇生成主链路与事实源治理已经完成 V5.2 工程验收
 
 V6 首批工作按阶段推进：
 
-1. **叙事骨架 MVP（阶段 0）**：新增全书大纲 / 弧规划 / 线索（PlotThread）数据模型，让章节目标从骨架派生，而非只看上一章摘要。
-2. **长篇质量度量（阶段 A）**：把 orphan 绝对量、新 critical 产生速率、质量债、文学趋势、弧级伏笔兑现率等指标入库并可在报告查看，先让指标说真话。
-3. **末端治理与长跑底盘（阶段 B/C）**：在骨架与度量落地后收敛 orphan 源头，并补足 run 级断点续跑与失败隔离，支撑无人值守长跑。
+1. **叙事骨架 MVP（阶段 0）**：新增全书大纲 / 弧规划 / 线索（PlotThread）前置规划模型，让章节目标从骨架派生，而非只看上一章摘要。✅ 已完成。
+2. **长篇质量度量（阶段 A）**：把 orphan 绝对量、新 critical 产生速率、质量债、文学趋势、弧级伏笔兑现率等指标入库并可在报告查看，先让指标说真话。✅ 已完成。
+3. **末端治理（阶段 B）**：在骨架与度量落地后收敛 orphan 源头——录入侧降级、critical 分类收紧、MR 自适应上限与相关性排序、critical 设定显式 resolve/abandon 出口。✅ 已完成。
+4. **长跑底盘（阶段 C）**：run 级断点续跑、LLM 限流、失败隔离、DB 维护，支撑无人值守 Ch100–150 长跑。◻ 待做。
+5. **长窗口验证（阶段 D）**：在 V5.2 + 骨架 + 末端治理 + 长跑底盘合入后，取得 Ch1–Ch150 连续运行证据。◻ 待做。
 
 README 不维护实时任务状态。当前进度、测试结果和下一步执行项请查看 [`docs/STATUS.md`](docs/STATUS.md)；V6 任务事实入口见 [`tasks/V6-README.md`](tasks/V6-README.md)。
 
