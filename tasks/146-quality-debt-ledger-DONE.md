@@ -16,7 +16,7 @@
 | 聚合器 + 模型 | `evals/db_metrics.py`：`compute_quality_debt(logs, window=50)`、`QualityDebtReport`/`QualityDebtWindow`、`quality_debt_row`、`quality_debt_from_metrics_jsonl`、`render_run_quality_debt_section` |
 | run 级表 | `run_quality_debt`（迁移 `_migrate_run_quality_debt`，注册 `_EXPECTED_TABLES`+`init_schema`+`run_migrations`；FK→project_runs ON DELETE CASCADE） |
 | repo | `db/run_quality_debt_repo.py`：`RunQualityDebtRepository`（upsert/get/list_by_project）+ `RunQualityDebtRow` |
-| 增量写入 | `workflows/phase2_graph.py` `_upsert_quality_debt`，每章 `_run_single_chapter` 后调用（非阻塞） |
+| 周期写入 | `workflows/phase2_graph.py` `_upsert_quality_debt`，按 `_QUALITY_DEBT_FLUSH_INTERVAL`（10 章）+ run 收尾兜底调用（非阻塞，见"复审修复 #2"） |
 | metrics 段 | `render_stage_a_metrics` 追加"质量债账本"段（读 `run_quality_debt` by project_id） |
 | 测试 | `tests/test_146_quality_debt.py`（10 用例） |
 
@@ -33,6 +33,15 @@
 - `pytest tests/test_146_quality_debt.py -q` → **10 passed**（计数/占比/50 章窗破线+边界+窗口不足/表迁移/repo 增量 upsert 幂等/FK 级联/jsonl 适配器/渲染）。
 - `pytest tests/db/test_migrations.py tests/db/test_schema.py tests/test_141_narrative_skeleton.py -q` → **38 passed**（新表不破坏 schema 版本口径）。
 - `ruff check`（改动文件）→ **All checks passed**。
+
+## 复审修复（2026-07-02，阶段 0/A 交付复审）
+
+- **#2 长跑质量债重算 O(n²) + 异常覆盖不足** — `_upsert_quality_debt` 每次都 `read_run_logs(run_id)` 全量重读整份 JSONL 再 `compute_quality_debt`，原逐章调用使 150 章长跑累计成 O(n²)（威胁阶段 C/D 的 T5 长跑性能红线）；且原 except 未覆盖 JSONL 解析可能抛的 `ValueError`/`json.JSONDecodeError`。修复：
+  - **改为周期刷新**：新增模块常量 `_QUALITY_DEBT_FLUSH_INTERVAL = 10`，主循环仅在 `chapter_number % _QUALITY_DEBT_FLUSH_INTERVAL == 0` 时刷新；聚合成本从每章一次降到每 10 章一次。
+  - **收尾兜底刷新**：run 收尾块（`final_status` 计算后）无条件再刷新一次，保证 completed/partial run 均有覆盖尾段（不足 10 章那段）的完整汇总；被 kill 的 run 仍留有截至最近周期点的质量债（"被 kill 也留汇总"语义保持）。
+  - **异常收紧**：except 元组补 `ValueError, JSONDecodeError`（连同已有 `RuntimeError/OSError/ConnectionError/OperationalError`），日志解析损坏时降级告警而非中断长跑。
+- 验证：`pytest tests/test_146_quality_debt.py tests/test_phase2_graph.py`（含 38 项相关用例全过）、全量 `pytest tests/ -q` → **2099 passed, 2 skipped, 1 xfailed**（与修复前基线一致，无回归）；`ruff check` 改动文件全过。
+- 备注：本修复只改**刷新频率与健壮性**，不改 T4 口径、聚合器逻辑或 upsert 幂等语义。
 
 ## Out of Scope（未做）
 

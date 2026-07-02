@@ -43,7 +43,7 @@ from songyan.db.review_repo import (
 )
 from songyan.db.settlement_repo import SettingSnapshotRepository
 from songyan.evals.score_aggregator import ScoreAggregator
-from songyan.exceptions import LLMError, LLMResponseParseError, SettlementError
+from songyan.exceptions import LLMError, LLMResponseParseError, SettlementError, SongyanError
 from songyan.genres.loader import load_genre_profile
 from songyan.models import (
     ChapterHead,
@@ -2505,7 +2505,13 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
                     chapter_number=state["chapter_number"],
                     changed_threads=changed_threads,
                 )
-        except (RuntimeError, OSError, ConnectionError, sqlite3.OperationalError) as exc:
+        except (
+            SongyanError,
+            RuntimeError,
+            OSError,
+            ConnectionError,
+            sqlite3.Error,
+        ) as exc:
             logger.warning(
                 "settlement_extractor_node.plot_thread_update_failed",
                 error=str(exc),

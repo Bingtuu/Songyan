@@ -13,6 +13,7 @@ MVP：只做"正文进展驱动的自动状态推进"，基于 settlement 已产
 
 from __future__ import annotations
 
+from songyan.db.connection import get_db
 from songyan.db.narrative_repo import NarrativeRepository
 from songyan.models import PlotThread, PlotThreadStatus
 from songyan.models.settlement import StateSettlement
@@ -135,7 +136,9 @@ async def update_plot_threads_after_settlement(
     evidence = _settlement_evidence_text(settlement)
     resolved_evidence = _settlement_resolved_text(settlement)
 
-    changed: list[str] = []
+    # 先在内存中算出所有待推进的 (thread_id, new_status)，再在单事务内批量提交，
+    # 保证一章引用多条线索时的状态推进是原子的（要么全成功、要么全回滚，#3 修复）。
+    pending: list[tuple[str, PlotThreadStatus]] = []
     for thread in active:
         if not _thread_referenced(thread, evidence):
             continue
@@ -149,8 +152,17 @@ async def update_plot_threads_after_settlement(
         )
         if new_status is None:
             continue
-        await repo.advance_thread_status(
-            thread.thread_id, new_status, chapter_number, version_id
-        )
-        changed.append(thread.thread_id)
+        pending.append((thread.thread_id, new_status))
+
+    if not pending:
+        return []
+
+    changed: list[str] = []
+    async with get_db() as conn:
+        for thread_id, new_status in pending:
+            await repo.advance_thread_status(
+                thread_id, new_status, chapter_number, version_id, conn=conn
+            )
+            changed.append(thread_id)
+        await conn.commit()
     return changed

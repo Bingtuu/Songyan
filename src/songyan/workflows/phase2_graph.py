@@ -87,9 +87,13 @@ async def _persist_run_progress(
 async def _upsert_quality_debt(run_id: str, project_id: str) -> None:
     """读取本 run 的 JSONL 日志聚合质量债并 upsert run_quality_debt（V6 Task 146，非阻塞）.
 
-    每章调用一次（增量），使被 kill 的 run 也留有截至当前的质量债汇总。
+    质量债由整份 run 日志聚合而来，故本函数每次会全量重读日志。为避免 150 章长跑中
+    每章重读造成的 O(n²)（#2 修复），调用方按周期（每 N 章）+ run 收尾各调用一次，
+    而非逐章调用；被 kill 的 run 仍留有截至最近一次周期点的质量债汇总。
     """
     try:
+        from json import JSONDecodeError
+
         from songyan.db.run_quality_debt_repo import RunQualityDebtRepository
         from songyan.evals.db_metrics import compute_quality_debt, quality_debt_row
         from songyan.evals.streaming_report import read_run_logs
@@ -101,12 +105,23 @@ async def _upsert_quality_debt(run_id: str, project_id: str) -> None:
         await RunQualityDebtRepository().upsert(
             quality_debt_row(run_id, project_id, report)
         )
-    except (RuntimeError, OSError, ConnectionError, OperationalError) as exc:
+    except (
+        RuntimeError,
+        OSError,
+        ConnectionError,
+        OperationalError,
+        ValueError,
+        JSONDecodeError,
+    ) as exc:
         logger.warning(
             "project_pipeline.quality_debt_upsert_failed",
             run_id=run_id,
             error=str(exc),
         )
+
+
+# 质量债增量刷新周期（章）：避免每章全量重读日志的 O(n²)（#2）。
+_QUALITY_DEBT_FLUSH_INTERVAL = 10
 
 
 async def _pause_run_for_auto_halt(
@@ -411,8 +426,11 @@ async def run_project_pipeline(
 
         _append_recent_result(_recent_results, chapter_number, chapter_result, gate_config)
 
-        # V6 Task 146: 每章增量更新 run 级质量债账本（非阻塞）
-        await _upsert_quality_debt(run_id, project_id)
+        # V6 Task 146: 周期性刷新 run 级质量债账本（非阻塞）。
+        # 质量债由整份 run 日志聚合，逐章全量重读会造成 O(n²)（#2）；此处按
+        # _QUALITY_DEBT_FLUSH_INTERVAL 章刷新一次，run 收尾再兜底刷新一次。
+        if chapter_number % _QUALITY_DEBT_FLUSH_INTERVAL == 0:
+            await _upsert_quality_debt(run_id, project_id)
 
         # Task 127: 每章运行后更新最低 health_score
         _updated_min_score = chapter_result.get("updated_min_health_score")
@@ -514,6 +532,10 @@ async def run_project_pipeline(
     # ---- 收尾 ----
     duration = time.monotonic() - start_time
     final_status = "completed" if not failed else ("partial" if completed else "failed")
+
+    # #2 兜底：run 结束时刷新一次质量债，保证 completed/partial run 均有完整汇总
+    # （周期刷新可能未覆盖最后不足 _QUALITY_DEBT_FLUSH_INTERVAL 章的尾段）。
+    await _upsert_quality_debt(run_id, project_id)
 
     await _persist_run_progress(
         run_state,

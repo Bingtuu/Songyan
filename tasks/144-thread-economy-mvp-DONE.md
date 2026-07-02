@@ -63,6 +63,14 @@
 - **暴露并修复的缺陷**：初版收束规则太松——主线线索"灰塔"/"断刃"在 **ch2 就被误判 resolved**（关键词"灰塔"/"断刃"频繁出现在局部章末钩子/伏笔里，仅凭子串命中即收束整条主线）。已按上文"加固版"规则修复：**advanced 优先 + `expected_resolve_arc` 收束弧窗口**。修复后单测新增 `test_no_premature_resolve_before_resolve_arc` / `test_resolve_arc_undefined_never_auto_resolves` / `test_opened_advances_not_resolves` 等覆盖（12 用例全过）。
 - 临时产物：`.tmp/v6_smoke_*`（大纲/脚本/DB），复跑校验后可清理，不影响 138n/138k 校准库。
 
+## 复审修复（2026-07-02，阶段 0/A 交付复审）
+
+阶段 0+A 交付整体复审发现两处中危缺陷并修复（不改行为契约，仅收紧健壮性与原子性）：
+
+- **#1 后处理异常捕获不完整（破"非阻塞"契约）** — `settlement_extractor_node` step-6 的 except 原为 `(RuntimeError, OSError, ConnectionError, sqlite3.OperationalError)`，但 `update_plot_threads_after_settlement` 会抛 `NarrativeError`/`InvalidThreadTransitionError`（`SongyanError` 子类，如非法迁移/线索不存在）与 `sqlite3.IntegrityError`（FK 冲突），这些均**不在捕获范围内**，一旦触发会中断 accept 后处理，违背"线索更新失败不影响 settlement/summary"契约。修复：`src/songyan/workflows/_nodes.py` 捕获扩展为 `(SongyanError, RuntimeError, OSError, ConnectionError, sqlite3.Error)`，并补 `SongyanError` import。
+- **#3 一章引用多条线索时状态推进非原子** — 原 `update_plot_threads_after_settlement` 对每条待推进线索各自 `advance_thread_status`（各自开连接、各自 commit），若第 N 条中途抛异常，前 N-1 条已提交、留下**部分推进**的不一致状态。修复：`src/songyan/workflows/_thread_economy.py` 先在内存算出全部 `pending`（thread_id, new_status），再在**单个 `get_db()` 事务**内批量 `advance_thread_status(..., conn=conn)` 后统一 `commit()`——要么全成功、要么全回滚；每批新开连接也顺带规避 `advance_thread_status` 内 `row_factory=Row` 对复用连接的污染。
+- 验证：`pytest tests/test_144_thread_economy.py`（38 项相关用例含 phase2/146 全过）、全量 `pytest tests/ -q` → **2099 passed, 2 skipped, 1 xfailed**（与修复前基线一致，无回归）；`ruff check` 改动文件全过。
+
 ## Out of Scope（未做）
 
 - 自动重规划闭环（V7）；线索显式 resolve/作废出口（阶段 B/152）；Writer ContextPackage 注入骨架（超出 MVP 边界）。
