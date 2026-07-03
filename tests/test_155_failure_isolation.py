@@ -2,13 +2,47 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from songyan.db import get_db
+from songyan.db.connection import get_db_path
+from songyan.db.migrations import init_schema
 from songyan.exceptions import AutoHaltException
 from songyan.workflows.phase2_graph import run_project_pipeline
+
+
+@pytest.fixture(scope="module", autouse=True)
+def ensure_proj_155():
+    """保证主库 schema 与 proj-155 存在；本模块硬编码使用 project_id=proj-155."""
+    db_path = get_db_path()
+    asyncio.run(init_schema(db_path))
+
+    async def _seed():
+        async with get_db() as conn:
+            await conn.execute(
+                """INSERT OR IGNORE INTO projects (
+                    project_id, title, genre_id, mode_id, protagonist_name,
+                    estimated_chapters, words_per_chapter, target_word_count, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))""",
+                (
+                    "proj-155",
+                    "Test Project 155",
+                    "scifi",
+                    "webnovel",
+                    "Protagonist",
+                    150,
+                    3000,
+                    450000,
+                ),
+            )
+            await conn.commit()
+
+    asyncio.run(_seed())
+    yield
 
 
 def _make_chapter_result(

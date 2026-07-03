@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from songyan.models import ProjectRunResult
+from songyan.models import ContinuityReport, ProjectRunResult
 from songyan.workflows.phase2_graph import run_project_pipeline
 
 # ---------------------------------------------------------------------------
@@ -35,6 +35,27 @@ def _make_chapter_state(
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
+
+@pytest.fixture(autouse=True)
+def _mock_continuity_auditor():
+    """Isolate phase2 graph tests from the real DB.
+
+    run_project_pipeline calls ContinuityAuditor every 3rd chapter, which writes
+    continuity_reports and human_marks. Without isolation these tests pollute the
+    default songyan.db.
+    """
+    report = ContinuityReport(
+        report_id="mock-report",
+        project_id="mock",
+        checked_up_to_chapter=0,
+        overall_health_score=10.0,
+    )
+    with patch("songyan.workflows.phase2_graph.ContinuityAuditor") as mock_cls:
+        instance = mock_cls.return_value
+        instance.audit = AsyncMock(return_value=report)
+        instance.write_constraints = AsyncMock()
+        yield
+
 
 
 @pytest.mark.asyncio
