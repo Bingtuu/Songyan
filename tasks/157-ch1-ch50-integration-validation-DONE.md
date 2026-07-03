@@ -1,9 +1,10 @@
-# Task 157 DONE — V6 验收判据 harness（157a）已交付；157b Ch1-Ch50 实跑待执行
+# Task 157 DONE — V6 验收判据 harness（157a）+ Ch1-Ch50 实跑（157b）均已交付
 
 > **Phase**: V6 阶段 D（长窗口验证）
-> **状态**: ⚠️ 条件完成（157a 工程实现 + Layer 2 单测已收口；157b 无人值守 Ch1-Ch50 实跑因需要 >10h LLM 长跑，待后续安排资源执行）
-> **完成日期**: 2026-07-02（157a）
+> **状态**: ✅ 完成（157a harness + Layer 2 单测已收口；157b 无人值守 Ch1-Ch50 实跑已执行，报告入库）
+> **完成日期**: 2026-07-02（157a）/ 2026-07-03（157b）
 > **事实文档**: `tasks/157-ch1-ch50-integration-validation.md`
+> **实跑报告**: `docs/reports/task-157-ch1-ch50-integration-validation-report.md`
 
 ---
 
@@ -76,20 +77,37 @@
 
 ---
 
-## 未竟项：157b Ch1-Ch50 实跑
+## 157b Ch1-Ch50 实跑（已执行）
 
-157b 要求：
+- **环境**：隔离 DB `.tmp/task157_ch1_ch50.db`，带大纲项目 `806223daee344baa92cf84110258c04d`（scifi/space-opera，与 139b 基线对齐），骨架 6 弧 + 3 条主线线索（方舟/共鸣/旧日搭档）。
+- **命令口径**：`enforce` 门禁 + `on_failure=isolate`；真实 DeepSeek API；run `run-e4528e8c`，总耗时约 3.7h（13276s / 50 章）。
+- **脚本**：`scripts/run_157b_ch1_ch50.py`（`--init` 建库导纲 → 实跑 → 调用 `evaluate_v6_acceptance` 出三态 → 写报告）。
 
-1. 用隔离副本 DB（带大纲项目）无人值守跑 Ch1-Ch50，enforce 门禁。
-2. 跑后用 157a harness 判定 T2/T6/T1/T3/T4 + health≥7.0。
-3. 产出 `docs/reports/task-157-ch1-ch50-integration-validation-report.md`。
+### harness 判定（权威口径，详见报告）
 
-该步骤需要真实的 LLM 调用与数小时运行时间，不在本次会话执行。执行前请确认：
+| 判据 | 结果 | 关键值 |
+|------|------|--------|
+| T1 主线跃迁 | ✅ pass | 2 条：t_ark(Ch1→2)、t_resonance(Ch4→5) |
+| T2 完成率 | 🔴 48/50 | Ch14/Ch27 未 accept（见下） |
+| T6a orphan 斜率 | ✅ pass | 0.46/章 ≪ 3.14 |
+| T6b P1 critical | 实测 0（harness 标未判定） | 16 审计点 orphan_critical 全 0 |
+| T6c 归因 | 🔴 fail（口径失真） | T7=0.02/章、orphan 斜率=0.46/章，均远优于基线 |
+| T3/T8 文学 | ✅ pass | 无维度触红线 |
+| T4 质量债 | ✅ pass | degraded 0%、convergence 2% |
+| T5 DB/性能 | ✅ pass（采样） | 41.23MB、1.20×（冻结归 158） |
+| health≥7.0 | ✅ pass | 全程 8.1-10.0 |
 
-- 使用 `.tmp/` 外的隔离 DB 副本。
-- 选择 `--on-failure isolate` 或 `--on-failure retry`（推荐 isolate，避免单章抖动白跑）。
-- metrics 逐章追加到 `.tmp/task157_ch1_ch50_metrics.jsonl`。
-- 跑完后用 `evaluate_v6_acceptance(project_id, 1, 50, run_id=..., run_logs=...)` 出判定。
+### 两项未过均非治理退化
+
+- **Ch14**：QG 通过但 settlement 数值幻觉（`vision_left_eye` 0≠33、`right_hand_grip_strength` 50≠100）→ 被「closing_value 必须等于公式值」硬校验正确拦截 → `needs_human_review`。
+- **Ch27**：正文仅 2475 字（length_score 0.42）→ QG 未过、`convergence_failed`、无 safe-best 可回滚 → 未 accept。
+- **T6c**：骨架治理把新 critical 速率压到 ≈0（0.02/章），归因比值判据在退化基线下算术失真，实为"源头收敛过度达标"（T6c-obs candidate critical=0，无录入丢弃）。
+- 全程 **无 AutoHalt、无候选硬门禁触发、无 ContextEmergency**；两章在 isolate 下被隔离、run 跑完 Ch50。
+
+### 后续动作（不在本 Task 改治理，符合纪律）
+
+1. `--resume` 定点复跑 Ch14/Ch27，判定 settlement 数值幻觉是否偶发；复现率高则另开 settlement 数值鲁棒性修复 Task。
+2. 登记 **T6c 归因判据小基数失真** 为 158/159 复用前的 harness 口径校准候选。
 
 ---
 

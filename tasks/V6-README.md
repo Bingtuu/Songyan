@@ -79,7 +79,7 @@ V6 通过 = 同时满足以下五项（阈值与术语见 `docs/v6-plan.md` §1.
 
 | Task | 名称 | 状态 | 事实文档 |
 |------|------|:----:|----------|
-| 157 | Ch1-Ch50 集成验证 + V6 验收判据 harness（拆 157a/b） | 🔄 进行中（157a harness + Layer 2 单测已完成；157b 实跑待执行） | `tasks/157-ch1-ch50-integration-validation.md`、`tasks/157-ch1-ch50-integration-validation-DONE.md` |
+| 157 | Ch1-Ch50 集成验证 + V6 验收判据 harness（拆 157a/b） | ✅ 完成 | `tasks/157-ch1-ch50-integration-validation-DONE.md`、`docs/reports/task-157-ch1-ch50-integration-validation-report.md` |
 | 158 | Ch1-Ch100 长跑验证 + kill→resume + T5 冻结（拆 158a/b） | ◻ 规划中 | `tasks/158-ch1-ch100-long-run-validation.md` |
 | 159 | Ch1-Ch150 治理管线复现 + V6 阶段验收（拆 159a/b） | ◻ 规划中 | `tasks/159-ch1-ch150-governance-pipeline-replication.md` |
 
