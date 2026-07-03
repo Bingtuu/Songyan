@@ -20,6 +20,9 @@
 | 实跑报告 | `docs/reports/task-158-ch1-ch100-long-run-validation-report.md` |
 | 逐章 metrics JSONL | `.tmp/task158_ch1_ch100_metrics.jsonl` |
 | 隔离 DB（证据保留） | `.tmp/task158_ch1_ch100.db` |
+| kill→resume 真实演练脚本（158r） | `scripts/run_158r_kill_resume_drill.py` |
+| kill→resume 命令级证据报告（158r） | `docs/reports/task-158r-kill-resume-drill-report.md` |
+| kill→resume Layer 2 冒烟测试（158r） | `tests/test_158r_kill_resume_drill_smoke.py` |
 
 ---
 
@@ -104,13 +107,20 @@
 
 ### kill→resume 说明
 
-Task 158 规划要求"中途至少一次人为 kill（含 in-flight 非边界）→ 同命令 `--resume` 续完"。本次实跑报告未生成独立的 **Kill→Resume 时间线**章节，原因：
+Task 158 规划要求"中途至少一次人为 kill（含 in-flight 非边界）→ 同命令 `--resume` 续完"。本次 Ch1-Ch100 实跑报告未生成独立的 **Kill→Resume 时间线**章节，原因：
 
 1. 实跑过程中未显式使用 `--kill-at-chapter` 做人为 kill。
 2. 运行日志显示 Ch11 曾出现 `Version not found` 失败（settlement_extractor 阶段），随后被自动重跑成功；该重算属于 run 内部恢复，未形成独立的 `--resume` 命令证据。
 3. 脚本层的 `--resume` 能力已由 `tests/test_158_long_run_smoke.py` 的 Layer 2 Mock 覆盖（已 accept 跳过、in-flight 重算、孤儿 checkpoint 清理）。
 
-**诚实记录**：§1.3-R 的"人为 kill 后同命令 resume 续完"尚未取得真实命令级证据。建议在 Task 159 前补一次 `--kill-at-chapter` 真实演练，或明确将其列为 159 的启动条件。
+**补充演练（2026-07-03，Task 158r）**：§1.3-R 的"人为 kill 后同命令 resume 续完"已取得**真实命令级证据**。在全新隔离 DB `.tmp/task158r_kill_resume.db` 上，用真实 DeepSeek API 执行：
+
+- **Phase 1（in-flight kill）**：`--kill-at-chapter 3`。Ch1/Ch2 accept 后，在 Ch3 **生成完成、accept 之前**抛 `KeyboardInterrupt`（真正的 in-flight 非边界 kill）。kill 后 `run-82bd2e07` 状态 running、`current_chapter=3`、accepted=[1,2]（Ch3 未 accept）、残留 checkpoint thread=3。
+- **Phase 2（同命令 resume）**：`--resume` 复用**同一** `run-82bd2e07`，`resume_start=3`（以 accepted head 为唯一完成事实源），`pruned_orphan_checkpoints pruned_count=58`（孤儿 checkpoint 清理），Ch3 以新 thread 重算并 accept，Ch4/Ch5 续完，最终 accepted=[1,2,3,4,5]、failed=[]、`status=completed`。
+- **5 项关键断言全 ✅**：in-flight 打断成立、run_id 复用、in-flight 章重算并 accept、目标章全续完、run 最终 completed。
+- 证据：报告 `docs/reports/task-158r-kill-resume-drill-report.md`；脚本 `scripts/run_158r_kill_resume_drill.py`；命令日志 `.tmp/task158r_kill_phase.log` / `.tmp/task158r_resume_phase.log`。
+
+**结论修正**：§1.3-R 的"人为 kill 后同命令 resume 续完"**已取得真实命令级证据**（前述 Task 158r）。Task 159 可直接引用该证据，无需重复 kill 演练（除非 150 章链路与 100 章存在实质差异）。
 
 ---
 
@@ -118,7 +128,7 @@ Task 158 规划要求"中途至少一次人为 kill（含 in-flight 非边界）
 
 - **必须复用** Task 157/158 的 harness，不新增/不 fork 判据函数。
 - **T5 阈值**需在 Task 159 中结合 150 章数据重新标定后冻结。
-- **kill→resume 真实演练**应作为 Task 159 的前置检查项，确保 §1.3-R 取得命令级证据。
+- **kill→resume 真实演练已在 Task 158r 补齐**（`run-82bd2e07`，in-flight kill@Ch3 → 同命令 resume 续完 Ch1-Ch5，5 项断言全过）。Task 159 的 §1.3-R **直接引用该证据**，无需重复 kill 演练（除非 150 章链路与 100 章存在实质差异）。
 - Ch48/Ch62 的 settlement/summary 失败可定点复跑，若复现率高则另开修复 Task。
 
 ---
@@ -129,5 +139,7 @@ Task 158 规划要求"中途至少一次人为 kill（含 in-flight 非边界）
 - `tasks/157-ch1-ch50-integration-validation-DONE.md`
 - `tasks/148z-stage-a-threshold-calibration-DONE.md`
 - `scripts/run_158_ch1_ch100.py`
+- `scripts/run_158r_kill_resume_drill.py`（§1.3-R kill→resume 真实演练脚本）
+- `docs/reports/task-158r-kill-resume-drill-report.md`（kill→resume 命令级证据报告）
 - `tests/test_158_long_run_smoke.py`
 - `tests/test_158_t5_freeze.py`
