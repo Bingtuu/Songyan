@@ -128,16 +128,16 @@ class TestPreservationRatio:
 # =============================================================================
 
 class TestReassembleContent:
-    def test_reassembles_with_headers(self) -> None:
+    def test_reassembles_without_scene_headers(self) -> None:
         scenes = [
             {"scene_number": 1, "content": "第一段", "header": "### Scene 1"},
             {"scene_number": 2, "content": "第二段", "header": "### Scene 2"},
         ]
         revised = ["修订一", "修订二"]
         result = _reassemble_content(scenes, revised)
-        assert "### Scene 1" in result
+        assert "### Scene 1" not in result
         assert "修订一" in result
-        assert "### Scene 2" in result
+        assert "### Scene 2" not in result
         assert "修订二" in result
 
 
@@ -163,6 +163,7 @@ class TestRenderScenePrompt:
         assert "场景正文" in prompt
         assert "引用" in prompt
         assert "建议" in prompt
+        assert "不要输出 `### Scene N`" in prompt
 
     def test_includes_protected_fissures(self) -> None:
         prompt = _render_scene_prompt("正文", [], ["保护内容"])

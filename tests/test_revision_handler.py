@@ -800,6 +800,36 @@ class TestSaveRevisionOutput:
         assert created.content == "修改后正文"
         assert vid.startswith("rev-")
 
+    async def test_strips_scene_markers_before_saving_revision(self) -> None:
+        mock_version_db = AsyncMock()
+        mock_head_db = AsyncMock()
+        mock_head_db.get.return_value = None
+        mock_version_db.get_next_version_number.return_value = 2
+
+        parent = ChapterVersion(
+            version_id="v_old",
+            project_id="p1",
+            chapter_number=3,
+            version_number=1,
+            version_type="draft",
+        )
+
+        await save_revision_output(
+            version_db=mock_version_db,
+            head_db=mock_head_db,
+            project_id="p1",
+            chapter_number=3,
+            output=RevisionOutput(new_version_id="vid_old"),
+            revised_content="### Scene 1\n\n第一段正文。\n\nScene 2: 控制室\n\n第二段正文。",
+            parent_version=parent,
+        )
+
+        created = mock_version_db.create.call_args[0][0]
+        assert "Scene 1" not in created.content
+        assert "Scene 2" not in created.content
+        assert "第一段正文。" in created.content
+        assert "第二段正文。" in created.content
+
     async def test_updates_chapter_head(self) -> None:
         mock_version_db = AsyncMock()
         mock_head_db = AsyncMock()

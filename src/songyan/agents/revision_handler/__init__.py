@@ -968,6 +968,10 @@ async def save_revision_output(
     Returns:
         新创建的 version_id
     """
+    from songyan.agents.writer import _strip_scene_marker_lines
+
+    revised_content = _strip_scene_marker_lines(revised_content).strip()
+
     # 确定版本号（包含废弃版本，避免编号冲突）
     version_number = await version_db.get_next_version_number(project_id, chapter_number)
 

@@ -11,6 +11,7 @@ from difflib import SequenceMatcher
 
 import structlog
 
+from songyan.agents.writer import _strip_scene_marker_lines
 from songyan.llm.client import call_llm
 from songyan.models import Patch, ReviewIssue, RevisionOutput, RuleAuditResult
 from songyan.utils.scene_parser import SCENE_PATTERN, _merge_short_blocks
@@ -193,7 +194,7 @@ def _render_scene_prompt(
 3. 不要修改保护内容
 4. 直接输出修改后的完整场景段落，不要添加解释
 5. 输出格式：直接输出正文，不要用 markdown 代码块包裹
-6. 保持 ### Scene N 标题之前的场景编号不变（如果有）
+6. 不要输出 `### Scene N`、`Scene 1:`、`场景一` 等任何场景标题或编号
 """
     return prompt
 
@@ -229,6 +230,7 @@ async def _revise_single_scene(
         if lines and lines[-1].strip() == "```":
             lines = lines[:-1]
         revised = "\n".join(lines).strip()
+    revised = _strip_scene_marker_lines(revised).strip()
 
     ratio = _compute_preservation_ratio(scene["content"], revised)
     if ratio < MIN_PRESERVATION_RATIO:
@@ -347,11 +349,13 @@ async def run_segmented_revision(
         elif revised_scene != scene["content"]:
             scenes_modified += 1
 
-    # 按 scene 编号拼接（注意：不保留 header，因为 content 中的 header 在 split 时被排除）
-    # 实际上 scenes[i]["content"] 不包含 header，需要重新加上
+    # 按 scene 编号拼接；正文落库前不得保留或重建任何显式场景标题。
     full_revised = _reassemble_content(scenes, revised_scenes)
+    clean_original_content = _strip_scene_marker_lines(content).strip() or content
 
-    content_preservation_ratio = _compute_preservation_ratio(content, full_revised)
+    content_preservation_ratio = _compute_preservation_ratio(
+        clean_original_content, full_revised
+    )
 
     # Task 100a: 全局字数下限守卫 — 拼接后若保留率 < 0.85，直接回退到原始内容
     if content_preservation_ratio < MIN_PRESERVATION_RATIO:
@@ -372,7 +376,7 @@ async def run_segmented_revision(
             scenes_modified=0,
             scenes_fallback_count=len(scenes),
         )
-        return output, content
+        return output, clean_original_content
 
     # 全局 issues 计入 remaining
     remaining_ids = [i.issue_id for i in global_issues]
@@ -388,7 +392,10 @@ async def run_segmented_revision(
     revised_scenes_parsed = _parse_scenes(full_revised)
     constrained_content, constrained_scenes, constrained_wc, adjusted, reason = (
         _enforce_revision_word_count(
-            full_revised, revised_scenes_parsed, content, target_word_count
+            full_revised,
+            revised_scenes_parsed,
+            clean_original_content,
+            target_word_count,
         )
     )
     if adjusted:
@@ -401,7 +408,7 @@ async def run_segmented_revision(
         )
         # 更新 preservation_ratio（基于约束后的内容）
         content_preservation_ratio = _compute_preservation_ratio(
-            content, constrained_content
+            clean_original_content, constrained_content
         )
         full_revised = constrained_content
 
@@ -493,15 +500,18 @@ def _dedup_reassembled_content(
 
 
 def _reassemble_content(original_scenes: list[dict], revised_scenes: list[str]) -> str:
-    """按 scene 顺序拼接成完整正文，保留原始 header，并去除重复长段落."""
+    """按 scene 顺序拼接成完整正文，去除场景标题与重复长段落."""
     parts: list[str] = []
-    for i, scene in enumerate(original_scenes):
-        header = scene.get("header", "")
-        if header:
-            parts.append(header)
-        parts.append(revised_scenes[i])
-        parts.append("")
-    return _dedup_reassembled_content("\n\n".join(parts).strip())
+    for i, _scene in enumerate(original_scenes):
+        if i >= len(revised_scenes):
+            break
+        revised = _strip_scene_marker_lines(revised_scenes[i]).strip()
+        if revised:
+            parts.append(revised)
+            parts.append("")
+    return _dedup_reassembled_content(
+        _strip_scene_marker_lines("\n\n".join(parts).strip())
+    )
 
 
 def _enforce_revision_word_count(

@@ -92,8 +92,8 @@ class TestReassembleContentDedup:
         result = _reassemble_content(scenes, revised)
 
         assert result.count(para) == 1
-        assert "### Scene 1" in result
-        assert "### Scene 2" in result
+        assert "### Scene 1" not in result
+        assert "### Scene 2" not in result
         assert "独有段落。" in result
 
     def test_reassemble_preserves_short_repeated_paragraphs(self) -> None:
@@ -106,3 +106,17 @@ class TestReassembleContentDedup:
         result = _reassemble_content(scenes, revised)
 
         assert result.count("不。") == 2
+
+    def test_reassemble_strips_scene_markers_from_revised_scene(self) -> None:
+        scenes = [
+            {"scene_number": 1, "content": "旧一", "header": ""},
+            {"scene_number": 2, "content": "旧二", "header": ""},
+        ]
+        revised = ["### Scene 1\n\n第一段正文。", "Scene 2: 控制室\n\n第二段正文。"]
+
+        result = _reassemble_content(scenes, revised)
+
+        assert "Scene 1" not in result
+        assert "Scene 2" not in result
+        assert "第一段正文。" in result
+        assert "第二段正文。" in result
