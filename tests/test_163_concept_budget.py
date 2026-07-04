@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from pathlib import Path
+from unittest.mock import AsyncMock, patch
 
-from songyan.agents.creative_director import _render_prompt
+from songyan.agents.creative_director import _render_prompt, generate_creative_brief
 from songyan.creative_modes.registry import load_creative_mode_profile
 from songyan.db.continuity_repo import SettingTrackingRepository
 from songyan.db.repository import ChapterVersionRepository, ProjectRepository
@@ -264,6 +265,46 @@ class TestConceptBudgetIntegration:
 
         assert "概念预算约束" in prompt
         assert "提示概念" in prompt
+
+    async def test_creative_brief_carries_constraint_to_writer(self, test_db: Path) -> None:
+        await _seed_project()
+        await _seed_setting(
+            key="concept.writer",
+            name="传递到 Writer 的概念",
+            introduced=1,
+            category="critical",
+        )
+        genre = load_genre_profile("scifi")
+        mode = load_creative_mode_profile("webnovel")
+        llm_response = """{
+            "mode_id": "webnovel",
+            "creative_intent": "推进冲突",
+            "required_tensions": [],
+            "forbidden_patterns": ["禁止空洞设定堆叠"],
+            "allowed_fissures": [],
+            "style_constraints": ["短句推进"],
+            "reader_contract": "保持悬念"
+        }"""
+
+        with patch(
+            "songyan.agents.creative_director.call_llm",
+            new_callable=AsyncMock,
+            return_value=llm_response,
+        ):
+            brief = await generate_creative_brief(
+                project_id=PID,
+                project=ProjectSetting(genre_id="scifi", protagonist_name="林渊"),
+                chapter_goal=ChapterGoal(chapter_number=5),
+                genre_profile=genre,
+                mode_profile=mode,
+                characters=[],
+                previous_summary="",
+                seed_settings=[],
+                narrative_ctx=None,
+            )
+
+        assert any("概念预算约束" in item for item in brief.style_constraints)
+        assert any("传递到 Writer 的概念" in item for item in brief.style_constraints)
 
     async def test_no_ledger_prompt_falls_back_without_constraint(self, test_db: Path) -> None:
         project_id = "proj-163-empty"

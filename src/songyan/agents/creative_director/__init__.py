@@ -353,6 +353,14 @@ async def generate_creative_brief(
 
     # 构建 CreativeBrief（含字段验证和修正）
     brief = _build_creative_brief(data, mode_profile.id, chapter_goal)
+    concept_budget_constraint = await build_concept_budget_constraint(
+        project_id, chapter_goal.chapter_number
+    )
+    if concept_budget_constraint and not any(
+        "概念预算约束" in item for item in brief.style_constraints
+    ):
+        # Task 165: 确保 Task 163 的规划侧概念预算继续传递到 Writer。
+        brief.style_constraints.append(concept_budget_constraint)
 
     logger.info(
         "creative_director.complete",
