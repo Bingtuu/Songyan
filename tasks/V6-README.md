@@ -1,8 +1,8 @@
 # V6 Task 总索引
 
 > **阶段**: 叙事骨架 MVP + 长篇质量度量 + 可靠长跑底盘
-> **当前口径**: **V6 进行中——阶段 0（叙事骨架 MVP，Task 141-144）、阶段 A（长篇质量度量，Task 145-148 + 148z 阈值标定）、阶段 B（末端治理，Task 149-152）、阶段 C（工程加固，Task 153-156）均已合入；阶段 D 中 Task 157（Ch1-Ch50 集成验证）与 Task 158（Ch1-Ch100 长跑）已完成，Task 159（Ch150 复现 + V6 验收）待执行**。前置 V5（V5.0/V5.1/V5.2）已完整完成并验收（Ch1-Ch150 150/150 accept，`failed=[]`，无 AutoHalt，continuity health=8.5）。V6 论证基础见 `docs/300-chapter-gap-analysis.md`，阶段规划见 `docs/v6-plan.md`，验收阈值见 v6-plan §1.4（T3/T6/T8 已冻结，T4 在 Task 157 首测通过，T5 在 Task 158 首测未冻结、待 159 复核）。任务编号沿用连续编号惯例（V5 收尾于 Task 140），本阶段从 **Task 141** 起连续编号（Task 141-159）。
-> **最后整理**: 2026-07-03（阶段 C 已完成；阶段 D：Task 157/158 已完成，Task 159 待执行）
+> **当前口径**: **V6 全阶段完成——阶段 0（叙事骨架 MVP，Task 141-144）、阶段 A（长篇质量度量，Task 145-148 + 148z 阈值标定）、阶段 B（末端治理，Task 149-152）、阶段 C（工程加固，Task 153-156）、阶段 D（长窗口验证，Task 157-159）均已合入并验收**。阶段 D 收官：Task 157（Ch1-Ch50 + harness）、158（Ch1-Ch100 + T5 首测）、158r（kill→resume 命令级证据）、159（Ch1-Ch150 复现 + V6 阶段验收）全部完成。**V6 阶段验收结论：实质达标，条件通过**——新管线 `run-bba292da` Ch1-Ch150 **150/150 accept、`failed=[]`、health 全程 ≥8.2**、orphan 斜率 0.0897（≪138n 基线 6.28）、无 T3/T4 红线、T5 已冻结（尺寸≤300MB + 扫描耗时改中位数×2.0）；N/D/R 三项 harness 直接 pass；两处 harness fail（T6b 瞬时已 resolved orphan、T5 旧口径缺陷）经复核判为**判据口径待校准项、非治理退化**，列后续工程 Task。前置 V5（V5.0/V5.1/V5.2）已完整完成并验收（Ch1-Ch150 150/150 accept，`failed=[]`，无 AutoHalt，continuity health=8.5）。V6 论证基础见 `docs/300-chapter-gap-analysis.md`，阶段规划见 `docs/v6-plan.md`，验收阈值见 v6-plan §1.4（T3/T4/T5/T6/T8 全部冻结）。任务编号沿用连续编号惯例（V5 收尾于 Task 140），本阶段从 **Task 141** 起连续编号（Task 141-159）。
+> **最后整理**: 2026-07-04（V6 阶段 D 收官：Task 157/158/158r/159 全部完成，V6 阶段验收条件通过）
 
 本文是 V6 阶段任务文档的事实入口。V5 阶段事实入口见 `tasks/V5-README.md`；历史规划稿统一归档到 `archive/`，仅在追溯设计边界时查阅。V6 各任务最终状态以本文件和各 `*-DONE.md` 为准。
 
@@ -81,7 +81,7 @@ V6 通过 = 同时满足以下五项（阈值与术语见 `docs/v6-plan.md` §1.
 |------|------|:----:|----------|
 | 157 | Ch1-Ch50 集成验证 + V6 验收判据 harness（拆 157a/b） | ✅ 完成 | `tasks/157-ch1-ch50-integration-validation-DONE.md`、`docs/reports/task-157-ch1-ch50-integration-validation-report.md` |
 | 158 | Ch1-Ch100 长跑验证 + kill→resume + T5 冻结（拆 158a/b） | ✅ 完成 | `tasks/158-ch1-ch100-long-run-validation-DONE.md`、`docs/reports/task-158-ch1-ch100-long-run-validation-report.md`；kill→resume 真实命令级证据（158r）：`docs/reports/task-158r-kill-resume-drill-report.md` |
-| 159 | Ch1-Ch150 治理管线复现 + V6 阶段验收（拆 159a/b） | ◻ 规划中 | `tasks/159-ch1-ch150-governance-pipeline-replication.md` |
+| 159 | Ch1-Ch150 治理管线复现 + V6 阶段验收（拆 159a/b） | ✅ 完成 | `tasks/159-ch1-ch150-governance-pipeline-replication-DONE.md`、`docs/reports/task-159-v6-final-acceptance-report.md` |
 
 ---
 
