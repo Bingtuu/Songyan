@@ -8,7 +8,8 @@
 |------|------|
 | `AGENTS.md` | 开发代理短指令与不可违背规则 |
 | `docs/STATUS.md` | 当前状态、测试口径、下一步 |
-| `tasks/V6-README.md` | **V6 任务事实入口（当前阶段）**：叙事骨架 MVP + 度量 + 长跑底盘，Task 141-159 |
+| `tasks/V7-README.md` | **V7 任务事实入口（当前阶段）**：篇章级质量修复 → 叙事自驱 → enforce 可生产化 → Ch300 渐进爬坡，Task 160-173 |
+| `tasks/V6-README.md` | V6 任务事实入口（前置阶段）：叙事骨架 MVP + 度量 + 长跑底盘，Task 141-159 |
 | `tasks/V5-README.md` | V5.0 任务事实入口 |
 | `tasks/121a-v50-goal-assessment-and-v51-plan.md` | Task 121a：V5.0 目标评估与 V5.1 规划 |
 | `tasks/121b-ch1-ch150-single-run-rehearsal-DONE.md` | Ch1-Ch150 single-run rehearsal 结果 |
@@ -86,10 +87,12 @@
 
 | 文件 | 用途 |
 |------|------|
-| `tasks/V6-README.md` | **V6 任务事实入口**：Task 141-159 状态、阶段验收判定、依赖关系与执行纪律 |
+| `tasks/V7-README.md` | **V7 任务事实入口（当前阶段）**：Task 160-173 状态、P/L/T/G/V 阶段验收判定、依赖关系与执行纪律 |
+| `tasks/V6-README.md` | V6 任务事实入口（前置）：Task 141-159 状态、阶段验收判定、依赖关系与执行纪律 |
 | `docs/300-chapter-gap-analysis.md` | 300 章卡点与解决路径（含根因：缺自顶向下叙事架构）的代码级分析（V6/V7 论证基础） |
 | `docs/v6-plan.md` | V6 阶段规划：叙事骨架 MVP + 长篇质量度量 + 可靠长跑底盘 + Task 141-159 路线图 |
-| `docs/v7-vision.md` | V7 构想：从叙事骨架到完整线索经济 + 满 Ch300 渐进验证 |
+| `docs/v7-vision.md` | V7 构想（方向性）：从叙事骨架到完整线索经济 + 满 Ch300 渐进验证 |
+| `docs/v7-plan.md` | V7 阶段规划：篇章级质量修复 + 叙事自驱 + enforce 可生产化 + Ch300 渐进爬坡 + Task 160-173 路线图 |
 
 ## 按场景查阅
 
