@@ -305,6 +305,7 @@ class TestConceptBudgetIntegration:
 
         assert any("概念预算约束" in item for item in brief.style_constraints)
         assert any("传递到 Writer 的概念" in item for item in brief.style_constraints)
+        assert any("设定回收约束" in item for item in brief.style_constraints)
 
     async def test_no_ledger_prompt_falls_back_without_constraint(self, test_db: Path) -> None:
         project_id = "proj-163-empty"

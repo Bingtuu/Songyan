@@ -257,6 +257,17 @@ def _format_active_settings_to_recycle(settings: list[dict]) -> str:
     return "\n".join(lines)
 
 
+def _append_style_constraint_once(brief: CreativeBrief, constraint: str) -> None:
+    """把规划侧硬约束传给 Writer，避免重复追加同类约束."""
+    text = constraint.strip()
+    if not text:
+        return
+    title = text.splitlines()[0].strip()
+    if title and any(title in item for item in brief.style_constraints):
+        return
+    brief.style_constraints.append(text)
+
+
 def _format_mode_constraints(mode_profile: CreativeModeProfile) -> str:
     """将 CreativeModeProfile 格式化为约束文本."""
     lines = []
@@ -353,14 +364,22 @@ async def generate_creative_brief(
 
     # 构建 CreativeBrief（含字段验证和修正）
     brief = _build_creative_brief(data, mode_profile.id, chapter_goal)
+    active_settings = await _load_active_settings_to_recycle(
+        project_id, chapter_goal.chapter_number
+    )
+    if active_settings:
+        _append_style_constraint_once(
+            brief,
+            "## 设定回收约束（Task 137 / Task 165）\n"
+            "以下设定已经沉寂或被标记为需要回收，Writer 本章必须优先"
+            "通过行动、冲突、对话或明确剧情后果进行提及/使用/收束：\n"
+            f"{_format_active_settings_to_recycle(active_settings)}",
+        )
     concept_budget_constraint = await build_concept_budget_constraint(
         project_id, chapter_goal.chapter_number
     )
-    if concept_budget_constraint and not any(
-        "概念预算约束" in item for item in brief.style_constraints
-    ):
-        # Task 165: 确保 Task 163 的规划侧概念预算继续传递到 Writer。
-        brief.style_constraints.append(concept_budget_constraint)
+    # Task 165: 确保 Task 163 的规划侧概念预算继续传递到 Writer。
+    _append_style_constraint_once(brief, concept_budget_constraint)
 
     logger.info(
         "creative_director.complete",
