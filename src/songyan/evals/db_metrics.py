@@ -26,10 +26,18 @@ from songyan.db.review_repo import LiteraryObservationRepository
 from songyan.db.run_db_metrics_repo import RunDbMetricsRepository
 from songyan.db.run_quality_debt_repo import RunQualityDebtRepository, RunQualityDebtRow
 from songyan.db.settlement_repo import ForeshadowingRepository
+from songyan.evals.concept_budget import (
+    collect_concept_budget_report,
+    render_concept_budget_section,
+)
 from songyan.evals.db_maintenance_metrics import (
     DbSizeMetrics,
     check_t5_latency_redline,
     check_t5_size_redline,
+)
+from songyan.evals.timeline_consistency import (
+    collect_timeline_conflicts,
+    render_timeline_consistency_section,
 )
 from songyan.models.run_log import ChapterRunLog
 
@@ -253,6 +261,8 @@ async def render_stage_a_metrics(project_id: str, start: int, end: int) -> str:
     arc_fulfillment = await _guard(collect_arc_fulfillment(project_id), [])
     ledger = await _guard(collect_long_range_ledger(project_id, end), [])
     db_samples = await _guard(collect_db_maintenance_samples(project_id, start, end), [])
+    timeline = await _guard(collect_timeline_conflicts(project_id, start, end), ({}, []))
+    concept_budget = await _guard(collect_concept_budget_report(project_id, end), None)
     # 局部导入避免与 v6_acceptance 循环引用（v6_acceptance 已导入本模块）
     from songyan.evals.v6_acceptance import evaluate_v6_acceptance, render_v6_acceptance_section
     acceptance = await _guard(evaluate_v6_acceptance(project_id, start, end), None)
@@ -267,6 +277,8 @@ async def render_stage_a_metrics(project_id: str, start: int, end: int) -> str:
         render_arc_fulfillment_section(arc_fulfillment),
         render_foreshadowing_ledger_section(ledger),
         render_db_maintenance_section(db_samples),
+        render_timeline_consistency_section(timeline[0], timeline[1]),
+        render_concept_budget_section(concept_budget),
     ]
     if acceptance is not None:
         sections.append(render_v6_acceptance_section(acceptance))

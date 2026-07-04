@@ -10,6 +10,7 @@ import structlog
 from songyan.agents.continuity_auditor._scanners import ORPHANED_THRESHOLDS
 from songyan.db.continuity_repo import SettingTrackingRepository
 from songyan.db.human_mark_repo import HumanMarkRepository
+from songyan.evals.concept_budget import build_concept_budget_constraint
 from songyan.exceptions import LLMError, LLMResponseParseError
 from songyan.llm.client import call_llm
 from songyan.models.chapter import ChapterGoal
@@ -101,6 +102,12 @@ async def _render_prompt(
     active_settings = await _load_active_settings_to_recycle(
         project_id, chapter_goal.chapter_number
     )
+    active_settings_text = _format_active_settings_to_recycle(active_settings)
+    concept_budget_constraint = await build_concept_budget_constraint(
+        project_id, chapter_goal.chapter_number
+    )
+    if concept_budget_constraint:
+        active_settings_text = f"{active_settings_text}\n\n{concept_budget_constraint}"
 
     variables = {
         "mode_id": mode_profile.id,
@@ -118,7 +125,7 @@ async def _render_prompt(
         "recent_summaries": previous_summary or "（本章为开篇章节，无前置剧情）",
         "character_states": _format_characters(characters),
         "seed_settings_json": _format_seed_settings(seed_settings),
-        "active_settings_to_recycle": _format_active_settings_to_recycle(active_settings),
+        "active_settings_to_recycle": active_settings_text,
         "mode_constraints": _format_mode_constraints(mode_profile),
         "punch_engine_enabled": mode_profile.id == "webnovel_intense",
     }

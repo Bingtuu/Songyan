@@ -1,8 +1,8 @@
 # V7 Task 总索引
 
 > **阶段**: 篇章级质量修复 → 叙事自驱 → enforce 可生产化 → Ch300 渐进爬坡
-> **当前口径**: **V7 阶段 W 已开工，Task 160-161 已完成，下一步 Task 162 跨章时间线一致性检测**。前置 V6（Task 141-159）已全阶段完成并验收——叙事骨架 MVP、长篇质量度量、末端治理、无人值守长跑底盘，取得真实 Ch1-Ch150 证据（`run-bba292da`，150/150 accept、health 全程 ≥8.2、orphan 斜率 0.0897、T5 已冻结）。V6 阶段验收结论：**实质达标、条件通过**。但对 `run-bba292da` 全 150 章正文的人工通读暴露了 V6 句子级度量掩盖的**篇章级质量债**（52 章元标记泄漏、19 章整段重复/时间线矛盾、中后段概念通胀），这是 V7 阶段 W 的第一性修复对象。V7 论证基础见 `docs/v7-vision.md`，阶段规划与 Task 160-173 路线图见 `docs/v7-plan.md`，V6 收官依据见 `tasks/V6-README.md` 与 `docs/reports/task-159-v6-final-acceptance-report.md`。任务编号沿用连续编号惯例（V6 收尾于 Task 159），本阶段从 **Task 160** 起连续编号。
-> **最后整理**: 2026-07-04（Task 161 完成：分段修订拼接侧长段落去重 + RuleAuditor 重复长段落诊断；下一步 Task 162）
+> **当前口径**: **V7 阶段 W 已开工，Task 160-163 已完成，下一步 Task 164 文本洁净度度量入库 + T9 harness**。前置 V6（Task 141-159）已全阶段完成并验收——叙事骨架 MVP、长篇质量度量、末端治理、无人值守长跑底盘，取得真实 Ch1-Ch150 证据（`run-bba292da`，150/150 accept、health 全程 ≥8.2、orphan 斜率 0.0897、T5 已冻结）。V6 阶段验收结论：**实质达标、条件通过**。但对 `run-bba292da` 全 150 章正文的人工通读暴露了 V6 句子级度量掩盖的**篇章级质量债**（52 章元标记泄漏、19 章整段重复/时间线矛盾、中后段概念通胀），这是 V7 阶段 W 的第一性修复对象。V7 论证基础见 `docs/v7-vision.md`，阶段规划与 Task 160-173 路线图见 `docs/v7-plan.md`，V6 收官依据见 `tasks/V6-README.md` 与 `docs/reports/task-159-v6-final-acceptance-report.md`。任务编号沿用连续编号惯例（V6 收尾于 Task 159），本阶段从 **Task 160** 起连续编号。
+> **最后整理**: 2026-07-04（Task 163 完成：概念台账 MVP + CreativeDirector 概念预算约束注入 + metrics 诊断段；下一步 Task 164）
 
 本文是 V7 阶段任务文档的事实入口。V6 阶段事实入口见 `tasks/V6-README.md`；V5 见 `tasks/V5-README.md`；历史规划稿统一归档到 `archive/`，仅在追溯设计边界时查阅。V7 各任务最终状态以本文件和各 `*-DONE.md` 为准。
 
@@ -44,8 +44,8 @@ V7 通过 = 同时满足以下五项（阈值沿用 v6-plan §1.4 的 T1-T8，V7
 |------|------|:----:|----------|
 | 160 | 元标记泄漏根治（正则补全 + Writer/RevisionHandler 强制清洗 + ReviewMerger 阻塞） | ✅ 完成 | `tasks/160-meta-tag-leak-eradication-DONE.md` |
 | 161 | 段落级去重（整段复制根治 + 重复长段落检测） | ✅ 完成 | `tasks/161-paragraph-dedup-DONE.md` |
-| 162 | 跨章时间线一致性检测（倒计时/时间戳矛盾，先诊断） | ◻ 规划中 | `tasks/162-cross-chapter-timeline-consistency.md` |
-| 163 | 概念预算约束（治概念通胀） | ◻ 规划中 | `tasks/163-concept-budget-constraint.md` |
+| 162 | 跨章时间线一致性检测（倒计时/时间戳矛盾，先诊断） | ✅ 完成 | `tasks/162-cross-chapter-timeline-consistency-DONE.md` |
+| 163 | 概念预算约束（治概念通胀） | ✅ 完成 | `tasks/163-concept-budget-constraint-DONE.md` |
 | 164 | 文本洁净度度量入库 + `songyan report` 展示（T9 harness） | ◻ 规划中 | `tasks/164-text-cleanliness-metrics.md` |
 | 165 | 阶段 W 出口：Ch150 复跑验证 + T9/T10 标定冻结 | ◻ 规划中 | `tasks/165-stage-w-ch150-rerun-and-threshold-freeze.md` |
 
