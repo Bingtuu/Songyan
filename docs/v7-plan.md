@@ -77,7 +77,7 @@ Y（enforce 可生产化 168-170）──┴────────────
 
 | Task | 名称 | 交付要点 |
 |------|------|----------|
-| **160** | 元标记泄漏根治 | 补 `_MARKDOWN_SCENE_PATTERNS` 覆盖裸 `Scene N`（无数字）/`###` 变体；Writer `_extract_body` 默认 `strip_scene_markers=True` **强制清洗**；RuleAuditor 把元标记泄漏 severity 从 `info` 升为 accept 前**阻塞项**；补单测钉死 52 章泄漏样本不复现 |
+| **160** | 元标记泄漏根治 | 补 `_MARKDOWN_SCENE_PATTERNS` 覆盖裸 `Scene N`（无数字）/`###` 变体；Writer/RevisionHandler 复用的 `_extract_body` 默认 `strip_scene_markers=True` **强制清洗**；RuleAuditor 检测结果经 ReviewMerger 转为 accept 前**可修订/可阻塞** `ReviewIssue`；补单测钉死 52 章泄漏样本不复现 |
 | **161** | 段落级去重（整段复制根治） | `_reassemble_content` 拼接后增加**段落级去重**（Ch75 整段逐字复制根因）；RuleAuditor 新增"同章重复长段落"检测（含定位）；补单测钉死 19 章重复样本 |
 | **162** | 跨章时间线一致性检测 | 新增"倒计时/时间戳/日期"跨章矛盾检测（Ch75 时间线矛盾根因）；作为诊断项入 report（不阻塞 accept，先观测）；补单测 |
 | **163** | 概念预算约束（治概念通胀） | 章节规划阶段限制单章新概念引入数；强制"已引入概念先落地再造新的"；conceptual_grounding 下滑触发概念预算收紧（诊断+告警，不自动改写） |

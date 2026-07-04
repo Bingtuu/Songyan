@@ -5,12 +5,14 @@ from __future__ import annotations
 import re
 import time
 import uuid
+from difflib import SequenceMatcher
 from typing import Any
 
 import structlog
 
 from songyan.db.review_repo import ReviewReportRepository
 from songyan.models import (
+    DuplicateParagraphMatch,
     GenreRules,
     MergedReviewReport,
     MetaTagLeakMatch,
@@ -66,8 +68,12 @@ _META_TAG_PATTERNS: list[tuple[str, str]] = [
 ]
 
 _MARKDOWN_SCENE_PATTERNS: list[tuple[str, str]] = [
-    (r"(?im)^\s*###\s*Scene\s+\d+.*", "Markdown场景标题"),
-    (r"(?im)^\s*Scene\s+\d+[:：].*", "裸场景标题"),
+    (r"(?im)^\s*#{1,6}\s*Scene\s+(?:\d+|[A-Z]).*$", "Markdown场景标题"),
+    (r"(?im)^\s*Scene\s+(?:\d+|[A-Z])(?:\s*[:：].*)?\s*$", "裸场景标题"),
+    (r"(?im)^\s*\*\*Scene\s+(?:\d+|[A-Z])\*\*.*$", "加粗场景标题"),
+    (r"(?im)^\s*#{1,6}\s*场景\s*(?:\d+|[A-Z]|[一二三四五六七八九十]+).*$", "Markdown中文场景标题"),
+    (r"(?im)^\s*场景\s*(?:\d+|[A-Z]|[一二三四五六七八九十]+)(?:\s*[:：].*)?\s*$", "裸中文场景标题"),
+    (r"(?im)^\s*\*\*场景\s*(?:\d+|[A-Z]|[一二三四五六七八九十]+)\*\*.*$", "加粗中文场景标题"),
 ]
 
 
@@ -96,7 +102,7 @@ def detect_meta_tag_leaks(text: str) -> list[MetaTagLeakMatch]:
 
 
 def detect_markdown_scene_titles(text: str) -> list[MetaTagLeakMatch]:
-    """检测正文中的 Markdown / 裸场景标题（观测指标）."""
+    """检测正文中的 Markdown / 裸场景标题."""
     matches: list[MetaTagLeakMatch] = []
     seen: set[tuple[int, int]] = set()
     for pattern, tag_type in _MARKDOWN_SCENE_PATTERNS:
@@ -111,11 +117,73 @@ def detect_markdown_scene_titles(text: str) -> list[MetaTagLeakMatch]:
                     pattern=f"{tag_type}: {pattern}",
                     matched_text=m.group(),
                     location=location,
-                    severity="info",
+                    severity="major",
                     message="检测到 Markdown 场景标题（应使用空行分隔场景）",
                 )
             )
     matches.sort(key=lambda x: text.find(x.matched_text))
+    return matches
+
+
+def _normalize_paragraph_for_similarity(paragraph: str) -> str:
+    """归一化段落空白，供重复检测计算相似度."""
+    return re.sub(r"\s+", "", paragraph.strip())
+
+
+def _paragraphs_with_offsets(text: str) -> list[tuple[int, str, int]]:
+    """返回 1-based 段落序号、段落文本和起始偏移."""
+    paragraphs = split_paragraphs(text)
+    result: list[tuple[int, str, int]] = []
+    cursor = 0
+    for idx, paragraph in enumerate(paragraphs, 1):
+        start = text.find(paragraph, cursor)
+        if start < 0:
+            start = text.find(paragraph)
+        if start < 0:
+            start = cursor
+        result.append((idx, paragraph, start))
+        cursor = start + len(paragraph)
+    return result
+
+
+def detect_duplicate_paragraphs(
+    text: str,
+    *,
+    min_chars: int = 100,
+    similarity_threshold: float = 0.9,
+) -> list[DuplicateParagraphMatch]:
+    """检出同章内重复长段落并定位（诊断项，不直接阻断）."""
+    matches: list[DuplicateParagraphMatch] = []
+    seen: list[tuple[int, str, str, int]] = []
+
+    for paragraph_index, paragraph, start in _paragraphs_with_offsets(text):
+        normalized = _normalize_paragraph_for_similarity(paragraph)
+        if len(normalized) < min_chars:
+            continue
+
+        for original_index, original, original_normalized, original_start in seen:
+            similarity = (
+                1.0
+                if normalized == original_normalized
+                else SequenceMatcher(None, original_normalized, normalized).ratio()
+            )
+            if similarity < similarity_threshold:
+                continue
+            matches.append(
+                DuplicateParagraphMatch(
+                    paragraph_index=paragraph_index,
+                    duplicate_of_index=original_index,
+                    matched_text=paragraph,
+                    original_text=original,
+                    location=locate_position(text, start),
+                    original_location=locate_position(text, original_start),
+                    similarity=round(similarity, 4),
+                )
+            )
+            break
+
+        seen.append((paragraph_index, paragraph, normalized, start))
+
     return matches
 
 
@@ -294,17 +362,21 @@ def run_rule_audit(
     meta_tag_matches = detect_meta_tag_leaks(content)
     meta_tag_count = len(meta_tag_matches)
 
-    # 10. Markdown 场景标题检测（观测指标，不直接阻断）
+    # 10. Markdown 场景标题检测
     markdown_scene_title_matches = detect_markdown_scene_titles(content)
     markdown_scene_title_count = len(markdown_scene_title_matches)
 
-    # 11. 短段落比例（观测指标，不直接阻断）
+    # 11. 重复长段落检测（观测指标，不直接阻断）
+    duplicate_paragraph_matches = detect_duplicate_paragraphs(content)
+    duplicate_paragraph_count = len(duplicate_paragraph_matches)
+
+    # 12. 短段落比例（观测指标，不直接阻断）
     short_paragraph_ratio = _short_paragraph_ratio(content, threshold=50)
 
-    # 12. 刺激度检查（Punch Engine）
+    # 13. 刺激度检查（Punch Engine）
     punch_check = _check_punch_points(content, punch_points or [], word_count)
 
-    # 13. Task 138h: 强制连续性约束检查
+    # 14. Task 138h: 强制连续性约束检查
     mr_passed, mr_issues = _check_mandatory_references(content, mandatory_references)
 
     duration_ms = int((time.perf_counter() - start_time) * 1000)
@@ -332,6 +404,8 @@ def run_rule_audit(
         meta_tag_count=meta_tag_count,
         markdown_scene_title_matches=markdown_scene_title_matches,
         markdown_scene_title_count=markdown_scene_title_count,
+        duplicate_paragraph_matches=duplicate_paragraph_matches,
+        duplicate_paragraph_count=duplicate_paragraph_count,
         short_paragraph_ratio=short_paragraph_ratio,
         numerical_issues=numerical_issues,
         punch_check=punch_check,
@@ -477,6 +551,8 @@ def _generate_summary(result: RuleAuditResult) -> str:
         parts.append(
             f"发现 {result.markdown_scene_title_count} 处 Markdown 场景标题（建议改为空行分隔）"
         )
+    if result.duplicate_paragraph_count > 0:
+        parts.append(f"发现 {result.duplicate_paragraph_count} 处重复长段落")
     if result.short_paragraph_ratio > 0.50:
         parts.append(
             f"短段落占比偏高（{result.short_paragraph_ratio:.0%}，建议控制 <50%）"

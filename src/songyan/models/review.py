@@ -92,6 +92,20 @@ class GenericNameMatch(BaseModel):
     matched_text: str
 
 
+class DuplicateParagraphMatch(BaseModel):
+    """重复长段落命中."""
+
+    paragraph_index: int
+    duplicate_of_index: int
+    matched_text: str
+    original_text: str
+    location: str
+    original_location: str
+    similarity: float
+    severity: str = "info"
+    message: str = "检测到重复长段落"
+
+
 class MetaTagLeakMatch(BaseModel):
     """元标记泄漏命中."""
 
@@ -159,6 +173,10 @@ class RuleAuditResult(BaseModel):
     # Markdown 场景标题检测（观测指标，不直接阻断）
     markdown_scene_title_matches: list[MetaTagLeakMatch] = Field(default_factory=list)
     markdown_scene_title_count: int = 0
+
+    # 重复长段落检测（观测指标，不直接阻断）
+    duplicate_paragraph_matches: list[DuplicateParagraphMatch] = Field(default_factory=list)
+    duplicate_paragraph_count: int = 0
 
     # 短段落比例（<50 字，观测指标，不直接阻断）
     short_paragraph_ratio: float = 0.0

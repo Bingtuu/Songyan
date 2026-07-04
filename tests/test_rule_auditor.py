@@ -465,7 +465,7 @@ class TestMarkdownSceneTitleDetection:
         result = run_rule_audit(text, word_count_target=10)
         assert result.markdown_scene_title_count == 1
         assert any("Markdown场景标题" in m.pattern for m in result.markdown_scene_title_matches)
-        assert result.markdown_scene_title_matches[0].severity == "info"
+        assert result.markdown_scene_title_matches[0].severity == "major"
 
     def test_bare_scene_title_detected(self) -> None:
         text = "Scene 2: 控制中心\n警报声响起。"

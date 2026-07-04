@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import re
 import uuid
+from difflib import SequenceMatcher
 
 import structlog
 
@@ -430,8 +431,69 @@ async def run_segmented_revision(
     return output, full_revised
 
 
+def _normalize_paragraph_for_dedup(paragraph: str) -> str:
+    """归一化段落空白，供长段落去重计算相似度."""
+    return re.sub(r"\s+", "", paragraph.strip())
+
+
+def _dedup_long_paragraphs(
+    paragraphs: list[str],
+    *,
+    min_chars: int = 100,
+    similarity_threshold: float = 0.9,
+) -> list[str]:
+    """去除逐字相同/高相似的长段落，保留首次出现；短段落不参与."""
+    kept: list[str] = []
+    seen_long: list[tuple[str, str]] = []
+
+    for paragraph in paragraphs:
+        normalized = _normalize_paragraph_for_dedup(paragraph)
+        if len(normalized) < min_chars:
+            kept.append(paragraph)
+            continue
+
+        duplicate = False
+        for _, seen_normalized in seen_long:
+            similarity = (
+                1.0
+                if normalized == seen_normalized
+                else SequenceMatcher(None, seen_normalized, normalized).ratio()
+            )
+            if similarity >= similarity_threshold:
+                duplicate = True
+                break
+
+        if duplicate:
+            continue
+
+        kept.append(paragraph)
+        seen_long.append((paragraph, normalized))
+
+    return kept
+
+
+def _dedup_reassembled_content(
+    content: str,
+    *,
+    min_chars: int = 100,
+    similarity_threshold: float = 0.9,
+) -> str:
+    """对拼接后的正文做段落级长文本去重."""
+    paragraphs = [
+        block.strip()
+        for block in re.split(r"\n\s*\n", content)
+        if block.strip()
+    ]
+    deduped = _dedup_long_paragraphs(
+        paragraphs,
+        min_chars=min_chars,
+        similarity_threshold=similarity_threshold,
+    )
+    return "\n\n".join(deduped).strip()
+
+
 def _reassemble_content(original_scenes: list[dict], revised_scenes: list[str]) -> str:
-    """按 scene 顺序拼接成完整正文，保留原始 header."""
+    """按 scene 顺序拼接成完整正文，保留原始 header，并去除重复长段落."""
     parts: list[str] = []
     for i, scene in enumerate(original_scenes):
         header = scene.get("header", "")
@@ -439,7 +501,7 @@ def _reassemble_content(original_scenes: list[dict], revised_scenes: list[str]) 
             parts.append(header)
         parts.append(revised_scenes[i])
         parts.append("")
-    return "\n\n".join(parts).strip()
+    return _dedup_reassembled_content("\n\n".join(parts).strip())
 
 
 def _enforce_revision_word_count(

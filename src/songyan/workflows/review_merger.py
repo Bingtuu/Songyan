@@ -10,6 +10,7 @@ from songyan.db.review_repo import ReviewReportRepository
 from songyan.models import (
     LLMAuditResult,
     MergedReviewReport,
+    MetaTagLeakMatch,
     ReviewCategory,
     ReviewIssue,
     RuleAuditResult,
@@ -212,6 +213,34 @@ def _convert_rule_to_issues(
             return text
         return text[:max_len] + "..."
 
+    def _meta_issue(
+        issue_id: str,
+        matches: list[MetaTagLeakMatch],
+        *,
+        title: str,
+        expected: str,
+        suggested_fix: str,
+    ) -> ReviewIssue | None:
+        if not matches:
+            return None
+        quotes = [m.matched_text.strip() for m in matches if m.matched_text.strip()]
+        if not quotes:
+            return None
+        locations = [m.location for m in matches if m.location]
+        return ReviewIssue(
+            issue_id=issue_id,
+            category=ReviewCategory.NARRATIVE_PACING,
+            severity="major",
+            evidence_quote=_clamp("; ".join(quotes[:10])),
+            evidence_location="; ".join(locations[:10]) or "全章",
+            issue_description=f"{title} — 正文中出现 {len(matches)} 处可见元标记。",
+            expected=expected,
+            actual="正文中包含不应展示给读者的结构化标记。",
+            suggested_fix=suggested_fix,
+            fix_type="patch",
+            confidence=1.0,
+        )
+
     # 0. Task 138n: 强制连续性约束未回收 (critical) — 聚合成单个 issue 放在最前面
     if not rule_result.mandatory_reference_check_passed:
         missing_refs = rule_result.mandatory_reference_issues
@@ -241,6 +270,30 @@ def _convert_rule_to_issues(
                     confidence=1.0,
                 )
             )
+
+    # 0b. Task 160: 元标记 / Markdown 场景标题泄漏 (major) — 保护项，不计入普通 cap
+    meta_issue = _meta_issue(
+        f"rule-meta-{version_id}",
+        rule_result.meta_tag_matches,
+        title="元标记泄漏",
+        expected="正文不应包含 HTML 注释、meta 前缀、旧式可见标记等工程元数据。",
+        suggested_fix="删除所有元标记，仅保留自然正文；不要添加解释或替代标记。",
+    )
+    if meta_issue is not None:
+        issues.append(meta_issue)
+
+    scene_issue = _meta_issue(
+        f"rule-scene-{version_id}",
+        rule_result.markdown_scene_title_matches,
+        title="场景标题泄漏",
+        expected=(
+            "正文场景切换应使用空行分隔，不应出现 `### Scene N`、"
+            "`Scene N:`、`场景一` 等标题。"
+        ),
+        suggested_fix="删除场景标题或编号，使用空行保留场景切换；不要改写正文情节。",
+    )
+    if scene_issue is not None:
+        issues.append(scene_issue)
 
     # 1. 章末钩子缺失 (critical)
     if not rule_result.has_ending_hook:
@@ -430,34 +483,23 @@ def _convert_rule_to_issues(
             )
         )
 
-    # 上限保护：MR 聚合 issue 不计入 cap，始终保留
+    # 上限保护：MR / 元标记聚合 issue 不计入 cap，始终保留
     max_rule_issues = 5
-    if issues and issues[0].issue_id.startswith("rule-mr-"):
-        if len(issues) > max_rule_issues + 1:
-            kept = issues[: max_rule_issues + 1]
-            dropped = issues[max_rule_issues + 1 :]
-            issues = kept
-            logger.warning(
-                "review_merger.rule_issues_capped",
-                version_id=version_id,
-                total_found=len(kept) + len(dropped),
-                cap=max_rule_issues,
-                mr_issue_kept=True,
-                dropped_issue_ids=[i.issue_id for i in dropped],
-            )
-    else:
-        if len(issues) > max_rule_issues:
-            kept = issues[:max_rule_issues]
-            dropped = issues[max_rule_issues:]
-            issues = kept
-            logger.warning(
-                "review_merger.rule_issues_capped",
-                version_id=version_id,
-                total_found=len(kept) + len(dropped),
-                cap=max_rule_issues,
-                mr_issue_kept=False,
-                dropped_issue_ids=[i.issue_id for i in dropped],
-            )
+    protected_prefixes = ("rule-mr-", "rule-meta-", "rule-scene-")
+    protected = [i for i in issues if i.issue_id.startswith(protected_prefixes)]
+    regular = [i for i in issues if not i.issue_id.startswith(protected_prefixes)]
+    if len(regular) > max_rule_issues:
+        kept_regular = regular[:max_rule_issues]
+        dropped = regular[max_rule_issues:]
+        issues = protected + kept_regular
+        logger.warning(
+            "review_merger.rule_issues_capped",
+            version_id=version_id,
+            total_found=len(protected) + len(regular),
+            cap=max_rule_issues,
+            protected_issue_count=len(protected),
+            dropped_issue_ids=[i.issue_id for i in dropped],
+        )
 
     return issues
 

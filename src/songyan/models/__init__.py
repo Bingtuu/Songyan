@@ -57,6 +57,7 @@ from songyan.models.project_run import ProjectRunResult, ProjectRunState
 from songyan.models.rag import ChunkMetadata, RAGConfig, RetrievedChunk, TextChunk
 from songyan.models.review import (
     AiTellMatch,
+    DuplicateParagraphMatch,
     FatigueWordMatch,
     GenericNameMatch,
     LLMAuditResult,
@@ -140,6 +141,7 @@ __all__ = [
     "ReviewIssue",
     "RuleAuditResult",
     "AiTellMatch",
+    "DuplicateParagraphMatch",
     "FatigueWordMatch",
     "GenericNameMatch",
     "LLMAuditResult",

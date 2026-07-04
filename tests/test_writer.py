@@ -336,6 +336,13 @@ class TestExtractBody:
         text = "```\n正文\n### Scene 1\n场景\n```"
         result = _extract_body(text)
         assert "正文" in result
+        assert "### Scene 1" not in result
+        assert "```" not in result
+
+    def test_explicitly_preserves_scene_markers_for_internal_parsing(self) -> None:
+        text = "```\n正文\n### Scene 1\n场景\n```"
+        result = _extract_body(text, strip_scene_markers=False)
+        assert "正文" in result
         assert "### Scene 1" in result
         assert "```" not in result
 
@@ -529,9 +536,9 @@ class TestWriteChapter:
                 context_package=ctx,
             )
 
-        # Scene 1: 中文字符 13 + 英文词 3 (Scene, 1, English) = 16
-        # Scene 2: 中文字符 7 + 英文词 2 (Scene, 2) = 9
-        assert version.word_count == 25
+        # Task 160: Scene 标题不再计入最终入库正文。
+        # 第一段：中文字符 13 + 英文词 1 (English) = 14；第二段：中文字符 7。
+        assert version.word_count == 21
 
     async def test_empty_llm_response_warns(self) -> None:
         """空 LLM 响应不再 raise，而是记录 warning 并继续（scene 不足由后续审查捕获）."""

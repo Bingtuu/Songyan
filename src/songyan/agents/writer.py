@@ -22,10 +22,27 @@ logger = structlog.get_logger(__name__)
 
 WORD_COUNT_TOLERANCE = 0.10  # ±10%
 
+_SCENE_MARKER_TOKEN = r"(?:\d+|[A-Z]|[一二三四五六七八九十]+)"
+_SCENE_MARKER_LINE_PATTERNS: tuple[str, ...] = (
+    rf"(?im)^\s*#{{1,6}}\s*Scene\s+{_SCENE_MARKER_TOKEN}.*$",
+    rf"(?im)^\s*Scene\s+{_SCENE_MARKER_TOKEN}(?:\s*[:：].*)?\s*$",
+    rf"(?im)^\s*\*\*Scene\s+{_SCENE_MARKER_TOKEN}\*\*.*$",
+    rf"(?im)^\s*#{{1,6}}\s*场景\s*{_SCENE_MARKER_TOKEN}.*$",
+    rf"(?im)^\s*场景\s*{_SCENE_MARKER_TOKEN}(?:\s*[:：].*)?\s*$",
+    rf"(?im)^\s*\*\*场景\s*{_SCENE_MARKER_TOKEN}\*\*.*$",
+)
+
 
 def _hard_truncate_at_boundary(content: str, max_words: int) -> str:
     """兼容旧 Writer 测试的硬截断入口."""
     return hard_truncate_at_boundary(content, max_words)
+
+
+def _strip_scene_marker_lines(text: str) -> str:
+    """去除正文中泄漏的显式场景编号行."""
+    for pattern in _SCENE_MARKER_LINE_PATTERNS:
+        text = re.sub(pattern, "", text)
+    return re.sub(r"\n{3,}", "\n\n", text)
 
 
 def _compute_scene_budget(word_count_target: int, chapter_type: str) -> str:
@@ -405,7 +422,7 @@ def _render_prompt(ctx: ContextPackage) -> str:
     return rendered.full_prompt
 
 
-def _extract_body(llm_response: str, strip_scene_markers: bool = False) -> str:
+def _extract_body(llm_response: str, strip_scene_markers: bool = True) -> str:
     """从 LLM 响应中提取正文.
 
     去除 markdown 代码块标记、前后说明文字、场景清单、核心事件等元数据。
@@ -430,21 +447,6 @@ def _extract_body(llm_response: str, strip_scene_markers: bool = False) -> str:
     # 去除 LLM 偶尔输出的 `# 第N章` / `## 第N章` / `### 第N章` 标题行
     text = re.sub(r"^#+\s*第\s*\d+\s*章\s*\n?", "", text, flags=re.MULTILINE)
 
-    # 将 `## Scene N` 转换为 `### Scene N`（兼容 LLM 偶尔少写一个 #）
-    text = re.sub(r"^##\s*(Scene\s+\d+)", r"### \1", text, flags=re.MULTILINE | re.IGNORECASE)
-
-    # 去除 LLM 偶尔输出的占位符场景标题（如 `### Scene N`）
-    text = re.sub(r"^###\s*Scene\s+(?!\d).*$\n?", "", text, flags=re.MULTILINE | re.IGNORECASE)
-
-    # 若调用方要求，去除所有显式场景编号（Writer 1.2.0+ 禁止在正文出现场景标题）
-    if strip_scene_markers:
-        text = re.sub(
-            r"^###\s*Scene\s+\d+\s*[:：:]?\s*$\n?",
-            "",
-            text,
-            flags=re.MULTILINE | re.IGNORECASE,
-        )
-
     # 去除场景清单（从 # 场景清单 到 --- 或下一个 ### Scene）
     text = re.sub(
         r"(?i)^#\s*场景清单.*?\n---\s*\n",
@@ -459,14 +461,38 @@ def _extract_body(llm_response: str, strip_scene_markers: bool = False) -> str:
         flags=re.DOTALL,
     )
 
+    # 将 `# Scene N` / `## Scene N` 转换为 `### Scene N`，供显式保留模式解析。
+    if not strip_scene_markers:
+        text = re.sub(
+            r"^#{1,2}\s*(Scene\s+\d+)",
+            r"### \1",
+            text,
+            flags=re.MULTILINE | re.IGNORECASE,
+        )
+
+    # 默认去除所有显式场景编号，使最终入库正文只使用空行分隔场景。
+    if strip_scene_markers:
+        text = _strip_scene_marker_lines(text)
+    else:
+        # 兼容旧路径：占位符标题无法被 scene_parser 解析，直接清理。
+        text = re.sub(
+            r"^###\s*Scene\s+(?!\d).*$\n?",
+            "",
+            text,
+            flags=re.MULTILINE | re.IGNORECASE,
+        )
+
     # 去除以 "核心事件："、"时间："、"地点：" 开头的段落（但保留 ### Scene 后的第一行）
     lines = text.splitlines()
     filtered_lines: list[str] = []
     prev_was_scene_header = False
     for line in lines:
         stripped = line.strip()
-        # 保留 Scene 标题行本身
-        if re.match(r"^###\s*Scene\s+\d+", stripped, re.IGNORECASE):
+        # 显式保留模式下，Scene 标题行供内部 parser 使用。
+        if (
+            not strip_scene_markers
+            and re.match(r"^###\s*Scene\s+\d+", stripped, re.IGNORECASE)
+        ):
             filtered_lines.append(line)
             prev_was_scene_header = True
             continue
@@ -568,19 +594,26 @@ async def write_chapter(
     # 调用 LLM
     llm_response = await call_llm(prompt, temperature=temperature, max_tokens=6000)
 
-    # 提取正文：Writer 1.2.0+ 要求正文内禁止出现场景编号
-    content = _extract_body(llm_response, strip_scene_markers=strict_scenes)
+    # 提取正文：最终入库正文禁止出现场景编号；内部解析可保留标题恢复 scene 边界。
+    parse_content = _extract_body(llm_response, strip_scene_markers=False)
+    content = _extract_body(llm_response)
 
-    # 解析场景：Writer 1.2.0+ 使用严格多场景结构参数
+    # 解析场景：仅当内部文本保留了 scene_parser 可识别的数字标题时使用它，
+    # 避免不可解析的加粗/中文标题残留进 scenes metadata。
+    has_parseable_scene_markers = bool(
+        re.search(r"(?im)^\s*###\s*Scene\s+\d+", parse_content)
+    )
+    scene_source = parse_content if has_parseable_scene_markers else content
+    # Writer 1.2.0+ 使用严格多场景结构参数。
     if strict_scenes:
         scenes = _parse_scenes(
-            content,
+            scene_source,
             min_scene_chars=600,
             max_scene_chars=2400,
             target_scene_chars=1800,
         )
     else:
-        scenes = _parse_scenes(content)
+        scenes = _parse_scenes(scene_source)
     if len(scenes) < 2:
         logger.warning(
             "writer.scenes_count_low",

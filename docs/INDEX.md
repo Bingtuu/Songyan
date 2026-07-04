@@ -9,6 +9,8 @@
 | `AGENTS.md` | 开发代理短指令与不可违背规则 |
 | `docs/STATUS.md` | 当前状态、测试口径、下一步 |
 | `tasks/V7-README.md` | **V7 任务事实入口（当前阶段）**：篇章级质量修复 → 叙事自驱 → enforce 可生产化 → Ch300 渐进爬坡，Task 160-173 |
+| `tasks/160-meta-tag-leak-eradication-DONE.md` | Task 160：元标记泄漏根治（Writer/RevisionHandler 默认清洗 + ReviewMerger 阻塞） |
+| `tasks/161-paragraph-dedup-DONE.md` | Task 161：段落级去重（分段修订拼接去重 + 重复长段落诊断） |
 | `tasks/V6-README.md` | V6 任务事实入口（前置阶段）：叙事骨架 MVP + 度量 + 长跑底盘，Task 141-159 |
 | `tasks/V5-README.md` | V5.0 任务事实入口 |
 | `tasks/121a-v50-goal-assessment-and-v51-plan.md` | Task 121a：V5.0 目标评估与 V5.1 规划 |

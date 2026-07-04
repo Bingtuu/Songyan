@@ -16,7 +16,7 @@
 
 设计核实（2026-07-04，创建前对主干代码核对）：
 
-- **检测信号已由 160-162 产出，但未聚合入库**：160 升级 `detect_markdown_scene_titles`（元标记 count）、161 新增 `detect_duplicate_paragraphs`（重复段 count）、162 新增 `detect_timeline_conflicts`（矛盾对 count）。三者是**逐章检测结果**，但目前**无统一的"洁净度"度量入库 + report 展示**。本 Task 是聚合层。
+- **检测信号已由 160-162 产出，但未聚合入库**：160 补全 `detect_markdown_scene_titles` / `detect_meta_tag_leaks` 并通过 ReviewMerger 接入阻塞链路（元标记 count）、161 新增 `detect_duplicate_paragraphs`（重复段 count）、162 新增 `detect_timeline_conflicts`（矛盾对 count）。三者是**逐章检测结果**，但目前**无统一的"洁净度"度量入库 + report 展示**。本 Task 是聚合层。
 - **度量入库/展示有成熟范式**：V6 阶段 A 的五类曲线走 `render_stage_a_metrics`（`src/songyan/evals/db_metrics.py`），逐章度量持久化 + `songyan metrics --chapters N-M` 渲染。洁净度是**第六类度量**，应沿用同一范式（逐章洁净度记录 + report 段），而非另起炉灶。
 - **T9 harness 对齐 157**：V6 的 `evaluate_v6_acceptance` 产出 T1-T8 三态（pass/fail/undecided），`render_v6_acceptance_section` 渲染。T9（文本洁净度红线）应作为**同类三态判据**接入——`check_t9(project_id, start, end) -> ThresholdResult`，判"全程 accepted 正文洁净度全零"。这样 165 阶段 W 出口能一次性调用、逐章核对。
 - **阈值待 165 冻结**：T9 的"零"是结构性红线（元标记=0/重复=0/矛盾=0），但"时间线矛盾"因 162 是诊断项、可能有误报，T9 是否把矛盾纳入"硬零"还是"仅报告"，需 165 用 Ch150 修复后基线实测决定。本 Task 建 harness 骨架 + 入库 + 展示，**阈值口径留 165 标定冻结**（继承 148z 纪律）。
@@ -36,7 +36,7 @@
 - **不冻结 T9/T10 阈值**（留 Task 165 用 Ch150 修复后基线标定冻结）；本 Task 判据可参数化。
 - 不做文学维度趋势（那是 147 已有的五类之一，T10 冻结在 165）。
 - 不新建独立度量子系统——沿用 `render_stage_a_metrics` 范式接第六段。
-- 不阻塞 accept（洁净度是否作为 accept 硬门在 160 已对元标记做阻塞；本 Task 是**度量与验收判据**，不新增门禁）。
+- 不阻塞 accept（洁净度是否作为 accept 硬门在 160 已通过 `RuleAuditor -> ReviewMerger -> ReviewIssue` 对元标记做阻塞；本 Task 是**度量与验收判据**，不新增门禁）。
 
 ## 接口契约
 
