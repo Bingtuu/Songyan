@@ -13,6 +13,7 @@
 | `tasks/161-paragraph-dedup-DONE.md` | Task 161：段落级去重（分段修订拼接去重 + 重复长段落诊断） |
 | `tasks/162-cross-chapter-timeline-consistency-DONE.md` | Task 162：跨章时间线一致性诊断（确定性时间信号 + metrics 诊断段） |
 | `tasks/163-concept-budget-constraint-DONE.md` | Task 163：概念预算约束（概念台账 + CreativeDirector 规划侧约束 + metrics 诊断段） |
+| `tasks/164-text-cleanliness-metrics-DONE.md` | Task 164：文本洁净度度量入库 + metrics 展示 + T9 harness |
 | `tasks/V6-README.md` | V6 任务事实入口（前置阶段）：叙事骨架 MVP + 度量 + 长跑底盘，Task 141-159 |
 | `tasks/V5-README.md` | V5.0 任务事实入口 |
 | `tasks/121a-v50-goal-assessment-and-v51-plan.md` | Task 121a：V5.0 目标评估与 V5.1 规划 |

@@ -35,6 +35,10 @@ from songyan.evals.db_maintenance_metrics import (
     check_t5_latency_redline,
     check_t5_size_redline,
 )
+from songyan.evals.text_cleanliness import (
+    refresh_text_cleanliness_metrics,
+    render_text_cleanliness_section,
+)
 from songyan.evals.timeline_consistency import (
     collect_timeline_conflicts,
     render_timeline_consistency_section,
@@ -263,6 +267,9 @@ async def render_stage_a_metrics(project_id: str, start: int, end: int) -> str:
     db_samples = await _guard(collect_db_maintenance_samples(project_id, start, end), [])
     timeline = await _guard(collect_timeline_conflicts(project_id, start, end), ({}, []))
     concept_budget = await _guard(collect_concept_budget_report(project_id, end), None)
+    text_cleanliness = await _guard(
+        refresh_text_cleanliness_metrics(project_id, start, end), []
+    )
     # 局部导入避免与 v6_acceptance 循环引用（v6_acceptance 已导入本模块）
     from songyan.evals.v6_acceptance import evaluate_v6_acceptance, render_v6_acceptance_section
     acceptance = await _guard(evaluate_v6_acceptance(project_id, start, end), None)
@@ -279,6 +286,7 @@ async def render_stage_a_metrics(project_id: str, start: int, end: int) -> str:
         render_db_maintenance_section(db_samples),
         render_timeline_consistency_section(timeline[0], timeline[1]),
         render_concept_budget_section(concept_budget),
+        render_text_cleanliness_section(text_cleanliness),
     ]
     if acceptance is not None:
         sections.append(render_v6_acceptance_section(acceptance))

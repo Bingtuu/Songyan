@@ -57,6 +57,8 @@ _EXPECTED_TABLES: list[str] = [
     "run_quality_debt",
     # V6 阶段 C: run 级 DB 维护遥测
     "run_db_metrics",
+    # V7 阶段 W: 文本洁净度逐章度量
+    "text_cleanliness_metrics",
 ]
 
 
@@ -607,6 +609,29 @@ async def _migrate_run_db_metrics(conn: aiosqlite.Connection) -> None:
     )
 
 
+async def _migrate_text_cleanliness_metrics(conn: aiosqlite.Connection) -> None:
+    """创建文本洁净度逐章度量表（V7 Task 164）."""
+    await conn.execute(
+        """CREATE TABLE IF NOT EXISTS text_cleanliness_metrics (
+            project_id                 TEXT NOT NULL
+                                        REFERENCES projects(project_id) ON DELETE CASCADE,
+            chapter_number             INTEGER NOT NULL,
+            version_id                 TEXT NOT NULL
+                                        REFERENCES chapter_versions(version_id) ON DELETE CASCADE,
+            meta_tag_leak_count        INTEGER NOT NULL DEFAULT 0,
+            duplicate_paragraph_count  INTEGER NOT NULL DEFAULT 0,
+            timeline_conflict_count    INTEGER NOT NULL DEFAULT 0,
+            details_json               TEXT DEFAULT '{}',
+            updated_at                 TEXT DEFAULT (datetime('now')),
+            PRIMARY KEY(project_id, chapter_number)
+        )"""
+    )
+    await conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_text_cleanliness_project_chapter "
+        "ON text_cleanliness_metrics(project_id, chapter_number)"
+    )
+
+
 async def init_schema(db_path: str | Path | None = None) -> None:
     """读取 schema.sql 并执行，幂等（所有 CREATE 带 IF NOT EXISTS）.
 
@@ -651,6 +676,7 @@ async def init_schema(db_path: str | Path | None = None) -> None:
         await _migrate_run_quality_debt(conn)
         await _migrate_setting_tracking_lifecycle_columns(conn)
         await _migrate_run_db_metrics(conn)
+        await _migrate_text_cleanliness_metrics(conn)
         await conn.commit()
 
 
@@ -703,4 +729,5 @@ async def run_migrations(conn: aiosqlite.Connection) -> None:
     await _migrate_run_quality_debt(conn)
     await _migrate_setting_tracking_lifecycle_columns(conn)
     await _migrate_run_db_metrics(conn)
+    await _migrate_text_cleanliness_metrics(conn)
     logger.info("migrations.run_all", status="complete")

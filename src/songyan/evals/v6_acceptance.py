@@ -36,6 +36,7 @@ from songyan.evals.db_metrics import (
     detect_literary_trend,
     linear_slope,
 )
+from songyan.evals.text_cleanliness import collect_text_cleanliness_metrics
 
 # --------------------------------------------------------------------------- #
 # 阈值常量（出处见 docs/v6-plan.md §1.4 与 tasks/148z-stage-a-threshold-calibration-DONE.md）
@@ -573,6 +574,72 @@ async def check_health_low(
     )
 
 
+async def check_t9(
+    project_id: str,
+    start: int,
+    end: int,
+    *,
+    include_timeline_in_redline: bool = False,
+) -> ThresholdResult:
+    """T9: accepted 正文元标记=0、重复长段落=0；时间线口径待 V7 Task 165 冻结."""
+    rows = await collect_text_cleanliness_metrics(project_id, start, end, persist=False)
+    expected = list(range(start, end + 1))
+    present = {row.chapter_number for row in rows}
+    missing = [chapter for chapter in expected if chapter not in present]
+    if not rows or missing:
+        return ThresholdResult(
+            key="T9",
+            passed=None,
+            measured=f"{len(rows)}/{len(expected)}",
+            threshold="meta=0; duplicate=0; timeline configurable",
+            sufficient=False,
+            detail=(
+                f"洁净度样本不足；缺失章: {missing[:20]}"
+                if missing
+                else "无 accepted 正文洁净度样本"
+            ),
+        )
+
+    meta_chapters = [row.chapter_number for row in rows if row.meta_tag_leak_count > 0]
+    duplicate_chapters = [
+        row.chapter_number for row in rows if row.duplicate_paragraph_count > 0
+    ]
+    timeline_chapters = [
+        row.chapter_number for row in rows if row.timeline_conflict_count > 0
+    ]
+    timeline_breached = bool(timeline_chapters) and include_timeline_in_redline
+    passed = not meta_chapters and not duplicate_chapters and not timeline_breached
+    measured = (
+        f"meta={sum(row.meta_tag_leak_count for row in rows)}, "
+        f"duplicate={sum(row.duplicate_paragraph_count for row in rows)}, "
+        f"timeline={sum(row.timeline_conflict_count for row in rows)}"
+    )
+    threshold = (
+        "meta=0; duplicate=0; timeline=0"
+        if include_timeline_in_redline
+        else "meta=0; duplicate=0; timeline report-only"
+    )
+    detail_parts = []
+    if meta_chapters:
+        detail_parts.append(f"元标记违规章: {meta_chapters[:20]}")
+    if duplicate_chapters:
+        detail_parts.append(f"重复长段落违规章: {duplicate_chapters[:20]}")
+    if timeline_chapters:
+        label = "时间线红线章" if include_timeline_in_redline else "时间线诊断章"
+        detail_parts.append(f"{label}: {timeline_chapters[:20]}")
+    if not detail_parts:
+        detail_parts.append("T9 洁净度红线未破")
+
+    return ThresholdResult(
+        key="T9",
+        passed=passed,
+        measured=measured,
+        threshold=threshold,
+        sufficient=True,
+        detail="；".join(detail_parts),
+    )
+
+
 # --------------------------------------------------------------------------- #
 # 聚合入口
 # --------------------------------------------------------------------------- #
@@ -588,6 +655,7 @@ async def evaluate_v6_acceptance(
     orphan_slope_threshold: float = _T6A_ORPHAN_SLOPE_THRESHOLD,
     orphan_slope_baseline: float = _T6A_ORPHAN_SLOPE_BASELINE,
     t7_rate_baseline: float = _T6C_T7_RATE_BASELINE,
+    t9_include_timeline_in_redline: bool = False,
 ) -> V6AcceptanceResult:
     """对 (project, 章范围) 执行全部 V6 红线判定，返回三态结果.
 
@@ -620,6 +688,12 @@ async def evaluate_v6_acceptance(
         await check_t3_t8(project_id, start, end),
         check_t4(run_logs),
         await check_t5(project_id, run_id=run_id),
+        await check_t9(
+            project_id,
+            start,
+            end,
+            include_timeline_in_redline=t9_include_timeline_in_redline,
+        ),
         await check_health_low(project_id, start, end),
     ]
 

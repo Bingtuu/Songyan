@@ -490,3 +490,20 @@ CREATE TABLE IF NOT EXISTS run_db_metrics (
 CREATE INDEX IF NOT EXISTS idx_run_db_metrics_run ON run_db_metrics(run_id);
 CREATE INDEX IF NOT EXISTS idx_run_db_metrics_project_chapter
     ON run_db_metrics(project_id, chapter_number);
+
+-- ============================================================
+-- 24. text_cleanliness_metrics — 文本洁净度逐章度量（V7 Task 164）
+-- ============================================================
+CREATE TABLE IF NOT EXISTS text_cleanliness_metrics (
+    project_id                 TEXT NOT NULL REFERENCES projects(project_id) ON DELETE CASCADE,
+    chapter_number             INTEGER NOT NULL,
+    version_id                 TEXT NOT NULL REFERENCES chapter_versions(version_id) ON DELETE CASCADE,
+    meta_tag_leak_count        INTEGER NOT NULL DEFAULT 0,
+    duplicate_paragraph_count  INTEGER NOT NULL DEFAULT 0,
+    timeline_conflict_count    INTEGER NOT NULL DEFAULT 0,
+    details_json               TEXT DEFAULT '{}',
+    updated_at                 TEXT DEFAULT (datetime('now')),
+    PRIMARY KEY(project_id, chapter_number)
+);
+CREATE INDEX IF NOT EXISTS idx_text_cleanliness_project_chapter
+    ON text_cleanliness_metrics(project_id, chapter_number);
