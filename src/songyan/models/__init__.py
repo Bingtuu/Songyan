@@ -33,6 +33,13 @@ from songyan.models.creative_mode import (
     PunchPoint,
     Tension,
 )
+from songyan.models.foreshadowing_schedule import (
+    ForeshadowingScheduleItem,
+    ForeshadowingSchedulePlan,
+    ForeshadowingScheduleReason,
+    ForeshadowingScheduleSourceType,
+    ForeshadowingScheduleStatus,
+)
 from songyan.models.gate_config import GateConfig
 from songyan.models.genre import (
     EmotionArc,
@@ -143,6 +150,12 @@ __all__ = [
     "VolumeSummary",
     "PermanentScene",
     "OpenThread",
+    # V7 Task 167a: active foreshadowing scheduling
+    "ForeshadowingSchedulePlan",
+    "ForeshadowingScheduleItem",
+    "ForeshadowingScheduleStatus",
+    "ForeshadowingScheduleSourceType",
+    "ForeshadowingScheduleReason",
     # V6 阶段 0 新增：叙事骨架（前置规划）
     "StoryOutline",
     "ArcPlan",

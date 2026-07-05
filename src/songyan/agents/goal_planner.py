@@ -62,11 +62,16 @@ def _format_foreshadowing_lines(items: list[dict]) -> str:
     """将临近伏笔列表格式化为 prompt 文本（空则显示"（无）"）."""
     if not items:
         return "（无）"
-    return "\n".join(
-        f"- {f.get('description', '')}"
-        f"（预计第 {f.get('expected_resolve_chapter', '?')} 章兑现）"
-        for f in items
-    )
+    lines: list[str] = []
+    for item in items:
+        source_id = item.get("foreshadowing_id") or item.get("source_id") or ""
+        description = item.get("description", "")
+        expected = item.get("expected_resolve_chapter") or item.get("target_chapter") or "?"
+        rationale = item.get("rationale", "")
+        prefix = f"[{source_id}] " if source_id else ""
+        suffix = f"，原因：{rationale}" if rationale else ""
+        lines.append(f"- {prefix}{description}（预计第 {expected} 章兑现{suffix}）")
+    return "\n".join(lines)
 
 
 def _render_prompt(
@@ -116,7 +121,7 @@ def _render_prompt(
                     narrative_ctx.threads_to_resolve
                 ),
                 "due_foreshadowings": _format_foreshadowing_lines(
-                    narrative_ctx.due_foreshadowings
+                    [*narrative_ctx.due_foreshadowings, *narrative_ctx.scheduled_items]
                 ),
             }
         )

@@ -65,7 +65,7 @@ V6 证明了系统"有骨架、看得见质量、能可靠跑到 Ch150"，但对
 >
 > **拆分粒度（2026-07-04 基于 V5/V6 测试历史 review 后确定）**：初稿 10 个 Task 严重低估了 V7 爬坡难度。V6 历史规律——全部 19 个 Task 都拆了 a/b/c，仅 enforce 一项就用了 8 个 Task（123-130）——证明"文学修复""enforce 自适应""长窗口 scaling"都是撞墙密集区。据此把 V7 扩到 **17 个 Task**：把原 161 拆成"段落去重"+"时间线一致"两个独立 Task；把原单个 enforce Task 扩成 3 个（数据面/判定/验证）；并为 Ch200/250/300 每级预留一个 `NNNp` **撞墙定点修复占位 Task**（内容待实跑反馈确定，不预先发明）。复杂 Task 在文档内再拆 a/b。
 >
-> **文档编写策略（2026-07-04 确认，2026-07-05 更新）**：本 plan 为**全局骨架**；阶段 W（160-165p）已落地并通过，阶段 X 起点 Task 166 已完成。后续 167 与 Y/Z 的详细文档继续按前置 evidence 递进补齐——避免 V6 "文档超前 → 返工"的教训。下表未细化行仍是方向性占位，交付要点会在写详细文档时按实测细化。
+> **文档编写策略（2026-07-04 确认，2026-07-05 更新）**：本 plan 为**全局骨架**；阶段 W（160-165p）已落地并通过，阶段 X 的 Task 166/167 已完成。后续 Y/Z 的详细文档继续按前置 evidence 递进补齐——避免 V6 "文档超前 → 返工"的教训。下表未细化行仍是方向性占位，交付要点会在写详细文档时按实测细化。
 
 ```
 W（篇章级质量修复 160-165p）─────────────► Z（171 Ch200 → 172 Ch250 → 173 Ch300）
@@ -92,7 +92,7 @@ Y（enforce 可生产化 168-170）──┴────────────
 | **166** | plan→generate→re-plan 闭环总览 | 已完成：`tasks/166-plan-generate-replan-loop-DONE.md`；166a/166b 已分别完成提案生成与人工确认后的事务化应用 |
 | **166a** | 弧后评估与 ReplanProposal 生成 | 已完成：从 SQLite 读取 ArcPlan / PlotThread / summaries / T9/T10/T6/T7，生成 draft proposal，不修改规划表 |
 | **166b** | 人工确认后的 re-plan 应用 | 已完成：approved proposal 事务化应用到未来 ArcPlan / PlotThread / planning constraints，保留 diff 并支持 rollback |
-| **167** | 长程伏笔主动兑现调度（方向二；拆 167a 调度器 / 167b 生命周期） | 章节规划阶段把"临近兑现窗口的长线伏笔/本弧应收束线索"作为候选主题主动喂入；区分短线（弧内）vs 主线长线（跨数十章）生命周期；弧级兑现率成为一等驱动信号 |
+| **167** | 长程伏笔主动兑现调度（拆 167a 调度计划 / 167b 注入与生命周期） | 已完成：`tasks/167-long-range-foreshadowing-active-scheduling-DONE.md`；active 调度项已注入 GoalPlanner / CreativeDirector，accept 后推进 `satisfied/missed` 生命周期；不自动改正文，不启动 Ch200 |
 
 ### 阶段 Y：enforce 门禁可生产化（方向三）— 占位，对标 V6 enforce 8-Task 先例拆 3 个
 

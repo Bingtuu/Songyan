@@ -1,8 +1,8 @@
 # V7 Task 总索引
 
 > **阶段**: 篇章级质量修复 → 叙事自驱 → enforce 可生产化 → Ch300 渐进爬坡
-> **当前口径**: **V7 阶段 W 已通过，Task 166 已完成，下一步规划 Task 167**。Task 166a 已提供离线弧后评估与 draft `ReplanProposal` 生成能力；Task 166b 已实现人工确认后的事务化应用。re-plan 默认不改正文、不接入主 workflow，且 Task 165/165p 的 T9/T10 冻结口径未改动。Task 166 总结见 `tasks/166-plan-generate-replan-loop-DONE.md`。
-> **最后整理**: 2026-07-05（Task 166 完成；下一步规划 Task 167）
+> **当前口径**: **V7 阶段 W 已通过，Task 166/167 已完成，下一步规划 Task 168**。167 已能生成 draft `ForeshadowingSchedulePlan`，将主线线索、临近/逾期伏笔和 Task 166 的 `planning_constraints` 转化为主动调度项，并把 active 调度项注入 GoalPlanner / CreativeDirector 的规划侧输入；accept 后推进 `injected/satisfied/missed` 生命周期。
+> **最后整理**: 2026-07-05（Task 167 完成；下一步规划 Task 168）
 
 本文是 V7 阶段任务文档的事实入口。V6 阶段事实入口见 `tasks/V6-README.md`；V5 见 `tasks/V5-README.md`；历史规划稿统一归档到 `archive/`，仅在追溯设计边界时查阅。V7 各任务最终状态以本文件和各 `*-DONE.md` 为准。
 
@@ -57,7 +57,9 @@ V7 通过 = 同时满足以下五项（阈值沿用 v6-plan §1.4 的 T1-T8，V7
 | 166 | plan→generate→re-plan 闭环总览 | ✅ 完成 | `tasks/166-plan-generate-replan-loop-DONE.md` |
 | 166a | 弧后评估与 ReplanProposal 生成 | ✅ 完成 | `tasks/166a-arc-outcome-evaluation-and-replan-proposal-DONE.md` |
 | 166b | 人工确认后的 re-plan 应用 | ✅ 完成 | `tasks/166b-approved-replan-application-DONE.md` |
-| 167 | 长程伏笔主动兑现调度（拆 167a/b） | ⏳ 占位 | 下一步规划 |
+| 167 | 长程伏笔主动兑现调度（拆 167a/b） | ✅ 完成 | `tasks/167-long-range-foreshadowing-active-scheduling-DONE.md` |
+| 167a | 主动伏笔调度计划生成 | ✅ 完成 | `tasks/167a-foreshadowing-schedule-plan-DONE.md` |
+| 167b | 调度计划注入与生命周期推进 | ✅ 完成 | `tasks/167b-schedule-injection-and-lifecycle-DONE.md` |
 
 ### 阶段 Y：enforce 门禁可生产化
 
@@ -92,14 +94,14 @@ Y（enforce 可生产化 168-170）──┴────────────
 - **阶段 W 出口已完成并冻结 T9/T10**：Task 165/165p 已确认阶段 W 通过，T9/T10 已冻结；后续 X/Y/Z 不得在长跑撞线后临时放宽冻结口径。
 - **X 与 Y 可部分并行**：不同代码域（自驱在规划侧、门禁在 gate 侧）。
 - **Z 必须在 W+X+Y 落地后**：171/172/173 长跑是终检，每级出口未达标不进下一级；每级预留 `NNNp` 撞墙定点修复占位。
-- **文档递进纪律**：166/166a/166b 已按阶段 W 结果落地；后续 167 与阶段 Y/Z 详细 Task 文档继续按前置 evidence 递进补齐，避免文档超前返工。
+- **文档递进纪律**：166/166a/166b 与 167 已按阶段 W/Task 166 结果落地；后续阶段 Y/Z 详细 Task 文档继续按前置 evidence 递进补齐，避免文档超前返工。
 
 ---
 
 ## 编写策略与拆分依据（2026-07-04）
 
 - **拆分粒度**：基于 V5/V6 测试历史 review——V6 全部 19 Task 拆 a/b/c、enforce 单项用 8 Task（123-130）——确认初稿 10 Task 低估爬坡难度，扩为 **17 Task**：161 拆成去重+时间线两个独立 Task、enforce 扩为 3 Task（数据面/判定/验证）、Ch200/250/300 每级带 `NNNp` 撞墙定点修复占位。
-- **文档策略**：v7-plan 为全局骨架；阶段 W（160-165p）与阶段 X 起点（166/166a/166b）已落地详细文档；后续 167 与 Y/Z 仍保持方向性占位，待前置数据出炉后写。
+- **文档策略**：v7-plan 为全局骨架；阶段 W（160-165p）与阶段 X 的 166/167 已落地详细文档；后续 Y/Z 仍保持方向性占位，待前置数据出炉后写。
 
 ---
 

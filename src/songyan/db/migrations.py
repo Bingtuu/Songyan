@@ -63,6 +63,9 @@ _EXPECTED_TABLES: list[str] = [
     "replan_proposals",
     "replan_actions",
     "planning_constraints",
+    # V7 阶段 X: active foreshadowing scheduling（Task 167a）
+    "foreshadowing_schedule_plans",
+    "foreshadowing_schedule_items",
 ]
 
 
@@ -724,6 +727,77 @@ async def _migrate_replan_proposals(conn: aiosqlite.Connection) -> None:
     )
 
 
+async def _migrate_foreshadowing_schedule(conn: aiosqlite.Connection) -> None:
+    """创建主动伏笔调度表（V7 Task 167a）."""
+    await conn.execute(
+        """CREATE TABLE IF NOT EXISTS foreshadowing_schedule_plans (
+            plan_id            TEXT PRIMARY KEY,
+            project_id         TEXT NOT NULL
+                               REFERENCES projects(project_id) ON DELETE CASCADE,
+            target_chapter     INTEGER NOT NULL,
+            current_arc_index  INTEGER,
+            horizon_chapters   INTEGER NOT NULL DEFAULT 5,
+            max_items          INTEGER NOT NULL DEFAULT 3,
+            status             TEXT NOT NULL DEFAULT 'draft'
+                               CHECK(status IN (
+                                   'draft', 'active', 'injected',
+                                   'satisfied', 'missed', 'cancelled'
+                               )),
+            summary            TEXT DEFAULT '',
+            evidence_json      TEXT DEFAULT '{}',
+            created_at         TEXT DEFAULT (datetime('now')),
+            updated_at         TEXT DEFAULT (datetime('now'))
+        )"""
+    )
+    await conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_foreshadowing_schedule_plans_project "
+        "ON foreshadowing_schedule_plans(project_id, target_chapter)"
+    )
+    await conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_foreshadowing_schedule_plans_status "
+        "ON foreshadowing_schedule_plans(project_id, status)"
+    )
+    await conn.execute(
+        """CREATE TABLE IF NOT EXISTS foreshadowing_schedule_items (
+            item_id        TEXT PRIMARY KEY,
+            plan_id        TEXT NOT NULL
+                           REFERENCES foreshadowing_schedule_plans(plan_id)
+                           ON DELETE CASCADE,
+            project_id     TEXT NOT NULL
+                           REFERENCES projects(project_id) ON DELETE CASCADE,
+            item_order     INTEGER NOT NULL DEFAULT 0,
+            target_chapter INTEGER NOT NULL,
+            source_type    TEXT NOT NULL,
+            source_id      TEXT NOT NULL,
+            title          TEXT DEFAULT '',
+            description    TEXT DEFAULT '',
+            priority_score REAL NOT NULL DEFAULT 0,
+            reason_codes   TEXT DEFAULT '[]',
+            rationale      TEXT DEFAULT '',
+            status         TEXT NOT NULL DEFAULT 'draft'
+                           CHECK(status IN (
+                               'draft', 'active', 'injected',
+                               'satisfied', 'missed', 'cancelled'
+                           )),
+            evidence_json  TEXT DEFAULT '{}',
+            created_at     TEXT DEFAULT (datetime('now')),
+            UNIQUE(plan_id, item_order)
+        )"""
+    )
+    await conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_foreshadowing_schedule_items_plan "
+        "ON foreshadowing_schedule_items(plan_id, item_order)"
+    )
+    await conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_foreshadowing_schedule_items_project_source "
+        "ON foreshadowing_schedule_items(project_id, source_type, source_id, target_chapter)"
+    )
+    await conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_foreshadowing_schedule_items_status "
+        "ON foreshadowing_schedule_items(project_id, status)"
+    )
+
+
 async def init_schema(db_path: str | Path | None = None) -> None:
     """读取 schema.sql 并执行，幂等（所有 CREATE 带 IF NOT EXISTS）.
 
@@ -770,6 +844,7 @@ async def init_schema(db_path: str | Path | None = None) -> None:
         await _migrate_run_db_metrics(conn)
         await _migrate_text_cleanliness_metrics(conn)
         await _migrate_replan_proposals(conn)
+        await _migrate_foreshadowing_schedule(conn)
         await conn.commit()
 
 
@@ -824,4 +899,5 @@ async def run_migrations(conn: aiosqlite.Connection) -> None:
     await _migrate_run_db_metrics(conn)
     await _migrate_text_cleanliness_metrics(conn)
     await _migrate_replan_proposals(conn)
+    await _migrate_foreshadowing_schedule(conn)
     logger.info("migrations.run_all", status="complete")

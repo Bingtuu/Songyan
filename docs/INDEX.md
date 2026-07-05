@@ -20,6 +20,10 @@
 | `tasks/166-plan-generate-replan-loop-DONE.md` | Task 166：plan→generate→re-plan 闭环总览（已完成） |
 | `tasks/166a-arc-outcome-evaluation-and-replan-proposal-DONE.md` | Task 166a：弧后评估与 ReplanProposal 生成（已完成） |
 | `tasks/166b-approved-replan-application-DONE.md` | Task 166b：人工确认后的 re-plan 应用（已完成） |
+| `tasks/167-long-range-foreshadowing-active-scheduling.md` | Task 167：长程伏笔主动兑现调度（规划文档，拆 167a/167b） |
+| `tasks/167-long-range-foreshadowing-active-scheduling-DONE.md` | Task 167：长程伏笔主动兑现调度（已完成） |
+| `tasks/167a-foreshadowing-schedule-plan-DONE.md` | Task 167a：主动伏笔调度计划生成（已完成） |
+| `tasks/167b-schedule-injection-and-lifecycle-DONE.md` | Task 167b：调度计划注入与生命周期推进（已完成） |
 | `tasks/V6-README.md` | V6 任务事实入口（前置阶段）：叙事骨架 MVP + 度量 + 长跑底盘，Task 141-159 |
 | `tasks/V5-README.md` | V5.0 任务事实入口 |
 | `tasks/121a-v50-goal-assessment-and-v51-plan.md` | Task 121a：V5.0 目标评估与 V5.1 规划 |

@@ -125,6 +125,31 @@ class ForeshadowingRepository:
             for row in rows
         ]
 
+    async def list_schedulable(self, project_id: str) -> list[ForeshadowingItem]:
+        """返回可进入主动调度的 active 伏笔（含 overdue）."""
+        async with get_db() as conn:
+            conn.row_factory = Row
+            cursor = await conn.execute(
+                """SELECT * FROM foreshadowings
+                WHERE project_id = ?
+                  AND lifecycle_status = 'active'
+                  AND status IN ('planted', 'due', 'overdue')
+                ORDER BY planted_in_chapter, foreshadowing_id""",
+                (project_id,),
+            )
+            rows = await cursor.fetchall()
+        return [
+            ForeshadowingItem(
+                foreshadowing_id=row["foreshadowing_id"],
+                description=row["description"],
+                planted_in_chapter=row["planted_in_chapter"],
+                expected_resolve_chapter=row["expected_resolve_chapter"],
+                status=row["status"],
+                source_version_id=row["source_version_id"],
+            )
+            for row in rows
+        ]
+
     async def archive_overdue(
         self, project_id: str, current_chapter: int, window: int = 5,
         conn: aiosqlite.Connection | None = None,

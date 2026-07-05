@@ -573,3 +573,58 @@ CREATE INDEX IF NOT EXISTS idx_planning_constraints_project
     ON planning_constraints(project_id, status);
 CREATE INDEX IF NOT EXISTS idx_planning_constraints_source
     ON planning_constraints(source_proposal_id);
+
+-- ============================================================
+-- 26. foreshadowing_schedule_* — 主动伏笔调度（V7 Task 167a）
+-- ============================================================
+CREATE TABLE IF NOT EXISTS foreshadowing_schedule_plans (
+    plan_id            TEXT PRIMARY KEY,
+    project_id         TEXT NOT NULL REFERENCES projects(project_id) ON DELETE CASCADE,
+    target_chapter     INTEGER NOT NULL,
+    current_arc_index  INTEGER,
+    horizon_chapters   INTEGER NOT NULL DEFAULT 5,
+    max_items          INTEGER NOT NULL DEFAULT 3,
+    status             TEXT NOT NULL DEFAULT 'draft'
+                       CHECK(status IN (
+                           'draft', 'active', 'injected',
+                           'satisfied', 'missed', 'cancelled'
+                       )),
+    summary            TEXT DEFAULT '',
+    evidence_json      TEXT DEFAULT '{}',
+    created_at         TEXT DEFAULT (datetime('now')),
+    updated_at         TEXT DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_foreshadowing_schedule_plans_project
+    ON foreshadowing_schedule_plans(project_id, target_chapter);
+CREATE INDEX IF NOT EXISTS idx_foreshadowing_schedule_plans_status
+    ON foreshadowing_schedule_plans(project_id, status);
+
+CREATE TABLE IF NOT EXISTS foreshadowing_schedule_items (
+    item_id        TEXT PRIMARY KEY,
+    plan_id        TEXT NOT NULL REFERENCES foreshadowing_schedule_plans(plan_id)
+                   ON DELETE CASCADE,
+    project_id     TEXT NOT NULL REFERENCES projects(project_id) ON DELETE CASCADE,
+    item_order     INTEGER NOT NULL DEFAULT 0,
+    target_chapter INTEGER NOT NULL,
+    source_type    TEXT NOT NULL,
+    source_id      TEXT NOT NULL,
+    title          TEXT DEFAULT '',
+    description    TEXT DEFAULT '',
+    priority_score REAL NOT NULL DEFAULT 0,
+    reason_codes   TEXT DEFAULT '[]',
+    rationale      TEXT DEFAULT '',
+    status         TEXT NOT NULL DEFAULT 'draft'
+                   CHECK(status IN (
+                       'draft', 'active', 'injected',
+                       'satisfied', 'missed', 'cancelled'
+                   )),
+    evidence_json  TEXT DEFAULT '{}',
+    created_at     TEXT DEFAULT (datetime('now')),
+    UNIQUE(plan_id, item_order)
+);
+CREATE INDEX IF NOT EXISTS idx_foreshadowing_schedule_items_plan
+    ON foreshadowing_schedule_items(plan_id, item_order);
+CREATE INDEX IF NOT EXISTS idx_foreshadowing_schedule_items_project_source
+    ON foreshadowing_schedule_items(project_id, source_type, source_id, target_chapter);
+CREATE INDEX IF NOT EXISTS idx_foreshadowing_schedule_items_status
+    ON foreshadowing_schedule_items(project_id, status);

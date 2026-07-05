@@ -57,6 +57,10 @@ from songyan.models import (
     ReviewIssue,
     StateSettlement,
 )
+from songyan.services.foreshadowing_schedule import (
+    mark_schedule_items_injected,
+    update_schedule_after_accept,
+)
 from songyan.utils.scene_parser import parse_scenes as _parse_scenes
 from songyan.utils.truncation import enforce_word_count as _enforce_word_count
 from songyan.utils.truncation import hard_truncate_at_boundary as _hard_truncate_at_boundary
@@ -381,6 +385,13 @@ async def goal_planner_node(state: dict[str, Any]) -> dict[str, Any]:
         )
         goal_id = new_id("gp")
         await ChapterGoalRepository().create(goal, goal_id, state["project_id"])
+        schedule_item_ids = [
+            item.get("item_id", "")
+            for item in getattr(narrative_ctx, "scheduled_items", [])
+            if item.get("status") == "active"
+        ]
+        if schedule_item_ids:
+            await mark_schedule_items_injected(schedule_item_ids)
         return {"chapter_goal_id": goal_id, "status": "creative_direction"}
     except (LLMError, LLMResponseParseError) as exc:
         logger.warning(
@@ -2528,6 +2539,38 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
         ) as exc:
             logger.warning(
                 "settlement_extractor_node.plot_thread_update_failed",
+                error=str(exc),
+                project_id=state["project_id"],
+                chapter_number=state["chapter_number"],
+            )
+
+    # 6b. V7 Task 167b：主动调度项生命周期推进
+    #     非阻塞：失败不影响 settlement/summary；只更新 schedule item 状态。
+    if accepted_for_postprocessing and settlement is not None:
+        try:
+            schedule_updates = await update_schedule_after_accept(
+                project_id=state["project_id"],
+                chapter_number=state["chapter_number"],
+                settlement=settlement,
+            )
+            if schedule_updates["satisfied"] or schedule_updates["missed"]:
+                logger.info(
+                    "settlement_extractor_node.foreshadowing_schedule_updated",
+                    project_id=state["project_id"],
+                    chapter_number=state["chapter_number"],
+                    satisfied=schedule_updates["satisfied"],
+                    missed=schedule_updates["missed"],
+                )
+        except (
+            SongyanError,
+            ValueError,
+            RuntimeError,
+            OSError,
+            ConnectionError,
+            sqlite3.Error,
+        ) as exc:
+            logger.warning(
+                "settlement_extractor_node.foreshadowing_schedule_update_failed",
                 error=str(exc),
                 project_id=state["project_id"],
                 chapter_number=state["chapter_number"],

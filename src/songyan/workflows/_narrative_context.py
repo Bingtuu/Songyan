@@ -9,9 +9,10 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
+from songyan.db.foreshadowing_schedule_repo import ForeshadowingScheduleRepository
 from songyan.db.narrative_repo import NarrativeRepository
 from songyan.db.settlement_repo import ForeshadowingRepository
-from songyan.models import PlotThread
+from songyan.models import ForeshadowingScheduleItem, PlotThread
 
 # 未收束线索的状态集合
 _OPEN_STATUSES = ("opened", "advanced")
@@ -27,6 +28,7 @@ class NarrativeGoalContext(BaseModel):
     open_threads: list[dict] = Field(default_factory=list)       # 本弧未收束线索
     threads_to_resolve: list[dict] = Field(default_factory=list)  # 本弧应收束线索
     due_foreshadowings: list[dict] = Field(default_factory=list)  # 临近兑现伏笔
+    scheduled_items: list[dict] = Field(default_factory=list)     # Task 167 主动调度项
 
 
 def _thread_brief(thread: PlotThread) -> dict:
@@ -38,13 +40,30 @@ def _thread_brief(thread: PlotThread) -> dict:
     }
 
 
+def _schedule_item_brief(item: ForeshadowingScheduleItem) -> dict:
+    return {
+        "item_id": item.item_id,
+        "source_type": item.source_type,
+        "source_id": item.source_id,
+        "title": item.title,
+        "description": item.description,
+        "target_chapter": item.target_chapter,
+        "priority_score": item.priority_score,
+        "reason_codes": item.reason_codes,
+        "rationale": item.rationale,
+        "status": item.status,
+    }
+
+
 async def load_narrative_goal_context(
     project_id: str,
     chapter_number: int,
     repo: NarrativeRepository | None = None,
     foreshadowing_repo: ForeshadowingRepository | None = None,
+    schedule_repo: ForeshadowingScheduleRepository | None = None,
     *,
     due_window: int = 5,
+    schedule_limit: int = 3,
 ) -> NarrativeGoalContext:
     """从骨架表 + 现有伏笔表组装 GoalPlanner 上下文.
 
@@ -53,8 +72,10 @@ async def load_narrative_goal_context(
         chapter_number: 当前章节号。
         repo: NarrativeRepository（默认新建）。
         foreshadowing_repo: 复用现有伏笔查询（默认新建）；不新增伏笔机制。
+        schedule_repo: 主动调度查询（默认新建）。
         due_window: "临近兑现" 窗口——expected_resolve_chapter 落在
             ``[chapter_number, chapter_number + due_window]`` 内视为临近。
+        schedule_limit: 单章最多注入的主动调度项数量。
 
     Returns:
         NarrativeGoalContext；当前章节无覆盖弧（无大纲/超出规划）时 has_skeleton=False。
@@ -91,6 +112,17 @@ async def load_narrative_goal_context(
                 }
             )
 
+    schedule_repo = schedule_repo or ForeshadowingScheduleRepository()
+    scheduled_items = [
+        _schedule_item_brief(item)
+        for item in await schedule_repo.list_items_for_chapter(
+            project_id,
+            chapter_number,
+            statuses=("active", "injected"),
+            limit=schedule_limit,
+        )
+    ]
+
     return NarrativeGoalContext(
         has_skeleton=True,
         arc_goal=arc.arc_goal,
@@ -99,4 +131,5 @@ async def load_narrative_goal_context(
         open_threads=open_threads,
         threads_to_resolve=threads_to_resolve,
         due_foreshadowings=due_foreshadowings,
+        scheduled_items=scheduled_items,
     )

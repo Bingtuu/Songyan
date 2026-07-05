@@ -69,12 +69,27 @@ def _format_thread_constraints(narrative_ctx: NarrativeGoalContext) -> str:
             for t in threads
         )
 
+    def _fmt_schedule(items: list[dict]) -> str:
+        if not items:
+            return "（无）"
+        lines: list[str] = []
+        for item in items:
+            reason = item.get("rationale") or "主动调度"
+            lines.append(
+                f"- [{item.get('source_id', '')}] {item.get('description', '')}"
+                f"（来源：{item.get('source_type', '')}，原因：{reason}）"
+            )
+        return "\n".join(lines)
+
     return (
         f"本章应推进的线索（优先通过角色行动/冲突推进，而非旁白交代）：\n"
         f"{_fmt(narrative_ctx.open_threads)}\n"
         f"本章应收束的线索：\n"
         f"{_fmt(narrative_ctx.threads_to_resolve)}\n"
+        f"本章主动调度项（Task 167，必须通过行动、冲突或明确后果体现）：\n"
+        f"{_fmt_schedule(narrative_ctx.scheduled_items)}\n"
         "**线索经济要求**：优先推进/收束上述已开启线索；"
+        "主动调度项必须在本章目标、张力或场景安排中被体现；"
         "除非剧情必需，非必要不开启新线索、不引入新的 critical 设定；"
         "新开线索必须服务于当前弧目标。"
     )
@@ -131,7 +146,9 @@ async def _render_prompt(
     }
 
     has_threads = narrative_ctx is not None and narrative_ctx.has_skeleton and (
-        narrative_ctx.open_threads or narrative_ctx.threads_to_resolve
+        narrative_ctx.open_threads
+        or narrative_ctx.threads_to_resolve
+        or narrative_ctx.scheduled_items
     )
     if has_threads:
         variables["thread_constraints"] = _format_thread_constraints(narrative_ctx)
