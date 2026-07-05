@@ -16,7 +16,7 @@ Songyan 已经从实验原型推进到可长篇运行的工程版本。系统现
 
 **V6 已完成**：系统装上了最小可用的叙事骨架（自顶向下的全书大纲 / 弧规划 / 线索经济 MVP），建立了长篇质量度量，补齐了无人值守长跑底盘，并在治理管线上取得真实 Ch1–Ch150 证据（`run-bba292da`，150/150 accept、health 全程 ≥8.2）。V6 阶段验收结论：实质达标、条件通过。V6 论证基础见 [`docs/300-chapter-gap-analysis.md`](docs/300-chapter-gap-analysis.md)，阶段规划见 [`docs/v6-plan.md`](docs/v6-plan.md)。
 
-**V7 阶段 W 已通过，Task 166/167/168/169 已完成**：对 V6 生成的 150 章正文人工通读发现，句子级度量掩盖了篇章级质量债（元标记泄漏、整段落重复、时间线矛盾、概念通胀）。Task 160-165p 已取得修复后 Ch1–Ch150 证据（150/150 accepted，P 洁净、L 文学与不回退均通过），T9/T10 已冻结。阶段 X 已完成 Task 166 和 167；阶段 Y 已建立自适应门禁数据面并完成自适应 halt 判定接入。下一步是 Task 170 小窗口验证与 T12 标定。V7 构想见 [`docs/v7-vision.md`](docs/v7-vision.md)，阶段规划见 [`docs/v7-plan.md`](docs/v7-plan.md)。
+**V7 阶段 W 已通过，Task 166/167/168/169 已完成，Task 170 已规划**：对 V6 生成的 150 章正文人工通读发现，句子级度量掩盖了篇章级质量债（元标记泄漏、整段落重复、时间线矛盾、概念通胀）。Task 160-165p 已取得修复后 Ch1–Ch150 证据（150/150 accepted，P 洁净、L 文学与不回退均通过），T9/T10 已冻结。阶段 X 已完成 plan→re-plan 闭环和长程伏笔主动调度；阶段 Y 已建立自适应门禁数据面、adaptive halt 判定引擎和 workflow 接入。下一步是 Task 170：用良性波动 / 真实退化小窗口验证自适应门禁，标定 T12 误报率，并做过程监测、数据采集和可读性 / 文学性抽检；这一步不启动 Ch200。V7 构想见 [`docs/v7-vision.md`](docs/v7-vision.md)，阶段规划见 [`docs/v7-plan.md`](docs/v7-plan.md)。
 
 README 只保留开源项目概览。实时开发状态、测试结果和下一步任务以 [`docs/STATUS.md`](docs/STATUS.md) 为准；V7 任务事实入口见 [`tasks/V7-README.md`](tasks/V7-README.md)，V6 历史任务记录见 [`tasks/V6-README.md`](tasks/V6-README.md)，V5 历史任务记录见 [`tasks/V5-README.md`](tasks/V5-README.md)。
 
@@ -30,14 +30,14 @@ README 只保留开源项目概览。实时开发状态、测试结果和下一�
 | 质量加固 | 补充测试、质量门、严格模式和异常恢复 | 生成流程更稳定，失败时更容易定位原因 |
 | V5.2 完成 | enforce 默认启用 + 150 章完整证据 | CLI 默认 `enforce`，Ch1–Ch150 全部 accept，角色状态、世界设定和数字读数均有正文证据支撑 |
 | V6 完成 | 补齐自顶向下叙事架构与长篇质量度量，验证 150 章稳定输出 | 章节目标从全书规划派生；orphan、文学质量、伏笔兑现可观测；治理管线 Ch1–Ch150 取得 150/150 证据 |
-| 当前阶段（V7） | 先修复 V6 暴露的篇章级质量债（元标记 / 重复 / 时间线 / 概念通胀），再让系统自驱把质量维持在高位并爬坡至 Ch300 | 正文更洁净、连贯；世界观概念持续落地；目标从 200 章推进到 300 章级别稳定输出 |
+| 当前阶段（V7） | 先修复 V6 暴露的篇章级质量债，再补齐叙事自驱和自适应门禁，最后渐进爬坡至 Ch300 | 正文更洁净、连贯；线索调度可追踪；门禁从固定阈值走向趋势判定；进入 Ch200 前先完成 Task 170 小窗口验证 |
 
 ### 当前开发重点（V7）
 
 1. **篇章级质量修复（阶段 W）**：以确定性工程修复根治 V6 暴露的可读性/连贯性债——元标记泄漏清洗、整段落去重、跨章时间线一致性检测、概念预算约束，并把文本洁净度做成可入库、可查的指标。✅ Task 160-165p 已完成，阶段 W 通过，T9/T10 已冻结。
 2. **叙事自驱（阶段 X）**：把静态叙事骨架升级为 plan→generate→re-plan 闭环，并让长程伏笔从被动遗忘转为主动兑现调度。✅ Task 166 和 167 已完成。
-3. **enforce 可生产化（阶段 Y）**：把质量门禁从绝对阈值改为相对趋势/异常因子触发，正常波动不误伤、真退化才暂停。🔄 Task 168 和 169 已完成，下一步 170。
-4. **Ch300 渐进爬坡（阶段 Z）**：Ch150 基线 → Ch200 → Ch250 → Ch300，每级取真实证据再进下一级。◻ 待 W+X+Y 落地后启动。
+3. **enforce 可生产化（阶段 Y）**：把质量门禁从绝对阈值改为相对趋势 / 异常因子触发，正常波动不误伤、真退化才暂停。✅ Task 168 和 169 已完成；◻ Task 170 已规划，下一步做小窗口验证、T12 误报率标定和可读性 / 文学性抽检。
+4. **Ch300 渐进爬坡（阶段 Z）**：Ch150 基线 → Ch200 → Ch250 → Ch300，每级取真实证据再进下一级。◻ 待 Task 170 验证通过后启动 Ch200。
 
 ### 长期目标
 
@@ -290,7 +290,7 @@ SettlementExtractor 负责把 accepted 正文转成结构化事实，但它不�
 
 ## 3. 开发历程
 
-Songyan 的开发历程按能力演进划分，而不是按内部任务编号展开。详细任务记录见 [`tasks/V5-README.md`](tasks/V5-README.md)，历史资料见 [`archive/v5/INDEX.md`](archive/v5/INDEX.md)。
+Songyan 的开发历程按能力演进划分，而不是按内部任务编号展开。当前阶段任务记录见 [`tasks/V7-README.md`](tasks/V7-README.md)，前置阶段见 [`tasks/V6-README.md`](tasks/V6-README.md) 和 [`tasks/V5-README.md`](tasks/V5-README.md)，历史资料见 [`archive/v5/INDEX.md`](archive/v5/INDEX.md)。
 
 | 阶段 | 主要目标 | 已形成的能力 | 当前状态 |
 |------|----------|--------------|----------|
@@ -302,7 +302,7 @@ Songyan 的开发历程按能力演进划分，而不是按内部任务编号展
 | 质量加固 | 提升输出质量和失败恢复能力 | 补充系统性测试、严格模式、降级接受、safe best 回退和报告入口 | 已完成 |
 | 事实源治理 | 确保长期记录的角色状态、设定和数字信息可信 | 强化 Settlement 证据校验、设定回收、连续性健康检查；enforce 默认启用并取得 Ch1–Ch150 150/150 证据 | 已完成（V5.2） |
 | 叙事骨架与度量 | 补齐自顶向下叙事架构，并让长篇质量可度量 | 全书大纲 / 弧规划 / 线索经济 MVP（阶段 0）、跨章质量度量入库 orphan/T7/质量债/文学趋势/伏笔兑现率（阶段 A）、末端治理降低 critical 误判与 orphan 累积（阶段 B）、无人值守长跑底盘 run 级 resume / LLM 限流预算 / 失败隔离 / DB 维护（阶段 C）、Ch1-Ch150 治理管线复现（阶段 D） | 已完成（V6：阶段 0+A+B+C+D 全部完成，`run-bba292da` Ch1-Ch150 150/150 accept，阶段验收实质达标、条件通过） |
-| 篇章级质量与自驱 | 修复篇章级质量债，再让系统自驱把质量维持在高位并爬坡至 Ch300 | 元标记清洗 / 段落去重 / 时间线一致 / 概念预算 / 文本洁净度 T9 harness（阶段 W）、plan→re-plan 闭环 + 伏笔调度（阶段 X）、enforce 门禁自适应（阶段 Y）、Ch200→300 渐进验证（阶段 Z） | 进行中（V7：阶段 W Task 160-165p 已完成并通过；Task 166/167/168/169 已完成，下一步 170） |
+| 篇章级质量与自驱 | 修复篇章级质量债，再让系统自驱把质量维持在高位并爬坡至 Ch300 | 元标记清洗 / 段落去重 / 时间线一致 / 概念预算 / 文本洁净度 T9 harness（阶段 W）、plan→re-plan 闭环 + 伏笔调度（阶段 X）、enforce 门禁自适应（阶段 Y）、Ch200→300 渐进验证（阶段 Z） | 进行中（V7：阶段 W 已通过；Task 166/167/168/169 已完成；Task 170 已规划，作为 Ch200 前置验证） |
 
 ---
 ## 4. 快速开始
@@ -351,7 +351,7 @@ ruff check src/ tests/
 
 | 能力 | 当前状态 | 证据入口 |
 |------|----------|----------|
-| 150 章长篇生成链路 | 已完成一次 Ch1-Ch150 全流程验证，150/150 章节成功 | `tasks/121q-safe-best-threshold-dynamic-fix-DONE.md` |
+| 150 章长篇生成链路 | 已取得多轮 Ch1-Ch150 证据：V5.2 enforce 验证、V6 治理管线复现、V7 阶段 W 修复后复跑均达到 150/150 | `tasks/121q-safe-best-threshold-dynamic-fix-DONE.md`、`tasks/159-v6-final-acceptance-DONE.md`、`tasks/165-stage-w-ch150-rerun-and-threshold-freeze-DONE.md` |
 | 单章生成闭环 | 已支持章节目标、创作简报、上下文组装、正文生成、审查、修订、质量门和人工确认 | `src/songyan/workflows/phase1_graph.py` |
 | 多章节运行与恢复 | 已支持章节范围运行、跳过已接受章节、run log、自动暂停；新增 run 级断点续跑（`--resume`/`--run-id`）与孤儿 checkpoint 清理 | `src/songyan/workflows/phase2_graph.py`、`tasks/153-run-level-resume-DONE.md` |
 | 上下文预算控制 | 已落地分层摘要、角色衰减、设定蒸发和预算硬上限，支撑长篇上下文压缩 | `archive/tasks/120-v5-final-acceptance-DONE.md` |
@@ -361,23 +361,26 @@ ruff check src/ tests/
 | 叙事骨架数据模型（V6 阶段 0） | 已交付 `StoryOutline` / `ArcPlan` / `PlotThread` 前置规划模型、三张表与 `NarrativeRepository`（含线索生命周期状态机）；`create-project --outline-file` 可导入全书大纲；GoalPlanner 从弧规划自顶向下派生章节目标（`derived_from_arc`）；CreativeDirector 注入线索经济约束、settlement 后自动推进线索状态；无骨架均回退旧行为 | `tasks/141-narrative-skeleton-data-model-DONE.md` … `tasks/144-thread-economy-mvp-DONE.md` |
 | 长篇质量度量（V6 阶段 A） | 新增 `songyan metrics`（DB 支撑、可复算历史库）：orphan 绝对量/新 critical 速率(T7)/质量债账本/文学趋势/弧级伏笔兑现率+长程台账；`run_quality_debt` 表；阈值 T3/T6/T8 已用历史 DB 复算冻结（T4/T5 延后长跑实测）。复现了被 health 指标掩盖的 orphan 累积与长程伏笔失效 | `tasks/145-orphan-and-critical-rate-metrics-DONE.md` … `tasks/148z-stage-a-threshold-calibration-DONE.md`、`docs/reports/v6-stageA-threshold-calibration.md` |
 | 末端治理（V6 阶段 B） | 录入侧降级（超额 critical 转 candidate，可回升）、`_infer_setting_category` 去硬编码主角名并收紧双命中、MR 上限自适应 + 主线相关性排序、critical 设定显式 resolve/abandon 终态；为阶段 D 长窗口验证降低 orphan 源头 | `tasks/149-input-side-demotion-DONE.md` … `tasks/152-critical-explicit-resolve-abandon-DONE.md` |
+| 篇章级文本洁净治理（V7 阶段 W） | 已根治元标记 / 场景 marker 泄漏，补齐段落级去重、跨章时间线诊断、概念预算约束和 T9 文本洁净度入库；Task 165/165p 冻结 T9/T10 并完成阶段 W 出口 | `tasks/160-meta-tag-leak-eradication-DONE.md` … `tasks/165p-stage-w-harness-calibration-DONE.md` |
+| 叙事自驱（V7 阶段 X） | 已支持弧后评估生成 `ReplanProposal`、人工确认后事务化应用未来规划，并将长程伏笔调度注入 GoalPlanner / CreativeDirector，推进 active / injected / satisfied / missed 生命周期 | `tasks/166-plan-generate-replan-loop-DONE.md`、`tasks/167-long-range-foreshadowing-active-scheduling-DONE.md` |
+| 自适应门禁基础（V7 阶段 Y） | 已交付 adaptive gate 信号快照、窗口聚合报告、adaptive halt 判定引擎、决策账本和 phase2 observe/enforce 接入；默认关闭，生产化前需 Task 170 验证 T12 误报率 | `tasks/168-adaptive-gate-data-plane-DONE.md`、`tasks/169-adaptive-halt-decision-DONE.md`、`tasks/170-enforce-small-window-validation-and-t12-calibration.md` |
 | 自动化验证 | 已建立单元、集成、E2E 和长序列压力测试；最近全量测试见状态板 | `tests/`、`docs/STATUS.md` |
 
-仍在治理的指标包括：剩余 orphan 设定、部分环境读数类状态结算、以及完整默认配置下的更大范围复跑。这些属于当前开发工作，不应写成已交付指标。
+仍在治理的指标包括：Task 170 的 T12 误报率 / 漏拦口径、自适应门禁小窗口验证、可读性 / 文学性抽检，以及后续 Ch200 → Ch250 → Ch300 渐进爬坡证据。这些属于当前开发工作，不应写成已交付指标。
 
 ---
 ## 6. 当前阶段与下一步
 
-Songyan 已完成 V6：系统装上了自顶向下的叙事骨架，长篇质量从"无对象、无指标"变成"可见、可度量"，并在治理管线上取得真实 Ch1–Ch150 证据（`run-bba292da`，150/150 accept）。当前进入 V7：先修复 V6 生成的正文中"读者一眼可见"的篇章级质量债，再让系统自驱把质量维持在高位、渐进爬坡到 Ch300。
+Songyan 已完成 V6：系统装上了自顶向下的叙事骨架，长篇质量从"无对象、无指标"变成"可见、可度量"，并在治理管线上取得真实 Ch1–Ch150 证据（`run-bba292da`，150/150 accept）。V7 目前已经完成篇章级质量修复、叙事自驱和自适应门禁机制建设，正在进入 Ch200 前的 Task 170 小窗口验证。
 
 V7 分四个阶段推进：
 
 1. **篇章级质量修复（阶段 W）**：以确定性工程修复根治元标记泄漏、整段落重复、跨章时间线矛盾和概念通胀，并把文本洁净度做成可入库、可查的指标。Task 160-165p 已完成，阶段 W 通过，T9/T10 已冻结。
 2. **叙事自驱（阶段 X）**：把静态叙事骨架升级为 plan→generate→re-plan 闭环，让长程伏笔从被动遗忘转为主动兑现调度。✅ Task 166 和 167 已完成。
-3. **enforce 可生产化（阶段 Y）**：把质量门禁从绝对阈值改为相对趋势/异常因子触发，正常波动不误伤、真退化才暂停。🔄 Task 168 和 169 已完成，下一步 170。
-4. **Ch300 渐进爬坡（阶段 Z）**：Ch150 基线 → Ch200 → Ch250 → Ch300，每级取真实证据再进下一级，每级预留撞墙定点修复占位。◻ 待 W+X+Y 落地后启动。
+3. **enforce 可生产化（阶段 Y）**：把质量门禁从绝对阈值改为相对趋势 / 异常因子触发，正常波动不误伤、真退化才暂停。Task 168/169 已完成；Task 170 已规划，下一步用良性波动 / 真实退化小窗口验证 adaptive halt，并标定 T12。
+4. **Ch300 渐进爬坡（阶段 Z）**：Ch150 基线 → Ch200 → Ch250 → Ch300，每级取真实证据再进下一级，每级预留撞墙定点修复占位。Task 170 通过前不启动 Ch200。
 
-README 不维护实时任务状态。当前进度、测试结果和下一步执行项请查看 [`docs/STATUS.md`](docs/STATUS.md)；V7 任务事实入口见 [`tasks/V7-README.md`](tasks/V7-README.md)。
+Task 170 的交付物不是新增长跑章节，而是验证报告：过程监测 JSONL、T12 误报 / 漏拦统计、旧 gate 与 adaptive halt 对照、可读性 / 文学性抽检结论。README 不维护实时任务状态；当前进度、测试结果和下一步执行项请查看 [`docs/STATUS.md`](docs/STATUS.md)，V7 任务事实入口见 [`tasks/V7-README.md`](tasks/V7-README.md)。
 
 ---
 ## 7. CLI 常用命令

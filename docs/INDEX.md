@@ -36,6 +36,7 @@
 | `tasks/169a-adaptive-halt-decision-engine-DONE.md` | Task 169a：自适应 halt 判定引擎与决策账本（已完成） |
 | `tasks/169b-adaptive-halt-workflow-integration.md` | Task 169b：自适应 halt workflow 接入（规划文档） |
 | `tasks/169b-adaptive-halt-workflow-integration-DONE.md` | Task 169b：自适应 halt workflow 接入（已完成） |
+| `tasks/170-enforce-small-window-validation-and-t12-calibration.md` | Task 170：enforce 小窗口验证 + T12 误报率标定（规划中） |
 | `tasks/V6-README.md` | V6 任务事实入口（前置阶段）：叙事骨架 MVP + 度量 + 长跑底盘，Task 141-159 |
 | `tasks/V5-README.md` | V5.0 任务事实入口 |
 | `tasks/121a-v50-goal-assessment-and-v51-plan.md` | Task 121a：V5.0 目标评估与 V5.1 规划 |
