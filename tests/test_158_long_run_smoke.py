@@ -12,8 +12,12 @@ from unittest.mock import AsyncMock, patch
 
 import scripts.run_158_ch1_ch100 as runner
 from songyan.db.project_run_repo import ProjectRunRepository
-from songyan.db.repository import ChapterHeadRepository, ProjectRepository
-from songyan.models import ChapterHead, ProjectRunState, ProjectSetting
+from songyan.db.repository import (
+    ChapterHeadRepository,
+    ChapterVersionRepository,
+    ProjectRepository,
+)
+from songyan.models import ChapterHead, ChapterVersion, ProjectRunState, ProjectSetting
 from songyan.workflows.phase2_graph import run_project_pipeline
 
 PID = "proj-158-smoke"
@@ -49,12 +53,27 @@ async def _seed_project() -> None:
 
 
 async def _accept_chapters(chapters: list[int]) -> None:
-    repo = ChapterHeadRepository()
+    version_repo = ChapterVersionRepository()
+    head_repo = ChapterHeadRepository()
     for ch in chapters:
-        await repo.update(
+        version_id = f"accepted-{ch}"
+        await version_repo.create(
+            ChapterVersion(
+                version_id=version_id,
+                project_id=PID,
+                chapter_number=ch,
+                version_number=1,
+                version_type="accepted",
+                content=f"accepted content {ch}",
+                word_count=10,
+            )
+        )
+        await head_repo.update(
             ChapterHead(
                 project_id=PID,
                 chapter_number=ch,
+                current_version_id=version_id,
+                accepted_version_id=version_id,
                 status="accepted",
             )
         )

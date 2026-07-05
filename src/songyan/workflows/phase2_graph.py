@@ -504,7 +504,7 @@ async def run_project_pipeline(
     chapter_head_repo = ChapterHeadRepository()
     all_heads = await chapter_head_repo.list_by_project(project_id)
     accepted_chapters = {
-        h.chapter_number for h in all_heads if h.status == "accepted"
+        h.chapter_number for h in all_heads if h.accepted_version_id
     }
     if accepted_chapters:
         logger.info(

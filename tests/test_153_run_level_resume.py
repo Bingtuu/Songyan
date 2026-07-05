@@ -9,8 +9,12 @@ from unittest.mock import AsyncMock, patch
 
 from songyan.db.connection import get_db
 from songyan.db.project_run_repo import ProjectRunRepository
-from songyan.db.repository import ChapterHeadRepository, ProjectRepository
-from songyan.models import ChapterHead, ProjectRunState, ProjectSetting
+from songyan.db.repository import (
+    ChapterHeadRepository,
+    ChapterVersionRepository,
+    ProjectRepository,
+)
+from songyan.models import ChapterHead, ChapterVersion, ProjectRunState, ProjectSetting
 from songyan.workflows.checkpointer import prune_orphan_checkpoints
 from songyan.workflows.phase2_graph import (
     _compute_resume_start,
@@ -57,13 +61,28 @@ async def _seed_project_and_run(
 
 
 async def _accept_chapters(chapters: list[int]) -> None:
-    """在 chapter_heads 表中创建 accepted 记录（version_id 留空，避免 FK 依赖）."""
-    repo = ChapterHeadRepository()
+    """在 chapter_heads 表中创建真实 accepted head 记录."""
+    version_repo = ChapterVersionRepository()
+    head_repo = ChapterHeadRepository()
     for ch in chapters:
-        await repo.update(
+        version_id = f"accepted-{ch}"
+        await version_repo.create(
+            ChapterVersion(
+                version_id=version_id,
+                project_id=PID,
+                chapter_number=ch,
+                version_number=1,
+                version_type="accepted",
+                content=f"accepted content {ch}",
+                word_count=10,
+            )
+        )
+        await head_repo.update(
             ChapterHead(
                 project_id=PID,
                 chapter_number=ch,
+                current_version_id=version_id,
+                accepted_version_id=version_id,
                 status="accepted",
             )
         )
@@ -227,6 +246,58 @@ class TestPipelineResume:
         # Ch3 因未真正 accept 被重跑
         assert result.chapters_completed == [1, 2, 3]
         assert calls == [3]
+
+    async def test_resume_ignores_status_accepted_without_accepted_version(
+        self, test_db: Any
+    ) -> None:
+        """status=accepted 但 accepted_version_id 为空时仍必须重跑该章."""
+        await _seed_project_and_run(completed=[1], status="running", start=1, end=1)
+        await ChapterHeadRepository().update(
+            ChapterHead(
+                project_id=PID,
+                chapter_number=1,
+                current_version_id=None,
+                accepted_version_id=None,
+                status="accepted",
+            )
+        )
+
+        calls: list[int] = []
+
+        async def _fake_run(**kwargs: Any) -> dict[str, Any]:
+            calls.append(kwargs["chapter_number"])
+            return {
+                "success": True,
+                "summary_text": "summary-1",
+                "error": None,
+                "final_state": {},
+                "final_version_id": "v-1",
+                "budget_used": 0.8,
+                "context_emergency": False,
+                "quality_gate_passed": True,
+                "settlement_success": True,
+                "summary_success": True,
+            }
+
+        with (
+            patch("songyan.workflows.phase2_graph._run_single_chapter", side_effect=_fake_run),
+            patch("songyan.workflows.phase2_graph._save_run_state", new_callable=AsyncMock),
+            patch("songyan.workflows.phase2_graph.reset_checkpointer", new_callable=AsyncMock),
+            patch(
+                "songyan.workflows.checkpointer.prune_orphan_checkpoints",
+                new_callable=AsyncMock,
+                return_value=0,
+            ),
+        ):
+            result = await run_project_pipeline(
+                project_id=PID,
+                chapter_range=(1, 1),
+                auto_confirm=True,
+                resume=True,
+            )
+
+        assert result.chapters_completed == [1]
+        assert calls == [1]
 
     async def test_stuck_at_running_resumes_and_completes(self, test_db: Any) -> None:
         """status='running' 的 stuck run 可被续完."""
