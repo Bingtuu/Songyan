@@ -112,6 +112,29 @@ class GateConfig(BaseModel):
         default=True,
         description="保留已有行为：连续 3 章 ContextEmergency 且伴随降级时触发 AutoHalt",
     )
+    # V7 Task 169b: 自适应 halt 接入，默认关闭，不改变现有 enforce 行为
+    adaptive_halt_enabled: bool = Field(
+        default=False,
+        description="是否启用自适应 halt 判定（默认关闭）",
+    )
+    adaptive_halt_action_mode: Literal["observe", "enforce"] = Field(
+        default="observe",
+        description="自适应 halt 动作模式：observe 只记录；enforce 可暂停",
+    )
+    adaptive_halt_policy_id: str = Field(
+        default="v7-adaptive-halt-mvp",
+        description="自适应 halt 策略 ID",
+    )
+    adaptive_halt_window: int = Field(
+        default=5,
+        ge=1,
+        description="自适应 halt 数据面窗口大小",
+    )
+    adaptive_halt_warmup_chapters: int = Field(
+        default=10,
+        ge=0,
+        description="自适应 halt 开局保护章数",
+    )
 
     @classmethod
     def for_mode(cls, mode: Literal["observe", "enforce"]) -> GateConfig:

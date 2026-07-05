@@ -1,5 +1,26 @@
 """Songyan data models — Pydantic v2 domain models."""
 
+from songyan.models.adaptive_gate import (
+    AdaptiveGateCleanlinessSignals,
+    AdaptiveGateContextSignals,
+    AdaptiveGateContinuitySignals,
+    AdaptiveGateDataPlaneReport,
+    AdaptiveGateLiterarySignals,
+    AdaptiveGateNarrativeSignals,
+    AdaptiveGateQualitySignals,
+    AdaptiveGateSignalSnapshot,
+    AdaptiveGateSignalSourceStatus,
+    AdaptiveGateSignalWindow,
+    AdaptiveGateTrendPoint,
+)
+from songyan.models.adaptive_halt import (
+    AdaptiveHaltDecision,
+    AdaptiveHaltDecisionStatus,
+    AdaptiveHaltPolicy,
+    AdaptiveHaltPolicyMode,
+    AdaptiveHaltReason,
+    AdaptiveHaltReasonCode,
+)
 from songyan.models.chapter import ChapterGoal, ChapterHead, ChapterVersion
 from songyan.models.character import Character, CharacterState, DialogueStyleCard
 from songyan.models.context import (
@@ -218,4 +239,23 @@ __all__ = [
     "ChapterScoreCard",
     "DimensionScore",
     "ScoreFlags",
+    # V7 Task 168a: adaptive gate data plane snapshots
+    "AdaptiveGateSignalSnapshot",
+    "AdaptiveGateSignalSourceStatus",
+    "AdaptiveGateContinuitySignals",
+    "AdaptiveGateQualitySignals",
+    "AdaptiveGateLiterarySignals",
+    "AdaptiveGateCleanlinessSignals",
+    "AdaptiveGateContextSignals",
+    "AdaptiveGateNarrativeSignals",
+    "AdaptiveGateTrendPoint",
+    "AdaptiveGateSignalWindow",
+    "AdaptiveGateDataPlaneReport",
+    # V7 Task 169a: adaptive halt decision models
+    "AdaptiveHaltPolicy",
+    "AdaptiveHaltPolicyMode",
+    "AdaptiveHaltDecision",
+    "AdaptiveHaltDecisionStatus",
+    "AdaptiveHaltReason",
+    "AdaptiveHaltReasonCode",
 ]

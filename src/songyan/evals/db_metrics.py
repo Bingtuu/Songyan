@@ -270,6 +270,15 @@ async def render_stage_a_metrics(project_id: str, start: int, end: int) -> str:
     text_cleanliness = await _guard(
         refresh_text_cleanliness_metrics(project_id, start, end), []
     )
+    from songyan.evals.adaptive_gate import (
+        build_adaptive_gate_data_plane_report,
+        refresh_adaptive_gate_signal_snapshots,
+        render_adaptive_gate_data_plane_section,
+    )
+    await _guard(refresh_adaptive_gate_signal_snapshots(project_id, start, end), 0)
+    adaptive_gate_report = await _guard(
+        build_adaptive_gate_data_plane_report(project_id, start, end), None
+    )
     # 局部导入避免与 v6_acceptance 循环引用（v6_acceptance 已导入本模块）
     from songyan.evals.v6_acceptance import evaluate_v6_acceptance, render_v6_acceptance_section
     acceptance = await _guard(evaluate_v6_acceptance(project_id, start, end), None)
@@ -288,6 +297,8 @@ async def render_stage_a_metrics(project_id: str, start: int, end: int) -> str:
         render_concept_budget_section(concept_budget),
         render_text_cleanliness_section(text_cleanliness),
     ]
+    if adaptive_gate_report is not None:
+        sections.append(render_adaptive_gate_data_plane_section(adaptive_gate_report))
     if acceptance is not None:
         sections.append(render_v6_acceptance_section(acceptance))
     return "\n\n".join(sections)

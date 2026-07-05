@@ -24,6 +24,18 @@
 | `tasks/167-long-range-foreshadowing-active-scheduling-DONE.md` | Task 167：长程伏笔主动兑现调度（已完成） |
 | `tasks/167a-foreshadowing-schedule-plan-DONE.md` | Task 167a：主动伏笔调度计划生成（已完成） |
 | `tasks/167b-schedule-injection-and-lifecycle-DONE.md` | Task 167b：调度计划注入与生命周期推进（已完成） |
+| `tasks/168-adaptive-gate-data-plane.md` | Task 168：自适应门禁数据面（规划文档，拆 168a/168b） |
+| `tasks/168-adaptive-gate-data-plane-DONE.md` | Task 168：自适应门禁数据面（已完成） |
+| `tasks/168a-adaptive-gate-signal-snapshot.md` | Task 168a：自适应门禁信号快照模型（规划文档） |
+| `tasks/168a-adaptive-gate-signal-snapshot-DONE.md` | Task 168a：自适应门禁信号快照模型（已完成） |
+| `tasks/168b-adaptive-gate-window-reporting.md` | Task 168b：自适应门禁窗口聚合与报告出口（规划文档） |
+| `tasks/168b-adaptive-gate-window-reporting-DONE.md` | Task 168b：自适应门禁窗口聚合与报告出口（已完成） |
+| `tasks/169-adaptive-halt-decision.md` | Task 169：自适应 halt 判定（规划文档，拆 169a/169b） |
+| `tasks/169-adaptive-halt-decision-DONE.md` | Task 169：自适应 halt 判定（已完成） |
+| `tasks/169a-adaptive-halt-decision-engine.md` | Task 169a：自适应 halt 判定引擎与决策账本（规划文档） |
+| `tasks/169a-adaptive-halt-decision-engine-DONE.md` | Task 169a：自适应 halt 判定引擎与决策账本（已完成） |
+| `tasks/169b-adaptive-halt-workflow-integration.md` | Task 169b：自适应 halt workflow 接入（规划文档） |
+| `tasks/169b-adaptive-halt-workflow-integration-DONE.md` | Task 169b：自适应 halt workflow 接入（已完成） |
 | `tasks/V6-README.md` | V6 任务事实入口（前置阶段）：叙事骨架 MVP + 度量 + 长跑底盘，Task 141-159 |
 | `tasks/V5-README.md` | V5.0 任务事实入口 |
 | `tasks/121a-v50-goal-assessment-and-v51-plan.md` | Task 121a：V5.0 目标评估与 V5.1 规划 |

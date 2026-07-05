@@ -628,3 +628,51 @@ CREATE INDEX IF NOT EXISTS idx_foreshadowing_schedule_items_project_source
     ON foreshadowing_schedule_items(project_id, source_type, source_id, target_chapter);
 CREATE INDEX IF NOT EXISTS idx_foreshadowing_schedule_items_status
     ON foreshadowing_schedule_items(project_id, status);
+
+-- ============================================================
+-- 27. adaptive_gate_signal_snapshots — 自适应门禁信号快照（V7 Task 168a）
+-- ============================================================
+CREATE TABLE IF NOT EXISTS adaptive_gate_signal_snapshots (
+    snapshot_id         TEXT PRIMARY KEY,
+    project_id          TEXT NOT NULL REFERENCES projects(project_id) ON DELETE CASCADE,
+    run_id              TEXT NOT NULL DEFAULT '',
+    chapter_number      INTEGER NOT NULL,
+    source_status_json  TEXT NOT NULL DEFAULT '{}',
+    continuity_json     TEXT NOT NULL DEFAULT '{}',
+    quality_json        TEXT NOT NULL DEFAULT '{}',
+    literary_json       TEXT NOT NULL DEFAULT '{}',
+    cleanliness_json    TEXT NOT NULL DEFAULT '{}',
+    context_json        TEXT NOT NULL DEFAULT '{}',
+    narrative_json      TEXT NOT NULL DEFAULT '{}',
+    created_at          TEXT DEFAULT (datetime('now')),
+    updated_at          TEXT DEFAULT (datetime('now')),
+    UNIQUE(project_id, run_id, chapter_number)
+);
+CREATE INDEX IF NOT EXISTS idx_adaptive_gate_snapshots_project_range
+    ON adaptive_gate_signal_snapshots(project_id, run_id, chapter_number);
+
+-- ============================================================
+-- 28. adaptive_halt_decisions — 自适应 halt 判定账本（V7 Task 169a）
+-- ============================================================
+CREATE TABLE IF NOT EXISTS adaptive_halt_decisions (
+    decision_id           TEXT PRIMARY KEY,
+    project_id            TEXT NOT NULL REFERENCES projects(project_id) ON DELETE CASCADE,
+    run_id                TEXT NOT NULL DEFAULT '',
+    chapter_start         INTEGER NOT NULL,
+    chapter_end           INTEGER NOT NULL,
+    evaluated_at_chapter  INTEGER NOT NULL,
+    status                TEXT NOT NULL DEFAULT 'continue'
+                          CHECK(status IN (
+                              'continue', 'observe', 'warn',
+                              'halt_candidate', 'halt'
+                          )),
+    reasons_json          TEXT NOT NULL DEFAULT '[]',
+    evidence_json         TEXT NOT NULL DEFAULT '{}',
+    policy_id             TEXT NOT NULL DEFAULT 'v7-adaptive-halt-mvp',
+    policy_version        TEXT NOT NULL DEFAULT '1.0',
+    created_at            TEXT DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_adaptive_halt_decisions_project
+    ON adaptive_halt_decisions(project_id, run_id, evaluated_at_chapter);
+CREATE INDEX IF NOT EXISTS idx_adaptive_halt_decisions_status
+    ON adaptive_halt_decisions(project_id, status);

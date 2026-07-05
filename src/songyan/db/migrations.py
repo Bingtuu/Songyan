@@ -66,6 +66,10 @@ _EXPECTED_TABLES: list[str] = [
     # V7 阶段 X: active foreshadowing scheduling（Task 167a）
     "foreshadowing_schedule_plans",
     "foreshadowing_schedule_items",
+    # V7 阶段 Y: adaptive gate data plane（Task 168a）
+    "adaptive_gate_signal_snapshots",
+    # V7 阶段 Y: adaptive halt decisions（Task 169a）
+    "adaptive_halt_decisions",
 ]
 
 
@@ -798,6 +802,66 @@ async def _migrate_foreshadowing_schedule(conn: aiosqlite.Connection) -> None:
     )
 
 
+async def _migrate_adaptive_gate_signals(conn: aiosqlite.Connection) -> None:
+    """创建自适应门禁信号快照表（V7 Task 168a）."""
+    await conn.execute(
+        """CREATE TABLE IF NOT EXISTS adaptive_gate_signal_snapshots (
+            snapshot_id         TEXT PRIMARY KEY,
+            project_id          TEXT NOT NULL
+                                REFERENCES projects(project_id) ON DELETE CASCADE,
+            run_id              TEXT NOT NULL DEFAULT '',
+            chapter_number      INTEGER NOT NULL,
+            source_status_json  TEXT NOT NULL DEFAULT '{}',
+            continuity_json     TEXT NOT NULL DEFAULT '{}',
+            quality_json        TEXT NOT NULL DEFAULT '{}',
+            literary_json       TEXT NOT NULL DEFAULT '{}',
+            cleanliness_json    TEXT NOT NULL DEFAULT '{}',
+            context_json        TEXT NOT NULL DEFAULT '{}',
+            narrative_json      TEXT NOT NULL DEFAULT '{}',
+            created_at          TEXT DEFAULT (datetime('now')),
+            updated_at          TEXT DEFAULT (datetime('now')),
+            UNIQUE(project_id, run_id, chapter_number)
+        )"""
+    )
+    await conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_adaptive_gate_snapshots_project_range "
+        "ON adaptive_gate_signal_snapshots(project_id, run_id, chapter_number)"
+    )
+
+
+async def _migrate_adaptive_halt_decisions(conn: aiosqlite.Connection) -> None:
+    """创建自适应 halt 判定账本（V7 Task 169a）."""
+    await conn.execute(
+        """CREATE TABLE IF NOT EXISTS adaptive_halt_decisions (
+            decision_id           TEXT PRIMARY KEY,
+            project_id            TEXT NOT NULL
+                                  REFERENCES projects(project_id) ON DELETE CASCADE,
+            run_id                TEXT NOT NULL DEFAULT '',
+            chapter_start         INTEGER NOT NULL,
+            chapter_end           INTEGER NOT NULL,
+            evaluated_at_chapter  INTEGER NOT NULL,
+            status                TEXT NOT NULL DEFAULT 'continue'
+                                  CHECK(status IN (
+                                      'continue', 'observe', 'warn',
+                                      'halt_candidate', 'halt'
+                                  )),
+            reasons_json          TEXT NOT NULL DEFAULT '[]',
+            evidence_json         TEXT NOT NULL DEFAULT '{}',
+            policy_id             TEXT NOT NULL DEFAULT 'v7-adaptive-halt-mvp',
+            policy_version        TEXT NOT NULL DEFAULT '1.0',
+            created_at            TEXT DEFAULT (datetime('now'))
+        )"""
+    )
+    await conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_adaptive_halt_decisions_project "
+        "ON adaptive_halt_decisions(project_id, run_id, evaluated_at_chapter)"
+    )
+    await conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_adaptive_halt_decisions_status "
+        "ON adaptive_halt_decisions(project_id, status)"
+    )
+
+
 async def init_schema(db_path: str | Path | None = None) -> None:
     """读取 schema.sql 并执行，幂等（所有 CREATE 带 IF NOT EXISTS）.
 
@@ -845,6 +909,8 @@ async def init_schema(db_path: str | Path | None = None) -> None:
         await _migrate_text_cleanliness_metrics(conn)
         await _migrate_replan_proposals(conn)
         await _migrate_foreshadowing_schedule(conn)
+        await _migrate_adaptive_gate_signals(conn)
+        await _migrate_adaptive_halt_decisions(conn)
         await conn.commit()
 
 
@@ -900,4 +966,6 @@ async def run_migrations(conn: aiosqlite.Connection) -> None:
     await _migrate_text_cleanliness_metrics(conn)
     await _migrate_replan_proposals(conn)
     await _migrate_foreshadowing_schedule(conn)
+    await _migrate_adaptive_gate_signals(conn)
+    await _migrate_adaptive_halt_decisions(conn)
     logger.info("migrations.run_all", status="complete")

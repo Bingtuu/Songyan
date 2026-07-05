@@ -1,8 +1,8 @@
 # V7 Task 总索引
 
 > **阶段**: 篇章级质量修复 → 叙事自驱 → enforce 可生产化 → Ch300 渐进爬坡
-> **当前口径**: **V7 阶段 W 已通过，Task 166/167 已完成，下一步规划 Task 168**。167 已能生成 draft `ForeshadowingSchedulePlan`，将主线线索、临近/逾期伏笔和 Task 166 的 `planning_constraints` 转化为主动调度项，并把 active 调度项注入 GoalPlanner / CreativeDirector 的规划侧输入；accept 后推进 `injected/satisfied/missed` 生命周期。
-> **最后整理**: 2026-07-05（Task 167 完成；下一步规划 Task 168）
+> **当前口径**: **V7 阶段 W 已通过，Task 166/167/168/169 已完成，下一步规划 Task 170**。169 已把自适应 halt 判定建立为可审计 decision ledger，并并行接入 phase2 observe/enforce 后处理路径；下一步用小窗口验证并标定 T12。
+> **最后整理**: 2026-07-05（Task 169 完成；下一步规划 Task 170）
 
 本文是 V7 阶段任务文档的事实入口。V6 阶段事实入口见 `tasks/V6-README.md`；V5 见 `tasks/V5-README.md`；历史规划稿统一归档到 `archive/`，仅在追溯设计边界时查阅。V7 各任务最终状态以本文件和各 `*-DONE.md` 为准。
 
@@ -65,9 +65,13 @@ V7 通过 = 同时满足以下五项（阈值沿用 v6-plan §1.4 的 T1-T8，V7
 
 | Task | 名称 | 状态 | 事实文档 |
 |------|------|:----:|----------|
-| 168 | 自适应门禁数据面（沉淀 supervise_159 分类信号） | ⏳ 占位 | 待阶段 X 规划侧数据面稳定后写 |
-| 169 | 自适应 halt 判定（绝对阈值 → 相对趋势/异常因子） | ⏳ 占位 | 待 168 后写 |
-| 170 | enforce 小窗口验证 + T12 误报率标定 | ⏳ 占位 | 待 169 后写 |
+| 168 | 自适应门禁数据面（拆 168a/b） | ✅ 完成 | `tasks/168-adaptive-gate-data-plane-DONE.md` |
+| 168a | 自适应门禁信号快照模型 | ✅ 完成 | `tasks/168a-adaptive-gate-signal-snapshot-DONE.md` |
+| 168b | 自适应门禁窗口聚合与报告出口 | ✅ 完成 | `tasks/168b-adaptive-gate-window-reporting-DONE.md` |
+| 169 | 自适应 halt 判定（拆 169a/b） | ✅ 完成 | `tasks/169-adaptive-halt-decision-DONE.md` |
+| 169a | 自适应 halt 判定引擎与决策账本 | ✅ 完成 | `tasks/169a-adaptive-halt-decision-engine-DONE.md` |
+| 169b | 自适应 halt workflow 接入 | ✅ 完成 | `tasks/169b-adaptive-halt-workflow-integration-DONE.md` |
+| 170 | enforce 小窗口验证 + T12 误报率标定 | ⏳ 占位 | 下一步规划 |
 
 ### 阶段 Z：Ch300 渐进爬坡验证
 
@@ -94,14 +98,14 @@ Y（enforce 可生产化 168-170）──┴────────────
 - **阶段 W 出口已完成并冻结 T9/T10**：Task 165/165p 已确认阶段 W 通过，T9/T10 已冻结；后续 X/Y/Z 不得在长跑撞线后临时放宽冻结口径。
 - **X 与 Y 可部分并行**：不同代码域（自驱在规划侧、门禁在 gate 侧）。
 - **Z 必须在 W+X+Y 落地后**：171/172/173 长跑是终检，每级出口未达标不进下一级；每级预留 `NNNp` 撞墙定点修复占位。
-- **文档递进纪律**：166/166a/166b 与 167 已按阶段 W/Task 166 结果落地；后续阶段 Y/Z 详细 Task 文档继续按前置 evidence 递进补齐，避免文档超前返工。
+- **文档递进纪律**：166/166a/166b、167、168 与 169 已按阶段 W/Task 166/167/168 结果落地；后续 170 与阶段 Z 详细 Task 文档继续按前置 evidence 递进补齐，避免文档超前返工。
 
 ---
 
 ## 编写策略与拆分依据（2026-07-04）
 
 - **拆分粒度**：基于 V5/V6 测试历史 review——V6 全部 19 Task 拆 a/b/c、enforce 单项用 8 Task（123-130）——确认初稿 10 Task 低估爬坡难度，扩为 **17 Task**：161 拆成去重+时间线两个独立 Task、enforce 扩为 3 Task（数据面/判定/验证）、Ch200/250/300 每级带 `NNNp` 撞墙定点修复占位。
-- **文档策略**：v7-plan 为全局骨架；阶段 W（160-165p）与阶段 X 的 166/167 已落地详细文档；后续 Y/Z 仍保持方向性占位，待前置数据出炉后写。
+- **文档策略**：v7-plan 为全局骨架；阶段 W（160-165p）、阶段 X 的 166/167、阶段 Y 的 168/169 已落地详细文档；后续 170 与 Z 仍保持方向性占位，待前置数据出炉后写。
 
 ---
 

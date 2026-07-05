@@ -11,17 +11,29 @@ import structlog
 
 from songyan.agents.continuity_auditor import ContinuityAuditor
 from songyan.agents.continuity_auditor.continuity_health import classify_report
+from songyan.db.adaptive_halt_repo import AdaptiveHaltDecisionRepository
 from songyan.db.connection import get_db
 from songyan.db.project_run_repo import ProjectRunRepository
 from songyan.db.repository import ChapterHeadRepository
 from songyan.db.run_db_metrics_repo import RunDbMetricsRepository
+from songyan.evals.adaptive_gate import (
+    build_adaptive_gate_data_plane_report,
+    refresh_adaptive_gate_signal_snapshots,
+)
+from songyan.evals.adaptive_halt import evaluate_adaptive_halt
 from songyan.evals.db_maintenance_metrics import (
     check_t5_size_redline,
     collect_db_size_metrics,
     measure_continuity_scan_latency,
 )
-from songyan.exceptions import AutoHaltException, LLMBudgetExceededError
-from songyan.models import GateConfig, ProjectRunResult, ProjectRunState
+from songyan.exceptions import AutoHaltException, LLMBudgetExceededError, SongyanError
+from songyan.models import (
+    AdaptiveHaltDecision,
+    AdaptiveHaltPolicy,
+    GateConfig,
+    ProjectRunResult,
+    ProjectRunState,
+)
 from songyan.workflows._gates import (
     check_health_low_streak_gate,
     evaluate_all_gates,
@@ -137,6 +149,67 @@ async def _upsert_quality_debt(run_id: str, project_id: str) -> None:
             run_id=run_id,
             error=str(exc),
         )
+
+
+async def _evaluate_adaptive_halt_for_run(
+    *,
+    project_id: str,
+    run_id: str,
+    chapter_start: int,
+    chapter_number: int,
+    gate_config: GateConfig,
+) -> AdaptiveHaltDecision | None:
+    """Evaluate Task 169 adaptive halt in phase2 post-processing.
+
+    The helper is non-invasive by default: it only runs when explicitly enabled.
+    Ledger write failures are logged and do not affect accepted/current heads.
+    """
+    if not gate_config.adaptive_halt_enabled:
+        return None
+    try:
+        await refresh_adaptive_gate_signal_snapshots(
+            project_id,
+            chapter_start,
+            chapter_number,
+            run_id=run_id,
+        )
+        report = await build_adaptive_gate_data_plane_report(
+            project_id,
+            chapter_start,
+            chapter_number,
+            run_id=run_id,
+            window=gate_config.adaptive_halt_window,
+        )
+        policy = AdaptiveHaltPolicy(
+            policy_id=gate_config.adaptive_halt_policy_id,
+            mode=gate_config.adaptive_halt_action_mode,
+            warmup_chapters=gate_config.adaptive_halt_warmup_chapters,
+        )
+        decision = evaluate_adaptive_halt(report, policy)
+        await AdaptiveHaltDecisionRepository().create(decision)
+        logger.info(
+            "project_pipeline.adaptive_halt_decision",
+            run_id=run_id,
+            chapter_number=chapter_number,
+            status=decision.status,
+            reasons=[reason.code for reason in decision.reasons],
+        )
+        return decision
+    except (
+        RuntimeError,
+        OSError,
+        ConnectionError,
+        OperationalError,
+        ValueError,
+        SongyanError,
+    ) as exc:
+        logger.warning(
+            "project_pipeline.adaptive_halt_decision_failed",
+            run_id=run_id,
+            chapter_number=chapter_number,
+            error=str(exc),
+        )
+        return None
 
 
 # 质量债增量刷新周期（章）：避免每章全量重读日志的 O(n²)（#2）。
@@ -737,6 +810,32 @@ async def run_project_pipeline(
                 persisted_summary,
                 status="running",
             )
+            adaptive_decision = (
+                await _evaluate_adaptive_halt_for_run(
+                    project_id=project_id,
+                    run_id=run_id,
+                    chapter_start=start,
+                    chapter_number=chapter_number,
+                    gate_config=gate_config,
+                )
+                if gate_config.adaptive_halt_enabled
+                else None
+            )
+            if adaptive_decision is not None and adaptive_decision.status == "halt":
+                await _pause_run_for_auto_halt(
+                    run_state,
+                    completed,
+                    failed,
+                    persisted_summary,
+                )
+                raise AutoHaltException(
+                    message=(
+                        f"Ch{chapter_number} 触发自适应 halt: "
+                        f"{[reason.code for reason in adaptive_decision.reasons]}"
+                    ),
+                    last_chapter=chapter_number,
+                    reason="adaptive_halt_decision",
+                )
 
         else:
             failed.append(chapter_number)
@@ -753,6 +852,32 @@ async def run_project_pipeline(
                 persisted_summary,
                 status="running",
             )
+            adaptive_decision = (
+                await _evaluate_adaptive_halt_for_run(
+                    project_id=project_id,
+                    run_id=run_id,
+                    chapter_start=start,
+                    chapter_number=chapter_number,
+                    gate_config=gate_config,
+                )
+                if gate_config.adaptive_halt_enabled
+                else None
+            )
+            if adaptive_decision is not None and adaptive_decision.status == "halt":
+                await _pause_run_for_auto_halt(
+                    run_state,
+                    completed,
+                    failed,
+                    persisted_summary,
+                )
+                raise AutoHaltException(
+                    message=(
+                        f"Ch{chapter_number} 触发自适应 halt: "
+                        f"{[reason.code for reason in adaptive_decision.reasons]}"
+                    ),
+                    last_chapter=chapter_number,
+                    reason="adaptive_halt_decision",
+                )
             await _check_auto_halt_window(
                 run_state,
                 _recent_results,
