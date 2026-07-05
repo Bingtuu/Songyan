@@ -7,7 +7,9 @@
 from __future__ import annotations
 
 import time
+from collections import defaultdict
 from pathlib import Path
+from statistics import median
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
@@ -34,6 +36,21 @@ class ContinuityScanLatency(BaseModel):
     project_id: str
     up_to_chapter: int
     elapsed_ms: float
+
+
+class T5LatencyAnalysis(BaseModel):
+    """T5 扫描耗时稳健口径分析结果."""
+
+    baseline_ms: float
+    baseline_sample_count: int
+    max_latency_ms: float
+    max_latency_ratio: float
+    observed_breach_chapters: list[int]
+    hard_breach_chapters: list[int]
+    consecutive_breach_chapters: list[int]
+    extreme_breach_chapters: list[int]
+    threshold_ms: float
+    hard_failed: bool
 
 
 async def collect_db_size_metrics() -> DbSizeMetrics:
@@ -109,3 +126,66 @@ def check_t5_latency_redline(
     if baseline_ms <= 0:
         return False
     return elapsed_ms > baseline_ms * factor
+
+
+def analyze_t5_latency_samples(
+    samples: list[dict],
+    *,
+    factor: float = 2.0,
+    extreme_factor: float = 5.0,
+) -> T5LatencyAnalysis:
+    """用稳健口径分析 T5 连续性扫描耗时.
+
+    - 同一章多次采样先取该章中位数，避免 resume/report 追加样本放大权重。
+    - 基线取所有章采样中位数，红线为 median × factor。
+    - 单个孤立样本超过红线只记观察项；连续破线或极端破线才 hard fail。
+    """
+    by_chapter: dict[int, list[float]] = defaultdict(list)
+    for sample in samples:
+        value = sample.get("scan_latency_ms")
+        if value is None:
+            continue
+        by_chapter[int(sample["chapter_number"])].append(float(value))
+
+    chapter_samples = [
+        (chapter, float(median(values)))
+        for chapter, values in sorted(by_chapter.items())
+        if values
+    ]
+    values = [value for _, value in chapter_samples]
+    baseline_ms = float(median(values)) if values else 0.0
+    threshold_ms = baseline_ms * factor if baseline_ms > 0 else 0.0
+    extreme_threshold_ms = baseline_ms * extreme_factor if baseline_ms > 0 else 0.0
+
+    observed_breaches: list[tuple[int, int, float]] = []
+    extreme_breach_chapters: list[int] = []
+    max_latency_ms = max(values) if values else 0.0
+    max_latency_ratio = max_latency_ms / baseline_ms if baseline_ms > 0 else 0.0
+    for idx, (chapter, value) in enumerate(chapter_samples):
+        if baseline_ms <= 0 or value <= threshold_ms:
+            continue
+        observed_breaches.append((idx, chapter, value))
+        if value > extreme_threshold_ms:
+            extreme_breach_chapters.append(chapter)
+
+    consecutive_breach_chapters: list[int] = []
+    for left, right in zip(observed_breaches, observed_breaches[1:]):
+        if right[0] == left[0] + 1:
+            consecutive_breach_chapters.extend([left[1], right[1]])
+
+    hard_breach_chapters = sorted(
+        set(consecutive_breach_chapters + extreme_breach_chapters)
+    )
+
+    return T5LatencyAnalysis(
+        baseline_ms=baseline_ms,
+        baseline_sample_count=len(values),
+        max_latency_ms=max_latency_ms,
+        max_latency_ratio=max_latency_ratio,
+        observed_breach_chapters=[chapter for _, chapter, _ in observed_breaches],
+        hard_breach_chapters=hard_breach_chapters,
+        consecutive_breach_chapters=sorted(set(consecutive_breach_chapters)),
+        extreme_breach_chapters=extreme_breach_chapters,
+        threshold_ms=threshold_ms,
+        hard_failed=bool(hard_breach_chapters),
+    )

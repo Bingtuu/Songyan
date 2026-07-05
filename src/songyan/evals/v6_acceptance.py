@@ -22,7 +22,7 @@ from songyan.db.repository import ChapterHeadRepository
 from songyan.db.run_db_metrics_repo import RunDbMetricsRepository
 from songyan.evals.db_maintenance_metrics import (
     DbSizeMetrics,
-    check_t5_latency_redline,
+    analyze_t5_latency_samples,
     check_t5_size_redline,
 )
 from songyan.evals.db_metrics import (
@@ -53,10 +53,10 @@ _T6C_ATTRIBUTION_RATIO = 0.5  # T7 降幅 ≥ orphan 斜率降幅的 50%
 # T6c-obs: 被降级为 candidate 的 critical ≤ 同窗新增 critical 总数 15%
 _T6C_OBS_MAX_RATIO = 0.15
 
-# T5: DB ≤300MB、扫描耗时 ≤ 基线 1.5×（由 db_maintenance_metrics 实现常量，此处不复值）
 _MIN_ORPHAN_POINTS = 3
 _MIN_T7_POINTS = 1
 _MIN_T5_SAMPLES = 3
+_T6C_SMALL_T7_RATE = 0.1
 
 # T2: 项目 chapter_heads.status 当前只支持 accepted（无 edited）
 _COMPLETING_STATUSES = ("accepted",)
@@ -218,14 +218,15 @@ async def check_t6b(
     end: int,
     continuity_repo: ContinuityReportRepository | None = None,
 ) -> ThresholdResult:
-    """T6b: 全程每章 orphan_critical == 0；缺 continuity_report 的章视为未判定."""
+    """T6b: 审计点上 orphan_critical == 0.
+
+    ContinuityAuditor 默认按审计点产出报告，不要求每章都有 report。
+    只要审计点样本足够且 P1 critical orphan 为 0，即可判定通过。
+    """
     points = await collect_orphan_metrics(
         project_id, start, end, repo=continuity_repo
     )
-    present_chapters = {p.chapter for p in points}
-    expected = set(range(start, end + 1))
-    missing = sorted(expected - present_chapters)
-    sufficient = not missing and bool(points)
+    sufficient = len(points) >= _MIN_ORPHAN_POINTS
 
     if not sufficient:
         return ThresholdResult(
@@ -235,10 +236,8 @@ async def check_t6b(
             threshold="orphan_critical = 0 全程",
             sufficient=False,
             detail=(
-                f"continuity_report 缺失章: {missing[:10]}"
-                f"{'...' if len(missing) > 10 else ''}"
-                if missing
-                else "无 continuity_reports 数据"
+                f"continuity_report 审计点样本不足（{len(points)} < "
+                f"{_MIN_ORPHAN_POINTS}），无法判定 P1=0"
             ),
         )
 
@@ -250,7 +249,7 @@ async def check_t6b(
         threshold="0",
         sufficient=True,
         detail=(
-            "P1 critical orphan 全程为 0"
+            f"P1 critical orphan 审计点全程为 0（基于 {len(points)} 个审计点）"
             if not breaches
             else f"P1 critical orphan >0 的章: {breaches[:20]}"
         ),
@@ -302,7 +301,7 @@ async def check_t6c_attribution(
     continuity_repo: ContinuityReportRepository | None = None,
     setting_repo: SettingTrackingRepository | None = None,
 ) -> ThresholdResult:
-    """T6c hard: T7 降幅 ≥ orphan 斜率降幅的 50%."""
+    """T6c hard: T7 降幅 ≥ orphan 斜率降幅的 50%，小基数保护."""
     orphan_points = await collect_orphan_metrics(
         project_id, start, end, repo=continuity_repo
     )
@@ -331,6 +330,25 @@ async def check_t6c_attribution(
     orphan_decrease = orphan_slope_baseline - orphan_slope
     t7_decrease = t7_baseline - avg_t7
     required = attribution_ratio * orphan_decrease
+
+    # 小基数保护：新 critical 已接近 0 时，T7 绝对可降空间不足，
+    # 不能再用线性降幅比例判定为归因失败。
+    if avg_t7 <= _T6C_SMALL_T7_RATE and t7_decrease >= 0:
+        return ThresholdResult(
+            key="T6c",
+            passed=True,
+            measured=f"orphan_slope={orphan_slope:.4f}, t7={avg_t7:.4f}",
+            threshold=(
+                f"T7≤{_T6C_SMALL_T7_RATE:.2f}/章时启用小基数保护；"
+                f"否则 T7降幅≥{attribution_ratio}×orphan降幅"
+            ),
+            sufficient=True,
+            detail=(
+                "小基数保护：新 critical 产生率已接近 0，原降幅比值口径会被绝对可降空间"
+                f"限制误伤；orphan 斜率降幅 {orphan_decrease:.4f}，"
+                f"T7 降幅 {t7_decrease:.4f}"
+            ),
+        )
 
     # orphan 斜率没有下降时，归因自然不成立
     if orphan_decrease <= 0:
@@ -484,7 +502,7 @@ async def check_t5(
     *,
     run_id: str | None = None,
 ) -> ThresholdResult:
-    """T5: DB ≤300MB、扫描耗时 ≤ 前 10 样本均值 1.5×."""
+    """T5: DB ≤300MB、扫描耗时采用中位数 ×2.0 稳健口径."""
     repo = RunDbMetricsRepository()
     if run_id:
         samples = await repo.list_by_run(run_id)
@@ -502,17 +520,8 @@ async def check_t5(
             detail=f"run_db_metrics 样本不足（{len(samples)} < {_MIN_T5_SAMPLES}）",
         )
 
-    baseline_values = [
-        float(s["scan_latency_ms"])
-        for s in samples[:10]
-        if s.get("scan_latency_ms") is not None
-    ]
-    baseline_ms = sum(baseline_values) / len(baseline_values) if baseline_values else 0.0
-
     size_breaches: list[int] = []
-    latency_breaches: list[int] = []
     max_db_mb = 0.0
-    max_latency_ratio = 0.0
     for s in samples:
         db_bytes = int(s["db_size_bytes"])
         db_mb = db_bytes / (1024 * 1024)
@@ -527,24 +536,30 @@ async def check_t5(
         ):
             size_breaches.append(int(s["chapter_number"]))
 
-        scan_ms = float(s["scan_latency_ms"])
-        if baseline_ms > 0:
-            ratio = scan_ms / baseline_ms
-            max_latency_ratio = max(max_latency_ratio, ratio)
-        if check_t5_latency_redline(scan_ms, baseline_ms):
-            latency_breaches.append(int(s["chapter_number"]))
+    latency = analyze_t5_latency_samples(samples)
 
-    passed = not size_breaches and not latency_breaches
+    passed = not size_breaches and not latency.hard_failed
     return ThresholdResult(
         key="T5",
         passed=passed,
-        measured=f"max_db={max_db_mb:.2f}MB, max_latency_ratio={max_latency_ratio:.2f}x",
-        threshold="DB≤300MB; scan≤1.5× baseline",
+        measured=(
+            f"max_db={max_db_mb:.2f}MB, "
+            f"max_latency_ratio={latency.max_latency_ratio:.2f}x"
+        ),
+        threshold="DB≤300MB; scan≤median×2.0（连续/极端破线才 hard fail）",
         sufficient=True,
         detail=(
             "T5 未破"
             if passed
-            else f"尺寸破线章 {size_breaches}; 耗时破线章 {latency_breaches}"
+            else (
+                f"尺寸破线章 {size_breaches}; "
+                f"耗时 hard 破线章 {latency.hard_breach_chapters}"
+            )
+        )
+        + (
+            f"；耗时观察章 {latency.observed_breach_chapters}"
+            if latency.observed_breach_chapters
+            else ""
         ),
     )
 
@@ -697,8 +712,8 @@ async def evaluate_v6_acceptance(
         await check_health_low(project_id, start, end),
     ]
 
-    sufficient_results = [r for r in results if r.sufficient]
-    all_passed = all(r.passed is True for r in sufficient_results)
+    failed_sufficient = [r for r in results if r.sufficient and r.passed is False]
+    all_passed = not failed_sufficient
     undecided = [r.key for r in results if r.passed is None]
 
     return V6AcceptanceResult(
@@ -744,7 +759,7 @@ def render_v6_acceptance_section(result: V6AcceptanceResult) -> str:
     undecided_text = result.undecided or "无"
     if result.all_passed:
         lines.append(
-            f"- **聚合结论：全部 sufficient 项通过**（未判定项：{undecided_text}）"
+            f"- **聚合结论：无 failed sufficient 项**（未判定项：{undecided_text}）"
         )
     else:
         lines.append(

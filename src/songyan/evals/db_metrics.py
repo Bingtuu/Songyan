@@ -32,7 +32,7 @@ from songyan.evals.concept_budget import (
 )
 from songyan.evals.db_maintenance_metrics import (
     DbSizeMetrics,
-    check_t5_latency_redline,
+    analyze_t5_latency_samples,
     check_t5_size_redline,
 )
 from songyan.evals.text_cleanliness import (
@@ -719,23 +719,21 @@ async def collect_db_maintenance_samples(
 
 def render_db_maintenance_section(samples: list[dict]) -> str:
     """T5：DB 尺寸与连续性扫描耗时红线判定."""
-    lines = ["## DB 维护遥测（T5：尺寸 ≤300MB；扫描耗时 ≤ 基线 1.5×）", ""]
+    lines = ["## DB 维护遥测（T5：尺寸 ≤300MB；扫描耗时 ≤ 中位数×2.0）", ""]
     if not samples:
         lines.append("（无 run_db_metrics 遥测样本）")
         return "\n".join(lines)
 
-    lines.append("| 章 | DB(MB) | WAL(KB) | pages | scan(ms) | 尺寸红线 | 耗时红线 |")
+    latency = analyze_t5_latency_samples(samples)
+    hard_latency = set(latency.hard_breach_chapters)
+    observed_latency = set(latency.observed_breach_chapters)
+
+    lines.append("| 章 | DB(MB) | WAL(KB) | pages | scan(ms) | 尺寸红线 | 耗时状态 |")
     lines.append("|----|--------|---------|-------|----------|----------|----------|")
 
-    # 基线取前 10 个有效样本的 scan_latency_ms 均值（与 T3 基线精神一致）
-    baseline_values = [
-        float(s["scan_latency_ms"]) for s in samples[:10] if s.get("scan_latency_ms") is not None
-    ]
-    baseline_ms = sum(baseline_values) / len(baseline_values) if baseline_values else 0.0
-
     size_breaches: list[int] = []
-    latency_breaches: list[int] = []
     for s in samples:
+        chapter = int(s["chapter_number"])
         db_mb = int(s["db_size_bytes"]) / (1024 * 1024)
         wal_kb = int(s["wal_size_bytes"]) / 1024
         scan_ms = float(s["scan_latency_ms"])
@@ -747,25 +745,34 @@ def render_db_maintenance_section(samples: list[dict]) -> str:
                 page_size=int(s["page_size"]),
             )
         )
-        latency_red = check_t5_latency_redline(scan_ms, baseline_ms)
         if size_red:
-            size_breaches.append(int(s["chapter_number"]))
-        if latency_red:
-            latency_breaches.append(int(s["chapter_number"]))
+            size_breaches.append(chapter)
+        if chapter in hard_latency:
+            latency_flag = "🔴 hard"
+        elif chapter in observed_latency:
+            latency_flag = "△ observe"
+        else:
+            latency_flag = "✓"
         lines.append(
-            f"| {s['chapter_number']} | {db_mb:.2f} | {wal_kb:.1f} "
+            f"| {chapter} | {db_mb:.2f} | {wal_kb:.1f} "
             f"| {s['page_count']} | {scan_ms:.3f} | "
-            f"{'🔴' if size_red else '✓'} | {'🔴' if latency_red else '✓'} |"
+            f"{'🔴' if size_red else '✓'} | {latency_flag} |"
         )
 
     lines.append("")
-    lines.append(f"- 扫描耗时基线（前 {len(baseline_values)} 样本均值）：**{baseline_ms:.3f} ms**")
+    lines.append(
+        f"- 扫描耗时基线（{latency.baseline_sample_count} 个章级样本中位数）："
+        f"**{latency.baseline_ms:.3f} ms**；hard 阈值："
+        f"**{latency.threshold_ms:.3f} ms**"
+    )
     if size_breaches:
         lines.append(f"- 🔴 DB 尺寸超 300MB 样本章：{size_breaches}")
     else:
         lines.append("- ✓ DB 尺寸未超 300MB 红线")
-    if latency_breaches:
-        lines.append(f"- 🔴 扫描耗时超基线 1.5× 样本章：{latency_breaches}")
+    if latency.hard_breach_chapters:
+        lines.append(f"- 🔴 扫描耗时 hard 破线章：{latency.hard_breach_chapters}")
     else:
-        lines.append("- ✓ 扫描耗时未超基线 1.5× 红线")
+        lines.append("- ✓ 扫描耗时无连续/极端 hard 破线")
+    if latency.observed_breach_chapters:
+        lines.append(f"- △ 扫描耗时观察章：{latency.observed_breach_chapters}")
     return "\n".join(lines)

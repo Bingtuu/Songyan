@@ -286,6 +286,6 @@ class TestStageWExitSummary:
 
         text = r165.render_threshold_freeze_section(t9, t10)
 
-        assert "T9/T10 阈值标定与冻结草案" in text
+        assert "T9/T10 阈值标定与冻结结论" in text
         assert "仅报告不计红线" in text
         assert "×0.85" in text

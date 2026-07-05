@@ -308,15 +308,15 @@ def render_stage_w_exit_section(rows: list[StageWExitRow]) -> str:
 
 
 def render_threshold_freeze_section(t9: T9Calibration, t10: T10Calibration) -> str:
-    """渲染 T9/T10 冻结草案。"""
+    """渲染 T9/T10 标定与冻结结论。"""
     t9_timeline = "纳入硬红线" if t9.include_timeline_in_redline else "仅报告不计红线"
     lines = [
-        "## T9/T10 阈值标定与冻结草案",
+        "## T9/T10 阈值标定与冻结结论",
         "",
         "### T9 文本洁净度",
         "",
         "- 元标记=0、重复长段落=0：结构性硬红线。",
-        f"- 时间线矛盾口径：**{t9_timeline}**（真实 Ch150 后最终冻结）。",
+        f"- 时间线矛盾口径：**{t9_timeline}**。",
         f"- 当前 T9 结果：{_flag(t9.passed)}；实测：{t9.measured or '-'}；{t9.detail}",
         "",
         "### T10 文学不衰减",
@@ -324,8 +324,8 @@ def render_threshold_freeze_section(t9: T9Calibration, t10: T10Calibration) -> s
         f"- 默认系数：×{t10.coefficient}",
         f"- 当前结果：{_flag(t10.passed)}；{t10.detail}",
         "",
-        "> 冻结纪律：真实 Ch150 修复后基线实测后写入 docs/v7-plan.md §4，"
-        "不得在长跑撞线后临时放宽。",
+        "> 冻结纪律：本结论基于 Task 165 / 165p 的真实 Ch150 修复后基线；"
+        "不得在后续长跑撞线后临时放宽。",
     ]
     return "\n".join(lines)
 

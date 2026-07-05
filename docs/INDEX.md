@@ -14,6 +14,9 @@
 | `tasks/162-cross-chapter-timeline-consistency-DONE.md` | Task 162：跨章时间线一致性诊断（确定性时间信号 + metrics 诊断段） |
 | `tasks/163-concept-budget-constraint-DONE.md` | Task 163：概念预算约束（概念台账 + CreativeDirector 规划侧约束 + metrics 诊断段） |
 | `tasks/164-text-cleanliness-metrics-DONE.md` | Task 164：文本洁净度度量入库 + metrics 展示 + T9 harness |
+| `tasks/165-stage-w-ch150-rerun-and-threshold-freeze-DONE.md` | Task 165：阶段 W 出口 Ch1-Ch150 复跑验证 + T9/T10 冻结（已完成） |
+| `tasks/165p-stage-w-harness-calibration-DONE.md` | Task 165p：阶段 W 出口阻断项，T5/T6 harness 口径校准（已完成） |
+| `docs/reports/task-165-stage-w-exit-report.md` | Task 165：阶段 W 出口报告（150/150 accepted，P/L/不回退均通过） |
 | `tasks/V6-README.md` | V6 任务事实入口（前置阶段）：叙事骨架 MVP + 度量 + 长跑底盘，Task 141-159 |
 | `tasks/V5-README.md` | V5.0 任务事实入口 |
 | `tasks/121a-v50-goal-assessment-and-v51-plan.md` | Task 121a：V5.0 目标评估与 V5.1 规划 |

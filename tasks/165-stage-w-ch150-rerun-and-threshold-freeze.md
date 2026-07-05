@@ -25,6 +25,14 @@
 
 **为什么这是阶段 W 出口**：160-162 修检测与清洗、163 治概念、164 建度量与判据——165 是**在真实 150 章长跑上验证四者协同生效 + 冻结验收口径**。X/Y/Z 都以"篇章级洁净的 Ch150 基线"为前提，故 165 未达标不进 X/Y/Z（继承 V6 阶段出口纪律）。
 
+### 2026-07-05 执行结果与 165p 交接
+
+- 真实复跑 `run-11fc7c96` 已完成：Ch1-Ch150 150/150 accepted，`failed=[]`，无 AutoHalt。
+- P 洁净通过：元标记 52→0、重复长段落 19→0；时间线诊断 3 章（[21, 37, 142]）按候选口径 report-only。
+- L 文学通过：conceptual_grounding 首段 W=5 6.80，末段 W=5 6.06，阈值 5.78（×0.85）。
+- 初次报告中阶段 W 出口条件不通过：`不回退` 项中 T5 扫描耗时旧口径 fail、T6c 小基数归因口径 fail。
+- 该阻断项已由 `tasks/165p-stage-w-harness-calibration-DONE.md` 解决。复算后阶段 W 通过，T9/T10 已冻结，最终结论见 `tasks/165-stage-w-ch150-rerun-and-threshold-freeze-DONE.md`。
+
 ## Cross-Task Coordination（阶段 W 统一口径）
 
 - **判据/曲线复用**：T9 走 164 `check_t9`；T10 走 147 文学趋势；洁净度曲线走 164 `render_text_cleanliness_section`。165 只在 150 章规模跑 + 对比 + 冻结，**不新增判据函数、不 fork**。

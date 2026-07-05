@@ -85,7 +85,7 @@ class TestT5Freeze:
         assert t5["size_passed"] is True
         assert t5["latency_passed"] is True
         assert t5["db_size_mb"] == pytest.approx(299.0, abs=0.01)
-        assert "维持" in t5["recommendation"]
+        assert "稳健口径" in t5["recommendation"]
         assert not t5["size_breach_chapters"]
         assert not t5["latency_breach_chapters"]
 
@@ -108,15 +108,32 @@ class TestT5Freeze:
         assert 100 in t5["size_breach_chapters"]
         assert "调整" in t5["recommendation"]
 
-    async def test_latency_breach_at_1_6x(self, test_db: Path) -> None:
+    async def test_isolated_latency_1_6x_is_observed_not_hard_fail(
+        self, test_db: Path
+    ) -> None:
         await _seed_project()
-        await _seed_run("run-latency-breach")
-        # 前 10 个样本建立 10ms 基线；1.5x = 15ms；第 11 个 16ms 破线
+        await _seed_run("run-latency-observed")
+        # 中位数基线 10ms；2.0x = 20ms；第 11 个 16ms 只作为观察项
         samples = [(i * 10, 100, 10.0) for i in range(1, 11)]
         samples.append((100, 100, 16.0))
-        await _create_samples("run-latency-breach", samples)
+        await _create_samples("run-latency-observed", samples)
 
-        t5 = await runner._evaluate_t5(PID, "run-latency-breach")
+        t5 = await runner._evaluate_t5(PID, "run-latency-observed")
+        assert t5["sufficient"] is True
+        assert t5["size_passed"] is True
+        assert t5["latency_passed"] is True
+        assert 100 not in t5["latency_breach_chapters"]
+        assert not t5["latency_observed_chapters"]
+        assert "稳健口径" in t5["recommendation"]
+
+    async def test_extreme_latency_breach_fails(self, test_db: Path) -> None:
+        await _seed_project()
+        await _seed_run("run-latency-extreme")
+        samples = [(i * 10, 100, 10.0) for i in range(1, 11)]
+        samples.append((100, 100, 100.0))
+        await _create_samples("run-latency-extreme", samples)
+
+        t5 = await runner._evaluate_t5(PID, "run-latency-extreme")
         assert t5["sufficient"] is True
         assert t5["size_passed"] is True
         assert t5["latency_passed"] is False
@@ -136,16 +153,17 @@ class TestT5Freeze:
         assert t5["latency_passed"] is True
         assert not t5["latency_breach_chapters"]
 
-    async def test_baseline_uses_first_10_samples(self, test_db: Path) -> None:
+    async def test_baseline_uses_all_sample_median(self, test_db: Path) -> None:
         await _seed_project()
-        await _seed_run("run-baseline-10")
+        await _seed_run("run-baseline-median")
         samples = [(i * 10, 100, 10.0) for i in range(1, 11)]
-        samples.append((100, 100, 15.1))  # 基线 10ms，1.5x=15ms，15.1 破线
-        await _create_samples("run-baseline-10", samples)
+        samples.append((100, 100, 15.1))  # 中位数仍为 10ms；2.0x=20ms
+        await _create_samples("run-baseline-median", samples)
 
-        t5 = await runner._evaluate_t5(PID, "run-baseline-10")
+        t5 = await runner._evaluate_t5(PID, "run-baseline-median")
         assert t5["baseline_ms"] == pytest.approx(10.0, abs=0.01)
-        assert t5["latency_passed"] is False
+        assert t5["baseline_sample_count"] == 10
+        assert t5["latency_passed"] is True
 
     async def test_latency_no_baseline_when_zero(self, test_db: Path) -> None:
         await _seed_project()

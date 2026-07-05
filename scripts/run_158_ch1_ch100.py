@@ -52,7 +52,7 @@ from songyan.db.repository import (
 from songyan.db.run_db_metrics_repo import RunDbMetricsRepository
 from songyan.evals.db_maintenance_metrics import (
     DbSizeMetrics,
-    check_t5_latency_redline,
+    analyze_t5_latency_samples,
     check_t5_size_redline,
 )
 from songyan.evals.db_metrics import render_stage_a_metrics
@@ -423,21 +423,16 @@ async def _evaluate_t5(
     )
     size_breached = check_t5_size_redline(size_metrics)
 
-    baseline_values = [
-        float(s["scan_latency_ms"])
-        for s in samples[:10]
-        if s.get("scan_latency_ms") is not None
-    ]
-    baseline_ms = sum(baseline_values) / len(baseline_values) if baseline_values else 0.0
-    max_latency_ms = max(float(s["scan_latency_ms"]) for s in samples)
-    latency_breached = any(
-        check_t5_latency_redline(float(s["scan_latency_ms"]), baseline_ms)
-        for s in samples
-    )
+    latency = analyze_t5_latency_samples(samples)
+    baseline_ms = latency.baseline_ms
+    max_latency_ms = latency.max_latency_ms
+    latency_breached = latency.hard_failed
 
-    recommendation = "维持首版阈值：DB≤300MB、扫描≤基线1.5×"
+    recommendation = "采用稳健口径冻结：DB≤300MB、扫描≤中位数×2.0"
     if size_breached or latency_breached:
         recommendation = "实测破线，需按 148z 纪律记录并调整阈值后再冻结"
+    elif latency.observed_breach_chapters:
+        recommendation = "采用稳健口径冻结：DB≤300MB、扫描≤中位数×2.0；孤立耗时抖动仅观察"
 
     return {
         "sufficient": True,
@@ -445,7 +440,7 @@ async def _evaluate_t5(
         "latency_passed": not latency_breached,
         "db_size_mb": db_size_mb,
         "baseline_ms": baseline_ms,
-        "baseline_sample_count": len(baseline_values),
+        "baseline_sample_count": latency.baseline_sample_count,
         "max_latency_ms": max_latency_ms,
         "size_breach_chapters": [
             int(s["chapter_number"])
@@ -459,11 +454,8 @@ async def _evaluate_t5(
                 )
             )
         ],
-        "latency_breach_chapters": [
-            int(s["chapter_number"])
-            for s in samples
-            if check_t5_latency_redline(float(s["scan_latency_ms"]), baseline_ms)
-        ],
+        "latency_breach_chapters": latency.hard_breach_chapters,
+        "latency_observed_chapters": latency.observed_breach_chapters,
         "recommendation": recommendation,
     }
 

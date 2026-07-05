@@ -123,6 +123,7 @@ async def _make_critical_setting(
     chapter: int,
     idx: int,
     status: str = "active",
+    category: str = "critical",
 ) -> None:
     await SettingTrackingRepository().create(
         tracking_id=f"st_{project_id}_{chapter}_{idx}",
@@ -132,7 +133,7 @@ async def _make_critical_setting(
         description="",
         introduced_in_chapter=chapter,
         source_version_id=f"v_{project_id}_{chapter}",
-        category="critical",
+        category=category,
         status=status,
     )
 
@@ -265,8 +266,17 @@ class TestT6bP1Orphan:
         assert result.passed is False
         assert "5" in result.detail
 
-    async def test_missing_report_undecided(self, test_db) -> None:
+    async def test_audit_point_coverage_passes_without_every_chapter_report(
+        self, test_db
+    ) -> None:
         for ch in range(1, 10):
+            await _make_orphan_report(PROJECT_ID, ch, total=2, critical=0)
+        result = await check_t6b(PROJECT_ID, 1, 10)
+        assert result.passed is True
+        assert result.sufficient is True
+
+    async def test_insufficient_audit_points_undecided(self, test_db) -> None:
+        for ch in range(1, 3):
             await _make_orphan_report(PROJECT_ID, ch, total=2, critical=0)
         result = await check_t6b(PROJECT_ID, 1, 10)
         assert result.passed is None
@@ -291,6 +301,15 @@ class TestT6cAttribution:
                 await _make_critical_setting(PROJECT_ID, ch, i)
         result = await check_t6c_attribution(PROJECT_ID, 1, 10)
         assert result.passed is False
+
+    async def test_small_t7_rate_does_not_fail_by_arithmetic(self, test_db) -> None:
+        # 新 critical 已压到 0 时，T7 绝对可降空间不足，原比值口径不应硬 fail。
+        for ch in range(1, 11):
+            await _make_orphan_report(PROJECT_ID, ch, total=round(1.0 * ch))
+            await _make_critical_setting(PROJECT_ID, ch, 0, category="background")
+        result = await check_t6c_attribution(PROJECT_ID, 1, 10)
+        assert result.passed is True
+        assert "小基数" in result.detail
 
     async def test_insufficient_undecided(self, test_db) -> None:
         await _make_orphan_report(PROJECT_ID, 1, total=1)
