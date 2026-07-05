@@ -1,8 +1,8 @@
 # V7 Task 总索引
 
 > **阶段**: 篇章级质量修复 → 叙事自驱 → enforce 可生产化 → Ch300 渐进爬坡
-> **当前口径**: **V7 阶段 W 已开工，Task 160-164 已完成，下一步 Task 165 阶段 W 出口复跑与 T9/T10 冻结**。前置 V6（Task 141-159）已全阶段完成并验收——叙事骨架 MVP、长篇质量度量、末端治理、无人值守长跑底盘，取得真实 Ch1-Ch150 证据（`run-bba292da`，150/150 accept、health 全程 ≥8.2、orphan 斜率 0.0897、T5 已冻结）。V6 阶段验收结论：**实质达标、条件通过**。但对 `run-bba292da` 全 150 章正文的人工通读暴露了 V6 句子级度量掩盖的**篇章级质量债**（52 章元标记泄漏、19 章整段重复/时间线矛盾、中后段概念通胀），这是 V7 阶段 W 的第一性修复对象。V7 论证基础见 `docs/v7-vision.md`，阶段规划与 Task 160-173 路线图见 `docs/v7-plan.md`，V6 收官依据见 `tasks/V6-README.md` 与 `docs/reports/task-159-v6-final-acceptance-report.md`。任务编号沿用连续编号惯例（V6 收尾于 Task 159），本阶段从 **Task 160** 起连续编号。
-> **最后整理**: 2026-07-04（Task 164 完成：文本洁净度入库 + metrics 展示 + T9 harness；下一步 Task 165）
+> **当前口径**: **V7 阶段 W Task 165 已完成真实 Ch1-Ch150 复跑，但阶段 W 出口仍条件不通过**。`run-11fc7c96` 最终 150/150 accepted、`failed=[]`、无 AutoHalt；P 洁净通过（元标记 52→0、重复段落 19→0，时间线 3 章 report-only），L 文学通过（conceptual_grounding 6.80→6.06，阈值 5.78）。阻断项为“不回退”：T5 扫描耗时旧口径 fail、T6c 归因口径 fail。下一步先处理 V6 遗留 harness 口径（T5/T6b/T6c），复算 165 报告后再决定 T9/T10 正式冻结与 X/Y/Z 开工。
+> **最后整理**: 2026-07-05（Task 165 真实复跑完成；P/L 通过，阶段 W 因 T5/T6c harness fail 条件不通过）
 
 本文是 V7 阶段任务文档的事实入口。V6 阶段事实入口见 `tasks/V6-README.md`；V5 见 `tasks/V5-README.md`；历史规划稿统一归档到 `archive/`，仅在追溯设计边界时查阅。V7 各任务最终状态以本文件和各 `*-DONE.md` 为准。
 
@@ -47,7 +47,7 @@ V7 通过 = 同时满足以下五项（阈值沿用 v6-plan §1.4 的 T1-T8，V7
 | 162 | 跨章时间线一致性检测（倒计时/时间戳矛盾，先诊断） | ✅ 完成 | `tasks/162-cross-chapter-timeline-consistency-DONE.md` |
 | 163 | 概念预算约束（治概念通胀） | ✅ 完成 | `tasks/163-concept-budget-constraint-DONE.md` |
 | 164 | 文本洁净度度量入库 + `songyan report` 展示（T9 harness） | ✅ 完成 | `tasks/164-text-cleanliness-metrics-DONE.md` |
-| 165 | 阶段 W 出口：Ch150 复跑验证 + T9/T10 标定冻结 | ◻ 规划中 | `tasks/165-stage-w-ch150-rerun-and-threshold-freeze.md` |
+| 165 | 阶段 W 出口：Ch150 复跑验证 + T9/T10 标定冻结 | ⚠️ 条件完成 | `tasks/165-stage-w-ch150-rerun-and-threshold-freeze.md`；报告 `docs/reports/task-165-stage-w-exit-report.md` |
 
 ### 阶段 X：叙事自驱（骨架动态闭环 + 伏笔主动调度）
 
