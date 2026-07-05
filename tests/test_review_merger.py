@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from songyan.models import (
+    DuplicateParagraphMatch,
     LLMAuditResult,
     ReviewCategory,
     ReviewIssue,
@@ -203,6 +204,68 @@ class TestWordCountThreshold:
         severities = [i.severity for i in issues]
         assert severities.count("critical") == 2
         assert severities.count("major") == 1
+
+
+# ---------------------------------------------------------------------------
+# Task 165: Duplicate Paragraph Issues
+# ---------------------------------------------------------------------------
+class TestDuplicateParagraphIssues:
+    """重复长段落必须进入 ReviewIssue，避免 T9 到最终报告才失败."""
+
+    def test_duplicate_paragraph_converts_to_major_patch_issue(self) -> None:
+        match = DuplicateParagraphMatch(
+            paragraph_index=75,
+            duplicate_of_index=41,
+            matched_text="林渊看到了搭档的表情，那个表情他见过。那不是恐惧，而是决绝。",
+            original_text="林渊看到了搭档的表情，那个表情他见过。那不是恐惧，而是决绝。",
+            location="第75段第1句",
+            original_location="第41段第1句",
+            similarity=1.0,
+        )
+        rule_result = RuleAuditResult(
+            has_opening_hook=True,
+            has_ending_hook=True,
+            duplicate_paragraph_count=1,
+            duplicate_paragraph_matches=[match],
+        )
+
+        issues = _convert_rule_to_issues("正文", rule_result, "v1")
+
+        dup_issues = [i for i in issues if i.issue_id.startswith("rule-dup-")]
+        assert len(dup_issues) == 1
+        assert dup_issues[0].severity == "major"
+        assert dup_issues[0].fix_type == "patch"
+        assert dup_issues[0].evidence_location == "第75段第1句"
+        assert "T9" in dup_issues[0].issue_description
+
+    def test_duplicate_paragraph_issue_is_protected_from_rule_cap(self) -> None:
+        match = DuplicateParagraphMatch(
+            paragraph_index=75,
+            duplicate_of_index=41,
+            matched_text="林渊看到了搭档的表情，那个表情他见过。那不是恐惧，而是决绝。",
+            original_text="林渊看到了搭档的表情，那个表情他见过。那不是恐惧，而是决绝。",
+            location="第75段第1句",
+            original_location="第41段第1句",
+            similarity=1.0,
+        )
+        rule_result = RuleAuditResult(
+            has_opening_hook=False,
+            has_ending_hook=False,
+            ai_tell_count=2,
+            fatigue_word_count=3,
+            word_count=4200,
+            word_count_target=3000,
+            paragraph_rhythm_score=3.0,
+            rhythm_issues=["连续超长段落"],
+            scene_count=1,
+            scene_count_ok=False,
+            duplicate_paragraph_count=1,
+            duplicate_paragraph_matches=[match],
+        )
+
+        issues = _convert_rule_to_issues("正文" * 1200, rule_result, "v1")
+
+        assert any(i.issue_id.startswith("rule-dup-") for i in issues)
 
 
 # ---------------------------------------------------------------------------

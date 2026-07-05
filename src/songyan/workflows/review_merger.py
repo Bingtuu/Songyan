@@ -295,6 +295,34 @@ def _convert_rule_to_issues(
     if scene_issue is not None:
         issues.append(scene_issue)
 
+    # 0c. Task 161 / 165: 重复长段落是 T9 硬红线，必须进入可修订问题流
+    if rule_result.duplicate_paragraph_matches:
+        for idx, match in enumerate(rule_result.duplicate_paragraph_matches[:3], 1):
+            issues.append(
+                ReviewIssue(
+                    issue_id=f"rule-dup-{version_id}-{idx:03d}",
+                    category=ReviewCategory.NARRATIVE_PACING,
+                    severity="major",
+                    evidence_quote=_clamp(match.matched_text),
+                    evidence_location=match.location or f"第{match.paragraph_index}段",
+                    issue_description=(
+                        "重复长段落 — 正文中出现与前文高度相同的长段落，"
+                        "会触发 T9 文本洁净度硬红线。"
+                    ),
+                    expected="保留第一次出现的有效段落，删除或改写后续重复段落。",
+                    actual=(
+                        f"第{match.paragraph_index}段与第{match.duplicate_of_index}段"
+                        f"相似度 {match.similarity:.2f}。"
+                    ),
+                    suggested_fix=(
+                        "删除后出现的重复长段落；如该位置需要承接情绪或动作，"
+                        "改成一句新的过渡，不要复制原段落。"
+                    ),
+                    fix_type="patch",
+                    confidence=1.0,
+                )
+            )
+
     # 1. 章末钩子缺失 (critical)
     if not rule_result.has_ending_hook:
         ending_snippet = _clamp(content[-200:]) if content else ""
@@ -485,7 +513,7 @@ def _convert_rule_to_issues(
 
     # 上限保护：MR / 元标记聚合 issue 不计入 cap，始终保留
     max_rule_issues = 5
-    protected_prefixes = ("rule-mr-", "rule-meta-", "rule-scene-")
+    protected_prefixes = ("rule-mr-", "rule-meta-", "rule-scene-", "rule-dup-")
     protected = [i for i in issues if i.issue_id.startswith(protected_prefixes)]
     regular = [i for i in issues if not i.issue_id.startswith(protected_prefixes)]
     if len(regular) > max_rule_issues:
