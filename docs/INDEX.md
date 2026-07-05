@@ -17,6 +17,9 @@
 | `tasks/165-stage-w-ch150-rerun-and-threshold-freeze-DONE.md` | Task 165：阶段 W 出口 Ch1-Ch150 复跑验证 + T9/T10 冻结（已完成） |
 | `tasks/165p-stage-w-harness-calibration-DONE.md` | Task 165p：阶段 W 出口阻断项，T5/T6 harness 口径校准（已完成） |
 | `docs/reports/task-165-stage-w-exit-report.md` | Task 165：阶段 W 出口报告（150/150 accepted，P/L/不回退均通过） |
+| `tasks/166-plan-generate-replan-loop-DONE.md` | Task 166：plan→generate→re-plan 闭环总览（已完成） |
+| `tasks/166a-arc-outcome-evaluation-and-replan-proposal-DONE.md` | Task 166a：弧后评估与 ReplanProposal 生成（已完成） |
+| `tasks/166b-approved-replan-application-DONE.md` | Task 166b：人工确认后的 re-plan 应用（已完成） |
 | `tasks/V6-README.md` | V6 任务事实入口（前置阶段）：叙事骨架 MVP + 度量 + 长跑底盘，Task 141-159 |
 | `tasks/V5-README.md` | V5.0 任务事实入口 |
 | `tasks/121a-v50-goal-assessment-and-v51-plan.md` | Task 121a：V5.0 目标评估与 V5.1 规划 |

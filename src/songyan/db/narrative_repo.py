@@ -12,7 +12,7 @@ from __future__ import annotations
 import json as _json
 from datetime import datetime
 from sqlite3 import Row
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import structlog
 
@@ -192,6 +192,88 @@ class NarrativeRepository:
             return None
         return self._row_to_arc(row)
 
+    async def get_arc_by_id(
+        self,
+        arc_id: str,
+        conn: aiosqlite.Connection | None = None,
+    ) -> ArcPlan | None:
+        """按 arc_id 读取弧规划."""
+
+        async def _do(c: aiosqlite.Connection) -> ArcPlan | None:
+            c.row_factory = Row
+            cursor = await c.execute(
+                "SELECT * FROM arc_plans WHERE arc_id = ?",
+                (arc_id,),
+            )
+            row = await cursor.fetchone()
+            return self._row_to_arc(row) if row is not None else None
+
+        if conn is None:
+            async with get_db() as c:
+                return await _do(c)
+        return await _do(conn)
+
+    async def update_arc_goal(
+        self,
+        arc_id: str,
+        arc_goal: str,
+        conn: aiosqlite.Connection | None = None,
+    ) -> None:
+        """更新未来 ArcPlan 的 arc_goal（供 approved re-plan 应用）."""
+
+        async def _do(c: aiosqlite.Connection) -> None:
+            cursor = await c.execute(
+                "UPDATE arc_plans SET arc_goal = ? WHERE arc_id = ?",
+                (arc_goal, arc_id),
+            )
+            if cursor.rowcount == 0:
+                msg = f"arc plan not found: {arc_id}"
+                raise NarrativeError(msg)
+
+        if conn is None:
+            async with get_db() as c:
+                await _do(c)
+                await c.commit()
+        else:
+            await _do(conn)
+        logger.info(
+            "repository.write",
+            table="arc_plans",
+            operation="update_arc_goal",
+            arc_id=arc_id,
+        )
+
+    async def update_arc_thread_list(
+        self,
+        arc_id: str,
+        field: Literal["threads_to_open", "threads_to_resolve"],
+        values: list[str],
+        conn: aiosqlite.Connection | None = None,
+    ) -> None:
+        """结构化更新 ArcPlan 的线索列表字段."""
+
+        async def _do(c: aiosqlite.Connection) -> None:
+            cursor = await c.execute(
+                f"UPDATE arc_plans SET {field} = ? WHERE arc_id = ?",
+                (_json.dumps(values, ensure_ascii=False), arc_id),
+            )
+            if cursor.rowcount == 0:
+                msg = f"arc plan not found: {arc_id}"
+                raise NarrativeError(msg)
+
+        if conn is None:
+            async with get_db() as c:
+                await _do(c)
+                await c.commit()
+        else:
+            await _do(conn)
+        logger.info(
+            "repository.write",
+            table="arc_plans",
+            operation=f"update_{field}",
+            arc_id=arc_id,
+        )
+
     @staticmethod
     def _row_to_arc(row: Row) -> ArcPlan:
         return ArcPlan(
@@ -262,17 +344,24 @@ class NarrativeRepository:
             rows = await cursor.fetchall()
         return [self._row_to_thread(row) for row in rows]
 
-    async def get_thread(self, thread_id: str) -> PlotThread | None:
-        async with get_db() as conn:
-            conn.row_factory = Row
-            cursor = await conn.execute(
+    async def get_thread(
+        self,
+        thread_id: str,
+        conn: aiosqlite.Connection | None = None,
+    ) -> PlotThread | None:
+        async def _do(c: aiosqlite.Connection) -> PlotThread | None:
+            c.row_factory = Row
+            cursor = await c.execute(
                 "SELECT * FROM plot_threads WHERE thread_id = ?",
                 (thread_id,),
             )
             row = await cursor.fetchone()
-        if row is None:
-            return None
-        return self._row_to_thread(row)
+            return self._row_to_thread(row) if row is not None else None
+
+        if conn is None:
+            async with get_db() as c:
+                return await _do(c)
+        return await _do(conn)
 
     async def count_threads_by_status(self, project_id: str) -> dict[str, int]:
         """按状态统计线索数量（供 report 与阶段 A 弧级兑现率使用）."""
@@ -345,6 +434,39 @@ class NarrativeRepository:
             thread_id=thread_id,
             new_status=new_status,
             chapter=chapter,
+        )
+
+    async def update_thread_expected_resolve_arc(
+        self,
+        thread_id: str,
+        expected_resolve_arc: int | None,
+        conn: aiosqlite.Connection | None = None,
+    ) -> None:
+        """更新未来规划中的线索预期收束弧."""
+
+        async def _do(c: aiosqlite.Connection) -> None:
+            cursor = await c.execute(
+                """UPDATE plot_threads
+                   SET expected_resolve_arc = ?, updated_at = datetime('now')
+                   WHERE thread_id = ?""",
+                (expected_resolve_arc, thread_id),
+            )
+            if cursor.rowcount == 0:
+                msg = f"plot thread not found: {thread_id}"
+                raise NarrativeError(msg)
+
+        if conn is None:
+            async with get_db() as c:
+                await _do(c)
+                await c.commit()
+        else:
+            await _do(conn)
+        logger.info(
+            "repository.write",
+            table="plot_threads",
+            operation="update_expected_resolve_arc",
+            thread_id=thread_id,
+            expected_resolve_arc=expected_resolve_arc,
         )
 
     @staticmethod

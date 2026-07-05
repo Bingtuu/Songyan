@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from sqlite3 import Row
+from typing import Any
 
 import structlog
 
@@ -287,4 +288,48 @@ class LiteraryObservationRepository:
                 continue
             seen.add(chapter)
             result.append(dict(row))
+        return result
+
+    async def list_observations_by_chapter_range(
+        self, project_id: str, start: int, end: int
+    ) -> list[dict[str, Any]]:
+        """按章回读最新文学诊断明细（供 166a 风格债转规划约束）."""
+        async with get_db() as conn:
+            conn.row_factory = Row
+            cursor = await conn.execute(
+                """SELECT cv.chapter_number AS chapter,
+                          lo.observation_id,
+                          lo.observations,
+                          lo.summary,
+                          lo.literary_quality_score,
+                          lo.character_autonomy_score,
+                          lo.conceptual_grounding_score,
+                          lo.fissure_preservation_score
+                   FROM literary_observations lo
+                   JOIN chapter_versions cv ON lo.version_id = cv.version_id
+                   WHERE cv.project_id = ?
+                     AND cv.chapter_number BETWEEN ? AND ?
+                   ORDER BY cv.chapter_number, lo.created_at DESC, lo.observation_id DESC""",
+                (project_id, start, end),
+            )
+            rows = await cursor.fetchall()
+        seen: set[int] = set()
+        result: list[dict[str, Any]] = []
+        for row in rows:
+            chapter = int(row["chapter"])
+            if chapter in seen:
+                continue
+            seen.add(chapter)
+            result.append(
+                {
+                    "chapter": chapter,
+                    "observation_id": row["observation_id"],
+                    "observations": _from_json(row["observations"], []),
+                    "summary": row["summary"] or "",
+                    "literary_quality_score": row["literary_quality_score"],
+                    "character_autonomy_score": row["character_autonomy_score"],
+                    "conceptual_grounding_score": row["conceptual_grounding_score"],
+                    "fissure_preservation_score": row["fissure_preservation_score"],
+                }
+            )
         return result

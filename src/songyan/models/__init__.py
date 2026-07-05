@@ -55,6 +55,18 @@ from songyan.models.narrative import (
 from songyan.models.project import ProjectSetting
 from songyan.models.project_run import ProjectRunResult, ProjectRunState
 from songyan.models.rag import ChunkMetadata, RAGConfig, RetrievedChunk, TextChunk
+from songyan.models.replan import (
+    ArcOutcomeEvaluation,
+    ArcOutcomeRiskLevel,
+    PlanningConstraint,
+    PlanningConstraintStatus,
+    PlanningConstraintType,
+    ReplanAction,
+    ReplanActionTargetType,
+    ReplanApplicationResult,
+    ReplanProposal,
+    ReplanProposalStatus,
+)
 from songyan.models.review import (
     AiTellMatch,
     DuplicateParagraphMatch,
@@ -136,6 +148,17 @@ __all__ = [
     "ArcPlan",
     "PlotThread",
     "PlotThreadStatus",
+    # V7 Task 166a: re-plan proposal models
+    "ArcOutcomeEvaluation",
+    "ArcOutcomeRiskLevel",
+    "ReplanProposal",
+    "ReplanProposalStatus",
+    "ReplanAction",
+    "ReplanActionTargetType",
+    "PlanningConstraint",
+    "PlanningConstraintStatus",
+    "PlanningConstraintType",
+    "ReplanApplicationResult",
     # review
     "ReviewCategory",
     "ReviewIssue",

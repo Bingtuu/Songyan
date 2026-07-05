@@ -507,3 +507,69 @@ CREATE TABLE IF NOT EXISTS text_cleanliness_metrics (
 );
 CREATE INDEX IF NOT EXISTS idx_text_cleanliness_project_chapter
     ON text_cleanliness_metrics(project_id, chapter_number);
+
+-- ============================================================
+-- 25. replan_proposals / replan_actions — 重规划提案（V7 Task 166a）
+-- ============================================================
+CREATE TABLE IF NOT EXISTS replan_proposals (
+    proposal_id          TEXT PRIMARY KEY,
+    project_id           TEXT NOT NULL REFERENCES projects(project_id) ON DELETE CASCADE,
+    source_arc_index     INTEGER,
+    source_start_chapter INTEGER,
+    source_end_chapter   INTEGER,
+    status               TEXT NOT NULL DEFAULT 'draft'
+                         CHECK(status IN ('draft', 'approved', 'rejected', 'applied')),
+    summary              TEXT DEFAULT '',
+    evidence_json        TEXT DEFAULT '{}',
+    created_at           TEXT DEFAULT (datetime('now')),
+    updated_at           TEXT DEFAULT (datetime('now')),
+    approved_at          TEXT,
+    approved_by          TEXT,
+    rejected_at          TEXT,
+    rejected_reason      TEXT,
+    applied_at           TEXT,
+    applied_by           TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_replan_proposals_project
+    ON replan_proposals(project_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_replan_proposals_status
+    ON replan_proposals(project_id, status);
+
+CREATE TABLE IF NOT EXISTS replan_actions (
+    action_id      TEXT PRIMARY KEY,
+    proposal_id    TEXT NOT NULL REFERENCES replan_proposals(proposal_id) ON DELETE CASCADE,
+    project_id     TEXT NOT NULL REFERENCES projects(project_id) ON DELETE CASCADE,
+    action_order   INTEGER NOT NULL DEFAULT 0,
+    target_type    TEXT NOT NULL,
+    target_id      TEXT DEFAULT '',
+    field          TEXT NOT NULL,
+    old_value_json TEXT DEFAULT 'null',
+    new_value_json TEXT DEFAULT 'null',
+    reason         TEXT DEFAULT '',
+    evidence_json  TEXT DEFAULT '{}',
+    created_at     TEXT DEFAULT (datetime('now')),
+    UNIQUE(proposal_id, action_order)
+);
+CREATE INDEX IF NOT EXISTS idx_replan_actions_proposal
+    ON replan_actions(proposal_id, action_order);
+CREATE INDEX IF NOT EXISTS idx_replan_actions_project
+    ON replan_actions(project_id);
+
+CREATE TABLE IF NOT EXISTS planning_constraints (
+    constraint_id       TEXT PRIMARY KEY,
+    project_id          TEXT NOT NULL REFERENCES projects(project_id) ON DELETE CASCADE,
+    source_proposal_id  TEXT NOT NULL REFERENCES replan_proposals(proposal_id) ON DELETE CASCADE,
+    source_action_id    TEXT NOT NULL REFERENCES replan_actions(action_id) ON DELETE CASCADE,
+    target_id           TEXT DEFAULT '',
+    constraint_type     TEXT NOT NULL,
+    content             TEXT NOT NULL,
+    reason              TEXT DEFAULT '',
+    status              TEXT NOT NULL DEFAULT 'active'
+                        CHECK(status IN ('active', 'archived')),
+    created_at          TEXT DEFAULT (datetime('now')),
+    UNIQUE(source_action_id)
+);
+CREATE INDEX IF NOT EXISTS idx_planning_constraints_project
+    ON planning_constraints(project_id, status);
+CREATE INDEX IF NOT EXISTS idx_planning_constraints_source
+    ON planning_constraints(source_proposal_id);

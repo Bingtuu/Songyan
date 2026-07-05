@@ -59,6 +59,10 @@ _EXPECTED_TABLES: list[str] = [
     "run_db_metrics",
     # V7 阶段 W: 文本洁净度逐章度量
     "text_cleanliness_metrics",
+    # V7 阶段 X: re-plan proposals（Task 166a）
+    "replan_proposals",
+    "replan_actions",
+    "planning_constraints",
 ]
 
 
@@ -632,6 +636,94 @@ async def _migrate_text_cleanliness_metrics(conn: aiosqlite.Connection) -> None:
     )
 
 
+async def _migrate_replan_proposals(conn: aiosqlite.Connection) -> None:
+    """创建 re-plan proposal 表（V7 Task 166a）."""
+    await conn.execute(
+        """CREATE TABLE IF NOT EXISTS replan_proposals (
+            proposal_id          TEXT PRIMARY KEY,
+            project_id           TEXT NOT NULL
+                                 REFERENCES projects(project_id) ON DELETE CASCADE,
+            source_arc_index     INTEGER,
+            source_start_chapter INTEGER,
+            source_end_chapter   INTEGER,
+            status               TEXT NOT NULL DEFAULT 'draft'
+                                 CHECK(status IN ('draft', 'approved', 'rejected', 'applied')),
+            summary              TEXT DEFAULT '',
+            evidence_json        TEXT DEFAULT '{}',
+            created_at           TEXT DEFAULT (datetime('now')),
+            updated_at           TEXT DEFAULT (datetime('now')),
+            approved_at          TEXT,
+            approved_by          TEXT,
+            rejected_at          TEXT,
+            rejected_reason      TEXT,
+            applied_at           TEXT,
+            applied_by           TEXT
+        )"""
+    )
+    await conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_replan_proposals_project "
+        "ON replan_proposals(project_id, created_at)"
+    )
+    await conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_replan_proposals_status "
+        "ON replan_proposals(project_id, status)"
+    )
+    await conn.execute(
+        """CREATE TABLE IF NOT EXISTS replan_actions (
+            action_id      TEXT PRIMARY KEY,
+            proposal_id    TEXT NOT NULL
+                           REFERENCES replan_proposals(proposal_id) ON DELETE CASCADE,
+            project_id     TEXT NOT NULL
+                           REFERENCES projects(project_id) ON DELETE CASCADE,
+            action_order   INTEGER NOT NULL DEFAULT 0,
+            target_type    TEXT NOT NULL,
+            target_id      TEXT DEFAULT '',
+            field          TEXT NOT NULL,
+            old_value_json TEXT DEFAULT 'null',
+            new_value_json TEXT DEFAULT 'null',
+            reason         TEXT DEFAULT '',
+            evidence_json  TEXT DEFAULT '{}',
+            created_at     TEXT DEFAULT (datetime('now')),
+            UNIQUE(proposal_id, action_order)
+        )"""
+    )
+    await conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_replan_actions_proposal "
+        "ON replan_actions(proposal_id, action_order)"
+    )
+    await conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_replan_actions_project "
+        "ON replan_actions(project_id)"
+    )
+    await conn.execute(
+        """CREATE TABLE IF NOT EXISTS planning_constraints (
+            constraint_id       TEXT PRIMARY KEY,
+            project_id          TEXT NOT NULL
+                                REFERENCES projects(project_id) ON DELETE CASCADE,
+            source_proposal_id  TEXT NOT NULL
+                                REFERENCES replan_proposals(proposal_id) ON DELETE CASCADE,
+            source_action_id    TEXT NOT NULL
+                                REFERENCES replan_actions(action_id) ON DELETE CASCADE,
+            target_id           TEXT DEFAULT '',
+            constraint_type     TEXT NOT NULL,
+            content             TEXT NOT NULL,
+            reason              TEXT DEFAULT '',
+            status              TEXT NOT NULL DEFAULT 'active'
+                                CHECK(status IN ('active', 'archived')),
+            created_at          TEXT DEFAULT (datetime('now')),
+            UNIQUE(source_action_id)
+        )"""
+    )
+    await conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_planning_constraints_project "
+        "ON planning_constraints(project_id, status)"
+    )
+    await conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_planning_constraints_source "
+        "ON planning_constraints(source_proposal_id)"
+    )
+
+
 async def init_schema(db_path: str | Path | None = None) -> None:
     """读取 schema.sql 并执行，幂等（所有 CREATE 带 IF NOT EXISTS）.
 
@@ -677,6 +769,7 @@ async def init_schema(db_path: str | Path | None = None) -> None:
         await _migrate_setting_tracking_lifecycle_columns(conn)
         await _migrate_run_db_metrics(conn)
         await _migrate_text_cleanliness_metrics(conn)
+        await _migrate_replan_proposals(conn)
         await conn.commit()
 
 
@@ -730,4 +823,5 @@ async def run_migrations(conn: aiosqlite.Connection) -> None:
     await _migrate_setting_tracking_lifecycle_columns(conn)
     await _migrate_run_db_metrics(conn)
     await _migrate_text_cleanliness_metrics(conn)
+    await _migrate_replan_proposals(conn)
     logger.info("migrations.run_all", status="complete")
