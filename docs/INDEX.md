@@ -122,6 +122,25 @@
 | `docs/v7-vision.md` | V7 构想（方向性）：从叙事骨架到完整线索经济 + 满 Ch300 渐进验证 |
 | `docs/v7-plan.md` | V7 阶段规划：篇章级质量修复 + 叙事自驱 + enforce 可生产化 + Ch300 渐进爬坡 + Task 160-173 路线图 |
 
+## V7 代码审查与架构审计
+
+| 文件 | 用途 |
+|------|------|
+| `docs/reports/v7-audit/final-audit-report.md` | **V7 最终审计汇总报告**：P0/P1/P2 分级清单、风险热力图、进入 Ch200 的放行条件 |
+| `docs/reports/v7-audit/pass1-compliance-report.md` | Pass 1：合规性审查（不可违背规则基线） |
+| `docs/reports/v7-audit/pass2-architecture-report.md` | Pass 2：架构审计（职责分离与文件规模） |
+| `docs/reports/v7-audit/pass3-data-and-schema-report.md` | Pass 3：数据事实源与 Schema 审计 |
+| `docs/reports/v7-audit/pass4-workflow-report.md` | Pass 4：工作流与 LangGraph 状态机审计 |
+| `docs/reports/v7-audit/pass5-agent-boundaries-report.md` | Pass 5：Agent 边界与职责审计 |
+| `docs/reports/v7-audit/pass6-quality-gates-report.md` | Pass 6：质量门与审查体系审计 |
+| `docs/reports/v7-audit/pass7-v7-subsystems-report.md` | Pass 7：V7 新子系统审计（叙事自驱 + 自适应门禁） |
+| `docs/reports/v7-audit/pass8-testing-report.md` | Pass 8：测试质量与覆盖审计 |
+| `docs/reports/v7-audit/pass9-prompts-config-report.md` | Pass 9：Prompt 与配置管理审计 |
+| `docs/reports/v7-audit/pass10-performance-observability-report.md` | Pass 10：性能与可观测性审计 |
+| `docs/reports/v7-audit/pass11-security-dependencies-report.md` | Pass 11：安全与依赖审计 |
+| `docs/reports/v7-audit/pass12-docs-consistency-report.md` | Pass 12：文档与状态一致性审计 |
+| `docs/superpowers/plans/2026-07-06-v7-code-review-and-architecture-audit-plan.md` | V7 审计执行计划 |
+
 ## 按场景查阅
 
 | 场景 | 文件 |
