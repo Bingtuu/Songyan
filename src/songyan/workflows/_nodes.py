@@ -907,6 +907,7 @@ async def rewrite_node(state: dict[str, Any]) -> dict[str, Any]:
                     error=str(exc),
                     project_id=state["project_id"],
                     chapter_number=state["chapter_number"],
+                    exc_info=True,
                 )
                 # 回退：继续使用已更新的内存对象
 
@@ -1136,7 +1137,7 @@ async def rule_auditor_node(state: dict[str, Any]) -> dict[str, Any]:
         if ctx_pkg:
             mandatory_references = getattr(ctx_pkg, "mandatory_references", None)
     except Exception:
-        logger.debug("rule_auditor_node.mandatory_references_load_skipped")
+        logger.debug("rule_auditor_node.mandatory_references_load_skipped", exc_info=True)
 
     result = run_rule_audit(
         content=version.content,
@@ -1294,6 +1295,7 @@ async def review_merger_node(state: dict[str, Any]) -> dict[str, Any]:
             "review_merger.save_score_card_failed",
             error=str(exc),
             version_id=version.version_id,
+            exc_info=True,
         )
 
     if was_rewritten and best_version and best_version != version.version_id:
@@ -1735,7 +1737,7 @@ async def revision_handler_node(state: dict[str, Any]) -> dict[str, Any]:
         if rev_ctx_pkg:
             rev_mandatory_refs = getattr(rev_ctx_pkg, "mandatory_references", None)
     except Exception:
-        logger.debug("revision_handler_node.mandatory_references_load_skipped")
+        logger.debug("revision_handler_node.mandatory_references_load_skipped", exc_info=True)
 
     revised_rule_result = run_rule_audit(
         content=revised_content,
@@ -2435,6 +2437,7 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
                         error=str(fallback_exc),
                         project_id=state["project_id"],
                         chapter_number=state["chapter_number"],
+                        exc_info=True,
                     )
                     settlement_needs_review = True
 
