@@ -149,10 +149,18 @@ def _paragraphs_with_offsets(text: str) -> list[tuple[int, str, int]]:
 def detect_duplicate_paragraphs(
     text: str,
     *,
-    min_chars: int = 100,
+    min_chars: int = 40,
     similarity_threshold: float = 0.9,
+    long_paragraph_chars: int = 100,
+    short_similarity_threshold: float = 0.95,
 ) -> list[DuplicateParagraphMatch]:
-    """检出同章内重复长段落并定位（诊断项，不直接阻断）."""
+    """检出同章内重复长段落并定位（诊断项，不直接阻断）.
+
+    分级阈值：归一化长度 >= long_paragraph_chars 的长段用 similarity_threshold；
+    落在 [min_chars, long_paragraph_chars) 的中段改用更严的 short_similarity_threshold，
+    只抓近乎逐字的重复。这样既能捕获 70-95 字的近似重复（170c Ch31 漏报），
+    又不会误伤刻意的短句 refrain（< min_chars 直接跳过）。
+    """
     matches: list[DuplicateParagraphMatch] = []
     seen: list[tuple[int, str, str, int]] = []
 
@@ -167,7 +175,12 @@ def detect_duplicate_paragraphs(
                 if normalized == original_normalized
                 else SequenceMatcher(None, original_normalized, normalized).ratio()
             )
-            if similarity < similarity_threshold:
+            effective_threshold = (
+                similarity_threshold
+                if min(len(normalized), len(original_normalized)) >= long_paragraph_chars
+                else short_similarity_threshold
+            )
+            if similarity < effective_threshold:
                 continue
             matches.append(
                 DuplicateParagraphMatch(
