@@ -1,8 +1,8 @@
 # V7 Task 总索引
 
 > **阶段**: 篇章级质量修复 → 叙事自驱 → enforce 可生产化 → Ch300 渐进爬坡
-> **当前口径**: **V7 阶段 W 已通过，Task 166/167/168/169 已完成，Task 170 已规划，下一步开工 170**。170 将用良性波动/真实退化小窗口验证 168/169，并标定 T12；过程监测、数据采集、可读性/文学性抽检均为必选项。
-> **最后整理**: 2026-07-06（Task 170 文档规划完成；下一步开工 170）
+> **当前口径**: **V7 阶段 W 已通过，Task 166/167/168/169/170 已完成，T12 已冻结，下一步规划 171 Ch200 长跑**。170 已用良性波动/真实退化/单点/单域四类小窗口验证 168/169：良性 FP rate=0、真实退化 halt_candidate/halt=100%，可读性/文学性抽检无 blocker，未改 T9/T10/T5/T6 口径。
+> **最后整理**: 2026-07-06（Task 170 完成，T12 冻结；下一步规划 171 Ch200）
 
 本文是 V7 阶段任务文档的事实入口。V6 阶段事实入口见 `tasks/V6-README.md`；V5 见 `tasks/V5-README.md`；历史规划稿统一归档到 `archive/`，仅在追溯设计边界时查阅。V7 各任务最终状态以本文件和各 `*-DONE.md` 为准。
 
@@ -71,7 +71,7 @@ V7 通过 = 同时满足以下五项（阈值沿用 v6-plan §1.4 的 T1-T8，V7
 | 169 | 自适应 halt 判定（拆 169a/b） | ✅ 完成 | `tasks/169-adaptive-halt-decision-DONE.md` |
 | 169a | 自适应 halt 判定引擎与决策账本 | ✅ 完成 | `tasks/169a-adaptive-halt-decision-engine-DONE.md` |
 | 169b | 自适应 halt workflow 接入 | ✅ 完成 | `tasks/169b-adaptive-halt-workflow-integration-DONE.md` |
-| 170 | enforce 小窗口验证 + T12 误报率标定 | ◻ 规划中 | `tasks/170-enforce-small-window-validation-and-t12-calibration.md` |
+| 170 | enforce 小窗口验证 + T12 误报率标定 | ✅ 完成 | `tasks/170-enforce-small-window-validation-and-t12-calibration-DONE.md`；报告 `docs/reports/task-170-adaptive-gate-validation-report.md` |
 
 ### 阶段 Z：Ch300 渐进爬坡验证
 
@@ -97,8 +97,9 @@ Y（enforce 可生产化 168-170）──┴────────────
 - **阶段 W 先行**：是后续一切的地基——篇章级缺陷不修干净，爬坡只会把毛病放大。
 - **阶段 W 出口已完成并冻结 T9/T10**：Task 165/165p 已确认阶段 W 通过，T9/T10 已冻结；后续 X/Y/Z 不得在长跑撞线后临时放宽冻结口径。
 - **X 与 Y 可部分并行**：不同代码域（自驱在规划侧、门禁在 gate 侧）。
+- **阶段 Y 出口已完成并冻结 T12**：Task 170 已用四类小窗口验证 168/169（良性 FP rate=0、真实退化 halt_candidate/halt=100%），T12 已冻结；后续 Z 不得在长跑撞线后临时放宽冻结口径。
 - **Z 必须在 W+X+Y 落地后**：171/172/173 长跑是终检，每级出口未达标不进下一级；每级预留 `NNNp` 撞墙定点修复占位。
-- **文档递进纪律**：166/166a/166b、167、168、169 与 170 已按阶段 W/Task 166/167/168/169 结果落地；后续阶段 Z 详细 Task 文档继续按前置 evidence 递进补齐，避免文档超前返工。
+- **文档递进纪律**：166/166a/166b、167、168、169、170 已落地并有 evidence；后续阶段 Z 详细 Task 文档继续按前置 evidence 递进补齐，避免文档超前返工。
 
 ---
 

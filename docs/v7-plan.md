@@ -100,7 +100,7 @@ Y（enforce 可生产化 168-170）──┴────────────
 |------|------|----------|
 | **168** | 自适应门禁数据面（拆 168a 信号快照 / 168b 窗口聚合） | 已完成：`tasks/168-adaptive-gate-data-plane-DONE.md`；已建立 SQLite 快照事实源，并在 `songyan metrics` 展示窗口级数据面；只供 169 判定使用，不改变 halt 行为 |
 | **169** | 自适应 halt 判定（拆 169a 判定引擎 / 169b workflow 接入） | 已完成：`tasks/169-adaptive-halt-decision-DONE.md`；已建立 decision ledger 并接入 phase2 observe/enforce 行为；良性波动不停、真退化才停 |
-| **170** | enforce 小窗口验证 + T12 误报率标定 | 已规划：`tasks/170-enforce-small-window-validation-and-t12-calibration.md`；用良性波动/真实退化小窗口验证自适应门禁，采集过程监测、T12 误报/漏拦统计，并加入可读性/文学性抽检；不启动 Ch200 |
+| **170** | enforce 小窗口验证 + T12 误报率标定 | ✅ 完成：`tasks/170-...-DONE.md`；报告 `docs/reports/task-170-adaptive-gate-validation-report.md`；四类小窗口（良性/真实退化/单点毛刺/单域）验证 168/169，良性 FP rate=0、真实退化 halt_candidate/halt=100%，**T12 已冻结**，可读性/文学性抽检无 blocker，未启动 Ch200 |
 
 > **借鉴 159 督跑经验**：`scripts/supervise_159.py` 的"保守策略自动 resume / 停下上报"已实证自适应门禁可行——把它的决策逻辑（良性暂停自动续、真退化才停）沉淀为**门禁本身的能力**，而非外挂脚本，是阶段 Y 的主线。
 
@@ -126,9 +126,9 @@ Y（enforce 可生产化 168-170）──┴────────────
 | **T9** | 文本洁净度红线 | **已冻结**：元标记泄漏数=0、整段落重复章数=0 为硬红线；跨章时间线矛盾默认 report-only（Task 165 诊断 3 章：[21, 37, 142]） |
 | **T10** | 文学不衰减 | **已冻结**：conceptual_grounding 末段 W=5 ≥ 首段 W=5 ×0.85；Task 165 first=6.80、last=6.06、threshold=5.78，pass |
 | **T11** | 长线伏笔兑现 | ≥1 条主线伏笔跨度 ≥50 章且经**主动调度**兑现（source_version_id 可定位调度章与兑现章） |
-| **T12** | 门禁误报率 | enforce AutoHalt 中"对应真实退化"的比例；正常波动误伤率有上限（具体值待标定） |
+| **T12** | 门禁误报率 | **已冻结（Task 170）**：良性波动窗口 false positive rate = 0，且真实退化窗口 halt_candidate_or_halt rate = 100%；`missing/insufficient/observation` 与样本不足窗口不计入 hard fail 分母，warn-on-benign 不计误报 |
 
-> 标定纪律（继承 148z）：T9/T10 已由 Task 165/165p 基于真实 Ch150 修复后基线冻结，**不允许后续长跑撞红线后临时放宽**。T11/T12 留阶段 X/Y 继续标定冻结。
+> 标定纪律（继承 148z）：T9/T10 已由 Task 165/165p 基于真实 Ch150 修复后基线冻结、T12 已由 Task 170 小窗口验证冻结，**不允许后续长跑撞红线后临时放宽**。T11 留阶段 Z 长跑继续标定冻结。
 
 ---
 
