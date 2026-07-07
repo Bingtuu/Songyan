@@ -20,7 +20,7 @@ class TestPromptLoaderBasics:
         assert card.metadata.agent == "writer"
         # # Writer 当前默认版本为 1.1.0（Task 121r），但 1.2.0 已注册。
         assert card.metadata.version in ("1.0.7", "1.0.8", "1.0.9", "1.1.0", "1.2.0")
-        assert len(card.sections) == 9
+        assert len(card.sections) == 10  # 1.1.0: 9 original + scene_interaction (170f)
 
     def test_load_goal_planner_card(self) -> None:
         reset_prompt_loader()

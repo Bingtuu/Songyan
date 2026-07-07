@@ -1,8 +1,8 @@
 # V7 Task 总索引
 
 > **阶段**: 篇章级质量修复 → 叙事自驱 → enforce 可生产化 → Ch300 渐进爬坡
-> **当前口径**: **V7 阶段 W/X/Y 已通过，T9/T10/T12 已冻结**。但 **Task 170b 中段窗口实读判定 blocker**——治理指标全达标（T9=0、health 9.1–9.7、QG 全 pass）而 prose 文学质量不达标（voice 均值 1.8 塌陷、节奏偏慢），且机器文学诊断系统性高估、T9 近似重复漏报。**Ch200 长跑（Task 171）暂缓**，先做文学提质专项（170c–170g）。**量具阶段已完成：170c（T9 近似重复补强）✅ + 170d（LiteraryAuditor 校准）✅**；**提质阶段 170e（voice）✅ 已完成——根因是 seeding gap（characters 表为空致声纹机制全程死代码），非生成侧缺陷，已用幂等 ensure_protagonist_character 修复并小样本验证机制激活**；下一步 170f（pacing/exposition）→ 复评出口（170g）→ 再放行 Ch200。
-> **最后整理**: 2026-07-07（Task 170e voice 完成：定位并修复 seeding gap）
+> **当前口径**: **V7 阶段 W/X/Y 已通过，T9/T10/T12 已冻结**。但 **Task 170b 中段窗口实读判定 blocker**——治理指标全达标（T9=0、health 9.1–9.7、QG 全 pass）而 prose 文学质量不达标（voice 均值 1.8 塌陷、节奏偏慢），且机器文学诊断系统性高估、T9 近似重复漏报。**Ch200 长跑（Task 171）暂缓**，先做文学提质专项（170c–170g）。**量具阶段已完成：170c（T9 近似重复补强）✅ + 170d（LiteraryAuditor 校准）✅**；**提质阶段 170e（voice）✅ 已完成——根因是 seeding gap（characters 表为空致声纹机制全程死代码），非生成侧缺陷，已用幂等 ensure_protagonist_character 修复并小样本验证机制激活**；**170f（pacing/exposition）🔄 Stage 1 完成——Stage 0 校准证明代码指标无法可靠区分 pacing，转为纯生成侧约束（Writer 1.1.0 新增 `scene_interaction` 段落）**；下一步 Stage 2 小样本验证 → 复评出口（170g）→ 再放行 Ch200。
+> **最后整理**: 2026-07-07（Task 170f Stage 1 完成：Writer 1.1.0 新增 scene_interaction 段落）
 
 本文是 V7 阶段任务文档的事实入口。V6 阶段事实入口见 `tasks/V6-README.md`；V5 见 `tasks/V5-README.md`；历史规划稿统一归档到 `archive/`，仅在追溯设计边界时查阅。V7 各任务最终状态以本文件和各 `*-DONE.md` 为准。
 
@@ -84,7 +84,7 @@ V7 通过 = 同时满足以下五项（阈值沿用 v6-plan §1.4 的 T1-T8，V7
 | 170c | T9 近似/改写重复检测补强 | 量具 | ✅ 完成 | `tasks/170c-t9-near-duplicate-detection-DONE.md` |
 | 170d | LiteraryAuditor 校准（character_autonomy 锚点） | 量具 | ✅ 完成 | `tasks/170d-literary-auditor-calibration-DONE.md`；回测 `docs/reports/task-170d-auditor-calibration-backtest.md` |
 | 170e | voice 声纹区分提质 | 提质 | ✅ 完成 | `tasks/170e-voice-differentiation-DONE.md` |
-| 170f | pacing 节奏 + exposition 融合 | 提质 | ◻ 待开工 | `tasks/170f-pacing-exposition.md` |
+| 170f | pacing 节奏 + exposition 融合 | 提质 | 🔄 进行中（Stage 1 完成：生成侧约束已落地 Writer 1.1.0 `scene_interaction` 段落） | `tasks/170f-pacing-exposition.md` |
 | 170g | 提质复评出口 | 出口 | ◻ 待开工 | `tasks/170g-remediation-rerun-and-reeval.md` |
 
 ### 阶段 Z：Ch300 渐进爬坡验证
