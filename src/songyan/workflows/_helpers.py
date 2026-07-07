@@ -58,6 +58,61 @@ async def load_characters(project_id: str) -> list:
     return await CharacterRepository().list_by_project(project_id)
 
 
+async def ensure_protagonist_character(
+    project_id: str,
+    project: ProjectSetting | None = None,
+) -> bool:
+    """确保项目至少有一条 protagonist Character 记录（幂等）.
+
+    Task 170e 根因：`songyan create` 只把 protagonist_name 存进 projects 表，
+    从不建 Character 记录；settlement 遇未知 character_id 是 skip 而非新建。
+    因此未经脚本 seed 的项目 characters 表为空，DialogueStyleCard 声纹机制
+    （generate_dialogue_style_cards 只为已存在的角色生成）永远不激活，
+    对白全员塌陷成旁白腔。
+
+    本函数在项目创建与流水线启动处调用，用 project.protagonist_name 补建
+    一条最小 protagonist 记录，让声纹机制有落点。
+
+    幂等保证（不干扰已 seed 的项目/测试）：
+    - 项目不存在 → 直接返回 False，不写任何数据。
+    - 已存在任意 protagonist 角色 → 返回 False，不新建。
+    - protagonist_name 为空 → 返回 False，不新建。
+
+    Returns:
+        True 表示本次新建了 protagonist；False 表示无需新建。
+    """
+    if project is None:
+        project = await load_project(project_id)
+    if project is None:
+        return False
+
+    existing = await CharacterRepository().list_by_project(project_id)
+    if any(c.role_type == "protagonist" for c in existing):
+        return False
+
+    name = (project.protagonist_name or "").strip()
+    if not name:
+        return False
+
+    from songyan.models.character import Character
+
+    character = Character(
+        character_id=new_id("char"),
+        project_id=project_id,
+        name=name,
+        role_type="protagonist",
+        background=project.protagonist_background or "",
+    )
+    await CharacterRepository().create(character)
+    logger.info(
+        "ensure_protagonist_character.created",
+        project_id=project_id,
+        character_id=character.character_id,
+        name=name,
+    )
+    return True
+
+
 async def load_character_states(project_id: str) -> list:
     return await CharacterStateRepository().list_latest_by_project(project_id)
 

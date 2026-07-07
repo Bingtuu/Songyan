@@ -168,6 +168,11 @@ async def _create_project_async(outline_file: str | None = None) -> tuple[str, P
     repo = ProjectRepository()
     await repo.create(project, project_id)
 
+    # Task 170e: 建项目时即补建 protagonist Character，让 DialogueStyleCard 声纹机制有落点
+    from songyan.workflows._helpers import ensure_protagonist_character
+
+    await ensure_protagonist_character(project_id, project)
+
     # Task 142: 可选大纲导入（缺省不执行，保持旧行为逐字节等价）
     if outline_file:
         outline, arcs, threads = load_outline_file(outline_file, project_id)

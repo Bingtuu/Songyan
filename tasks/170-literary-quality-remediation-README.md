@@ -2,8 +2,8 @@
 
 > **立项依据**: Task 170b 判定 **blocker** —— 中段窗口 prose 文学质量不达标（voice 塌陷、节奏偏慢、真实文本缺陷），且机器文学诊断系统性失真。
 > **性质**: Ch200 长跑（Task 171）的文学放行前置修复专项。
-> **状态**: ⏳ 进行中 —— 量具阶段完成（170c ✅ / 170d ✅），下一步提质（170e/170f）。
-> **最后整理**: 2026-07-06
+> **状态**: ⏳ 进行中 —— 量具阶段完成（170c ✅ / 170d ✅），提质阶段 170e（voice）✅ 完成，下一步 170f（pacing/exposition）。
+> **最后整理**: 2026-07-07
 
 ---
 
@@ -37,7 +37,7 @@
 |------|------|:---:|:---:|:---:|------|
 | 170c | T9 近似/改写重复检测 | 量具 | 170b | 低·独立 | ✅ `tasks/170c-t9-near-duplicate-detection-DONE.md` |
 | 170d | LiteraryAuditor 校准 | 量具 | 170b | 低·独立 | ✅ `tasks/170d-literary-auditor-calibration-DONE.md` |
-| 170e | voice 声纹区分提质 | 提质 | 170d | 中·碰生成链 | `tasks/170e-voice-differentiation.md` |
+| 170e | voice 声纹区分提质 | 提质 | 170d | 中·碰生成链 | ✅ `tasks/170e-voice-differentiation-DONE.md` |
 | 170f | pacing 节奏 + exposition 融合 | 提质 | 170d | 中·碰生成链 | `tasks/170f-pacing-exposition.md` |
 | 170g | 提质复评出口 | 出口 | c+d+e+f | — | `tasks/170g-remediation-rerun-and-reeval.md` |
 

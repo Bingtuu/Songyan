@@ -38,7 +38,7 @@ from songyan.workflows._gates import (
     check_health_low_streak_gate,
     evaluate_all_gates,
 )
-from songyan.workflows._helpers import new_id
+from songyan.workflows._helpers import ensure_protagonist_character, new_id
 from songyan.workflows._run_logger import log_chapter_run
 from songyan.workflows.phase1_graph import (
     reset_checkpointer,
@@ -585,6 +585,10 @@ async def run_project_pipeline(
             project_id=project_id,
             accepted_chapters=sorted(accepted_chapters),
         )
+
+    # Task 170e: 兜底补建 protagonist Character（脚本/harness 直接建项目、绕过
+    # songyan create 时也覆盖）。幂等：项目不存在或已有 protagonist 则 no-op。
+    await ensure_protagonist_character(project_id)
 
     # ---- run 级断点续跑 ----
     existing_run = await _find_resume_run(
