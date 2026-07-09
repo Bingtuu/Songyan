@@ -45,6 +45,8 @@ from songyan.models import (
 )
 from songyan.workflows.phase2_graph import run_project_pipeline
 
+_MODES_DIR = Path(__file__).parent.parent / "creative_modes"
+
 DEFAULT_STRATEGY_ID = "minimal_voice_anchor"
 DEFAULT_START_CHAPTER = 29
 DEFAULT_END_CHAPTER = 32
@@ -62,7 +64,29 @@ def _resolve_metrics_path(strategy_id: str) -> Path:
     return Path(f".tmp/task170j_{strategy_id}_metrics.jsonl")
 
 
+def _temp_mode_profile_path(strategy_id: str) -> Path:
+    return _MODES_DIR / f"webnovel_intense_{strategy_id}.json"
+
+
 DB_PATH = _resolve_db_path(DEFAULT_STRATEGY_ID)
+
+
+def _ensure_temp_mode_profile(strategy_id: str) -> str:
+    """基于 webnovel_intense 创建临时 mode profile，启用指定 literary optimization strategy.
+
+    返回新的 mode_id（文件名，不含 .json）。
+    """
+    source_path = _MODES_DIR / "webnovel_intense.json"
+    target_path = _temp_mode_profile_path(strategy_id)
+    data = json.loads(source_path.read_text(encoding="utf-8"))
+    plugins = data.get("literary_optimization_plugins", [])
+    if strategy_id not in plugins:
+        plugins.append(strategy_id)
+    data["literary_optimization_plugins"] = plugins
+    target_path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    return f"webnovel_intense_{strategy_id}"
+
+
 DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{DB_PATH}")
 # 安全默认：强制指向隔离 DB，避免误删/误写主库 songyan.db。
 settings.database_url = DATABASE_URL
@@ -293,6 +317,7 @@ async def main() -> int:
     if not project_id:
         parser.error("请先用 --init 创建项目，或提供 --project-id / PROJECT_ID")
 
+    mode_id = _ensure_temp_mode_profile(args.strategy_id)
     db_path = get_db_path()
     print(f"[preflight] db={db_path}")
     print(f"[preflight] project={project_id}, range=({args.start}, {args.end})")
@@ -310,7 +335,7 @@ async def main() -> int:
         result = await run_project_pipeline(
             project_id=project_id,
             chapter_range=(args.start, args.end),
-            mode_id=project.mode_id,
+            mode_id=mode_id,
             auto_confirm=True,
             on_failure=ON_FAILURE,
             gate_config=gate_config,

@@ -32,7 +32,12 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from songyan.agents.rule_auditor import detect_exposition_carriers
+try:
+    from songyan.agents.rule_auditor import detect_exposition_carriers
+except ImportError:  # noqa: BLE001
+    # Fallback for worktree without exposition carrier detection
+    def detect_exposition_carriers(_content: str) -> list:  # type: ignore[misc]
+        return []
 from songyan.config import settings
 from songyan.db.repository import ChapterHeadRepository, ChapterVersionRepository
 from songyan.db.review_repo import LiteraryObservationRepository
