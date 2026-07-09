@@ -80,6 +80,7 @@ def _ensure_temp_mode_profile(strategy_id: str) -> str:
     source_path = _MODES_DIR / "webnovel_intense.json"
     target_path = _temp_mode_profile_path(strategy_id)
     data = json.loads(source_path.read_text(encoding="utf-8"))
+    data["id"] = f"webnovel_intense_{strategy_id}"
     plugins = data.get("literary_optimization_plugins", [])
     if strategy_id not in plugins:
         plugins.append(strategy_id)
