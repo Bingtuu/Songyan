@@ -95,6 +95,11 @@ system_prompt: |
     ],
     "reader_contract": "用1句话概括本章对读者的'承诺'——读完本章，读者应该得到什么？",
 
+    "voice_anchors": [
+      {"character_id": "role_a", "emotional_register": "压抑但易怒", "verbal_tick": "听着", "taboo_phrase": "对不起"}
+    ],
+    "voice_anchors_description": "极简声纹锚定（Task 170j）。当 system prompt 中【极简声纹锚定】插件存在时，必须为 2-3 个核心人类角色输出此字段；否则可省略。每个角色给出情绪基调、口头禅/高频短语、禁忌语。",
+
     "narrative_fullness": 0.65,
     "narrative_fullness_description": "叙事充满度：0.0~1.0。当前所有线索展开到什么程度了？0.3=刚开始，0.6=多条线索并行，0.8=大部分线索接近收束，0.9=高潮来临。如果你在早期章节（Ch02-20），正常范围 0.2~0.5。中期（Ch21-35）0.4~0.7。晚期（Ch36+）0.6~0.9。如果你的直觉和章节数不匹配，相信直觉——没有两条相同的叙事曲线。",
 
