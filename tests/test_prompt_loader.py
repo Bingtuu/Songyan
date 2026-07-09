@@ -6,6 +6,7 @@ from typing import Any
 
 import pytest
 
+from songyan.literary_optimization.plugin_loader import load_strategy_plugins
 from songyan.prompts import get_prompt_loader, reset_prompt_loader
 from songyan.prompts._models import CraftCard, CraftCardMetadata, CraftCardSection
 
@@ -262,4 +263,27 @@ class TestAgentIntegration:
         card = loader.load_card("llm_auditor")
         assert "语义审查" in card.system_prompt
         assert "12 个维度" in card.system_prompt
+
+
+@pytest.mark.parametrize(
+    "strategy_id, agent, expected_in_content",
+    [
+        ("minimal_voice_anchor", "creative_director", "voice_anchor"),
+        ("minimal_voice_anchor", "writer", "taboo_phrase"),
+    ],
+)
+def test_load_strategy_plugins(strategy_id: str, agent: str, expected_in_content: str):
+    plugins = load_strategy_plugins([strategy_id], agent)
+    assert len(plugins) == 1
+    assert expected_in_content in plugins[0]
+
+
+def test_load_strategy_plugins_unknown_strategy():
+    plugins = load_strategy_plugins(["nonexistent"], "writer")
+    assert plugins == []
+
+
+def test_strategy_plugins_empty_when_disabled():
+    plugins = load_strategy_plugins([], "writer")
+    assert plugins == []
 
