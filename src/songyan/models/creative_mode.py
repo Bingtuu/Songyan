@@ -51,6 +51,15 @@ class PunchPoint(BaseModel):
     ] | None = None
 
 
+class VoiceAnchor(BaseModel):
+    """Task 170j: 极简声纹锚定 — 每个核心人类角色的情绪基调+口头禅/禁忌."""
+
+    character_id: str
+    emotional_register: str = ""
+    verbal_tick: str = ""
+    taboo_phrase: str = ""
+
+
 class CreativeBrief(BaseModel):
     """创作导演输出 — 创作意图与张力地图."""
 
@@ -75,6 +84,9 @@ class CreativeBrief(BaseModel):
     foreshadowing_due: list[str] = Field(default_factory=list)
     # 景深 — close(40%) / mid(40%) / wide(15%) / disruption(5%)
     focal_distance: str = "mid"
+
+    # Task 170j: 极简声纹锚定
+    voice_anchors: list[VoiceAnchor] = Field(default_factory=list)
 
 
 class HumanMemoryConfig(BaseModel):

@@ -340,6 +340,51 @@ class TestBuildCreativeBrief:
         assert brief.style_constraints == []
         assert brief.reader_contract == ""
 
+    def test_build_creative_brief_parses_voice_anchors(self) -> None:
+        data = json.loads(
+            _make_valid_llm_response(
+                voice_anchors=[
+                    {
+                        "character_id": "char-1",
+                        "emotional_register": "压抑但易怒",
+                        "verbal_tick": "我没时间",
+                        "taboo_phrase": "对不起",
+                    }
+                ]
+            )
+        )
+        goal = _make_chapter_goal()
+
+        brief = _build_creative_brief(data, "webnovel", goal)
+
+        assert len(brief.voice_anchors) == 1
+        assert brief.voice_anchors[0].character_id == "char-1"
+        assert brief.voice_anchors[0].emotional_register == "压抑但易怒"
+        assert brief.voice_anchors[0].verbal_tick == "我没时间"
+        assert brief.voice_anchors[0].taboo_phrase == "对不起"
+
+    def test_voice_anchors_invalid_entries_dropped(self) -> None:
+        data = json.loads(
+            _make_valid_llm_response(
+                voice_anchors=[
+                    {
+                        "character_id": "char-1",
+                        "emotional_register": "压抑但易怒",
+                    },
+                    {
+                        "emotional_register": "缺少 character_id",
+                    },
+                    "不是字典",
+                ]
+            )
+        )
+        goal = _make_chapter_goal()
+
+        brief = _build_creative_brief(data, "webnovel", goal)
+
+        assert len(brief.voice_anchors) == 1
+        assert brief.voice_anchors[0].character_id == "char-1"
+
 
 # ---------------------------------------------------------------------------
 # generate_creative_brief (integration with mock LLM)
