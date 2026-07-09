@@ -30,7 +30,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
+# 优先使用当前 worktree 的 src/songyan，避免 editable install 指向主仓库
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 try:
     from songyan.agents.rule_auditor import detect_exposition_carriers
