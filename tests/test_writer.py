@@ -19,6 +19,7 @@ from songyan.models import (
     CharacterStateSnapshot,
     ContextPackage,
     CreativeBrief,
+    CreativeModeProfile,
     ForeshadowingItem,
     GenreRules,
     HardConstraint,
@@ -26,6 +27,7 @@ from songyan.models import (
     RecentPlot,
     SoftReference,
     Tension,
+    VoiceAnchor,
 )
 
 # ---------------------------------------------------------------------------
@@ -220,6 +222,45 @@ class TestRenderPrompt:
         )
         prompt = _render_prompt(ctx)
         assert "- [inject] 强化主角对黑匣子的执念" in prompt
+
+    def test_literary_plugins_injected_when_configured(self) -> None:
+        """Task 170j: mode_profile 配置了插件时注入 literary_plugins."""
+        ctx = _make_context_package(
+            mode_profile=CreativeModeProfile(
+                id="webnovel",
+                name="网文",
+                literary_optimization_plugins=["minimal_voice_anchor"],
+            )
+        )
+        prompt = _render_prompt(ctx)
+        assert "极简声纹锚定" in prompt
+
+    def test_literary_plugins_empty_when_not_configured(self) -> None:
+        """Task 170j: 未配置插件时不应出现插件内容."""
+        ctx = _make_context_package()
+        prompt = _render_prompt(ctx)
+        assert "极简声纹锚定" not in prompt
+
+    def test_voice_anchors_rendered(self) -> None:
+        """Task 170j: CreativeBrief 中的 voice_anchors 应渲染到 prompt."""
+        brief = CreativeBrief(
+            mode_id="webnovel",
+            chapter_goal=ChapterGoal(chapter_number=1),
+            voice_anchors=[
+                VoiceAnchor(
+                    character_id="char_001",
+                    emotional_register="压抑但易怒",
+                    verbal_tick="我没时间",
+                    taboo_phrase="对不起",
+                )
+            ],
+        )
+        ctx = _make_context_package(creative_brief=brief)
+        prompt = _render_prompt(ctx)
+        assert "极简声纹锚定" in prompt
+        assert "char_001" in prompt
+        assert "我没时间" in prompt
+        assert "对不起" in prompt
 
 
 # ---------------------------------------------------------------------------

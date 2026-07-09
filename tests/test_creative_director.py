@@ -24,6 +24,19 @@ from songyan.models.genre import GenreProfile
 from songyan.models.project import ProjectSetting
 
 
+@pytest.fixture(autouse=True)
+def _patch_load_active_settings_to_recycle():
+    """Task 170j: 避免集成测试依赖未初始化的 setting_tracking 表."""
+    with patch(
+        "songyan.agents.creative_director._load_active_settings_to_recycle",
+        new=AsyncMock(return_value=[]),
+    ), patch(
+        "songyan.agents.creative_director.build_concept_budget_constraint",
+        new=AsyncMock(return_value=""),
+    ):
+        yield
+
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -597,3 +610,127 @@ class TestTemperatureParam:
             )
 
         assert captured_kwargs.get("temperature") == 0.99
+
+
+# ---------------------------------------------------------------------------
+# Task 170j: literary optimization plugin wiring
+# ---------------------------------------------------------------------------
+class TestLiteraryPlugins:
+    async def test_plugins_injected_when_has_skeleton(self) -> None:
+        """有骨架且 mode 配置了插件时，prompt 应包含插件内容."""
+        from songyan.workflows._narrative_context import NarrativeGoalContext
+
+        goal = _make_chapter_goal()
+        genre = _make_genre()
+        mode = _make_mode()
+        mode.literary_optimization_plugins = ["minimal_voice_anchor"]
+        characters = _make_characters()
+        llm_response = _make_valid_llm_response()
+
+        narrative_ctx = NarrativeGoalContext(
+            has_skeleton=True,
+            open_threads=[{"thread_id": "t1", "title": "测试线索"}],
+        )
+
+        captured_prompt: str = ""
+
+        async def _capture_call(prompt: str, **kwargs: object) -> str:
+            nonlocal captured_prompt
+            captured_prompt = prompt
+            return llm_response
+
+        with patch(
+            "songyan.agents.creative_director.call_llm",
+            new_callable=AsyncMock,
+            side_effect=_capture_call,
+        ):
+            await generate_creative_brief(
+                project=_make_project(),
+                project_id="proj_123",
+                chapter_goal=goal,
+                genre_profile=genre,
+                mode_profile=mode,
+                characters=characters,
+                previous_summary="测试剧情",
+                narrative_ctx=narrative_ctx,
+            )
+
+        assert "极简声纹锚定" in captured_prompt
+
+    async def test_plugins_not_injected_without_skeleton(self) -> None:
+        """无骨架时不应加载插件."""
+        from songyan.workflows._narrative_context import NarrativeGoalContext
+
+        goal = _make_chapter_goal()
+        genre = _make_genre()
+        mode = _make_mode()
+        mode.literary_optimization_plugins = ["minimal_voice_anchor"]
+        characters = _make_characters()
+        llm_response = _make_valid_llm_response()
+
+        narrative_ctx = NarrativeGoalContext(has_skeleton=False)
+
+        captured_prompt: str = ""
+
+        async def _capture_call(prompt: str, **kwargs: object) -> str:
+            nonlocal captured_prompt
+            captured_prompt = prompt
+            return llm_response
+
+        with patch(
+            "songyan.agents.creative_director.call_llm",
+            new_callable=AsyncMock,
+            side_effect=_capture_call,
+        ):
+            await generate_creative_brief(
+                project=_make_project(),
+                project_id="proj_123",
+                chapter_goal=goal,
+                genre_profile=genre,
+                mode_profile=mode,
+                characters=characters,
+                previous_summary="测试剧情",
+                narrative_ctx=narrative_ctx,
+            )
+
+        assert "极简声纹锚定" not in captured_prompt
+
+    async def test_plugins_not_injected_when_empty(self) -> None:
+        """插件列表为空时，prompt 与不使用插件时一致."""
+        from songyan.workflows._narrative_context import NarrativeGoalContext
+
+        goal = _make_chapter_goal()
+        genre = _make_genre()
+        mode = _make_mode()
+        characters = _make_characters()
+        llm_response = _make_valid_llm_response()
+
+        narrative_ctx = NarrativeGoalContext(
+            has_skeleton=True,
+            open_threads=[{"thread_id": "t1", "title": "测试线索"}],
+        )
+
+        captured_prompt: str = ""
+
+        async def _capture_call(prompt: str, **kwargs: object) -> str:
+            nonlocal captured_prompt
+            captured_prompt = prompt
+            return llm_response
+
+        with patch(
+            "songyan.agents.creative_director.call_llm",
+            new_callable=AsyncMock,
+            side_effect=_capture_call,
+        ):
+            await generate_creative_brief(
+                project=_make_project(),
+                project_id="proj_123",
+                chapter_goal=goal,
+                genre_profile=genre,
+                mode_profile=mode,
+                characters=characters,
+                previous_summary="测试剧情",
+                narrative_ctx=narrative_ctx,
+            )
+
+        assert "极简声纹锚定" not in captured_prompt

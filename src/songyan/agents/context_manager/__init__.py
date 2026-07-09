@@ -1048,6 +1048,7 @@ def assemble_context_package(
     ctx = ContextPackage(
         chapter_goal=chapter_goal,
         creative_brief=creative_brief,
+        mode_profile=mode_profile,
         hard_constraints=hard_constraints,
         character_states=character_snapshots,
         recent_plot=recent_plot,

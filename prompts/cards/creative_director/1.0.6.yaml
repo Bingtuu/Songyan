@@ -49,6 +49,8 @@ system_prompt: |
   ## 创作模式参数
   {{ mode_constraints }}
 
+  {{ literary_plugins }}
+
   {% if punch_engine_enabled %}
   ## 刺激点规划要求（Punch Engine）
 
@@ -221,3 +223,7 @@ variables:
   - name: mode_id
     type: str
     required: true
+  - name: literary_plugins
+    type: str
+    required: false
+    description: "Task 170j: 文学优化插件 prompt 片段（有骨架时注入）"

@@ -53,6 +53,7 @@ from songyan.models.creative_mode import (
     HumanMemoryConfig,
     PunchPoint,
     Tension,
+    VoiceAnchor,
 )
 from songyan.models.foreshadowing_schedule import (
     ForeshadowingScheduleItem,
@@ -147,6 +148,7 @@ __all__ = [
     "Tension",
     "PunchPoint",
     "EmotionArcItem",
+    "VoiceAnchor",
     "HumanMemoryConfig",
     "HumanInstruction",
     # continuity

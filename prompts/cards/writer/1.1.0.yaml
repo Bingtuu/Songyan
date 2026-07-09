@@ -34,6 +34,8 @@ system_prompt: |
   ## 风格约束
   {{ style_constraints }}
 
+  {{ literary_plugins }}
+
   ## 读者契约
   {{ reader_contract }}
 
@@ -80,6 +82,8 @@ system_prompt: |
   每个角色的对话必须符合以下风格指纹。若角色风格卡为空，则使用通用对话规范。
 
   {{ dialogue_style_cards }}
+
+  {{ voice_anchors }}
 
   **对话风格执行规则**：
   1. 每个角色的口头禅必须在对话中至少出现 1 次
@@ -520,3 +524,11 @@ variables:
     type: str
     required: false
     description: "Task 138h: critical orphan 强制回收约束文本"
+  - name: literary_plugins
+    type: str
+    required: false
+    description: "Task 170j: 文学优化插件 prompt 片段"
+  - name: voice_anchors
+    type: str
+    required: false
+    description: "Task 170j: 极简声纹锚定列表"

@@ -150,6 +150,9 @@ class CreativeModeProfile(BaseModel):
     # Task 128b: 开局期质量爬坡窗口章节数（默认前 10 章使用更宽松阈值）
     quality_ramp_chapters: int = 10
 
+    # Task 170j: 启用的文学优化策略插件 ID 列表
+    literary_optimization_plugins: list[str] = Field(default_factory=list)
+
     @classmethod
     def from_dict(cls, data: dict) -> "CreativeModeProfile":
         """从 dict 加载（JSON 反序列化后调用）."""
