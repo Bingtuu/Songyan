@@ -368,7 +368,7 @@ async def goal_planner_node(state: dict[str, Any]) -> dict[str, Any]:
         return {"error": f"Project not found: {state['project_id']}", "status": "goal_planner"}
 
     genre = load_genre_profile(project.genre_id)
-    mode = load_creative_mode_profile(project.mode_id)
+    mode = load_creative_mode_profile(state.get("mode_id") or project.mode_id)
     try:
         # V6 Task 143：加载自顶向下叙事骨架上下文（无骨架时 has_skeleton=False，回退旧行为）
         narrative_ctx = await load_narrative_goal_context(
@@ -410,7 +410,7 @@ async def creative_director_node(state: dict[str, Any]) -> dict[str, Any]:
 
     project = await load_project(state["project_id"])
     genre = load_genre_profile(project.genre_id)
-    mode = load_creative_mode_profile(project.mode_id)
+    mode = load_creative_mode_profile(state.get("mode_id") or project.mode_id)
     characters = await CharacterRepository().list_by_project(state["project_id"])
     seed_settings = await SettingSnapshotRepository().list_by_project(state["project_id"])
 
@@ -2449,7 +2449,7 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
     # Task 114a: 仅在本次 accept + settlement 事务成功后触发，禁止通过历史 version_type 旁路
     if accepted_for_postprocessing:
         try:
-            mode = load_creative_mode_profile(project.mode_id)
+            mode = load_creative_mode_profile(state.get("mode_id") or project.mode_id)
             await _index_accepted_chapter(
                 project_id=state["project_id"],
                 chapter_number=state["chapter_number"],
