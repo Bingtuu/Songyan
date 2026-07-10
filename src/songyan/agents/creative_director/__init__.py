@@ -145,7 +145,20 @@ async def _render_prompt(
         "punch_engine_enabled": mode_profile.id == "webnovel_intense",
     }
 
-    has_threads = narrative_ctx is not None and narrative_ctx.has_skeleton and (
+    # Task 170j: 有骨架时注入文学优化插件
+    has_skeleton = narrative_ctx is not None and narrative_ctx.has_skeleton
+    literary_plugins = ""
+    if has_skeleton and mode_profile.literary_optimization_plugins:
+        from songyan.literary_optimization.plugin_loader import load_strategy_plugins
+
+        fragments = load_strategy_plugins(
+            mode_profile.literary_optimization_plugins, "creative_director"
+        )
+        if fragments:
+            literary_plugins = "\n\n".join(fragments)
+    variables["literary_plugins"] = literary_plugins
+
+    has_threads = has_skeleton and (
         narrative_ctx.open_threads
         or narrative_ctx.threads_to_resolve
         or narrative_ctx.scheduled_items

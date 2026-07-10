@@ -30,6 +30,10 @@ class ReviewCategory(StrEnum):
     DESCRIPTION_SENSORY = "description_sensory"
     SHOW_DONT_TELL = "show_dont_tell"
 
+    # === 文学质量（Task 170h：voice / exposition）===
+    VOICE = "voice"
+    EXPOSITION = "exposition"
+
     # === 题材专项（1 个）===
     GENRE_NUMERICAL = "genre_numerical"
 
@@ -116,6 +120,32 @@ class MetaTagLeakMatch(BaseModel):
     message: str = "检测到元标记泄漏"
 
 
+class ExpositionCarrierMatch(BaseModel):
+    """说明文载体硬灌命中 — Task 170g / 170h."""
+
+    carrier_type: Literal[
+        "info_stream",
+        "consciousness_tentacle",
+        "vision_dump",
+        "faq_dialogue",
+        "repeated_revelation_beat",
+        "direct_revelation_monologue",
+        "protagonist_summary_tell",
+        "info_delivery_dialogue",
+        "non_character_monologue_overflow",
+        "expository_dialogue_chain",
+        "unearned_revelation",
+        "unconflicted_revelation",
+        "human_voice_homogeneity",
+    ]
+    matched_text: str
+    location: str
+    severity: Literal["major", "minor", "info"] = "minor"
+    message: str = "检测到说明文载体硬灌"
+    start: int | None = None
+    end: int | None = None
+
+
 class PunchCheck(BaseModel):
     """刺激度检查结果 — Punch Engine 专用."""
 
@@ -180,6 +210,10 @@ class RuleAuditResult(BaseModel):
 
     # 短段落比例（<50 字，观测指标，不直接阻断）
     short_paragraph_ratio: float = 0.0
+
+    # Task 170g: 说明文载体硬灌检测（观测指标，辅助诊断 exposition）
+    exposition_carrier_matches: list[ExpositionCarrierMatch] = Field(default_factory=list)
+    exposition_carrier_count: int = 0
 
     # 数值公式检测（玄幻）
     numerical_issues: list[str] = Field(default_factory=list)

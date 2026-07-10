@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 
 from songyan.models.chapter import ChapterGoal
 from songyan.models.character import DialogueStyleCard
-from songyan.models.creative_mode import CreativeBrief
+from songyan.models.creative_mode import CreativeBrief, CreativeModeProfile
 from songyan.models.genre import StyleBaseline
 from songyan.models.human_mark import HumanMark
 
@@ -181,6 +181,9 @@ class ContextPackage(BaseModel):
 
     chapter_goal: ChapterGoal
     creative_brief: CreativeBrief | None = None
+
+    # 创作模式完整配置（Task 170j 用于读取 literary_optimization_plugins）
+    mode_profile: CreativeModeProfile | None = None
 
     # === 分区 1：硬约束 ===
     hard_constraints: list[HardConstraint] = Field(default_factory=list)

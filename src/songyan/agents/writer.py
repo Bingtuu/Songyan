@@ -264,6 +264,42 @@ def _render_prompt(ctx: ContextPackage) -> str:
         lines.append(f"- 疲劳词容忍：{mr.tolerance_max_fatigue_words}")
         mode_rules = "\n".join(lines)
 
+    # Task 170j: 文学优化插件（仅当 mode_profile 配置了插件时加载）
+    literary_plugins = ""
+    if ctx.mode_profile and ctx.mode_profile.literary_optimization_plugins:
+        from songyan.literary_optimization.plugin_loader import load_strategy_plugins
+
+        fragments = load_strategy_plugins(
+            ctx.mode_profile.literary_optimization_plugins, "writer"
+        )
+        if fragments:
+            literary_plugins = "\n\n".join(fragments)
+
+    # Task 170j: 极简声纹锚定
+    voice_anchors = ""
+    if brief and brief.voice_anchors:
+        lines = ["## 极简声纹锚定"]
+        for va in brief.voice_anchors:
+            lines.append(
+                f"- {va.character_id}：情绪基调={va.emotional_register}，"
+                f"口头禅={va.verbal_tick}，禁忌={va.taboo_phrase}"
+            )
+        voice_anchors = "\n".join(lines)
+
+    # Task 170l: 少样本声纹锚定
+    voice_samples = ""
+    if brief and brief.voice_samples:
+        lines = ["## 少样本声纹锚定"]
+        for vs in brief.voice_samples:
+            lines.append(
+                f"- {vs.character_name}（{vs.character_id}）：情绪基调={vs.mood_anchor}"
+            )
+            for line in vs.sample_lines:
+                lines.append(f"  示例：{line}")
+            if vs.forbidden_patterns:
+                lines.append(f"  禁用：{', '.join(vs.forbidden_patterns)}")
+        voice_samples = "\n".join(lines)
+
     # 刺激点执行清单（Punch Engine）
     punch_points = []
     if brief and brief.punch_points:
@@ -412,6 +448,9 @@ def _render_prompt(ctx: ContextPackage) -> str:
         "human_marks": human_marks,
         "dialogue_style_cards": dialogue_style_cards_text,
         "mandatory_references": mandatory_references_text,
+        "literary_plugins": literary_plugins,
+        "voice_anchors": voice_anchors,
+        "voice_samples": voice_samples,
     }
 
     tags: list[str] = []

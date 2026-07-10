@@ -4,6 +4,7 @@ from songyan.db.chunk_repo import ChunkRepository
 from songyan.db.connection import get_db, get_db_path
 from songyan.db.context_repo import CharacterStateRepository, SummaryRepository
 from songyan.db.human_mark_repo import HumanMarkRepository
+from songyan.db.literary_repo import LiteraryKeywordRepository
 from songyan.db.migrations import init_schema, verify_schema
 from songyan.db.repository import (
     ChapterGoalRepository,
@@ -33,6 +34,7 @@ __all__ = [
     "CreativeBriefRepository",
     "ForeshadowingRepository",
     "HumanMarkRepository",
+    "LiteraryKeywordRepository",
     "LiteraryObservationRepository",
     "NumericalLedgerRepository",
     "ProjectRepository",

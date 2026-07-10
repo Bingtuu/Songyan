@@ -51,6 +51,25 @@ class PunchPoint(BaseModel):
     ] | None = None
 
 
+class VoiceAnchor(BaseModel):
+    """Task 170j: 极简声纹锚定 — 每个核心人类角色的情绪基调+口头禅/禁忌."""
+
+    character_id: str
+    emotional_register: str = ""
+    verbal_tick: str = ""
+    taboo_phrase: str = ""
+
+
+class VoiceSample(BaseModel):
+    """Task 170l: 角色声纹样例 — 示例台词、禁忌与情绪基调."""
+
+    character_id: str
+    character_name: str = ""
+    sample_lines: list[str] = Field(default_factory=list)
+    forbidden_patterns: list[str] = Field(default_factory=list)
+    mood_anchor: str = ""
+
+
 class CreativeBrief(BaseModel):
     """创作导演输出 — 创作意图与张力地图."""
 
@@ -75,6 +94,12 @@ class CreativeBrief(BaseModel):
     foreshadowing_due: list[str] = Field(default_factory=list)
     # 景深 — close(40%) / mid(40%) / wide(15%) / disruption(5%)
     focal_distance: str = "mid"
+
+    # Task 170j: 极简声纹锚定
+    voice_anchors: list[VoiceAnchor] = Field(default_factory=list)
+
+    # Task 170l: 角色声纹样例库
+    voice_samples: list[VoiceSample] = Field(default_factory=list)
 
 
 class HumanMemoryConfig(BaseModel):
@@ -137,6 +162,9 @@ class CreativeModeProfile(BaseModel):
 
     # Task 128b: 开局期质量爬坡窗口章节数（默认前 10 章使用更宽松阈值）
     quality_ramp_chapters: int = 10
+
+    # Task 170j: 启用的文学优化策略插件 ID 列表
+    literary_optimization_plugins: list[str] = Field(default_factory=list)
 
     @classmethod
     def from_dict(cls, data: dict) -> "CreativeModeProfile":

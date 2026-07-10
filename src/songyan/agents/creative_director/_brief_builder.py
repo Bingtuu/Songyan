@@ -16,6 +16,8 @@ from songyan.models.creative_mode import (
     EmotionArcItem,
     PunchPoint,
     Tension,
+    VoiceAnchor,
+    VoiceSample,
 )
 
 logger = structlog.get_logger(__name__)
@@ -176,6 +178,67 @@ def _ensure_forbidden_patterns(patterns: list[Any]) -> list[str]:
     return valid
 
 
+def _parse_voice_anchors(raw: Any) -> list[VoiceAnchor]:
+    """Task 170j: 解析 voice_anchors 字段，无效条目静默丢弃."""
+    result: list[VoiceAnchor] = []
+    if not isinstance(raw, list):
+        return result
+    for item in raw:
+        if not isinstance(item, dict):
+            continue
+        character_id = str(item.get("character_id", ""))
+        if not character_id:
+            continue
+        try:
+            result.append(
+                VoiceAnchor(
+                    character_id=character_id,
+                    emotional_register=str(item.get("emotional_register", "")),
+                    verbal_tick=str(item.get("verbal_tick", "")),
+                    taboo_phrase=str(item.get("taboo_phrase", "")),
+                )
+            )
+        except Exception:
+            continue
+    return result
+
+
+def _parse_voice_samples(raw: Any) -> list[VoiceSample]:
+    """Task 170l: 解析 voice_samples 字段，无效条目静默丢弃."""
+    result: list[VoiceSample] = []
+    if not isinstance(raw, list):
+        return result
+    for item in raw:
+        if not isinstance(item, dict):
+            continue
+        character_id = str(item.get("character_id", ""))
+        if not character_id:
+            continue
+        sample_lines = [
+            str(line)
+            for line in item.get("sample_lines", [])
+            if isinstance(line, (str, int, float))
+        ]
+        forbidden_patterns = [
+            str(p)
+            for p in item.get("forbidden_patterns", [])
+            if isinstance(p, (str, int, float))
+        ]
+        try:
+            result.append(
+                VoiceSample(
+                    character_id=character_id,
+                    character_name=str(item.get("character_name", "")),
+                    sample_lines=sample_lines,
+                    forbidden_patterns=forbidden_patterns,
+                    mood_anchor=str(item.get("mood_anchor", "")),
+                )
+            )
+        except Exception:
+            continue
+    return result
+
+
 def _build_creative_brief(
     data: dict[str, Any],
     mode_id: str,
@@ -273,4 +336,6 @@ def _build_creative_brief(
         character_focus=_character_focus,
         foreshadowing_due=_foreshadowing_due,
         focal_distance=_focal_distance,
+        voice_anchors=_parse_voice_anchors(data.get("voice_anchors")),
+        voice_samples=_parse_voice_samples(data.get("voice_samples")),
     )

@@ -32,6 +32,10 @@ system_prompt: |
 
   {{ protected_fissures }}
 
+  {% if literary_plugins %}
+  {{ literary_plugins }}
+  {% endif %}
+
   ## 规则
 
   1. 每个问题只修改对应的那几句话
@@ -103,3 +107,7 @@ variables:
   - name: protected_fissures
     type: str
     required: true
+  - name: literary_plugins
+    type: str
+    required: false
+    description: "Task 170l: 文学优化插件 prompt 片段（如 ai_tone_blocklist）"

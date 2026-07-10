@@ -251,7 +251,7 @@ class TestContextPackage:
 class TestReviewCategory:
     """ReviewCategory 枚举测试."""
 
-    def test_all_12_dimensions(self) -> None:
+    def test_all_14_dimensions(self) -> None:
         expected = {
             "world_consistency",
             "character_behavior",
@@ -265,6 +265,8 @@ class TestReviewCategory:
             "description_sensory",
             "show_dont_tell",
             "genre_numerical",
+            "voice",
+            "exposition",
         }
         actual = {m.value for m in ReviewCategory}
         assert actual == expected

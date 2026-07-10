@@ -46,6 +46,8 @@ system_prompt: |
   ## 创作模式参数
   {{ mode_constraints }}
 
+  {{ literary_plugins }}
+
   {% if punch_engine_enabled %}
   ## 刺激点规划要求（Punch Engine）
 
@@ -92,6 +94,22 @@ system_prompt: |
       "【节奏地图】开头慢→中段加速→结尾爆发（或根据本章需要定制）"
     ],
     "reader_contract": "用1句话概括本章对读者的'承诺'——读完本章，读者应该得到什么？",
+
+    "voice_anchors": [
+      {"character_id": "role_a", "emotional_register": "压抑但易怒", "verbal_tick": "听着", "taboo_phrase": "对不起"}
+    ],
+    "voice_anchors_description": "voice_anchors（Task 170j）。当 system prompt 中文学优化插件存在时，必须为 2-3 个核心人类角色输出此字段；否则可省略。每个角色给出情绪基调、口头禅/高频短语、禁忌语。",
+
+    "voice_samples": [
+      {
+        "character_id": "role_a",
+        "character_name": "角色A",
+        "sample_lines": ["你别过来。", "我早说过这不归我管。"],
+        "forbidden_patterns": ["换句话说", "不可否认的是", "他知道"],
+        "mood_anchor": "压抑但易怒"
+      }
+    ],
+    "voice_samples_description": "voice_samples（Task 170l）。当 system prompt 中启用了 few_shot_voice_anchor 插件时，必须为 2-3 个核心人类角色输出此字段；否则可省略。sample_lines 必须贴合角色身份与本章冲突，禁止通用模板。",
 
     "narrative_fullness": 0.65,
     "narrative_fullness_description": "叙事充满度：0.0~1.0。当前所有线索展开到什么程度了？0.3=刚开始，0.6=多条线索并行，0.8=大部分线索接近收束，0.9=高潮来临。如果你在早期章节（Ch02-20），正常范围 0.2~0.5。中期（Ch21-35）0.4~0.7。晚期（Ch36+）0.6~0.9。如果你的直觉和章节数不匹配，相信直觉——没有两条相同的叙事曲线。",
@@ -215,3 +233,7 @@ variables:
   - name: mode_id
     type: str
     required: true
+  - name: literary_plugins
+    type: str
+    required: false
+    description: "Task 170j: 文学优化插件 prompt 片段（有骨架时注入）"

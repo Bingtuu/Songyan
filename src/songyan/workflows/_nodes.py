@@ -368,7 +368,7 @@ async def goal_planner_node(state: dict[str, Any]) -> dict[str, Any]:
         return {"error": f"Project not found: {state['project_id']}", "status": "goal_planner"}
 
     genre = load_genre_profile(project.genre_id)
-    mode = load_creative_mode_profile(project.mode_id)
+    mode = load_creative_mode_profile(state.get("mode_id") or project.mode_id)
     try:
         # V6 Task 143：加载自顶向下叙事骨架上下文（无骨架时 has_skeleton=False，回退旧行为）
         narrative_ctx = await load_narrative_goal_context(
@@ -410,7 +410,7 @@ async def creative_director_node(state: dict[str, Any]) -> dict[str, Any]:
 
     project = await load_project(state["project_id"])
     genre = load_genre_profile(project.genre_id)
-    mode = load_creative_mode_profile(project.mode_id)
+    mode = load_creative_mode_profile(state.get("mode_id") or project.mode_id)
     characters = await CharacterRepository().list_by_project(state["project_id"])
     seed_settings = await SettingSnapshotRepository().list_by_project(state["project_id"])
 
@@ -1679,6 +1679,14 @@ async def revision_handler_node(state: dict[str, Any]) -> dict[str, Any]:
     goal = await load_chapter_goal(state.get("chapter_goal_id", ""))
     word_count_target = goal.word_count_target if goal else 3000
 
+    # Task 170l: 加载 mode_profile 以注入文学优化插件
+    project = await load_project(state["project_id"])
+    mode_profile = (
+        load_creative_mode_profile(state.get("mode_id") or project.mode_id)
+        if project
+        else None
+    )
+
     # Task 128c: 传入 score_card，使 RevisionHandler 能识别 readability 问题并走专精路径
     output, revised_content = await run_revision(
         content=version.content,
@@ -1687,6 +1695,7 @@ async def revision_handler_node(state: dict[str, Any]) -> dict[str, Any]:
         previous_issues=previous_issues,
         word_count_target=word_count_target,
         score_card=state.get("_score_card"),
+        mode_profile=mode_profile,
     )
 
     # 截断检测：若内容保留率 < 50%，跳过 revision，回退到原始版本
@@ -2449,7 +2458,7 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
     # Task 114a: 仅在本次 accept + settlement 事务成功后触发，禁止通过历史 version_type 旁路
     if accepted_for_postprocessing:
         try:
-            mode = load_creative_mode_profile(project.mode_id)
+            mode = load_creative_mode_profile(state.get("mode_id") or project.mode_id)
             await _index_accepted_chapter(
                 project_id=state["project_id"],
                 chapter_number=state["chapter_number"],

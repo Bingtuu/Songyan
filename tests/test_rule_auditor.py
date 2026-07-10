@@ -517,3 +517,355 @@ class TestSceneCountWithBlankLines:
         result = run_rule_audit(text, word_count_target=10, scene_count_target=2)
         assert result.scene_count == 1
         assert result.scene_count_ok is False
+
+
+# ---------------------------------------------------------------------------
+# Task 170g: Exposition Carrier Detection Tests
+# ---------------------------------------------------------------------------
+class TestExpositionCarrierDetection:
+    def test_info_stream_detected(self) -> None:
+        text = "信息流就像高压电流般涌入颅腔，他瞬间理解了方舟的全部真相。"
+        result = run_rule_audit(text, word_count_target=10)
+        assert result.exposition_carrier_count >= 1
+        assert any(m.carrier_type == "info_stream" for m in result.exposition_carrier_matches)
+
+    def test_consciousness_tentacle_detected(self) -> None:
+        text = "林渊的意识触须沿着坐标延伸，触碰到了建造者留下的核心节点。"
+        result = run_rule_audit(text, word_count_target=10)
+        assert result.exposition_carrier_count >= 1
+        assert any(
+            m.carrier_type == "consciousness_tentacle"
+            for m in result.exposition_carrier_matches
+        )
+
+    def test_vision_dump_detected(self) -> None:
+        text = "他看见了建造者——他们站在一个巨大的空间里，周身流动着液态星光。"
+        result = run_rule_audit(text, word_count_target=10)
+        assert result.exposition_carrier_count >= 1
+        assert any(m.carrier_type == "vision_dump" for m in result.exposition_carrier_matches)
+
+    def test_repeated_revelation_beat_detected(self) -> None:
+        text = (
+            "信息流涌入颅腔，他明白了第一个真相。"
+            "片刻后，信息流再次涌入颅腔，他明白了第二个真相。"
+        )
+        result = run_rule_audit(text, word_count_target=10)
+        assert any(
+            m.carrier_type == "repeated_revelation_beat"
+            for m in result.exposition_carrier_matches
+        )
+
+    def test_exposition_carrier_penalty_in_overall_score(self) -> None:
+        result = RuleAuditResult(
+            ai_tell_count=0,
+            fatigue_word_count=0,
+            has_opening_hook=True,
+            has_ending_hook=True,
+            paragraph_rhythm_score=8.0,
+            word_count=3000,
+            word_count_target=3000,
+            word_count_ok=True,
+            exposition_carrier_count=3,
+        )
+        score = _compute_overall_score(result)
+        # 3 * 0.3 = 0.9 扣分
+        assert score == 9.1
+
+    def test_exposition_carrier_summary(self) -> None:
+        result = RuleAuditResult(
+            ai_tell_count=0,
+            fatigue_word_count=0,
+            has_opening_hook=True,
+            has_ending_hook=True,
+            paragraph_rhythm_score=8.0,
+            word_count=3000,
+            word_count_target=3000,
+            word_count_ok=True,
+            exposition_carrier_count=2,
+        )
+        summary = _generate_summary(result)
+        assert "说明文载体硬灌" in summary
+
+    def test_clean_text_no_exposition_carrier(self) -> None:
+        text = _make_clean_text()
+        result = run_rule_audit(text, word_count_target=100)
+        # 干净文本不应命中 info_stream / vision_dump / consciousness_tentacle
+        bad_types = {"info_stream", "vision_dump", "consciousness_tentacle"}
+        found_bad = {
+            m.carrier_type for m in result.exposition_carrier_matches if m.carrier_type in bad_types
+        }
+        assert not found_bad
+
+
+def test_direct_revelation_monologue_detected() -> None:
+    text = (
+        '建造者的声音在舱室里回荡："建造者文明没有灭绝，它们把自己分裂成七块意识碎片，'
+        '嵌入了七把钥匙的基因序列之中，每一代钥匙的死亡都会释放一块碎片，等待最后的共鸣。"'
+    )
+    result = run_rule_audit(text, word_count_target=10)
+    assert any(
+        m.carrier_type == "direct_revelation_monologue"
+        for m in result.exposition_carrier_matches
+    )
+
+
+def test_protagonist_summary_tell_detected() -> None:
+    text = "林渊看着残骸。他明白了——方舟从来不是庇护所，而是一座牢笼。"
+    result = run_rule_audit(text, word_count_target=10)
+    assert any(
+        m.carrier_type == "protagonist_summary_tell"
+        for m in result.exposition_carrier_matches
+    )
+
+
+def test_protagonist_summary_tell_expanded_verbs() -> None:
+    for verb in ("他终于懂了", "这一切都意味着", "他理解了"):
+        text = f"林渊看着残骸。{verb}——方舟从来不是庇护所，而是一座牢笼。"
+        result = run_rule_audit(text, word_count_target=10)
+        assert any(
+            m.carrier_type == "protagonist_summary_tell"
+            for m in result.exposition_carrier_matches
+        ), f"failed for {verb}"
+
+
+def test_unconflicted_revelation_detected() -> None:
+    text = (
+        '林渊走进房间，环顾四周。老雷平静地说：'
+        '"核心协议叫做共鸣锁，它通过基因标记识别每一代钥匙，'
+        '当七把钥匙全部激活时，系统会释放预先写入的最终指令。"'
+    )
+    result = run_rule_audit(text, word_count_target=10)
+    assert any(
+        m.carrier_type == "unconflicted_revelation"
+        for m in result.exposition_carrier_matches
+    )
+
+
+def test_unconflicted_revelation_with_conflict_not_flagged() -> None:
+    text = (
+        '林渊以为共鸣锁是保护机制。陈薇冷笑："你错了，那是处决开关。"'
+        '老雷平静地说："核心协议叫做共鸣锁，它通过基因标记识别每一代钥匙。"'
+    )
+    result = run_rule_audit(text, word_count_target=10)
+    assert not any(
+        m.carrier_type == "unconflicted_revelation"
+        for m in result.exposition_carrier_matches
+    )
+
+
+def test_human_voice_homogeneity_detected() -> None:
+    text = (
+        '林渊说："我们必须马上离开这里。通道已经封死了。"\n'
+        '陈薇说："我们必须马上离开这里。通道已经封死了。"\n'
+        '老雷说："我们必须马上离开这里。通道已经封死了。"'
+    )
+    result = run_rule_audit(text, word_count_target=10)
+    assert any(
+        m.carrier_type == "human_voice_homogeneity"
+        for m in result.exposition_carrier_matches
+    )
+
+
+def test_human_voice_homogeneity_with_distinct_voices_not_flagged() -> None:
+    text = (
+        '林渊吼道："走！"\n\n'
+        '陈薇按住他的手，声音发颤："往哪走？通道都锁死了，你冷静点。"\n\n'
+        '老雷没抬头，只是用扳手敲了敲变形的门框："先把手从警报按钮上挪开。"'
+    )
+    result = run_rule_audit(text, word_count_target=10)
+    assert not any(
+        m.carrier_type == "human_voice_homogeneity"
+        for m in result.exposition_carrier_matches
+    )
+
+
+def test_human_voice_homogeneity_detected_with_post_quote_speakers() -> None:
+    """后置说话人（网文常见格式）也应被正确归因并检测同质化."""
+    text = (
+        '"我们必须马上离开这里。通道已经封死了。"林渊说。\n\n'
+        '"我们必须马上离开这里。通道已经封死了。"陈薇说。\n\n'
+        '"我们必须马上离开这里。通道已经封死了。"老雷说。'
+    )
+    result = run_rule_audit(text, word_count_target=10)
+    assert any(
+        m.carrier_type == "human_voice_homogeneity"
+        for m in result.exposition_carrier_matches
+    )
+
+
+def test_human_voice_homogeneity_distinct_post_quote_voices_not_flagged() -> None:
+    """后置说话人但声纹不同，不应误报."""
+    text = (
+        '"走！"林渊吼道。\n\n'
+        '"往哪走？通道都锁死了，你冷静点。"陈薇按住他的手，声音发颤。\n\n'
+        '"先把手从警报按钮上挪开。"老雷没抬头，只是用扳手敲了敲变形的门框。'
+    )
+    result = run_rule_audit(text, word_count_target=10)
+    assert not any(
+        m.carrier_type == "human_voice_homogeneity"
+        for m in result.exposition_carrier_matches
+    )
+
+
+def test_info_delivery_dialogue_detected() -> None:
+    text = (
+        '老雷平静地说："核心协议叫做共鸣锁，它通过基因标记识别每一代钥匙，'
+        '当七把钥匙全部激活时，系统会释放预先写入的最终指令，完成整个闭环校验。"'
+    )
+    result = run_rule_audit(text, word_count_target=10)
+    assert any(
+        m.carrier_type == "info_delivery_dialogue"
+        for m in result.exposition_carrier_matches
+    )
+
+
+def test_repeated_direct_revelation_beat_detected() -> None:
+    text = (
+        '残影说："建造者文明为了逃避熵增的终点，把自己分裂成七块意识碎片，'
+        '并分别封印在七把钥匙的基因序列深处，等待最后的共鸣时刻。"'
+        '过了一会，残影又说："每一块碎片都记录着一段被抹除的历史，'
+        '只有对应钥匙在濒死时释放共鸣，碎片才会从基因里苏醒，向继任者展示那段被封印的过去。"'
+    )
+    result = run_rule_audit(text, word_count_target=10)
+    assert any(
+        m.carrier_type == "repeated_revelation_beat"
+        for m in result.exposition_carrier_matches
+    )
+
+
+class TestStructuralExpositionDetection:
+    def test_non_character_monologue_overflow_total_words(self) -> None:
+        text = (
+            '建造者的声音说："建造者留下的话很清楚：方舟不是庇护所，而是一座牢笼，'
+            '你们所有人都是被选中的锁芯，基因里刻着共振的密码，每一道纹路都指向同一个终点。'
+            '当七把钥匙同时转动，门不会打开，只会把最后的缝隙也封死，把所有人都留在黑暗里。"'
+        )
+        result = run_rule_audit(text, word_count_target=10)
+        assert any(
+            m.carrier_type == "non_character_monologue_overflow"
+            for m in result.exposition_carrier_matches
+        )
+
+    def test_non_character_monologue_overflow_consecutive(self) -> None:
+        text = (
+            '"建造者说方舟是牢笼，这句话像钉子一样钉进空气。"'
+            '"建造者还说你们都是锁芯，每一个人都不例外。"'
+            '"建造者最后说门不会打开，只会封死最后的缝隙。"'
+        )
+        result = run_rule_audit(text, word_count_target=10)
+        assert any(
+            m.carrier_type == "non_character_monologue_overflow"
+            for m in result.exposition_carrier_matches
+        )
+
+    def test_expository_dialogue_chain_detected(self) -> None:
+        text = (
+            '"核心协议叫做共鸣锁，它通过基因标记识别每一代钥匙，这是系统的第一层校验机制，任何人都无法绕过这个底层协议。"'
+            '"当七把钥匙的基因标记同时被系统读取之后，共鸣锁会进入第二层校验流程，验证所有标记是否匹配并记录偏差值。"'
+            '"七把钥匙全部激活时，系统会释放预先写入的最终指令，完成整个闭环校验，没有任何外部干预的余地，结果早已注定。"'
+        )
+        result = run_rule_audit(text, word_count_target=10)
+        assert any(
+            m.carrier_type == "expository_dialogue_chain"
+            for m in result.exposition_carrier_matches
+        )
+
+    def test_unearned_revelation_detected(self) -> None:
+        text = (
+            '林渊走进房间，环顾四周。建造者的声音突然响起：'
+            '"建造者文明从一开始就知道真相：方舟从来不是庇护所，而是一座牢笼，'
+            '你们所有人都是被选中的锁芯，基因里刻着共振的密码。"'
+        )
+        result = run_rule_audit(text, word_count_target=10)
+        assert any(
+            m.carrier_type == "unearned_revelation"
+            for m in result.exposition_carrier_matches
+        )
+
+    def test_earned_revelation_not_flagged(self) -> None:
+        text = (
+            '林渊一拳砸向主控面板，屏幕碎裂，火花四溅。'
+            '系统警报尖叫。建造者的声音才响起："协议已终止。"'
+        )
+        result = run_rule_audit(text, word_count_target=10)
+        assert not any(
+            m.carrier_type == "unearned_revelation"
+            for m in result.exposition_carrier_matches
+        )
+
+
+# ---------------------------------------------------------------------------
+# Task 170l: Quote-style coverage for exposition carrier detection
+# ---------------------------------------------------------------------------
+class TestExpositionCarrierCurlyQuotes:
+    """验证 exposition carrier 检测同时支持 ASCII \"...\" 与中文弯引号 ""“...”"""""
+
+    def test_direct_revelation_monologue_with_curly_quotes(self) -> None:
+        text = (
+            '建造者的声音在舱室里回荡：\u201c建造者文明没有灭绝，它们把自己分裂成七块意识碎片，'
+            '嵌入了七把钥匙的基因序列之中，每一代钥匙的死亡都会释放一块碎片，等待最后的共鸣。\u201d'
+        )
+        result = run_rule_audit(text, word_count_target=10)
+        assert any(
+            m.carrier_type == "direct_revelation_monologue"
+            for m in result.exposition_carrier_matches
+        )
+
+    def test_info_delivery_dialogue_with_curly_quotes(self) -> None:
+        text = (
+            '老雷平静地说：\u201c核心协议叫做共鸣锁，它通过基因标记识别每一代钥匙，'
+            '当七把钥匙全部激活时，系统会释放预先写入的最终指令，完成整个闭环校验。\u201d'
+        )
+        result = run_rule_audit(text, word_count_target=10)
+        assert any(
+            m.carrier_type == "info_delivery_dialogue"
+            for m in result.exposition_carrier_matches
+        )
+
+    def test_unconflicted_revelation_with_curly_quotes(self) -> None:
+        text = (
+            '林渊走进房间，环顾四周。老雷平静地说：'
+            '\u201c核心协议叫做共鸣锁，它通过基因标记识别每一代钥匙，'
+            '当七把钥匙全部激活时，系统会释放预先写入的最终指令。\u201d'
+        )
+        result = run_rule_audit(text, word_count_target=10)
+        assert any(
+            m.carrier_type == "unconflicted_revelation"
+            for m in result.exposition_carrier_matches
+        )
+
+    def test_human_voice_homogeneity_with_curly_quotes(self) -> None:
+        text = (
+            '林渊说：\u201c我们必须马上离开这里。通道已经封死了。\u201d\n'
+            '陈薇说：\u201c我们必须马上离开这里。通道已经封死了。\u201d\n'
+            '老雷说：\u201c我们必须马上离开这里。通道已经封死了。\u201d'
+        )
+        result = run_rule_audit(text, word_count_target=10)
+        assert any(
+            m.carrier_type == "human_voice_homogeneity"
+            for m in result.exposition_carrier_matches
+        )
+
+    def test_non_character_monologue_overflow_with_curly_quotes(self) -> None:
+        text = (
+            '建造者的声音说：\u201c建造者留下的话很清楚：方舟不是庇护所，而是一座牢笼，'
+            '你们所有人都是被选中的锁芯，基因里刻着共振的密码，每一道纹路都指向同一个终点。'
+            '当七把钥匙同时转动，门不会打开，只会把最后的缝隙也封死，把所有人都留在黑暗里。\u201d'
+        )
+        result = run_rule_audit(text, word_count_target=10)
+        assert any(
+            m.carrier_type == "non_character_monologue_overflow"
+            for m in result.exposition_carrier_matches
+        )
+
+    def test_expository_dialogue_chain_with_curly_quotes(self) -> None:
+        text = (
+            '\u201c核心协议叫做共鸣锁，它通过基因标记识别每一代钥匙，这是系统的第一层校验机制，任何人都无法绕过这个底层协议。\u201d'
+            '\u201c当七把钥匙的基因标记同时被系统读取之后，共鸣锁会进入第二层校验流程，验证所有标记是否匹配并记录偏差值。\u201d'
+            '\u201c七把钥匙全部激活时，系统会释放预先写入的最终指令，完成整个闭环校验，没有任何外部干预的余地，结果早已注定。\u201d'
+        )
+        result = run_rule_audit(text, word_count_target=10)
+        assert any(
+            m.carrier_type == "expository_dialogue_chain"
+            for m in result.exposition_carrier_matches
+        )

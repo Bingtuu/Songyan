@@ -20,6 +20,8 @@ from songyan.models import (
     ReviewIssue,
     RuleAuditResult,
     Tension,
+    VoiceAnchor,
+    VoiceSample,
 )
 from songyan.utils.json_helpers import from_json as _from_json
 from songyan.utils.json_helpers import model_json as _model_json
@@ -44,8 +46,8 @@ class CreativeBriefRepository:
                     brief_id, project_id, chapter_number, mode_id, creative_intent,
                     required_tensions, forbidden_patterns, allowed_fissures,
                     style_constraints, reader_contract, polyphony_notes, chapter_goal,
-                    punch_points, emotion_arc
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    punch_points, emotion_arc, voice_anchors, voice_samples
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
                     brief_id,
                     project_id,
@@ -61,6 +63,8 @@ class CreativeBriefRepository:
                     _model_json(brief.chapter_goal),
                     _model_json(brief.punch_points),
                     _model_json(brief.emotion_arc),
+                    _model_json(brief.voice_anchors),
+                    _model_json(brief.voice_samples),
                 ),
             )
             await conn.commit()
@@ -104,6 +108,12 @@ class CreativeBriefRepository:
             ],
             emotion_arc=[
                 EmotionArcItem.model_validate(item) for item in _from_json(row["emotion_arc"], [])
+            ],
+            voice_anchors=[
+                VoiceAnchor.model_validate(item) for item in _from_json(row["voice_anchors"], [])
+            ],
+            voice_samples=[
+                VoiceSample.model_validate(item) for item in _from_json(row["voice_samples"], [])
             ],
         )
 

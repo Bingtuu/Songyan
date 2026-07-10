@@ -1,0 +1,12 @@
+content: |
+  ## 少样本声纹锚定（Task 170l）
+
+  本章 CreativeDirector 为部分核心人类角色提供了 `voice_samples`。
+
+  {{ voice_samples }}
+
+  为这类角色写对白时必须：
+  - 以 `sample_lines` 为**声纹模板**，模仿其语速、用词、情绪缺陷与句式；
+  - 根据当前场景重新创作对白内容，**禁止直接复制 sample_lines**；
+  - 让声纹从角色的目标、恐惧与冲突中自然流露，而不是贴标签式地重复口头禅；
+  - 如果该角色有 `forbidden_patterns`，其对白与心理描写必须**完全避开**这些模式。

@@ -15,6 +15,7 @@ from songyan.llm.parsing import parse_llm_response
 from songyan.models import (
     ChapterHead,
     ChapterVersion,
+    CreativeModeProfile,
     LiteraryAuditResult,
     MergedReviewReport,
     Patch,
@@ -301,10 +302,12 @@ def _render_prompt(
     *,
     prompt_version: str | None = None,
     readability_metrics: dict[str, Any] | None = None,
+    mode_profile: CreativeModeProfile | None = None,
 ) -> str:
     """渲染 RevisionHandler Prompt.
 
     Task 128c: 支持 readability 专精 prompt 版本和可读性指标变量。
+    Task 170l: 支持 mode_profile 文学优化插件注入（如 ai_tone_blocklist）。
     """
     from songyan.prompts import get_prompt_loader
 
@@ -313,10 +316,22 @@ def _render_prompt(
 
     content = truncate_to_tokens(content, MAX_CONTENT_TOKENS)
 
+    # Task 170l: 加载 revision_handler 文学优化插件
+    literary_plugins = ""
+    if mode_profile and mode_profile.literary_optimization_plugins:
+        from songyan.literary_optimization.plugin_loader import load_strategy_plugins
+
+        fragments = load_strategy_plugins(
+            mode_profile.literary_optimization_plugins, "revision_handler"
+        )
+        if fragments:
+            literary_plugins = "\n\n".join(fragments)
+
     variables: dict[str, Any] = {
         "content": content,
         "issues": _render_issues(issues),
         "protected_fissures": _render_protected_fissures(protected_fissures),
+        "literary_plugins": literary_plugins,
     }
     if readability_metrics is not None:
         variables.update(readability_metrics)
@@ -618,6 +633,7 @@ async def run_revision(
     previous_issues: list[ReviewIssue] | None = None,
     word_count_target: int = 3000,
     score_card: dict[str, Any] | None = None,
+    mode_profile: CreativeModeProfile | None = None,
 ) -> tuple[RevisionOutput, str]:
     """运行修订 — 按 issue 局部 patch，不整章重写.
 
@@ -628,6 +644,7 @@ async def run_revision(
         temperature: LLM 温度（默认 0.3，精确修改）
         word_count_target: 目标字数（V4.0 Task 088 字数硬约束）
         score_card: 可选的 score_card dict（Task 128c：用于判断 readability 专精路径）
+        mode_profile: 可选的创作模式配置（Task 170l：用于注入文学优化插件）
 
     Returns:
         (RevisionOutput, revised_content)
@@ -796,6 +813,7 @@ async def run_revision(
         previous_issues,
         prompt_version="1.1.0" if readability_driven else None,
         readability_metrics=readability_metrics,
+        mode_profile=mode_profile,
     )
 
     llm_response = await call_llm(prompt, temperature=temperature)
