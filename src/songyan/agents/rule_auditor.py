@@ -785,6 +785,7 @@ def detect_exposition_carriers(
 def detect_human_voice_homogeneity(
     text: str,
     non_character_keywords: set[str] | None = None,
+    character_names: set[str] | None = None,
 ) -> list[ExpositionCarrierMatch]:
     """Task 170i: 检测同场景多人类角色对白声纹同质化.
 
@@ -794,16 +795,21 @@ def detect_human_voice_homogeneity(
     - 副词密度差异 <30%
     则认为声纹同质化，返回 report-only 命中。
 
-    本函数同时支持前置说话人（林渊说："..."）与后置说话人（"..."林渊说。），
-    并对连续短场景做合并，降低 Writer 1.1.0+ 空行分场景格式导致的漏检。
+    说话人归因（Task 170o 校准）：
+    - 前置说话人：``林渊说："..."``；
+    - 后置说话人：``"..."林渊说。``；
+    - 叙事归因：``X的声音/嗓音/录音``、``声音是X的``（真实正文大量使用，非 ``X说`` 标签）。
+    当提供 ``character_names``（项目角色注册表）时，仅接受注册表内的人名作为说话人，
+    过滤 ``寻找更多`` / ``录音中`` 等把叙事片段误当人名的噪声；未提供时回退到
+    "长度 2-4 汉字 + 非代词 + 非非人实体" 的宽松启发式，保持向后兼容。
     """
     matches: list[ExpositionCarrierMatch] = []
     raw_scenes = _split_scenes(text)
     scenes = _merge_short_scenes_for_voice(raw_scenes)
 
-    # 基础说话人识别：支持前置与后置，覆盖常见 speech-verb 变体。
-    # 注意：捕获组为说话人名字（1-6 个汉字），可能误捕"他/她"等代词；
-    # 后续用非人关键词过滤 + 多角色成对比较，可在一定程度上稀释单一代词噪声。
+    # 基础说话人识别：支持前置、后置与叙事归因，覆盖常见 speech-verb 变体。
+    # 注意：捕获组为说话人名字（1-6 个汉字），可能误捕"他/她"等代词或叙事片段；
+    # 后续用代词过滤 + 非人关键词过滤 + 角色注册表 gating + 多角色成对比较收敛噪声。
     speech_verb = (
         r"(?:说|道|喊道|问道|冷笑道|回答道|低声道|吼道|骂道|"
         r"开口|打断|补充|继续|反问|沉声|厉声|轻声|喃喃|嘀咕)"
@@ -814,34 +820,63 @@ def detect_human_voice_homogeneity(
     post_speaker_re = re.compile(
         rf'^[\s，。！？、…]*([一-龥]{{1,6}}){speech_verb}(?:道|着|了|，|。|：|\s*)'
     )
+    # 叙事归因：真实正文多用"X的声音/录音"而非"X说"，用注册表 gating 收敛噪声。
+    voice_of_re = re.compile(r'([一-龥]{2,4})的(?:声音|嗓音|录音|语音|话音|声线)')
+    is_voice_of_re = re.compile(r'(?:声音|嗓音|话音|语音)是([一-龥]{2,4})的')
     quote_re = re.compile(r'[\"“”]([^\"“”]{10,400})[\"“”]')
+
+    pronouns = {"他", "她", "它", "我", "你", "他们", "她们", "它们", "我们", "你们"}
 
     effective_non_char_keywords = (
         non_character_keywords
         if non_character_keywords is not None
         else set(_NON_CHARACTER_SPEAKER_KEYWORDS)
     )
+    # 角色注册表 gating：提供时只认注册表内人名，杜绝叙事片段误当说话人。
+    registry = {n for n in (character_names or set()) if n}
+
+    def _accept_speaker(name: str | None) -> str | None:
+        if not name or name in pronouns or name in effective_non_char_keywords:
+            return None
+        if registry:
+            # 注册表模式：名字必须命中注册表（支持子串，兼容"老陈/陈薇"式指代）。
+            for known in registry:
+                if known in name or name in known:
+                    return known
+            return None
+        # 无注册表：回退宽松启发式，仅接受 2-4 汉字候选，滤掉过长叙事片段。
+        return name if 2 <= len(name) <= 4 else None
 
     for scene_idx, scene in enumerate(scenes, 1):
         speaker_stats: dict[str, dict[str, Any]] = {}
         for m in quote_re.finditer(scene):
             quote = m.group(1)
-            speaker: str | None = None
-            # 1) 前置说话人：从引语前 30 字内找
+            raw_speaker: str | None = None
             before = scene[max(0, m.start() - 30):m.start()]
+            after = scene[m.end():min(len(scene), m.end() + 40)]
+            # 1) 前置说话人
             pre_match = pre_speaker_re.search(before)
             if pre_match:
-                speaker = pre_match.group(1)
-            else:
-                # 2) 后置说话人：从引语后 40 字内找
-                after = scene[m.end():min(len(scene), m.end() + 40)]
+                raw_speaker = pre_match.group(1)
+            # 2) 后置说话人
+            if raw_speaker is None:
                 post_match = post_speaker_re.search(after)
                 if post_match:
-                    speaker = post_match.group(1)
+                    raw_speaker = post_match.group(1)
+            # 3) 叙事归因（X的声音 / 声音是X的）：优先看引语前窗口（归因通常前置），
+            #    取窗口内最靠近引语的一次匹配，避免误取下一句的说话人。
+            if raw_speaker is None:
+                for rgx in (is_voice_of_re, voice_of_re):
+                    before_hits = list(rgx.finditer(before))
+                    if before_hits:
+                        raw_speaker = before_hits[-1].group(1)
+                        break
+                    after_hit = rgx.search(after)
+                    if after_hit:
+                        raw_speaker = after_hit.group(1)
+                        break
+            speaker = _accept_speaker(raw_speaker)
             if speaker is None:
-                continue
-            # 过滤非人实体声源
-            if speaker in effective_non_char_keywords:
                 continue
             if speaker not in speaker_stats:
                 speaker_stats[speaker] = {
@@ -1124,7 +1159,11 @@ def run_rule_audit(
         info_delivery_dialogue_min_chars=info_delivery_dialogue_min_chars,
     )
     exposition_carrier_matches.extend(
-        detect_human_voice_homogeneity(content, non_character_keywords=non_character_keywords)
+        detect_human_voice_homogeneity(
+            content,
+            non_character_keywords=non_character_keywords,
+            character_names=character_names,
+        )
     )
     exposition_carrier_count = len(exposition_carrier_matches)
 

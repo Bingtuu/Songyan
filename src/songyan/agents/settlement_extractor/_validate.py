@@ -19,6 +19,15 @@ from ._setting_quality import _is_valid_setting_key
 
 logger = structlog.get_logger(__name__)
 
+# Task 170p: 新角色登记的噪声过滤——代词/泛称不得当作具名角色。
+_NEW_CHARACTER_NAME_STOPWORDS = frozenset(
+    {
+        "他", "她", "它", "我", "你", "他们", "她们", "它们", "我们", "你们",
+        "对方", "众人", "大家", "所有人", "有人", "某人", "那人", "此人",
+        "声音", "身影", "人影", "投影", "残影",
+    }
+)
+
 _TELEMETRY_ATTRIBUTE_KEYWORDS = (
     "temperature",
     "温度",
@@ -539,6 +548,62 @@ def _should_filter_unevidenced_numerical_update(
     return _find_telemetry_reading(num, content) is None
 
 
+def _filter_new_characters(
+    settlement: StateSettlement,
+    content: str,
+    existing_character_names: set[str],
+    chapter_number: int,
+    project_id: str,
+) -> None:
+    """Task 170p: 对 new_characters 做证据门禁与去重，就地剔除不合格条目.
+
+    门禁规则（任一不满足即剔除，仅记 diagnostic，不阻断整章结算）：
+    1. name 非空、去空白后长度 2-6、非代词/泛称停用词。
+    2. name 实际出现在正文中（LLM 不得凭空捏造角色）。
+    3. source_quote 能在正文中模糊匹配（与 NewSetting 同纪律）。
+    4. 不与已存在角色重名（幂等，避免重复入库）。
+    5. 同一结算内 name 去重（保留首个）。
+    """
+    if not settlement.new_characters:
+        return
+
+    kept: list = []
+    seen_names: set[str] = set()
+    existing_lower = {n.strip() for n in existing_character_names if n}
+
+    for nc in settlement.new_characters:
+        name = (nc.name or "").strip()
+        reason: str | None = None
+        if not (2 <= len(name) <= 6):
+            reason = "name_length_invalid"
+        elif name in _NEW_CHARACTER_NAME_STOPWORDS:
+            reason = "name_is_pronoun_or_generic"
+        elif name in seen_names:
+            reason = "duplicate_in_settlement"
+        elif name in existing_lower:
+            reason = "already_exists"
+        elif name not in content:
+            reason = "name_not_in_content"
+        elif nc.source_quote and not _quote_in_content(nc.source_quote, content):
+            reason = "source_quote_not_in_content"
+
+        if reason is not None:
+            logger.info(
+                "settlement.new_character_filtered",
+                name=name,
+                role_type=nc.role_type,
+                reason=reason,
+                project_id=project_id,
+                chapter_number=chapter_number,
+            )
+            continue
+
+        seen_names.add(name)
+        kept.append(nc)
+
+    settlement.new_characters = kept
+
+
 async def _validate_settlement(
     settlement: StateSettlement,
     content: str,
@@ -546,14 +611,28 @@ async def _validate_settlement(
     current_settings: list[NewSetting],
     chapter_number: int = 0,
     project_id: str = "",
+    existing_character_names: set[str] | None = None,
 ) -> list[str]:
     """验证结算结果，返回错误列表.
 
     Task 114a 修复：
     - old_value 由 DB 事实源回填，不再依赖 LLM 精确复现
     - 对未知角色/字段或异常变更触发校验警告，不静默掩盖
+
+    Task 170p:
+    - new_characters 证据门禁：source_quote / name 必须在正文中出现，
+      过滤代词/泛称，去重已存在角色；不合格条目就地剔除，不阻断整章结算。
     """
     errors: list[str] = []
+
+    # Task 170p: 新角色证据门禁与去重（就地过滤，不阻断整章结算）
+    _filter_new_characters(
+        settlement=settlement,
+        content=content,
+        existing_character_names=existing_character_names or set(),
+        chapter_number=chapter_number,
+        project_id=project_id,
+    )
 
     # 1. 验证并回填 character_update.old_value
     # Task 114a: old_value 由代码从 DB 事实源回填，不再依赖 LLM 精确复现

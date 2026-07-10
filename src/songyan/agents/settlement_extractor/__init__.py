@@ -22,6 +22,7 @@ from songyan.models import (
     ForeshadowingItem,
     ForeshadowingUpdate,
     GenreRules,
+    NewCharacter,
     NewSetting,
     NumericalUpdate,
     StateSettlement,
@@ -368,6 +369,24 @@ def _build_new_setting(data: dict[str, Any]) -> NewSetting | None:
     )
 
 
+def _build_new_character(data: dict[str, Any]) -> NewCharacter | None:
+    """Task 170p: 从字典构建 NewCharacter（证据门禁在 _validate 阶段执行）."""
+    if not isinstance(data, dict):
+        return None
+    name = str(data.get("name", "")).strip()
+    if not name:
+        return None
+    role_type = data.get("role_type", "supporting")
+    if role_type not in ("supporting", "antagonist"):
+        role_type = "supporting"
+    return NewCharacter(
+        name=name,
+        role_type=role_type,  # type: ignore[arg-type]
+        source_quote=data.get("source_quote", ""),
+        background=data.get("background", ""),
+    )
+
+
 def _normalize_expected_resolve_chapter(value: Any) -> int | None:
     """规范化伏笔预计回收章.
 
@@ -518,6 +537,10 @@ def _build_state_settlement(data: dict[str, Any]) -> StateSettlement:
         s for s in (_build_new_setting(item) for item in data.get("new_settings", []))
         if s is not None
     ]
+    new_characters = [
+        c for c in (_build_new_character(item) for item in data.get("new_characters", []))
+        if c is not None
+    ]
     foreshadowing_updates = [
         f for f in (
             _build_foreshadowing_update(item)
@@ -531,6 +554,7 @@ def _build_state_settlement(data: dict[str, Any]) -> StateSettlement:
     ]
     return StateSettlement(
         character_updates=character_updates,
+        new_characters=new_characters,
         new_settings=new_settings,
         foreshadowing_updates=foreshadowing_updates,
         numerical_updates=numerical_updates,
@@ -678,6 +702,7 @@ async def extract_settlement(
         settlement, content, current_states, current_settings,
         chapter_number=chapter_number,
         project_id=project_id,
+        existing_character_names={c.name for c in project_characters if c.name},
     )
 
     if errors:

@@ -2,9 +2,9 @@
 
 > **立项依据**: Task 170b 判定 **blocker** —— 中段窗口 prose 文学质量不达标（voice 塌陷、节奏偏慢、真实文本缺陷），且机器文学诊断系统性失真。
 > **性质**: Ch200 长跑（Task 171）的文学放行前置修复专项。
-> **状态**: 🔴 **170h/170i/170j/170k/170l 路径 B 连续五步已完成并复评，均未达标，维持 blocker；Task 171 Ch200 长跑继续冻结。170l 同时修复 RuleAuditor 引号匹配 bug（中文弯引号 `"..."` 漏报），暴露 170h–170k `exposition_carrier=0` 失真。Task 170m 量具二次校准已完成：动态化关键词 + ground truth 闭环校准后，170l 原 exposition_carrier=72 降至 6（高置信），但 voice/exposition/窗口均值仍未达 Ch200 放行线，维持 blocker。Task 170n 方向评估已完成：推荐方向 C（目标降级）+ 同步准备方向 B（AI 腔后处理）作为长跑定点工具，最终方向待用户决策。**
-> 量具阶段完成（170c ✅ / 170d ✅），提质阶段 170e（voice）✅ / 170f（pacing/exposition）✅ 完成，170g 出口验证完成（结论 blocker），170g Phase2 验证完成（结论仍 blocker），170h 路径 B 第一步验证完成（结论仍 blocker），170i 路径 B 第二步验证完成（结论仍 blocker），170j/170k/170l 路径 B 第三/四/五步验证完成（结论仍 blocker）。
-> **最后整理**: 2026-07-10（170l 复评完成，结果未达 Ch200 放行线，进入决策点）
+> **状态**: 🔴 **170h/170i/170j/170k/170l 路径 B 连续五步已完成并复评，均未达标，维持 blocker；Task 171 Ch200 长跑继续冻结。170l 同时修复 RuleAuditor 引号匹配 bug（中文弯引号 `"..."` 漏报），暴露 170h–170k `exposition_carrier=0` 失真。Task 170m 量具二次校准已完成：动态化关键词 + ground truth 闭环校准后，170l 原 exposition_carrier=72 降至 6（高置信），但 voice/exposition/窗口均值仍未达 Ch200 放行线，维持 blocker。Task 170n 方向评估已完成：推荐方向 C（目标降级）+ 同步准备方向 B（AI 腔后处理）作为长跑定点工具，最终方向待用户决策。Task 170o 已完成 voice 量具（`detect_human_voice_homogeneity`）说话人归因校准：新增叙事归因（X的声音）+ 角色注册表 gating，修复真实正文恒 0 假阴性；同时暴露真正 blocker 在数据层——`characters` 表长期只 seed 主角（seeding gap），voice 量具与 voice 生成质量被同一缺口卡住，需后续任务（170p）修复。**
+> 量具阶段完成（170c ✅ / 170d ✅），提质阶段 170e（voice）✅ / 170f（pacing/exposition）✅ 完成，170g 出口验证完成（结论 blocker），170g Phase2 验证完成（结论仍 blocker），170h 路径 B 第一步验证完成（结论仍 blocker），170i 路径 B 第二步验证完成（结论仍 blocker），170j/170k/170l 路径 B 第三/四/五步验证完成（结论仍 blocker）；170m exposition 量具二次校准 ✅ / 170n 方向评估 ✅ / 170o voice 量具归因校准 ✅（暴露 seeding gap）/ 170p seeding gap 修复 ✅（SettlementExtractor 新配角证据门禁入库）。
+> **最后整理**: 2026-07-10（170p 修复 seeding gap：配角首次具名出场当章证据门禁后入库，voice 量具与声纹卡从此有落点；待用配角齐全的新样本复评 voice）
 
 ---
 

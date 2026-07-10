@@ -37,6 +37,9 @@
 | `tasks/169b-adaptive-halt-workflow-integration.md` | Task 169b：自适应 halt workflow 接入（规划文档） |
 | `tasks/169b-adaptive-halt-workflow-integration-DONE.md` | Task 169b：自适应 halt workflow 接入（已完成） |
 | `tasks/170-enforce-small-window-validation-and-t12-calibration.md` | Task 170：enforce 小窗口验证 + T12 误报率标定（规划中） |
+| `tasks/170-literary-quality-remediation-README.md` | **文学提质专项总览（170b–170p）**：Ch200 放行前置门，量具优先原则、路径 B 复盘、决策点 |
+| `tasks/170o-voice-homogeneity-attribution-calibration-DONE.md` | Task 170o：voice 量具 `detect_human_voice_homogeneity` 说话人归因校准（叙事归因 + 角色注册表 gating），暴露 seeding gap |
+| `tasks/170p-settlement-new-character-seeding-DONE.md` | Task 170p：修复 seeding gap（SettlementExtractor 新配角证据门禁入库 + 工艺卡 1.0.3）；`run-bcf3b8f1` 实证 characters 1→4；同批修复 2 个合并遗留 broken 测试 |
 | `tasks/V6-README.md` | V6 任务事实入口（前置阶段）：叙事骨架 MVP + 度量 + 长跑底盘，Task 141-159 |
 | `tasks/V5-README.md` | V5.0 任务事实入口 |
 | `tasks/121a-v50-goal-assessment-and-v51-plan.md` | Task 121a：V5.0 目标评估与 V5.1 规划 |

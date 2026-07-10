@@ -29,6 +29,7 @@ from songyan.db.settlement_repo import (
 )
 from songyan.exceptions import SettlementError
 from songyan.models import (
+    Character,
     CharacterState,
     ForeshadowingItem,
     NewSetting,
@@ -440,6 +441,34 @@ async def apply_settlement(
         c: aiosqlite.Connection,
     ) -> None:
         """核心写入逻辑（与连接来源无关）."""
+        # 0. Task 170p: 本章首次出场的具名配角/反派 — 幂等 INSERT characters.
+        #    settlement 已做证据门禁（source_quote/name 在正文中、去重、非代词）。
+        #    绑定到同一事务 conn；新建角色 ID 加入 valid_char_ids，使同章 update 可引用。
+        existing_names = {c2.name for c2 in project_characters if c2.name}
+        for nc in settlement.new_characters:
+            name = (nc.name or "").strip()
+            if not name or name in existing_names:
+                continue
+            character = Character(
+                character_id=f"char-{project_id}-{uuid.uuid4().hex[:8]}",
+                project_id=project_id,
+                name=name,
+                role_type=nc.role_type,
+                background=nc.background or "",
+            )
+            await char_repo.create(character, conn=c)
+            valid_char_ids.add(character.character_id)
+            role_type_by_id[character.character_id] = nc.role_type
+            existing_names.add(name)
+            logger.info(
+                "settlement.new_character_created",
+                character_id=character.character_id,
+                name=name,
+                role_type=nc.role_type,
+                project_id=project_id,
+                chapter_number=chapter_number,
+            )
+
         # 1. 角色状态变更 — INSERT 新快照
         for update in settlement.character_updates:
             if update.character_id not in valid_char_ids:

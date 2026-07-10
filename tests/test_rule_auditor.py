@@ -707,6 +707,55 @@ def test_human_voice_homogeneity_distinct_post_quote_voices_not_flagged() -> Non
     )
 
 
+def test_human_voice_homogeneity_narrative_attribution_with_registry() -> None:
+    """Task 170o: 叙事归因（X的声音）+ 角色注册表 gating 可检出同质化.
+
+    真实正文大量用"X的声音/录音"而非"X说"标签；提供 character_names 时应能归因。
+    """
+    from songyan.agents.rule_auditor import detect_human_voice_homogeneity
+
+    text = (
+        '陈薇的声音传来："我们必须马上离开。通道已经封死了。"\n\n'
+        '这是林渊的声音："我们必须马上离开。通道已经封死了。"'
+    )
+    matches = detect_human_voice_homogeneity(
+        text, character_names={"陈薇", "林渊"}
+    )
+    assert any(m.carrier_type == "human_voice_homogeneity" for m in matches)
+
+
+def test_human_voice_homogeneity_registry_filters_narration_noise() -> None:
+    """Task 170o: 注册表 gating 过滤把叙事片段误当人名的噪声.
+
+    "寻找更多"/"录音中" 等非注册表片段不得被当作说话人，避免噪声制造假命中。
+    """
+    from songyan.agents.rule_auditor import detect_human_voice_homogeneity
+
+    text = (
+        '寻找更多线索的时候，响起一句："这里没有退路，只能往前。"\n\n'
+        '录音中断之后，又是一句："这里没有退路，只能往前。"'
+    )
+    # 注册表只含真实角色，叙事片段不在其中 → 不应归因、不应命中
+    matches = detect_human_voice_homogeneity(text, character_names={"林渊", "陈薇"})
+    assert not any(m.carrier_type == "human_voice_homogeneity" for m in matches)
+
+
+def test_human_voice_homogeneity_single_seeded_character_no_false_positive() -> None:
+    """Task 170o: 注册表只有主角一人时，无法构成多角色对白，不得误报.
+
+    对应 170i seeding gap 实况：characters 表仅 seed 了主角，配角未入库。
+    """
+    from songyan.agents.rule_auditor import detect_human_voice_homogeneity
+
+    text = (
+        '林渊的声音沙哑："我们必须马上离开。通道已经封死了。"\n\n'
+        '陈薇的声音传来："我们必须马上离开。通道已经封死了。"'
+    )
+    # 注册表仅含主角 → 陈薇无法归因 → 只有 1 个合格说话人 → 不命中
+    matches = detect_human_voice_homogeneity(text, character_names={"林渊"})
+    assert not any(m.carrier_type == "human_voice_homogeneity" for m in matches)
+
+
 def test_info_delivery_dialogue_detected() -> None:
     text = (
         '老雷平静地说："核心协议叫做共鸣锁，它通过基因标记识别每一代钥匙，'

@@ -113,6 +113,70 @@ async def ensure_protagonist_character(
     return True
 
 
+# Task 170g Phase2: 非角色声源（建造者/残影/守门人 等）声纹卡工程化.
+# 这些声源在正文里以"独白/揭示"形式说话，但不是 characters 表里的人物，
+# 声纹机制不会为它们生成 DialogueStyleCard，导致它们全员同质冷静腔。
+# 本 helper 为已知非角色声源补一张确定性声纹卡，注入 Writer 时区分声线。
+_NON_CHARACTER_VOICE_NAMES: frozenset[str] = frozenset(
+    {"建造者", "建造者文明", "残影", "前代", "碎片", "守门人", "舰队之手", "意识"}
+)
+
+_NON_CHARACTER_VOICE_STYLE: dict[str, str] = {
+    "sentence_length_preference": "medium",
+    "anger_expression": "不升调，用更精确、更冷的措辞表达压迫感",
+    "fear_expression": "以停顿和信息缺口暗示，不直述恐惧",
+    "joy_expression": "近乎没有，至多是一丝机械的满足",
+    "sadness_expression": "以事实陈述承载，不外露",
+    "pause_habit": "在关键概念前后留一次刻意停顿",
+    "social_role_speech_pattern": "以宣告/协议/裁决式语气说话，不寒暄、不解释动机",
+}
+
+
+def _build_non_character_voice_cards(
+    appeared_names: set[str],
+    project_id: str,
+    existing_character_names: set[str],
+) -> list:
+    """Task 170g Phase2: 为本章出场的非角色声源构造声纹卡.
+
+    Args:
+        appeared_names: 本章出场/发声的名字集合。
+        project_id: 项目 ID。
+        existing_character_names: 已有 Character 记录的角色名（跳过，避免与真人重复）。
+
+    Returns:
+        DialogueStyleCard 列表，character_id 形如 ``voice-建造者``。
+        只为 ``_NON_CHARACTER_VOICE_NAMES`` 内、且不在 existing 里的名字生成。
+    """
+    from songyan.models.character import DialogueStyleCard
+
+    cards: list = []
+    for name in sorted(appeared_names):
+        if name not in _NON_CHARACTER_VOICE_NAMES:
+            continue
+        if name in existing_character_names:
+            continue
+        cards.append(
+            DialogueStyleCard(
+                character_id=f"voice-{name}",
+                project_id=project_id,
+                sentence_length_preference="medium",
+                common_openers=[f"{name}的声音", "在你听清之前"],
+                common_closers=["——仅此一次。", "剩下的你自己看。"],
+                anger_expression=_NON_CHARACTER_VOICE_STYLE["anger_expression"],
+                fear_expression=_NON_CHARACTER_VOICE_STYLE["fear_expression"],
+                joy_expression=_NON_CHARACTER_VOICE_STYLE["joy_expression"],
+                sadness_expression=_NON_CHARACTER_VOICE_STYLE["sadness_expression"],
+                metaphor_frequency="rare",
+                pause_habit=_NON_CHARACTER_VOICE_STYLE["pause_habit"],
+                social_role_speech_pattern=_NON_CHARACTER_VOICE_STYLE[
+                    "social_role_speech_pattern"
+                ],
+            )
+        )
+    return cards
+
+
 async def load_character_states(project_id: str) -> list:
     return await CharacterStateRepository().list_latest_by_project(project_id)
 

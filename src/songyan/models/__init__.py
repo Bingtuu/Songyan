@@ -119,6 +119,7 @@ from songyan.models.settlement import (
     Decrement,
     ForeshadowingUpdate,
     Increment,
+    NewCharacter,
     NewSetting,
     NumericalUpdate,
     StateSettlement,
@@ -221,6 +222,7 @@ __all__ = [
     # settlement
     "StateSettlement",
     "CharacterUpdate",
+    "NewCharacter",
     "NewSetting",
     "ForeshadowingUpdate",
     "NumericalUpdate",

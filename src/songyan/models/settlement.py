@@ -17,6 +17,24 @@ class CharacterUpdate(BaseModel):
     source_quote: str  # 原文证据
 
 
+class NewCharacter(BaseModel):
+    """Task 170p: 本章首次出场的具名配角/反派登记.
+
+    seeding gap 根因：SettlementExtractor 只 UPDATE 已存在角色、从不 INSERT 新配角，
+    导致 `characters` 表长期只有主角，声纹卡与 voice 量具对配角永远失效。
+    本模型让结算识别新出场的具名角色并入库，作为声纹机制的落点。
+
+    证据门禁（与 NewSetting.source_quote 同纪律）：
+    - ``name`` 必须是正文中真实出现的具名角色（非代词、非旁白片段）。
+    - ``source_quote`` 必须能在本章正文中找到，否则本条被过滤，不入库。
+    """
+
+    name: str
+    role_type: Literal["supporting", "antagonist"] = "supporting"
+    source_quote: str  # 原文证据：该角色出场/说话的引文
+    background: str = ""  # 可选：从正文可推断的最小背景
+
+
 class NewSetting(BaseModel):
     """新设定登记."""
 
@@ -70,6 +88,9 @@ class StateSettlement(BaseModel):
 
     # 角色状态变更
     character_updates: list[CharacterUpdate] = Field(default_factory=list)
+
+    # Task 170p: 本章首次出场的具名配角/反派（证据门禁后入库）
+    new_characters: list[NewCharacter] = Field(default_factory=list)
 
     # 新设定登记
     new_settings: list[NewSetting] = Field(default_factory=list)

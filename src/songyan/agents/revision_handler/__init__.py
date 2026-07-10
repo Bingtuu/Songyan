@@ -119,7 +119,198 @@ def _readability_driven(
     rhythm_score = getattr(rule_audit, "paragraph_rhythm_score", 5.0)
     if rhythm_score < 4.0:
         return True
+
+    # Task 170g Phase2 / 170h / 170i: 说明文载体 + 文学维度低分也进入专精路径
+    if getattr(rule_audit, "exposition_carrier_count", 0) >= 1:
+        return True
+    llm_audit = report.llm_audit
+    if llm_audit is not None:
+        dim = llm_audit.dimension_scores or {}
+        if _literary_dimension_below_threshold(dim):
+            return True
     return False
+
+
+# Task 170h/170i: LLM rubric 文学维度低分阈值（0-10 尺度，<5 视为需修订）
+_LITERARY_DIMENSION_THRESHOLDS: dict[str, float] = {
+    "dialogue_distinctness": 5.0,
+    "info_dump": 5.0,
+    "voice": 5.0,
+    "exposition": 5.0,
+}
+
+
+def _literary_dimension_below_threshold(dimension_scores: dict[str, float]) -> bool:
+    """任一文学维度分数低于阈值即触发文学修订路径."""
+    for dim, threshold in _LITERARY_DIMENSION_THRESHOLDS.items():
+        score = dimension_scores.get(dim)
+        if score is not None and score < threshold:
+            return True
+    return False
+
+
+# Task 170h/170i: exposition carrier 类型 → ReviewCategory / 修复建议 映射
+_CARRIER_ISSUE_SPEC: dict[str, dict[str, str]] = {
+    "direct_revelation_monologue": {
+        "category": ReviewCategory.SHOW_DONT_TELL,
+        "description": "非角色实体直接揭示世界观（说明文载体硬灌）。",
+        "fix": "删除说明性独白，改用动作、失败或代价让主角推导设定。",
+    },
+    "info_delivery_dialogue": {
+        "category": ReviewCategory.INFO_DUMP,
+        "description": "角色一次性大段说明设定/世界观（低摩擦 exposition）。",
+        "fix": "拆解大段说明，融入冲突对白与场景动作，避免设定清单式交代。",
+    },
+    "info_stream": {
+        "category": ReviewCategory.INFO_DUMP,
+        "description": "信息流硬灌，概念砸脸不落地。",
+        "fix": "把信息流拆成可感知的动作后果与感官细节。",
+    },
+    "vision_dump": {
+        "category": ReviewCategory.INFO_DUMP,
+        "description": "幻象/画面直接播放，绕过角色主动推导。",
+        "fix": "让主角在冲突/失败中逐步拼出画面，而非一次性播放。",
+    },
+    "unconflicted_revelation": {
+        "category": ReviewCategory.EXPOSITION,
+        "description": "高概念信息缺乏对立判断/误判/代价支撑（无认知冲突揭示）。",
+        "fix": "在揭示前加入对立判断与主角误判，让信息经代价才被理解。",
+    },
+    "human_voice_homogeneity": {
+        "category": ReviewCategory.DIALOGUE_DISTINCTNESS,
+        "description": "人类角色声纹同质化，对白不可辨身份。",
+        "fix": "为每个角色注入差异化句式/口头禅/情绪表达，打破趋同。",
+    },
+    "protagonist_summary_tell": {
+        "category": ReviewCategory.SHOW_DONT_TELL,
+        "description": "主角总结容器：用内心独白直接投递真相。",
+        "fix": "删除总结式独白，改用行动、对白冲突与身体反应展示领悟过程。",
+    },
+    "non_character_monologue_overflow": {
+        "category": ReviewCategory.INFO_DUMP,
+        "description": "非人实体台词/连续独白超标，承担世界观讲解员角色。",
+        "fix": "压缩非人实体台词量，把设定分配给人类角色在冲突中推导。",
+    },
+    "expository_dialogue_chain": {
+        "category": ReviewCategory.INFO_DUMP,
+        "description": "连续说明性对话链传递设定，缺乏冲突/动作打断。",
+        "fix": "在对话链中插入冲突、疑问或动作打断，降低说明密度。",
+    },
+    "unearned_revelation": {
+        "category": ReviewCategory.EXPOSITION,
+        "description": "揭示缺乏失败/损坏/代价等动作线索支撑。",
+        "fix": "在揭示前铺垫失败或代价，让信息被挣得而非被告知。",
+    },
+    "faq_dialogue": {
+        "category": ReviewCategory.INFO_DUMP,
+        "description": "FAQ 式连续问答，低摩擦 exposition。",
+        "fix": "把问答改写成带冲突与潜台词的对话。",
+    },
+    "repeated_revelation_beat": {
+        "category": ReviewCategory.EXPOSITION,
+        "description": "同一揭示节拍重复出现，产生审美疲劳。",
+        "fix": "合并重复的揭示节拍，保留一次最有张力的呈现。",
+    },
+}
+
+# Task 170h/170i: LLM 维度低分 → fallback issue 映射
+_LLM_DIMENSION_ISSUE_SPEC: dict[str, dict[str, str]] = {
+    "dialogue_distinctness": {
+        "category": ReviewCategory.DIALOGUE_DISTINCTNESS,
+        "id": "rh-dialogue-distinctness-0",
+        "description": "对白区分度低：不同角色声纹趋同。",
+        "fix": "为主要角色建立差异化句式与口头禅，让对白可辨身份。",
+    },
+    "info_dump": {
+        "category": ReviewCategory.INFO_DUMP,
+        "id": "rh-info-dump-0",
+        "description": "信息倾倒：设定以说明性方式堆叠交代。",
+        "fix": "把说明性信息融进动作与冲突场景，避免设定清单。",
+    },
+    "voice": {
+        "category": ReviewCategory.VOICE,
+        "id": "rh-voice-0",
+        "description": "角色声纹扁平，缺乏个体语气。",
+        "fix": "赋予角色个人历史/情绪/缺陷驱动的独特对白。",
+    },
+    "exposition": {
+        "category": ReviewCategory.EXPOSITION,
+        "id": "rh-exposition-0",
+        "description": "信息交代生硬，缺乏认知冲突支撑。",
+        "fix": "让信息通过主角的认知冲突、误判与代价被理解，而非直接告知。",
+    },
+}
+
+
+def _build_literary_issues(report: MergedReviewReport) -> list[ReviewIssue]:
+    """Task 170g Phase2 / 170h / 170i: 构造文学修订 issues.
+
+    两个来源：
+    1. RuleAuditor 的 exposition_carrier_matches（代码检测，带定位）——每条转成
+       对应 ReviewCategory 的 patch issue，最多取前 3 条。
+    2. LLMAuditor 的文学维度低分（voice / exposition / dialogue_distinctness /
+       info_dump < 5.0）——无对应 carrier 命中时补 fallback issue。
+
+    严格对齐 tests/test_revision_handler_literary.py 的契约。
+    """
+    issues: list[ReviewIssue] = []
+    rule_audit = report.rule_audit
+
+    # 1. exposition carrier 命中（最多 3 条）
+    if rule_audit is not None and rule_audit.exposition_carrier_matches:
+        for idx, match in enumerate(rule_audit.exposition_carrier_matches[:3]):
+            spec = _CARRIER_ISSUE_SPEC.get(
+                match.carrier_type,
+                {
+                    "category": ReviewCategory.EXPOSITION,
+                    "description": "说明文载体硬灌。",
+                    "fix": "改用动作与冲突承载信息。",
+                },
+            )
+            issues.append(
+                ReviewIssue(
+                    issue_id=f"rh-exposition-{idx}",
+                    category=spec["category"],  # type: ignore[arg-type]
+                    severity="major",
+                    evidence_quote=match.matched_text,
+                    evidence_location=match.location or f"第{idx + 1}处说明文载体",
+                    issue_description=spec["description"],
+                    expected="信息通过动作、冲突、代价被展示而非直接讲述。",
+                    actual=f'命中类型 {match.carrier_type}: "{match.matched_text}"',
+                    suggested_fix=spec["fix"],
+                    fix_type="patch",
+                    confidence=0.85,
+                )
+            )
+
+    # 2. LLM 维度低分 fallback（仅在无 carrier 命中该类别时补充）
+    llm_audit = report.llm_audit
+    if llm_audit is not None:
+        dim = llm_audit.dimension_scores or {}
+        existing_categories = {issue.category for issue in issues}
+        for dim_name, spec in _LLM_DIMENSION_ISSUE_SPEC.items():
+            score = dim.get(dim_name)
+            if score is None or score >= _LITERARY_DIMENSION_THRESHOLDS.get(dim_name, 5.0):
+                continue
+            if spec["category"] in existing_categories:
+                continue
+            issues.append(
+                ReviewIssue(
+                    issue_id=spec["id"],
+                    category=spec["category"],  # type: ignore[arg-type]
+                    severity="major",
+                    evidence_quote=f"{dim_name}={score:.1f}（低于阈值 5.0）",
+                    evidence_location="全章文学维度",
+                    issue_description=spec["description"],
+                    expected="该文学维度达到可接受水平（≥5.0/10）。",
+                    actual=f"{dim_name} 评分 {score:.1f}/10。",
+                    suggested_fix=spec["fix"],
+                    fix_type="patch",
+                    confidence=0.7,
+                )
+            )
+
+    return issues
 
 
 def _build_readability_issues(
