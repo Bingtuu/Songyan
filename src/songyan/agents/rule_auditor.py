@@ -13,6 +13,7 @@ import structlog
 from songyan.db.review_repo import ReviewReportRepository
 from songyan.models import (
     DuplicateParagraphMatch,
+    ExpositionCarrierMatch,
     GenreRules,
     MergedReviewReport,
     MetaTagLeakMatch,
@@ -207,6 +208,721 @@ def _split_scenes(text: str) -> list[str]:
     return scenes if scenes else [text.strip()] if text.strip() else []
 
 
+def _merge_short_scenes_for_voice(
+    scenes: list[str],
+    max_short_len: int = 300,
+    max_group_len: int = 1200,
+) -> list[str]:
+    """为声纹同质化检测合并相邻短场景.
+
+    Writer 1.1.0+ 使用空行分隔场景，但段落之间也常出现空行，导致 `_split_scenes`
+    把同一段对话里的每个对白/动作节拍都切成独立场景。该 helper 把连续短场景
+    （<= max_short_len）合并成语义上更接近"对话块"的单元，避免 detector 因为
+    格式原因漏检。合并长度超过 max_group_len 时强制切分，防止过度聚合。
+    """
+    if not scenes:
+        return []
+    merged: list[str] = []
+    current = scenes[0]
+    for scene in scenes[1:]:
+        current_len = len(current)
+        next_len = len(scene)
+        if (
+            current_len <= max_short_len
+            and next_len <= max_short_len
+            and current_len + next_len + 2 <= max_group_len
+        ):
+            current = current + "\n\n" + scene
+        else:
+            merged.append(current)
+            current = scene
+    merged.append(current)
+    return merged
+
+
+# --------------------------------------------------------------------------- #
+# Task 170g: exposition 载体硬灌模式检测
+# --------------------------------------------------------------------------- #
+_EXPOSITION_CARRIER_PATTERNS: list[tuple[str, str, str]] = [
+    (
+        "info_stream",
+        r"信息流[^。，]{0,15}(?:涌入|冲入|灌入|冲刷|涌进|冲进|灌进|撕裂|撕裂.{0,5}颅腔|高压电流)",
+        "信息流硬灌",
+    ),
+    (
+        "consciousness_tentacle",
+        r"意识触须[^。，]{0,20}(?:延伸|探入|触及|触碰|深入|伸入|铺开|铺开去|铺开向)",
+        "意识触须硬灌",
+    ),
+    (
+        "vision_dump",
+        r"(?:他|她|林渊|宋晚|苏晚)看见了[^。，]{0,10}(?:建造者|他们|完整的画面|完整画面|一幕|一切|真相|过去|未来|自己)",
+        "幻象/画面直接播放",
+    ),
+]
+
+_FAQ_DIALOGUE_PATTERN = re.compile(
+    (
+        r"[\"“”]([^\"“”]{1,20}[?？][\"“”][\s\n]{0,30}"
+        r"[\"“”][^\"“”]{1,60}[\"“”][\s\n]{0,30}){2,}"
+    ),
+    re.MULTILINE,
+)
+
+_REVELATION_BEAT_PATTERNS: list[tuple[str, str]] = [
+    ("info_stream", r"信息流[^。，]{0,15}(?:涌入|冲入|灌入|冲刷|涌进|冲进|灌进)"),
+    ("vision_dump", r"看见了[^。，]{0,15}(?:建造者|他们|完整的画面|完整画面|一切|真相)"),
+    (
+        "faq_dialogue",
+        (
+            r"[。？！\"“”][\s\n]{0,30}[\"“”][^\"“”]{1,30}[？！。]"
+            r"[\"“”][\s\n]{0,30}[\"“”][^\"“”]{1,60}[。？！][\"“”]"
+        ),
+    ),
+]
+
+# Task 170h: 结构性 exposition 检测阈值
+_NON_CHARACTER_SPEAKER_KEYWORDS = [
+    "建造者",
+    "残影",
+    "前代",
+    "碎片",
+    "守门人",
+    "意识",
+    "舰队之手",
+    "建造者文明",
+]
+
+_DEFAULT_CHARACTER_NAMES = {"林渊", "宋晚", "苏晚"}
+
+# 非人实体单章台词上限（字）
+_NON_CHARACTER_DIALOGUE_WORD_LIMIT = 100
+# 非人实体连续独白上限（句）
+_NON_CHARACTER_CONSECUTIVE_MONOLOGUE_LIMIT = 2
+
+
+_EARNED_REVELATION_CUES = [
+    "失败",
+    "错误",
+    "损坏",
+    "碎裂",
+    "尸体",
+    "血",
+    "崩溃",
+    "锁死",
+    "失效",
+    "无法",
+    "拒绝",
+    "警报",
+    "火花",
+    "焦黑",
+    "扭曲",
+    "断裂",
+]
+
+# Task 170i: 对立判断 / 主角误判 / 代价线索
+_OPPOSING_JUDGMENT_CUES = [
+    "不",
+    "错",
+    "反",
+    "别",
+    "否",
+    "怀疑",
+    "质疑",
+    "不对",
+    "相反",
+    "未必",
+    "冷笑",
+    "嘲讽",
+    "讥讽",
+]
+_MISJUDGMENT_CUES = [
+    "以为",
+    "认为",
+    "误判",
+    "猜错",
+    "错把",
+    "误把",
+    "想当然",
+    "坚持",
+    "不听",
+]
+_COST_CUES = _EARNED_REVELATION_CUES + [
+    "代价",
+    "伤口",
+    "损失",
+    "受伤",
+    "疼痛",
+    "撕裂",
+    "破裂",
+    "背叛",
+    "信任",
+]
+
+# Task 170i: 情绪词与副词表（用于人类声纹同质化检测）
+_EMOTION_WORDS = _POSITIVE_WORDS | _NEGATIVE_WORDS
+_ADVERBS = {
+    "很", "非常", "突然", "猛地", "悄悄", "冷冷地", "缓缓", "狠狠", "死死",
+    "紧紧", "微微", "明显", "似乎", "大概", "根本", "完全", "绝对", "几乎",
+    "终于", "猛地", "忽然", "猛然", "骤然", "渐渐", "慢慢", "迅速", "飞快",
+}
+_PROTAGONIST_TELL_VERBS = [
+    "明白了",
+    "意识到",
+    "知道了",
+    "理解了",
+    "懂了",
+    "终于懂了",
+    "这一切都意味着",
+    "他理解了",
+    "醒悟",
+    "顿悟",
+    "总结",
+    "断定",
+    "确信",
+    "觉察",
+    "发现",
+]
+_INFO_DELIVERY_KEYWORDS = [
+    "是",
+    "叫做",
+    "称为",
+    "机制",
+    "文明",
+    "协议",
+    "方舟",
+    "基因",
+    "意识",
+    "钥匙",
+    "舰队",
+    "转化度",
+    "共鸣",
+    "隐藏节点",
+]
+
+def _locate_match(text: str, matched_text: str, start: int) -> str:
+    """将偏移转换为段落/句子位置描述."""
+    return locate_position(text, start)
+
+
+def detect_exposition_carriers(
+    text: str,
+    *,
+    character_names: set[str] | None = None,
+    non_character_keywords: set[str] | None = None,
+    setting_keywords: set[str] | None = None,
+    info_delivery_keywords: set[str] | None = None,
+    non_character_dialogue_word_limit: int = _NON_CHARACTER_DIALOGUE_WORD_LIMIT,
+    non_character_consecutive_monologue_limit: int = _NON_CHARACTER_CONSECUTIVE_MONOLOGUE_LIMIT,
+    direct_revelation_quote_min_chars: int = 50,
+    info_delivery_dialogue_min_chars: int = 50,
+) -> list[ExpositionCarrierMatch]:
+    """检测说明文载体硬灌模式（Task 170g 诊断辅助，Phase 2 扩展版）.
+
+    当前实现为代码级启发式检测，用于量化观察和报告，不直接阻断 accept。
+    命中模式包括：信息流/意识触须硬灌、幻象直接播放、FAQ 式连续问答、
+    非角色实体直接揭示独白、主角总结式 tell、角色一次性大段说明、
+    同一章内反复使用同一揭示节拍。
+
+    Args:
+        text: 待检测正文.
+        character_names: 项目主角/人类角色名集合；未提供时使用默认集合.
+        non_character_keywords: 非人实体/声源关键词集合；未提供时使用模块常量.
+        setting_keywords: 项目设定关键词（保留参数，当前未参与计算）.
+        info_delivery_keywords: 说明性信息投递关键词集合；未提供时使用模块常量.
+        non_character_dialogue_word_limit: 非人实体单章台词字数上限.
+        non_character_consecutive_monologue_limit: 非人实体连续独白句数上限.
+        direct_revelation_quote_min_chars: 直接揭示独白引语最小长度.
+        info_delivery_dialogue_min_chars: 信息投递式对话引语最小长度.
+    """
+    matches: list[ExpositionCarrierMatch] = []
+    seen: set[tuple[str | int, int]] = set()
+
+    effective_character_names = (
+        character_names if character_names is not None else _DEFAULT_CHARACTER_NAMES
+    )
+    effective_non_char_keywords = (
+        non_character_keywords
+        if non_character_keywords is not None
+        else set(_NON_CHARACTER_SPEAKER_KEYWORDS)
+    )
+    effective_direct_revelation_keywords = effective_non_char_keywords
+    effective_info_delivery_keywords = (
+        info_delivery_keywords
+        if info_delivery_keywords is not None
+        else set(_INFO_DELIVERY_KEYWORDS)
+    )
+    # setting_keywords 保留给未来项目级设定注入，当前未参与量具计算
+
+    # Dynamic vision_dump pattern: effective character names + pronouns
+    char_alternatives = "|".join(map(re.escape, sorted(effective_character_names | {"他", "她"})))
+    vision_dump_re = re.compile(
+        f"(?:{char_alternatives})看见了[^。，]{{0,10}}"
+        f"(?:建造者|他们|完整的画面|完整画面|一幕|一切|真相|过去|未来|自己)"
+    )
+
+    # Compile local regexes using effective keywords and thresholds
+    quoted_segment_re = re.compile(r'["“”]([^"“”]{20,800})["“”]')  # noqa: F841
+    direct_revelation_quote_re = re.compile(
+        rf'["“”]([^"“”]{{{direct_revelation_quote_min_chars},800}})["“”]'
+    )
+    info_delivery_dialogue_re = re.compile(
+        rf'["“”]([^"“”]{{{info_delivery_dialogue_min_chars},800}})["“”]'
+    )
+    non_character_quote_re = re.compile(r'["“”]([^"“”]{1,800})["“”]')
+    protagonist_summary_tell_re = re.compile(
+        r"[。！？\n]\s*(?:他|她)?[^。，]{0,10}?(?:"
+        + "|".join(map(re.escape, _PROTAGONIST_TELL_VERBS))
+        + r")[^。，]{0,15}?(?:，|：|——)([^。！？]{15,400})[。！？]"
+    )
+
+    # 1. 正则模式匹配（原始 170g 形式层模式；vision_dump 使用动态角色名）
+    for carrier_type, pattern, message in _EXPOSITION_CARRIER_PATTERNS:
+        pattern_re = vision_dump_re if carrier_type == "vision_dump" else re.compile(pattern)
+        for m in pattern_re.finditer(text):
+            key = (m.start(), m.end())
+            if key in seen:
+                continue
+            seen.add(key)
+            matches.append(
+                ExpositionCarrierMatch(
+                    carrier_type=carrier_type,  # type: ignore[arg-type]
+                    matched_text=m.group(),
+                    location=_locate_match(text, m.group(), m.start()),
+                    severity="minor",
+                    message=message,
+                    start=m.start(),
+                    end=m.end(),
+                )
+            )
+
+    # 2. FAQ 式连续问答（简化：连续 2 轮以上短问答）
+    for m in _FAQ_DIALOGUE_PATTERN.finditer(text):
+        key = (m.start(), m.end())
+        if key in seen:
+            continue
+        seen.add(key)
+        matches.append(
+            ExpositionCarrierMatch(
+                carrier_type="faq_dialogue",  # type: ignore[arg-type]
+                matched_text=m.group()[:120],
+                location=_locate_match(text, m.group(), m.start()),
+                severity="info",
+                message="FAQ 式连续问答（可能为低摩擦 exposition）",
+                start=m.start(),
+                end=m.end(),
+            )
+        )
+
+    # 3. 非角色实体直接揭示独白
+    for m in direct_revelation_quote_re.finditer(text):
+        key = (m.start(), m.end())
+        if key in seen:
+            continue
+        content = m.group(1)
+        # 过滤跨段落（closing quote 与下一段 opening quote 夹住叙事）的伪引语
+        if "\n\n" in content:
+            continue
+        if any(kw in content for kw in effective_direct_revelation_keywords):
+            seen.add(key)
+            matches.append(
+                ExpositionCarrierMatch(
+                    carrier_type="direct_revelation_monologue",  # type: ignore[arg-type]
+                    matched_text=m.group()[:120],
+                    location=_locate_match(text, m.group(), m.start()),
+                    severity="minor",
+                    message="非角色实体直接揭示世界观/设定（独白硬灌）",
+                    start=m.start(),
+                    end=m.end(),
+                )
+            )
+
+    # 4. 主角总结式 tell
+    for m in protagonist_summary_tell_re.finditer(text):
+        key = (m.start(), m.end())
+        if key in seen:
+            continue
+        seen.add(key)
+        matches.append(
+            ExpositionCarrierMatch(
+                carrier_type="protagonist_summary_tell",  # type: ignore[arg-type]
+                matched_text=m.group()[:120],
+                location=_locate_match(text, m.group(), m.start()),
+                severity="minor",
+                message="主角总结式 tell 直接投递世界观/真相",
+                start=m.start(),
+                end=m.end(),
+            )
+        )
+
+    # 5. 信息投递式对话（长引语含说明性关键词）
+    for m in info_delivery_dialogue_re.finditer(text):
+        key = (m.start(), m.end())
+        if key in seen:
+            continue
+        content = m.group(1)
+        if "\n\n" in content:
+            continue
+        if any(kw in content for kw in effective_info_delivery_keywords):
+            seen.add(key)
+            matches.append(
+                ExpositionCarrierMatch(
+                    carrier_type="info_delivery_dialogue",  # type: ignore[arg-type]
+                    matched_text=m.group()[:120],
+                    location=_locate_match(text, m.group(), m.start()),
+                    severity="info",
+                    message="角色一次性大段说明设定/世界观（低摩擦 exposition）",
+                    start=m.start(),
+                    end=m.end(),
+                )
+            )
+
+    # 6. 重复揭示节拍
+    beat_counts: dict[str, int] = {
+        "info_stream": len(re.findall(_REVELATION_BEAT_PATTERNS[0][1], text)),
+        "vision_dump": len(re.findall(_REVELATION_BEAT_PATTERNS[1][1], text)),
+        "faq_dialogue": len(re.findall(_REVELATION_BEAT_PATTERNS[2][1], text)),
+        "direct_revelation_monologue": len(
+            [
+                m
+                for m in direct_revelation_quote_re.finditer(text)
+                if "\n\n" not in m.group(1)
+                and any(kw in m.group(1) for kw in effective_direct_revelation_keywords)
+            ]
+        ),
+        "protagonist_summary_tell": len(protagonist_summary_tell_re.findall(text)),
+        "info_delivery_dialogue": len(
+            [
+                m
+                for m in info_delivery_dialogue_re.finditer(text)
+                if "\n\n" not in m.group(1)
+                and any(kw in m.group(1) for kw in effective_info_delivery_keywords)
+            ]
+        ),
+    }
+
+    for carrier_type, count in beat_counts.items():
+        if count >= 2:
+            matches.append(
+                ExpositionCarrierMatch(
+                    carrier_type="repeated_revelation_beat",  # type: ignore[arg-type]
+                    matched_text=f"{carrier_type} 出现 {count} 次",
+                    location="全章",
+                    severity="minor",
+                    message=f"同一章内 '{carrier_type}' 揭示节拍重复 {count} 次，可能产生审美疲劳",
+                )
+            )
+
+    # 7. Task 170h: 非人实体台词总量/连续独白超标检测
+    non_char_total_words = 0
+    non_char_consecutive = 0
+    last_was_non_character = False
+    for m in non_character_quote_re.finditer(text):
+        quote = m.group(1)
+        is_non_character = any(kw in quote for kw in effective_non_char_keywords)
+        if is_non_character:
+            non_char_total_words += len(quote)
+            non_char_consecutive += 1
+            last_was_non_character = True
+        else:
+            if last_was_non_character:
+                if non_char_consecutive > non_character_consecutive_monologue_limit:
+                    key = ("non_char_consecutive", m.start())
+                    if key not in seen:
+                        seen.add(key)
+                        matches.append(
+                            ExpositionCarrierMatch(
+                                carrier_type="non_character_monologue_overflow",  # type: ignore[arg-type]
+                                matched_text=f"非人实体连续独白 {non_char_consecutive} 句",
+                                location=_locate_match(text, quote, m.start()),
+                                severity="minor",
+                                message="非人实体连续独白超过 2 句，可能承担世界观讲解员角色",
+                            )
+                        )
+            non_char_consecutive = 0
+            last_was_non_character = False
+
+    # 句尾再检查一次连续独白
+    if last_was_non_character and non_char_consecutive > non_character_consecutive_monologue_limit:
+        key = ("non_char_consecutive", len(text))
+        if key not in seen:
+            seen.add(key)
+            matches.append(
+                ExpositionCarrierMatch(
+                    carrier_type="non_character_monologue_overflow",  # type: ignore[arg-type]
+                    matched_text=f"非人实体连续独白 {non_char_consecutive} 句",
+                    location="章末",
+                    severity="minor",
+                    message="非人实体连续独白超过 2 句，可能承担世界观讲解员角色",
+                )
+            )
+
+    if non_char_total_words > non_character_dialogue_word_limit:
+        key = ("non_char_total_words", 0)
+        if key not in seen:
+            seen.add(key)
+            matches.append(
+                ExpositionCarrierMatch(
+                    carrier_type="non_character_monologue_overflow",  # type: ignore[arg-type]
+                    matched_text=f"非人实体台词总量 {non_char_total_words} 字",
+                    location="全章",
+                    severity="major",
+                    message=(
+                        f"非人实体单章台词超过 {non_character_dialogue_word_limit} 字，"
+                        "戏份分配失衡"
+                    ),
+                )
+            )
+
+    # 8. Task 170h: 连续说明性对话链检测
+    consecutive_expository = 0
+    last_end = 0
+    chain_start = 0
+    for m in info_delivery_dialogue_re.finditer(text):
+        quote = m.group(1)
+        if "\n\n" in quote:
+            continue
+        has_info_keyword = any(kw in quote for kw in effective_info_delivery_keywords)
+        has_conflict_interruption = any(
+            kw in quote for kw in ["？", "？", "！", "别动", "住手", "该死", "滚开", "闭嘴"]
+        )
+        if has_info_keyword and not has_conflict_interruption:
+            if consecutive_expository == 0:
+                chain_start = m.start()
+            consecutive_expository += 1
+            last_end = m.end()
+        else:
+            if consecutive_expository >= 3:
+                key = ("expository_chain", chain_start)
+                if key not in seen:
+                    seen.add(key)
+                    matches.append(
+                        ExpositionCarrierMatch(
+                            carrier_type="expository_dialogue_chain",  # type: ignore[arg-type]
+                            matched_text=text[chain_start:last_end][:120],
+                            location=_locate_match(text, text[chain_start:last_end], chain_start),
+                            severity="minor",
+                            message="连续 3 句以上说明性对话传递设定，缺乏冲突/动作打断",
+                        )
+                    )
+            consecutive_expository = 0
+
+    if consecutive_expository >= 3:
+        key = ("expository_chain", chain_start)
+        if key not in seen:
+            seen.add(key)
+            matches.append(
+                ExpositionCarrierMatch(
+                    carrier_type="expository_dialogue_chain",  # type: ignore[arg-type]
+                    matched_text=text[chain_start:last_end][:120],
+                    location=_locate_match(text, text[chain_start:last_end], chain_start),
+                    severity="minor",
+                    message="连续 3 句以上说明性对话传递设定，缺乏冲突/动作打断",
+                )
+            )
+
+    # 9. Task 170h: 无动作/失败/代价支撑的揭示
+    for m in direct_revelation_quote_re.finditer(text):
+        quote = m.group(1)
+        if "\n\n" in quote:
+            continue
+        has_non_char = any(kw in quote for kw in effective_non_char_keywords)
+        if not has_non_char:
+            continue
+        window_start = max(0, m.start() - 200)
+        preceding = text[window_start:m.start()]
+        if not any(cue in preceding for cue in _EARNED_REVELATION_CUES):
+            matches.append(
+                ExpositionCarrierMatch(
+                    carrier_type="unearned_revelation",  # type: ignore[arg-type]
+                    matched_text=m.group()[:120],
+                    location=_locate_match(text, m.group(), m.start()),
+                    severity="info",
+                    message=(
+                        "非人实体揭示前 200 字内未出现失败/损坏/代价/锁死等动作线索，"
+                        "揭示可能缺乏支撑"
+                    ),
+                    start=m.start(),
+                    end=m.end(),
+                )
+            )
+
+    # 10. Task 170i: 无认知冲突支撑的揭示
+    for m in info_delivery_dialogue_re.finditer(text):
+        quote = m.group(1)
+        if "\n\n" in quote:
+            continue
+        if not any(kw in quote for kw in effective_info_delivery_keywords):
+            continue
+        key = ("unconflicted", m.start())
+        if key in seen:
+            continue
+        window_start = max(0, m.start() - 300)
+        preceding = text[window_start:m.start()]
+        has_conflict = any(cue in preceding for cue in _OPPOSING_JUDGMENT_CUES)
+        has_misjudgment = any(cue in preceding for cue in _MISJUDGMENT_CUES)
+        has_cost = any(cue in preceding for cue in _COST_CUES)
+        if not (has_conflict or has_misjudgment or has_cost):
+            seen.add(key)
+            matches.append(
+                ExpositionCarrierMatch(
+                    carrier_type="unconflicted_revelation",  # type: ignore[arg-type]
+                    matched_text=m.group()[:120],
+                    location=_locate_match(text, m.group(), m.start()),
+                    severity="info",
+                    message=(
+                        "高概念信息前 300 字内未出现对立判断、主角误判或代价事件，"
+                        "揭示可能缺乏认知冲突支撑"
+                    ),
+                    start=m.start(),
+                    end=m.end(),
+                )
+            )
+
+    matches.sort(key=lambda x: text.find(x.matched_text) if x.matched_text in text else 0)
+    return matches
+
+def detect_human_voice_homogeneity(
+    text: str,
+    non_character_keywords: set[str] | None = None,
+) -> list[ExpositionCarrierMatch]:
+    """Task 170i: 检测同场景多人类角色对白声纹同质化.
+
+    启发式规则：同一场景（或合并后的短场景对话块）中两个以上人类角色有对白，且
+    - 平均句长差异 <20%
+    - 情绪词重叠 >50%
+    - 副词密度差异 <30%
+    则认为声纹同质化，返回 report-only 命中。
+
+    本函数同时支持前置说话人（林渊说："..."）与后置说话人（"..."林渊说。），
+    并对连续短场景做合并，降低 Writer 1.1.0+ 空行分场景格式导致的漏检。
+    """
+    matches: list[ExpositionCarrierMatch] = []
+    raw_scenes = _split_scenes(text)
+    scenes = _merge_short_scenes_for_voice(raw_scenes)
+
+    # 基础说话人识别：支持前置与后置，覆盖常见 speech-verb 变体。
+    # 注意：捕获组为说话人名字（1-6 个汉字），可能误捕"他/她"等代词；
+    # 后续用非人关键词过滤 + 多角色成对比较，可在一定程度上稀释单一代词噪声。
+    speech_verb = (
+        r"(?:说|道|喊道|问道|冷笑道|回答道|低声道|吼道|骂道|"
+        r"开口|打断|补充|继续|反问|沉声|厉声|轻声|喃喃|嘀咕)"
+    )
+    pre_speaker_re = re.compile(
+        rf'([一-龥]{{1,6}}){speech_verb}(?:道|着|了|：|\s*)$'
+    )
+    post_speaker_re = re.compile(
+        rf'^[\s，。！？、…]*([一-龥]{{1,6}}){speech_verb}(?:道|着|了|，|。|：|\s*)'
+    )
+    quote_re = re.compile(r'[\"“”]([^\"“”]{10,400})[\"“”]')
+
+    effective_non_char_keywords = (
+        non_character_keywords
+        if non_character_keywords is not None
+        else set(_NON_CHARACTER_SPEAKER_KEYWORDS)
+    )
+
+    for scene_idx, scene in enumerate(scenes, 1):
+        speaker_stats: dict[str, dict[str, Any]] = {}
+        for m in quote_re.finditer(scene):
+            quote = m.group(1)
+            speaker: str | None = None
+            # 1) 前置说话人：从引语前 30 字内找
+            before = scene[max(0, m.start() - 30):m.start()]
+            pre_match = pre_speaker_re.search(before)
+            if pre_match:
+                speaker = pre_match.group(1)
+            else:
+                # 2) 后置说话人：从引语后 40 字内找
+                after = scene[m.end():min(len(scene), m.end() + 40)]
+                post_match = post_speaker_re.search(after)
+                if post_match:
+                    speaker = post_match.group(1)
+            if speaker is None:
+                continue
+            # 过滤非人实体声源
+            if speaker in effective_non_char_keywords:
+                continue
+            if speaker not in speaker_stats:
+                speaker_stats[speaker] = {
+                    "quotes": [],
+                    "lengths": [],
+                    "emotion_words": set(),
+                    "adverb_count": 0,
+                    "word_count": 0,
+                }
+            # 按句拆分
+            sentences = re.split(r'[。！？…]', quote)
+            for s in sentences:
+                s = s.strip()
+                if not s:
+                    continue
+                speaker_stats[speaker]["lengths"].append(len(s))
+            speaker_stats[speaker]["quotes"].append(quote)
+            speaker_stats[speaker]["word_count"] += len(quote)
+            for w in _EMOTION_WORDS:
+                if w in quote:
+                    speaker_stats[speaker]["emotion_words"].add(w)
+            for adv in _ADVERBS:
+                speaker_stats[speaker]["adverb_count"] += quote.count(adv)
+
+        # 只保留有 >=2 句对白的角色
+        qualified = {
+            name: stats
+            for name, stats in speaker_stats.items()
+            if len(stats["lengths"]) >= 2
+        }
+        if len(qualified) < 2:
+            continue
+
+        names = list(qualified.keys())
+        for i in range(len(names)):
+            for j in range(i + 1, len(names)):
+                a, b = qualified[names[i]], qualified[names[j]]
+                avg_a = sum(a["lengths"]) / len(a["lengths"])
+                avg_b = sum(b["lengths"]) / len(b["lengths"])
+                if avg_a == 0 or avg_b == 0:
+                    continue
+                length_diff = abs(avg_a - avg_b) / max(avg_a, avg_b)
+                emotion_union = a["emotion_words"] | b["emotion_words"]
+                if not emotion_union:
+                    # 双方都没有情绪词：在"无情绪标记"这一维度上视为趋同，
+                    # 避免漏检干净但模板化的对白。
+                    emotion_overlap = 1.0
+                else:
+                    emotion_overlap = len(
+                        a["emotion_words"] & b["emotion_words"]
+                    ) / len(emotion_union)
+                adv_density_a = a["adverb_count"] / max(a["word_count"], 1)
+                adv_density_b = b["adverb_count"] / max(b["word_count"], 1)
+                if adv_density_a == 0 and adv_density_b == 0:
+                    adv_diff = 0.0
+                else:
+                    adv_diff = abs(adv_density_a - adv_density_b) / max(
+                        adv_density_a, adv_density_b, 1e-6
+                    )
+
+                if (
+                    length_diff < 0.20
+                    and emotion_overlap > 0.50
+                    and adv_diff < 0.30
+                ):
+                    matches.append(
+                        ExpositionCarrierMatch(
+                            carrier_type="human_voice_homogeneity",  # type: ignore[arg-type]
+                            matched_text=f"场景{scene_idx}: {names[i]} 与 {names[j]} 对白趋同",
+                            location=f"场景{scene_idx}",
+                            severity="info",
+                            message=(
+                                f"人类角色声纹同质化：{names[i]} 与 {names[j]} "
+                                f"句长差异 {length_diff:.0%}、情绪重叠 {emotion_overlap:.0%}、"
+                                f"副词密度差异 {adv_diff:.0%}"
+                            ),
+                        )
+                    )
+    return matches
+
+
 def _short_paragraph_ratio(text: str, threshold: int = 50) -> float:
     """计算短段落（< threshold 字）占比."""
     paragraphs = split_paragraphs(text)
@@ -321,6 +1037,15 @@ def run_rule_audit(
     numerical_contexts: list[NumericalContext] | None = None,
     punch_points: list[PunchPoint] | None = None,
     mandatory_references: list[dict] | None = None,
+    *,
+    character_names: set[str] | None = None,
+    non_character_keywords: set[str] | None = None,
+    setting_keywords: set[str] | None = None,
+    info_delivery_keywords: set[str] | None = None,
+    non_character_dialogue_word_limit: int = _NON_CHARACTER_DIALOGUE_WORD_LIMIT,
+    non_character_consecutive_monologue_limit: int = _NON_CHARACTER_CONSECUTIVE_MONOLOGUE_LIMIT,
+    direct_revelation_quote_min_chars: int = 50,
+    info_delivery_dialogue_min_chars: int = 50,
 ) -> RuleAuditResult:
     """运行规则检测（纯代码，无 LLM）.
 
@@ -386,10 +1111,27 @@ def run_rule_audit(
     # 12. 短段落比例（观测指标，不直接阻断）
     short_paragraph_ratio = _short_paragraph_ratio(content, threshold=50)
 
-    # 13. 刺激度检查（Punch Engine）
+    # 13. Task 170g/170i: 说明文载体硬灌检测 + 人类声纹同质化检测（观测指标，不直接阻断）
+    exposition_carrier_matches = detect_exposition_carriers(
+        content,
+        character_names=character_names,
+        non_character_keywords=non_character_keywords,
+        setting_keywords=setting_keywords,
+        info_delivery_keywords=info_delivery_keywords,
+        non_character_dialogue_word_limit=non_character_dialogue_word_limit,
+        non_character_consecutive_monologue_limit=non_character_consecutive_monologue_limit,
+        direct_revelation_quote_min_chars=direct_revelation_quote_min_chars,
+        info_delivery_dialogue_min_chars=info_delivery_dialogue_min_chars,
+    )
+    exposition_carrier_matches.extend(
+        detect_human_voice_homogeneity(content, non_character_keywords=non_character_keywords)
+    )
+    exposition_carrier_count = len(exposition_carrier_matches)
+
+    # 14. 刺激度检查（Punch Engine）
     punch_check = _check_punch_points(content, punch_points or [], word_count)
 
-    # 14. Task 138h: 强制连续性约束检查
+    # 15. Task 138h: 强制连续性约束检查
     mr_passed, mr_issues = _check_mandatory_references(content, mandatory_references)
 
     duration_ms = int((time.perf_counter() - start_time) * 1000)
@@ -420,6 +1162,8 @@ def run_rule_audit(
         duplicate_paragraph_matches=duplicate_paragraph_matches,
         duplicate_paragraph_count=duplicate_paragraph_count,
         short_paragraph_ratio=short_paragraph_ratio,
+        exposition_carrier_matches=exposition_carrier_matches,
+        exposition_carrier_count=exposition_carrier_count,
         numerical_issues=numerical_issues,
         punch_check=punch_check,
         mandatory_reference_issues=mr_issues,
@@ -440,6 +1184,7 @@ def run_rule_audit(
         emotion_switch_ok=punch_check.emotion_switch_ok,
         mandatory_reference_check_passed=mr_passed,
         mandatory_reference_issue_count=len(mr_issues),
+        exposition_carrier_count=exposition_carrier_count,
         duration_ms=duration_ms,
     )
     return result
@@ -520,6 +1265,9 @@ def _compute_overall_score(result: RuleAuditResult) -> float:
     # 元标记泄漏扣分：每个 -0.5，最多 -2
     score -= min(result.meta_tag_count * 0.5, 2.0)
 
+    # Task 170g: 说明文载体硬灌扣分（观测指标，轻量扣分，最多 -1.5）
+    score -= min(result.exposition_carrier_count * 0.3, 1.5)
+
     # Punch Engine 扣分
     if result.punch_check.expected_punch_count > 0:
         if not result.punch_check.punch_density_ok:
@@ -569,6 +1317,10 @@ def _generate_summary(result: RuleAuditResult) -> str:
     if result.short_paragraph_ratio > 0.50:
         parts.append(
             f"短段落占比偏高（{result.short_paragraph_ratio:.0%}，建议控制 <50%）"
+        )
+    if result.exposition_carrier_count > 0:
+        parts.append(
+            f"发现 {result.exposition_carrier_count} 处说明文载体硬灌（exposition 风险）"
         )
 
     if result.punch_check.expected_punch_count > 0:

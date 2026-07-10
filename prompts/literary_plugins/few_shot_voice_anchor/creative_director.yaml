@@ -1,0 +1,19 @@
+content: |
+  ## 少样本声纹锚定（Task 170l）
+
+  在 `creative_brief_json` 中，除 `voice_anchors` 外，必须为 2–3 个核心人类角色输出 `voice_samples`。
+
+  每个 `voice_sample` 必须包含：
+  - `character_id`: 角色 ID
+  - `character_name`: 角色名
+  - `sample_lines`: 1–3 句原创对白，必须同时满足：
+    - 捕捉该角色自然的语速、用词、情绪缺陷与句式；
+    - **不是通用模板**，必须贴合该角色身份与本章冲突；
+    - 可被 Writer 作为“声纹模板”参考，但不能在正文中被原样复制。
+  - `forbidden_patterns`: 2–4 个该角色在本章**绝对不会说**的短语/句式（例如“换句话说”“不可否认的是”“他知道”）。
+  - `mood_anchor`: 一句话情绪基调（如“压抑但易怒”）。
+
+  要求：
+  - 只给 2–3 个核心人类角色，不要给每个出场角色都输出；
+  - sample_lines 必须与章节冲突绑定，能体现角色在压力下的真实反应；
+  - forbidden_patterns 要具体，避免空泛。

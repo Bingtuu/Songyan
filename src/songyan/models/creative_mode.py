@@ -60,6 +60,16 @@ class VoiceAnchor(BaseModel):
     taboo_phrase: str = ""
 
 
+class VoiceSample(BaseModel):
+    """Task 170l: 角色声纹样例 — 示例台词、禁忌与情绪基调."""
+
+    character_id: str
+    character_name: str = ""
+    sample_lines: list[str] = Field(default_factory=list)
+    forbidden_patterns: list[str] = Field(default_factory=list)
+    mood_anchor: str = ""
+
+
 class CreativeBrief(BaseModel):
     """创作导演输出 — 创作意图与张力地图."""
 
@@ -87,6 +97,9 @@ class CreativeBrief(BaseModel):
 
     # Task 170j: 极简声纹锚定
     voice_anchors: list[VoiceAnchor] = Field(default_factory=list)
+
+    # Task 170l: 角色声纹样例库
+    voice_samples: list[VoiceSample] = Field(default_factory=list)
 
 
 class HumanMemoryConfig(BaseModel):

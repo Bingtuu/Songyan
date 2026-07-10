@@ -43,6 +43,10 @@ system_prompt: |
 
   {{ protected_fissures }}
 
+  {% if literary_plugins %}
+  {{ literary_plugins }}
+  {% endif %}
+
   ## Readability 修复示例
 
   **示例 1 — AI 腔**
@@ -101,3 +105,7 @@ variables:
   - name: paragraph_rhythm_score
     type: float
     required: true
+  - name: literary_plugins
+    type: str
+    required: false
+    description: "Task 170l: 文学优化插件 prompt 片段（如 ai_tone_blocklist）"

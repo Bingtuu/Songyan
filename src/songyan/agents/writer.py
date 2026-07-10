@@ -286,6 +286,20 @@ def _render_prompt(ctx: ContextPackage) -> str:
             )
         voice_anchors = "\n".join(lines)
 
+    # Task 170l: 少样本声纹锚定
+    voice_samples = ""
+    if brief and brief.voice_samples:
+        lines = ["## 少样本声纹锚定"]
+        for vs in brief.voice_samples:
+            lines.append(
+                f"- {vs.character_name}（{vs.character_id}）：情绪基调={vs.mood_anchor}"
+            )
+            for line in vs.sample_lines:
+                lines.append(f"  示例：{line}")
+            if vs.forbidden_patterns:
+                lines.append(f"  禁用：{', '.join(vs.forbidden_patterns)}")
+        voice_samples = "\n".join(lines)
+
     # 刺激点执行清单（Punch Engine）
     punch_points = []
     if brief and brief.punch_points:
@@ -436,6 +450,7 @@ def _render_prompt(ctx: ContextPackage) -> str:
         "mandatory_references": mandatory_references_text,
         "literary_plugins": literary_plugins,
         "voice_anchors": voice_anchors,
+        "voice_samples": voice_samples,
     }
 
     tags: list[str] = []

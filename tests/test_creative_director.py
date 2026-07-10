@@ -398,6 +398,53 @@ class TestBuildCreativeBrief:
         assert len(brief.voice_anchors) == 1
         assert brief.voice_anchors[0].character_id == "char-1"
 
+    def test_build_creative_brief_parses_voice_samples(self) -> None:
+        data = json.loads(
+            _make_valid_llm_response(
+                voice_samples=[
+                    {
+                        "character_id": "char-1",
+                        "character_name": "角色一",
+                        "sample_lines": ["你别过来。", "我早说过这不归我管。"],
+                        "forbidden_patterns": ["换句话说", "不可否认的是"],
+                        "mood_anchor": "压抑但易怒",
+                    }
+                ]
+            )
+        )
+        goal = _make_chapter_goal()
+
+        brief = _build_creative_brief(data, "webnovel", goal)
+
+        assert len(brief.voice_samples) == 1
+        assert brief.voice_samples[0].character_id == "char-1"
+        assert brief.voice_samples[0].character_name == "角色一"
+        assert brief.voice_samples[0].sample_lines == ["你别过来。", "我早说过这不归我管。"]
+        assert brief.voice_samples[0].forbidden_patterns == ["换句话说", "不可否认的是"]
+        assert brief.voice_samples[0].mood_anchor == "压抑但易怒"
+
+    def test_voice_samples_invalid_entries_dropped(self) -> None:
+        data = json.loads(
+            _make_valid_llm_response(
+                voice_samples=[
+                    {
+                        "character_id": "char-1",
+                        "sample_lines": ["一句对白"],
+                    },
+                    {
+                        "sample_lines": ["缺少 character_id"],
+                    },
+                    "不是字典",
+                ]
+            )
+        )
+        goal = _make_chapter_goal()
+
+        brief = _build_creative_brief(data, "webnovel", goal)
+
+        assert len(brief.voice_samples) == 1
+        assert brief.voice_samples[0].character_id == "char-1"
+
 
 # ---------------------------------------------------------------------------
 # generate_creative_brief (integration with mock LLM)

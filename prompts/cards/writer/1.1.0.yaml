@@ -532,3 +532,7 @@ variables:
     type: str
     required: false
     description: "Task 170j: 极简声纹锚定列表"
+  - name: voice_samples
+    type: str
+    required: false
+    description: "Task 170l: 少样本声纹锚定列表"

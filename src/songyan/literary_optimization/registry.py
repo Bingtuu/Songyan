@@ -3,13 +3,19 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from .strategies.ai_tone_blocklist import AiToneBlocklistStrategy
+from .strategies.few_shot_voice_anchor import FewShotVoiceAnchorStrategy
 from .strategies.minimal_voice_anchor import MinimalVoiceAnchorStrategy
+from .strategies.opposing_goal_anchor import OpposingGoalAnchorStrategy
 
 if TYPE_CHECKING:
     from .base import LiteraryOptimizationStrategy
 
 _REGISTRY: dict[str, type[LiteraryOptimizationStrategy]] = {
+    AiToneBlocklistStrategy().strategy_id: AiToneBlocklistStrategy,
+    FewShotVoiceAnchorStrategy().strategy_id: FewShotVoiceAnchorStrategy,
     MinimalVoiceAnchorStrategy().strategy_id: MinimalVoiceAnchorStrategy,
+    OpposingGoalAnchorStrategy().strategy_id: OpposingGoalAnchorStrategy,
 }
 
 

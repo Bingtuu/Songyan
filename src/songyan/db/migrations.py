@@ -169,6 +169,16 @@ async def _migrate_creative_briefs_voice_anchors(conn: aiosqlite.Connection) -> 
         )
 
 
+async def _migrate_creative_briefs_voice_samples(conn: aiosqlite.Connection) -> None:
+    """为 creative_briefs 表添加 voice_samples 列（v2.0.2 / Task 170l）."""
+    cursor = await conn.execute("PRAGMA table_info(creative_briefs)")
+    cols = {row[1] for row in await cursor.fetchall()}
+    if "voice_samples" not in cols:
+        await conn.execute(
+            "ALTER TABLE creative_briefs ADD COLUMN voice_samples TEXT DEFAULT '[]'"
+        )
+
+
 # ---------------------------------------------------------------------------
 # Phase 4 迁移
 # ---------------------------------------------------------------------------
@@ -896,6 +906,7 @@ async def init_schema(db_path: str | Path | None = None) -> None:
         await _migrate_setting_category(conn)
         await _migrate_creative_briefs_punch(conn)
         await _migrate_creative_briefs_voice_anchors(conn)
+        await _migrate_creative_briefs_voice_samples(conn)
         await _migrate_human_instructions(conn)
         await _migrate_continuity_tables(conn)
         # Phase 4 迁移
@@ -954,6 +965,8 @@ async def run_migrations(conn: aiosqlite.Connection) -> None:
     await _migrate_continuity_tables(conn)
     await _migrate_human_instructions(conn)
     await _migrate_creative_briefs_punch(conn)
+    await _migrate_creative_briefs_voice_anchors(conn)
+    await _migrate_creative_briefs_voice_samples(conn)
     await _migrate_summaries_impact_score(conn)
     await _migrate_project_arc_boundaries(conn)
     await _migrate_chapter_versions_score_card(conn)

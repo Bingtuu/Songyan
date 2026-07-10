@@ -87,6 +87,7 @@ CREATE TABLE IF NOT EXISTS creative_briefs (
     punch_points    TEXT DEFAULT '[]',           -- JSON array of PunchPoint
     emotion_arc     TEXT DEFAULT '[]',           -- JSON array of EmotionArcItem
     voice_anchors   TEXT DEFAULT '[]',           -- JSON array of VoiceAnchor (Task 170j)
+    voice_samples   TEXT DEFAULT '[]',           -- JSON array of VoiceSample (Task 170l)
     created_at      TEXT DEFAULT (datetime('now'))
 );
 

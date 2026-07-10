@@ -1679,6 +1679,14 @@ async def revision_handler_node(state: dict[str, Any]) -> dict[str, Any]:
     goal = await load_chapter_goal(state.get("chapter_goal_id", ""))
     word_count_target = goal.word_count_target if goal else 3000
 
+    # Task 170l: 加载 mode_profile 以注入文学优化插件
+    project = await load_project(state["project_id"])
+    mode_profile = (
+        load_creative_mode_profile(state.get("mode_id") or project.mode_id)
+        if project
+        else None
+    )
+
     # Task 128c: 传入 score_card，使 RevisionHandler 能识别 readability 问题并走专精路径
     output, revised_content = await run_revision(
         content=version.content,
@@ -1687,6 +1695,7 @@ async def revision_handler_node(state: dict[str, Any]) -> dict[str, Any]:
         previous_issues=previous_issues,
         word_count_target=word_count_target,
         score_card=state.get("_score_card"),
+        mode_profile=mode_profile,
     )
 
     # 截断检测：若内容保留率 < 50%，跳过 revision，回退到原始版本

@@ -54,6 +54,7 @@ from songyan.models.creative_mode import (
     PunchPoint,
     Tension,
     VoiceAnchor,
+    VoiceSample,
 )
 from songyan.models.foreshadowing_schedule import (
     ForeshadowingScheduleItem,
@@ -99,6 +100,7 @@ from songyan.models.replan import (
 from songyan.models.review import (
     AiTellMatch,
     DuplicateParagraphMatch,
+    ExpositionCarrierMatch,
     FatigueWordMatch,
     GenericNameMatch,
     LLMAuditResult,
@@ -149,6 +151,7 @@ __all__ = [
     "PunchPoint",
     "EmotionArcItem",
     "VoiceAnchor",
+    "VoiceSample",
     "HumanMemoryConfig",
     "HumanInstruction",
     # continuity
@@ -201,6 +204,7 @@ __all__ = [
     "RuleAuditResult",
     "AiTellMatch",
     "DuplicateParagraphMatch",
+    "ExpositionCarrierMatch",
     "FatigueWordMatch",
     "GenericNameMatch",
     "LLMAuditResult",
