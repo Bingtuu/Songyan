@@ -29,6 +29,7 @@ from songyan.agents.writer import write_chapter
 from songyan.creative_modes.registry import load_creative_mode_profile
 from songyan.db.connection import get_db
 from songyan.db.context_repo import SummaryRepository
+from songyan.db.literary_repo import LiteraryKeywordRepository
 from songyan.db.repository import (
     ChapterGoalRepository,
     ChapterHeadRepository,
@@ -91,6 +92,23 @@ from songyan.workflows.review_merger import merge_reviews
 logger = structlog.get_logger(__name__)
 
 _REWRITE_ROLLBACK_SCORE_DELTA = 0.08
+
+
+async def _load_literary_keywords(project_id: str) -> dict[str, set[str]]:
+    """Task 171a: 体裁解耦——为 RuleAuditor 加载项目实际关键词（角色/设定/非人实体）.
+
+    从 ``characters`` / ``setting_snapshots`` 动态提取，替代写死的科幻词表 + 主角名。
+    任何失败都回退到空集（该维度不计分，而非误报到硬编码），绝不阻断生成管线。
+    """
+    try:
+        return await LiteraryKeywordRepository().load_exposition_keywords(project_id)
+    except Exception:
+        logger.debug("literary_keywords.load_skipped", project_id=project_id, exc_info=True)
+        return {
+            "character_names": set(),
+            "setting_keywords": set(),
+            "non_character_keywords": set(),
+        }
 
 
 def _safe_best_min_score(chapter_number: int) -> float:
@@ -1139,6 +1157,7 @@ async def rule_auditor_node(state: dict[str, Any]) -> dict[str, Any]:
     except Exception:
         logger.debug("rule_auditor_node.mandatory_references_load_skipped", exc_info=True)
 
+    _lit_kw = await _load_literary_keywords(state["project_id"])
     result = run_rule_audit(
         content=version.content,
         genre_rules=_build_genre_rules(genre, project, goal) if genre else None,
@@ -1147,6 +1166,9 @@ async def rule_auditor_node(state: dict[str, Any]) -> dict[str, Any]:
         scene_count_target=max(len(version.scenes), 2) if version.scenes else 2,
         punch_points=punch_points,
         mandatory_references=mandatory_references,
+        character_names=_lit_kw["character_names"],
+        setting_keywords=_lit_kw["setting_keywords"],
+        non_character_keywords=_lit_kw["non_character_keywords"],
     )
     report_id = new_id("ra")
     await save_rule_audit(
@@ -1748,6 +1770,7 @@ async def revision_handler_node(state: dict[str, Any]) -> dict[str, Any]:
     except Exception:
         logger.debug("revision_handler_node.mandatory_references_load_skipped", exc_info=True)
 
+    _rev_lit_kw = await _load_literary_keywords(state["project_id"])
     revised_rule_result = run_rule_audit(
         content=revised_content,
         genre_rules=_build_genre_rules(genre, project, goal) if genre else None,
@@ -1756,6 +1779,9 @@ async def revision_handler_node(state: dict[str, Any]) -> dict[str, Any]:
         scene_count_target=max(len(output.patches_applied), 2),
         punch_points=punch_points,
         mandatory_references=rev_mandatory_refs,
+        character_names=_rev_lit_kw["character_names"],
+        setting_keywords=_rev_lit_kw["setting_keywords"],
+        non_character_keywords=_rev_lit_kw["non_character_keywords"],
     )
 
     # 058d: 重新构建 RevisionOutput，传入前后 RuleAuditResult

@@ -17,9 +17,11 @@ from songyan.models import (
     GenreRules,
     MergedReviewReport,
     MetaTagLeakMatch,
+    MotifFatigueMatch,
     PunchCheck,
     PunchPoint,
     RuleAuditResult,
+    TextCleanlinessCleanIssue,
 )
 from songyan.utils import (
     analyze_paragraph_rhythm,
@@ -77,6 +79,69 @@ _MARKDOWN_SCENE_PATTERNS: list[tuple[str, str]] = [
     (r"(?im)^\s*\*\*场景\s*(?:\d+|[A-Z]|[一二三四五六七八九十]+)\*\*.*$", "加粗中文场景标题"),
 ]
 
+_MARKDOWN_HEADING_PATTERNS: list[tuple[str, str]] = [
+    (
+        r"(?im)^\s*#{1,6}\s*(?:第\s*)?[一二三四五六七八九十百千万零〇两\d]+\s*(?:章|章节|回)\b.*$",
+        "Markdown章节标题",
+    ),
+    (r"(?im)^\s*#{1,6}\s*Chapter\s+\d+\b.*$", "Markdown英文章节标题"),
+]
+
+_PROTECTED_DIRECTIVE_RE = re.compile(
+    r"(?im)(?:【[^】]*(?:保护内容|请勿修改|不要修改|不可修改)[^】]*】|"
+    r"\b(?:保护内容|请勿修改|不要修改|不可修改)\b)"
+)
+
+_PROMPT_PATCH_INSTRUCTION_PATTERNS: list[tuple[str, str]] = [
+    (r"(?im)每句末尾.{0,12}(?:加重|加强|强化).{0,8}语气", "句尾语气指令"),
+    (
+        r"(?im)(?:请|务必|必须).{0,20}(?:改写|修改|替换|保留|删除)"
+        r".{0,20}(?:本段|这一段|正文|内容)",
+        "写作修改指令",
+    ),
+    (r"(?im)(?:patch|rewrite|diff)\s*(?:note|instruction|指令|说明)\s*[:：]", "Patch指令"),
+]
+
+_CJK_RE = re.compile(r"[\u4e00-\u9fff]")
+_ELLIPSIS_PLACEHOLDER_RE = re.compile(r"^(?:[.．。…·\s]+)$")
+
+MotifDefinition = tuple[str, tuple[str, ...], tuple[str, ...]]
+
+DEFAULT_MOTIF_FATIGUE_THRESHOLD = 3
+
+_FATIGUE_MOTIF_DEFINITIONS: tuple[MotifDefinition, ...] = (
+    (
+        "指尖悬停",
+        (r"指尖.{0,6}悬停", r"手指.{0,6}悬停"),
+        ("身体重心变化", "环境反应", "配角动作打断", "战术动作"),
+    ),
+    (
+        "左臂发烫",
+        (r"左臂.{0,8}(?:发烫|灼|痛|金属化)", r"金属化左臂"),
+        ("肩背受力", "呼吸节奏", "设备回震", "伤口牵扯"),
+    ),
+    (
+        "神经接口刺痛",
+        (r"神经接口.{0,8}(?:刺痛|发烫|灼痛)", r"颅骨内侧"),
+        ("听觉失真", "视野延迟", "平衡感偏移", "记忆闪断"),
+    ),
+    (
+        "倒计时",
+        (r"倒计时", r"\d+\s*秒"),
+        ("环境临界变化", "对手抢先动作", "配角催促", "系统资源下降"),
+    ),
+    (
+        "控制台数据流",
+        (r"控制台.{0,10}(?:数据流|刷新|跳动)", r"全息屏.{0,10}刷新"),
+        ("机械噪声变化", "灯光失序", "地面震动", "手动操作反馈"),
+    ),
+    (
+        "共鸣频率",
+        (r"共鸣频率.{0,8}(?:跳动|震荡|偏移)", r"频率.{0,8}(?:跳动|震荡)"),
+        ("温差变化", "材料裂纹", "角色误判", "局部失控后果"),
+    ),
+)
+
 
 def detect_meta_tag_leaks(text: str) -> list[MetaTagLeakMatch]:
     """检测元标记泄漏."""
@@ -96,6 +161,7 @@ def detect_meta_tag_leaks(text: str) -> list[MetaTagLeakMatch]:
                     location=location,
                     severity="major",
                     message="检测到元标记泄漏",
+                    artifact_type="meta_tag_leak",
                 )
             )
     matches.sort(key=lambda x: text.find(x.matched_text))
@@ -120,9 +186,214 @@ def detect_markdown_scene_titles(text: str) -> list[MetaTagLeakMatch]:
                     location=location,
                     severity="major",
                     message="检测到 Markdown 场景标题（应使用空行分隔场景）",
+                    artifact_type="markdown_scene_title",
                 )
             )
     matches.sort(key=lambda x: text.find(x.matched_text))
+    return matches
+
+
+def _line_span_at(text: str, pos: int) -> tuple[int, int]:
+    """返回 pos 所在行的 [start, end) span。"""
+    start = text.rfind("\n", 0, pos) + 1
+    end = text.find("\n", pos)
+    if end < 0:
+        end = len(text)
+    return start, end
+
+
+def _append_artifact_match(
+    matches: list[MetaTagLeakMatch],
+    *,
+    text: str,
+    start: int,
+    end: int,
+    artifact_type: str,
+    pattern: str,
+    message: str,
+    matched_text: str | None = None,
+) -> None:
+    """创建带 artifact_type 的 MetaTagLeakMatch。"""
+    evidence = (matched_text if matched_text is not None else text[start:end]).strip()
+    matches.append(
+        MetaTagLeakMatch(
+            pattern=pattern,
+            matched_text=evidence,
+            location=locate_position(text, start),
+            severity="major",
+            message=message,
+            artifact_type=artifact_type,
+        )
+    )
+
+
+def _has_cjk_on_both_sides(left: str, right: str) -> bool:
+    return bool(_CJK_RE.search(left) and _CJK_RE.search(right))
+
+
+def _is_safe_slash_context(text: str, slash_pos: int) -> bool:
+    """判断 `/` 是否属于单位、URL、路径或数字比值等合法上下文。"""
+    left = text[max(0, slash_pos - 16):slash_pos]
+    right = text[slash_pos + 1: slash_pos + 17]
+    window = left + "/" + right
+    if re.search(r"https?://|[A-Za-z]:[/\\]|[/\\][\w.-]+[/\\]", window):
+        return True
+    if re.search(r"[A-Za-z0-9]\s*/\s*[A-Za-z0-9]", window):
+        return True
+    if re.search(r"\d+(?:\.\d+)?\s*/\s*\d+(?:\.\d+)?", window):
+        return True
+    # 常见速度/频率/比例单位，如 km/s、m/s、次/秒。
+    if re.search(r"(?:km|m|cm|mm|次|米|公里)\s*/\s*(?:s|秒|min|h|小时)", window, re.I):
+        return True
+    return False
+
+
+def _detect_slash_splice_artifacts(text: str) -> list[MetaTagLeakMatch]:
+    matches: list[MetaTagLeakMatch] = []
+    seen_lines: set[tuple[int, int]] = set()
+    for m in re.finditer("/", text):
+        slash_pos = m.start()
+        if _is_safe_slash_context(text, slash_pos):
+            continue
+        line_start, line_end = _line_span_at(text, slash_pos)
+        key = (line_start, line_end)
+        if key in seen_lines:
+            continue
+        line = text[line_start:line_end]
+        left = line[: slash_pos - line_start]
+        right = line[slash_pos - line_start + 1:]
+        if not _has_cjk_on_both_sides(left[-12:], right[:12]):
+            continue
+        seen_lines.add(key)
+        _append_artifact_match(
+            matches,
+            text=text,
+            start=line_start,
+            end=line_end,
+            artifact_type="slash_splice_artifact",
+            pattern="slash_splice_artifact: CJK / CJK",
+            message="检测到斜杠拼接痕迹",
+        )
+    return matches
+
+
+def _detect_ellipsis_placeholder_paragraphs(text: str) -> list[MetaTagLeakMatch]:
+    matches: list[MetaTagLeakMatch] = []
+    for paragraph_index, paragraph, start in _paragraphs_with_offsets(text):
+        normalized = re.sub(r"\s+", "", paragraph)
+        if not _ELLIPSIS_PLACEHOLDER_RE.match(normalized):
+            continue
+        if normalized.count(".") + normalized.count("．") < 3 and normalized.count("…") < 2:
+            continue
+        _append_artifact_match(
+            matches,
+            text=text,
+            start=start,
+            end=start + len(paragraph),
+            artifact_type="ellipsis_placeholder_paragraph",
+            pattern="ellipsis_placeholder_paragraph",
+            message=f"检测到纯省略号占位段（第{paragraph_index}段）",
+        )
+    return matches
+
+
+def detect_text_cleanliness_artifacts(text: str) -> list[MetaTagLeakMatch]:
+    """Task 171t: 检测 T9 hard-clean 的新增文本 artifact。"""
+    matches: list[MetaTagLeakMatch] = []
+    seen: set[tuple[int, int, str]] = set()
+
+    def add_regex_matches(
+        pattern: str,
+        tag_type: str,
+        artifact_type: str,
+        message: str,
+    ) -> None:
+        for m in re.finditer(pattern, text):
+            key = (m.start(), m.end(), artifact_type)
+            if key in seen:
+                continue
+            seen.add(key)
+            _append_artifact_match(
+                matches,
+                text=text,
+                start=m.start(),
+                end=m.end(),
+                artifact_type=artifact_type,
+                pattern=f"{tag_type}: {pattern}",
+                message=message,
+            )
+
+    for pattern, tag_type in _MARKDOWN_HEADING_PATTERNS:
+        add_regex_matches(
+            pattern,
+            tag_type,
+            "markdown_heading_leak",
+            "检测到 Markdown 章节标题泄漏",
+        )
+
+    add_regex_matches(
+        _PROTECTED_DIRECTIVE_RE.pattern,
+        "保护指令",
+        "protected_directive_leak",
+        "检测到保护/请勿修改指令泄漏",
+    )
+
+    for pattern, tag_type in _PROMPT_PATCH_INSTRUCTION_PATTERNS:
+        add_regex_matches(
+            pattern,
+            tag_type,
+            "prompt_patch_instruction_leak",
+            "检测到 prompt/patch 写作指令泄漏",
+        )
+
+    matches.extend(_detect_slash_splice_artifacts(text))
+    matches.extend(_detect_ellipsis_placeholder_paragraphs(text))
+    matches.sort(key=lambda x: text.find(x.matched_text))
+    return matches
+
+
+def _unique_limited(values: list[str], *, limit: int = 5) -> list[str]:
+    """保留少量去重示例，避免 observe 报告膨胀."""
+    seen: set[str] = set()
+    result: list[str] = []
+    for value in values:
+        cleaned = value.strip()
+        if not cleaned or cleaned in seen:
+            continue
+        seen.add(cleaned)
+        result.append(cleaned)
+        if len(result) >= limit:
+            break
+    return result
+
+
+def detect_fatigue_motifs(
+    text: str,
+    *,
+    threshold: int = DEFAULT_MOTIF_FATIGUE_THRESHOLD,
+) -> list[MotifFatigueMatch]:
+    """Task 171v: 检测 Ch200+ 高频母题疲劳（observe-only）."""
+    if not text.strip() or threshold <= 0:
+        return []
+
+    matches: list[MotifFatigueMatch] = []
+    for motif, patterns, alternatives in _FATIGUE_MOTIF_DEFINITIONS:
+        matched_texts: list[str] = []
+        for pattern in patterns:
+            for match in re.finditer(pattern, text):
+                matched_texts.append(match.group(0))
+        count = len(matched_texts)
+        if count < threshold:
+            continue
+        matches.append(
+            MotifFatigueMatch(
+                motif=motif,
+                count=count,
+                threshold=threshold,
+                matched_texts=_unique_limited(matched_texts),
+                alternatives=list(alternatives),
+            )
+        )
     return matches
 
 
@@ -199,6 +470,78 @@ def detect_duplicate_paragraphs(
         seen.append((paragraph_index, paragraph, normalized, start))
 
     return matches
+
+
+def _clean_issue_for_meta_match(
+    match: MetaTagLeakMatch,
+    *,
+    chapter_number: int | None,
+    version_id: str | None,
+) -> TextCleanlinessCleanIssue:
+    issue_type = match.artifact_type or "meta_tag_leak"
+    suggested_actions = {
+        "meta_tag_leak": "删除工程元标记，仅保留自然正文。",
+        "markdown_scene_title": "删除场景标题或编号，使用空行保留场景切换。",
+        "markdown_heading_leak": "删除 Markdown 章节标题行，保留正文内容。",
+        "protected_directive_leak": "删除保护/请勿修改指令，不改动叙事正文。",
+        "slash_splice_artifact": "移除拼接斜杠，按上下文改成自然标点或直接连接句段。",
+        "ellipsis_placeholder_paragraph": "删除纯省略号占位段。",
+        "prompt_patch_instruction_leak": "删除写作/patch 指令文本，保留叙事内容。",
+    }
+    return TextCleanlinessCleanIssue(
+        chapter_number=chapter_number,
+        version_id=version_id,
+        issue_type=issue_type,
+        evidence_quote=match.matched_text,
+        evidence_location=match.location,
+        suggested_action=suggested_actions.get(issue_type, "删除非叙事 artifact。"),
+        deterministic_cleanable=True,
+    )
+
+
+def _clean_issue_for_duplicate(
+    match: DuplicateParagraphMatch,
+    *,
+    chapter_number: int | None,
+    version_id: str | None,
+) -> TextCleanlinessCleanIssue:
+    return TextCleanlinessCleanIssue(
+        chapter_number=chapter_number,
+        version_id=version_id,
+        issue_type="duplicate_paragraph",
+        evidence_quote=match.matched_text,
+        evidence_location=match.location,
+        suggested_action="保留首次出现段落，删除后续重复长段落；必要时补一处新的自然过渡。",
+        deterministic_cleanable=True,
+    )
+
+
+def collect_text_cleanliness_clean_issues(
+    content: str,
+    *,
+    chapter_number: int | None = None,
+    version_id: str | None = None,
+) -> list[TextCleanlinessCleanIssue]:
+    """Task 171t: 汇总 accept-time final sweep 的 hard-clean 问题清单."""
+    meta_matches = detect_meta_tag_leaks(content)
+    scene_matches = detect_markdown_scene_titles(content)
+    artifact_matches = detect_text_cleanliness_artifacts(content)
+    duplicate_matches = detect_duplicate_paragraphs(content)
+
+    issues: list[TextCleanlinessCleanIssue] = []
+    for match in [*meta_matches, *scene_matches, *artifact_matches]:
+        issues.append(
+            _clean_issue_for_meta_match(
+                match, chapter_number=chapter_number, version_id=version_id
+            )
+        )
+    for match in duplicate_matches:
+        issues.append(
+            _clean_issue_for_duplicate(
+                match, chapter_number=chapter_number, version_id=version_id
+            )
+        )
+    return issues
 
 
 def _split_scenes(text: str) -> list[str]:
@@ -293,7 +636,11 @@ _NON_CHARACTER_SPEAKER_KEYWORDS = [
     "建造者文明",
 ]
 
-_DEFAULT_CHARACTER_NAMES = {"林渊", "宋晚", "苏晚"}
+# Task 171a: 体裁解耦——不再写死本项目主角名作默认值。
+# 未注入 character_names 时，vision_dump（依赖具名角色）不计分，而非误报到硬编码人名。
+# 保留常量仅供单测/回归引用其历史值，不再作为生产 fallback。
+_DEFAULT_CHARACTER_NAMES: set[str] = set()
+_LEGACY_SCIFI_CHARACTER_NAMES = {"林渊", "宋晚", "苏晚"}  # 仅历史记录，不参与检测
 
 # 非人实体单章台词上限（字）
 _NON_CHARACTER_DIALOGUE_WORD_LIMIT = 100
@@ -366,6 +713,13 @@ _ADVERBS = {
     "紧紧", "微微", "明显", "似乎", "大概", "根本", "完全", "绝对", "几乎",
     "终于", "猛地", "忽然", "猛然", "骤然", "渐渐", "慢慢", "迅速", "飞快",
 }
+# Task 171a: 代词提示语——纯代词提示的对白轮替，继承上一位具名说话人。
+_DIALOGUE_PRONOUN_CUES = {
+    "他说", "她说", "他问", "她问", "他道", "她道", "他答", "她答",
+    "他喊", "她喊", "他低声", "她低声", "他继续", "她继续", "他反问", "她反问",
+}
+# Task 171a: 章级对话密度门——判定"是否对话承载章"（宽松，任意成对引号即计一处对白）。
+_VOICE_QUOTE_RE = re.compile(r'[\"“”][^\"“”]{1,400}[\"“”]')
 _PROTAGONIST_TELL_VERBS = [
     "明白了",
     "意识到",
@@ -463,11 +817,14 @@ def detect_exposition_carriers(
 
     # Compile local regexes using effective keywords and thresholds
     quoted_segment_re = re.compile(r'["“”]([^"“”]{20,800})["“”]')  # noqa: F841
+    # Task 171a-1: 方向性引号——开引号 ["“]、闭引号 ["”]，内部禁含任何引号。
+    # 防止"上一句闭引号 ” + 叙事 + 下一句开引号"被当成一段引语（跨对话轮 artifact，
+    # 该 artifact 内容常无换行，故 "\n\n" 过滤无法拦截）。ASCII " 两端通用仍可匹配。
     direct_revelation_quote_re = re.compile(
-        rf'["“”]([^"“”]{{{direct_revelation_quote_min_chars},800}})["“”]'
+        rf'["“]([^"“”]{{{direct_revelation_quote_min_chars},800}})["”]'
     )
     info_delivery_dialogue_re = re.compile(
-        rf'["“”]([^"“”]{{{info_delivery_dialogue_min_chars},800}})["“”]'
+        rf'["“]([^"“”]{{{info_delivery_dialogue_min_chars},800}})["”]'
     )
     non_character_quote_re = re.compile(r'["“”]([^"“”]{1,800})["“”]')
     protagonist_summary_tell_re = re.compile(
@@ -782,10 +1139,42 @@ def detect_exposition_carriers(
     matches.sort(key=lambda x: text.find(x.matched_text) if x.matched_text in text else 0)
     return matches
 
+def _nearest_registry_name(
+    before: str,
+    after: str,
+    registry: set[str],
+) -> str | None:
+    """Task 171a: 动作节拍归因——在引语紧邻窗口内就近匹配注册表角色名.
+
+    覆盖"名字+动作节拍+引语"（``林渊皱眉。"..."``）与"引语+名字动作"
+    （``"..."林渊转身``）等无 speech-verb 句式。**优先 before 窗口**（引语前的动作
+    主体通常是说话人），仅当 before 无注册表名时才回退 after，避免把"下一位说话人"
+    （紧跟在引语后开始其动作节拍的角色）误当当前说话人。仅在有注册表时调用。
+    """
+    best: str | None = None
+    best_dist: int | None = None
+    # 1) 优先 before：取最靠近引语（末次出现）的注册表名。
+    for known in registry:
+        b_idx = before.rfind(known)
+        if b_idx != -1:
+            dist = len(before) - (b_idx + len(known))
+            if best_dist is None or dist < best_dist:
+                best, best_dist = known, dist
+    if best is not None:
+        return best
+    # 2) before 无名时回退 after：取最先出现（首次）的注册表名。
+    for known in registry:
+        a_idx = after.find(known)
+        if a_idx != -1 and (best_dist is None or a_idx < best_dist):
+            best, best_dist = known, a_idx
+    return best
+
+
 def detect_human_voice_homogeneity(
     text: str,
     non_character_keywords: set[str] | None = None,
     character_names: set[str] | None = None,
+    min_chapter_quotes: int = 2,
 ) -> list[ExpositionCarrierMatch]:
     """Task 170i: 检测同场景多人类角色对白声纹同质化.
 
@@ -806,6 +1195,13 @@ def detect_human_voice_homogeneity(
     matches: list[ExpositionCarrierMatch] = []
     raw_scenes = _split_scenes(text)
     scenes = _merge_short_scenes_for_voice(raw_scenes)
+
+    # Task 171a 构念重定义：voice 仅在"对话承载章"计分。
+    # 全章对白引语过稀（单人解谜/意识流/纯叙事）时视为"voice 不适用"，直接返回空——
+    # 不把"没有对白可比"误判为"声纹同质"。真正的多角色声纹区分度由下游
+    # "≥2 具名说话人 + 各 ≥2 句" 判定。
+    if len(_VOICE_QUOTE_RE.findall(text)) < min_chapter_quotes:
+        return matches
 
     # 基础说话人识别：支持前置、后置与叙事归因，覆盖常见 speech-verb 变体。
     # 注意：捕获组为说话人名字（1-6 个汉字），可能误捕"他/她"等代词或叙事片段；
@@ -849,11 +1245,13 @@ def detect_human_voice_homogeneity(
 
     for scene_idx, scene in enumerate(scenes, 1):
         speaker_stats: dict[str, dict[str, Any]] = {}
+        last_named_speaker: str | None = None  # 用于代词就近继承（对话轮替常见）
         for m in quote_re.finditer(scene):
             quote = m.group(1)
             raw_speaker: str | None = None
-            before = scene[max(0, m.start() - 30):m.start()]
-            after = scene[m.end():min(len(scene), m.end() + 40)]
+            # Task 171a: 加宽归因窗口 30/40 -> 60/60，覆盖"名字+动作节拍+引语"的较长句式。
+            before = scene[max(0, m.start() - 60):m.start()]
+            after = scene[m.end():min(len(scene), m.end() + 60)]
             # 1) 前置说话人
             pre_match = pre_speaker_re.search(before)
             if pre_match:
@@ -876,8 +1274,21 @@ def detect_human_voice_homogeneity(
                         raw_speaker = after_hit.group(1)
                         break
             speaker = _accept_speaker(raw_speaker)
+            # 4) Task 171a 动作节拍归因（``林渊皱眉。"..."`` / ``"..."林渊转身``）：
+            #    speech-verb 归因失败时，若引语紧邻窗口出现注册表内角色名（无 speech verb，
+            #    多为动作节拍夹引语），就近绑定。仅在提供 character_names 注册表时启用，
+            #    避免无注册表时把任意人名误当说话人。
+            if speaker is None and registry:
+                speaker = _nearest_registry_name(before, after, registry)
+            # 5) 代词就近继承：纯代词提示（"他说"/"她问）或无提示轮替，继承上一位具名说话人。
+            if speaker is None and last_named_speaker is not None:
+                tail = before[-6:]
+                head = after[:6]
+                if any(p in tail or p in head for p in _DIALOGUE_PRONOUN_CUES):
+                    speaker = last_named_speaker
             if speaker is None:
                 continue
+            last_named_speaker = speaker
             if speaker not in speaker_stats:
                 speaker_stats[speaker] = {
                     "quotes": [],
@@ -1139,14 +1550,22 @@ def run_rule_audit(
     markdown_scene_title_matches = detect_markdown_scene_titles(content)
     markdown_scene_title_count = len(markdown_scene_title_matches)
 
-    # 11. 重复长段落检测（观测指标，不直接阻断）
+    # 11. Task 171t: 文本洁净 artifact 检测（T9 hard issue）
+    text_artifact_matches = detect_text_cleanliness_artifacts(content)
+    text_artifact_count = len(text_artifact_matches)
+
+    # 12. Task 171v: 母题疲劳扫描（观测指标，不直接阻断）
+    motif_fatigue_matches = detect_fatigue_motifs(content)
+    motif_fatigue_count = len(motif_fatigue_matches)
+
+    # 13. 重复长段落检测（观测指标，不直接阻断）
     duplicate_paragraph_matches = detect_duplicate_paragraphs(content)
     duplicate_paragraph_count = len(duplicate_paragraph_matches)
 
-    # 12. 短段落比例（观测指标，不直接阻断）
+    # 14. 短段落比例（观测指标，不直接阻断）
     short_paragraph_ratio = _short_paragraph_ratio(content, threshold=50)
 
-    # 13. Task 170g/170i: 说明文载体硬灌检测 + 人类声纹同质化检测（观测指标，不直接阻断）
+    # 15. Task 170g/170i: 说明文载体硬灌检测 + 人类声纹同质化检测（观测指标，不直接阻断）
     exposition_carrier_matches = detect_exposition_carriers(
         content,
         character_names=character_names,
@@ -1167,10 +1586,10 @@ def run_rule_audit(
     )
     exposition_carrier_count = len(exposition_carrier_matches)
 
-    # 14. 刺激度检查（Punch Engine）
+    # 16. 刺激度检查（Punch Engine）
     punch_check = _check_punch_points(content, punch_points or [], word_count)
 
-    # 15. Task 138h: 强制连续性约束检查
+    # 17. Task 138h: 强制连续性约束检查
     mr_passed, mr_issues = _check_mandatory_references(content, mandatory_references)
 
     duration_ms = int((time.perf_counter() - start_time) * 1000)
@@ -1198,6 +1617,10 @@ def run_rule_audit(
         meta_tag_count=meta_tag_count,
         markdown_scene_title_matches=markdown_scene_title_matches,
         markdown_scene_title_count=markdown_scene_title_count,
+        text_artifact_matches=text_artifact_matches,
+        text_artifact_count=text_artifact_count,
+        motif_fatigue_matches=motif_fatigue_matches,
+        motif_fatigue_count=motif_fatigue_count,
         duplicate_paragraph_matches=duplicate_paragraph_matches,
         duplicate_paragraph_count=duplicate_paragraph_count,
         short_paragraph_ratio=short_paragraph_ratio,
@@ -1224,6 +1647,8 @@ def run_rule_audit(
         mandatory_reference_check_passed=mr_passed,
         mandatory_reference_issue_count=len(mr_issues),
         exposition_carrier_count=exposition_carrier_count,
+        text_artifact_count=text_artifact_count,
+        motif_fatigue_count=motif_fatigue_count,
         duration_ms=duration_ms,
     )
     return result
@@ -1304,6 +1729,9 @@ def _compute_overall_score(result: RuleAuditResult) -> float:
     # 元标记泄漏扣分：每个 -0.5，最多 -2
     score -= min(result.meta_tag_count * 0.5, 2.0)
 
+    # Task 171t: 文本 artifact 泄漏扣分：每个 -0.5，最多 -2
+    score -= min(result.text_artifact_count * 0.5, 2.0)
+
     # Task 170g: 说明文载体硬灌扣分（观测指标，轻量扣分，最多 -1.5）
     score -= min(result.exposition_carrier_count * 0.3, 1.5)
 
@@ -1351,6 +1779,11 @@ def _generate_summary(result: RuleAuditResult) -> str:
         parts.append(
             f"发现 {result.markdown_scene_title_count} 处 Markdown 场景标题（建议改为空行分隔）"
         )
+    if result.text_artifact_count > 0:
+        parts.append(f"发现 {result.text_artifact_count} 处文本洁净 artifact")
+    if result.motif_fatigue_count > 0:
+        motifs = "、".join(m.motif for m in result.motif_fatigue_matches)
+        parts.append(f"发现 {result.motif_fatigue_count} 类母题疲劳（{motifs}）")
     if result.duplicate_paragraph_count > 0:
         parts.append(f"发现 {result.duplicate_paragraph_count} 处重复长段落")
     if result.short_paragraph_ratio > 0.50:

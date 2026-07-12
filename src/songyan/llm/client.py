@@ -154,7 +154,7 @@ def get_llm(
 async def call_llm(
     prompt: str,
     *,
-    temperature: float = 0.7,
+    temperature: float | None = None,
     max_tokens: int = 4096,
     max_retries: int | None = None,
     timeout: int = 60,
@@ -165,7 +165,7 @@ async def call_llm(
 
     Args:
         prompt: 发送给 LLM 的提示文本
-        temperature: 采样温度
+        temperature: 采样温度；None 时使用 settings.llm_temperature（默认 0.7）
         max_tokens: 最大输出 token 数（默认 4096）
         max_retries: 最大重试次数；None 时使用 settings.llm_max_retries
         timeout: 单次 LLM 调用超时秒数（默认 60）
@@ -177,6 +177,8 @@ async def call_llm(
         LLMError: 调用失败（重试后仍失败）
         LLMBudgetExceededError: 单 run 调用预算耗尽
     """
+    if temperature is None:
+        temperature = settings.llm_temperature
     if max_retries is None:
         max_retries = settings.llm_max_retries
 

@@ -91,6 +91,7 @@ async def collect_orphan_metrics(
     start: int,
     end: int,
     repo: ContinuityReportRepository | None = None,
+    setting_repo: SettingTrackingRepository | None = None,
 ) -> list[OrphanPoint]:
     """从 continuity_reports 逐章还原 orphan 绝对量与分类分布.
 
@@ -99,7 +100,13 @@ async def collect_orphan_metrics(
     不使用 ``classify_report``（它聚合了 state_mismatches/forgotten_items，会污染 orphan 口径）。
     """
     repo = repo or ContinuityReportRepository()
+    setting_repo = setting_repo or SettingTrackingRepository()
     reports = await repo.list_by_chapter_range(project_id, start, end)
+    tracking_rows = await setting_repo.list_by_project(project_id)
+    current_tracking = {
+        str(row.get("tracking_id") or row.get("setting_key") or ""): row
+        for row in tracking_rows
+    }
 
     latest_by_chapter: dict[int, object] = {}
     for report in reports:
@@ -109,7 +116,18 @@ async def collect_orphan_metrics(
     for chapter in sorted(latest_by_chapter):
         report = latest_by_chapter[chapter]
         critical = recurring = other = 0
+        active_orphaned = []
         for setting in report.orphaned_settings:  # type: ignore[attr-defined]
+            tracking_key = getattr(setting, "tracking_id", "") or getattr(
+                setting, "setting_key", ""
+            )
+            current = current_tracking.get(str(tracking_key))
+            if current:
+                last = int(current.get("last_mentioned_chapter") or 0)
+                status = str(current.get("status") or "active")
+                if last > chapter or status in {"resolved", "abandoned", "archived"}:
+                    continue
+            active_orphaned.append(setting)
             cat = getattr(setting, "category", "background")
             if cat == "critical":
                 critical += 1
@@ -120,7 +138,7 @@ async def collect_orphan_metrics(
         points.append(
             OrphanPoint(
                 chapter=chapter,
-                orphan_total=len(report.orphaned_settings),  # type: ignore[attr-defined]
+                orphan_total=len(active_orphaned),
                 orphan_critical=critical,
                 orphan_recurring=recurring,
                 orphan_other=other,
@@ -262,6 +280,7 @@ async def render_stage_a_metrics(project_id: str, start: int, end: int) -> str:
     debt_rows = await _guard(RunQualityDebtRepository().list_by_project(project_id), [])
     literary_points = await _guard(collect_literary_scores(project_id, start, end), [])
     literary_trend = detect_literary_trend(literary_points)
+    literary_spot_read = detect_literary_spot_read(literary_points)
     arc_fulfillment = await _guard(collect_arc_fulfillment(project_id), [])
     ledger = await _guard(collect_long_range_ledger(project_id, end), [])
     db_samples = await _guard(collect_db_maintenance_samples(project_id, start, end), [])
@@ -283,8 +302,37 @@ async def render_stage_a_metrics(project_id: str, start: int, end: int) -> str:
     from songyan.evals.v6_acceptance import evaluate_v6_acceptance, render_v6_acceptance_section
     acceptance = await _guard(evaluate_v6_acceptance(project_id, start, end), None)
     header = f"# V6 阶段 A 度量报告 — 项目 {project_id}（Ch{start}-Ch{end}）\n"
+    # Task 171d：Tier 1 硬缺陷严格对齐冻结 T9（Task 165）——meta 泄漏与整段重复
+    # 均为硬红线（必须为 0），二者合计计入 tier1_hard_defect_total；时间线维持
+    # report-only（不进入硬红线），只作为明细展示，避免与 check_t9 口径漂移。
+    tier1_hard: int | None = None
+    tier1_meta = tier1_dup = tier1_timeline = 0
+    if text_cleanliness:
+        tier1_meta = sum(
+            int(getattr(r, "meta_tag_leak_count", 0) or 0) for r in text_cleanliness
+        )
+        tier1_dup = sum(
+            int(getattr(r, "duplicate_paragraph_count", 0) or 0) for r in text_cleanliness
+        )
+        tier1_timeline = sum(
+            int(getattr(r, "timeline_conflict_count", 0) or 0) for r in text_cleanliness
+        )
+        tier1_hard = tier1_meta + tier1_dup
+    detail_parts: list[str] = []
+    if tier1_hard is not None:
+        detail_parts.append(
+            f"元标记/artifact {tier1_meta} + 重复长段落 {tier1_dup}（均为硬红线）"
+        )
+    if tier1_timeline:
+        detail_parts.append(f"时间线 {tier1_timeline} 处（report-only）")
+    tier1_detail = "；".join(detail_parts)
     sections = [
         header,
+        render_three_tier_contract_summary(
+            literary_spot_read,
+            tier1_hard_defect_total=tier1_hard,
+            tier1_detail=tier1_detail,
+        ),
         render_setting_lifecycle_section(lifecycle),
         render_orphan_section(orphan_points),
         render_critical_rate_section(critical_points),
@@ -553,6 +601,79 @@ def detect_literary_trend(
     )
 
 
+# --------------------------------------------------------------------------- #
+# Task 171d: Tier 2 趋势地板 + 人工抽读触发（observe-only，绝不阻塞）
+# --------------------------------------------------------------------------- #
+# 框架 §8 A3：滚动窗口均值 ≥ 首段基线 ×0.85（相对地板）**且** ≥ 低绝对地板。
+# 与既有 detect_literary_trend（×0.80/T3 诊断）并存、口径独立：本函数只产出
+# "人工抽读建议"标志，不接任何 halt/gate。系数经 Task 171d 标定（见报告）。
+_SPOT_READ_RELATIVE_FLOOR = 0.85  # 相对首段基线的地板系数
+# 低绝对地板（rubric 1–10 量表；171d 标定确认真实分均值 5–8，跌破 3.0 视为塌陷）。
+_SPOT_READ_ABSOLUTE_FLOOR = 3.0
+
+
+class LiterarySpotReadResult(BaseModel):
+    """Tier 2 趋势地板评估结果（observe-only）."""
+
+    baseline_available: bool
+    spot_read_recommended: bool
+    triggered_dimensions: list[str]
+    first_trigger_window: dict[str, int | None]
+    relative_floor: float
+    absolute_floor: float
+    baseline: dict[str, float]
+
+
+def detect_literary_spot_read(
+    points: list[LiteraryScorePoint],
+    *,
+    baseline_n: int = 10,
+    window: int = 5,
+    relative_floor: float = _SPOT_READ_RELATIVE_FLOOR,
+    absolute_floor: float = _SPOT_READ_ABSOLUTE_FLOOR,
+) -> LiterarySpotReadResult:
+    """Tier 2 趋势地板：滚动窗口均值跌破 base×relative_floor 或 absolute_floor 即建议人工抽读.
+
+    **observe-only**：只返回建议标志与触发维度，**不阻塞、不 halt**。基线不足
+    baseline_n 章时不判（避免小样本误判）。与 detect_literary_trend 口径独立并存。
+    """
+    ordered = sorted(points, key=lambda p: p.chapter)
+    baseline_available = len(ordered) >= baseline_n
+
+    baseline: dict[str, float] = {}
+    triggered: list[str] = []
+    first_trigger: dict[str, int | None] = {}
+
+    for dim in _LITERARY_DIMS:
+        first_trigger[dim] = None
+        series = [getattr(p, dim) for p in ordered]
+        if not baseline_available:
+            baseline[dim] = 0.0
+            continue
+        base = _mean(series[:baseline_n])
+        baseline[dim] = base
+        threshold = max(base * relative_floor, absolute_floor)
+        win_means: list[float] = []
+        if len(series) >= window:
+            for i in range(len(series) - window + 1):
+                win_means.append(_mean(series[i : i + window]))
+        for idx, wmean in enumerate(win_means):
+            if wmean < threshold:
+                triggered.append(dim)
+                first_trigger[dim] = ordered[idx].chapter
+                break
+
+    return LiterarySpotReadResult(
+        baseline_available=baseline_available,
+        spot_read_recommended=bool(triggered),
+        triggered_dimensions=triggered,
+        first_trigger_window=first_trigger,
+        relative_floor=relative_floor,
+        absolute_floor=absolute_floor,
+        baseline=baseline,
+    )
+
+
 def render_literary_section(
     points: list[LiteraryScorePoint], trend: LiteraryTrendResult
 ) -> str:
@@ -579,6 +700,66 @@ def render_literary_section(
             )
     else:
         lines.append("- ✓ 无维度触 T3 红线")
+    return "\n".join(lines)
+
+
+def render_three_tier_contract_summary(
+    spot_read: LiterarySpotReadResult,
+    *,
+    tier1_hard_defect_total: int | None = None,
+    tier1_detail: str = "",
+) -> str:
+    """Task 171d / 框架 §8 A1：三层契约摘要（Tier 1/2/3 分区、互不混淆、标注阻塞性）.
+
+    - Tier 1（硬缺陷 / 阻塞）：冻结 T9（Task 165）——meta 泄漏与整段重复均为硬红线
+      （必须为 0），二者合计计入总量；时间线维持 report-only 只作明细。此处只汇总展示，
+      真正阻塞在 review_merger（major/critical）+ 采样接受门，沿用冻结阈值。
+    - Tier 2（趋势 / observe，不阻塞）：文学 rubric 趋势地板（×0.85 相对 + 绝对地板），
+      跌破仅建议人工抽读。
+    - Tier 3（研究值 / 不判定）：voice/exposition 原始读数供研究（171a-1 已验证效度）。
+    """
+    lines = [
+        "## 三层契约摘要（框架 §8 A1；Tier 分区互不混淆）",
+        "",
+        "| 层 | 内容 | 阻塞性 | 当前状态 |",
+        "|----|------|--------|----------|",
+    ]
+    if tier1_hard_defect_total is None:
+        t1_status = "（未采集，见 text_cleanliness / timeline 段）"
+    elif tier1_hard_defect_total > 0:
+        _detail = ("：" + tier1_detail) if tier1_detail else ""
+        t1_status = f"🔴 {tier1_hard_defect_total} 处硬缺陷{_detail}"
+    else:
+        t1_status = "✓ 0 硬缺陷"
+    lines.append(
+        f"| Tier 1 硬缺陷 | T9 meta 泄漏 / 整段重复 / 时间线 | "
+        f"**阻塞**（冻结阈值） | {t1_status} |"
+    )
+
+    if not spot_read.baseline_available:
+        t2_status = "基线不足（< 10 章），暂不判趋势地板"
+    elif spot_read.spot_read_recommended:
+        dims = "、".join(spot_read.triggered_dimensions)
+        t2_status = (
+            f"⚠️ 建议人工抽读：{dims}"
+            f"（跌破 base×{spot_read.relative_floor} 或 <{spot_read.absolute_floor}）"
+        )
+    else:
+        t2_status = "✓ 各维度在趋势地板之上"
+    lines.append(
+        f"| Tier 2 趋势 | 文学 rubric 趋势地板（voice/expo/pacing/concept） | "
+        f"**observe，不阻塞** | {t2_status} |"
+    )
+
+    lines.append(
+        "| Tier 3 研究值 | voice/exposition 原始读数（171a-1 已验证效度） | "
+        "不判定 | 见文学趋势/exposition 观测段 |"
+    )
+    lines.append("")
+    lines.append(
+        "> 三层互不混淆：Tier 1 缺陷阻塞（此处只汇总）；Tier 2 跌破仅触发人工抽读、"
+        "**绝不自动阻塞**；Tier 3 供研究、不参与任何放行判定。"
+    )
     return "\n".join(lines)
 
 

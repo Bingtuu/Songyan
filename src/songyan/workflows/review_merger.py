@@ -295,6 +295,19 @@ def _convert_rule_to_issues(
     if scene_issue is not None:
         issues.append(scene_issue)
 
+    artifact_issue = _meta_issue(
+        f"rule-artifact-{version_id}",
+        rule_result.text_artifact_matches,
+        title="文本洁净 artifact 泄漏",
+        expected=(
+            "正文不应包含 Markdown 章标题、保护/请勿修改指令、斜杠拼接残留、"
+            "纯省略号占位段或 prompt/patch 写作指令。"
+        ),
+        suggested_fix="删除所有非叙事 artifact；只做确定性清理，不改写剧情和设定。",
+    )
+    if artifact_issue is not None:
+        issues.append(artifact_issue)
+
     # 0c. Task 161 / 165: 重复长段落是 T9 硬红线，必须进入可修订问题流
     if rule_result.duplicate_paragraph_matches:
         for idx, match in enumerate(rule_result.duplicate_paragraph_matches[:3], 1):

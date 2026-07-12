@@ -446,10 +446,19 @@ def _normalize_paragraph_for_dedup(paragraph: str) -> str:
 def _dedup_long_paragraphs(
     paragraphs: list[str],
     *,
-    min_chars: int = 100,
+    min_chars: int = 40,
     similarity_threshold: float = 0.9,
+    long_paragraph_chars: int = 100,
+    short_similarity_threshold: float = 0.95,
 ) -> list[str]:
-    """去除逐字相同/高相似的长段落，保留首次出现；短段落不参与."""
+    """去除逐字相同/高相似的重复段落，保留首次出现；短段落不参与.
+
+    Task 171q：口径与冻结 T9 检测器 ``detect_duplicate_paragraphs`` 对齐——
+    ``min_chars=40`` 下限 + 分级相似度阈值（``[40,100)`` 用 ``short_similarity_threshold``
+    0.95、``>=100`` 用 ``similarity_threshold`` 0.9）。这样确定性去重删除的区间恰好等于
+    T9 判定区间：既能清除分段修订拼接产生的 40–99 字逐字 stutter（原 ``min_chars=100``
+    漏删），又不误删 T9 本就判为"不同"的 0.90–0.95 中段对（避免镜像的过度删除）。
+    """
     kept: list[str] = []
     seen_long: list[tuple[str, str]] = []
 
@@ -466,7 +475,12 @@ def _dedup_long_paragraphs(
                 if normalized == seen_normalized
                 else SequenceMatcher(None, seen_normalized, normalized).ratio()
             )
-            if similarity >= similarity_threshold:
+            effective_threshold = (
+                similarity_threshold
+                if min(len(normalized), len(seen_normalized)) >= long_paragraph_chars
+                else short_similarity_threshold
+            )
+            if similarity >= effective_threshold:
                 duplicate = True
                 break
 
@@ -482,10 +496,12 @@ def _dedup_long_paragraphs(
 def _dedup_reassembled_content(
     content: str,
     *,
-    min_chars: int = 100,
+    min_chars: int = 40,
     similarity_threshold: float = 0.9,
+    long_paragraph_chars: int = 100,
+    short_similarity_threshold: float = 0.95,
 ) -> str:
-    """对拼接后的正文做段落级长文本去重."""
+    """对拼接后的正文做段落级重复去除（Task 171q：口径对齐冻结 T9）."""
     paragraphs = [
         block.strip()
         for block in re.split(r"\n\s*\n", content)
@@ -495,6 +511,8 @@ def _dedup_reassembled_content(
         paragraphs,
         min_chars=min_chars,
         similarity_threshold=similarity_threshold,
+        long_paragraph_chars=long_paragraph_chars,
+        short_similarity_threshold=short_similarity_threshold,
     )
     return "\n\n".join(deduped).strip()
 

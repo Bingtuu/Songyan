@@ -70,6 +70,39 @@ class VoiceSample(BaseModel):
     mood_anchor: str = ""
 
 
+class ProtagonistActiveChoice(BaseModel):
+    """Task 171v: 主角主动选择护栏."""
+
+    choice: str = ""
+    alternatives: list[str] = Field(default_factory=list)
+    cost: str = ""
+    irreversible_consequence: str = ""
+
+
+class NewConceptBudget(BaseModel):
+    """Task 171v: 新概念预算与落地约束."""
+
+    max_new_core_concepts: int = Field(default=1, ge=0, le=3)
+    grounding_scene: str = ""
+    forbidden_mode: str = "禁止连续解释协议机制"
+
+
+class FatigueMotifReplacement(BaseModel):
+    """Task 171v: 高频母题替代表达建议."""
+
+    overused: str
+    alternatives: list[str] = Field(default_factory=list)
+
+
+class SupportingCharacterGoal(BaseModel):
+    """Task 171v: 配角独立目标护栏."""
+
+    character: str = ""
+    goal: str = ""
+    conflict_with_protagonist: str = ""
+    scene_consequence: str = ""
+
+
 class CreativeBrief(BaseModel):
     """创作导演输出 — 创作意图与张力地图."""
 
@@ -100,6 +133,12 @@ class CreativeBrief(BaseModel):
 
     # Task 170l: 角色声纹样例库
     voice_samples: list[VoiceSample] = Field(default_factory=list)
+
+    # Task 171v: Ch200+ 文学性与可读性护栏（observe-first）
+    protagonist_active_choice: ProtagonistActiveChoice | None = None
+    new_concept_budget: NewConceptBudget | None = None
+    fatigue_motif_replacements: list[FatigueMotifReplacement] = Field(default_factory=list)
+    supporting_character_goal: SupportingCharacterGoal | None = None
 
 
 class HumanMemoryConfig(BaseModel):

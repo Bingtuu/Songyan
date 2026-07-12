@@ -120,3 +120,55 @@ class TestReassembleContentDedup:
         assert "Scene 2" not in result
         assert "第一段正文。" in result
         assert "第二段正文。" in result
+
+
+# Task 171q: 去重助手口径与冻结 T9 检测器对齐（min_chars=40 + 分级阈值 0.95/0.9）。
+# 中段（[40,100) 字）逐字重复段落 = detect_duplicate_paragraphs 所判 stutter，
+# 修复前 min_chars=100 漏删；修复后默认参数即删。0.90–0.95 中段对 T9 判为"不同"，
+# 助手须保留（防回退平铺 0.9 造成镜像过度删除）。
+_MID_VERBATIM = (
+    "林渊的手指在触控板上快速移动，他不是在断开接口，而是在逆向解析那段次声波脉冲的编码。"
+)
+_MID_NEAR_A = (
+    "警报持续鸣响，控制舱的红光每隔三秒扫过舷窗，映在他紧绷的侧脸上，一次又一次地提醒着倒计时。"
+)
+_MID_NEAR_B = (
+    "警报持续鸣响，控制舱的蓝光每隔五秒扫过舷窗，映在她紧绷的侧脸上，一次又一次地提醒着倒计时。"
+)
+
+
+class TestMidLengthDedupAlignedToT9:
+    def test_mid_length_verbatim_removed_by_default(self) -> None:
+        """[40,100) 字逐字重复段落经默认参数即删（回归防 min_chars 漂回 100）."""
+        paragraphs = ["开头短段。", _MID_VERBATIM, "过渡段落但很短。", _MID_VERBATIM]
+
+        result = _dedup_long_paragraphs(paragraphs)
+
+        assert result.count(_MID_VERBATIM) == 1
+        # detector（冻结 T9）在去重后应判 0 重复。
+        assert detect_duplicate_paragraphs("\n\n".join(result)) == []
+
+    def test_mid_length_verbatim_removed_via_reassemble(self) -> None:
+        scenes = [
+            {"scene_number": 1, "content": "旧一", "header": "### Scene 1"},
+            {"scene_number": 2, "content": "旧二", "header": "### Scene 2"},
+        ]
+        revised = [_MID_VERBATIM, f"独有内容段。\n\n{_MID_VERBATIM}"]
+
+        result = _reassemble_content(scenes, revised)
+
+        assert result.count(_MID_VERBATIM) == 1
+        assert "独有内容段。" in result
+        assert detect_duplicate_paragraphs(result) == []
+
+    def test_mid_length_near_pair_090_095_band_preserved(self) -> None:
+        """镜像 T9：[40,100) 段 similarity∈[0.90,0.95) 判为不同，助手须双双保留."""
+        paragraphs = [_MID_NEAR_A, "中间过渡短句。", _MID_NEAR_B]
+
+        result = _dedup_long_paragraphs(paragraphs)
+
+        assert _MID_NEAR_A in result
+        assert _MID_NEAR_B in result
+        # 与检测器一致：该中段对不应被判重复。
+        text = f"{_MID_NEAR_A}\n\n{_MID_NEAR_B}"
+        assert detect_duplicate_paragraphs(text) == []

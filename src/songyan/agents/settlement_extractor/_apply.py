@@ -53,6 +53,29 @@ _SETTING_REFERENCE_BOUNDARY_CHARS = set(
     "中上下里内外前后间处和与及或并、，。；：！？,.!?;:()（）[]【】"
     "\"'“”‘’ \t\r\n"
 )
+_SETTING_REFERENCE_SPLIT_RE = re.compile(
+    r"[·—\-_/（）()\[\]【】,，、;；:.：\s]+|"
+    r"[的了着过在为是被将把从到向对于由以中上下里内外前后间处和与及或并]"
+)
+_LOW_INFO_REFERENCE_TOKENS = {
+    "这个",
+    "那个",
+    "一种",
+    "不是",
+    "没有",
+    "已经",
+    "正在",
+    "开始",
+    "继续",
+    "系统",
+    "结构",
+    "装置",
+    "通道",
+    "核心",
+    "数据",
+    "信息",
+    "能力",
+}
 
 
 def _term_in_content(term: str, content: str) -> bool:
@@ -91,6 +114,75 @@ def _setting_value(setting: dict[str, Any] | NewSetting, field: str) -> str:
 def _compact_setting_text(text: str) -> str:
     compact = text.lower().replace("theta", "θ").replace("第七", "第7")
     return re.sub(r"[\s·—\-_/（）()\[\]【】,，、;；:.：]+", "", compact)
+
+
+def _cjk_runs(text: str) -> list[str]:
+    """提取连续中文片段。"""
+    return re.findall(r"[\u4e00-\u9fff]{2,}", text)
+
+
+def _setting_low_info_tokens(setting: dict[str, Any]) -> set[str]:
+    """推断不适合作为引用证据的低信息 token。"""
+    tokens = set(_LOW_INFO_REFERENCE_TOKENS)
+    name = str(setting.get("setting_name") or "")
+    # 复合设定常以“角色A与对象B的属性”命名；开头 2-3 字多为角色/主体名，
+    # 单独命中不能证明该设定被回收。
+    prefix = re.split(r"[与和及的]", name, maxsplit=1)[0].strip()
+    if 2 <= len(prefix) <= 3:
+        tokens.add(prefix)
+    return tokens
+
+
+def _setting_core_phrases(setting: dict[str, Any]) -> set[str]:
+    """从 setting name/description 派生较强的中文核心短语。"""
+    text = " ".join(
+        [
+            str(setting.get("setting_name") or ""),
+            str(setting.get("description") or ""),
+        ]
+    )
+    low_info = _setting_low_info_tokens(setting)
+    phrases: set[str] = set()
+    for run in _cjk_runs(text):
+        for part in _SETTING_REFERENCE_SPLIT_RE.split(run):
+            cleaned = part.strip()
+            if len(cleaned) >= 5 and cleaned not in low_info:
+                phrases.add(cleaned)
+    return phrases
+
+
+def _setting_reference_tokens(setting: dict[str, Any]) -> set[str]:
+    """生成复合设定的轻量 token，用于多 token 命中。"""
+    low_info = _setting_low_info_tokens(setting)
+    tokens: set[str] = set()
+    for phrase in _setting_core_phrases(setting):
+        if 2 <= len(phrase) <= 8:
+            tokens.add(phrase)
+        max_n = min(4, len(phrase))
+        for n in range(2, max_n + 1):
+            for i in range(0, len(phrase) - n + 1):
+                token = phrase[i : i + n]
+                if token not in low_info:
+                    tokens.add(token)
+    return tokens
+
+
+def _has_multi_token_setting_reference(setting: dict[str, Any], content: str) -> bool:
+    """复合设定多 token 命中。
+
+    单个“基因”这类短词不构成回收；但“基因 + 收割者 + 签名”等多 token 同章出现，
+    足以证明正文在推进同一 critical setting。
+    """
+    if setting.get("category") != "critical":
+        return False
+    tokens = _setting_reference_tokens(setting)
+    if len(tokens) < 3:
+        return False
+    lowered_content = content.lower()
+    matched = {token for token in tokens if token.lower() in lowered_content}
+    if len(matched) < 3:
+        return False
+    return any(len(token) >= 3 for token in matched)
 
 
 def _setting_cluster_canonical(setting: dict[str, Any] | NewSetting) -> str | None:
@@ -214,6 +306,7 @@ def _setting_reference_terms(setting: dict[str, Any]) -> set[str]:
     if len(key_tail) >= 2:
         terms.add(key_tail)
 
+    terms.update(_setting_core_phrases(setting))
     _add_cluster_reference_terms(setting, terms)
     return terms
 
@@ -307,6 +400,9 @@ def _detect_setting_references(
             if _term_in_content(term, content):
                 referenced[tracking_id] = setting_key
                 break
+        else:
+            if _has_multi_token_setting_reference(setting, content):
+                referenced[tracking_id] = setting_key
 
     return referenced
 

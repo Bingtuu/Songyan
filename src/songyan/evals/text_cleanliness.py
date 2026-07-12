@@ -9,6 +9,7 @@ from songyan.agents.rule_auditor import (
     detect_duplicate_paragraphs,
     detect_markdown_scene_titles,
     detect_meta_tag_leaks,
+    detect_text_cleanliness_artifacts,
 )
 from songyan.db.repository import ChapterHeadRepository, ChapterVersionRepository
 from songyan.db.text_cleanliness_repo import (
@@ -84,18 +85,22 @@ async def collect_text_cleanliness_metrics(
         version_id, content = accepted[chapter]
         meta_matches = detect_meta_tag_leaks(content)
         scene_title_matches = detect_markdown_scene_titles(content)
+        artifact_matches = detect_text_cleanliness_artifacts(content)
         duplicate_matches = detect_duplicate_paragraphs(content)
         chapter_conflicts = conflicts_by_chapter.get(chapter, [])
         row = TextCleanlinessMetricRow(
             project_id=project_id,
             chapter_number=chapter,
             version_id=version_id,
-            meta_tag_leak_count=len(meta_matches) + len(scene_title_matches),
+            meta_tag_leak_count=(
+                len(meta_matches) + len(scene_title_matches) + len(artifact_matches)
+            ),
             duplicate_paragraph_count=len(duplicate_matches),
             timeline_conflict_count=len(chapter_conflicts),
             details={
                 "meta_tag_matches": _model_dump_list(meta_matches),
                 "markdown_scene_title_matches": _model_dump_list(scene_title_matches),
+                "text_artifact_matches": _model_dump_list(artifact_matches),
                 "duplicate_paragraph_matches": _model_dump_list(duplicate_matches),
                 "timeline_conflicts": _model_dump_list(chapter_conflicts),
             },
@@ -143,11 +148,11 @@ def render_text_cleanliness_section(rows: list[TextCleanlinessMetricRow]) -> str
     timeline_chapters = [row.chapter_number for row in rows if row.timeline_conflict_count > 0]
 
     lines.append(
-        f"- 汇总：元标记 **{total_meta}**，重复长段落 **{total_dup}**，"
+        f"- 汇总：元标记 **{total_meta}**（含 artifact），重复长段落 **{total_dup}**，"
         f"时间线矛盾 **{total_timeline}**。"
     )
     lines.append("")
-    lines.append("| 章 | version | 元标记 | 重复长段落 | 时间线矛盾 |")
+    lines.append("| 章 | version | 元标记/artifact | 重复长段落 | 时间线矛盾 |")
     lines.append("|----|---------|--------|------------|------------|")
     for row in rows:
         lines.append(
@@ -157,7 +162,7 @@ def render_text_cleanliness_section(rows: list[TextCleanlinessMetricRow]) -> str
         )
 
     lines.append("")
-    lines.append(f"- 元标记违规章：{meta_chapters or '无'}")
+    lines.append(f"- 元标记违规章：{meta_chapters or '无'}（含 artifact）")
     lines.append(f"- 重复长段落违规章：{dup_chapters or '无'}")
     lines.append(f"- 时间线矛盾诊断章：{timeline_chapters or '无'}")
     return "\n".join(lines)

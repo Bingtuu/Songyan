@@ -2,14 +2,17 @@
 
 from __future__ import annotations
 
+import sqlite3
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import structlog
 
 from songyan.agents.continuity_auditor._scanners import ORPHANED_THRESHOLDS
+from songyan.agents.rule_auditor import detect_fatigue_motifs
 from songyan.db.continuity_repo import SettingTrackingRepository
 from songyan.db.human_mark_repo import HumanMarkRepository
+from songyan.db.repository import ChapterHeadRepository, ChapterVersionRepository
 from songyan.evals.concept_budget import build_concept_budget_constraint
 from songyan.exceptions import LLMError, LLMResponseParseError
 from songyan.llm.client import call_llm
@@ -18,6 +21,10 @@ from songyan.models.character import Character, DialogueStyleCard
 from songyan.models.creative_mode import (
     CreativeBrief,
     CreativeModeProfile,
+    FatigueMotifReplacement,
+    NewConceptBudget,
+    ProtagonistActiveChoice,
+    SupportingCharacterGoal,
 )
 from songyan.models.genre import GenreProfile
 from songyan.models.project import ProjectSetting
@@ -49,6 +56,8 @@ from ._brief_builder import (
 logger = structlog.get_logger(__name__)
 
 PROMPT_PATH = Path(__file__).parent.parent.parent.parent / "prompts" / "creative_director.md"
+_MOTIF_LOOKBACK_CHAPTERS = 8
+_MOTIF_LOOKBACK_THRESHOLD = 4
 
 
 def _load_prompt_template() -> str:
@@ -298,6 +307,271 @@ def _append_style_constraint_once(brief: CreativeBrief, constraint: str) -> None
     brief.style_constraints.append(text)
 
 
+def _project_protagonist_name(project: ProjectSetting, characters: list[Character]) -> str:
+    """Task 171v: 获取主角名，供主动选择护栏渲染."""
+    if project.protagonist_name:
+        return project.protagonist_name
+    for character in characters:
+        if character.role_type == "protagonist":
+            return character.name
+    return "主角"
+
+
+def _first_goal_anchor(chapter_goal: ChapterGoal) -> str:
+    """Task 171v: 从章节目标里抽一个可执行动作锚点."""
+    for item in [*chapter_goal.target_events, *chapter_goal.hooks]:
+        if item:
+            return item
+    if chapter_goal.chapter_type:
+        return chapter_goal.chapter_type
+    return "本章核心目标"
+
+
+def _select_supporting_character(characters: list[Character]) -> Character | None:
+    """Task 171v: 优先选已有非主角角色，避免硬编码新角色."""
+    for character in characters:
+        if character.role_type != "protagonist":
+            return character
+    return None
+
+
+def _ensure_protagonist_active_choice(
+    brief: CreativeBrief,
+    *,
+    project: ProjectSetting,
+    chapter_goal: ChapterGoal,
+    characters: list[Character],
+) -> None:
+    """Task 171v: LLM 未输出时，补一个最低可执行主动选择结构."""
+    current = brief.protagonist_active_choice
+    if current and current.choice and current.cost and current.irreversible_consequence:
+        return
+
+    protagonist = _project_protagonist_name(project, characters)
+    anchor = _first_goal_anchor(chapter_goal)
+    brief.protagonist_active_choice = ProtagonistActiveChoice(
+        choice=f"{protagonist}主动选择用行动推进“{anchor}”，而不是只被危机推动。",
+        alternatives=[
+            "等待协议、倒计时或外部敌人逼迫下一步",
+            "继续破解/承受现有压力但不改变局面",
+        ],
+        cost="必须付出资源、暴露位置、牺牲时间或承担误判风险之一。",
+        irreversible_consequence="选择后路线、关系、资源或敌我态势必须发生不可撤回的变化。",
+    )
+
+
+def _ensure_new_concept_budget(
+    brief: CreativeBrief,
+    *,
+    chapter_goal: ChapterGoal,
+) -> None:
+    """Task 171v: 确保每章有新概念预算与落地方式."""
+    current = brief.new_concept_budget
+    if current and current.grounding_scene:
+        return
+
+    anchor = _first_goal_anchor(chapter_goal)
+    brief.new_concept_budget = NewConceptBudget(
+        max_new_core_concepts=(
+            current.max_new_core_concepts if current is not None else 1
+        ),
+        grounding_scene=(
+            "若引入新核心概念，必须绑定到"
+            f"“{anchor}”中的行动、失败、对话或物理后果。"
+        ),
+        forbidden_mode=(
+            current.forbidden_mode
+            if current is not None and current.forbidden_mode
+            else "禁止连续解释协议机制"
+        ),
+    )
+
+
+def _ensure_supporting_character_goal(
+    brief: CreativeBrief,
+    *,
+    project: ProjectSetting,
+    chapter_goal: ChapterGoal,
+    characters: list[Character],
+) -> None:
+    """Task 171v: 每 5 章补一次配角独立目标节点."""
+    current = brief.supporting_character_goal
+    if current and current.character and current.goal and current.scene_consequence:
+        return
+    if chapter_goal.chapter_number % 5 != 0:
+        return
+
+    supporting = _select_supporting_character(characters)
+    if supporting is None:
+        return
+
+    protagonist = _project_protagonist_name(project, characters)
+    anchor = _first_goal_anchor(chapter_goal)
+    own_goal = next((goal for goal in supporting.goals if goal), "")
+    if not own_goal:
+        own_goal = "保住自己掌握的信息、路线或生存筹码"
+    brief.supporting_character_goal = SupportingCharacterGoal(
+        character=supporting.name,
+        goal=own_goal,
+        conflict_with_protagonist=(
+            f"该目标与{protagonist}推进“{anchor}”存在时间、路线或信息优先级偏差。"
+        ),
+        scene_consequence="配角行动必须造成信息延迟、路线变化、代价增加或误判之一。",
+    )
+
+
+async def _load_recent_accepted_chapter_texts(
+    project_id: str,
+    current_chapter: int,
+    *,
+    lookback: int = _MOTIF_LOOKBACK_CHAPTERS,
+) -> list[str]:
+    """Task 171v: 读取最近 accepted head 正文，用于母题疲劳扫描."""
+    if current_chapter <= 1 or lookback <= 0:
+        return []
+
+    head_repo = ChapterHeadRepository()
+    version_repo = ChapterVersionRepository()
+    texts: list[str] = []
+    start = max(1, current_chapter - lookback)
+    try:
+        for chapter_number in range(start, current_chapter):
+            head = await head_repo.get(project_id, chapter_number)
+            if head is None or head.status != "accepted" or not head.accepted_version_id:
+                continue
+            version = await version_repo.get(head.accepted_version_id)
+            if version is not None and version.content:
+                texts.append(version.content)
+    except (OSError, RuntimeError, ValueError, sqlite3.Error) as exc:
+        logger.warning(
+            "creative_director.171v_motif_history_unavailable",
+            project_id=project_id,
+            chapter_number=current_chapter,
+            error=str(exc),
+        )
+        return []
+    return texts
+
+
+async def _ensure_fatigue_motif_replacements(
+    brief: CreativeBrief,
+    *,
+    project_id: str,
+    chapter_goal: ChapterGoal,
+) -> None:
+    """Task 171v: 基于近期正文补母题替代表达建议."""
+    if brief.fatigue_motif_replacements:
+        return
+    recent_texts = await _load_recent_accepted_chapter_texts(
+        project_id,
+        chapter_goal.chapter_number,
+    )
+    if not recent_texts:
+        return
+    matches = detect_fatigue_motifs(
+        "\n\n".join(recent_texts),
+        threshold=_MOTIF_LOOKBACK_THRESHOLD,
+    )
+    brief.fatigue_motif_replacements = [
+        FatigueMotifReplacement(
+            overused=match.motif,
+            alternatives=match.alternatives,
+        )
+        for match in matches
+    ]
+
+
+def _format_171v_active_choice_constraint(brief: CreativeBrief) -> str:
+    active = brief.protagonist_active_choice
+    if active is None:
+        return ""
+    alternatives = "；".join(active.alternatives) if active.alternatives else "至少一个备选方案"
+    return (
+        "## 角色主动选择护栏（Task 171v）\n"
+        f"- 主动选择：{active.choice}\n"
+        f"- 可行备选：{alternatives}\n"
+        f"- 选择代价：{active.cost}\n"
+        f"- 不可逆后果：{active.irreversible_consequence}\n"
+        "- Writer 必须写出主角主动改变局面，不能只写继续破解、继续推进或继续承受。"
+    )
+
+
+def _format_171v_concept_budget_constraint(brief: CreativeBrief) -> str:
+    budget = brief.new_concept_budget
+    if budget is None:
+        return ""
+    return (
+        "## 概念密度护栏（Task 171v）\n"
+        f"- 本章最多新增核心概念：{budget.max_new_core_concepts}\n"
+        f"- 落地场景：{budget.grounding_scene}\n"
+        f"- 禁止模式：{budget.forbidden_mode}\n"
+        "- 旧概念可以回收，但必须服务行动目标，不能连续倾倒协议解释。"
+    )
+
+
+def _format_171v_motif_constraint(brief: CreativeBrief) -> str:
+    replacements = brief.fatigue_motif_replacements
+    if not replacements:
+        return ""
+    lines = ["## 母题疲劳替代表达（Task 171v）"]
+    for replacement in replacements:
+        alternatives = "、".join(replacement.alternatives) or "改用行动或环境后果"
+        lines.append(f"- 少用“{replacement.overused}”；替代：{alternatives}")
+    lines.append("- 这些建议只改变表达承载，不改变剧情事实。")
+    return "\n".join(lines)
+
+
+def _format_171v_supporting_goal_constraint(brief: CreativeBrief) -> str:
+    goal = brief.supporting_character_goal
+    if goal is None:
+        return ""
+    return (
+        "## 配角独立目标护栏（Task 171v）\n"
+        f"- 配角：{goal.character}\n"
+        f"- 自己的目标：{goal.goal}\n"
+        f"- 与主角偏差：{goal.conflict_with_protagonist}\n"
+        f"- 场景后果：{goal.scene_consequence}\n"
+        "- 配角不能只是提醒器；其行动必须真实改变局面。"
+    )
+
+
+async def _apply_171v_literary_guardrails(
+    brief: CreativeBrief,
+    *,
+    project_id: str,
+    project: ProjectSetting,
+    chapter_goal: ChapterGoal,
+    characters: list[Character],
+) -> None:
+    """Task 171v: 注入 Ch200+ 文学/可读性 observe-first 护栏."""
+    _ensure_protagonist_active_choice(
+        brief,
+        project=project,
+        chapter_goal=chapter_goal,
+        characters=characters,
+    )
+    _ensure_new_concept_budget(brief, chapter_goal=chapter_goal)
+    _ensure_supporting_character_goal(
+        brief,
+        project=project,
+        chapter_goal=chapter_goal,
+        characters=characters,
+    )
+    await _ensure_fatigue_motif_replacements(
+        brief,
+        project_id=project_id,
+        chapter_goal=chapter_goal,
+    )
+
+    for constraint in (
+        _format_171v_active_choice_constraint(brief),
+        _format_171v_concept_budget_constraint(brief),
+        _format_171v_motif_constraint(brief),
+        _format_171v_supporting_goal_constraint(brief),
+    ):
+        _append_style_constraint_once(brief, constraint)
+
+
 def _format_mode_constraints(mode_profile: CreativeModeProfile) -> str:
     """将 CreativeModeProfile 格式化为约束文本."""
     lines = []
@@ -410,6 +684,13 @@ async def generate_creative_brief(
     )
     # Task 165: 确保 Task 163 的规划侧概念预算继续传递到 Writer。
     _append_style_constraint_once(brief, concept_budget_constraint)
+    await _apply_171v_literary_guardrails(
+        brief,
+        project_id=project_id,
+        project=project,
+        chapter_goal=chapter_goal,
+        characters=characters,
+    )
 
     logger.info(
         "creative_director.complete",

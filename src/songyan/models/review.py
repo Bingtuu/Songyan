@@ -118,6 +118,31 @@ class MetaTagLeakMatch(BaseModel):
     location: str
     severity: str = "major"
     message: str = "检测到元标记泄漏"
+    artifact_type: str | None = None
+
+
+class TextCleanlinessCleanIssue(BaseModel):
+    """Task 171t: accept-time final sweep 供 171u 消费的清洁问题."""
+
+    issue_type: str
+    evidence_quote: str
+    evidence_location: str
+    suggested_action: str
+    deterministic_cleanable: bool
+    chapter_number: int | None = None
+    version_id: str | None = None
+
+
+class MotifFatigueMatch(BaseModel):
+    """Task 171v: 高频动作/感知母题疲劳命中（observe-only）."""
+
+    motif: str
+    count: int
+    threshold: int
+    matched_texts: list[str] = Field(default_factory=list)
+    alternatives: list[str] = Field(default_factory=list)
+    severity: Literal["info"] = "info"
+    message: str = "检测到高频母题疲劳"
 
 
 class ExpositionCarrierMatch(BaseModel):
@@ -203,6 +228,14 @@ class RuleAuditResult(BaseModel):
     # Markdown 场景标题检测（观测指标，不直接阻断）
     markdown_scene_title_matches: list[MetaTagLeakMatch] = Field(default_factory=list)
     markdown_scene_title_count: int = 0
+
+    # Task 171t: 文本洁净 artifact 检测（T9 hard issue）
+    text_artifact_matches: list[MetaTagLeakMatch] = Field(default_factory=list)
+    text_artifact_count: int = 0
+
+    # Task 171v: 动作/感知母题疲劳（观测指标，不阻塞）
+    motif_fatigue_matches: list[MotifFatigueMatch] = Field(default_factory=list)
+    motif_fatigue_count: int = 0
 
     # 重复长段落检测（观测指标，不直接阻断）
     duplicate_paragraph_matches: list[DuplicateParagraphMatch] = Field(default_factory=list)

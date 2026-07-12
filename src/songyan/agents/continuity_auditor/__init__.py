@@ -196,7 +196,10 @@ class ContinuityAuditor:
         score -= _diminishing_count(orphaned_technical) * 0.05 * factor
         score -= _diminishing_count(orphaned_historical) * 0.05 * factor
         score -= _diminishing_count(len(forgotten)) * 0.5 * factor
-        score -= _diminishing_count(len(mismatches)) * 1.0 * factor
+        # Task 171r: state_mismatch 不再计入健康分——code-only 字符串不等启发式
+        # 无法语义区分"角色进展"与"真实矛盾"（171p 实证），其信号不可信。
+        # 真实矛盾由 LLM 一致性审查（coherence_critical/major）在章级 revision 阻断。
+        # state_mismatch 仍入库、仍可查（Tier 2 观测），仅不拖低健康分。
         score -= _diminishing_count(len(overdue)) * 0.3 * factor
 
         floor = 3.0 if chapter_number <= 30 else 2.0

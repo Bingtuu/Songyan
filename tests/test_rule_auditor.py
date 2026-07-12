@@ -756,6 +756,68 @@ def test_human_voice_homogeneity_single_seeded_character_no_false_positive() -> 
     assert not any(m.carrier_type == "human_voice_homogeneity" for m in matches)
 
 
+# --- Task 171a: voice 归因召回增强 + 构念重定义 ---
+
+_171A_LINE = "我们必须离开。通道封死了。快走。"  # 3 句，满足 lengths>=2
+
+
+def test_171a_action_beat_attribution() -> None:
+    """Task 171a: 动作节拍夹引语（名字+动作。引语）无 speech-verb 也应归因.
+
+    ``林渊皱眉。"..."`` 这类真实正文主流句式，170o 归因（仅 speech-verb/叙事）漏检；
+    171a 用注册表就近绑定（before 优先）补齐召回。
+    """
+    from songyan.agents.rule_auditor import detect_human_voice_homogeneity
+
+    text = (
+        f"林渊皱眉，盯着屏幕。“{_171A_LINE}”\n"
+        f"陈薇转过身去，声音发紧。“{_171A_LINE}”"
+    )
+    matches = detect_human_voice_homogeneity(text, character_names={"林渊", "陈薇"})
+    assert any(m.carrier_type == "human_voice_homogeneity" for m in matches)
+
+
+def test_171a_pronoun_carry_attribution() -> None:
+    """Task 171a: 纯代词提示（"..."他又说）继承上一位具名说话人."""
+    from songyan.agents.rule_auditor import detect_human_voice_homogeneity
+
+    text = (
+        f"林渊开口了：“{_171A_LINE}”\n"
+        f"陈薇看着他。“{_171A_LINE}”\n"
+        f"“{_171A_LINE}”他又说了一遍。"
+    )
+    matches = detect_human_voice_homogeneity(text, character_names={"林渊", "陈薇"})
+    assert len(matches) > 0
+
+
+def test_171a_action_beat_speaker_is_preceding_actor_not_next() -> None:
+    """Task 171a: 动作节拍归因应优先 before（引语前的动作主体），不误取引语后的下一位.
+
+    ``林渊皱眉。"A" 陈薇转身。"B"`` 中，"A" 归林渊、"B" 归陈薇；若误把 "A" 归陈薇，
+    会塌成单说话人、漏检同质化。
+    """
+    from songyan.agents.rule_auditor import detect_human_voice_homogeneity
+
+    text = (
+        f"林渊皱眉，盯着屏幕。“{_171A_LINE}”\n"
+        f"陈薇转过身去，声音发紧。“{_171A_LINE}”"
+    )
+    matches = detect_human_voice_homogeneity(text, character_names={"林渊", "陈薇"})
+    # 正确归因到两人 → 同质化命中，命中文案含两名角色
+    assert any(
+        "林渊" in m.matched_text and "陈薇" in m.matched_text for m in matches
+    )
+
+
+def test_171a_dialogue_sparse_chapter_not_scored() -> None:
+    """Task 171a 构念重定义：对白稀疏章（无引语）视为 voice 不适用，返回空而非误判."""
+    from songyan.agents.rule_auditor import detect_human_voice_homogeneity
+
+    text = "林渊盯着屏幕，脑海里闪过无数画面。他意识到自己已经无路可退，只能向前。"
+    matches = detect_human_voice_homogeneity(text, character_names={"林渊", "陈薇"})
+    assert matches == []
+
+
 def test_info_delivery_dialogue_detected() -> None:
     text = (
         '老雷平静地说："核心协议叫做共鸣锁，它通过基因标记识别每一代钥匙，'
@@ -766,6 +828,30 @@ def test_info_delivery_dialogue_detected() -> None:
         m.carrier_type == "info_delivery_dialogue"
         for m in result.exposition_carrier_matches
     )
+
+
+def test_171a1_cross_dialogue_narration_not_info_delivery() -> None:
+    """Task 171a-1: 跨对话轮的叙事描写不得被误当 info_delivery_dialogue.
+
+    ``…绕弯子了。”<叙事描写含设定词>“这块布…`` —— 闭引号 + 叙事 + 开引号，
+    中间叙事无换行。方向性引号（开 ["“] / 闭 ["”]）应使其不匹配。
+    """
+    from songyan.agents.rule_auditor import detect_exposition_carriers
+
+    text = (
+        "“别绕弯子了。”女人从袖中取出一块布片，摊开在桌上。布片不大，巴掌见方，"
+        "边缘被烧得焦黑，上面用暗红颜料画着半截兽纹，像是某种文明的密钥图谱。"
+        "“这块布，公子可认得？”"
+    )
+    matches = detect_exposition_carriers(text, setting_keywords={"密钥", "文明", "图谱"})
+    # 中段叙事（含设定词）不应被当作一段 info_delivery / direct_revelation 引语
+    spans = [
+        m for m in matches
+        if m.carrier_type in ("info_delivery_dialogue", "direct_revelation_monologue")
+        and m.matched_text.startswith("”")
+    ]
+    assert spans == []
+
 
 
 def test_repeated_direct_revelation_beat_detected() -> None:

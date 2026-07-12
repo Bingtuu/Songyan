@@ -12,38 +12,37 @@
 
 Songyan 已经从实验原型推进到可长篇运行的工程版本。系统现在可以完成小说章节生成、自动审查、自动修订、状态结算、摘要沉淀和跨章节一致性维护，并已通过 150 章级别的长序列验证。
 
-**V5.2 已完成**：默认 `gate_mode` 已切换为 `enforce`，Ch1–Ch150 enforce 模式验证 150/150 accept，长期事实库的可信度达到 V5.2 出口标准。
+- **V5.2 已完成**：默认 `gate_mode` 切换为 `enforce`，Ch1–Ch150 enforce 模式验证 150/150 accept，长期事实库可信度达到 V5.2 出口标准。
+- **V6 已完成**：系统装上了最小可用的叙事骨架（自顶向下全书大纲 / 弧规划 / 线索经济 MVP），建立了长篇质量度量，补齐了无人值守长跑底盘，并在治理管线上取得真实 Ch1–Ch150 证据（`run-bba292da`，150/150 accept、health 全程 ≥8.2）。阶段验收结论：实质达标、条件通过。
+- **V7 进行中**：目标是让系统"自己把质量维持在高位"——先修复 V6 暴露的篇章级质量债，再闭合叙事自驱、伏笔调度、enforce 门禁三个开放环，最后渐进爬坡到 Ch300。
+  - **阶段 W / X / Y 已完成，T9 / T10 / T12 已冻结**：篇章级质量修复（元标记清洗、段落去重、时间线一致、概念预算、文本洁净度）、叙事自驱（plan→re-plan 闭环 + 长程伏笔主动调度）、enforce 门禁自适应化均已落地并冻结阈值。
+  - **阶段 Z（Ch200 → Ch300 爬坡）已完成 Ch200 D1 收口**：Task 170b 实读发现"治理指标全达标 ≠ prose 好看"，曾据此把文学质量设为 Ch200 硬前置门；经框架级复盘（[`docs/reports/v7-literary-framework-review.md`](docs/reports/v7-literary-framework-review.md)）认定该门禁框架有结构性错误，已改判为**三层契约 + 并行 R&D**——文学质量转为长跑观测项而非闸门。**Ch200 长跑（Task 171）已取得 `run-fb39245c` 200/200 accepted 且 D1 hard clean pass 证据**；171v Ch201-Ch220 小窗口已实跑但未通过出口（19/20 accepted），当前需要 hardening 后重验，再进入 172 Ch250 验证。已完成的 171a–171d R&D 证据归档见 [`archive/v7/INDEX.md`](archive/v7/INDEX.md)。
 
-**V6 已完成**：系统装上了最小可用的叙事骨架（自顶向下的全书大纲 / 弧规划 / 线索经济 MVP），建立了长篇质量度量，补齐了无人值守长跑底盘，并在治理管线上取得真实 Ch1–Ch150 证据（`run-bba292da`，150/150 accept、health 全程 ≥8.2）。V6 阶段验收结论：实质达标、条件通过。V6 论证基础见 [`docs/300-chapter-gap-analysis.md`](docs/300-chapter-gap-analysis.md)，阶段规划见 [`docs/v6-plan.md`](docs/v6-plan.md)。
-
-**V7 阶段 W/X/Y 已完成，T9/T10/T12 已冻结；文学提质专项（170c–170h）已完成阶段 170c–170h，170g 改判 blocker，170g Phase2 小样本复评仍未达标，Task 171 Ch200 长跑继续冻结**：对 V6 生成的 150 章正文人工通读发现，句子级度量掩盖了篇章级质量债（元标记泄漏、整段落重复、时间线矛盾、概念通胀）。Task 160-165p 已取得修复后 Ch1–Ch150 证据（150/150 accepted，P 洁净、L 文学与不回退均通过），T9/T10 已冻结。阶段 X 已完成 plan→re-plan 闭环和长程伏笔主动调度；阶段 Y 已建立自适应门禁并由 Task 170 冻结 T12。Task 170b 对中段窗口（Ch28–Ch40）真实实读判定 **blocker**——治理指标全达标（T9=0、continuity health 9.1–9.7、质量门全 pass）而 prose 文学质量不达标（角色声纹塌陷、节奏偏慢、真实文本缺陷），机器文学诊断系统性高估、T9 近似重复漏报。据此转入文学提质专项（170c–170g），遵循"量具优先"原则：先校准量具（**170c T9 近似重复补强、170d LiteraryAuditor 校准均已完成**），再做生成侧提质（**170e voice ✅ 已完成**——根因 seeding gap 修复；**170f pacing/exposition ✅ 已完成（部分达标）**——Stage 0 校准证明代码指标不可靠，转纯生成侧约束（Writer 1.1.0 新增 `scene_interaction` 段落）；Stage 2 小样本重生成 Ch29–Ch32 验证 pacing 3.25 ✅、exposition 2.0 ❌，实际通读发现模型用"意识触须/信息流读取 + 幻象播放 + FAQ 式 NPC 问答"绕过互动约束，说明文载体未受控），最后追加 **说明文载体约束（exposition_carrier）** 并用可信量具复评（**170g ✅ 已完成**）：工程侧已落地（Writer 1.1.0/1.2.0 新增约束、RuleAuditor 新增代码检测、专用生成/复评脚本）；小样本复评 **exposition 载体硬灌从多处降至 1 处、T9 不漏报、量具可信**，但 LLM rubric 文学维度整体未较 170f 提升（均值 2.45，voice 1.75、exposition 2.0）。**170g Phase2 工艺补丁与小样本复评已完成**：新增非角色声纹卡、RuleAuditor 深层 exposition 检测、CreativeDirector 世界观揭示正路径模板、GoalPlanner 信息交付校验、RevisionHandler 文学 patch 路径；重跑 Ch29–Ch32 后 **voice 1.75 / exposition 2.25 / 窗口均值 2.55 仍未达 pass 线**，exposition_carrier_count 0、T9 0/0、偏差 0/4。结论 **维持 blocker：不放行 Task 171 Ch200 长跑；阶段 Z 入口继续冻结**，下一步进入 **170h 路径 B 第一步（结构性改写）**：升级 CreativeDirector 1.0.7 场景模板、GoalPlanner 1.1.1 动作-失败-冲突信息承载、Writer 1.2.1 非人实体戏份配额与声纹降级、RuleAuditor 结构性检测、RevisionHandler 1.1.1 voice/exposition 低分直连、LLMAuditor 1.0.3 新增 voice/exposition 维度。**170h 路径 B 第一步已完成并复评，仍未达标（voice 1.50 / exposition 2.50 / 窗口均值 2.65），170i（路径 B 第二步）已完成并复评，仍未达标（voice 2.00 / exposition 2.25 / 窗口均值 2.55），170j/170k/170l（路径 B 第三/四/五步）已完成并复评，均未达标（170j voice 2.25 / 窗口均值 2.60；170k voice 2.00 / 窗口均值 3.00；170l voice 2.00 / exposition 2.00 / 窗口均值 2.40，exposition_carrier 真实值 72 处）。**170l 同时修复 RuleAuditor 引号匹配 bug**（中文弯引号 `"..."` 漏报），暴露 170h–170k `exposition_carrier=0` 失真。
-**2026-07-10 追加 170i 量具补丁**：修复 `detect_human_voice_homogeneity` 恒为 0 假阴性（f-string 转义、前后置说话人、短场景合并、空情绪词交集），新增测试并通过 ruff/pytest；该补丁修复量具本身，不改变 170i 未达标结论。**2026-07-10 追加 170o/170p**：170o voice 量具二次归因校准（叙事归因 + 角色注册表 gating）暴露真正 blocker 在数据层——`characters` 表长期只 seed 主角（seeding gap）；170p 修复 seeding gap（`NewCharacter` 模型 + 结算工艺卡 1.0.3 证据门禁 + `_apply` 幂等 INSERT），小窗口真实生成 `run-bcf3b8f1`（Ch1–Ch5）实证 `characters` 表 1→4、配角有状态快照，seeding gap 闭合；同批修复合并遗留的 2 个 broken 测试。验证暴露 voice 量具仍因说话人归因召回率过低而假阴性，建议后续 170q 增强归因。结论 **维持 blocker：不放行 Task 171 Ch200 长跑；阶段 Z 入口继续冻结**，当前进入 **决策点**：需用户选择路径 B 升级 / AI 腔后处理 / 目标降级方向，达标或明确降级后方可重新评估 Ch200 入口。V7 构想见 [`docs/v7-vision.md`](docs/v7-vision.md)，阶段规划见 [`docs/v7-plan.md`](docs/v7-plan.md)，提质专项总览见 [`tasks/170-literary-quality-remediation-README.md`](tasks/170-literary-quality-remediation-README.md)，Phase2 DONE 见 [`tasks/170g-phase2-remediation-DONE.md`](tasks/170g-phase2-remediation-DONE.md)，Phase2 复评报告见 [`docs/reports/task-170g-phase2-remediation-reeval-report.md`](docs/reports/task-170g-phase2-remediation-reeval-report.md)。
-
-README 只保留开源项目概览。实时开发状态、测试结果和下一步任务以 [`docs/STATUS.md`](docs/STATUS.md) 为准；V7 任务事实入口见 [`tasks/V7-README.md`](tasks/V7-README.md)，V6 历史任务记录见 [`tasks/V6-README.md`](tasks/V6-README.md)，V5 历史任务记录见 [`tasks/V5-README.md`](tasks/V5-README.md)。
+> README 只保留开源项目概览。**逐任务进展、复评分数、测试结果和下一步执行项以 [`docs/STATUS.md`](docs/STATUS.md) 为准**；V7 任务事实入口见 [`tasks/V7-README.md`](tasks/V7-README.md)，V6 见 [`tasks/V6-README.md`](tasks/V6-README.md)，V5 见 [`tasks/V5-README.md`](tasks/V5-README.md)。V6 论证基础见 [`docs/300-chapter-gap-analysis.md`](docs/300-chapter-gap-analysis.md)，V7 构想与规划见 [`docs/v7-vision.md`](docs/v7-vision.md)、[`docs/v7-plan.md`](docs/v7-plan.md)。
 
 ### 阶段概览
 
 | 阶段 | 解决的问题 | 对使用者意味着什么 |
 |------|------------|--------------------|
-| 早期版本 | 搭建“写作 → 审查 → 修订 → 记录状态”的基础流程 | 系统不只是生成文本，还会解释、检查并保存每章结果 |
+| 早期版本 | 搭建"写作 → 审查 → 修订 → 记录状态"的基础流程 | 系统不只是生成文本，还会解释、检查并保存每章结果 |
 | 长篇稳定性 | 处理历史信息越来越多、上下文越来越长的问题 | 可以连续生成几十章而不频繁丢失上下文 |
 | 150 章验证 | 引入信息压缩、角色淡出、设定清理和预算保护 | 已验证可以支撑 150 章级别的长篇生成流程 |
 | 质量加固 | 补充测试、质量门、严格模式和异常恢复 | 生成流程更稳定，失败时更容易定位原因 |
 | V5.2 完成 | enforce 默认启用 + 150 章完整证据 | CLI 默认 `enforce`，Ch1–Ch150 全部 accept，角色状态、世界设定和数字读数均有正文证据支撑 |
 | V6 完成 | 补齐自顶向下叙事架构与长篇质量度量，验证 150 章稳定输出 | 章节目标从全书规划派生；orphan、文学质量、伏笔兑现可观测；治理管线 Ch1–Ch150 取得 150/150 证据 |
-| 当前阶段（V7） | 先修复 V6 暴露的篇章级质量债，再补齐叙事自驱和自适应门禁，最后渐进爬坡至 Ch300 | 正文更洁净、连贯；线索调度可追踪；门禁从固定阈值走向趋势判定；阶段 W/X/Y 已完成、T12 已冻结；文学提质专项 170c–170l 已完成，170h/170i/170j/170k/170l 路径 B 连续五步复评均未达标（voice 1.50/2.00/2.25/2.00/2.00、exposition 2.50/2.25/2.25/2.50/2.00、窗口均值 2.65/2.55/2.60/3.00/2.40），维持 blocker，**170l 同时修复 RuleAuditor 引号匹配 bug**（中文弯引号 `"..."` 漏报），暴露 170h–170k `exposition_carrier=0` 失真。当前进入 **决策点**：需用户选择路径 B 升级 / AI 腔后处理 / 目标降级方向，达标或明确降级后方可重新评估 Ch200 入口**，Task 171 Ch200 长跑继续冻结 |
+| 当前阶段（V7） | 先修复 V6 暴露的篇章级质量债，再补齐叙事自驱和自适应门禁，最后渐进爬坡至 Ch300 | 正文更洁净、连贯；线索调度可追踪；门禁从固定阈值走向趋势判定。阶段 W/X/Y 已完成、T9/T10/T12 已冻结；Ch200 长跑（阶段 Z）已完成 200/200 accepted 且 D1 hard clean pass；171v 小窗口 partial，需 hardening 后重验，文学质量采用三层契约 + 并行 R&D（详见 STATUS.md 与框架文档） |
 
 ### 当前开发重点（V7）
 
-1. **篇章级质量修复（阶段 W）**：以确定性工程修复根治 V6 暴露的可读性/连贯性债——元标记泄漏清洗、整段落去重、跨章时间线一致性检测、概念预算约束，并把文本洁净度做成可入库、可查的指标。✅ Task 160-165p 已完成，阶段 W 通过，T9/T10 已冻结。
-2. **叙事自驱（阶段 X）**：把静态叙事骨架升级为 plan→generate→re-plan 闭环，并让长程伏笔从被动遗忘转为主动兑现调度。✅ Task 166 和 167 已完成。
-3. **enforce 可生产化（阶段 Y）**：把质量门禁从绝对阈值改为相对趋势 / 异常因子触发，正常波动不误伤、真退化才暂停。✅ Task 168/169/170 已完成——Task 170 用四类小窗口验证自适应门禁，良性 false positive rate=0、真实退化拦截率 100%，T12 已冻结。
-4. **Ch300 渐进爬坡（阶段 Z）**：Ch150 基线 → Ch200 → Ch250 → Ch300，每级取真实证据再进下一级。🔄 **Task 171 Ch200 长跑入口继续冻结；170h/170i/170j/170k/170l 路径 B 连续五步已完成并复评，均未达标（voice 1.50/2.00/2.25/2.00/2.00、exposition 2.50/2.25/2.25/2.50/2.00、窗口均值 2.65/2.55/2.60/3.00/2.40），维持 blocker，**170l 同时修复 RuleAuditor 引号匹配 bug**（中文弯引号 `"..."` 漏报），暴露 170h–170k `exposition_carrier=0` 失真。当前进入 **决策点**：需用户选择路径 B 升级 / AI 腔后处理 / 目标降级方向，达标或明确降级后方可重新评估 Ch200 入口。
-5. **文学提质专项（Ch200 放行前置门）已完成**：Task 170b 证明"治理指标全达标 ≠ prose 好看"（角色声纹塌陷、节奏偏慢、真实文本缺陷）。遵循"量具优先"：✅ 170c（T9 近似/改写重复检测补强）+ 170d（LiteraryAuditor 校准，回测机器 character_autonomy 均值 7.69→2.46 向人工声纹收敛）已完成；✅ 170e（voice 声纹提质）已完成——根因 seeding gap（characters 表为空致声纹机制死代码），已修复并验证；✅ 170f（pacing + exposition 融合）已完成（部分达标）——Stage 0 校准证明代码指标不可靠，转纯生成侧约束（Writer 1.1.0 新增 `scene_interaction` 段落）；Stage 2 小样本重生成 Ch29–Ch32 验证 **pacing 3.25 ✅（目标 ≥3.0）、exposition 2.0 ❌（目标 ≥2.5）**，实际通读发现模型用"意识触须/信息流读取 + 幻象播放 + FAQ 式 NPC 问答"绕过互动约束，说明文载体未受控。✅ **170g 已完成**——Writer 1.1.0/1.2.0 新增 `exposition_carrier` 约束（禁信息流硬灌、限 FAQ 式对话、动作承载信息、增加留白）、RuleAuditor 新增 exposition 载体硬灌代码检测、新建专用生成/复评脚本；小样本复评 **exposition 载体硬灌从多处降至 1 处、T9 不漏报、量具可信**，但 LLM rubric 文学维度整体未较 170f 提升（均值 2.45，voice 1.75、exposition 2.0）。✅ **170g Phase2 已完成**——新增非角色声纹卡、RuleAuditor 深层 exposition 检测、CreativeDirector 世界观揭示正路径模板、GoalPlanner 信息交付校验、RevisionHandler 文学 patch 路径；重跑 Ch29–Ch32 后 **voice 1.75 / exposition 2.25 / 窗口均值 2.55 仍未达 pass 线**，exposition_carrier_count 0、T9 0/0、偏差 0/4。**结论维持 blocker：不放行 Task 171 Ch200 长跑；阶段 Z 入口继续冻结**，下一步进入 **170i（路径 B 第二步）**：在 170h 已限制"谁在说/谁说多少"的基础上，进一步约束"信息如何被主角真正理解/误判/付出代价"，并把声纹工程从非人实体降级转向人类角色对白锚定。**170i 已完成并复评，仍未达标（voice 2.00 / exposition 2.25 / 窗口均值 2.55）**；**170j/170k/170l 路径 B 第三/四/五步已完成并复评，均未达标**（170j voice 2.25 / 窗口均值 2.60；170k voice 2.00 / 窗口均值 3.00；170l voice 2.00 / exposition 2.00 / 窗口均值 2.40，exposition_carrier 真实值 72 处）。**170l 同时修复 RuleAuditor 引号匹配 bug**（仅匹配 ASCII `"..."` 漏报中文弯引号 `"..."`，导致 170h–170k `exposition_carrier=0` 失真）。路径 B 轻量策略连续五步收益递减/劣化，当前进入 **决策点**：需用户选择路径 B 升级 / AI 腔后处理 / 目标降级方向，达标或明确降级后方可重新评估 Ch200 入口。
+1. **篇章级质量修复（阶段 W）**：以确定性工程修复根治 V6 暴露的可读性/连贯性债——元标记泄漏清洗、整段落去重、跨章时间线一致性检测、概念预算约束，并把文本洁净度做成可入库、可查的指标。✅ 已完成，T9/T10 已冻结。
+2. **叙事自驱（阶段 X）**：把静态叙事骨架升级为 plan→generate→re-plan 闭环，并让长程伏笔从被动遗忘转为主动兑现调度。✅ 已完成。
+3. **enforce 可生产化（阶段 Y）**：把质量门禁从绝对阈值改为相对趋势 / 异常因子触发，正常波动不误伤、真退化才暂停。✅ 已完成——小窗口验证良性 false positive rate=0、真实退化拦截率 100%，T12 已冻结。
+4. **文学质量框架（Ch200 长跑观测 + 并行 R&D）**：Task 170b 实读发现"治理指标全达标 ≠ prose 好看"，曾据此把文学质量设为 Ch200 硬前置门；经框架级复盘（[`docs/reports/v7-literary-framework-review.md`](docs/reports/v7-literary-framework-review.md)）改判为**三层契约**——Tier 1 硬缺陷（T9）仍阻塞、Tier 2 趋势地板转 observe 不阻塞、Tier 3 上限归并行 R&D。✅ **R&D 支撑已完成并归档**：171a/171a-1/171b/171c/171d 的量具、样本、杠杆和三层契约证据见 [`archive/v7/INDEX.md`](archive/v7/INDEX.md)；主线仍按 STATUS.md 推进。
+5. **Ch300 渐进爬坡（阶段 Z）**：Ch150 基线 → Ch200 → Ch250 → Ch300，每级取真实证据再进下一级。✅ **Task 171 Ch200 已完成 D1 hard clean pass**：`run-fb39245c` 200/200 accepted，T9 hard issue=0，T6b critical orphan peak=0；171v 小窗口 partial，下一步是 hardening → Ch201-Ch220 重验 → 172。
 
 ### 长期目标
 
-当前已经完成 150 章级别的长篇验证。下一阶段的现实目标是推进到 **200 章以上稳定输出**；更长期的研究目标是评估 **300 章级别** 的连续生成能力。
+当前已经完成 150 章级别长篇验证，并取得 **Ch200 规模化运行 + D1 hard clean pass 证据**。下一阶段的现实目标是完成 171v-hardening，并让 Ch201-Ch220 重验通过；之后再推进到 **Ch250 稳定输出**。更长期的研究目标是评估 **300 章级别** 的连续生成能力。
 
 这两个目标不会只按章节数判断。Songyan 更关注长篇运行后的事实源质量：角色状态是否可信、设定是否被正确回收、伏笔是否持续可追踪、数字记录是否有正文证据。只有生成链路和长期事实库同时稳定，才算真正达到 200+ / 300 章目标。
 
@@ -73,14 +72,14 @@ V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
 
 ### 1.1 设计目标
 
-Songyan 的目标不是“一次调用模型写一章”，而是把长篇小说生成拆成可控制、可审查、可恢复的工程流程。每一章都要回答四个问题：
+Songyan 的目标不是"一次调用模型写一章"，而是把长篇小说生成拆成可控制、可审查、可恢复的工程流程。每一章都要回答四个问题：
 
 1. 这一章为什么这样写？
 2. 它是否违反了题材、节奏、人物和世界设定？
 3. 修订后有没有引入新问题？
 4. 哪些角色状态、设定、伏笔和摘要可以安全写入长期事实库？
 
-因此，系统把“生成文本”和“沉淀事实”分开处理：Writer 只负责正文；审查、修订、质量门、结算、摘要和连续性审计分别由独立模块完成。SQLite 是唯一长期事实源，LangGraph state 只传递 ID，不保存正文或完整业务对象。
+因此，系统把"生成文本"和"沉淀事实"分开处理：Writer 只负责正文；审查、修订、质量门、结算、摘要和连续性审计分别由独立模块完成。SQLite 是唯一长期事实源，LangGraph state 只传递 ID，不保存正文或完整业务对象。
 
 ### 1.2 总体架构
 
@@ -106,7 +105,7 @@ flowchart TB
 
 ### 1.3 单章生成闭环
 
-单章工作流的核心是“先生成，再审查，再决定是否修订或接受”。只有通过质量门和人工确认的版本才会进入结算阶段。
+单章工作流的核心是"先生成，再审查，再决定是否修订或接受"。只有通过质量门和人工确认的版本才会进入结算阶段。
 
 ```mermaid
 flowchart LR
@@ -296,15 +295,15 @@ Songyan 的开发历程按能力演进划分，而不是按内部任务编号展
 
 | 阶段 | 主要目标 | 已形成的能力 | 当前状态 |
 |------|----------|--------------|----------|
-| 原型闭环 | 验证多 Agent 写作流程是否可控 | 建立“章节规划 → 正文生成 → 审查 → 修订 → 状态结算”的基础闭环 | 已完成 |
+| 原型闭环 | 验证多 Agent 写作流程是否可控 | 建立"章节规划 → 正文生成 → 审查 → 修订 → 状态结算"的基础闭环 | 已完成 |
 | 长篇支撑 | 解决多章生成中的遗忘、节奏和一致性问题 | 引入 RAG、人工标记、分层摘要、伏笔和设定追踪 | 已完成 |
 | 稳定长跑 | 让系统可以连续运行并定位失败原因 | 增加 run log、断点续跑、质量指标、上下文预算和重写保护 | 已完成 |
 | 上下文优化 | 控制长篇项目中不断膨胀的历史信息 | 建立预算裁剪、角色生命周期、设定生命周期和质量门控 | 已完成 |
 | 150 章验证 | 验证系统能否支撑长篇规模生成 | Context Diet 2.0、分层压缩、角色衰减、设定蒸发、预算硬上限通过长序列验证 | 已完成 |
 | 质量加固 | 提升输出质量和失败恢复能力 | 补充系统性测试、严格模式、降级接受、safe best 回退和报告入口 | 已完成 |
 | 事实源治理 | 确保长期记录的角色状态、设定和数字信息可信 | 强化 Settlement 证据校验、设定回收、连续性健康检查；enforce 默认启用并取得 Ch1–Ch150 150/150 证据 | 已完成（V5.2） |
-| 叙事骨架与度量 | 补齐自顶向下叙事架构，并让长篇质量可度量 | 全书大纲 / 弧规划 / 线索经济 MVP（阶段 0）、跨章质量度量入库 orphan/T7/质量债/文学趋势/伏笔兑现率（阶段 A）、末端治理降低 critical 误判与 orphan 累积（阶段 B）、无人值守长跑底盘 run 级 resume / LLM 限流预算 / 失败隔离 / DB 维护（阶段 C）、Ch1-Ch150 治理管线复现（阶段 D） | 已完成（V6：阶段 0+A+B+C+D 全部完成，`run-bba292da` Ch1-Ch150 150/150 accept，阶段验收实质达标、条件通过） |
-| 篇章级质量与自驱 | 修复篇章级质量债，再让系统自驱把质量维持在高位并爬坡至 Ch300 | 元标记清洗 / 段落去重 / 时间线一致 / 概念预算 / 文本洁净度 T9 harness（阶段 W）、plan→re-plan 闭环 + 伏笔调度（阶段 X）、enforce 门禁自适应（阶段 Y）、Ch200→300 渐进验证（阶段 Z） | 进行中（V7：阶段 W/X/Y 已完成，T9/T10/T12 已冻结；文学提质专项 170c–170l 已完成，170h/170i/170j/170k/170l 路径 B 连续五步复评均未达标（voice 1.50/2.00/2.25/2.00/2.00、exposition 2.50/2.25/2.25/2.50/2.00、窗口均值 2.65/2.55/2.60/3.00/2.40），维持 blocker，**170l 同时修复 RuleAuditor 引号匹配 bug**（中文弯引号 `"..."` 漏报），暴露 170h–170k `exposition_carrier=0` 失真。当前进入 **决策点**：需用户选择路径 B 升级 / AI 腔后处理 / 目标降级方向，达标或明确降级后方可重新评估 Ch200 入口**，Task 171 Ch200 长跑继续冻结） |
+| 叙事骨架与度量 | 补齐自顶向下叙事架构，并让长篇质量可度量 | 全书大纲 / 弧规划 / 线索经济 MVP、跨章质量度量入库（orphan / T7 / 质量债 / 文学趋势 / 伏笔兑现率）、末端治理、无人值守长跑底盘（run 级 resume / 限流 / 失败隔离 / DB 维护）、Ch1-Ch150 治理管线复现 | 已完成（V6：`run-bba292da` Ch1-Ch150 150/150 accept，阶段验收实质达标、条件通过） |
+| 篇章级质量与自驱 | 修复篇章级质量债，再让系统自驱把质量维持在高位并爬坡至 Ch300 | 元标记清洗 / 段落去重 / 时间线一致 / 概念预算 / 文本洁净度 T9 harness（阶段 W）、plan→re-plan 闭环 + 伏笔调度（阶段 X）、enforce 门禁自适应（阶段 Y）、Ch200→300 渐进验证（阶段 Z） | 进行中（V7：阶段 W/X/Y 已完成，T9/T10/T12 已冻结；Ch200 长跑已完成 200/200 accepted 且 D1 hard clean pass；文学质量改为三层契约 + 并行 R&D，详见 STATUS.md 与框架文档） |
 
 ---
 ## 4. 快速开始
@@ -360,29 +359,31 @@ ruff check src/ tests/
 | 质量审查体系 | 已包含规则审查、语义审查、文学性诊断、质量评分、局部修订和 safe best 回退 | `src/songyan/agents/` |
 | 状态结算与摘要 | 已支持 accepted 后的角色状态、设定、伏笔、数值和摘要结算，并持续加强证据校验 | `tasks/138f-settlement-evidence-gated-numerical-extraction-DONE.md` |
 | 连续性健康检查 | 已支持跨章扫描孤立设定、遗忘伏笔和状态冲突；当前仍在治理剩余边界问题 | `tasks/137-setting-recycling-closed-loop.md` |
-| 叙事骨架数据模型（V6 阶段 0） | 已交付 `StoryOutline` / `ArcPlan` / `PlotThread` 前置规划模型、三张表与 `NarrativeRepository`（含线索生命周期状态机）；`create-project --outline-file` 可导入全书大纲；GoalPlanner 从弧规划自顶向下派生章节目标（`derived_from_arc`）；CreativeDirector 注入线索经济约束、settlement 后自动推进线索状态；无骨架均回退旧行为 | `tasks/141-narrative-skeleton-data-model-DONE.md` … `tasks/144-thread-economy-mvp-DONE.md` |
-| 长篇质量度量（V6 阶段 A） | 新增 `songyan metrics`（DB 支撑、可复算历史库）：orphan 绝对量/新 critical 速率(T7)/质量债账本/文学趋势/弧级伏笔兑现率+长程台账；`run_quality_debt` 表；阈值 T3/T6/T8 已用历史 DB 复算冻结（T4/T5 延后长跑实测）。复现了被 health 指标掩盖的 orphan 累积与长程伏笔失效 | `tasks/145-orphan-and-critical-rate-metrics-DONE.md` … `tasks/148z-stage-a-threshold-calibration-DONE.md`、`docs/reports/v6-stageA-threshold-calibration.md` |
-| 末端治理（V6 阶段 B） | 录入侧降级（超额 critical 转 candidate，可回升）、`_infer_setting_category` 去硬编码主角名并收紧双命中、MR 上限自适应 + 主线相关性排序、critical 设定显式 resolve/abandon 终态；为阶段 D 长窗口验证降低 orphan 源头 | `tasks/149-input-side-demotion-DONE.md` … `tasks/152-critical-explicit-resolve-abandon-DONE.md` |
+| 叙事骨架数据模型（V6 阶段 0） | 已交付 `StoryOutline` / `ArcPlan` / `PlotThread` 前置规划模型、三张表与 `NarrativeRepository`（含线索生命周期状态机）；`create-project --outline-file` 可导入全书大纲；GoalPlanner 从弧规划自顶向下派生章节目标；CreativeDirector 注入线索经济约束、settlement 后自动推进线索状态；无骨架均回退旧行为 | `tasks/141-narrative-skeleton-data-model-DONE.md` … `tasks/144-thread-economy-mvp-DONE.md` |
+| 长篇质量度量（V6 阶段 A） | 新增 `songyan metrics`（DB 支撑、可复算历史库）：orphan 绝对量 / 新 critical 速率（T7）/ 质量债账本 / 文学趋势 / 弧级伏笔兑现率 + 长程台账；`run_quality_debt` 表；阈值 T3/T6/T8 已用历史 DB 复算冻结 | `tasks/145-orphan-and-critical-rate-metrics-DONE.md` … `tasks/148z-stage-a-threshold-calibration-DONE.md`、`docs/reports/v6-stageA-threshold-calibration.md` |
+| 末端治理（V6 阶段 B） | 录入侧降级（超额 critical 转 candidate，可回升）、`_infer_setting_category` 去硬编码主角名并收紧双命中、MR 上限自适应 + 主线相关性排序、critical 设定显式 resolve/abandon 终态 | `tasks/149-input-side-demotion-DONE.md` … `tasks/152-critical-explicit-resolve-abandon-DONE.md` |
 | 篇章级文本洁净治理（V7 阶段 W） | 已根治元标记 / 场景 marker 泄漏，补齐段落级去重、跨章时间线诊断、概念预算约束和 T9 文本洁净度入库；Task 165/165p 冻结 T9/T10 并完成阶段 W 出口 | `tasks/160-meta-tag-leak-eradication-DONE.md` … `tasks/165p-stage-w-harness-calibration-DONE.md` |
 | 叙事自驱（V7 阶段 X） | 已支持弧后评估生成 `ReplanProposal`、人工确认后事务化应用未来规划，并将长程伏笔调度注入 GoalPlanner / CreativeDirector，推进 active / injected / satisfied / missed 生命周期 | `tasks/166-plan-generate-replan-loop-DONE.md`、`tasks/167-long-range-foreshadowing-active-scheduling-DONE.md` |
-| 自适应门禁基础（V7 阶段 Y） | 已交付 adaptive gate 信号快照、窗口聚合报告、adaptive halt 判定引擎、决策账本和 phase2 observe/enforce 接入；Task 170 已用四类小窗口验证 T12（良性 FP rate=0、真实退化拦截率 100%）并冻结；默认仍关闭，Ch200 长跑前作为生产化门槛 | `tasks/168-adaptive-gate-data-plane-DONE.md`、`tasks/169-adaptive-halt-decision-DONE.md`、`tasks/170-enforce-small-window-validation-and-t12-calibration-DONE.md` |
+| 自适应门禁基础（V7 阶段 Y） | 已交付 adaptive gate 信号快照、窗口聚合报告、adaptive halt 判定引擎、决策账本和 phase2 observe/enforce 接入；Task 170 已用四类小窗口验证 T12（良性 FP rate=0、真实退化拦截率 100%）并冻结 | `tasks/168-adaptive-gate-data-plane-DONE.md`、`tasks/169-adaptive-halt-decision-DONE.md`、`tasks/170-enforce-small-window-validation-and-t12-calibration-DONE.md` |
 | 自动化验证 | 已建立单元、集成、E2E 和长序列压力测试；最近全量测试见状态板 | `tests/`、`docs/STATUS.md` |
 
-仍在治理的指标是后续 Ch200 → Ch250 → Ch300 渐进爬坡证据（含每级的可读性 / 文学性真实正文抽读与长跑中 AutoHalt 的真退化归因）。文学提质专项（170c–170l）已完成阶段 170c–170l，170h/170i/170j/170k/170l 路径 B 连续五步已完成并复评，均未达标（voice 1.50/2.00/2.25/2.00/2.00、exposition 2.50/2.25/2.25/2.50/2.00、窗口均值 2.65/2.55/2.60/3.00/2.40），Task 171 Ch200 长跑继续冻结；阶段 Z 入口继续冻结，**170l 同时修复 RuleAuditor 引号匹配 bug**（中文弯引号 `"..."` 漏报），暴露 170h–170k `exposition_carrier=0` 失真。Task 170n 方向评估已完成：推荐方向 C（目标降级）+ 同步准备方向 B（AI 腔后处理）作为长跑定点工具；方向 A（路径 B 升级）作为备选。最终方向待用户决策，达标或明确降级后方可重新评估 Ch200 入口**。Task 170m 量具二次校准已完成，exposition_carrier 从 72 校准为 6（高置信），但文学维度仍不达标。这些属于当前开发工作，不应写成已交付指标。
+> **仍在治理中**：Ch200+ 文学可读性护栏，以及 Ch250 → Ch300 渐进爬坡证据。171a–171d 文学 R&D 支撑已完成并归档，见 [`archive/v7/INDEX.md`](archive/v7/INDEX.md)。当前进展以 [`docs/STATUS.md`](docs/STATUS.md) 和框架文档 [`docs/reports/v7-literary-framework-review.md`](docs/reports/v7-literary-framework-review.md) 为准，不写成已交付指标。
 
 ---
 ## 6. 当前阶段与下一步
 
-Songyan 已完成 V6：系统装上了自顶向下的叙事骨架，长篇质量从"无对象、无指标"变成"可见、可度量"，并在治理管线上取得真实 Ch1–Ch150 证据（`run-bba292da`，150/150 accept）。V7 已经完成篇章级质量修复（阶段 W）、叙事自驱（阶段 X）和自适应门禁可生产化（阶段 Y），T9/T10/T12 已冻结。文学提质专项（170c–170m）已完成阶段 170c–170m：Task 170b 对中段窗口真实实读判定 **Ch200 blocker**，经量具校准（170c/170d）、生成侧提质（170e/170f）、170g 复评、170g Phase2 复评、**170h 路径 B 第一步结构性改写复评**、**170i 路径 B 第二步认知冲突/人类声纹锚定复评**、**170j/170k/170l 路径 B 第三/四/五步轻量策略复评**后，**结论维持 blocker，不放行 Task 171 Ch200 长跑**；170l 小样本复评仍未达标（voice 2.00 / exposition 2.00 / 窗口均值 2.40，exposition_carrier 真实值 72 处），**170l 同时修复 RuleAuditor 引号匹配 bug**（中文弯引号 `"..."` 漏报），暴露 170h–170k `exposition_carrier=0` 失真。阶段 Z 入口继续冻结，当前进入 **决策点**：需用户选择路径 B 升级 / AI 腔后处理 / 目标降级方向，达标或明确降级后方可重新评估 Ch200 入口。
+Songyan 已完成 V6，并在 V7 中完成篇章级质量修复（阶段 W）、叙事自驱（阶段 X）和自适应门禁可生产化（阶段 Y），T9/T10/T12 已冻结。
+
+V7 的文学质量环经框架级复盘已改判：Task 170b 对中段窗口实读发现"治理指标全达标 ≠ prose 好看"（角色声纹塌陷、节奏偏慢、真实文本缺陷），曾据此把文学质量（voice/exposition ≥3.0）设为 Ch200 长跑（阶段 Z）的**硬前置门**并用 prompt 工程反复迭代。但复盘（[`docs/reports/v7-literary-framework-review.md`](docs/reports/v7-literary-framework-review.md)）认定该门禁框架有 5 个结构性错误（判决分辨率 > 量具精度、量具构念建错、用未证能力阻塞已证能力等），**已改判为"三层契约 + 并行 R&D"**：Tier 1 硬缺陷（T9）仍阻塞、Tier 2 趋势地板转 observe 不阻塞、Tier 3 上限归并行 R&D。**Task 171 Ch200 长跑已完成 200/200 accepted + D1 hard clean pass 证据**（以稳定性面放行、文学=观测）；171v 小窗口已证明护栏进入 prompt，但未稳定改变正文输出，需 hardening 后重验。171a–171d R&D 证据已归档至 [`archive/v7/INDEX.md`](archive/v7/INDEX.md)。阶段验收标准见框架文档 §8。
 
 V7 分四个阶段推进：
 
-1. **篇章级质量修复（阶段 W）**：以确定性工程修复根治元标记泄漏、整段落重复、跨章时间线矛盾和概念通胀，并把文本洁净度做成可入库、可查的指标。Task 160-165p 已完成，阶段 W 通过，T9/T10 已冻结。
-2. **叙事自驱（阶段 X）**：把静态叙事骨架升级为 plan→generate→re-plan 闭环，让长程伏笔从被动遗忘转为主动兑现调度。✅ Task 166 和 167 已完成。
-3. **enforce 可生产化（阶段 Y）**：把质量门禁从绝对阈值改为相对趋势 / 异常因子触发，正常波动不误伤、真退化才暂停。Task 168/169/170 已完成——Task 170 用良性波动 / 真实退化 / 单点毛刺 / 单域四类小窗口验证 adaptive halt，良性 false positive rate=0、真实退化拦截率 100%，T12 已冻结。
-4. **Ch300 渐进爬坡（阶段 Z）**：Ch150 基线 → Ch200 → Ch250 → Ch300，每级取真实证据再进下一级，每级预留撞墙定点修复占位。🔄 **Task 171 Ch200 长跑入口继续冻结；170h/170i/170j/170k/170l 路径 B 连续五步已完成并复评，均未达标（voice 1.50/2.00/2.25/2.00/2.00、exposition 2.50/2.25/2.25/2.50/2.00、窗口均值 2.65/2.55/2.60/3.00/2.40），维持 blocker，**170l 同时修复 RuleAuditor 引号匹配 bug**（中文弯引号 `"..."` 漏报），暴露 170h–170k `exposition_carrier=0` 失真。当前进入 **决策点**：需用户选择路径 B 升级 / AI 腔后处理 / 目标降级方向，达标或明确降级后方可重新评估 Ch200 入口。
+1. **篇章级质量修复（阶段 W）**：确定性工程修复根治元标记泄漏、整段落重复、跨章时间线矛盾和概念通胀，并把文本洁净度做成可入库、可查的指标。✅ 已完成，T9/T10 已冻结。
+2. **叙事自驱（阶段 X）**：把静态叙事骨架升级为 plan→generate→re-plan 闭环，让长程伏笔从被动遗忘转为主动兑现调度。✅ 已完成。
+3. **enforce 可生产化（阶段 Y）**：把质量门禁从绝对阈值改为相对趋势 / 异常因子触发，正常波动不误伤、真退化才暂停。✅ 已完成，T12 已冻结。
+4. **Ch300 渐进爬坡（阶段 Z）**：Ch150 基线 → Ch200 → Ch250 → Ch300，每级取真实证据再进下一级，每级预留撞墙定点修复占位。✅ **Task 171 Ch200 已完成 D1 hard clean pass**；当前顺序为 171v-hardening → Ch201-Ch220 重验 → 172 Ch250 验证。
 
-**当前重心：170h/170i/170j/170k/170l 路径 B 连续五步已完成并复评，均未达标（voice 1.50/2.00/2.25/2.00/2.00、exposition 2.50/2.25/2.25/2.50/2.00、窗口均值 2.65/2.55/2.60/3.00/2.40），维持 blocker，**170l 同时修复 RuleAuditor 引号匹配 bug**（中文弯引号 `"..."` 漏报），暴露 170h–170k `exposition_carrier=0` 失真。当前进入 **决策点**：需用户选择路径 B 升级 / AI 腔后处理 / 目标降级方向，达标或明确降级后方可重新评估 Ch200 入口。** 文学提质专项已完成阶段 170c–170n，170g 及 Phase2、170h、170i、170j、170k、170l 均判 blocker 不放行 Ch200；Task 170m 将 exposition_carrier 从 72 校准为 6（高置信）；Task 170n 评估推荐方向 C（目标降级）+ 方向 B（AI 腔后处理）作为长跑定点工具。README 不维护实时任务状态；当前进度、测试结果和下一步执行项请查看 [`docs/STATUS.md`](docs/STATUS.md)，V7 任务事实入口见 [`tasks/V7-README.md`](tasks/V7-README.md)，提质专项总览见 [`tasks/170-literary-quality-remediation-README.md`](tasks/170-literary-quality-remediation-README.md)，170l DONE 见 [`tasks/170l-few-shot-voice-anchor-DONE.md`](tasks/170l-few-shot-voice-anchor-DONE.md)，170l 复评报告见 [`docs/reports/task-170l-few-shot-voice-anchor-reeval-report.md`](docs/reports/task-170l-few-shot-voice-anchor-reeval-report.md)。
+> README 不维护实时任务状态。**当前进度、测试结果和下一步执行项请查看 [`docs/STATUS.md`](docs/STATUS.md)**，V7 任务事实入口见 [`tasks/V7-README.md`](tasks/V7-README.md)，文学质量框架与阶段验收标准见 [`docs/reports/v7-literary-framework-review.md`](docs/reports/v7-literary-framework-review.md)。
 
 ---
 ## 7. CLI 常用命令
@@ -443,6 +444,7 @@ Checkpointer 模式说明：
 - `tasks/V7-README.md` — 当前任务事实入口（V7，Task 160-173）。
 - `docs/v7-plan.md` — V7 阶段规划（篇章级质量修复 + 自驱 + enforce 可生产化 + Ch300 爬坡）。
 - `docs/v7-vision.md` — V7 方向性构想。
+- `archive/v7/INDEX.md` — V7 已完成 R&D 产物归档（171a–171d）。
 - `tasks/V6-README.md` — V6 历史任务事实入口（Task 141-159）。
 - `docs/v6-plan.md` — V6 阶段规划（叙事骨架 + 度量 + 长跑底盘）。
 - `tasks/V5-README.md` — V5 历史任务事实入口。

@@ -131,13 +131,35 @@ def classify_report(report: ContinuityReport) -> dict[Literal["P1", "P2", "P3"],
     for item in report.forgotten_items:
         counts["P3"] += 1
 
+    # Task 171r: state_mismatch 降为 P3（Tier 2 观测）——code-only 启发式
+    # 无法区分进展与矛盾，不应参与任何阻塞判定。仍入库、可查、进报告。
     for mismatch in report.state_mismatches:
-        counts["P1"] += 1
+        counts["P3"] += 1
 
     for fs in report.overdue_foreshadowings:
         counts["P2"] += 1
 
     return counts
+
+
+def count_hard_p1_for_halt(report: ContinuityReport) -> int:
+    """计算用于 run-level 硬 halt 的 P1 数——**排除 state_mismatch**（Task 171p2）.
+
+    构念依据：`state_mismatch` 由 `_find_state_mismatches` 的字符串不等启发式产生，
+    无法语义区分「角色进展」与「真实矛盾」（Task 171 小窗口实证：Ch3 P1=11/6 全为
+    进展被误判）。**真实的语义矛盾由 LLM 一致性审查（coherence_critical/major）在章级
+    revision 阻断**，与本 P1 halt 独立且更准。因此 state_mismatch 降为 Tier 2 观测
+    （仍入库、仍进 `classify_report` 供报告/抽读），但**不再驱动 run-level 硬 halt**。
+    critical orphaned setting 仍计入硬 P1（那是有明确类别、非启发式的真实治理信号）。
+
+    与冻结口径关系：T5/T6/T9/T12 均不含 state_mismatch（T6b 只查 orphan_critical），
+    故本变更不放宽任何冻结阈值，属量具构念修正。
+    """
+    hard = 0
+    for setting in report.orphaned_settings:
+        if getattr(setting, "category", "background") == "critical":
+            hard += 1
+    return hard
 
 
 async def collect_continuity_health_metrics(

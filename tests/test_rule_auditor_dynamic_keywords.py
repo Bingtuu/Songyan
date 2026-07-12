@@ -19,10 +19,19 @@ class TestDynamicExpositionCarrierKeywords:
         )
         assert any(m.carrier_type == "vision_dump" for m in matches)
 
-    def test_default_character_names_still_work(self) -> None:
+    def test_hardcoded_names_not_scored_without_injection(self) -> None:
+        """Task 171a 体裁解耦：未注入 character_names 时，不再对写死的本项目主角名误报.
+
+        旧行为（`_DEFAULT_CHARACTER_NAMES={林渊,宋晚,苏晚}` fallback）会让 vision_dump
+        在任何项目上都命中"林渊看见了…"，属体裁窄化失真。新契约：无注入 => 该维度不计分。
+        注入后（见上一用例）应正常命中。
+        """
         text = "林渊看见了建造者——他们站在一个巨大的空间里，周身流动着液态星光。"
         matches = detect_exposition_carriers(text)
-        assert any(m.carrier_type == "vision_dump" for m in matches)
+        assert not any(m.carrier_type == "vision_dump" for m in matches)
+        # 注入项目实际角色名后应恢复检测
+        injected = detect_exposition_carriers(text, character_names={"林渊"})
+        assert any(m.carrier_type == "vision_dump" for m in injected)
 
     def test_dynamic_non_character_entity_direct_revelation(self) -> None:
         text = (

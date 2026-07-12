@@ -582,6 +582,24 @@ def _build_creative_brief_snapshot(ctx: ContextPackage) -> dict:
         "character_focus": brief.character_focus,
         "foreshadowing_due": brief.foreshadowing_due,
         "focal_distance": brief.focal_distance,
+        "protagonist_active_choice": (
+            brief.protagonist_active_choice.model_dump(mode="json")
+            if brief.protagonist_active_choice is not None
+            else None
+        ),
+        "new_concept_budget": (
+            brief.new_concept_budget.model_dump(mode="json")
+            if brief.new_concept_budget is not None
+            else None
+        ),
+        "fatigue_motif_replacements": [
+            item.model_dump(mode="json") for item in brief.fatigue_motif_replacements
+        ],
+        "supporting_character_goal": (
+            brief.supporting_character_goal.model_dump(mode="json")
+            if brief.supporting_character_goal is not None
+            else None
+        ),
     }
 
 

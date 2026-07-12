@@ -598,7 +598,7 @@ class ContinuityReportRepository:
             cursor = await conn.execute(
                 """SELECT * FROM continuity_reports
                    WHERE project_id = ?
-                   ORDER BY created_at DESC, report_id DESC
+                   ORDER BY created_at DESC, rowid DESC
                    LIMIT 1""",
                 (project_id,),
             )
@@ -617,8 +617,19 @@ class ContinuityReportRepository:
                           orphaned_settings, forgotten_items, state_mismatches,
                           overdue_foreshadowings, suggested_marks, overall_health_score,
                           created_at
-                   FROM continuity_reports
-                   WHERE project_id = ? AND checked_up_to_chapter BETWEEN ? AND ?
+                   FROM (
+                       SELECT report_id, project_id, checked_up_to_chapter,
+                              orphaned_settings, forgotten_items, state_mismatches,
+                              overdue_foreshadowings, suggested_marks, overall_health_score,
+                              created_at,
+                              ROW_NUMBER() OVER (
+                                  PARTITION BY project_id, checked_up_to_chapter
+                                  ORDER BY created_at DESC, rowid DESC
+                              ) AS rn
+                       FROM continuity_reports
+                       WHERE project_id = ? AND checked_up_to_chapter BETWEEN ? AND ?
+                   )
+                   WHERE rn = 1
                    ORDER BY checked_up_to_chapter""",
                 (project_id, chapter_start, chapter_end),
             )

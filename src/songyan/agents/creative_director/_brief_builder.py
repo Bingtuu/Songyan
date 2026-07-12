@@ -14,7 +14,11 @@ from songyan.models.chapter import ChapterGoal
 from songyan.models.creative_mode import (
     CreativeBrief,
     EmotionArcItem,
+    FatigueMotifReplacement,
+    NewConceptBudget,
+    ProtagonistActiveChoice,
     PunchPoint,
+    SupportingCharacterGoal,
     Tension,
     VoiceAnchor,
     VoiceSample,
@@ -239,6 +243,70 @@ def _parse_voice_samples(raw: Any) -> list[VoiceSample]:
     return result
 
 
+def _parse_protagonist_active_choice(raw: Any) -> ProtagonistActiveChoice | None:
+    """Task 171v: 解析主角主动选择护栏."""
+    if not isinstance(raw, dict):
+        return None
+    return ProtagonistActiveChoice(
+        choice=str(raw.get("choice") or ""),
+        alternatives=[
+            str(v)
+            for v in raw.get("alternatives", [])
+            if isinstance(v, (str, int, float))
+        ],
+        cost=str(raw.get("cost") or ""),
+        irreversible_consequence=str(raw.get("irreversible_consequence") or ""),
+    )
+
+
+def _parse_new_concept_budget(raw: Any) -> NewConceptBudget | None:
+    """Task 171v: 解析新概念预算护栏."""
+    if not isinstance(raw, dict):
+        return None
+    max_new = raw.get("max_new_core_concepts", 1)
+    if not isinstance(max_new, int):
+        max_new = 1
+    return NewConceptBudget(
+        max_new_core_concepts=max(0, min(3, max_new)),
+        grounding_scene=str(raw.get("grounding_scene") or ""),
+        forbidden_mode=str(raw.get("forbidden_mode") or "禁止连续解释协议机制"),
+    )
+
+
+def _parse_fatigue_motif_replacements(raw: Any) -> list[FatigueMotifReplacement]:
+    """Task 171v: 解析母题替代表达建议."""
+    result: list[FatigueMotifReplacement] = []
+    if not isinstance(raw, list):
+        return result
+    for item in raw:
+        if not isinstance(item, dict):
+            continue
+        overused = str(item.get("overused") or "")
+        if not overused:
+            continue
+        alternatives = [
+            str(v)
+            for v in item.get("alternatives", [])
+            if isinstance(v, (str, int, float))
+        ]
+        result.append(
+            FatigueMotifReplacement(overused=overused, alternatives=alternatives)
+        )
+    return result
+
+
+def _parse_supporting_character_goal(raw: Any) -> SupportingCharacterGoal | None:
+    """Task 171v: 解析配角独立目标护栏."""
+    if not isinstance(raw, dict):
+        return None
+    return SupportingCharacterGoal(
+        character=str(raw.get("character") or ""),
+        goal=str(raw.get("goal") or ""),
+        conflict_with_protagonist=str(raw.get("conflict_with_protagonist") or ""),
+        scene_consequence=str(raw.get("scene_consequence") or ""),
+    )
+
+
 def _build_creative_brief(
     data: dict[str, Any],
     mode_id: str,
@@ -338,4 +406,14 @@ def _build_creative_brief(
         focal_distance=_focal_distance,
         voice_anchors=_parse_voice_anchors(data.get("voice_anchors")),
         voice_samples=_parse_voice_samples(data.get("voice_samples")),
+        protagonist_active_choice=_parse_protagonist_active_choice(
+            data.get("protagonist_active_choice")
+        ),
+        new_concept_budget=_parse_new_concept_budget(data.get("new_concept_budget")),
+        fatigue_motif_replacements=_parse_fatigue_motif_replacements(
+            data.get("fatigue_motif_replacements")
+        ),
+        supporting_character_goal=_parse_supporting_character_goal(
+            data.get("supporting_character_goal")
+        ),
     )

@@ -36,10 +36,34 @@
 | `tasks/169a-adaptive-halt-decision-engine-DONE.md` | Task 169a：自适应 halt 判定引擎与决策账本（已完成） |
 | `tasks/169b-adaptive-halt-workflow-integration.md` | Task 169b：自适应 halt workflow 接入（规划文档） |
 | `tasks/169b-adaptive-halt-workflow-integration-DONE.md` | Task 169b：自适应 halt workflow 接入（已完成） |
-| `tasks/170-enforce-small-window-validation-and-t12-calibration.md` | Task 170：enforce 小窗口验证 + T12 误报率标定（规划中） |
-| `tasks/170-literary-quality-remediation-README.md` | **文学提质专项总览（170b–170p）**：Ch200 放行前置门，量具优先原则、路径 B 复盘、决策点 |
+| `tasks/170-enforce-small-window-validation-and-t12-calibration-DONE.md` | Task 170：enforce 小窗口验证 + T12 误报率标定（已完成；良性 FP rate=0、真实退化拦截率 100%，T12 已冻结） |
+| `tasks/170-literary-quality-remediation-README.md` | **文学提质专项总览（170b–170p，已结束）**：历史记录——量具优先原则、路径 B 复盘；其"Ch200 硬前置门"框架已被 `docs/reports/v7-literary-framework-review.md` 推翻改判 |
 | `tasks/170o-voice-homogeneity-attribution-calibration-DONE.md` | Task 170o：voice 量具 `detect_human_voice_homogeneity` 说话人归因校准（叙事归因 + 角色注册表 gating），暴露 seeding gap |
 | `tasks/170p-settlement-new-character-seeding-DONE.md` | Task 170p：修复 seeding gap（SettlementExtractor 新配角证据门禁入库 + 工艺卡 1.0.3）；`run-bcf3b8f1` 实证 characters 1→4；同批修复 2 个合并遗留 broken 测试 |
+| `docs/reports/v7-literary-framework-review.md` | **文学质量框架级复盘 + V7 阶段目标与验收标准**：Task 170 结束改判为"改契约 + 并行"，旧框架 5 个结构性错误、三层契约、R0/R1/R2、§8 阶段验收标准（A/B/C/D/E） |
+| `tasks/171-ch200-long-run.md` | **Task 171：Ch200 长跑（阶段 Z 主线）**——run `run-fb39245c` 200/200 accepted、gaps=[]、Halt=None；171t/171u 后 D1 hard clean pass |
+| `docs/reports/task-171-ch200-long-run-report.md` | Task 171 Ch200 长跑报告：稳定性面与三层契约观测结果 |
+| `docs/reports/task-171-ch200-analysis-and-next-step-report.md` | Task 171 Ch200 分析与下一步：20% 抽读、171t/171u D1 收口结果、171v/172 路线 |
+| `scripts/run_171_ch200.py` | Task 171/172 渐进爬坡 harness：Ch200 report/resume 与后续 Ch250 复用 |
+| `tasks/171p-ch200-wall-fix.md` | Task 171p：Ch200 撞墙定点修复——state_mismatch 演进型 field 构念修正 |
+| `tasks/171p-ch200-wall-fix-DONE.md` | Task 171p DONE：Ch3 假阳性收敛，state_mismatch 从阻塞信号降级为观测 |
+| `tasks/171q-ch200-wall-fix-duplicate.md` | Task 171q：分段修订 T9 duplicate 阈值口径对齐 |
+| `tasks/171s-critical-setting-reference-refresh.md` | Task 171s：critical setting 同义提及刷新，修复 Ch159/165 false orphan 阻断 |
+| `tasks/171t-ch200-d1-hard-clean.md` | Task 171t：Ch200 D1 文本洁净量具补强（已完成） |
+| `tasks/171u-ch200-d1-clean-application-and-report-refresh.md` | Task 171u：Ch200 D1 清洁应用与报告事实源复算（已完成，T9 hard issue=0，T6b peak=0） |
+| `tasks/171v-ch200-plus-literary-readability-guardrails.md` | Task 171v：Ch200+ 文学性与可读性护栏（小窗口 partial，需 hardening） |
+| `tasks/172-ch250-transition-validation.md` | Task 172：Ch250 过渡验证占位 |
+| `archive/v7/INDEX.md` | V7 已完成 R&D 归档入口（171a/171a-1/171b/171c/171d） |
+| `archive/v7/tasks/171a-literary-metric-validity-rebuild-DONE.md` | Task 171a DONE：文学量具效度重建（代码侧 B1/B4/B5） |
+| `archive/v7/reports/task-171a-metric-validity-report.md` | Task 171a 效度报告 |
+| `archive/v7/tasks/171a-1-metric-validity-quantification-DONE.md` | Task 171a-1 DONE：两体裁 voice/exposition P/R/F1 量化 |
+| `archive/v7/reports/task-171a-1-metric-prf-report.md` | Task 171a-1 P/R/F1 报告 |
+| `archive/v7/tasks/171b-representative-sampling-DONE.md` | Task 171b DONE：代表性样本集与 2×2 归因 |
+| `archive/v7/reports/task-171b-representative-sampling-report.md` | Task 171b 报告 |
+| `archive/v7/tasks/171c-improvement-levers-DONE.md` | Task 171c DONE：杠杆组合验证，确定性后处理 Goodhart 退出 |
+| `archive/v7/reports/task-171c-improvement-levers-report.md` | Task 171c 报告 |
+| `archive/v7/tasks/171d-three-tier-contract-DONE.md` | Task 171d DONE：三层契约落地 |
+| `archive/v7/reports/task-171d-three-tier-contract-report.md` | Task 171d 报告 |
 | `tasks/V6-README.md` | V6 任务事实入口（前置阶段）：叙事骨架 MVP + 度量 + 长跑底盘，Task 141-159 |
 | `tasks/V5-README.md` | V5.0 任务事实入口 |
 | `tasks/121a-v50-goal-assessment-and-v51-plan.md` | Task 121a：V5.0 目标评估与 V5.1 规划 |
@@ -124,6 +148,7 @@
 | `docs/v6-plan.md` | V6 阶段规划：叙事骨架 MVP + 长篇质量度量 + 可靠长跑底盘 + Task 141-159 路线图 |
 | `docs/v7-vision.md` | V7 构想（方向性）：从叙事骨架到完整线索经济 + 满 Ch300 渐进验证 |
 | `docs/v7-plan.md` | V7 阶段规划：篇章级质量修复 + 叙事自驱 + enforce 可生产化 + Ch300 渐进爬坡 + Task 160-173 路线图 |
+| `docs/reports/v7-literary-framework-review.md` | **V7 文学质量框架级复盘（当前阶段目标 + 验收标准）**：Task 170 结束改判为"改契约 + 并行"，三层契约、R0/R1/R2（171a/b/c）、§8 阶段 PASS 判据 |
 
 ## V7 代码审查与架构审计
 
@@ -213,6 +238,7 @@
 归档内容默认不读，仅在追溯历史决策时查阅。
 
 - `archive/v5/INDEX.md` — V5 归档索引
+- `archive/v7/INDEX.md` — V7 已完成 R&D 产物归档（171a–171d）
 - `archive/v5/context-docs/` — AGENTS / STATUS / INDEX 长版快照
 - `archive/v5/plans/` — V5.0 已完成任务的历史规划稿
 - `archive/v4/INDEX.md` — V4.x 历史结论

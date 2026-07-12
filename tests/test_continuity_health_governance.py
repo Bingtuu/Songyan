@@ -200,7 +200,8 @@ class TestClassifyReport:
         counts = classify_report(report)
         assert counts["P3"] == 1
 
-    def test_state_mismatch_is_p1(self) -> None:
+    def test_state_mismatch_is_p3(self) -> None:
+        """Task 171r: state_mismatch 降为 P3（Tier 2 观测，不参与阻塞）."""
         report = ContinuityReport(
             report_id="r1",
             project_id="p1",
@@ -218,7 +219,8 @@ class TestClassifyReport:
             ],
         )
         counts = classify_report(report)
-        assert counts["P1"] == 1
+        assert counts["P1"] == 0
+        assert counts["P3"] == 1
 
     def test_overdue_foreshadowing_is_p2(self) -> None:
         report = ContinuityReport(

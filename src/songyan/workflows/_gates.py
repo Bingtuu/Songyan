@@ -11,7 +11,9 @@ from __future__ import annotations
 import statistics
 from typing import Any
 
-from songyan.agents.continuity_auditor.continuity_health import classify_report
+from songyan.agents.continuity_auditor.continuity_health import (
+    count_hard_p1_for_halt,
+)
 from songyan.models import ContinuityReport, GateConfig
 
 
@@ -70,10 +72,12 @@ def check_health_low_single_gate(
     if not config.health_low_gate_enabled:
         return False, reasons, updated_min_score
 
-    severity = classify_report(report)
+    # Task 171p2: 硬 halt 只看"硬 P1"（critical orphaned setting），排除 state_mismatch
+    # （启发式假阳性，真实矛盾由 LLM coherence 章级阻断）。
+    hard_p1 = count_hard_p1_for_halt(report)
 
-    if config.health_low_p1_halt and severity["P1"] > 0:
-        p1_count = severity["P1"]
+    if config.health_low_p1_halt and hard_p1 > 0:
+        p1_count = hard_p1
         if config.health_low_p1_anomaly_factor is not None:
             baseline = _median(previous_p1_counts or []) * config.health_low_p1_anomaly_factor
             min_absolute = config.health_low_p1_min_absolute or 0
@@ -86,7 +90,7 @@ def check_health_low_single_gate(
         else:
             reasons.append(
                 f"health_low_p1_halt: P1_count={p1_count} "
-                f"(state_mismatch or critical orphaned setting)"
+                f"(critical orphaned setting)"
             )
 
     if (
@@ -95,7 +99,7 @@ def check_health_low_single_gate(
         and min_health_score_so_far is not None
         and current_score < min_health_score_so_far
     ):
-        p1_count = severity["P1"]
+        p1_count = hard_p1
         window = config.health_low_score_halt_window
         recent = (previous_p1_counts or [])[-window:] if previous_p1_counts else []
         baseline = _median(recent) * config.health_low_score_halt_anomaly_factor

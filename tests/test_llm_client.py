@@ -105,3 +105,50 @@ class TestCallLlm:
                 mock_retry.side_effect = _timeout
                 with pytest.raises(LLMError):
                     await call_llm("test prompt", max_retries=1)
+
+    @pytest.mark.asyncio
+    async def test_call_llm_temperature_defaults_to_settings(self) -> None:
+        """Task 171c: temperature 未显式传入时应从 settings.llm_temperature 解析（去死配置）."""
+        mock_llm = MagicMock()
+        mock_response = MagicMock()
+        mock_response.content = "ok"
+        mock_llm.ainvoke = AsyncMock(return_value=mock_response)
+
+        async def _passthrough(coro, **kwargs):
+            return await coro()
+
+        with patch("songyan.llm.client.get_llm", return_value=mock_llm) as mock_get:
+            with patch("songyan.llm.client.settings") as mock_settings:
+                mock_settings.llm_temperature = 0.42
+                mock_settings.llm_max_retries = 3
+                mock_settings.llm_run_call_budget = 0
+                with patch(
+                    "songyan.llm.client.retry_with_backoff", new_callable=AsyncMock
+                ) as mock_retry:
+                    mock_retry.side_effect = _passthrough
+                    await call_llm("test prompt")
+                    # get_llm 应收到来自 settings 的温度，而非旧的硬编码 0.7
+                    assert mock_get.call_args.kwargs["temperature"] == 0.42
+
+    @pytest.mark.asyncio
+    async def test_call_llm_explicit_temperature_overrides_settings(self) -> None:
+        """显式 temperature 优先于 settings（生产 caller 行为不变）."""
+        mock_llm = MagicMock()
+        mock_response = MagicMock()
+        mock_response.content = "ok"
+        mock_llm.ainvoke = AsyncMock(return_value=mock_response)
+
+        async def _passthrough(coro, **kwargs):
+            return await coro()
+
+        with patch("songyan.llm.client.get_llm", return_value=mock_llm) as mock_get:
+            with patch("songyan.llm.client.settings") as mock_settings:
+                mock_settings.llm_temperature = 0.42
+                mock_settings.llm_max_retries = 3
+                mock_settings.llm_run_call_budget = 0
+                with patch(
+                    "songyan.llm.client.retry_with_backoff", new_callable=AsyncMock
+                ) as mock_retry:
+                    mock_retry.side_effect = _passthrough
+                    await call_llm("test prompt", temperature=0.9)
+                    assert mock_get.call_args.kwargs["temperature"] == 0.9

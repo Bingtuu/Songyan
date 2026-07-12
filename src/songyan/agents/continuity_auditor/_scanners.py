@@ -31,6 +31,31 @@ ORPHANED_THRESHOLDS: dict[str, int] = {
 FORGOTTEN_THRESHOLD = 3  # 3 章未使用即视为 forgotten
 STATE_MISMATCH_WINDOW = 2  # 2 章内剧烈变化视为 mismatch
 
+# Task 171p + 171r: 构念修正——本就该逐章演进/单调累积的 field，其"变化"是角色发展，
+# 不是连续性矛盾。这些 field 从 state-mismatch 检测中排除，避免把情绪推进、
+# 知识累积误判为 P1 矛盾（Task 171 小窗口实证：Ch3 P1=11 全为此类假阳性、
+# 假阻塞长跑）。仅对"应稳定、变了才可能是真矛盾"的 field 保留检测。
+#
+# Task 171r 扩展：增加 ability/physical_state 精确匹配，以及 knowledge_*/relationship_*
+# 前缀匹配——覆盖 D1 全量长跑 Ch3 实证的 9 个假阳性字段（ability、
+# knowledge_of_partner_death、physical_state、relationship_with_commander、
+# relationship_with_linyuan）。这些字段共享同一构念：在叙事中会自然演进的属性。
+_EVOLVING_STATE_FIELDS: frozenset[str] = frozenset(
+    {
+        "emotional_state",  # 情绪随剧情推进，本就该变
+        "knowledge",         # 角色认知单调累积（学到更多），非矛盾
+        "ability",           # 能力渐进增长，非矛盾
+        "physical_state",    # 伤情/身体状态随剧情变化，非矛盾
+    }
+)
+# 前缀匹配：字段名以这些前缀开头的均视为演进型。
+# knowledge_*（如 knowledge_of_partner_death）是认知累积子类；
+# relationship_*（如 relationship_with_commander）是关系演进——叙事中关系只应深化/转变。
+_EVOLVING_STATE_FIELD_PREFIXES: tuple[str, ...] = (
+    "knowledge_",
+    "relationship_",
+)
+
 
 async def _find_orphaned_settings(
     project_id: str, up_to_chapter: int,
@@ -119,6 +144,12 @@ async def _find_state_mismatches(
     # 按 character_id + field 分组
     state_history: dict[str, list[dict]] = {}
     for row in rows:
+        # Task 171p + 171r: 排除演进型 field（精确匹配 + 前缀匹配）。
+        field = row["field"]
+        if field in _EVOLVING_STATE_FIELDS:
+            continue
+        if field.startswith(_EVOLVING_STATE_FIELD_PREFIXES):
+            continue
         key = f"{row['character_id']}:{row['field']}"
         if key not in state_history:
             state_history[key] = []

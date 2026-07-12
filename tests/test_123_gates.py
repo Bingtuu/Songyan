@@ -69,15 +69,15 @@ def test_health_low_p1_triggers_when_enabled() -> None:
         report_id="r1",
         project_id="test-proj-123",
         checked_up_to_chapter=6,
-        state_mismatches=[
-            StateMismatch(
-                character_id="c1",
-                field="location",
-                chapter_a=1,
-                value_a="A",
-                chapter_b=2,
-                value_b="B",
-                issue="矛盾",
+        orphaned_settings=[
+            OrphanedSetting(
+                tracking_id="s1",
+                setting_key="k1",
+                setting_name="关键设定",
+                introduced_in_chapter=1,
+                last_mentioned_chapter=1,
+                chapters_since_mention=5,
+                category="critical",
             )
         ],
         overall_health_score=5.0,
@@ -86,6 +86,31 @@ def test_health_low_p1_triggers_when_enabled() -> None:
     triggered, reasons, _ = check_health_low_single_gate(report, cfg)
     assert triggered
     assert any("health_low_p1_halt" in r for r in reasons)
+
+
+def test_state_mismatch_does_not_trigger_hard_halt() -> None:
+    # Task 171p2: state_mismatch 降为观测——即便存在也不再驱动 run-level 硬 halt。
+    report = ContinuityReport(
+        report_id="r-sm",
+        project_id="test-proj-123",
+        checked_up_to_chapter=6,
+        state_mismatches=[
+            StateMismatch(
+                character_id="c1",
+                field="emotional_state",
+                chapter_a=1,
+                value_a="平静",
+                chapter_b=2,
+                value_b="愤怒",
+                issue="演进",
+            )
+            for _ in range(11)
+        ],
+        overall_health_score=3.0,
+    )
+    cfg = GateConfig(health_low_gate_enabled=True, health_low_p1_halt=True)
+    triggered, reasons, _ = check_health_low_single_gate(report, cfg)
+    assert not triggered
 
 
 def test_health_low_p1_no_trigger_when_disabled() -> None:
@@ -116,15 +141,15 @@ def test_health_low_score_halt_trigger() -> None:
         report_id="r1",
         project_id="p1",
         checked_up_to_chapter=6,
-        state_mismatches=[
-            StateMismatch(
-                character_id=f"c{i}",
-                field="location",
-                chapter_a=1,
-                value_a="A",
-                chapter_b=2,
-                value_b="B",
-                issue="矛盾",
+        orphaned_settings=[
+            OrphanedSetting(
+                tracking_id=f"s{i}",
+                setting_key=f"k{i}",
+                setting_name=f"设定{i}",
+                introduced_in_chapter=1,
+                last_mentioned_chapter=1,
+                chapters_since_mention=5,
+                category="critical",
             )
             for i in range(60)
         ],
@@ -291,15 +316,15 @@ def test_evaluate_all_gates_combines_reasons() -> None:
         report_id="r1",
         project_id="p1",
         checked_up_to_chapter=6,
-        state_mismatches=[
-            StateMismatch(
-                character_id="c1",
-                field="location",
-                chapter_a=1,
-                value_a="A",
-                chapter_b=2,
-                value_b="B",
-                issue="矛盾",
+        orphaned_settings=[
+            OrphanedSetting(
+                tracking_id="s1",
+                setting_key="k1",
+                setting_name="关键设定",
+                introduced_in_chapter=1,
+                last_mentioned_chapter=1,
+                chapters_since_mention=5,
+                category="critical",
             )
         ],
         overall_health_score=2.0,

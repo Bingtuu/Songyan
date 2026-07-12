@@ -41,6 +41,77 @@ class TestDetectSettingReferences:
         refs = _detect_setting_references("他握紧了天剑，目光如电。", settings)
         assert refs == {"t1": "xuanhuan.tian_jian"}
 
+    def test_171s_compound_setting_core_phrase_refreshes_tracking(self) -> None:
+        """Task 171s: 复合中文设定的核心短语命中应刷新 tracking."""
+        settings = [
+            {
+                "tracking_id": "t1",
+                "setting_key": "protagonist.genetic_identity.reaper_maker_consistency",
+                "setting_name": "林渊与收割者制造者的基因一致性",
+                "description": (
+                    "第三组基因密钥与收割者制造者的基因签名完全一致，"
+                    "这意味着林渊不仅是建造者设计的钥匙，"
+                    "还是收割者制造者的钥匙。"
+                ),
+                "category": "critical",
+                "status": "active",
+            }
+        ]
+        content = (
+            "基因一致性。\n\n"
+            "建造者的神经结构与人类不同，但他们的基因序列与林渊一致——"
+            "收割者制造者的基因签名，现在终于有了意义。"
+        )
+
+        refs = _detect_setting_references(content, settings)
+
+        assert refs == {"t1": "protagonist.genetic_identity.reaper_maker_consistency"}
+
+    def test_171s_compound_setting_multi_token_refreshes_tracking(self) -> None:
+        """Task 171s: 同章多 token 语义复现应刷新 tracking，避免 false orphan."""
+        settings = [
+            {
+                "tracking_id": "t1",
+                "setting_key": "protagonist.genetic_identity.reaper_maker_consistency",
+                "setting_name": "林渊与收割者制造者的基因一致性",
+                "description": (
+                    "第三组基因密钥与收割者制造者的基因签名完全一致，"
+                    "这意味着林渊不仅是建造者设计的钥匙，"
+                    "还是收割者制造者的钥匙。"
+                ),
+                "category": "critical",
+                "status": "active",
+            }
+        ]
+        content = (
+            "残影的声音从协议层深处传来：“你的基因序列告诉我你在犹豫。”"
+            "倒计时还在继续，收割者的签名像砂纸一样摩擦着神经末梢。"
+        )
+
+        refs = _detect_setting_references(content, settings)
+
+        assert refs == {"t1": "protagonist.genetic_identity.reaper_maker_consistency"}
+
+    def test_171s_single_weak_token_does_not_refresh_tracking(self) -> None:
+        """Task 171s: 单独一个短 token（如“基因”）不足以刷新复合 setting."""
+        settings = [
+            {
+                "tracking_id": "t1",
+                "setting_key": "protagonist.genetic_identity.reaper_maker_consistency",
+                "setting_name": "林渊与收割者制造者的基因一致性",
+                "description": (
+                    "第三组基因密钥与收割者制造者的基因签名完全一致，"
+                    "这意味着林渊不仅是建造者设计的钥匙。"
+                ),
+                "category": "critical",
+                "status": "active",
+            }
+        ]
+
+        refs = _detect_setting_references("医疗舱开始扫描普通基因样本。", settings)
+
+        assert refs == {}
+
     def test_avoids_substring_inside_longer_word(self) -> None:
         settings = [
             {

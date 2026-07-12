@@ -50,8 +50,12 @@ from songyan.models.creative_mode import (
     CreativeBrief,
     CreativeModeProfile,
     EmotionArcItem,
+    FatigueMotifReplacement,
     HumanMemoryConfig,
+    NewConceptBudget,
+    ProtagonistActiveChoice,
     PunchPoint,
+    SupportingCharacterGoal,
     Tension,
     VoiceAnchor,
     VoiceSample,
@@ -106,10 +110,12 @@ from songyan.models.review import (
     LLMAuditResult,
     MergedReviewReport,
     MetaTagLeakMatch,
+    MotifFatigueMatch,
     PunchCheck,
     ReviewCategory,
     ReviewIssue,
     RuleAuditResult,
+    TextCleanlinessCleanIssue,
 )
 from songyan.models.revision import Patch, RevisionInput, RevisionOutput
 from songyan.models.run_log import ChapterRunLog
@@ -153,6 +159,10 @@ __all__ = [
     "EmotionArcItem",
     "VoiceAnchor",
     "VoiceSample",
+    "ProtagonistActiveChoice",
+    "NewConceptBudget",
+    "FatigueMotifReplacement",
+    "SupportingCharacterGoal",
     "HumanMemoryConfig",
     "HumanInstruction",
     # continuity
@@ -210,6 +220,8 @@ __all__ = [
     "GenericNameMatch",
     "LLMAuditResult",
     "MetaTagLeakMatch",
+    "MotifFatigueMatch",
+    "TextCleanlinessCleanIssue",
     "MergedReviewReport",
     "PunchCheck",
     # literary

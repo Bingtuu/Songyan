@@ -6,20 +6,21 @@
 
 from __future__ import annotations
 
-from songyan.models import ContinuityReport, GateConfig, StateMismatch
+from songyan.models import ContinuityReport, GateConfig, OrphanedSetting
 from songyan.workflows._gates import check_health_low_single_gate, evaluate_all_gates
 
 
-def _state_mismatches(count: int) -> list[StateMismatch]:
+def _critical_orphans(count: int) -> list[OrphanedSetting]:
+    # Task 171p2: 硬 P1 来源改用 critical orphaned setting（state_mismatch 已降为观测）。
     return [
-        StateMismatch(
-            character_id=f"c{i}",
-            field="health",
-            chapter_a=1,
-            value_a="fine",
-            chapter_b=2,
-            value_b="dead",
-            issue="inconsistent",
+        OrphanedSetting(
+            tracking_id=f"t{i}",
+            setting_key=f"k{i}",
+            setting_name=f"设定{i}",
+            introduced_in_chapter=1,
+            last_mentioned_chapter=1,
+            chapters_since_mention=5,
+            category="critical",
         )
         for i in range(count)
     ]
@@ -35,7 +36,7 @@ def _report(
         project_id="proj",
         checked_up_to_chapter=chapter,
         overall_health_score=health_score,
-        state_mismatches=_state_mismatches(p1_count),
+        orphaned_settings=_critical_orphans(p1_count),
     )
 
 
