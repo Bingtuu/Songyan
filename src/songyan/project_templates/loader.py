@@ -11,8 +11,11 @@ import yaml
 
 import songyan
 from songyan.cli.outline_import import load_outline_file
-from songyan.creative_modes.registry import load_creative_mode_profile
-from songyan.genres.loader import load_genre_profile
+from songyan.creative_modes.registry import (
+    CreativeModeProfileError,
+    load_creative_mode_profile,
+)
+from songyan.genres.loader import GenreProfileError, load_genre_profile
 from songyan.models.project_template import (
     ProjectTemplate,
     TemplateSeed,
@@ -93,7 +96,9 @@ class ProjectTemplateLoader:
         # 3. evals/seeds 兼容
         seed_path = self._seeds_dir / f"{template_id}.json"
         if seed_path.exists():
-            return seed_to_template(seed_path)
+            template = seed_to_template(seed_path)
+            self._validate_genre_mode(template, template_id)
+            return template
 
         available = self.list_templates()
         raise ProjectTemplateNotFoundError(
@@ -126,29 +131,21 @@ class ProjectTemplateLoader:
         template = ProjectTemplate(**raw)
 
         # 校验 genre / mode 存在
-        try:
-            load_genre_profile(template.project_setting.genre_id)
-        except Exception as exc:
-            genre_id = template.project_setting.genre_id
-            raise ProjectTemplateError(
-                f"Template '{template_id}' references unknown genre: {genre_id}"
-            ) from exc
-        try:
-            load_creative_mode_profile(template.project_setting.mode_id)
-        except Exception as exc:
-            mode_id = template.project_setting.mode_id
-            raise ProjectTemplateError(
-                f"Template '{template_id}' references unknown mode: {mode_id}"
-            ) from exc
+        self._validate_genre_mode(template, template_id)
 
         # 加载 outline.json
         outline_file = source_dir / "outline.json"
         if outline_file.exists():
+            # "dummy" 为占位 project_id；初始化时大纲会重新绑定到真实 project_id
             outline, arcs, threads = load_outline_file(str(outline_file), "dummy")
             template.set_outline(outline, arcs, threads)
         elif base_template and base_template.has_outline:
             outline_tuple = base_template.outline_tuple
-            assert outline_tuple is not None
+            if outline_tuple is None:
+                raise ProjectTemplateError(
+                    f"Template '{template_id}' inherited outline from base "
+                    f"'{base_template.id}' but outline data is missing"
+                )
             outline, arcs, threads = outline_tuple
             template.set_outline(outline, arcs, threads)
 
@@ -162,6 +159,25 @@ class ProjectTemplateLoader:
             template.seed = base_template.seed
 
         return template
+
+    def _validate_genre_mode(
+        self, template: ProjectTemplate, template_id: str
+    ) -> None:
+        """校验模板引用的 genre 与 mode 配置真实存在."""
+        try:
+            load_genre_profile(template.project_setting.genre_id)
+        except GenreProfileError as exc:
+            genre_id = template.project_setting.genre_id
+            raise ProjectTemplateError(
+                f"Template '{template_id}' references unknown genre: {genre_id}"
+            ) from exc
+        try:
+            load_creative_mode_profile(template.project_setting.mode_id)
+        except CreativeModeProfileError as exc:
+            mode_id = template.project_setting.mode_id
+            raise ProjectTemplateError(
+                f"Template '{template_id}' references unknown mode: {mode_id}"
+            ) from exc
 
     @staticmethod
     def _merge_overwrite(

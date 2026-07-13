@@ -128,7 +128,118 @@ def test_unknown_template_raises(tmp_templates: Path) -> None:
         loader.load("not_exists")
 
 
-def test_circular_inheritance_raises(tmp_path: Path) -> None:
+def test_load_xuanhuan_variant_template(tmp_templates: Path) -> None:
+    loader = ProjectTemplateLoader(
+        templates_dir=tmp_templates,
+        seeds_dir=tmp_templates / "evals" / "seeds",
+    )
+    template = loader.load("xuanhuan")
+    assert template.id == "xuanhuan"
+    assert template.project_setting.title == "Ling"
+    assert template.project_setting.genre_id == "xuanhuan"
+    assert template.project_setting.mode_id == "webnovel_intense"
+    assert len(template.seed.characters) == 1
+
+
+def test_child_template_inherits_and_overwrites(tmp_path: Path) -> None:
+    base = tmp_path / "project_templates"
+    base.mkdir()
+
+    parent = base / "parent"
+    parent.mkdir()
+    (parent / "template.yaml").write_text(
+        (
+            "id: parent\n"
+            "name: Parent\n"
+            "project_setting:\n"
+            "  title: Parent Title\n"
+            "  genre_id: scifi\n"
+            "  mode_id: webnovel\n"
+            "  protagonist_name: Parent Protagonist\n"
+        ),
+        encoding="utf-8",
+    )
+    (parent / "outline.json").write_text(
+        json.dumps({
+            "outline": {"core_conflict": "parent", "mainline_synopsis": "..."},
+            "arc_plans": [],
+            "plot_threads": [],
+        }),
+        encoding="utf-8",
+    )
+    (parent / "seed.json").write_text(
+        json.dumps({"characters": [{"name": "Parent Protagonist", "role": "protagonist"}]}),
+        encoding="utf-8",
+    )
+
+    child = parent / "child"
+    child.mkdir()
+    (child / "template.yaml").write_text(
+        (
+            "id: parent/child\n"
+            "name: Child\n"
+            "extends: parent\n"
+            "overwrite:\n"
+            "  project_setting:\n"
+            "    title: Child Title\n"
+        ),
+        encoding="utf-8",
+    )
+
+    loader = ProjectTemplateLoader(
+        templates_dir=base,
+        seeds_dir=base / "evals" / "seeds",
+    )
+    template = loader.load("parent/child")
+    assert template.project_setting.title == "Child Title"
+    assert template.project_setting.genre_id == "scifi"
+    assert template.has_outline
+    assert template.seed.characters[0].name == "Parent Protagonist"
+
+
+def test_unknown_genre_raises(tmp_path: Path) -> None:
+    base = tmp_path / "project_templates"
+    base.mkdir()
+    bad = base / "bad"
+    bad.mkdir()
+    (bad / "template.yaml").write_text(
+        (
+            "id: bad\n"
+            "name: Bad\n"
+            "project_setting:\n"
+            "  title: Bad\n"
+            "  genre_id: not_a_real_genre\n"
+            "  mode_id: webnovel\n"
+            "  protagonist_name: X\n"
+        ),
+        encoding="utf-8",
+    )
+    loader = ProjectTemplateLoader(
+        templates_dir=base,
+        seeds_dir=base / "evals" / "seeds",
+    )
+    with pytest.raises(ProjectTemplateError, match="unknown genre"):
+        loader.load("bad")
+
+
+def test_seed_unknown_genre_raises(tmp_path: Path) -> None:
+    seeds = tmp_path / "evals" / "seeds"
+    seeds.mkdir(parents=True)
+    (seeds / "bad_seed.json").write_text(
+        json.dumps({
+            "project_name": "Bad Seed",
+            "genre_id": "not_a_real_genre",
+            "mode_id": "webnovel",
+            "characters": [{"name": "X", "role": "protagonist"}],
+        }),
+        encoding="utf-8",
+    )
+    loader = ProjectTemplateLoader(
+        templates_dir=tmp_path / "project_templates",
+        seeds_dir=seeds,
+    )
+    with pytest.raises(ProjectTemplateError, match="unknown genre"):
+        loader.load("bad_seed")
     base = tmp_path / "project_templates"
     base.mkdir()
     a = base / "a"

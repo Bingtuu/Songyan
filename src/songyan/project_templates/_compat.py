@@ -76,11 +76,19 @@ def seed_to_template(seed_path: Path) -> ProjectTemplate:
 
 
 def _extract_protagonist_name(data: dict[str, Any]) -> str:
-    for c in data.get("characters", []):
-        if c.get("role") == "protagonist":
-            return str(c["name"])
-    if data.get("characters"):
-        return str(data["characters"][0]["name"])
+    characters = data.get("characters")
+    if not isinstance(characters, list):
+        return "主角"
+    for c in characters:
+        if isinstance(c, dict) and c.get("role") == "protagonist":
+            name = c.get("name")
+            if name is not None:
+                return str(name)
+    for c in characters:
+        if isinstance(c, dict):
+            name = c.get("name")
+            if name is not None:
+                return str(name)
     return "主角"
 
 
