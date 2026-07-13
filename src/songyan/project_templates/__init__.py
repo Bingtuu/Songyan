@@ -1,5 +1,6 @@
-"""Project template loading."""
+"""Project template loading and initialization."""
 
+from songyan.project_templates.initializer import ProjectInitializer
 from songyan.project_templates.loader import (
     ProjectTemplateError,
     ProjectTemplateLoader,
@@ -7,6 +8,7 @@ from songyan.project_templates.loader import (
 )
 
 __all__ = [
+    "ProjectInitializer",
     "ProjectTemplateLoader",
     "ProjectTemplateError",
     "ProjectTemplateNotFoundError",
