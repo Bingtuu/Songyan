@@ -1,9 +1,9 @@
 # Task 171：Ch1-Ch200 长跑报告（阶段 Z 第一里程碑，文学=观测）
 
-- 生成时间: 2026-07-12T23:39:04.003967
+- 生成时间: 2026-07-13T13:04:35.934311
 - DB: `.tmp\task171_ch1_ch200.db`
 - 项目 ID: `835afdf11a294b5eac74a5d8998bd9a2`
-- Run ID: `run-e27b763f`
+- Run ID: `run-fb39245c`
 - 章节范围: Ch1-Ch200
 - Gate 模式: enforce；on_failure: isolate
 - 完成: 200/200
@@ -37,7 +37,7 @@
 
 ## setting 生命周期分布（显式 resolve / 显式 abandon / 逾期归档）
 
-- active（仍在监测）：**152**
+- active（仍在监测）：**155**
 - resolved（显式剧情收束）：**1**
 - abandoned（显式废弃）：**0**
 - archived（逾期/被遗忘）：**319**
@@ -274,7 +274,6 @@
 | run | 章数 | degraded | conv_failed | QG=false | degraded% | conv% | T4 |
 |-----|------|----------|-------------|----------|-----------|-------|----|
 | run-fb39245c | 210 | 0 | 0 | 1 | 0.0% | 0.0% | ✓ |
-| run-e27b763f | 20 | 0 | 0 | 0 | 0.0% | 0.0% | ✓ |
 
 ## 文学质量趋势（T3：W=5 均值相对前 10 章基线降 ≥20%；只诊断不阻断）
 
@@ -496,7 +495,7 @@
 
 ## 长程伏笔台账（未兑现；abandoned=逾期归档，被系统遗忘）
 
-- 未兑现合计 **502**，其中被遗忘（逾期归档）**394**
+- 未兑现合计 **506**，其中被遗忘（逾期归档）**394**
 
 | id | planted | expected | span | status | 被遗忘 |
 |----|---------|----------|------|--------|--------|
@@ -966,6 +965,10 @@
 | fs-835afdf11a294b5eac74a5d8998bd9a2-37342218 | 206 | 215 | -6 | overdue |  |
 | fs-835afdf11a294b5eac74a5d8998bd9a2-72f675b4 | 206 | 212 | -6 | overdue | 🔴 |
 | fs-835afdf11a294b5eac74a5d8998bd9a2-a5323b00 | 206 | 212 | -6 | overdue | 🔴 |
+| fs-835afdf11a294b5eac74a5d8998bd9a2-5f3d03f9 | 207 | - | -7 | planted |  |
+| fs-835afdf11a294b5eac74a5d8998bd9a2-6d7539ed | 207 | - | -7 | planted |  |
+| fs-835afdf11a294b5eac74a5d8998bd9a2-79c2f823 | 207 | - | -7 | planted |  |
+| fs-835afdf11a294b5eac74a5d8998bd9a2-8d373ad8 | 207 | - | -7 | planted |  |
 | fs-835afdf11a294b5eac74a5d8998bd9a2-05a60eab | 208 | 215 | -8 | overdue |  |
 | fs-835afdf11a294b5eac74a5d8998bd9a2-0714ba92 | 208 | 218 | -8 | overdue |  |
 | fs-835afdf11a294b5eac74a5d8998bd9a2-84a040c8 | 208 | 213 | -8 | overdue | 🔴 |
@@ -1126,7 +1129,7 @@
 
 ## 概念预算诊断（Task 163，规划侧约束；不自动改写）
 
-- 概念总数 **277**；未落地 **139**；本章新概念预算 **2**；触发收紧：**否**。
+- 概念总数 **277**；未落地 **138**；本章新概念预算 **2**；触发收紧：**否**。
 
 | 概念 | key | 引入章 | 最近提及 | 状态 | 类别 |
 |------|-----|--------|----------|------|------|
@@ -2391,28 +2394,7 @@
 | T7 | ◯ 未判定 | 0.0274 | 1.767 | 充分 | 新 critical 速率 0.0274/章（138k 基线 1.767） |
 | T3/T8 | 🔴 fail | character_autonomy_score | breached_dimensions = [] | 充分 | 触线维度: character_autonomy_score |
 | T4 | ◯ 未判定 | - | degraded≤20%, convergence≤10% | 不足 | 未提供 run_logs，T4 未判定 |
-| T5 | 🔴 fail | max_db=179.05MB, max_latency_ratio=2.92x | DB≤300MB; scan≤median×2.0（连续/极端破线才 hard fail） | 充分 | 尺寸破线章 []; 耗时 hard 破线章 [100, 110, 150, 160]；耗时观察章 [100, 110, 150, 160] |
-| T9 | ✓ pass | meta=0, duplicate=0, timeline=14 | meta=0; duplicate=0; timeline report-only | 充分 | 时间线诊断章: [32, 50, 56, 82, 83, 97, 99, 122, 149, 153, 161, 164, 171, 181] |
-| health≥7.0 | 🔴 fail | 1.0 | 0 | 充分 | health<7.0 的章: [3] |
-
-- **聚合结论：存在未通过的 sufficient 项**（未判定项：['T6c-obs', 'T7', 'T4']）
-
-## V6 验收判据（harness 三态）
-
-项目 **835afdf11a294b5eac74a5d8998bd9a2** Ch1-Ch200
-
-| 判据 | 结果 | 实测值 | 阈值 | 充分性 | 详情 |
-|------|------|--------|------|--------|------|
-| T1 | ✓ pass | 3.0 | ≥1 mainline thread advanced/resolved | 充分 | 主线线索 3 条，跃迁 3 条: t_ark(Ch1→Ch129), t_partner(Ch68→Ch69), t_resonance(Ch1→Ch101) |
-| T2 | ✓ pass | 200/200 | 200/200 accepted | 充分 | accepted 200 章 |
-| T6a | ✓ pass | 0.0062 | 3.14 | 充分 | orphan_total 线性斜率 0.0062/章（基于 66 章） |
-| T6b | ✓ pass | 0.0 | 0 | 充分 | P1 critical orphan 审计点全程为 0（基于 66 个审计点） |
-| T6c | ✓ pass | orphan_slope=0.0062, t7=0.0274 | T7≤0.10/章时启用小基数保护；否则 T7降幅≥0.5×orphan降幅 | 充分 | 小基数保护：新 critical 产生率已接近 0，原降幅比值口径会被绝对可降空间限制误伤；orphan 斜率降幅 6.2774，T7 降幅 1.7396 |
-| T6c-obs | ◯ 未判定 | 0.0% | ≤15%（观察项，不进入 all_passed） | 充分 | candidate critical 0 / 新增 critical 4 |
-| T7 | ◯ 未判定 | 0.0274 | 1.767 | 充分 | 新 critical 速率 0.0274/章（138k 基线 1.767） |
-| T3/T8 | 🔴 fail | character_autonomy_score | breached_dimensions = [] | 充分 | 触线维度: character_autonomy_score |
-| T4 | ◯ 未判定 | degraded=0.0%, convergence=0.0% | 50 章满窗 | 不足 | run_logs 仅 20 章，不足 50 章窗口 |
-| T5 | ✓ pass | max_db=179.05MB, max_latency_ratio=1.02x | DB≤300MB; scan≤median×2.0（连续/极端破线才 hard fail） | 充分 | T5 未破 |
+| T5 | ✓ pass | max_db=180.02MB, max_latency_ratio=2.84x | DB≤300MB; scan≤median×2.0（连续/极端破线才 hard fail） | 充分 | T5 未破；耗时观察章 [110, 150] |
 | T9 | ✓ pass | meta=0, duplicate=0, timeline=14 | meta=0; duplicate=0; timeline report-only | 充分 | 时间线诊断章: [32, 50, 56, 82, 83, 97, 99, 122, 149, 153, 161, 164, 171, 181] |
 | health≥7.0 | 🔴 fail | 1.0 | 0 | 充分 | health<7.0 的章: [3] |
 

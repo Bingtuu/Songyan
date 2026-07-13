@@ -1198,6 +1198,14 @@ async def save_revision_output(
 
     scenes = _parse_scenes(revised_content)
 
+    generation_metadata = dict(parent_version.generation_metadata or {})
+    generation_metadata.update(
+        {
+            "revision_parent_version_id": parent_version.version_id,
+            "revision_handler_preserved_brief": bool(parent_version.creative_brief_id),
+        }
+    )
+
     version = ChapterVersion(
         version_id=version_id,
         project_id=project_id,
@@ -1207,6 +1215,8 @@ async def save_revision_output(
         content=revised_content,
         word_count=word_count,
         scenes=scenes,
+        generation_metadata=generation_metadata,
+        creative_brief_id=parent_version.creative_brief_id,
         parent_version_id=parent_version.version_id,
     )
 

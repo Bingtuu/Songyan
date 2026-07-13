@@ -2,13 +2,13 @@
 
 > **框架**: V7 阶段 Z 渐进爬坡（Ch200 → Ch250 → Ch300）
 > **类型**: 长跑验证（阶段 Z 第二里程碑）
-> **优先级**: P0（171u/171v 完成后启动）
-> **依赖**: 171u Ch200 D1 hard clean pass；171v Ch201-Ch220 文学护栏小窗口 pass
+> **优先级**: P0（171w 完成后启动）
+> **依赖**: 171u Ch200 D1 hard clean pass；171w Ch201-Ch220 hardening 重验 pass
 > **状态**: 占位，待前置完成后开工
 
 ## 目标
 
-Task 172 的目标不是重新证明 Ch200 能跑通，而是验证系统在 **D1 hard clean 已收口、Ch200+ 文学护栏已接入** 后，能否稳定推进到 Ch250。
+Task 172 的目标不是重新证明 Ch200 能跑通，而是验证系统在 **D1 hard clean 已收口、Ch200+ 文学护栏已由 171w 证明可持久化/可审计/可落正文** 后，能否稳定推进到 Ch250。
 
 放行重点：
 
@@ -22,7 +22,7 @@ Task 172 的目标不是重新证明 Ch200 能跑通，而是验证系统在 **D
 | 前置 | 标准 |
 |---|---|
 | 171u | Ch1-Ch200 当前 accepted head T9 duplicate/meta/artifact=0，报告事实源无 stale P1 污染 |
-| 171v | Ch201-Ch220 20/20 accepted，T9 hard issue=0，抽读确认主动选择/概念密度/母题疲劳护栏有效 |
+| 171w | Ch201-Ch220 20/20 accepted，T9 hard issue=0，配角目标落正文，主动选择/概念预算/母题疲劳有 observe 报告，Ch207 settlement 缺口已修复 |
 | DB | `.tmp/task171_ch1_ch200.db` 或后续指定 Ch200 clean DB 可 resume |
 | 文档 | `docs/STATUS.md`、`tasks/V7-README.md`、Ch200 分析报告已同步前置结论 |
 

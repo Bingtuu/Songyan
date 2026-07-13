@@ -301,6 +301,51 @@ class TestBuildNumericalUpdate:
     def test_missing_id(self) -> None:
         assert _build_numerical_update({"attribute_name": "level"}) is None
 
+    def test_closing_zero_autofixed_from_formula(self) -> None:
+        """171w-d: closing_value=0.0 但公式可计算为非零时，从公式推导."""
+        data = {
+            "character_id": "c1",
+            "attribute_name": "escape_pod_communication_array_integrity",
+            "opening_value": 0.0,
+            "increments": [
+                {"amount": 30.0, "source": "repair", "source_quote": "修复通讯阵列"},
+                {"amount": 33.0, "source": "boost", "source_quote": "增强信号"},
+            ],
+            "decrements": [],
+            "closing_value": 0.0,
+        }
+        result = _build_numerical_update(data)
+        assert result is not None
+        assert result.closing_value == 63.0
+
+    def test_closing_zero_not_autofixed_when_formula_zero(self) -> None:
+        """opening=0、无增减 → formula=0，closing_value=0.0 不被误修."""
+        data = {
+            "character_id": "c1",
+            "attribute_name": "health",
+            "opening_value": 0.0,
+            "increments": [],
+            "decrements": [],
+            "closing_value": 0.0,
+        }
+        result = _build_numerical_update(data)
+        assert result is not None
+        assert result.closing_value == 0.0
+
+    def test_closing_valid_preserved(self) -> None:
+        """closing_value 与公式一致时，不做任何修改."""
+        data = {
+            "character_id": "c1",
+            "attribute_name": "level",
+            "opening_value": 1.0,
+            "increments": [{"amount": 0.5, "source": "s", "source_quote": "q"}],
+            "decrements": [],
+            "closing_value": 1.5,
+        }
+        result = _build_numerical_update(data)
+        assert result is not None
+        assert result.closing_value == 1.5
+
     @pytest.mark.parametrize("empty_value", ["无", "", None])
     def test_empty_values_do_not_crash_build(self, empty_value: object) -> None:
         data = {
@@ -448,7 +493,24 @@ class TestValidateSettlement:
         errors = await _validate_settlement(settlement, content, [], [])
         assert errors == []
 
-    async def test_numerical_formula_wrong(self) -> None:
+    async def test_numerical_formula_wrong_autocorrected(self) -> None:
+        """171w-d: closing_value=0.0 但有 opening 证据时自动纠正."""
+        content = "正文"
+        settlement = StateSettlement(
+            numerical_updates=[
+                NumericalUpdate(
+                    character_id="c1", attribute_name="level",
+                    opening_value=1.0, increments=[],
+                    decrements=[], closing_value=0.0,
+                )
+            ]
+        )
+        errors = await _validate_settlement(settlement, content, [], [])
+        assert errors == []
+        assert settlement.numerical_updates[0].closing_value == 1.0
+
+    async def test_numerical_formula_wrong_still_errors(self) -> None:
+        """closing_value 非默认值时不匹配仍报错."""
         content = "正文"
         settlement = StateSettlement(
             numerical_updates=[
@@ -456,6 +518,22 @@ class TestValidateSettlement:
                     character_id="c1", attribute_name="level",
                     opening_value=1.0, increments=[],
                     decrements=[], closing_value=2.0,
+                )
+            ]
+        )
+        errors = await _validate_settlement(settlement, content, [], [])
+        assert len(errors) == 1
+        assert "closing_value" in errors[0]
+
+    async def test_numerical_formula_wrong_no_evidence_still_errors(self) -> None:
+        """无 opening/increments/decrements 证据时，closing_value 不匹配仍报错."""
+        content = "正文"
+        settlement = StateSettlement(
+            numerical_updates=[
+                NumericalUpdate(
+                    character_id="c1", attribute_name="level",
+                    opening_value=0.0, increments=[],
+                    decrements=[], closing_value=5.0,
                 )
             ]
         )

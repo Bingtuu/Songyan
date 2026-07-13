@@ -4,7 +4,7 @@
 > **类型**: Ch200+ 质量护栏（observe-first，不恢复文学硬门）
 > **优先级**: P1（Task 172 Ch250 前置，须在 171u hard clean 后执行）
 > **依赖**: 171u；分析报告 `docs/reports/task-171-ch200-analysis-and-next-step-report.md`
-> **状态**: ⚠️ 条件未通过（核心工程护栏已落地；Ch201-Ch220 小窗口实跑 partial，需 171v-hardening）
+> **状态**: ⚠️ 条件未通过（核心工程护栏已落地；Ch201-Ch220 小窗口实跑 partial，后续拆为 Task 171w hardening）
 
 ## 结论
 
@@ -18,6 +18,15 @@ Task 171 Ch200 完成后，20% 抽读复盘确认：文本没有随长度明显�
 4. **配角目标偏功能化**：赵铭、小周、陈薇/陈曦等常承担解释/提醒/情绪推进功能，但较少拥有与林渊冲突的独立目标。
 
 本 task 不把文学分重新变成硬门禁，而是把抽读发现转成 CreativeDirector/Writer 的输入护栏和 observe 检测，作为 Ch250 前置质量底盘。
+
+## 拆分判定（2026-07-13）
+
+171v 已经完成“把文学护栏接入 planning/prompt 链路”的核心工程，但小窗口实跑证明它没有稳定改变正文输出，因此不能继续把后续修复仍记在 171v 内部。为避免混淆“已实跑的失败事实”和“下一步待修复范围”，后续拆出：
+
+- **171v**：保留为本任务事实源，记录护栏接入、测试结果、小窗口失败证据和不进入 172 的判定。
+- **171w**：新增 `tasks/171w-171v-hardening-and-ch201-ch220-rerun.md`，专门处理 hardening、Ch207 settlement 数值校验、Ch201-Ch220 重验和 172 前置出口。
+
+171w 通过前，171v 不得改判完成；Task 172 不得启动。
 
 ## 当前实施进度（2026-07-12）
 
@@ -55,6 +64,9 @@ result: partial，19/20 accepted，failed=[207]，Halt=None
 - `CreativeDirector` 对 Ch201-Ch220 **20/20** 注入了 171v 护栏；Ch205/210/215/220 也均注入了“配角独立目标护栏”。
 - accepted 19 章中，T9 hard issue 仍为 0：meta/artifact=0、duplicate=0。
 - 母题疲劳 observe 有改善但未清零：多章仍有 `motif_fatigue_count=1/2`，后段出现若干 0。
+- DB 复核显示 `project_runs.run-e27b763f` 为 `status=partial`，`completed_chapters=19`，`failed_chapters=[207]`；`chapter_heads` 中 Ch201-Ch220 为 19 accepted + Ch207 draft。
+- accepted 19 章 `character_autonomy_score` 均值为 2.8158，10/19 章低于 3.0。
+- `setting_tracking` 显示多章新增设定数 >1，Ch217 为 9。
 
 未通过：
 
@@ -62,11 +74,12 @@ result: partial，19/20 accepted，failed=[207]，Halt=None
 - 角色主动性未达到预期：accepted 19 章 `character_autonomy_score` 均值约 **2.816**，10/19 章低于 3.0。
 - 配角目标节点未落到正文：Ch205/210/215/220 均注入了配角目标约束，但正文中对应配角命中为 0；Ch210 的约束配角为“指挥官”，也未在正文出现。
 - 概念密度仍偏高：`setting_tracking` 显示多章新增设定数 >1（如 Ch217 为 9）。
+- 171v 结构化字段没有持久化到 `creative_briefs` 表；accepted/revision 版本也未稳定保留 `creative_brief_snapshot` 中的 171v 字段，导致回放审计只能依赖 prompt/style_constraints 旁证。
 
 结论：
 
 - 171v 当前证明了“护栏能进入 planning/prompt 链路”，但没有证明“护栏稳定改变正文输出”。
-- 不建议进入 Task 172；下一步应先做 `171v-hardening`：强化配角目标为可验证必达约束、修复 CreativeBrief 171v 字段持久化/Revision metadata 丢失、为概念预算与主动选择增加 observe 检测。
+- 不建议进入 Task 172；下一步应先做 **Task 171w**：强化配角目标为可验证必达约束、修复 CreativeBrief 171v 字段持久化/Revision metadata 丢失、为概念预算与主动选择增加 observe 检测，并诊断 Ch207 settlement 数值校验失败。
 
 ## 修复边界
 
@@ -250,7 +263,12 @@ python scripts/run_171_ch200.py --report
 
 ## 与后续关系
 
-171v 完成后进入 Task 172：Ch250 过渡验证。Task 172 不应只看 accepted 率，还要继续保留人工抽读，并重点复核：
+171v 不直接进入 Task 172。当前后续顺序为：
+
+1. **Task 171w：171v-hardening 与 Ch201-Ch220 重验**；
+2. 171w 通过后，才进入 **Task 172：Ch250 过渡验证**。
+
+Task 172 不应只看 accepted 率，还要继续保留人工抽读，并重点复核：
 
 - character autonomy 是否稳定；
 - 概念密度是否可读；

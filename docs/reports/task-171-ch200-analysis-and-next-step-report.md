@@ -248,9 +248,24 @@ Ch1、8、15、22、29、36、43、50、57、64、71、78、85、92、99、106�
    - 每 5 章至少 1 个配角拥有与林渊不完全一致的目标；
    - 通过冲突推动信息，而非只做提示器。
 
+### Task 171w：171v-hardening 与 Ch201-Ch220 重验
+
+状态：✅ 已完成（2026-07-13）。
+
+前置原因：171v Ch201-Ch220 小窗口 `run-e27b763f` 已实跑但未通过出口：19/20 accepted，failed=[207]，配角目标未落正文，主动性与概念密度未达预期。
+
+执行结果（四个工作包全部落地）：
+
+- **171w-a**：报告脚本参数化（`--run-id` / `--output` / `--include-legacy-harness`），Ch200 主报告 run_id 已校准为 `run-fb39245c`，旧 V6 harness 表默认不输出。
+- **171w-b**：171v 四类护栏字段持久化到 `creative_briefs`（`protagonist_active_choice` / `new_concept_budget` / `fatigue_motif_replacements` / `supporting_character_goal`），revision metadata 继承 parent brief/snapshot，范围审计 helper 可回放完整链路。
+- **171w-c**：正文 observe 检测硬化（配角目标/主动选择/概念预算），ReviewMerger 接线将"目标配角未出现在正文"升级为 major patchable issue（CHARACTER_BEHAVIOR），可触发自动修订链路。
+- **171w-d**：Ch207 settlement 数值闭合修复（解析层 + 验证层双层兜底），重跑 Ch201-Ch220 **20/20 accepted，failed=[]，Halt=None，status=completed**，T9 meta/artifact=0、duplicate=0。
+
+出口证据：Ch201-Ch220 20/20 accepted，Ch207 已接受（`rev-207-7-edf1218b`），numerical ledger 正常闭合。
+
 ### Task 172：Ch250 下一阶梯验证
 
-前置：171v Ch201-Ch220 小窗口落地。
+前置：171w hardening + Ch201-Ch220 重验通过。✅ 前置已满足。
 
 执行：
 
@@ -267,9 +282,9 @@ Ch1、8、15、22、29、36、43、50、57、64、71、78、85、92、99、106�
 
 ## 10. 建议结论
 
-Task 171 已取得关键工程突破：**Ch200 全量跑通 + D1 hard clean pass**。下一步不应直接追求更长，而应先加上轻量文学护栏，再进入 Ch250。
+Task 171 已取得关键工程突破：**Ch200 全量跑通 + D1 hard clean pass**。171w 硬化后 Ch201-Ch220 20/20 accepted 验证通过。
 
 推荐执行顺序：
 
-1. Task 171v：Ch200+ 文学可读性护栏；
-2. Task 172：Ch250 长跑验证。
+1. Task 171w：171v-hardening 与 Ch201-Ch220 重验；✅ 已完成（2026-07-13）
+2. Task 172：Ch250 长跑验证（前置已满足，可启动）。

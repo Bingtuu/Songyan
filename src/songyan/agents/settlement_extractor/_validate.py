@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import difflib
+import math
 import re
 
 import structlog
@@ -718,11 +719,31 @@ async def _validate_settlement(
             continue
         validated_numerical_updates.append(num)
         if abs(num.closing_value - expected) > NUMERICAL_TOLERANCE:
-            errors.append(
-                f"角色 {num.character_id} 的 {num.attribute_name} "
-                f"closing_value ({num.closing_value}) 不等于 "
-                f"公式值 ({expected:.3f})"
+            # 171w-d: closing_value 为 0.0/缺省但公式可计算时，从公式推导
+            closing_is_default = (
+                num.closing_value == 0.0
+                or math.isinf(num.closing_value)
             )
+            has_ledger_evidence = bool(
+                num.increments or num.decrements or num.opening_value != 0.0
+            )
+            if closing_is_default and has_ledger_evidence:
+                logger.info(
+                    "settlement.numerical_closing_autocorrected",
+                    character_id=num.character_id,
+                    attribute_name=num.attribute_name,
+                    llm_closing_value=num.closing_value,
+                    computed_closing=expected,
+                    project_id=project_id,
+                    chapter_number=chapter_number,
+                )
+                num.closing_value = expected
+            else:
+                errors.append(
+                    f"角色 {num.character_id} 的 {num.attribute_name} "
+                    f"closing_value ({num.closing_value}) 不等于 "
+                    f"公式值 ({expected:.3f})"
+                )
     settlement.numerical_updates = validated_numerical_updates
 
     # 5. 验证 foreshadowing_update.source_version_id

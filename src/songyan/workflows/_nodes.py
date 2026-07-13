@@ -1262,6 +1262,11 @@ async def review_merger_node(state: dict[str, Any]) -> dict[str, Any]:
         report_id=report_id,
         previous_new_issues=previous_new_issues if previous_new_issues else None,
         previous_all_issues=previous_all_issues,
+        creative_brief=(
+            await load_creative_brief(state["creative_brief_id"])
+            if state.get("creative_brief_id")
+            else None
+        ),
     )
 
     merged_has_critical = merged.has_critical

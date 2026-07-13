@@ -24,18 +24,22 @@ from songyan.models import (
     ChapterVersion,
     Character,
     CreativeBrief,
+    FatigueMotifReplacement,
     ForeshadowingItem,
     Increment,
     LiteraryAuditResult,
     LiteraryObservation,
     LLMAuditResult,
     MergedReviewReport,
+    NewConceptBudget,
     NewSetting,
     NumericalUpdate,
     ProjectSetting,
+    ProtagonistActiveChoice,
     ReviewCategory,
     ReviewIssue,
     RuleAuditResult,
+    SupportingCharacterGoal,
     Tension,
 )
 
@@ -100,6 +104,45 @@ class TestReviewRepositories:
         assert saved.chapter_goal.target_events == ["enter trial"]
         assert saved.required_tensions[0].tension_id == "t1"
         assert saved.forbidden_patterns == ["easy win"]
+
+    async def test_creative_brief_persists_171v_guardrails(self, repo_db: Path) -> None:
+        await _seed_project()
+        goal = ChapterGoal(chapter_number=205, target_events=["force route change"])
+        brief = CreativeBrief(
+            mode_id="webnovel",
+            chapter_goal=goal,
+            protagonist_active_choice=ProtagonistActiveChoice(
+                choice="林渊主动切断供能",
+                alternatives=["等待观察者"],
+                cost="暴露位置",
+                irreversible_consequence="审判舱失去回滚机会",
+            ),
+            new_concept_budget=NewConceptBudget(
+                max_new_core_concepts=1,
+                grounding_scene="供能断路现场",
+            ),
+            fatigue_motif_replacements=[
+                FatigueMotifReplacement(overused="左臂发烫", alternatives=["设备回震"])
+            ],
+            supporting_character_goal=SupportingCharacterGoal(
+                character="赵铭",
+                goal="带小周离开",
+                conflict_with_protagonist="路线冲突",
+                scene_consequence="迫使林渊改变路线",
+            ),
+        )
+
+        await CreativeBriefRepository().create(brief, "b171v", "p1", 205)
+        saved = await CreativeBriefRepository().get("b171v")
+
+        assert saved is not None
+        assert saved.protagonist_active_choice is not None
+        assert saved.protagonist_active_choice.choice == "林渊主动切断供能"
+        assert saved.new_concept_budget is not None
+        assert saved.new_concept_budget.max_new_core_concepts == 1
+        assert saved.fatigue_motif_replacements[0].overused == "左臂发烫"
+        assert saved.supporting_character_goal is not None
+        assert saved.supporting_character_goal.character == "赵铭"
 
     async def test_creative_brief_get_missing_returns_none(self, repo_db: Path) -> None:
         assert await CreativeBriefRepository().get("missing") is None

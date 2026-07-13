@@ -1,8 +1,8 @@
 # V7 Task 总索引
 
 > **阶段**: 篇章级质量修复 → 叙事自驱 → enforce 可生产化 → Ch300 渐进爬坡
-> **当前口径**: **V7 阶段 W/X/Y 已通过，T9/T10/T12 已冻结；文学提质专项（Task 170）已结束——改判为"改契约 + 并行"框架（2026-07-10 用户拍板，见 `docs/reports/v7-literary-framework-review.md`）**。旧框架把文学质量（voice/exposition ≥3.0）设为 Ch200 硬前置门，经框架级复盘认定其有 5 个结构性错误（判决分辨率 > 量具精度、量具构念建错、用未证能力阻塞已证能力等），路径 B 五步 prompt 工程（170h–170l）在错误框架内必然递减/劣化，**已封存**。新框架把文学质量拆为三层契约：Tier 1 硬缺陷（T9，仍阻塞）+ Tier 2 趋势地板（observe 不阻塞）+ Tier 3 上限（并行 R&D）。**Task 171 Ch200 长跑已取得 `run-fb39245c` 200/200 accepted + D1 hard clean pass 证据**；171v Ch201-Ch220 小窗口已实跑但未通过出口（run `run-e27b763f` partial，19/20 accepted，failed=[207]），当前转 171v-hardening 后再重验，暂不进入 172。文学 R&D 171a/171a-1/171b/171c/171d 已完成并归档至 `archive/v7/`。阶段验收标准见 `docs/reports/v7-literary-framework-review.md` §8。170 系列 DONE 文档保留为历史事实，不再作为 Ch200 闸门。
-> **最后整理**: 2026-07-12（Ch200 完成 200/200 accepted；171t/171u 完成 D1 hard clean pass；171v 小窗口 partial，需 hardening；171a–171d R&D 产物归档至 `archive/v7/`）
+> **当前口径**: **V7 阶段 W/X/Y 已通过，T9/T10/T12 已冻结；文学提质专项（Task 170）已结束——改判为"改契约 + 并行"框架（2026-07-10 用户拍板，见 `docs/reports/v7-literary-framework-review.md`）**。旧框架把文学质量（voice/exposition ≥3.0）设为 Ch200 硬前置门，经框架级复盘认定其有 5 个结构性错误，路径 B 五步 prompt 工程（170h–170l）在错误框架内必然递减/劣化，**已封存**。新框架把文学质量拆为三层契约：Tier 1 硬缺陷（T9，仍阻塞）+ Tier 2 趋势地板（observe 不阻塞）+ Tier 3 上限（并行 R&D）。**Task 171 Ch200 长跑已取得 `run-fb39245c` 200/200 accepted + D1 hard clean pass 证据**；171w hardening 已完成，Ch201-Ch220 20/20 accepted、failed=[]、Halt=None；可启动 172 Ch250。文学 R&D 171a/171a-1/171b/171c/171d 已完成并归档至 `archive/v7/`。阶段验收标准见 `docs/reports/v7-literary-framework-review.md` §8。
+> **最后整理**: 2026-07-13（Ch200 完成 200/200 accepted；171w 四个工作包全部落地；Ch201-Ch220 20/20 accepted；171a–171d R&D 产物归档至 `archive/v7/`）
 
 本文是 V7 阶段任务文档的事实入口。V6 阶段事实入口见 `tasks/V6-README.md`；V5 见 `tasks/V5-README.md`；历史规划稿统一归档到 `archive/`，仅在追溯设计边界时查阅。V7 各任务最终状态以本文件和各 `*-DONE.md` 为准。
 
@@ -10,7 +10,7 @@
 
 ## 一句话目标
 
-> **V7 让系统"自己把质量维持在高位"——先修复 V6 暴露的篇章级质量债（文本洁净、去重、概念落地），再闭合文学质量、伏笔调度、enforce 门禁三个开放环，最终渐进验证到 Ch300。文学质量环（Task 170）经框架级复盘，从"voice/exposition ≥3.0 的 Ch200 硬前置门"改判为"三层契约 + 并行 R&D"（详见 `docs/reports/v7-literary-framework-review.md`）：Tier 1 硬缺陷仍阻塞、Tier 2 趋势地板转 observe 不阻塞、Tier 3 上限归并行 R&D。Task 171 Ch200 长跑已取得 200/200 accepted + D1 hard clean pass 证据；171v 小窗口已证明护栏进入 prompt，但尚未稳定改变正文输出，需 hardening 后重验。本阶段目标不再是"把 voice 拧到 3.0"，而是"建立可信、可证伪、体裁解耦、不阻塞规模化的文学质量框架，并取得 Ch200+ 真实证据"（阶段验收标准见框架文档 §8）。**
+> **V7 让系统"自己把质量维持在高位"——先修复 V6 暴露的篇章级质量债（文本洁净、去重、概念落地），再闭合文学质量、伏笔调度、enforce 门禁三个开放环，最终渐进验证到 Ch300。文学质量环（Task 170）经框架级复盘，从"voice/exposition ≥3.0 的 Ch200 硬前置门"改判为"三层契约 + 并行 R&D"（详见 `docs/reports/v7-literary-framework-review.md`）：Tier 1 硬缺陷仍阻塞、Tier 2 趋势地板转 observe 不阻塞、Tier 3 上限归并行 R&D。Task 171 Ch200 长跑已取得 200/200 accepted + D1 hard clean pass 证据；171w hardening 已完成，Ch201-Ch220 20/20 accepted。本阶段目标不再是"把 voice 拧到 3.0"，而是"建立可信、可证伪、体裁解耦、不阻塞规模化的文学质量框架，并取得 Ch200+ 真实证据"（阶段验收标准见框架文档 §8）。**
 
 四个决策边界（2026-07-04 确认，详见 `docs/v7-plan.md` §1.2）：
 1. **质量修复优先**：先修 159 暴露的篇章级缺陷，再做长程爬坡。
@@ -101,7 +101,7 @@ V7 通过 = 同时满足以下五项（阈值沿用 v6-plan §1.4 的 T1-T8，V7
 
 ### 阶段 Z：Ch300 渐进爬坡验证（含文学 R&D 并行线）
 
-> **主线**（Ch200→250→300 长跑）与 **R&D 线**（171a→171b→171c 文学量具/样本/杠杆）并行。R&D 线是"文学结论"的前提，但**不阻塞主线**：Ch200 以已验证稳定性面放行、文学=观测。Ch200 完成后的当前收口链路为 **171t 量具补强 → 171u 清洁应用/报告复算 → 171v 文学护栏 → 171v-hardening + Ch201-Ch220 重验 → 172 Ch250**。阶段验收标准见 `docs/reports/v7-literary-framework-review.md` §8。
+> **主线**（Ch200→250→300 长跑）与 **R&D 线**（171a→171b→171c 文学量具/样本/杠杆）并行。R&D 线是"文学结论"的前提，但**不阻塞主线**：Ch200 以已验证稳定性面放行、文学=观测。Ch200 完成后的收口链路为 **171t 量具补强 → 171u 清洁应用/报告复算 → 171v 文学护栏 → 171w hardening + Ch201-Ch220 重验 → 172 Ch250**。171w 已完成，可启动 172。阶段验收标准见 `docs/reports/v7-literary-framework-review.md` §8。
 
 | Task | 名称 | 状态 | 事实文档 |
 |------|------|:----:|----------|
@@ -112,13 +112,13 @@ V7 通过 = 同时满足以下五项（阈值沿用 v6-plan §1.4 的 T1-T8，V7
 | 171t | Ch200 D1 文本洁净量具补强 | ✅ **完成** | `tasks/171t-ch200-d1-hard-clean.md`；已扩展 T9 hard issue 检测：Markdown 标题、保护指令、斜杠拼接、纯省略号段、prompt/patch 指令、duplicate final sweep；目标 pytest 104/127 passed，`ruff check src/ tests/` 通过 |
 | 171u | Ch200 D1 清洁应用与报告事实源复算 | ✅ **完成** | `tasks/171u-ch200-d1-clean-application-and-report-refresh.md`；20 个 clean accepted versions，T9 hard issue=0，T6b critical orphan peak=0，报告只取最新事实源 |
 | 171v | Ch200+ 文学性与可读性护栏 | ⚠️ **条件未通过（小窗口 partial，需 hardening）** | `tasks/171v-ch200-plus-literary-readability-guardrails.md`；run `run-e27b763f` Ch201-Ch220 **19/20 accepted、failed=[207]、Halt=None**；T9=0，但角色主动性均值约 2.816、配角目标 4/4 次注入未落正文、概念密度仍偏高 |
-| 171w | 171v-hardening：文学护栏硬化与 Ch201-Ch220 重验 | ◻ **规划中** | 待创建 spec；基于 171v 小窗口结论，重点修复 CreativeBrief/Revision metadata、配角目标必达约束、主动选择/概念预算 observe、Ch207 settlement 数值校验 |
+| 171w | 171v-hardening：文学护栏硬化与 Ch201-Ch220 重验 | ✅ **完成** | `tasks/171w-171v-hardening-and-ch201-ch220-rerun.md`；171w-a 报告收口 / 171w-b 持久化审计 / 171w-c 正文 observe + ReviewMerger 接线 / 171w-d Ch207 settlement 修复与重验全部落地；Ch201-Ch220 20/20 accepted、failed=[]、Halt=None、T9=0 |
 | 171a | 文学量具效度重建（R0：构念重定义 + 体裁解耦通电 + voice 归因召回修复） | ✅ **完成 / 已归档** | `archive/v7/tasks/171a-literary-metric-validity-rebuild-DONE.md`、`archive/v7/reports/task-171a-metric-validity-report.md`；B2/B3 已由 171a-1 达标 |
 | 171a-1 | 量具效度量化（≥2 体裁盲标 GT + voice/exposition P/R/F1，框架 §8 B2/B3） | ✅ **完成 / 已归档** | `archive/v7/tasks/171a-1-metric-validity-quantification-DONE.md`、`archive/v7/reports/task-171a-1-metric-prf-report.md`；scifi/wuxia voice F1=1.0、exposition F1=0.889/1.0 |
 | 171b | 代表性样本集（R1：场景分层采样 + ≥2 体裁交叉 + 2×2 归因） | ✅ **完成 / 已归档** | `archive/v7/tasks/171b-representative-sampling-DONE.md`、`archive/v7/reports/task-171b-representative-sampling-report.md`；两体裁 9 章全 voice 适用，稀疏参照层正确剔除，170 低分归『量具无效』格 |
 | 171c | 杠杆组合验证（R2：后处理/few-shot/解码参数/换模型/人工抽读，带退出判据） | ✅ **完成 / 已归档** | `archive/v7/tasks/171c-improvement-levers-DONE.md`、`archive/v7/reports/task-171c-improvement-levers-report.md`；确定性后处理证伪退出（Goodhart），温度死配置通电，换模型通道就绪待 live 资源 |
 | 171d | 三层契约落地（框架 §8 A 组：A1 报告分层 + A3 Tier2 趋势地板/抽读 observe + A4 标定） | ✅ **完成 / 已归档** | `archive/v7/tasks/171d-three-tier-contract-DONE.md`、`archive/v7/reports/task-171d-three-tier-contract-report.md`；`detect_literary_spot_read` observe-only，465 章标定确认 rubric 1–10、地板 max(base×0.85, 3.0) |
-| 172 | Ch250 过渡验证 | ⏳ 占位 | `tasks/172-ch250-transition-validation.md`；待 171w hardening + Ch201-Ch220 重验通过后启动 |
+| 172 | Ch250 过渡验证 | ◻ 规划中 | `tasks/172-ch250-transition-validation.md`；前置 171w 已完成，可启动 |
 | 172p | Ch250 撞墙定点修复（占位） | ⏳ 占位 | 待 Ch250 实跑后确定 |
 | 173 | Ch300 终态验收 + V7 阶段验收报告 | ⏳ 占位 | 待 172 后写 |
 | 173p | Ch300 撞墙定点修复（占位） | ⏳ 占位 | 待 Ch300 实跑后确定 |
@@ -138,7 +138,7 @@ Y（enforce 可生产化 168-170）──┴────────────
 - **X 与 Y 可部分并行**：不同代码域（自驱在规划侧、门禁在 gate 侧）。
 - **阶段 Y 出口已完成并冻结 T12**：Task 170 已用四类小窗口验证 168/169（良性 FP rate=0、真实退化 halt_candidate/halt=100%），T12 已冻结；后续 Z 不得在长跑撞线后临时放宽冻结口径。
 - **文学放行门已改判为三层契约（Task 170 结束）**：Task 170b 实读观察"治理达标 ≠ prose 好看"仍成立，但"用它作 Ch200 硬前置门 + 单窗口单体裁 prompt 迭代"的框架经复盘被推翻（`docs/reports/v7-literary-framework-review.md`）。文学质量改为三层契约：**Tier 1 硬缺陷（T9）仍阻塞；Tier 2 趋势地板转 observe 不阻塞；Tier 3 上限归并行 R&D**。**Ch200 不再被文学 rubric 阻塞**，放行判据回到已验证稳定性面。文学量具/样本/杠杆的未完成工作转 171a/171b/171c 并行推进；路径 B（170h–170l）prompt 工程已封存。
-- **Z 主线与 R&D 线并行**：171/172/173 长跑是终检，每级出口以**稳定性面**（T9/health/orphan/T12）判定、未达标不进下一级，每级预留撞墙定点修复或收口 task。**Task 171 Ch200 已完成且 D1 hard clean pass**；171v 小窗口已实跑但未通过出口，需 hardening + 重验后再进入 172。
+- **Z 主线与 R&D 线并行**：171/172/173 长跑是终检，每级出口以**稳定性面**（T9/health/orphan/T12）判定、未达标不进下一级，每级预留撞墙定点修复或收口 task。**Task 171 Ch200 已完成且 D1 hard clean pass**；171w hardening 已完成，Ch201-Ch220 20/20 accepted，可启动 172。
 - **文档递进纪律**：166/166a/166b、167、168、169、170、170b–170p 已落地并有 evidence；文学专项 Task 170 已结束并改判（框架文档 `docs/reports/v7-literary-framework-review.md`）。阶段 Z 的 171 主线、171t/171u/171v 收口与 172 占位 spec 保留在当前入口；171a/171a-1/171b/171c/171d R&D 产物已归档至 `archive/v7/`；173 与各后续撞墙修复继续保持方向性占位，待前置实跑数据出炉后补齐，避免文档超前返工。
 
 ---

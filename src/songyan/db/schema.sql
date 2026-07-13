@@ -88,6 +88,10 @@ CREATE TABLE IF NOT EXISTS creative_briefs (
     emotion_arc     TEXT DEFAULT '[]',           -- JSON array of EmotionArcItem
     voice_anchors   TEXT DEFAULT '[]',           -- JSON array of VoiceAnchor (Task 170j)
     voice_samples   TEXT DEFAULT '[]',           -- JSON array of VoiceSample (Task 170l)
+    protagonist_active_choice TEXT DEFAULT '{}', -- JSON object of ProtagonistActiveChoice (Task 171v)
+    new_concept_budget TEXT DEFAULT '{}',        -- JSON object of NewConceptBudget (Task 171v)
+    fatigue_motif_replacements TEXT DEFAULT '[]',-- JSON array of FatigueMotifReplacement (Task 171v)
+    supporting_character_goal TEXT DEFAULT '{}', -- JSON object of SupportingCharacterGoal (Task 171v)
     created_at      TEXT DEFAULT (datetime('now'))
 );
 

@@ -12,13 +12,17 @@ from songyan.models import (
     ChapterGoal,
     CreativeBrief,
     EmotionArcItem,
+    FatigueMotifReplacement,
     LiteraryAuditResult,
     LiteraryObservation,
     LLMAuditResult,
     MergedReviewReport,
+    NewConceptBudget,
+    ProtagonistActiveChoice,
     PunchPoint,
     ReviewIssue,
     RuleAuditResult,
+    SupportingCharacterGoal,
     Tension,
     VoiceAnchor,
     VoiceSample,
@@ -46,8 +50,10 @@ class CreativeBriefRepository:
                     brief_id, project_id, chapter_number, mode_id, creative_intent,
                     required_tensions, forbidden_patterns, allowed_fissures,
                     style_constraints, reader_contract, polyphony_notes, chapter_goal,
-                    punch_points, emotion_arc, voice_anchors, voice_samples
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    punch_points, emotion_arc, voice_anchors, voice_samples,
+                    protagonist_active_choice, new_concept_budget,
+                    fatigue_motif_replacements, supporting_character_goal
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
                     brief_id,
                     project_id,
@@ -65,6 +71,22 @@ class CreativeBriefRepository:
                     _model_json(brief.emotion_arc),
                     _model_json(brief.voice_anchors),
                     _model_json(brief.voice_samples),
+                    (
+                        brief.protagonist_active_choice.model_dump_json()
+                        if brief.protagonist_active_choice is not None
+                        else "{}"
+                    ),
+                    (
+                        brief.new_concept_budget.model_dump_json()
+                        if brief.new_concept_budget is not None
+                        else "{}"
+                    ),
+                    _model_json(brief.fatigue_motif_replacements),
+                    (
+                        brief.supporting_character_goal.model_dump_json()
+                        if brief.supporting_character_goal is not None
+                        else "{}"
+                    ),
                 ),
             )
             await conn.commit()
@@ -91,6 +113,9 @@ class CreativeBriefRepository:
             if goal_data and "chapter_number" in goal_data
             else None
         )
+        active_choice_data = _from_json(row["protagonist_active_choice"], {})
+        concept_budget_data = _from_json(row["new_concept_budget"], {})
+        supporting_goal_data = _from_json(row["supporting_character_goal"], {})
         return CreativeBrief(
             mode_id=row["mode_id"],
             chapter_goal=chapter_goal,
@@ -115,6 +140,25 @@ class CreativeBriefRepository:
             voice_samples=[
                 VoiceSample.model_validate(item) for item in _from_json(row["voice_samples"], [])
             ],
+            protagonist_active_choice=(
+                ProtagonistActiveChoice.model_validate(active_choice_data)
+                if active_choice_data
+                else None
+            ),
+            new_concept_budget=(
+                NewConceptBudget.model_validate(concept_budget_data)
+                if concept_budget_data
+                else None
+            ),
+            fatigue_motif_replacements=[
+                FatigueMotifReplacement.model_validate(item)
+                for item in _from_json(row["fatigue_motif_replacements"], [])
+            ],
+            supporting_character_goal=(
+                SupportingCharacterGoal.model_validate(supporting_goal_data)
+                if supporting_goal_data
+                else None
+            ),
         )
 
 

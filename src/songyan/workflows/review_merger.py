@@ -7,6 +7,7 @@ import uuid
 import structlog
 
 from songyan.db.review_repo import ReviewReportRepository
+from songyan.evals.literary_guardrail_observe import check_supporting_character_goal_presence
 from songyan.models import (
     LLMAuditResult,
     MergedReviewReport,
@@ -15,6 +16,7 @@ from songyan.models import (
     ReviewIssue,
     RuleAuditResult,
 )
+from songyan.models.creative_mode import CreativeBrief
 
 logger = structlog.get_logger(__name__)
 
@@ -194,6 +196,8 @@ def _convert_rule_to_issues(
     content: str,
     rule_result: RuleAuditResult,
     version_id: str,
+    *,
+    creative_brief: CreativeBrief | None = None,
 ) -> list[ReviewIssue]:
     """将 RuleAuditor 严重问题转化为 ReviewIssue.
 
@@ -524,9 +528,18 @@ def _convert_rule_to_issues(
             )
         )
 
+    # 171w-c: 配角目标护栏 — 目标角色未出现即生成 major patchable issue
+    scg_issue = check_supporting_character_goal_presence(
+        content, creative_brief, version_id=version_id,
+    )
+    if scg_issue is not None:
+        issues.append(scg_issue)
+
     # 上限保护：MR / 元标记聚合 issue 不计入 cap，始终保留
     max_rule_issues = 5
-    protected_prefixes = ("rule-mr-", "rule-meta-", "rule-scene-", "rule-dup-")
+    protected_prefixes = (
+        "rule-mr-", "rule-meta-", "rule-scene-", "rule-dup-", "rule-guardrail-scg-"
+    )
     protected = [i for i in issues if i.issue_id.startswith(protected_prefixes)]
     regular = [i for i in issues if not i.issue_id.startswith(protected_prefixes)]
     if len(regular) > max_rule_issues:
@@ -554,6 +567,8 @@ async def merge_reviews(
     report_id: str | None = None,
     previous_new_issues: list[ReviewIssue] | None = None,
     previous_all_issues: list[ReviewIssue] | None = None,
+    *,
+    creative_brief: CreativeBrief | None = None,
 ) -> MergedReviewReport:
     """合并 RuleAuditor + LLMAuditor 结果，写入 review_reports 表.
 
@@ -578,7 +593,9 @@ async def merge_reviews(
     llm_result.issues = _detect_auditor_conflicts(llm_result.issues, previous_all_issues)
 
     # 将 RuleAuditor 严重问题转化为 ReviewIssue
-    rule_issues = _convert_rule_to_issues(content, rule_result, version_id)
+    rule_issues = _convert_rule_to_issues(
+        content, rule_result, version_id, creative_brief=creative_brief,
+    )
     all_issues = list(llm_result.issues) + rule_issues
     # 058d: 合并上一轮 revision 引入的新问题
     if previous_new_issues:

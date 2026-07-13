@@ -51,7 +51,8 @@
 | `tasks/171s-critical-setting-reference-refresh.md` | Task 171s：critical setting 同义提及刷新，修复 Ch159/165 false orphan 阻断 |
 | `tasks/171t-ch200-d1-hard-clean.md` | Task 171t：Ch200 D1 文本洁净量具补强（已完成） |
 | `tasks/171u-ch200-d1-clean-application-and-report-refresh.md` | Task 171u：Ch200 D1 清洁应用与报告事实源复算（已完成，T9 hard issue=0，T6b peak=0） |
-| `tasks/171v-ch200-plus-literary-readability-guardrails.md` | Task 171v：Ch200+ 文学性与可读性护栏（小窗口 partial，需 hardening） |
+| `tasks/171v-ch200-plus-literary-readability-guardrails.md` | Task 171v：Ch200+ 文学性与可读性护栏（小窗口 partial，条件未通过） |
+| `tasks/171w-171v-hardening-and-ch201-ch220-rerun.md` | Task 171w：171v-hardening 与 Ch201-Ch220 重验（172 前置） |
 | `tasks/172-ch250-transition-validation.md` | Task 172：Ch250 过渡验证占位 |
 | `archive/v7/INDEX.md` | V7 已完成 R&D 归档入口（171a/171a-1/171b/171c/171d） |
 | `archive/v7/tasks/171a-literary-metric-validity-rebuild-DONE.md` | Task 171a DONE：文学量具效度重建（代码侧 B1/B4/B5） |

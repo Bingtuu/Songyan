@@ -777,6 +777,12 @@ class TestSaveRevisionOutput:
             chapter_number=3,
             version_number=1,
             version_type="draft",
+            generation_metadata={
+                "creative_brief_snapshot": {
+                    "protagonist_active_choice": {"choice": "主动切断供能"}
+                }
+            },
+            creative_brief_id="cb-171v",
         )
 
         mock_version_db.list_by_chapter.return_value = [parent]
@@ -797,6 +803,11 @@ class TestSaveRevisionOutput:
         assert created.version_type == "revision"
         assert created.version_number == 2
         assert created.parent_version_id == "v_old"
+        assert created.creative_brief_id == "cb-171v"
+        assert created.generation_metadata["creative_brief_snapshot"][
+            "protagonist_active_choice"
+        ]["choice"] == "主动切断供能"
+        assert created.generation_metadata["revision_parent_version_id"] == "v_old"
         assert created.content == "修改后正文"
         assert vid.startswith("rev-")
 

@@ -133,6 +133,12 @@ async def _find_run_id(project_id: str) -> str | None:
     return rows[0]["run_id"] if rows else None
 
 
+def _resolve_output(args: argparse.Namespace) -> Path | None:
+    if args.output:
+        return Path(args.output)
+    return None
+
+
 def _render_tier2_observation(spot_read: Any, points: list[Any]) -> str:
     """D2：文学 Tier 2 观测随跑输出（跌破触发人工抽读建议，不阻塞）."""
     lines = ["## 文学 Tier 2 观测（框架 §8 D2；observe-only，不阻塞）", ""]
@@ -154,7 +160,13 @@ def _render_tier2_observation(spot_read: Any, points: list[Any]) -> str:
     return "\n".join(lines)
 
 
-async def _build_and_write_report(project_id: str, run_id: str | None) -> None:
+async def _build_and_write_report(
+    project_id: str,
+    run_id: str | None,
+    *,
+    output_path: Path | None = None,
+    include_legacy_harness: bool = False,
+) -> None:
     """复用 159 稳定性面验收 + 三层契约 metrics + D2 文学观测。"""
     completed = await _query_dicts(
         "SELECT DISTINCT chapter_number FROM chapter_versions "
@@ -166,19 +178,16 @@ async def _build_and_write_report(project_id: str, run_id: str | None) -> None:
     target_count = END_CHAPTER - START_CHAPTER + 1
 
     run_logs = read_run_logs(run_id) if run_id else []
-    harness = await evaluate_v6_acceptance(
-        project_id, START_CHAPTER, END_CHAPTER, run_id=run_id, run_logs=run_logs
-    )
-    harness_section = render_v6_acceptance_section(harness)
     stage_a_section = await render_stage_a_metrics(project_id, START_CHAPTER, END_CHAPTER)
 
     literary_points = await collect_literary_scores(project_id, START_CHAPTER, END_CHAPTER)
     spot_read = detect_literary_spot_read(literary_points)
     tier2_section = _render_tier2_observation(spot_read, literary_points)
 
-    REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    report_path = output_path or REPORT_PATH
+    report_path.parent.mkdir(parents=True, exist_ok=True)
     lines = [
-        "# Task 171：Ch1-Ch200 长跑报告（阶段 Z 第一里程碑，文学=观测）",
+        f"# Task 171：Ch{START_CHAPTER}-Ch{END_CHAPTER} 长跑报告（阶段 Z 第一里程碑，文学=观测）",
         "",
         f"- 生成时间: {datetime.now().isoformat()}",
         f"- DB: `{get_db_path()}`",
@@ -195,11 +204,15 @@ async def _build_and_write_report(project_id: str, run_id: str | None) -> None:
         tier2_section,
         "",
         stage_a_section,
-        "",
-        harness_section,
     ]
-    REPORT_PATH.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    print(f"[report] {REPORT_PATH}")
+    if include_legacy_harness:
+        harness = await evaluate_v6_acceptance(
+            project_id, START_CHAPTER, END_CHAPTER, run_id=run_id, run_logs=run_logs
+        )
+        harness_section = render_v6_acceptance_section(harness)
+        lines.extend(["", harness_section])
+    report_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    print(f"[report] {report_path}")
     print(
         f"[report] completed {completed_count}/{target_count}; "
         f"spot_read={spot_read.spot_read_recommended}"
@@ -212,6 +225,21 @@ async def main() -> None:
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--project-id", default=None)
     parser.add_argument("--report", action="store_true", help="仅从已有 DB 重新生成报告")
+    parser.add_argument(
+        "--run-id",
+        default=None,
+        help="指定 run_id 生成报告（默认取最新 run）",
+    )
+    parser.add_argument(
+        "--output",
+        default=None,
+        help="报告输出路径（默认 docs/reports/task-171-ch200-long-run-report.md）",
+    )
+    parser.add_argument(
+        "--include-legacy-harness",
+        action="store_true",
+        help="保留旧 V6 harness 聚合表（默认不输出，避免旧口径干扰当前判定）",
+    )
     parser.add_argument(
         "--clean-d1",
         action="store_true",
@@ -241,13 +269,17 @@ async def main() -> None:
                 f"{result.original_version_id} -> {result.cleaned_version_id} "
                 f"issues={len(result.issues)}"
             )
-        run_id = await _find_run_id(project_id)
-        await _build_and_write_report(project_id, run_id)
+        run_id = args.run_id or await _find_run_id(project_id)
+        await _build_and_write_report(project_id, run_id, output_path=_resolve_output(args))
         return
 
     if args.report:
-        run_id = await _find_run_id(project_id)
-        await _build_and_write_report(project_id, run_id)
+        run_id = args.run_id or await _find_run_id(project_id)
+        await _build_and_write_report(
+            project_id, run_id,
+            output_path=_resolve_output(args),
+            include_legacy_harness=args.include_legacy_harness,
+        )
         return
 
     project = await ProjectRepository().get(project_id)
@@ -287,8 +319,8 @@ async def main() -> None:
         halt_reason = f"{exc.reason} (last chapter: {exc.last_chapter})"
         print(f"\n=== AutoHalt / Gate triggered ===\n{halt_reason}")
 
-    run_id = await _find_run_id(project_id)
-    await _build_and_write_report(project_id, run_id)
+    run_id = args.run_id or await _find_run_id(project_id)
+    await _build_and_write_report(project_id, run_id, output_path=_resolve_output(args))
     print(
         f"\n=== Summary ===\n"
         f"Project: {project_id}; Run ID: {run_id}; Halt: {halt_reason or 'None'}"

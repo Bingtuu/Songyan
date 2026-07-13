@@ -179,6 +179,28 @@ async def _migrate_creative_briefs_voice_samples(conn: aiosqlite.Connection) -> 
         )
 
 
+async def _migrate_creative_briefs_171v_guardrails(conn: aiosqlite.Connection) -> None:
+    """为 creative_briefs 表添加 171v 文学护栏结构化字段."""
+    cursor = await conn.execute("PRAGMA table_info(creative_briefs)")
+    cols = {row[1] for row in await cursor.fetchall()}
+    if "protagonist_active_choice" not in cols:
+        await conn.execute(
+            "ALTER TABLE creative_briefs ADD COLUMN protagonist_active_choice TEXT DEFAULT '{}'"
+        )
+    if "new_concept_budget" not in cols:
+        await conn.execute(
+            "ALTER TABLE creative_briefs ADD COLUMN new_concept_budget TEXT DEFAULT '{}'"
+        )
+    if "fatigue_motif_replacements" not in cols:
+        await conn.execute(
+            "ALTER TABLE creative_briefs ADD COLUMN fatigue_motif_replacements TEXT DEFAULT '[]'"
+        )
+    if "supporting_character_goal" not in cols:
+        await conn.execute(
+            "ALTER TABLE creative_briefs ADD COLUMN supporting_character_goal TEXT DEFAULT '{}'"
+        )
+
+
 # ---------------------------------------------------------------------------
 # Phase 4 迁移
 # ---------------------------------------------------------------------------
@@ -907,6 +929,7 @@ async def init_schema(db_path: str | Path | None = None) -> None:
         await _migrate_creative_briefs_punch(conn)
         await _migrate_creative_briefs_voice_anchors(conn)
         await _migrate_creative_briefs_voice_samples(conn)
+        await _migrate_creative_briefs_171v_guardrails(conn)
         await _migrate_human_instructions(conn)
         await _migrate_continuity_tables(conn)
         # Phase 4 迁移
@@ -967,6 +990,7 @@ async def run_migrations(conn: aiosqlite.Connection) -> None:
     await _migrate_creative_briefs_punch(conn)
     await _migrate_creative_briefs_voice_anchors(conn)
     await _migrate_creative_briefs_voice_samples(conn)
+    await _migrate_creative_briefs_171v_guardrails(conn)
     await _migrate_summaries_impact_score(conn)
     await _migrate_project_arc_boundaries(conn)
     await _migrate_chapter_versions_score_card(conn)

@@ -495,16 +495,40 @@ def _build_numerical_update(data: dict[str, Any]) -> NumericalUpdate | None:
         for item in data.get("decrements", [])
         if isinstance(item, dict)
     ]
+    opening_value = _coerce_numerical_value(data.get("opening_value"), 0.0)
+    raw_closing = _coerce_numerical_value(
+        data.get("closing_value"),
+        _INVALID_CLOSING_VALUE,
+    )
+    # 171w-d: LLM 返回 closing_value=0.0 但公式可计算为非零时，从公式推导
+    formula_expected = (
+        opening_value
+        + sum(i.amount for i in increments)
+        - sum(d.amount for d in decrements)
+    )
+    if (
+        raw_closing == 0.0
+        and formula_expected != 0.0
+        and raw_closing != _INVALID_CLOSING_VALUE
+    ):
+        closing_value = formula_expected
+        logger.info(
+            "settlement.parse.numerical_closing_autofixed",
+            character_id=character_id,
+            attribute_name=attribute_name,
+            opening_value=opening_value,
+            llm_closing_value=raw_closing,
+            computed_closing=formula_expected,
+        )
+    else:
+        closing_value = raw_closing
     return NumericalUpdate(
         character_id=character_id,
         attribute_name=attribute_name,
-        opening_value=_coerce_numerical_value(data.get("opening_value"), 0.0),
+        opening_value=opening_value,
         increments=increments,
         decrements=decrements,
-        closing_value=_coerce_numerical_value(
-            data.get("closing_value"),
-            _INVALID_CLOSING_VALUE,
-        ),
+        closing_value=closing_value,
         formula=str(data.get("formula", "")),
     )
 

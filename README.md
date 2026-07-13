@@ -3,467 +3,273 @@
 
   <h1>Songyan（松烟）</h1>
 
-  <p><strong>多 Agent 中文小说写作系统</strong></p>
+  <p><strong>多 Agent 中文长篇小说写作系统</strong></p>
   <p><em>松烟入墨，字句成锋。</em></p>
-  <p>面向长篇中文小说创作的多 Agent AI 生产系统，基于 LangGraph 多 Agent 协作架构。</p>
 </div>
-
-## 项目状态
-
-Songyan 已经从实验原型推进到可长篇运行的工程版本。系统现在可以完成小说章节生成、自动审查、自动修订、状态结算、摘要沉淀和跨章节一致性维护，并已通过 150 章级别的长序列验证。
-
-- **V5.2 已完成**：默认 `gate_mode` 切换为 `enforce`，Ch1–Ch150 enforce 模式验证 150/150 accept，长期事实库可信度达到 V5.2 出口标准。
-- **V6 已完成**：系统装上了最小可用的叙事骨架（自顶向下全书大纲 / 弧规划 / 线索经济 MVP），建立了长篇质量度量，补齐了无人值守长跑底盘，并在治理管线上取得真实 Ch1–Ch150 证据（`run-bba292da`，150/150 accept、health 全程 ≥8.2）。阶段验收结论：实质达标、条件通过。
-- **V7 进行中**：目标是让系统"自己把质量维持在高位"——先修复 V6 暴露的篇章级质量债，再闭合叙事自驱、伏笔调度、enforce 门禁三个开放环，最后渐进爬坡到 Ch300。
-  - **阶段 W / X / Y 已完成，T9 / T10 / T12 已冻结**：篇章级质量修复（元标记清洗、段落去重、时间线一致、概念预算、文本洁净度）、叙事自驱（plan→re-plan 闭环 + 长程伏笔主动调度）、enforce 门禁自适应化均已落地并冻结阈值。
-  - **阶段 Z（Ch200 → Ch300 爬坡）已完成 Ch200 D1 收口**：Task 170b 实读发现"治理指标全达标 ≠ prose 好看"，曾据此把文学质量设为 Ch200 硬前置门；经框架级复盘（[`docs/reports/v7-literary-framework-review.md`](docs/reports/v7-literary-framework-review.md)）认定该门禁框架有结构性错误，已改判为**三层契约 + 并行 R&D**——文学质量转为长跑观测项而非闸门。**Ch200 长跑（Task 171）已取得 `run-fb39245c` 200/200 accepted 且 D1 hard clean pass 证据**；171v Ch201-Ch220 小窗口已实跑但未通过出口（19/20 accepted），当前需要 hardening 后重验，再进入 172 Ch250 验证。已完成的 171a–171d R&D 证据归档见 [`archive/v7/INDEX.md`](archive/v7/INDEX.md)。
-
-> README 只保留开源项目概览。**逐任务进展、复评分数、测试结果和下一步执行项以 [`docs/STATUS.md`](docs/STATUS.md) 为准**；V7 任务事实入口见 [`tasks/V7-README.md`](tasks/V7-README.md)，V6 见 [`tasks/V6-README.md`](tasks/V6-README.md)，V5 见 [`tasks/V5-README.md`](tasks/V5-README.md)。V6 论证基础见 [`docs/300-chapter-gap-analysis.md`](docs/300-chapter-gap-analysis.md)，V7 构想与规划见 [`docs/v7-vision.md`](docs/v7-vision.md)、[`docs/v7-plan.md`](docs/v7-plan.md)。
-
-### 阶段概览
-
-| 阶段 | 解决的问题 | 对使用者意味着什么 |
-|------|------------|--------------------|
-| 早期版本 | 搭建"写作 → 审查 → 修订 → 记录状态"的基础流程 | 系统不只是生成文本，还会解释、检查并保存每章结果 |
-| 长篇稳定性 | 处理历史信息越来越多、上下文越来越长的问题 | 可以连续生成几十章而不频繁丢失上下文 |
-| 150 章验证 | 引入信息压缩、角色淡出、设定清理和预算保护 | 已验证可以支撑 150 章级别的长篇生成流程 |
-| 质量加固 | 补充测试、质量门、严格模式和异常恢复 | 生成流程更稳定，失败时更容易定位原因 |
-| V5.2 完成 | enforce 默认启用 + 150 章完整证据 | CLI 默认 `enforce`，Ch1–Ch150 全部 accept，角色状态、世界设定和数字读数均有正文证据支撑 |
-| V6 完成 | 补齐自顶向下叙事架构与长篇质量度量，验证 150 章稳定输出 | 章节目标从全书规划派生；orphan、文学质量、伏笔兑现可观测；治理管线 Ch1–Ch150 取得 150/150 证据 |
-| 当前阶段（V7） | 先修复 V6 暴露的篇章级质量债，再补齐叙事自驱和自适应门禁，最后渐进爬坡至 Ch300 | 正文更洁净、连贯；线索调度可追踪；门禁从固定阈值走向趋势判定。阶段 W/X/Y 已完成、T9/T10/T12 已冻结；Ch200 长跑（阶段 Z）已完成 200/200 accepted 且 D1 hard clean pass；171v 小窗口 partial，需 hardening 后重验，文学质量采用三层契约 + 并行 R&D（详见 STATUS.md 与框架文档） |
-
-### 当前开发重点（V7）
-
-1. **篇章级质量修复（阶段 W）**：以确定性工程修复根治 V6 暴露的可读性/连贯性债——元标记泄漏清洗、整段落去重、跨章时间线一致性检测、概念预算约束，并把文本洁净度做成可入库、可查的指标。✅ 已完成，T9/T10 已冻结。
-2. **叙事自驱（阶段 X）**：把静态叙事骨架升级为 plan→generate→re-plan 闭环，并让长程伏笔从被动遗忘转为主动兑现调度。✅ 已完成。
-3. **enforce 可生产化（阶段 Y）**：把质量门禁从绝对阈值改为相对趋势 / 异常因子触发，正常波动不误伤、真退化才暂停。✅ 已完成——小窗口验证良性 false positive rate=0、真实退化拦截率 100%，T12 已冻结。
-4. **文学质量框架（Ch200 长跑观测 + 并行 R&D）**：Task 170b 实读发现"治理指标全达标 ≠ prose 好看"，曾据此把文学质量设为 Ch200 硬前置门；经框架级复盘（[`docs/reports/v7-literary-framework-review.md`](docs/reports/v7-literary-framework-review.md)）改判为**三层契约**——Tier 1 硬缺陷（T9）仍阻塞、Tier 2 趋势地板转 observe 不阻塞、Tier 3 上限归并行 R&D。✅ **R&D 支撑已完成并归档**：171a/171a-1/171b/171c/171d 的量具、样本、杠杆和三层契约证据见 [`archive/v7/INDEX.md`](archive/v7/INDEX.md)；主线仍按 STATUS.md 推进。
-5. **Ch300 渐进爬坡（阶段 Z）**：Ch150 基线 → Ch200 → Ch250 → Ch300，每级取真实证据再进下一级。✅ **Task 171 Ch200 已完成 D1 hard clean pass**：`run-fb39245c` 200/200 accepted，T9 hard issue=0，T6b critical orphan peak=0；171v 小窗口 partial，下一步是 hardening → Ch201-Ch220 重验 → 172。
-
-### 长期目标
-
-当前已经完成 150 章级别长篇验证，并取得 **Ch200 规模化运行 + D1 hard clean pass 证据**。下一阶段的现实目标是完成 171v-hardening，并让 Ch201-Ch220 重验通过；之后再推进到 **Ch250 稳定输出**。更长期的研究目标是评估 **300 章级别** 的连续生成能力。
-
-这两个目标不会只按章节数判断。Songyan 更关注长篇运行后的事实源质量：角色状态是否可信、设定是否被正确回收、伏笔是否持续可追踪、数字记录是否有正文证据。只有生成链路和长期事实库同时稳定，才算真正达到 200+ / 300 章目标。
-
-### V5.0 核心决策
-
-**Context-on-Demand（检索架构）→ Context Diet 2.0（信息节食）**
-
-```
-V4.0: ContextManager 预组装大包 → BudgetPruner 裁剪 → 仍持续增长
-V5.0: TemporalCompressor 分层摘要 + CharacterFocalDecay 角色衰减
-       + SettingEvaporator 设定蒸发 + BudgetHardCeiling 硬天花板
-       → 信息密度 O(log n) → 支撑 150+ 章
-```
-
-**四组件协同**:
-
-| 组件 | 功能 | 解决什么问题 |
-|------|------|-------------|
-| **TemporalCompressor** | 金字塔分层摘要（最近 5 章详细 + 弧摘要 + 卷摘要）| 历史信息 O(n) → O(log n) |
-| **CharacterFocalDecay** | 角色档案按未出场章数衰减（完整→精简→符号→不加载）| 活跃角色池膨胀 |
-| **SettingEvaporator** | 设定按 resolve_confidence 蒸发 + embedding 合并 | 设定/伏笔累积 |
-| **BudgetHardCeiling** | fullness_factor 0.7 + ContextEmergency | 绝对预算天花板 |
 
 ---
 
-## 1. 设计方式、逻辑和结构
+## 这是什么？
 
-### 1.1 设计目标
+Songyan 是一个用多个 AI Agent 协作写中文长篇小说的系统。它不是"调用一次模型生成一章"的简单封装——而是把长篇写作拆成规划、生成、审查、修订、结算和连续性维护六个环节，每个环节由独立的 Agent 负责，共同维护一个长期事实数据库。
 
-Songyan 的目标不是"一次调用模型写一章"，而是把长篇小说生成拆成可控制、可审查、可恢复的工程流程。每一章都要回答四个问题：
+当前已稳定支持 **200 章以上**的连续生成，并在向 300 章推进。
 
-1. 这一章为什么这样写？
-2. 它是否违反了题材、节奏、人物和世界设定？
-3. 修订后有没有引入新问题？
-4. 哪些角色状态、设定、伏笔和摘要可以安全写入长期事实库？
+### 它解决什么问题？
 
-因此，系统把"生成文本"和"沉淀事实"分开处理：Writer 只负责正文；审查、修订、质量门、结算、摘要和连续性审计分别由独立模块完成。SQLite 是唯一长期事实源，LangGraph state 只传递 ID，不保存正文或完整业务对象。
+用单个模型直接写长篇会遇到三个核心困难：
 
-### 1.2 总体架构
+1. **遗忘**：写到第 50 章时，模型已经不记得第 3 章发生了什么。
+2. **质量漂移**：没有外部约束，文风、设定和角色行为会逐渐走样。
+3. **事实不可信**：模型会"编造"角色状态变化，但无法保证前后一致。
 
-Songyan 采用两层工作流：
+Songyan 的做法是把"写文本"和"管事实"分开——Writer 只管生成正文，而角色状态、世界设定、伏笔线索、数字读数都由独立的结算模块从正文中提取、校验后存入 SQLite。这样，每一章的事实基础都是可追溯、可验证的。
 
-- **单章工作流**：规划、生成、审查、修订、质量门、人工确认、状态结算。
-- **多章运行器**：按章节范围运行单章工作流，负责跳过已完成章节、记录 run log、执行连续性审计、触发暂停策略和支持断点续跑。
+---
 
-```mermaid
-flowchart TB
-    User["用户 / CLI"] --> Runner["多章节运行器<br/>phase2_graph"]
-    Runner --> Checkpoint["断点续跑<br/>跳过已 accepted 章节"]
-    Runner --> Chapter["单章工作流<br/>phase1_graph"]
-    Runner --> RunLog["运行日志<br/>chapter_runs / project_runs"]
-    Runner --> Continuity["连续性审计<br/>ContinuityAuditor"]
-    Runner --> Halt["自动暂停策略<br/>Quality / Health / Context"]
-    Chapter --> SQLite["SQLite<br/>唯一长期事实源"]
-    Continuity --> SQLite
-    RunLog --> SQLite
-    SQLite --> Context["上下文组装<br/>ContextManager"]
-    Context --> Chapter
+## 核心设计
+
+### 1. 生成与事实分离
+
+这是 Songyan 最重要的设计决策。
+
+大多数 AI 写作工具把模型输出当作最终结果。Songyan 把模型输出当作**候选材料**——正文可以自由发挥，但写入长期事实库的数据必须经过证据校验。
+
+```
+Writer 生成正文
+    ↓
+审查（规则 + 语义）→ 修订（最多两轮）
+    ↓
+人工确认 accept
+    ↓
+SettlementExtractor 从正文中提取：
+  - 角色状态变化（old_value 必须匹配 DB 当前值）
+  - 新设定（必须有正文 source_quote）
+  - 伏笔（记录来源版本，后续追踪兑现）
+  - 数字读数（公式闭合验证）
+    ↓
+写入 SQLite 长期事实库
 ```
 
-### 1.3 单章生成闭环
+这意味着：**模型可以提出候选信息，但事实库只接受有证据、可验证、可回放的数据。**
 
-单章工作流的核心是"先生成，再审查，再决定是否修订或接受"。只有通过质量门和人工确认的版本才会进入结算阶段。
+### 2. 上下文节食（Context Diet 2.0）
+
+长篇生成的最大压力来自上下文膨胀。每写一章，历史信息就多一分，如果不加控制，prompt 会线性增长直到超出模型窗口。
+
+Songyan 使用四组件协同控制：
+
+| 组件 | 做法 | 效果 |
+|------|------|------|
+| 分层摘要 | 最近 5 章保留细节，远期压缩为弧摘要和卷摘要 | 历史信息从 O(n) 降到 O(log n) |
+| 角色衰减 | 主角和当前出场角色保留完整档案；不活跃角色按未出场章数逐步降级为精简→符号→不加载 | 控制角色池膨胀 |
+| 设定蒸发 | 低置信度、长期未使用的设定自动归档 | 防止设定累积 |
+| 硬天花板 | 预算超限时触发紧急模式，只保留不可裁剪的硬约束 | 绝对上限保护 |
+
+### 3. 多层审查而非单一评分
+
+Songyan 不把质量判断交给一个模型。审查分为四层：
+
+- **规则审查（RuleAuditor）**：代码级确定性检测——字数、Markdown 泄漏、段落重复、AI 腔特征词等。有就是有，没有就是没有。
+- **语义审查（LLMAuditor）**：需要模型判断的问题——角色行为一致性、叙事节奏、信息密度。每个 critical/major issue 必须附带正文证据引用。
+- **文学诊断（LiteraryAuditor）**：识别人物工具化、概念空转、过度平滑等文学性问题。只诊断，不阻塞。
+- **合并与门禁（ReviewMerger + QualityGate）**：规则和语义审查结果合并后进入质量门——通过则 accept，有可修复问题则自动修订（最多两轮），修订不收敛则上报人工。
+
+### 4. 版本不可覆盖
+
+每次生成、修订、重写、人工编辑都会在 `chapter_versions` 表中创建新记录。不存在"覆盖"操作。这意味着：
+- 任何版本都可以回溯
+- 质量下降时可以回退到安全版本
+- 完整审计链：谁在什么时候改了什么
+
+### 5. 可中断、可恢复
+
+长篇生成可能需要数小时。Songyan 支持：
+- 中途 kill 后用 `--resume` 从断点继续
+- 自动跳过已 accept 的章节
+- 单章失败不阻塞整体（isolate 模式）
+- 门禁检测到真实退化时自动暂停（AutoHalt），人工判断后继续
+
+---
+
+## 架构概览
+
+### 单章工作流
+
+每一章走完"规划 → 生成 → 审查 → 修订 → 确认 → 结算"的完整闭环：
 
 ```mermaid
 flowchart LR
-    Goal["GoalPlanner<br/>章节目标"] --> Brief["CreativeDirector<br/>创作简报"]
-    Brief --> Context["ContextManager<br/>组装上下文"]
-    Context --> Writer["Writer<br/>生成初稿"]
-    Writer --> Rule["RuleAuditor<br/>规则检测"]
-    Writer --> LLM["LLMAuditor<br/>语义审查"]
-    Rule --> Merge["ReviewMerger<br/>合并审查结果"]
+    Goal["章节目标"] --> Brief["创作简报"]
+    Brief --> Context["上下文组装"]
+    Context --> Writer["生成初稿"]
+    Writer --> Rule["规则审查"]
+    Writer --> LLM["语义审查"]
+    Rule --> Merge["审查合并"]
     LLM --> Merge
-    Merge --> Score["ScoreAggregator<br/>质量评分"]
-    Score --> Gate{"QualityGate"}
-    Gate -->|通过| Human["HumanConfirm<br/>accept / edit / reject"]
-    Gate -->|可修复| Revision["RevisionHandler<br/>局部 patch"]
-    Gate -->|修订失败| Rewrite["Rewrite<br/>整章重写 / safe best 回退"]
-    Revision --> Rule
+    Merge --> Gate{"质量门"}
+    Gate -->|通过| Confirm["人工确认"]
+    Gate -->|可修复| Revise["局部修订"]
+    Gate -->|修订失败| Rewrite["整章重写"]
+    Revise --> Rule
     Rewrite --> Rule
-    Human -->|accepted| Settlement["SettlementExtractor<br/>状态结算"]
-    Settlement --> Summary["SummaryWriter<br/>章节摘要"]
-    Settlement --> Tracking["Setting Tracking<br/>设定刷新 / 回收"]
-    Summary --> DB["SQLite"]
-    Tracking --> DB
-    Settlement --> DB
+    Confirm -->|accept| Settlement["状态结算"]
+    Settlement --> Summary["章节摘要"]
+    Settlement --> DB["SQLite"]
+    Summary --> DB
 ```
 
-### 1.4 长篇上下文管理
-
-长篇生成不能无限制地把所有历史塞回 prompt。Songyan 使用 Context Diet 2.0 控制信息密度：近期内容保留细节，远期内容压缩，长期未出现的角色和设定逐步降级或归档。
+### 多章运行
 
 ```mermaid
 flowchart TB
-    DB["SQLite<br/>章节 / 摘要 / 角色 / 设定 / 伏笔"] --> Loader["ContextManager"]
-    Loader --> Summary["分层摘要<br/>最近章节 / 故事弧 / 卷摘要"]
-    Loader --> Character["角色焦点衰减<br/>主角保留，不活跃角色降级"]
-    Loader --> Setting["设定蒸发与回收<br/>低置信度设定归档"]
-    Loader --> Hard["硬约束<br/>题材规则 / 章节目标 / 主角档案"]
-    Summary --> Budget["预算硬上限"]
+    CLI["CLI / 脚本"] --> Runner["多章运行器"]
+    Runner --> Skip["跳过已完成章节"]
+    Runner --> Chapter["单章工作流"]
+    Runner --> RunLog["运行日志"]
+    Runner --> Continuity["连续性审计"]
+    Runner --> Halt["自动暂停策略"]
+    Chapter --> SQLite["SQLite 事实库"]
+    Continuity --> SQLite
+    RunLog --> SQLite
+    SQLite --> Context["上下文组装"]
+    Context --> Chapter
+```
+
+### 上下文管理
+
+```mermaid
+flowchart TB
+    DB["SQLite"] --> Loader["ContextManager"]
+    Loader --> Summary["分层摘要"]
+    Loader --> Character["角色衰减"]
+    Loader --> Setting["设定蒸发"]
+    Loader --> Hard["硬约束保护"]
+    Summary --> Budget["预算控制"]
     Character --> Budget
     Setting --> Budget
     Hard --> Budget
-    Budget -->|预算内| Package["ContextPackage"]
-    Budget -->|超预算| Emergency["ContextEmergency<br/>只保留不可裁剪信息"]
+    Budget -->|预算内| Package["上下文包"]
+    Budget -->|超预算| Emergency["紧急模式"]
     Emergency --> Package
-    Package --> Writer["Writer / Auditor / Revision"]
+    Package --> Writer
 ```
 
-### 1.5 事实源与证据边界
+---
 
-状态结算是系统最严格的部分。正文可以有文学表达，但写入事实库的数据必须有可追溯来源：
+## 当前能力
 
-- **角色状态**：只新增快照，不覆盖历史；`old_value` 必须匹配数据库当前值。
-- **新设定**：必须带有正文中的 `source_quote`，不能凭空创建。
-- **伏笔**：记录来源版本，后续可追踪是否兑现或过期。
-- **数字读数**：真实账本必须满足公式；仪表读数必须能在正文或引用中找到明确证据。
-- **摘要**：只基于 accepted 正文和已通过的结算结果生成。
-- **连续性审计**：定期扫描孤立设定、遗忘伏笔和状态冲突，作为后续章节规划和修复依据。
+Songyan 已经过 **200 章**规模的实战验证。以下是已验证的关键能力：
 
-这条边界的目的很简单：模型可以提出候选信息，但长期事实库只接受有证据、可验证、可回放的数据。
+| 能力 | 说明 |
+|------|------|
+| 200 章连续生成 | 单次运行完成 200 章，无人工干预，无结构性塌陷 |
+| 文本洁净 | 零 Markdown 泄漏、零段落重复、零 AI 保护指令进入正文 |
+| 事实一致性 | 角色状态、世界设定、数值读数均可追溯到正文证据 |
+| 跨章连续性 | 孤立设定和遗忘伏笔自动检测；health 评分全程稳定 |
+| 上下文控制 | Context Diet 2.0 支撑 200+ 章不溢出 |
+| 断点续跑 | kill 后 `--resume` 继续，自动跳过已完成章节 |
+| 自适应门禁 | 正常波动不误伤，真实退化自动暂停 |
+| 叙事骨架 | 全书大纲 → 弧规划 → 章节目标自顶向下派生 |
+| 伏笔调度 | 长程伏笔主动兑现，生命周期可追踪 |
+| 文学护栏 | 配角目标、主动选择、概念预算在 prompt 和审查中双重约束 |
 
-### 1.6 关键设计原则
+> 最新验证数据和进展见 [`docs/STATUS.md`](docs/STATUS.md)。
 
-- **事实源优先**：SQLite 保存长期事实；工作流 state 只保存 ID 和路由信息。
-- **职责分离**：Writer 写正文，Auditor 找问题，RevisionHandler 做局部修订，SettlementExtractor 做结算，SummaryWriter 写摘要。
-- **证据驱动**：自动修订和状态结算都依赖明确证据；没有证据的问题不进入自动修复链路。
-- **版本不可覆盖**：每次生成、修订、重写、人工编辑都会产生新版本，便于回滚和审计。
-- **长篇优先**：上下文管理以 100+ 章为目标，宁可压缩和归档信息，也不让 prompt 无限膨胀。
-- **可中断、可恢复**：多章节运行记录 run log，支持跳过 accepted 章节和从失败章节继续。
+---
 
-### 1.7 项目结构
+## 项目结构
 
 ```text
 songyan/
-├── creative_modes/          # 创作模式配置，如 webnovel / literary / hybrid
-├── genres/                  # 题材配置，如 scifi / xuanhuan / urban
-├── prompts/cards/           # Agent 工艺卡，YAML 版本化管理
 ├── src/songyan/
-│   ├── cli/                 # CLI 入口
-│   ├── agents/              # 生成、审查、修订、结算、摘要、连续性审计
-│   │   ├── context_manager/          # 上下文组装与预算控制
-│   │   ├── continuity_auditor/       # 跨章一致性与 health 分级
-│   │   ├── creative_director/        # 创作简报与章节策略
-│   │   ├── revision_handler/         # 局部 patch、分段修订、safe best 保护
-│   │   ├── settlement_extractor/     # 状态结算、证据校验、设定追踪
-│   │   └── setting_evaporator/       # 设定蒸发与归档
-│   ├── workflows/           # LangGraph 编排与多章节运行器
-│   │   ├── phase1_graph.py           # 单章闭环
-│   │   ├── phase2_graph.py           # 多章节运行、断点续跑、AutoHalt
-│   │   ├── _nodes.py                 # 工作流节点实现
-│   │   ├── _gates.py                 # 候选硬门禁与 health gate
-│   │   └── _run_logger.py            # 章节运行日志
-│   ├── db/                  # SQLite schema、repository、迁移和生命周期清理
+│   ├── agents/              # Writer / Auditor / RevisionHandler / SettlementExtractor 等
+│   │   ├── context_manager/        # 上下文组装与预算控制
+│   │   ├── creative_director/      # 创作简报与章节策略
+│   │   ├── revision_handler/       # 局部 patch、分段修订、safe best 保护
+│   │   └── settlement_extractor/   # 状态结算、证据校验、设定追踪
+│   ├── workflows/           # LangGraph 单章闭环 + 多章运行器
+│   ├── db/                  # SQLite schema、repository、迁移
 │   ├── models/              # Pydantic v2 数据模型
-│   ├── rag/                 # RAG 检索、chunk、embedding、vector store
-│   ├── llm/                 # LLM client、重试、JSON 解析
-│   └── utils/               # 规则检测、节奏检测、文本工具
-├── tests/                   # 单元、集成、E2E、长序列压力测试
-├── docs/                    # 当前状态、索引和架构文档
-├── tasks/                   # 任务事实记录和完成报告
-└── archive/                 # 历史报告、旧计划、旧脚本和归档材料
+│   ├── evals/               # 质量度量、文学诊断、护栏审计
+│   └── llm/                 # LLM 调用、重试、结构化输出
+├── prompts/cards/           # Agent 工艺卡（YAML 版本化）
+├── tests/                   # 单元 / 集成 / E2E / 长序列测试
+├── docs/                    # 状态、架构文档、报告
+└── archive/                 # 历史资料
 ```
 
 ---
 
-## 2. 技术设计
+## 快速开始
 
-### 2.1 技术栈
+### 环境要求
 
-| 组件 | 选型 | 说明 |
-|------|------|------|
-| Python 3.11+ | 主语言 | 异步优先，核心流程使用 `async` / `await` |
-| LangGraph | 工作流编排 | 组织单章生成闭环和多章节运行 |
-| Pydantic v2 | 数据模型 | 对章节、审查、结算、上下文等结构化数据做类型校验 |
-| SQLite + aiosqlite | 本地事实库 | 保存项目、章节版本、审查报告、角色状态、设定、摘要和 run log |
-| LiteLLM / LangChain | LLM 接入 | 统一模型调用、重试和结构化输出解析 |
-| Click | CLI | 提供项目创建、章节生成、报告查看等命令 |
-| structlog | 日志 | 输出可检索的结构化运行日志 |
-| pytest | 测试 | 覆盖单元、集成、E2E 和长序列稳定性测试 |
-
-### 2.2 数据事实源设计
-
-SQLite 是 Songyan 的唯一长期事实源。工作流运行时只在 state 中传递 ID，具体正文、审查报告和状态快照都从 SQLite 读取，避免 LangGraph state 变成不可控的大对象。
-
-关键规则：
-
-- LangGraph state 只存 `project_id`、`version_id`、`report_id` 等引用。
-- 每次生成、修订、重写、人工编辑都会创建新的 `chapter_versions` 记录，禁止覆盖旧版本。
-- 每个节点从 SQLite 加载输入，不依赖上游节点传递完整正文。
-- `character_states` 是快照表，默认只新增记录，不覆盖历史状态。
-- accepted head、settlement、summary 等关键写入必须在事务中完成，避免半提交。
-
-### 2.3 版本管理
-
-章节正文采用追加式版本管理。系统可以保留初稿、修订版、重写版、人工编辑版和最终接受版，并在质量下降时回退到安全版本。
-
-| 类型 | 说明 | 谁创建 |
-|------|------|--------|
-| `draft` | AI 初稿 | Writer |
-| `revision` | AI 修订版 | RevisionHandler |
-| `rewrite` | AI 重写版 | rewrite_node |
-| `accepted` | 人工确认版 | HumanConfirm |
-| `edited` | 人工编辑版 | HumanConfirm |
-
-### 2.4 审查体系
-
-Songyan 使用多层审查，而不是把质量判断交给单个模型：
-
-- **RuleAuditor**：代码级检测，覆盖字数、钩子、AI 腔、疲劳词、短段落比例、Markdown/HTML/元标记泄漏等确定性问题。
-- **LLMAuditor**：语义审查，检查角色行为、叙事节奏、设定一致性、信息倾倒等需要模型判断的问题。
-- **LiteraryAuditor**：文学性诊断，识别人物工具化、概念空转、过度平滑等问题；只诊断，不阻塞 accept。
-- **ReviewMerger**：合并规则审查和语义审查结果，不调用 LLM，保证审查合并可预测。
-- **QualityGate**：根据综合评分和章节位置动态调整阈值；低风险章节可降级接受，但会留下可追踪标记。
-- **RevisionHandler / Rewrite**：优先做局部 patch；多轮修订仍不收敛时才进入整章重写，并保留 safe best 回退路径。
-- **ContinuityAuditor**：跨章扫描孤立设定、遗忘伏笔和状态冲突，为长篇一致性提供反馈。
-
-### 2.5 状态结算
-
-每章只有在 accepted 后才执行状态结算。edit、reject、back 等动作不会触发 settlement，避免未确认正文污染事实库。
-
-SettlementExtractor 负责把 accepted 正文转成结构化事实，但它不能凭空写入信息：
-
-- 角色状态更新要求 `old_value` 与数据库当前值一致。
-- 新设定必须有正文中的 `source_quote`。
-- 伏笔必须记录来源版本，便于后续追踪。
-- 数字类状态分为真实账本和读数快照：真实账本必须公式闭合；读数快照必须能在正文或引用中找到明确数字证据。
-- 质量门失败但允许流程继续的章节会跳过 settlement，防止低置信正文写入长期事实源。
-- 结算通过后，SummaryWriter 基于 accepted 正文和 settlement 结果生成结构化摘要。
-
-### 2.6 上下文架构演进
-
-长篇生成的主要压力来自上下文膨胀。ContextManager 负责根据当前章节目标组装 `ContextPackage`，并在预算内选择最有用的信息。
-
-| 机制 | 作用 |
-|------|------|
-| 分层摘要 | 近期章节保留细节，远期内容压缩为故事弧和卷摘要 |
-| 角色焦点衰减 | 主角和当前出场角色优先，不活跃角色逐步降级 |
-| 设定蒸发 | 低置信度、长期未使用或已回收的设定逐步归档 |
-| 硬约束保护 | 题材规则、章节目标、创作简报和主角档案不被裁剪 |
-| 预算硬上限 | 超预算时触发 ContextEmergency，只保留不可裁剪信息 |
-
-这套机制的目标是让长篇上下文增长接近可控，而不是随着章节数线性膨胀。
-
----
-
-## 3. 开发历程
-
-Songyan 的开发历程按能力演进划分，而不是按内部任务编号展开。当前阶段任务记录见 [`tasks/V7-README.md`](tasks/V7-README.md)，前置阶段见 [`tasks/V6-README.md`](tasks/V6-README.md) 和 [`tasks/V5-README.md`](tasks/V5-README.md)，历史资料见 [`archive/v5/INDEX.md`](archive/v5/INDEX.md)。
-
-| 阶段 | 主要目标 | 已形成的能力 | 当前状态 |
-|------|----------|--------------|----------|
-| 原型闭环 | 验证多 Agent 写作流程是否可控 | 建立"章节规划 → 正文生成 → 审查 → 修订 → 状态结算"的基础闭环 | 已完成 |
-| 长篇支撑 | 解决多章生成中的遗忘、节奏和一致性问题 | 引入 RAG、人工标记、分层摘要、伏笔和设定追踪 | 已完成 |
-| 稳定长跑 | 让系统可以连续运行并定位失败原因 | 增加 run log、断点续跑、质量指标、上下文预算和重写保护 | 已完成 |
-| 上下文优化 | 控制长篇项目中不断膨胀的历史信息 | 建立预算裁剪、角色生命周期、设定生命周期和质量门控 | 已完成 |
-| 150 章验证 | 验证系统能否支撑长篇规模生成 | Context Diet 2.0、分层压缩、角色衰减、设定蒸发、预算硬上限通过长序列验证 | 已完成 |
-| 质量加固 | 提升输出质量和失败恢复能力 | 补充系统性测试、严格模式、降级接受、safe best 回退和报告入口 | 已完成 |
-| 事实源治理 | 确保长期记录的角色状态、设定和数字信息可信 | 强化 Settlement 证据校验、设定回收、连续性健康检查；enforce 默认启用并取得 Ch1–Ch150 150/150 证据 | 已完成（V5.2） |
-| 叙事骨架与度量 | 补齐自顶向下叙事架构，并让长篇质量可度量 | 全书大纲 / 弧规划 / 线索经济 MVP、跨章质量度量入库（orphan / T7 / 质量债 / 文学趋势 / 伏笔兑现率）、末端治理、无人值守长跑底盘（run 级 resume / 限流 / 失败隔离 / DB 维护）、Ch1-Ch150 治理管线复现 | 已完成（V6：`run-bba292da` Ch1-Ch150 150/150 accept，阶段验收实质达标、条件通过） |
-| 篇章级质量与自驱 | 修复篇章级质量债，再让系统自驱把质量维持在高位并爬坡至 Ch300 | 元标记清洗 / 段落去重 / 时间线一致 / 概念预算 / 文本洁净度 T9 harness（阶段 W）、plan→re-plan 闭环 + 伏笔调度（阶段 X）、enforce 门禁自适应（阶段 Y）、Ch200→300 渐进验证（阶段 Z） | 进行中（V7：阶段 W/X/Y 已完成，T9/T10/T12 已冻结；Ch200 长跑已完成 200/200 accepted 且 D1 hard clean pass；文学质量改为三层契约 + 并行 R&D，详见 STATUS.md 与框架文档） |
-
----
-## 4. 快速开始
-
-### 前置要求
-
-- **Python >= 3.11**（必须，`pyproject.toml` 中 `requires-python = ">=3.11"`)
-- DeepSeek API Key 或兼容的 LLM API（通过 litellm 统一接口）
-- 磁盘空间：100 章运行时 DB + JSONL 日志约 10MB
+- Python >= 3.11
+- DeepSeek API Key（或兼容 OpenAI 接口的 LLM）
+- 磁盘空间：200 章数据库约 160MB
 
 ### 安装
 
 ```bash
-# 安装
 pip install -e ".[dev]"
-
-# 配置环境变量
 cp .env.example .env
 # 编辑 .env，填入 LLM_API_KEY
-
-# 创建项目
-songyan create-project
-
-# 列出项目
-songyan list-projects
-
-# 运行测试
-pytest -k "not integration" -q
 ```
 
-### 验证命令
-
-```bash
-pytest tests/ -q
-# 最新测试基线见 docs/STATUS.md
-
-ruff check src/ tests/
-# 最新 lint 状态见 docs/STATUS.md
-```
-
----
-
-## 5. 已交付的关键能力
-
-本节只列对外说明有价值、且已有明确验证证据的能力。实时测试数字和最新阻断以 [`docs/STATUS.md`](docs/STATUS.md) 为准。
-
-| 能力 | 当前状态 | 证据入口 |
-|------|----------|----------|
-| 150 章长篇生成链路 | 已取得多轮 Ch1-Ch150 证据：V5.2 enforce 验证、V6 治理管线复现、V7 阶段 W 修复后复跑均达到 150/150 | `tasks/121q-safe-best-threshold-dynamic-fix-DONE.md`、`tasks/159-v6-final-acceptance-DONE.md`、`tasks/165-stage-w-ch150-rerun-and-threshold-freeze-DONE.md` |
-| 单章生成闭环 | 已支持章节目标、创作简报、上下文组装、正文生成、审查、修订、质量门和人工确认 | `src/songyan/workflows/phase1_graph.py` |
-| 多章节运行与恢复 | 已支持章节范围运行、跳过已接受章节、run log、自动暂停；新增 run 级断点续跑（`--resume`/`--run-id`）与孤儿 checkpoint 清理 | `src/songyan/workflows/phase2_graph.py`、`tasks/153-run-level-resume-DONE.md` |
-| 上下文预算控制 | 已落地分层摘要、角色衰减、设定蒸发和预算硬上限，支撑长篇上下文压缩 | `archive/tasks/120-v5-final-acceptance-DONE.md` |
-| 质量审查体系 | 已包含规则审查、语义审查、文学性诊断、质量评分、局部修订和 safe best 回退 | `src/songyan/agents/` |
-| 状态结算与摘要 | 已支持 accepted 后的角色状态、设定、伏笔、数值和摘要结算，并持续加强证据校验 | `tasks/138f-settlement-evidence-gated-numerical-extraction-DONE.md` |
-| 连续性健康检查 | 已支持跨章扫描孤立设定、遗忘伏笔和状态冲突；当前仍在治理剩余边界问题 | `tasks/137-setting-recycling-closed-loop.md` |
-| 叙事骨架数据模型（V6 阶段 0） | 已交付 `StoryOutline` / `ArcPlan` / `PlotThread` 前置规划模型、三张表与 `NarrativeRepository`（含线索生命周期状态机）；`create-project --outline-file` 可导入全书大纲；GoalPlanner 从弧规划自顶向下派生章节目标；CreativeDirector 注入线索经济约束、settlement 后自动推进线索状态；无骨架均回退旧行为 | `tasks/141-narrative-skeleton-data-model-DONE.md` … `tasks/144-thread-economy-mvp-DONE.md` |
-| 长篇质量度量（V6 阶段 A） | 新增 `songyan metrics`（DB 支撑、可复算历史库）：orphan 绝对量 / 新 critical 速率（T7）/ 质量债账本 / 文学趋势 / 弧级伏笔兑现率 + 长程台账；`run_quality_debt` 表；阈值 T3/T6/T8 已用历史 DB 复算冻结 | `tasks/145-orphan-and-critical-rate-metrics-DONE.md` … `tasks/148z-stage-a-threshold-calibration-DONE.md`、`docs/reports/v6-stageA-threshold-calibration.md` |
-| 末端治理（V6 阶段 B） | 录入侧降级（超额 critical 转 candidate，可回升）、`_infer_setting_category` 去硬编码主角名并收紧双命中、MR 上限自适应 + 主线相关性排序、critical 设定显式 resolve/abandon 终态 | `tasks/149-input-side-demotion-DONE.md` … `tasks/152-critical-explicit-resolve-abandon-DONE.md` |
-| 篇章级文本洁净治理（V7 阶段 W） | 已根治元标记 / 场景 marker 泄漏，补齐段落级去重、跨章时间线诊断、概念预算约束和 T9 文本洁净度入库；Task 165/165p 冻结 T9/T10 并完成阶段 W 出口 | `tasks/160-meta-tag-leak-eradication-DONE.md` … `tasks/165p-stage-w-harness-calibration-DONE.md` |
-| 叙事自驱（V7 阶段 X） | 已支持弧后评估生成 `ReplanProposal`、人工确认后事务化应用未来规划，并将长程伏笔调度注入 GoalPlanner / CreativeDirector，推进 active / injected / satisfied / missed 生命周期 | `tasks/166-plan-generate-replan-loop-DONE.md`、`tasks/167-long-range-foreshadowing-active-scheduling-DONE.md` |
-| 自适应门禁基础（V7 阶段 Y） | 已交付 adaptive gate 信号快照、窗口聚合报告、adaptive halt 判定引擎、决策账本和 phase2 observe/enforce 接入；Task 170 已用四类小窗口验证 T12（良性 FP rate=0、真实退化拦截率 100%）并冻结 | `tasks/168-adaptive-gate-data-plane-DONE.md`、`tasks/169-adaptive-halt-decision-DONE.md`、`tasks/170-enforce-small-window-validation-and-t12-calibration-DONE.md` |
-| 自动化验证 | 已建立单元、集成、E2E 和长序列压力测试；最近全量测试见状态板 | `tests/`、`docs/STATUS.md` |
-
-> **仍在治理中**：Ch200+ 文学可读性护栏，以及 Ch250 → Ch300 渐进爬坡证据。171a–171d 文学 R&D 支撑已完成并归档，见 [`archive/v7/INDEX.md`](archive/v7/INDEX.md)。当前进展以 [`docs/STATUS.md`](docs/STATUS.md) 和框架文档 [`docs/reports/v7-literary-framework-review.md`](docs/reports/v7-literary-framework-review.md) 为准，不写成已交付指标。
-
----
-## 6. 当前阶段与下一步
-
-Songyan 已完成 V6，并在 V7 中完成篇章级质量修复（阶段 W）、叙事自驱（阶段 X）和自适应门禁可生产化（阶段 Y），T9/T10/T12 已冻结。
-
-V7 的文学质量环经框架级复盘已改判：Task 170b 对中段窗口实读发现"治理指标全达标 ≠ prose 好看"（角色声纹塌陷、节奏偏慢、真实文本缺陷），曾据此把文学质量（voice/exposition ≥3.0）设为 Ch200 长跑（阶段 Z）的**硬前置门**并用 prompt 工程反复迭代。但复盘（[`docs/reports/v7-literary-framework-review.md`](docs/reports/v7-literary-framework-review.md)）认定该门禁框架有 5 个结构性错误（判决分辨率 > 量具精度、量具构念建错、用未证能力阻塞已证能力等），**已改判为"三层契约 + 并行 R&D"**：Tier 1 硬缺陷（T9）仍阻塞、Tier 2 趋势地板转 observe 不阻塞、Tier 3 上限归并行 R&D。**Task 171 Ch200 长跑已完成 200/200 accepted + D1 hard clean pass 证据**（以稳定性面放行、文学=观测）；171v 小窗口已证明护栏进入 prompt，但未稳定改变正文输出，需 hardening 后重验。171a–171d R&D 证据已归档至 [`archive/v7/INDEX.md`](archive/v7/INDEX.md)。阶段验收标准见框架文档 §8。
-
-V7 分四个阶段推进：
-
-1. **篇章级质量修复（阶段 W）**：确定性工程修复根治元标记泄漏、整段落重复、跨章时间线矛盾和概念通胀，并把文本洁净度做成可入库、可查的指标。✅ 已完成，T9/T10 已冻结。
-2. **叙事自驱（阶段 X）**：把静态叙事骨架升级为 plan→generate→re-plan 闭环，让长程伏笔从被动遗忘转为主动兑现调度。✅ 已完成。
-3. **enforce 可生产化（阶段 Y）**：把质量门禁从绝对阈值改为相对趋势 / 异常因子触发，正常波动不误伤、真退化才暂停。✅ 已完成，T12 已冻结。
-4. **Ch300 渐进爬坡（阶段 Z）**：Ch150 基线 → Ch200 → Ch250 → Ch300，每级取真实证据再进下一级，每级预留撞墙定点修复占位。✅ **Task 171 Ch200 已完成 D1 hard clean pass**；当前顺序为 171v-hardening → Ch201-Ch220 重验 → 172 Ch250 验证。
-
-> README 不维护实时任务状态。**当前进度、测试结果和下一步执行项请查看 [`docs/STATUS.md`](docs/STATUS.md)**，V7 任务事实入口见 [`tasks/V7-README.md`](tasks/V7-README.md)，文学质量框架与阶段验收标准见 [`docs/reports/v7-literary-framework-review.md`](docs/reports/v7-literary-framework-review.md)。
-
----
-## 7. CLI 常用命令
+### 创建项目并生成
 
 ```bash
 # 创建项目
 songyan create-project
 
-# 自动生成第 1-5 章
-songyan run --project-id mynovel --chapters 1-5 --auto-confirm
+# 生成第 1-5 章（自动确认模式）
+songyan run --project-id <id> --chapters 1-5 --auto-confirm
 
-# 断点续跑（从失败章节继续）
-songyan run --project-id mynovel --chapters 3-5 --auto-confirm  # 前 2 章已生成，从 Ch3 继续
-
-# 查看项目列表
-songyan list-projects
-
-# 添加人类标记
-songyan mark-add --project-id mynovel --type character --target 角色名 --note "需要调整性格"
-
-# 自定义创作模式
-songyan run --project-id mynovel --chapters 1-5 --auto-confirm --mode-id literary
+# 断点续跑
+songyan run --project-id <id> --chapters 1-200 --auto-confirm --resume
 ```
 
-## 8. 恢复失败章节
-
-Songyan 支持断点续跑（SQLite checkpoint）。有两种方式：
-
-**方式一 — 隐式跳过（沿用已久）**：重跑同一章节范围，系统自动检测已 `accepted` 的章节并跳过。
-
-1. 查阅 `logs/` 目录下的 JSONL 运行日志，找到失败章节的 `chapter_number`
-2. 使用 `--chapters` 参数从失败章节重新运行，系统自动检测已完成的章节并跳过
+### 长跑脚本
 
 ```bash
-# 假设 Ch1-Ch3 已完成，Ch4 失败：
-songyan run --project-id mynovel --chapters 4-30 --auto-confirm
+# 初始化 DB + 创建项目
+$env:DATABASE_URL = "sqlite:///.tmp/myproject.db"
+python scripts/run_171_ch200.py --init
+
+# 无人值守跑 Ch1-Ch200
+python scripts/run_171_ch200.py
+
+# 生成报告
+python scripts/run_171_ch200.py --report
 ```
 
-**方式二 — 显式 run 级续跑（V6 阶段 C / Task 153 新增）**：崩溃或人为 kill 后，用 `--resume`（复用该项目最近一次未完成的 run）或 `--run-id <id>`（指定 run）续跑。resume 以 `accepted` head 为唯一完成事实源、从 `summaries` 表重建累积摘要，并在重算前清理孤儿 checkpoint；被质量熔断暂停（`paused`）的 run 也可续跑，但门禁仍会生效。
+---
 
-```bash
-# 中途 kill 后，用同一命令 --resume 续完：
-songyan run --project-id mynovel --chapters 1-100 --auto-confirm --resume
-```
+## 技术栈
 
-Checkpointer 模式说明：
-- `sqlite`：生产环境，持久化 checkpoint，支持断点续跑
-- `memory`：测试环境，不写文件锁（推荐 Windows 验证时使用）
+| 组件 | 选型 |
+|------|------|
+| 语言 | Python 3.11+（async/await） |
+| 工作流 | LangGraph |
+| 数据模型 | Pydantic v2 |
+| 事实库 | SQLite + aiosqlite |
+| LLM 接入 | LiteLLM |
+| CLI | Click |
+| 日志 | structlog |
+| 测试 | pytest（2600+ 用例） |
 
-通过 `CHECKPOINTER_MODE` 环境变量切换。
+---
 
 ## 开发文档
 
-常用入口：
+- [`docs/STATUS.md`](docs/STATUS.md) — 当前状态、最新验证、下一步
+- [`docs/INDEX.md`](docs/INDEX.md) — 文档索引
+- [`tasks/V7-README.md`](tasks/V7-README.md) — 当前阶段任务事实
+- [`AGENTS.md`](AGENTS.md) — 开发规范与工程纪律
 
-- `docs/STATUS.md` — 当前状态、测试口径和下一步。
-- `docs/INDEX.md` — 文档索引。
-- `tasks/V7-README.md` — 当前任务事实入口（V7，Task 160-173）。
-- `docs/v7-plan.md` — V7 阶段规划（篇章级质量修复 + 自驱 + enforce 可生产化 + Ch300 爬坡）。
-- `docs/v7-vision.md` — V7 方向性构想。
-- `archive/v7/INDEX.md` — V7 已完成 R&D 产物归档（171a–171d）。
-- `tasks/V6-README.md` — V6 历史任务事实入口（Task 141-159）。
-- `docs/v6-plan.md` — V6 阶段规划（叙事骨架 + 度量 + 长跑底盘）。
-- `tasks/V5-README.md` — V5 历史任务事实入口。
-- `AGENTS.md` — 开发代理约束和工程规则。
-
-架构参考：
-
-- `docs/architecture/04-vibe-coding-engineering.md` — 工程实践说明。
-- `docs/architecture/05-tech-reference.md` — 技术参考。
-- `prompts/cards/` — Agent 工艺卡与 Prompt 版本。
-
-历史归档：
-
-- `archive/v5/INDEX.md` — V5 历史资料入口。
-- `archive/v4/INDEX.md` — V4 历史资料入口。
-- `archive/v3/INDEX.md` — V3 历史资料入口。
+---
 
 ## 许可证
 
-本项目采用 **AGPL-3.0** 许可证。
-
-你可以自由使用、修改和分发本项目；如果你基于本项目提供网络服务，也需要按 AGPL-3.0 的要求公开相应修改源码。完整条款见 [`LICENSE`](LICENSE)。
+AGPL-3.0 — 详见 [`LICENSE`](LICENSE)。

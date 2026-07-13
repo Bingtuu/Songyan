@@ -277,6 +277,16 @@ class TestCreativeBriefsAndLiterary:
         assert "t1" in row[0]
         assert "no cliche" in row[1]
 
+    async def test_creative_briefs_171v_guardrail_columns_exist(self, db_conn) -> None:
+        """171v 文学护栏字段必须随 creative_briefs 持久化."""
+        cursor = await db_conn.execute("PRAGMA table_info(creative_briefs)")
+        cols = {row[1] for row in await cursor.fetchall()}
+
+        assert "protagonist_active_choice" in cols
+        assert "new_concept_budget" in cols
+        assert "fatigue_motif_replacements" in cols
+        assert "supporting_character_goal" in cols
+
     async def test_literary_observations_insert(self, db_conn) -> None:
         """literary_observations 可正常插入."""
         pid = str(uuid.uuid4())
