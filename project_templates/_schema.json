@@ -6,13 +6,13 @@
   "properties": {
     "id": { "type": "string" },
     "name": { "type": "string" },
-    "extends": { "type": ["string", "null"] },
+    "extends": { "type": ["string", "null"], "default": null },
     "overwrite": { "type": "object" },
     "project_setting": {
       "type": "object",
       "required": ["genre_id", "protagonist_name"],
       "properties": {
-        "title": { "type": ["string", "null"] },
+        "title": { "type": ["string", "null"], "default": null },
         "genre_id": { "type": "string" },
         "mode_id": { "type": "string", "default": "webnovel" },
         "protagonist_name": { "type": "string" },
@@ -24,9 +24,12 @@
         "estimated_chapters": { "type": "integer", "default": 30 },
         "words_per_chapter": { "type": "integer", "default": 3000 },
         "story_structure": { "type": "string", "default": "free" },
-        "sub_genre_id": { "type": ["string", "null"] },
+        "sub_genre_id": { "type": ["string", "null"], "default": null },
         "arc_boundaries": { "type": "array", "items": { "type": "integer" } },
-        "arc_boundaries_auto": { "type": "boolean", "default": false }
+        "arc_boundaries_auto": { "type": "boolean", "default": false },
+        "taboos": { "type": "array", "items": { "type": "string" }, "default": [] },
+        "reference_works": { "type": "array", "items": { "type": "string" }, "default": [] },
+        "volume_boundaries": { "type": "array", "items": { "type": "integer" }, "default": [] }
       }
     }
   }

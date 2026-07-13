@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+from pydantic import ValidationError
 
 from songyan.models.project import ProjectSetting
 from songyan.models.project_template import (
@@ -32,8 +33,8 @@ def test_template_seed_character_defaults() -> None:
 
 
 def test_template_seed_setting_requires_key() -> None:
-    with pytest.raises(ValueError):
-        TemplateSeedSetting(setting_name="X", description="Y")
+    with pytest.raises(ValidationError):
+        TemplateSeedSetting.model_validate({"setting_name": "X", "description": "Y"})
 
 
 def test_template_seed_numerical_system() -> None:

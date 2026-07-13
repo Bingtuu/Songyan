@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field, PrivateAttr
 
@@ -15,7 +15,7 @@ class TemplateSeedCharacter(BaseModel):
     """模板中的初始角色."""
 
     name: str
-    role: str = "supporting"
+    role: Literal["protagonist", "supporting", "antagonist"] = "supporting"
     age: int | None = None
     description: str = ""
     initial_state: dict[str, Any] = Field(default_factory=dict)
