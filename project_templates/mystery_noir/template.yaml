@@ -1,0 +1,21 @@
+id: mystery_noir
+name: 悬疑 noir 模板
+extends: null
+overwrite: {}
+
+project_setting:
+  title: 雾中证人
+  genre_id: mystery_noir
+  mode_id: webnovel_intense
+  protagonist_name: 顾沉
+  protagonist_background: 落魄私家侦探，曾是刑警队最年轻的探长，因三年前一桩证物丢失案被迫离职。性格执拗，习惯在细节中寻找破绽。
+  core_hook: 连环失踪案的唯一“证人”竟是一具早已确认死亡的尸体，所有线索都指向顾沉当年经手的旧案
+  target_reader_expectation: 悬疑 noir，线索前置、推理逻辑自洽、反转合理
+  target_word_count: 450000
+  tone: 热血
+  estimated_chapters: 250
+  words_per_chapter: 3000
+  story_structure: serial
+  sub_genre_id: null
+  arc_boundaries: [25, 50, 75, 100, 125, 150, 175, 200, 225]
+  arc_boundaries_auto: true

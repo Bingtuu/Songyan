@@ -1,0 +1,21 @@
+id: scifi
+name: 科幻太空歌剧模板
+extends: null
+overwrite: {}
+
+project_setting:
+  title: 轨道蜃景
+  genre_id: scifi
+  mode_id: webnovel_intense
+  protagonist_name: 林渊
+  protagonist_background: 前星际考古学家，因一次事故失去搭档，独自追查真相
+  core_hook: 人类在太阳系边缘发现一座无法解析的黑色结构『方舟』，林渊是唯一能与之产生共鸣的个体
+  target_reader_expectation: 硬科幻+太空悬疑，要求科学细节与剧情张力兼顾
+  target_word_count: 450000
+  tone: 热血
+  estimated_chapters: 250
+  words_per_chapter: 3000
+  story_structure: serial
+  sub_genre_id: space_opera
+  arc_boundaries: [25, 50, 75, 100, 125, 150, 175, 200, 225]
+  arc_boundaries_auto: true

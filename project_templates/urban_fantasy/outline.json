@@ -1,0 +1,24 @@
+{
+  "outline": {
+    "core_conflict": "便利店夜班员江潮与“里界”裂隙及各方异能势力之间的存亡博弈",
+    "mainline_synopsis": "三年前，江潮的妹妹在一次异能事故中失踪，官方定性为意外。三年后，江潮打工的便利店地下出现连接“里界”的裂隙，而他竟是唯一能听见裂隙低语的人。随着异能管理局、地下势力与神秘教团先后介入，江潮发现妹妹的失踪与裂隙背后更大的阴谋息息相关。他必须学会控制自己的能力，在隐藏身份与保护亲友之间做出抉择。",
+    "themes": ["身份与隐藏", "代价与觉醒", "亲情与真相"],
+    "intended_ending": "江潮以裂隙为媒介救出妹妹，却永远失去普通人的生活"
+  },
+  "arc_plans": [
+    {"arc_index": 0, "start_chapter": 1, "end_chapter": 25, "arc_goal": "裂隙觉醒、确立江潮异能者身份，开启三条主线", "threads_to_open": ["t_rift", "t_sister_missing", "t_faction_war"], "threads_to_resolve": [], "is_mainline": true},
+    {"arc_index": 1, "start_chapter": 26, "end_chapter": 50, "arc_goal": "异能管理局介入，日常伪装与能力训练并行", "threads_to_open": [], "threads_to_resolve": [], "is_mainline": true},
+    {"arc_index": 2, "start_chapter": 51, "end_chapter": 75, "arc_goal": "妹妹失踪真相收束，里界入口首次大规模开启", "threads_to_open": [], "threads_to_resolve": ["t_sister_missing"], "is_mainline": true},
+    {"arc_index": 3, "start_chapter": 76, "end_chapter": 100, "arc_goal": "异能本质与里界意志揭露", "threads_to_open": [], "threads_to_resolve": [], "is_mainline": true},
+    {"arc_index": 4, "start_chapter": 101, "end_chapter": 125, "arc_goal": "裂隙控制权收束，决战前奏", "threads_to_open": [], "threads_to_resolve": ["t_rift"], "is_mainline": true},
+    {"arc_index": 5, "start_chapter": 126, "end_chapter": 150, "arc_goal": "异能势力战收束，主线终局", "threads_to_open": [], "threads_to_resolve": ["t_faction_war"], "is_mainline": true},
+    {"arc_index": 6, "start_chapter": 151, "end_chapter": 175, "arc_goal": "后日谈与余波", "threads_to_open": [], "threads_to_resolve": [], "is_mainline": true},
+    {"arc_index": 7, "start_chapter": 176, "end_chapter": 200, "arc_goal": "长线收尾", "threads_to_open": [], "threads_to_resolve": [], "is_mainline": true},
+    {"arc_index": 8, "start_chapter": 201, "end_chapter": 250, "arc_goal": "终章", "threads_to_open": [], "threads_to_resolve": [], "is_mainline": true}
+  ],
+  "plot_threads": [
+    {"thread_id": "t_rift", "title": "里界裂隙", "description": "便利店地下连接里界的裂缝，蕴含未知能量与意志", "is_mainline": true, "expected_resolve_arc": 4},
+    {"thread_id": "t_sister_missing", "title": "妹妹失踪", "description": "三年前异能事故中失踪的妹妹，真相远比意外更复杂", "is_mainline": true, "expected_resolve_arc": 2},
+    {"thread_id": "t_faction_war", "title": "异能势力战", "description": "管理局、地下势力、神秘教团对裂隙控制权的争夺", "is_mainline": true, "expected_resolve_arc": 5}
+  ]
+}

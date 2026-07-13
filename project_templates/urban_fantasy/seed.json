@@ -1,0 +1,14 @@
+{
+  "characters": [
+    {"name": "江潮", "role": "protagonist", "age": 24, "description": "深夜便利店夜班店员，三年前妹妹在异能事故中失踪。外冷内热，习惯独自承担。能听见里界裂隙的低语。", "initial_state": {}},
+    {"name": "叶晚星", "role": "supporting", "age": 23, "description": "异能管理局基层调查员，表面公事公办，暗中同情江潮。擅长空间感知类异能，负责监控便利店裂隙。", "initial_state": {}},
+    {"name": "黑鸦", "role": "antagonist", "age": 35, "description": "地下异能势力“鸦巢”首领，主张主动打开里界大门获取力量。手段狠辣，视江潮为关键钥匙。", "initial_state": {}},
+    {"name": "苏棠", "role": "supporting", "age": 19, "description": "江潮妹妹江璃的高中同学，如今是便利店常客。无意中成为各方势力监视江潮的窗口。", "initial_state": {}}
+  ],
+  "initial_settings": [
+    {"setting_key": "convenience_store", "setting_name": "便利店", "description": "江潮打工的24小时便利店，地下埋藏着连接里界的裂隙。", "source_quote": ""},
+    {"setting_key": "inner_world", "setting_name": "里界", "description": "与现实世界重叠的异能维度，充满未知生物与能量，普通人类无法感知。", "source_quote": ""},
+    {"setting_key": "bureau_of_abilities", "setting_name": "异能管理局", "description": "官方异能事务管理机构，负责监控裂隙与登记异能者。", "source_quote": ""}
+  ],
+  "numerical_system": null
+}

@@ -1,0 +1,24 @@
+{
+  "outline": {
+    "core_conflict": "人类文明存续与深空黑色结构『方舟』的意志之间的对抗",
+    "mainline_synopsis": "太阳系边缘出现一座无法解析的黑色结构『方舟』。前星际考古学家林渊是唯一能与之产生『共鸣』的个体。随着军方、财团与神秘教团先后介入，林渊在追查方舟真相的过程中，逐渐揭开当年那场夺走搭档性命的事故背后的隐情——『旧日搭档』之死并非意外，而与方舟的苏醒直接相关。林渊必须在人类被方舟同化之前，破解共鸣的本质，并决定是唤醒还是封存这座方舟。",
+    "themes": ["存续与牺牲", "认知的边界", "信任与背叛"],
+    "intended_ending": "林渊以自身共鸣为代价封存方舟，人类文明得以延续但代价沉重"
+  },
+  "arc_plans": [
+    {"arc_index": 0, "start_chapter": 1, "end_chapter": 25, "arc_goal": "发现方舟、确立林渊的共鸣者身份，开启三条主线", "threads_to_open": ["t_ark", "t_resonance", "t_partner"], "threads_to_resolve": [], "is_mainline": true},
+    {"arc_index": 1, "start_chapter": 26, "end_chapter": 50, "arc_goal": "多方势力介入，共鸣加深，旧日搭档之谜浮现关键线索", "threads_to_open": [], "threads_to_resolve": [], "is_mainline": true},
+    {"arc_index": 2, "start_chapter": 51, "end_chapter": 75, "arc_goal": "旧日搭档真相收束，方舟意志显现", "threads_to_open": [], "threads_to_resolve": ["t_partner"], "is_mainline": true},
+    {"arc_index": 3, "start_chapter": 76, "end_chapter": 100, "arc_goal": "共鸣本质揭示", "threads_to_open": [], "threads_to_resolve": [], "is_mainline": true},
+    {"arc_index": 4, "start_chapter": 101, "end_chapter": 125, "arc_goal": "共鸣线收束，方舟决战前奏", "threads_to_open": [], "threads_to_resolve": ["t_resonance"], "is_mainline": true},
+    {"arc_index": 5, "start_chapter": 126, "end_chapter": 150, "arc_goal": "方舟命运收束，主线终局", "threads_to_open": [], "threads_to_resolve": ["t_ark"], "is_mainline": true},
+    {"arc_index": 6, "start_chapter": 151, "end_chapter": 175, "arc_goal": "后日谈与余波", "threads_to_open": [], "threads_to_resolve": [], "is_mainline": true},
+    {"arc_index": 7, "start_chapter": 176, "end_chapter": 200, "arc_goal": "长线收尾", "threads_to_open": [], "threads_to_resolve": [], "is_mainline": true},
+    {"arc_index": 8, "start_chapter": 201, "end_chapter": 250, "arc_goal": "终章", "threads_to_open": [], "threads_to_resolve": [], "is_mainline": true}
+  ],
+  "plot_threads": [
+    {"thread_id": "t_ark", "title": "方舟", "description": "太阳系边缘的黑色结构，无法解析，疑似具有意志", "is_mainline": true, "expected_resolve_arc": 5},
+    {"thread_id": "t_resonance", "title": "共鸣", "description": "林渊与方舟之间独有的感应能力，本质未知", "is_mainline": true, "expected_resolve_arc": 4},
+    {"thread_id": "t_partner", "title": "旧日搭档", "description": "林渊失去的搭档之死背后的隐情", "is_mainline": true, "expected_resolve_arc": 3}
+  ]
+}

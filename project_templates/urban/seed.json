@@ -1,0 +1,14 @@
+{
+  "characters": [
+    {"name": "陈屿", "role": "protagonist", "age": 30, "description": "游戏公司项目经理，连续三次创业失败，负债累累但技术嗅觉敏锐。性格务实坚韧，擅长在资源匮乏中寻找突破口。", "initial_state": {}},
+    {"name": "林知遥", "role": "supporting", "age": 28, "description": "前同事，AI算法工程师。表面冷漠但技术理想主义，辞职后加入陈屿团队，负责核心模型训练。", "initial_state": {}},
+    {"name": "周牧野", "role": "antagonist", "age": 42, "description": "陈屿前公司VP，擅长资本运作与内部倾轧。视陈屿的AI原型为威胁，欲低价收购或摧毁。", "initial_state": {}},
+    {"name": "老张", "role": "supporting", "age": 55, "description": "陈屿父亲的老友，城中村网吧老板。给陈屿提供最初的办公场地与启动资金，是团队的精神后盾。", "initial_state": {}}
+  ],
+  "initial_settings": [
+    {"setting_key": "abandoned_ai", "setting_name": "Echo原型", "description": "一款被公司放弃的对话式AI项目，代号Echo，因商业变现路径不清而下马。", "source_quote": ""},
+    {"setting_key": "urban_debt", "setting_name": "陈屿的债务", "description": "三次创业失败积累的债务与信用危机，是陈屿行动的现实约束。", "source_quote": ""},
+    {"setting_key": "old_city_internet_cafe", "setting_name": "老张网吧", "description": "位于城中村的老式网吧，陈屿团队最初的根据地，象征从零开始的逆袭。", "source_quote": ""}
+  ],
+  "numerical_system": null
+}

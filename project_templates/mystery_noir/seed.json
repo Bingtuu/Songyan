@@ -1,0 +1,14 @@
+{
+  "characters": [
+    {"name": "顾沉", "role": "protagonist", "age": 34, "description": "落魄私家侦探，前刑警队最年轻探长。因三年前一桩证物丢失案被迫离职，性格执拗，习惯在细节中寻找破绽。", "initial_state": {}},
+    {"name": "许念慈", "role": "supporting", "age": 31, "description": "现任刑警队副队长，顾沉昔日搭档。表面上按规章办事，暗中为顾沉提供案件信息。", "initial_state": {}},
+    {"name": "周牧白", "role": "antagonist", "age": 48, "description": "雾城知名律师，表面精英正派，实则是多起失踪案的幕后策划者。擅长用法律与心理操控掩盖罪行。", "initial_state": {}},
+    {"name": "老仵作", "role": "supporting", "age": 68, "description": "退休法医，对顾沉有知遇之恩。掌握三年旧案的关键尸检记录，是突破口之一。", "initial_state": {}}
+  ],
+  "initial_settings": [
+    {"setting_key": "fog_city", "setting_name": "雾城", "description": "常年被浓雾笼罩的沿海城市，连环失踪案的发生地。", "source_quote": ""},
+    {"setting_key": "old_evidence_case", "setting_name": "三年旧案", "description": "顾沉经手的连环入室案，关键证物在审讯室神秘丢失，导致他被迫离职。", "source_quote": ""},
+    {"setting_key": "dead_witness", "setting_name": "雾中证人", "description": "三年前确认死亡的女受害人，其身份信息却在新的失踪案现场反复出现。", "source_quote": ""}
+  ],
+  "numerical_system": null
+}

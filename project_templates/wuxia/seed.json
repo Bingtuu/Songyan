@@ -1,0 +1,14 @@
+{
+  "characters": [
+    {"name": "沈默", "role": "protagonist", "age": 24, "description": "断刀门末代弟子，师门被灭后隐姓埋名十年。寡言隐忍，刀法走偏锋，最重师门情义。背负半截断刀与一封血书。", "initial_state": {}},
+    {"name": "铁心兰", "role": "supporting", "age": 22, "description": "独行女镖师，性格泼辣仗义。因一趟镖与沈默相识，逐渐成为他最可靠的江湖同伴。擅使双短刀。", "initial_state": {}},
+    {"name": "莫长空", "role": "antagonist", "age": 55, "description": "现任武林盟主，表面仁义道德，实则十年前参与灭门断刀门。武学深不可测，惯用权谋。", "initial_state": {}},
+    {"name": "老酒鬼", "role": "supporting", "age": 60, "description": "断刀门旧人，灭门之夜侥幸逃生，化名市井酒徒。知晓断刀刀谱的关键缺口，暗中指点沈默。", "initial_state": {}}
+  ],
+  "initial_settings": [
+    {"setting_key": "broken_blade_sect", "setting_name": "断刀门", "description": "以断刀为信物的二流门派，十年前被不明势力一夜灭门。", "source_quote": ""},
+    {"setting_key": "martial_alliance", "setting_name": "武林盟", "description": "由各派推举组成的江湖秩序维护机构，现任盟主为莫长空。", "source_quote": ""},
+    {"setting_key": "blood_letter", "setting_name": "血书", "description": "沈默从断刀门带出的唯一文字线索，上书八个血字：『断刀不灭，盟中有鬼』。", "source_quote": ""}
+  ],
+  "numerical_system": null
+}

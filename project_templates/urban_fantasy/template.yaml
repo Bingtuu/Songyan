@@ -1,0 +1,21 @@
+id: urban_fantasy
+name: 都市异能模板
+extends: null
+overwrite: {}
+
+project_setting:
+  title: 霓虹之下
+  genre_id: urban_fantasy
+  mode_id: webnovel_intense
+  protagonist_name: 江潮
+  protagonist_background: 深夜便利店夜班店员，三年前目睹妹妹在异能事故中失踪，一直暗中调查。性格外冷内热，习惯独自承担。
+  core_hook: 便利店地下埋藏着连接“里界”的裂隙，江潮是唯一能听见裂隙低语的人
+  target_reader_expectation: 都市异能热血流，异能体系有明确限制，身份隐藏与势力冲突并重
+  target_word_count: 450000
+  tone: 热血
+  estimated_chapters: 250
+  words_per_chapter: 3000
+  story_structure: serial
+  sub_genre_id: null
+  arc_boundaries: [25, 50, 75, 100, 125, 150, 175, 200, 225]
+  arc_boundaries_auto: true

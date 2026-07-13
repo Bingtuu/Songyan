@@ -1,0 +1,24 @@
+{
+  "outline": {
+    "core_conflict": "废墟工程师陆烬与各方势力围绕地下种子库展开的文明存续之争",
+    "mainline_synopsis": "末日降临三十年后，废墟中的年轻工程师陆烬意外发现一座旧时代地下种子库的坐标。种子库中不仅保存着重启农业文明的关键资源，还封存着导致末日的原始样本。随着 scavenger 帮派、军事残余势力与宗教救世团介入，陆烬必须在保护同伴与决定人类未来之间做出抉择——重启文明，还是彻底封存可能导致二次毁灭的种子。",
+    "themes": ["存续与代价", "信任与背叛", "过去与未来"],
+    "intended_ending": "陆烬销毁原始样本，仅释放可种植种子，重建文明但背负骂名"
+  },
+  "arc_plans": [
+    {"arc_index": 0, "start_chapter": 1, "end_chapter": 25, "arc_goal": "发现种子库、确立陆烬的引领者身份，开启三条主线", "threads_to_open": ["t_seed_vault", "t_origins", "t_factions"], "threads_to_resolve": [], "is_mainline": true},
+    {"arc_index": 1, "start_chapter": 26, "end_chapter": 50, "arc_goal": "资源搜寻与势力接触，末日真相初现端倪", "threads_to_open": [], "threads_to_resolve": [], "is_mainline": true},
+    {"arc_index": 2, "start_chapter": 51, "end_chapter": 75, "arc_goal": "末日起源真相收束，种子库核心区域开启", "threads_to_open": [], "threads_to_resolve": ["t_origins"], "is_mainline": true},
+    {"arc_index": 3, "start_chapter": 76, "end_chapter": 100, "arc_goal": "各方势力立场揭露，人性抉择升级", "threads_to_open": [], "threads_to_resolve": [], "is_mainline": true},
+    {"arc_index": 4, "start_chapter": 101, "end_chapter": 125, "arc_goal": "种子库控制权收束，决战前奏", "threads_to_open": [], "threads_to_resolve": ["t_seed_vault"], "is_mainline": true},
+    {"arc_index": 5, "start_chapter": 126, "end_chapter": 150, "arc_goal": "势力战收束，主线终局", "threads_to_open": [], "threads_to_resolve": ["t_factions"], "is_mainline": true},
+    {"arc_index": 6, "start_chapter": 151, "end_chapter": 175, "arc_goal": "后日谈与余波", "threads_to_open": [], "threads_to_resolve": [], "is_mainline": true},
+    {"arc_index": 7, "start_chapter": 176, "end_chapter": 200, "arc_goal": "长线收尾", "threads_to_open": [], "threads_to_resolve": [], "is_mainline": true},
+    {"arc_index": 8, "start_chapter": 201, "end_chapter": 250, "arc_goal": "终章", "threads_to_open": [], "threads_to_resolve": [], "is_mainline": true}
+  ],
+  "plot_threads": [
+    {"thread_id": "t_seed_vault", "title": "地下种子库", "description": "封存旧时代农业种子与末日原始样本的地下设施，是各方争夺核心", "is_mainline": true, "expected_resolve_arc": 4},
+    {"thread_id": "t_origins", "title": "末日起源", "description": "导致文明崩溃的真正原因，与种子库中的原始样本有关", "is_mainline": true, "expected_resolve_arc": 2},
+    {"thread_id": "t_factions", "title": "各方势力", "description": "scavenger、军事残余、救世团对种子库的不同态度与冲突", "is_mainline": true, "expected_resolve_arc": 5}
+  ]
+}

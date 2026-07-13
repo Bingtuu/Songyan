@@ -34,19 +34,16 @@ import asyncio
 import json
 import os
 import sys
-import uuid
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-import scripts.run_158_ch1_ch100 as base
 import scripts.run_159_ch1_ch150 as t159
 from songyan.db import get_db
 from songyan.db.connection import get_db_path
 from songyan.db.migrations import init_schema
-from songyan.db.narrative_repo import NarrativeRepository
 from songyan.db.repository import ProjectRepository
 from songyan.evals.db_metrics import (
     collect_literary_scores,
@@ -60,6 +57,7 @@ from songyan.evals.v6_acceptance import (
 )
 from songyan.exceptions import AutoHaltException
 from songyan.models import GateConfig
+from songyan.project_templates import ProjectInitializer, ProjectTemplateLoader
 from songyan.services.text_cleanliness_cleaner import apply_project_text_cleaning
 from songyan.workflows.phase2_graph import run_project_pipeline
 
@@ -67,6 +65,8 @@ DB_PATH = Path(".tmp/task171_ch1_ch200.db")
 REPORT_PATH = Path("docs/reports/task-171-ch200-long-run-report.md")
 METRICS_PATH = Path(".tmp/task171_ch1_ch200_metrics.jsonl")
 PROJECT_FILE = Path(".tmp/task171_project.json")
+
+TEMPLATE_ID = os.getenv("TEMPLATE_ID", "scifi")
 
 GATE_MODE = os.getenv("GATE_MODE", "enforce")
 ON_FAILURE = os.getenv("ON_FAILURE", "isolate")
@@ -97,11 +97,9 @@ async def _init_db() -> str:
     if METRICS_PATH.exists():
         METRICS_PATH.unlink()
 
-    project_id = uuid.uuid4().hex
-    await ProjectRepository().create(base._project_setting(), project_id)
-    outline, arcs, threads = base._build_outline(project_id)
-    await NarrativeRepository().import_outline(project_id, outline, arcs, threads)
-    print(f"[init] project {project_id}: {len(arcs)} arcs, {len(threads)} threads")
+    template = ProjectTemplateLoader().load(TEMPLATE_ID)
+    project_id, project = await ProjectInitializer.from_template(template)
+    print(f"[init] project {project_id} from template '{TEMPLATE_ID}': {project.genre_id}")
 
     PROJECT_FILE.parent.mkdir(parents=True, exist_ok=True)
     PROJECT_FILE.write_text(

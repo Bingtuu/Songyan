@@ -1,0 +1,21 @@
+id: urban
+name: 都市逆袭模板
+extends: null
+overwrite: {}
+
+project_setting:
+  title: 逆流之城
+  genre_id: urban
+  mode_id: webnovel_intense
+  protagonist_name: 陈屿
+  protagonist_background: 三十岁游戏公司项目经理，连续三次创业失败，负债累累但技术嗅觉敏锐。性格务实坚韧，擅长在资源匮乏中寻找突破口。
+  core_hook: 一款被公司放弃的AI项目在他手中意外觉醒，成为他职场逆袭的唯一筹码
+  target_reader_expectation: 都市职场逆袭，节奏紧凑，商业逻辑基本自洽
+  target_word_count: 450000
+  tone: 热血
+  estimated_chapters: 250
+  words_per_chapter: 3000
+  story_structure: serial
+  sub_genre_id: null
+  arc_boundaries: [25, 50, 75, 100, 125, 150, 175, 200, 225]
+  arc_boundaries_auto: true

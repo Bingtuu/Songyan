@@ -1,0 +1,24 @@
+{
+  "outline": {
+    "core_conflict": "落魄项目经理陈屿与职场不公、资本博弈之间的逆袭之路",
+    "mainline_synopsis": "三十岁项目经理陈屿在被公司裁员、负债压顶之际，接手了一款被放弃的AI原型。随着原型展现出远超预期的能力，陈屿被卷入一场关于技术所有权、资本博弈与前公司高层的暗战。他必须在守住底线的同时，利用这款AI完成职场逆袭，并揭开前公司项目被放弃背后的真正原因。",
+    "themes": ["逆袭与代价", "技术与伦理", "个人价值与资本"],
+    "intended_ending": "陈屿用AI项目打破行业垄断，但选择将核心技术开源，换取职业自由"
+  },
+  "arc_plans": [
+    {"arc_index": 0, "start_chapter": 1, "end_chapter": 25, "arc_goal": "AI原型觉醒、确立陈屿的逆袭者身份，开启三条主线", "threads_to_open": ["t_ai_project", "t_betrayal", "t_capital_war"], "threads_to_resolve": [], "is_mainline": true},
+    {"arc_index": 1, "start_chapter": 26, "end_chapter": 50, "arc_goal": "职场反击，初步验证AI价值，前公司打压浮现", "threads_to_open": [], "threads_to_resolve": [], "is_mainline": true},
+    {"arc_index": 2, "start_chapter": 51, "end_chapter": 75, "arc_goal": "背叛线收束，陈屿看清昔日同伴真面目", "threads_to_open": [], "threads_to_resolve": ["t_betrayal"], "is_mainline": true},
+    {"arc_index": 3, "start_chapter": 76, "end_chapter": 100, "arc_goal": "AI伦理困境与能力边界揭露", "threads_to_open": [], "threads_to_resolve": [], "is_mainline": true},
+    {"arc_index": 4, "start_chapter": 101, "end_chapter": 125, "arc_goal": "AI核心能力收束，资本战进入白热化", "threads_to_open": [], "threads_to_resolve": ["t_ai_project"], "is_mainline": true},
+    {"arc_index": 5, "start_chapter": 126, "end_chapter": 150, "arc_goal": "资本战收束，主线终局", "threads_to_open": [], "threads_to_resolve": ["t_capital_war"], "is_mainline": true},
+    {"arc_index": 6, "start_chapter": 151, "end_chapter": 175, "arc_goal": "后日谈与余波", "threads_to_open": [], "threads_to_resolve": [], "is_mainline": true},
+    {"arc_index": 7, "start_chapter": 176, "end_chapter": 200, "arc_goal": "长线收尾", "threads_to_open": [], "threads_to_resolve": [], "is_mainline": true},
+    {"arc_index": 8, "start_chapter": 201, "end_chapter": 250, "arc_goal": "终章", "threads_to_open": [], "threads_to_resolve": [], "is_mainline": true}
+  ],
+  "plot_threads": [
+    {"thread_id": "t_ai_project", "title": "AI原型", "description": "被公司放弃的AI项目，展现出远超预期的潜力", "is_mainline": true, "expected_resolve_arc": 4},
+    {"thread_id": "t_betrayal", "title": "昔日背叛", "description": "陈屿连续创业失败与职场失意的幕后推手", "is_mainline": true, "expected_resolve_arc": 2},
+    {"thread_id": "t_capital_war", "title": "资本博弈", "description": "围绕AI技术所有权展开的各方势力争夺", "is_mainline": true, "expected_resolve_arc": 5}
+  ]
+}

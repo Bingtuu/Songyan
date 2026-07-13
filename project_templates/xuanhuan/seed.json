@@ -1,0 +1,19 @@
+{
+  "characters": [
+    {"name": "陆沉", "role": "protagonist", "age": 16, "description": "青岩镇铁匠铺学徒，父母死于十年前的妖兽袭城。性格沉稳坚韧，不善言辞但内心炽烈。右手腕有一道暗红色胎记，据说是出生时便有的灵纹残迹。", "initial_state": {"cultivation_level": "无", "spirit_value": 0}},
+    {"name": "老周头", "role": "supporting", "age": 62, "description": "铁匠铺老板，陆沉的养父般的存在。曾是低阶修士，灵气枯竭后退隐。左腿有旧伤，走路微跛。", "initial_state": {"cultivation_level": "炼气三层（已废）", "spirit_value": 3}},
+    {"name": "赵天衡", "role": "antagonist", "age": 19, "description": "青岩镇镇守之子，自诩天才，已踏入炼气一层。傲慢跋扈，视陆沉为蝼蚁。", "initial_state": {"cultivation_level": "炼气一层", "spirit_value": 12}},
+    {"name": "苏晚晴", "role": "supporting", "age": 15, "description": "镇东药铺苏掌柜的独女，性情清冷，精通药理。与陆沉青梅竹马，常暗中给他送伤药。体内隐有不明寒毒。", "initial_state": {"cultivation_level": "无", "spirit_value": 0}}
+  ],
+  "initial_settings": [
+    {"setting_key": "qingyan_town", "setting_name": "青岩镇", "description": "位于苍云山脉西麓的边陲小镇，常住人口约三千。因附近出产青纹铁矿石而得名。", "source_quote": ""},
+    {"setting_key": "spirit_depletion_era", "setting_name": "灵气枯竭时代", "description": "三千年前大劫之后，天地间灵气浓度骤降至不足往昔百分之一。", "source_quote": ""},
+    {"setting_key": "ancient_ruins_legend", "setting_name": "灵渊传说", "description": "苍云山脉深处有一处被称为'灵渊'的上古遗迹，据说是大劫前某位化神期大能的洞府。", "source_quote": ""}
+  ],
+  "numerical_system": {
+    "name": "九品灵根修炼体系",
+    "levels": ["无", "炼气一层", "炼气二层", "炼气三层", "炼气四层", "炼气五层", "炼气六层", "炼气七层", "炼气八层", "炼气九层", "筑基"],
+    "base_unit": "灵气值",
+    "formula_hint": "每提升一层需要上一层的灵气值 × 1.5，炼气一层门槛为 10 点灵气值"
+  }
+}

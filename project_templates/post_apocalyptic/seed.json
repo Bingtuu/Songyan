@@ -1,0 +1,14 @@
+{
+  "characters": [
+    {"name": "陆烬", "role": "protagonist", "age": 26, "description": "旧时代工程师之子，在废墟中长大，擅长用报废零件修复器械。性格沉稳寡言，对人性抱有谨慎的信任。", "initial_state": {}},
+    {"name": "阿铁", "role": "supporting", "age": 30, "description": "废墟 scavenger 小队的机械师，陆烬的挚友。粗鲁但重情义，负责团队的重火力与车辆维护。", "initial_state": {}},
+    {"name": "神父", "role": "antagonist", "age": 50, "description": "救世团领袖，坚信末日是神的净化，主张释放原始样本完成“最终救赎”。口才极具蛊惑力。", "initial_state": {}},
+    {"name": "林医生", "role": "supporting", "age": 45, "description": "旧时代植物学家，在掩体中保存着少量可种植作物的知识。陆烬找到种子库后成为关键顾问。", "initial_state": {}}
+  ],
+  "initial_settings": [
+    {"setting_key": "seed_vault", "setting_name": "地下种子库", "description": "旧时代建造的地下设施，保存着数万种农作物种子与末日原始样本。", "source_quote": ""},
+    {"setting_key": "ashes_zone", "setting_name": "灰烬地带", "description": "末日核心污染区，地表寸草不生，遍布变异生物与废弃城市。", "source_quote": ""},
+    {"setting_key": "salvation_army", "setting_name": "救世团", "description": "末日宗教势力，认为人类需要二次净化，对种子库中的原始样本虎视眈眈。", "source_quote": ""}
+  ],
+  "numerical_system": null
+}

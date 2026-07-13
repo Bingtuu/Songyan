@@ -1,0 +1,24 @@
+{
+  "outline": {
+    "core_conflict": "末法时代少年陆沉与灵气枯竭命运及上古灵渊意志的对抗",
+    "mainline_synopsis": "灵气枯竭三千年后，青岩镇少年陆沉在铁匠铺下发现上古灵渊入口，获得残缺传承。随着青云宗、妖兽、神秘散修势力介入，陆沉逐渐揭开父母之死与灵渊苏醒的关联，必须在被灵渊同化前决定：封存它以维持末法平衡，还是解封它让灵气重归人间。",
+    "themes": ["逆天改命", "代价与传承", "个体与天地"],
+    "intended_ending": "陆沉以自身为桥，让灵渊灵气缓慢释放，既拯救苏晚晴寒毒，也避免天地剧变"
+  },
+  "arc_plans": [
+    {"arc_index": 0, "start_chapter": 1, "end_chapter": 25, "arc_goal": "发现灵渊、确立传承者身份，开启三条主线", "threads_to_open": ["t_lingyuan", "t_resonance", "t_parents"], "threads_to_resolve": [], "is_mainline": true},
+    {"arc_index": 1, "start_chapter": 26, "end_chapter": 50, "arc_goal": "青云宗选拔，境界初成，父母之死浮现线索", "threads_to_open": [], "threads_to_resolve": [], "is_mainline": true},
+    {"arc_index": 2, "start_chapter": 51, "end_chapter": 75, "arc_goal": "父母真相收束，灵渊意志首次显现", "threads_to_open": [], "threads_to_resolve": ["t_parents"], "is_mainline": true},
+    {"arc_index": 3, "start_chapter": 76, "end_chapter": 100, "arc_goal": "传承本质揭示，正邪势力觊觎灵渊", "threads_to_open": [], "threads_to_resolve": [], "is_mainline": true},
+    {"arc_index": 4, "start_chapter": 101, "end_chapter": 125, "arc_goal": "共鸣线收束，决战前奏", "threads_to_open": [], "threads_to_resolve": ["t_resonance"], "is_mainline": true},
+    {"arc_index": 5, "start_chapter": 126, "end_chapter": 150, "arc_goal": "灵渊命运收束，主线终局", "threads_to_open": [], "threads_to_resolve": ["t_lingyuan"], "is_mainline": true},
+    {"arc_index": 6, "start_chapter": 151, "end_chapter": 175, "arc_goal": "后日谈与余波", "threads_to_open": [], "threads_to_resolve": [], "is_mainline": true},
+    {"arc_index": 7, "start_chapter": 176, "end_chapter": 200, "arc_goal": "长线收尾", "threads_to_open": [], "threads_to_resolve": [], "is_mainline": true},
+    {"arc_index": 8, "start_chapter": 201, "end_chapter": 250, "arc_goal": "终章", "threads_to_open": [], "threads_to_resolve": [], "is_mainline": true}
+  ],
+  "plot_threads": [
+    {"thread_id": "t_lingyuan", "title": "灵渊", "description": "上古大能洞府，封印着一条残存灵脉，疑似具有意志", "is_mainline": true, "expected_resolve_arc": 5},
+    {"thread_id": "t_resonance", "title": "共鸣", "description": "陆沉与灵渊之间的传承感应，本质未知", "is_mainline": true, "expected_resolve_arc": 4},
+    {"thread_id": "t_parents", "title": "父母之死", "description": "陆沉父母死于妖兽袭城背后的隐情", "is_mainline": true, "expected_resolve_arc": 3}
+  ]
+}

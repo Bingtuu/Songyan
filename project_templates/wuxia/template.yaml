@@ -1,0 +1,21 @@
+id: wuxia
+name: 武侠江湖模板
+extends: null
+overwrite: {}
+
+project_setting:
+  title: 断刀行
+  genre_id: wuxia
+  mode_id: webnovel_intense
+  protagonist_name: 沈默
+  protagonist_background: 断刀门末代弟子，师门在十年前被灭门，只余半截断刀与一封血书。性格寡言隐忍，刀法走偏锋，最重师门情义。
+  core_hook: 一把断刀中的残缺刀谱，藏着足以颠覆武林盟主的秘密
+  target_reader_expectation: 热血武侠江湖恩怨，重视武学体系与侠义精神
+  target_word_count: 450000
+  tone: 热血
+  estimated_chapters: 250
+  words_per_chapter: 3000
+  story_structure: serial
+  sub_genre_id: null
+  arc_boundaries: [25, 50, 75, 100, 125, 150, 175, 200, 225]
+  arc_boundaries_auto: true

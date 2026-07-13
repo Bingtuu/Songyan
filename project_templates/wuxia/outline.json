@@ -1,0 +1,24 @@
+{
+  "outline": {
+    "core_conflict": "末代断刀弟子沈默与武林盟主之间关于师门灭门真相与江湖秩序的对抗",
+    "mainline_synopsis": "十年前断刀门一夜被灭，少年沈默只带出半截断刀与一封血书。十年后，他在一次偶然中发现断刀内藏的残缺刀谱，竟牵扯出武林盟主勾结外敌、篡改江湖秩序的惊天隐秘。沈默在追查真相的过程中，必须面对江湖规矩、师门遗志与个人恩怨的多重考验，最终决定是否以断刀重塑江湖。",
+    "themes": ["侠义与复仇", "规矩与人心", "传承与超越"],
+    "intended_ending": "沈默当众揭露盟主罪行，以断刀立新规，自己却隐退江湖"
+  },
+  "arc_plans": [
+    {"arc_index": 0, "start_chapter": 1, "end_chapter": 25, "arc_goal": "断刀现世、确立沈默的复仇者身份，开启三条主线", "threads_to_open": ["t_broken_blade", "t_sect_massacre", "t_alliance_lord"], "threads_to_resolve": [], "is_mainline": true},
+    {"arc_index": 1, "start_chapter": 26, "end_chapter": 50, "arc_goal": "江湖各派介入，刀谱线索浮现，师门灭门之谜初现端倪", "threads_to_open": [], "threads_to_resolve": [], "is_mainline": true},
+    {"arc_index": 2, "start_chapter": 51, "end_chapter": 75, "arc_goal": "师门灭门真相收束，断刀刀谱补全", "threads_to_open": [], "threads_to_resolve": ["t_sect_massacre"], "is_mainline": true},
+    {"arc_index": 3, "start_chapter": 76, "end_chapter": 100, "arc_goal": "盟主阴谋逐步揭露，正邪立场模糊", "threads_to_open": [], "threads_to_resolve": [], "is_mainline": true},
+    {"arc_index": 4, "start_chapter": 101, "end_chapter": 125, "arc_goal": "断刀刀谱大成，决战前奏", "threads_to_open": [], "threads_to_resolve": ["t_broken_blade"], "is_mainline": true},
+    {"arc_index": 5, "start_chapter": 126, "end_chapter": 150, "arc_goal": "盟主罪行收束，主线终局", "threads_to_open": [], "threads_to_resolve": ["t_alliance_lord"], "is_mainline": true},
+    {"arc_index": 6, "start_chapter": 151, "end_chapter": 175, "arc_goal": "后日谈与余波", "threads_to_open": [], "threads_to_resolve": [], "is_mainline": true},
+    {"arc_index": 7, "start_chapter": 176, "end_chapter": 200, "arc_goal": "长线收尾", "threads_to_open": [], "threads_to_resolve": [], "is_mainline": true},
+    {"arc_index": 8, "start_chapter": 201, "end_chapter": 250, "arc_goal": "终章", "threads_to_open": [], "threads_to_resolve": [], "is_mainline": true}
+  ],
+  "plot_threads": [
+    {"thread_id": "t_broken_blade", "title": "断刀刀谱", "description": "断刀门残缺传承，藏着颠覆武林秩序的关键武学", "is_mainline": true, "expected_resolve_arc": 4},
+    {"thread_id": "t_sect_massacre", "title": "师门灭门", "description": "断刀门一夜被灭的真相与幕后推手", "is_mainline": true, "expected_resolve_arc": 2},
+    {"thread_id": "t_alliance_lord", "title": "武林盟主", "description": "现任武林盟主勾结外敌、篡改江湖秩序的隐秘", "is_mainline": true, "expected_resolve_arc": 5}
+  ]
+}

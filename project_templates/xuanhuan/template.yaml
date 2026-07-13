@@ -1,0 +1,21 @@
+id: xuanhuan
+name: 玄幻修仙模板
+extends: null
+overwrite: {}
+
+project_setting:
+  title: 灵渊纪
+  genre_id: xuanhuan
+  mode_id: webnovel_intense
+  protagonist_name: 陆沉
+  protagonist_background: 青岩镇铁匠铺学徒，父母死于十年前的妖兽袭城。性格沉稳坚韧，不善言辞但内心炽烈。
+  core_hook: 灵气枯竭时代，少年获得上古灵渊传承，逆天改命
+  target_reader_expectation: 热血玄幻升级流，节奏明快，世界观自洽
+  target_word_count: 450000
+  tone: 热血
+  estimated_chapters: 250
+  words_per_chapter: 3000
+  story_structure: serial
+  sub_genre_id: null
+  arc_boundaries: [25, 50, 75, 100, 125, 150, 175, 200, 225]
+  arc_boundaries_auto: true

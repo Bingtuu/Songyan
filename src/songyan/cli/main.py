@@ -26,6 +26,7 @@ from songyan.genres.loader import list_genre_profiles, load_genre_profile
 from songyan.models.gate_config import GateConfig
 from songyan.models.human_mark import HumanMark
 from songyan.models.project import ProjectSetting, derive_arc_boundaries
+from songyan.project_templates import ProjectInitializer, ProjectTemplateLoader
 from songyan.workflows.phase2_graph import run_project_pipeline
 
 # CLI 层可捕获的异常类型（排除 KeyboardInterrupt / SystemExit）
@@ -185,6 +186,20 @@ async def _create_project_async(outline_file: str | None = None) -> tuple[str, P
     return project_id, project
 
 
+async def _create_project_from_template(
+    template_id: str, outline_file: str | None
+) -> tuple[str, ProjectSetting]:
+    await init_schema()
+    template = ProjectTemplateLoader().load(template_id)
+
+    if outline_file:
+        outline, arcs, threads = load_outline_file(outline_file, "dummy")
+        template.set_outline(outline, arcs, threads)
+
+    project_id, project = await ProjectInitializer.from_template(template)
+    return project_id, project
+
+
 @cli.command()
 @click.option(
     "--outline-file",
@@ -192,10 +207,21 @@ async def _create_project_async(outline_file: str | None = None) -> tuple[str, P
     default=None,
     help="可选：全书大纲 JSON 文件，导入 StoryOutline/ArcPlan/PlotThread",
 )
-def create_project(outline_file: str | None) -> None:
-    """交互式创建小说项目（可选 --outline-file 导入全书大纲）."""
+@click.option(
+    "--template",
+    "template_id",
+    default=None,
+    help="使用项目模板 ID 一键创建",
+)
+def create_project(outline_file: str | None, template_id: str | None) -> None:
+    """交互式创建小说项目，或 --template 使用模板."""
     try:
-        project_id, project = asyncio.run(_create_project_async(outline_file))
+        if template_id:
+            project_id, project = asyncio.run(
+                _create_project_from_template(template_id, outline_file)
+            )
+        else:
+            project_id, project = asyncio.run(_create_project_async(outline_file))
     except click.Abort:
         raise
     except SongyanError as exc:
@@ -256,7 +282,9 @@ def mark_add(
         mark = HumanMark(
             mark_id=f"hm_{uuid.uuid4().hex[:8]}",
             project_id=project_id,
-            mark_type=cast(Literal["setting", "character", "foreshadowing", "item", "custom"], mark_type),
+            mark_type=cast(
+                Literal["setting", "character", "foreshadowing", "item", "custom"], mark_type
+            ),
             target_key=target,
             note=note,
             priority=max(1, min(10, priority)),

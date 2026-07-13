@@ -1,0 +1,24 @@
+{
+  "outline": {
+    "core_conflict": "私家侦探顾沉与连环失踪案幕后真凶之间的心理博弈与真相追逐",
+    "mainline_synopsis": "雾城中发生连环失踪案，唯一的目击线索指向一具三年前已被确认死亡的尸体。私家侦探顾沉发现，所有线索都回流到自己当年被迫离职的旧案。随着调查深入，他必须面对警队黑幕、昔日同僚的背叛，以及一个精心布局数年的真凶。顾沉必须在真凶完成最后一步之前，用合法证据将其定罪，同时洗刷自己的冤屈。",
+    "themes": ["真相与救赎", "信任与背叛", "正义的代价"],
+    "intended_ending": "顾沉找到关键证据将真凶定罪，但选择继续以私家侦探身份留在雾城"
+  },
+  "arc_plans": [
+    {"arc_index": 0, "start_chapter": 1, "end_chapter": 25, "arc_goal": "连环失踪案出现、确立顾沉调查者身份，开启三条主线", "threads_to_open": ["t_missing_persons", "t_dead_witness", "t_old_case"], "threads_to_resolve": [], "is_mainline": true},
+    {"arc_index": 1, "start_chapter": 26, "end_chapter": 50, "arc_goal": "线索搜集与误导交织，旧案疑点浮现", "threads_to_open": [], "threads_to_resolve": [], "is_mainline": true},
+    {"arc_index": 2, "start_chapter": 51, "end_chapter": 75, "arc_goal": "旧案真相收束，顾沉冤屈部分洗清", "threads_to_open": [], "threads_to_resolve": ["t_old_case"], "is_mainline": true},
+    {"arc_index": 3, "start_chapter": 76, "end_chapter": 100, "arc_goal": "真凶轮廓揭露，线索前置回收", "threads_to_open": [], "threads_to_resolve": [], "is_mainline": true},
+    {"arc_index": 4, "start_chapter": 101, "end_chapter": 125, "arc_goal": "雾中证人身份收束，对决前奏", "threads_to_open": [], "threads_to_resolve": ["t_dead_witness"], "is_mainline": true},
+    {"arc_index": 5, "start_chapter": 126, "end_chapter": 150, "arc_goal": "失踪案收束，主线终局", "threads_to_open": [], "threads_to_resolve": ["t_missing_persons"], "is_mainline": true},
+    {"arc_index": 6, "start_chapter": 151, "end_chapter": 175, "arc_goal": "后日谈与余波", "threads_to_open": [], "threads_to_resolve": [], "is_mainline": true},
+    {"arc_index": 7, "start_chapter": 176, "end_chapter": 200, "arc_goal": "长线收尾", "threads_to_open": [], "threads_to_resolve": [], "is_mainline": true},
+    {"arc_index": 8, "start_chapter": 201, "end_chapter": 250, "arc_goal": "终章", "threads_to_open": [], "threads_to_resolve": [], "is_mainline": true}
+  ],
+  "plot_threads": [
+    {"thread_id": "t_missing_persons", "title": "连环失踪案", "description": "雾城中连续发生的失踪案件，所有受害者都与顾沉的旧案有关联", "is_mainline": true, "expected_resolve_arc": 5},
+    {"thread_id": "t_dead_witness", "title": "雾中证人", "description": "一具三年前确认死亡的尸体，却以目击者身份出现在新案件中", "is_mainline": true, "expected_resolve_arc": 4},
+    {"thread_id": "t_old_case", "title": "三年旧案", "description": "导致顾沉离职的证物丢失案，真相被刻意掩埋", "is_mainline": true, "expected_resolve_arc": 2}
+  ]
+}

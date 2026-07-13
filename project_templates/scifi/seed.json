@@ -1,0 +1,13 @@
+{
+  "characters": [
+    {
+      "name": "林渊",
+      "role": "protagonist",
+      "age": 32,
+      "description": "前星际考古学家，因一次事故失去搭档，独自追查真相。",
+      "initial_state": {}
+    }
+  ],
+  "initial_settings": [],
+  "numerical_system": null
+}

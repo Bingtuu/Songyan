@@ -1,0 +1,21 @@
+id: post_apocalyptic
+name: 末世生存模板
+extends: null
+overwrite: {}
+
+project_setting:
+  title: 灰烬纪元
+  genre_id: post_apocalyptic
+  mode_id: webnovel_intense
+  protagonist_name: 陆烬
+  protagonist_background: 旧时代工程师之子，在废墟中长大，擅长用报废零件修复器械。性格沉稳寡言，对人性抱有谨慎的信任。
+  core_hook: 一座被各方势力觊觎的地下种子库，藏着重启文明或终结末日的双重钥匙
+  target_reader_expectation: 末世生存热血流，资源约束真实，人性抉择有代价
+  target_word_count: 450000
+  tone: 热血
+  estimated_chapters: 250
+  words_per_chapter: 3000
+  story_structure: serial
+  sub_genre_id: null
+  arc_boundaries: [25, 50, 75, 100, 125, 150, 175, 200, 225]
+  arc_boundaries_auto: true
