@@ -5,6 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
+import pytest
+
 from songyan.agents.creative_director import _render_prompt, generate_creative_brief
 from songyan.creative_modes.registry import load_creative_mode_profile
 from songyan.db.continuity_repo import SettingTrackingRepository
@@ -27,6 +29,8 @@ from songyan.models import (
     LiteraryAuditResult,
     ProjectSetting,
 )
+
+pytestmark = pytest.mark.performance
 
 PID = "proj-163"
 

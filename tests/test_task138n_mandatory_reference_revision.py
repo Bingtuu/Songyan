@@ -220,11 +220,21 @@ class TestMRPatch:
         ]
 
         async def fake_llm(prompt: str, **kwargs: object) -> str:
-            # 简单模拟 LLM 在正文后追加自然提及
-            return (
-                content
-                + " 他抬头瞥见记忆之城的全息投影，"
-                "光线偏折让墙壁像水波一样晃动。"
+            # 模拟 LLM 返回 JSON patches
+            import json
+
+            return json.dumps(
+                [
+                    {
+                        "original_text": content,
+                        "revised_text": (
+                            content
+                            + " 他抬头瞥见记忆之城的全息投影，"
+                            "光线偏折让墙壁像水波一样晃动。"
+                        ),
+                        "location": "结尾",
+                    }
+                ]
             )
 
         monkeypatch.setattr(
@@ -252,7 +262,17 @@ class TestMRPatch:
         ]
 
         async def fake_llm(prompt: str, **kwargs: object) -> str:
-            return content + " 记忆之城的投影在角落闪烁。"
+            import json
+
+            return json.dumps(
+                [
+                    {
+                        "original_text": content,
+                        "revised_text": content + " 记忆之城的投影在角落闪烁。",
+                        "location": "结尾",
+                    }
+                ]
+            )
 
         monkeypatch.setattr(
             "songyan.agents.revision_handler.call_llm", fake_llm

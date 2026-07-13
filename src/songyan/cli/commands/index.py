@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from typing import Any
 
 import click
 
@@ -17,7 +18,7 @@ async def _index_chapters(
     project_id: str,
     chapter_numbers: list[int] | None = None,
     rebuild: bool = False,
-) -> dict:
+) -> dict[str, Any]:
     """为指定章节建立 RAG 向量索引.
 
     Args:

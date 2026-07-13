@@ -181,7 +181,7 @@ CREATE TABLE IF NOT EXISTS human_instructions (
 );
 
 -- ============================================================
--- 5. chapter_versions — 章节版本链（永远 INSERT，禁止 UPDATE）
+-- 5. chapter_versions — 章节版本链（正文内容永远 INSERT，禁止 UPDATE；元数据状态字段 is_abandoned / score_card 允许原地更新）
 -- ============================================================
 CREATE TABLE IF NOT EXISTS chapter_versions (
     version_id          TEXT PRIMARY KEY,
@@ -308,7 +308,7 @@ CREATE TABLE IF NOT EXISTS foreshadowings (
     expected_resolve_chapter INTEGER,
     status                  TEXT DEFAULT 'planted',  -- planted | due | overdue | resolved
     lifecycle_status        TEXT DEFAULT 'active' CHECK(lifecycle_status IN ('active', 'dormant', 'archived')),
-    source_version_id       TEXT REFERENCES chapter_versions(version_id) ON DELETE SET NULL,  -- ⭐
+    source_version_id       TEXT NOT NULL REFERENCES chapter_versions(version_id) ON DELETE CASCADE,  -- ⭐
     created_at              TEXT DEFAULT (datetime('now'))
 );
 
@@ -347,6 +347,7 @@ CREATE TABLE IF NOT EXISTS numerical_ledgers (
     increments      TEXT DEFAULT '[]',           -- JSON array of Increment
     decrements      TEXT DEFAULT '[]',           -- JSON array of Decrement
     closing_value   REAL NOT NULL,
+    formula         TEXT DEFAULT '',
     created_at      TEXT DEFAULT (datetime('now'))
 );
 

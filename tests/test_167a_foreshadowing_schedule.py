@@ -34,6 +34,21 @@ async def _seed_project(project_id: str = PID) -> str:
     return project_id
 
 
+async def _seed_version(
+    project_id: str = PID, version_id: str = "v1", chapter_number: int = 1
+) -> None:
+    from songyan.db.connection import get_db
+
+    async with get_db() as conn:
+        await conn.execute(
+            """INSERT OR IGNORE INTO chapter_versions (
+                version_id, project_id, chapter_number, version_number, version_type
+            ) VALUES (?, ?, ?, ?, ?)""",
+            (version_id, project_id, chapter_number, 1, "accepted"),
+        )
+        await conn.commit()
+
+
 async def _seed_arc(
     arc_id: str,
     *,
@@ -92,7 +107,9 @@ async def _seed_foreshadowing(
     planted: int,
     expected: int | None,
     status: str = "planted",
+    source_version_id: str = "v1",
 ) -> None:
+    await _seed_version(project_id, source_version_id, planted)
     await ForeshadowingRepository().create(
         ForeshadowingItem(
             foreshadowing_id=foreshadowing_id,
@@ -102,6 +119,7 @@ async def _seed_foreshadowing(
             status=status,  # type: ignore[arg-type]
         ),
         project_id,
+        source_version_id,
     )
 
 

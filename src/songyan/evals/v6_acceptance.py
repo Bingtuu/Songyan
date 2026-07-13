@@ -8,6 +8,8 @@
 
 from __future__ import annotations
 
+from typing import Any, cast
+
 from pydantic import BaseModel
 
 from songyan.agents.continuity_auditor.continuity_health import (
@@ -28,7 +30,6 @@ from songyan.evals.db_maintenance_metrics import (
 from songyan.evals.db_metrics import (
     _T4_CONVERGENCE_MAX,
     _T4_DEGRADED_MAX,
-    ChapterRunLog,
     collect_literary_scores,
     collect_new_critical_rate,
     collect_orphan_metrics,
@@ -37,6 +38,7 @@ from songyan.evals.db_metrics import (
     linear_slope,
 )
 from songyan.evals.text_cleanliness import collect_text_cleanliness_metrics
+from songyan.models.run_log import ChapterRunLog
 
 # --------------------------------------------------------------------------- #
 # 阈值常量（出处见 docs/v6-plan.md §1.4 与 tasks/148z-stage-a-threshold-calibration-DONE.md）
@@ -571,7 +573,7 @@ async def check_health_low(
 ) -> ThresholdResult:
     """阶段 B 出口附加项：health_score 全程 ≥ 7.0."""
     metrics = await collect_continuity_health_metrics(project_id, start, end)
-    chapter_details = metrics.get("chapter_details", [])
+    chapter_details = cast(list[dict[str, Any]], metrics.get("chapter_details", []))
     low_chapters = [d["chapter_number"] for d in chapter_details if d.get("health_low")]
     sufficient = len(chapter_details) > 0
 

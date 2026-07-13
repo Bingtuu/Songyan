@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Literal
+
 import structlog
 
 from songyan.models.continuity import (
@@ -44,7 +46,7 @@ def _generate_constraints(
 
     for setting in orphaned:
         cat = getattr(setting, "category", "background")
-        severity = "P1" if cat == "critical" else ("P2" if cat == "recurring" else "P3")
+        severity: Literal["P1", "P2", "P3"] = "P1" if cat == "critical" else ("P2" if cat == "recurring" else "P3")
         marks.append(
             HumanMark(
                 mark_id=f"cont-set-{setting.tracking_id}",

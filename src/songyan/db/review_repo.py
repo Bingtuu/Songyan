@@ -312,7 +312,7 @@ class LiteraryObservationRepository:
 
     async def list_scores_by_chapter_range(
         self, project_id: str, start: int, end: int
-    ) -> list[dict]:
+    ) -> list[dict[str, Any]]:
         """按章回读文学四维度分数（JOIN chapter_versions，每章取最新一条 observation）.
 
         literary_observations 无 chapter_number，经 version_id → chapter_versions 关联；
@@ -335,7 +335,7 @@ class LiteraryObservationRepository:
             )
             rows = await cursor.fetchall()
         seen: set[int] = set()
-        result: list[dict] = []
+        result: list[dict[str, Any]] = []
         for row in rows:
             chapter = row["chapter"]
             if chapter in seen:

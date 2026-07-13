@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import structlog
 
@@ -48,7 +48,7 @@ def _is_meta_instruction(text: str) -> bool:
 
 
 class RAGRetriever:
-    _store_cache: dict = {}
+    _store_cache: dict[str, Any] = {}
 
     """RAG 检索器 — 封装 query 构造、编码、检索全流程."""
 

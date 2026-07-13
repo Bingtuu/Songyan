@@ -348,22 +348,22 @@ def _build_readability_issues(
 
     # 疲劳词 — 取前 3 处
     if rule_audit.fatigue_word_count > 0:
-        for idx, match in enumerate(rule_audit.fatigue_word_matches[:3]):
-            loc = match.locations[0] if match.locations else f"第{idx + 1}处"
+        for idx, fw_match in enumerate(rule_audit.fatigue_word_matches[:3]):
+            loc = fw_match.locations[0] if fw_match.locations else f"第{idx + 1}处"
             issues.append(
                 ReviewIssue(
                     issue_id=f"rh-fatigue-{idx}",
                     category=ReviewCategory.DESCRIPTION_SENSORY,
                     severity="major",
-                    evidence_quote=match.word,
+                    evidence_quote=fw_match.word,
                     evidence_location=loc,
                     issue_description=(
-                        f'疲劳词 — "{match.word}" 累计出现 {match.count} 次。'
+                        f'疲劳词 — "{fw_match.word}" 累计出现 {fw_match.count} 次。'
                     ),
                     expected="同一概念使用多样表达，轮换词汇、比喻和感官通道。",
-                    actual=f'"{match.word}" 重复出现。',
+                    actual=f'"{fw_match.word}" 重复出现。',
                     suggested_fix=(
-                        f'将部分 "{match.word}" 替换为同义词、比喻或具体描写；'
+                        f'将部分 "{fw_match.word}" 替换为同义词、比喻或具体描写；'
                         "无法替换时删除冗余 occurrence。"
                     ),
                     fix_type="patch",
@@ -589,11 +589,12 @@ async def _handle_scene_overflow(content: str, target_words: int) -> str:
 
 async def _patch_mandatory_reference_missing(
     content: str,
-    missing_refs: list[dict],
+    missing_refs: list[dict[str, Any]],
     word_count_target: int = 3000,
 ) -> tuple[str, list[str]]:
     """为缺失的 mandatory reference 插入自然提及.
 
+    要求 LLM 输出 JSON patches，通过 patch engine 局部应用，不再整章重写。
     返回修订后正文与已修复 setting_key 列表。
     """
     if not missing_refs:
@@ -612,14 +613,56 @@ async def _patch_mandatory_reference_missing(
         "1. 只能通过角色对话、环境细节、动作触发或剧情事件来提及，禁止直接罗列设定。\n"
         "2. 不要新增大段解释，每处提及 1-2 句话即可。\n"
         "3. 不要改变本章主要情节走向。\n"
-        "4. 输出完整修订后的正文，不要添加解释、总结或 markdown 代码块。\n\n"
+        "4. 输出必须是 JSON 数组，每个元素包含以下字段：\n"
+        '   - "original_text": 原文中将要替换的完整片段\n'
+        '   - "revised_text": 替换后的片段（包含新增提及）\n'
+        '   - "location": 可选，位置描述\n'
+        "5. 不要添加解释、总结或 markdown 代码块，只输出 JSON。\n\n"
         f"缺失设定：{names}\n\n"
         f"正文：\n{content}"
     )
     llm_response = await call_llm(prompt, temperature=0.3)
-    from songyan.agents.writer import _extract_body
 
-    revised = _extract_body(llm_response) or content
+    patches: list[Patch] = []
+    try:
+        import json
+
+        data = json.loads(llm_response.strip())
+        if isinstance(data, list):
+            for idx, item in enumerate(data):
+                if not isinstance(item, dict):
+                    continue
+                patches.append(
+                    Patch(
+                        issue_id=f"mr-patch-{idx}",
+                        original_text=str(item.get("original_text", "")),
+                        revised_text=str(item.get("revised_text", "")),
+                        location=str(item.get("location", "")),
+                    )
+                )
+        elif isinstance(data, dict):
+            for idx, item in enumerate(data.get("patches", [])):
+                if not isinstance(item, dict):
+                    continue
+                patches.append(
+                    Patch(
+                        issue_id=str(item.get("issue_id", f"mr-patch-{idx}")),
+                        original_text=str(item.get("original_text", "")),
+                        revised_text=str(item.get("revised_text", "")),
+                        location=str(item.get("location", "")),
+                    )
+                )
+    except Exception as exc:
+        logger.warning(
+            "revision_handler.mr_patch_parse_failed",
+            error=str(exc),
+            response_preview=llm_response[:200],
+        )
+
+    if patches:
+        revised, _ = _apply_patches(content, patches)
+    else:
+        revised = content
 
     fixed: list[str] = []
     text_lower = revised.lower()

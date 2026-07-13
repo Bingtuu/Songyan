@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from typing import Literal
+from typing import Any, Literal
 
 import structlog
 
@@ -265,7 +265,7 @@ def _build_character_snapshots(
     recent_summaries: list[ChapterSummary] | None = None,
     arc_boundaries: list[int] | None = None,
     current_chapter: int = 0,
-    character_focus: list[dict] | None = None,
+    character_focus: list[dict[str, Any]] | None = None,
     last_appeared_chapters: dict[str, int] | None = None,
 ) -> list[CharacterStateSnapshot]:
     """构建角色状态快照 — 合并角色档案和最新状态.

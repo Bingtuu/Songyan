@@ -57,7 +57,7 @@ class TestIsValidSourceQuote:
         assert _is_valid_source_quote("林凡在修炼", content, "萧尘") is False
 
     def test_empty_quote(self) -> None:
-        assert _is_valid_source_quote("", "正文") is True
+        assert _is_valid_source_quote("", "正文") is False
 
 
 class TestFilterSettlementSourceQuotes:

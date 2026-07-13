@@ -386,21 +386,21 @@ def _convert_rule_to_issues(
 
     # 3. AI腔集中 (major) — 取前2处
     if rule_result.ai_tell_count >= 2:
-        for idx, match in enumerate(rule_result.ai_tell_matches[:2]):
+        for idx, ai_match in enumerate(rule_result.ai_tell_matches[:2]):
             issues.append(
                 ReviewIssue(
                     issue_id=_next_id(),
                     category=ReviewCategory.SHOW_DONT_TELL,
                     severity="major",
-                    evidence_quote=match.matched_text,
-                    evidence_location=match.location or f"第{idx + 1}处AI腔",
+                    evidence_quote=ai_match.matched_text,
+                    evidence_location=ai_match.location or f"第{idx + 1}处AI腔",
                     issue_description=(
-                        f"AI腔命中（模式: {match.pattern}）— "
+                        f"AI腔命中（模式: {ai_match.pattern}）— "
                         "使用了过于抽象、概括或模型化的叙述方式，"
                         "缺乏具体的感官细节和角色视角。"
                     ),
                     expected="通过角色的感官体验、动作反应和具体细节来展示情绪与状态，而非直接告诉读者。",
-                    actual=f'原文直接陈述: "{match.matched_text}"',
+                    actual=f'原文直接陈述: "{ai_match.matched_text}"',
                     suggested_fix="改写成具体场景：用动作、表情、环境反应、身体感受替代抽象描述。保持角色视角。",
                     fix_type="patch",
                     confidence=0.95,
@@ -409,23 +409,23 @@ def _convert_rule_to_issues(
 
     # 4. 疲劳词爆发 (major) — 取前3处
     if rule_result.fatigue_word_count >= 3:
-        for idx, match in enumerate(rule_result.fatigue_word_matches[:3]):
-            loc = match.locations[0] if match.locations else f"第{idx + 1}处"
+        for idx, fw_match in enumerate(rule_result.fatigue_word_matches[:3]):
+            loc = fw_match.locations[0] if fw_match.locations else f"第{idx + 1}处"
             issues.append(
                 ReviewIssue(
                     issue_id=_next_id(),
                     category=ReviewCategory.DESCRIPTION_SENSORY,
                     severity="major",
-                    evidence_quote=match.word,
+                    evidence_quote=fw_match.word,
                     evidence_location=loc,
                     issue_description=(
-                        f'疲劳词爆发 — "{match.word}" 累计出现 {match.count} 次，'
+                        f'疲劳词爆发 — "{fw_match.word}" 累计出现 {fw_match.count} 次，'
                         "造成阅读疲劳和词汇单调感。"
                     ),
                     expected="同一概念或情绪应使用多样的表达，轮换词汇、比喻和感官通道。",
-                    actual=f'"{match.word}" 重复出现，缺乏语言变化。',
+                    actual=f'"{fw_match.word}" 重复出现，缺乏语言变化。',
                     suggested_fix=(
-                        f'将部分 "{match.word}" 替换为同义词、比喻或具体描写；'
+                        f'将部分 "{fw_match.word}" 替换为同义词、比喻或具体描写；'
                         "如果无法替换，删除冗余 occurrence。"
                     ),
                     fix_type="patch",

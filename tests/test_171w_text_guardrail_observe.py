@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from songyan.db.connection import get_db
 from songyan.db.continuity_repo import SettingTrackingRepository
 from songyan.db.repository import ChapterHeadRepository, ChapterVersionRepository, ProjectRepository
@@ -25,6 +27,8 @@ from songyan.models import (
     ProjectSetting,
     SupportingCharacterGoal,
 )
+
+pytestmark = pytest.mark.performance
 
 
 def _brief(chapter_number: int, max_concepts: int = 1) -> CreativeBrief:

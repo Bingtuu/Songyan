@@ -90,9 +90,9 @@ class LiteraryKeywordRepository:
                     "SELECT protagonist_name FROM projects WHERE project_id = ?",
                     (project_id,),
                 )
-                row = await cur.fetchone()
-            if row and row["protagonist_name"]:
-                names.add(row["protagonist_name"])
+                project_row: Row | None = await cur.fetchone()
+            if project_row and project_row["protagonist_name"]:
+                names.add(project_row["protagonist_name"])
         return names
 
     async def get_project_setting_keywords(

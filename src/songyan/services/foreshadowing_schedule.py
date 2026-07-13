@@ -71,8 +71,8 @@ def _settlement_text(settlement: StateSettlement) -> str:
     for setting in settlement.new_settings:
         parts.append(setting.setting_name or "")
         parts.append(setting.description or "")
-    for update in settlement.character_updates:
-        parts.append(update.new_value or "")
+    for char_update in settlement.character_updates:
+        parts.append(char_update.new_value or "")
     return "\n".join(part for part in parts if part)
 
 

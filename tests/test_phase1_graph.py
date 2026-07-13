@@ -973,6 +973,7 @@ class TestSettlementExtractorNode:
             patch(
                 "songyan.workflows._nodes.accept_with_settlement_boundary",
                 new_callable=AsyncMock,
+                return_value="v-accepted",
             ) as mock_accept,
             patch(
                 "songyan.workflows._nodes.write_chapter_summary",
@@ -1039,6 +1040,7 @@ class TestSettlementExtractorNode:
             patch(
                 "songyan.workflows._nodes.accept_with_settlement_boundary",
                 new_callable=AsyncMock,
+                return_value="v-accepted",
             ) as mock_accept,
             patch(
                 "songyan.workflows._nodes.write_chapter_summary",
@@ -1077,6 +1079,9 @@ class TestSettlementExtractorNode:
         from songyan.workflows._nodes import settlement_extractor_node
 
         version = MagicMock(version_id="v-valid", content="A" * 500, version_type="draft")
+        version.model_copy.return_value = MagicMock(
+            version_id="v-accepted", content="A" * 500, version_type="accepted"
+        )
         project = MagicMock(mode_id="webnovel", genre_id="scifi")
         settlement = StateSettlement()
         summary_repo = AsyncMock()
@@ -1107,6 +1112,7 @@ class TestSettlementExtractorNode:
             patch(
                 "songyan.workflows._nodes.accept_with_settlement_boundary",
                 new_callable=AsyncMock,
+                return_value="v-accepted",
             ),
             patch(
                 "songyan.workflows._nodes.write_chapter_summary",
@@ -1179,6 +1185,7 @@ class TestSettlementExtractorNode:
             patch(
                 "songyan.workflows._nodes.accept_with_settlement_boundary",
                 new_callable=AsyncMock,
+                return_value="v-accepted",
             ),
             patch(
                 "songyan.workflows._nodes.write_chapter_summary",

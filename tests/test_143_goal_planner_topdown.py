@@ -94,12 +94,22 @@ class TestNarrativeContextLoader:
         await NarrativeRepository().add_arc_plan(
             ArcPlan(arc_id="a0", project_id=pid, arc_index=0, start_chapter=1, end_chapter=20)
         )
+        from songyan.db.connection import get_db
+        async with get_db() as conn:
+            await conn.execute(
+                """INSERT INTO chapter_versions (
+                    version_id, project_id, chapter_number, version_number, version_type
+                ) VALUES (?, ?, ?, ?, ?)""",
+                ("v1", pid, 1, 1, "accepted"),
+            )
+            await conn.commit()
         await ForeshadowingRepository().create(
             ForeshadowingItem(
                 foreshadowing_id="f1", description="神秘信物",
                 planted_in_chapter=1, expected_resolve_chapter=7, status="planted",
             ),
             pid,
+            "v1",
         )
         ctx = await load_narrative_goal_context(pid, 5, due_window=5)
         assert any(f["foreshadowing_id"] == "f1" for f in ctx.due_foreshadowings)

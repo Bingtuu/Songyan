@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from songyan.db.continuity_repo import SettingTrackingRepository
 from songyan.db.narrative_repo import NarrativeRepository
 from songyan.db.repository import ChapterGoalRepository, ProjectRepository
@@ -20,6 +22,8 @@ from songyan.workflows._helpers import (
     assemble_context_package,
 )
 from songyan.workflows._narrative_context import NarrativeGoalContext
+
+pytestmark = pytest.mark.performance
 
 
 async def _seed_project(project_id: str = "proj-151") -> str:

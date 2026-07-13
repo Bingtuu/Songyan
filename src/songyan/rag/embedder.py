@@ -59,7 +59,7 @@ class Embedder:
             self._dimension = 768
             return 768
         self._load_model()
-        dim = self._model.get_sentence_embedding_dimension()
+        dim: int = self._model.get_sentence_embedding_dimension()
         self._dimension = dim
         return dim
 
@@ -90,7 +90,8 @@ class Embedder:
             for i, text in enumerate(texts):
                 base[i] += hash(text) % 1000 / 10000
             norms = np.linalg.norm(base, axis=1, keepdims=True)
-            return base / np.maximum(norms, 1e-9)
+            normalized: np.ndarray = base / np.maximum(norms, 1e-9)
+            return normalized
 
         try:
             self._load_model()
@@ -99,7 +100,8 @@ class Embedder:
                 convert_to_numpy=True,
                 normalize_embeddings=True,
             )
-            return embeddings.astype(np.float32)
+            result: np.ndarray = embeddings.astype(np.float32)
+            return result
         except Exception as exc:
             import structlog
 

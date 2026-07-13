@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import sqlite3
 import uuid
+from typing import Any
 
 import structlog
 
@@ -41,6 +42,7 @@ from songyan.models import (
     RuleAuditResult,
     VolumeSummary,
 )
+from songyan.models.rag import RAGConfig
 from songyan.workflows._narrative_context import NarrativeGoalContext, load_narrative_goal_context
 
 logger = structlog.get_logger(__name__)
@@ -54,7 +56,7 @@ async def load_project(project_id: str) -> ProjectSetting | None:
     return await ProjectRepository().get(project_id)
 
 
-async def load_characters(project_id: str) -> list:
+async def load_characters(project_id: str) -> list[Any]:
     return await CharacterRepository().list_by_project(project_id)
 
 
@@ -136,7 +138,7 @@ def _build_non_character_voice_cards(
     appeared_names: set[str],
     project_id: str,
     existing_character_names: set[str],
-) -> list:
+) -> list[Any]:
     """Task 170g Phase2: 为本章出场的非角色声源构造声纹卡.
 
     Args:
@@ -150,7 +152,7 @@ def _build_non_character_voice_cards(
     """
     from songyan.models.character import DialogueStyleCard
 
-    cards: list = []
+    cards: list[Any] = []
     for name in sorted(appeared_names):
         if name not in _NON_CHARACTER_VOICE_NAMES:
             continue
@@ -177,11 +179,11 @@ def _build_non_character_voice_cards(
     return cards
 
 
-async def load_character_states(project_id: str) -> list:
+async def load_character_states(project_id: str) -> list[Any]:
     return await CharacterStateRepository().list_latest_by_project(project_id)
 
 
-async def load_recent_summaries(project_id: str, chapter_number: int) -> list:
+async def load_recent_summaries(project_id: str, chapter_number: int) -> list[Any]:
     return await SummaryRepository().list_recent(project_id, chapter_number)
 
 
@@ -273,11 +275,11 @@ async def load_layered_summaries(
     return result
 
 
-async def load_active_foreshadowings(project_id: str) -> list:
+async def load_active_foreshadowings(project_id: str) -> list[Any]:
     return await ForeshadowingRepository().list_active(project_id)
 
 
-async def load_setting_snapshots(project_id: str) -> list:
+async def load_setting_snapshots(project_id: str) -> list[Any]:
     return await SettingSnapshotRepository().list_by_project(project_id)
 
 
@@ -432,7 +434,7 @@ async def assemble_context_package(
     creative_brief: CreativeBrief | None,
     *,
     narrative_fullness: float = 0.0,
-    character_focus: list[dict] | None = None,
+    character_focus: list[dict[str, Any]] | None = None,
     foreshadowing_due: list[str] | None = None,
     focal_distance: str = "mid",
 ) -> ContextPackage:
@@ -455,15 +457,15 @@ async def assemble_context_package(
     import os
     cli_rag_mode = os.environ.get("SONGYAN_RAG_MODE")
     if cli_rag_mode:
-        from songyan.models.rag import RAGConfig
-
-        rag_config = RAGConfig(**rag_config.model_dump())
         rag_config.enabled = cli_rag_mode  # type: ignore[assignment]
 
     from songyan.db.human_mark_repo import HumanMarkRepository
+    from songyan.models.rag import RAGConfig
     from songyan.rag.utils import should_enable_rag
 
-    if should_enable_rag(chapter_number, project, rag_config):
+    effective_rag_config = RAGConfig(**rag_config.model_dump())
+
+    if should_enable_rag(chapter_number, project, effective_rag_config):
         try:
             from songyan.db.chunk_repo import ChunkRepository
             from songyan.models.context import ChapterSummary, RecentPlot
@@ -491,7 +493,7 @@ async def assemble_context_package(
             retriever = RAGRetriever(
                 embedder=embedder,
                 vector_store=store,
-                rag_config=rag_config,
+                rag_config=effective_rag_config,
             )
             rag_chunks = await retriever.retrieve_for_chapter(
                 project_id=project_id,
@@ -522,7 +524,7 @@ async def assemble_context_package(
     for s in recent_summaries:
         appeared_names.update(s.characters_appeared or [])
 
-    dialogue_style_cards: list = []
+    dialogue_style_cards: list[Any] = []
     for char in characters:
         if char.dialogue_style_card is None:
             continue
@@ -667,7 +669,7 @@ async def _load_critical_mandatory_references(
     *,
     active_critical_count: int | None = None,
     mainline_thread_keys: set[str] | None = None,
-) -> list[dict]:
+) -> list[dict[str, Any]]:
     """Task 138n/151: 从 SettingTrackingRepository 加载 critical orphan 作为强制回收约束.
 
     筛选条件：
@@ -707,7 +709,7 @@ async def _load_critical_mandatory_references(
     mainline_keys = mainline_thread_keys or set()
     mainline_keys_lower = {k.lower() for k in mainline_keys if k}
 
-    result: list[dict] = []
+    result: list[dict[str, Any]] = []
     for row in rows:
         if row.get("status") != "active":
             continue
@@ -793,7 +795,7 @@ async def _index_accepted_chapter(
     chapter_number: int,
     version_id: str,
     content: str,
-    rag_config,
+    rag_config: RAGConfig,
 ) -> None:
     """为已接受的章节建立 RAG 向量索引.
 
@@ -814,7 +816,7 @@ async def _index_accepted_chapter(
         known_characters = [c.name for c in characters if c.name]
 
         settings = await SettingTrackingRepository().list_by_project(project_id)
-        known_settings = [s.get("setting_key") for s in settings if s.get("setting_key")]
+        known_settings = [str(s["setting_key"]) for s in settings if s.get("setting_key")]
 
         # 切分
         chunker = Chunker(

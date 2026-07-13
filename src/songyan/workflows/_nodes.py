@@ -13,7 +13,7 @@ from typing import Any
 import structlog
 from langgraph.types import interrupt
 
-from songyan.agents.context_manager import _build_genre_rules
+from songyan.agents.context_manager import _build_genre_rules as _build_genre_rules
 from songyan.agents.creative_director import generate_creative_brief, generate_dialogue_style_cards
 from songyan.agents.goal_planner import define_chapter_goal
 from songyan.agents.literary_auditor import run_literary_audit, save_literary_audit
@@ -58,6 +58,7 @@ from songyan.models import (
     ReviewIssue,
     StateSettlement,
 )
+from songyan.models.rag import RAGConfig as _RAGConfig
 from songyan.services.foreshadowing_schedule import (
     mark_schedule_items_injected,
     update_schedule_after_accept,
@@ -427,6 +428,9 @@ async def creative_director_node(state: dict[str, Any]) -> dict[str, Any]:
         return {"error": "ChapterGoal not found", "status": "creative_director"}
 
     project = await load_project(state["project_id"])
+    if project is None:
+        return {"error": "ProjectSetting not found", "status": "creative_director"}
+
     genre = load_genre_profile(project.genre_id)
     mode = load_creative_mode_profile(state.get("mode_id") or project.mode_id)
     characters = await CharacterRepository().list_by_project(state["project_id"])
@@ -870,11 +874,6 @@ async def rewrite_node(state: dict[str, Any]) -> dict[str, Any]:
             # 不截断（无法自动扩展），但标记为需要 revision
 
         if _truncation_applied:
-            # 同步更新内存对象（保持向后兼容）
-            version.content = _new_content
-            version.word_count = _new_wc
-            version.scenes = _new_scenes
-
             # Rule 7: 禁止覆盖版本内容 — 创建新版本，废弃旧版本
             try:
                 old_version_id = version.version_id
@@ -927,7 +926,7 @@ async def rewrite_node(state: dict[str, Any]) -> dict[str, Any]:
                     chapter_number=state["chapter_number"],
                     exc_info=True,
                 )
-                # 回退：继续使用已更新的内存对象
+                # 回退：继续使用原始未截断版本，保持内存与 DB 一致
 
     # Task 107: 结构完整性校验（scene_count >= 2 + hooks 完整）
     struct_ok = True
@@ -941,9 +940,14 @@ async def rewrite_node(state: dict[str, Any]) -> dict[str, Any]:
         _genre = load_genre_profile(_project.genre_id) if _project else None
         _goal = await load_chapter_goal(state.get("chapter_goal_id", ""))
         _word_count_target = _goal.word_count_target if _goal else 3000
+        _genre_rules = (
+            _build_genre_rules(_genre, _project, _goal)
+            if (_genre and _project and _goal)
+            else None
+        )
         _rule_check = run_rule_audit(
             content=version.content,
-            genre_rules=_build_genre_rules(_genre, _project, _goal) if _genre else None,
+            genre_rules=_genre_rules,
             word_count_target=_word_count_target,
             chapter_type=_goal.chapter_type if _goal else None,
             scene_count_target=max(len(version.scenes), 2),
@@ -1149,18 +1153,27 @@ async def rule_auditor_node(state: dict[str, Any]) -> dict[str, Any]:
             punch_points = brief.punch_points
 
     # Task 138h: 获取 mandatory_references 用于 RuleAuditor 硬约束检查
-    mandatory_references: list[dict] | None = None
+    mandatory_references: list[dict[str, Any]] | None = None
     try:
         ctx_pkg = await _get_context_package(state)
         if ctx_pkg:
             mandatory_references = getattr(ctx_pkg, "mandatory_references", None)
-    except Exception:
-        logger.debug("rule_auditor_node.mandatory_references_load_skipped", exc_info=True)
+    except (SongyanError, ValueError, KeyError) as exc:
+        logger.warning(
+            "rule_auditor_node.mandatory_references_load_failed",
+            error=str(exc),
+            exc_info=True,
+        )
 
     _lit_kw = await _load_literary_keywords(state["project_id"])
+    _genre_rules = (
+        _build_genre_rules(genre, project, goal)
+        if (genre and project and goal)
+        else None
+    )
     result = run_rule_audit(
         content=version.content,
-        genre_rules=_build_genre_rules(genre, project, goal) if genre else None,
+        genre_rules=_genre_rules,
         word_count_target=word_count_target,
         chapter_type=goal.chapter_type if goal else None,
         scene_count_target=max(len(version.scenes), 2) if version.scenes else 2,
@@ -1317,7 +1330,7 @@ async def review_merger_node(state: dict[str, Any]) -> dict[str, Any]:
     version.score_card = score_card.model_dump()
     try:
         await ChapterVersionRepository().update_score_card(version.version_id, version.score_card)
-    except Exception as exc:
+    except (SongyanError, sqlite3.Error) as exc:
         logger.warning(
             "review_merger.save_score_card_failed",
             error=str(exc),
@@ -1767,18 +1780,27 @@ async def revision_handler_node(state: dict[str, Any]) -> dict[str, Any]:
             punch_points = brief.punch_points
 
     # Task 138h: 修订后同样需要检查 mandatory_references
-    rev_mandatory_refs: list[dict] | None = None
+    rev_mandatory_refs: list[dict[str, Any]] | None = None
     try:
         rev_ctx_pkg = await _get_context_package(state)
         if rev_ctx_pkg:
             rev_mandatory_refs = getattr(rev_ctx_pkg, "mandatory_references", None)
-    except Exception:
-        logger.debug("revision_handler_node.mandatory_references_load_skipped", exc_info=True)
+    except (SongyanError, ValueError, KeyError) as exc:
+        logger.warning(
+            "revision_handler_node.mandatory_references_load_failed",
+            error=str(exc),
+            exc_info=True,
+        )
 
     _rev_lit_kw = await _load_literary_keywords(state["project_id"])
+    _genre_rules = (
+        _build_genre_rules(genre, project, goal)
+        if (genre and project and goal)
+        else None
+    )
     revised_rule_result = run_rule_audit(
         content=revised_content,
-        genre_rules=_build_genre_rules(genre, project, goal) if genre else None,
+        genre_rules=_genre_rules,
         word_count_target=word_count_target,
         chapter_type=goal.chapter_type if goal else None,
         scene_count_target=max(len(output.patches_applied), 2),
@@ -2229,8 +2251,12 @@ async def accept_with_settlement_boundary(
     version_id: str,
     settlement: Any | None,
     content: str | None = None,
-) -> None:
-    """在同一事务内完成 settlement apply 与 accept 状态更新."""
+) -> str:
+    """在同一事务内完成 settlement apply 与 accept 状态更新.
+
+    Returns:
+        新创建的 accepted 版本 ID。
+    """
     if settlement is not None and settlement.validation_status != "valid":
         raise SettlementError(f"Settlement validation status is {settlement.validation_status}")
 
@@ -2245,13 +2271,15 @@ async def accept_with_settlement_boundary(
                     conn=conn,
                     content=content,
                 )
-            await ChapterVersionRepository().accept_version(version_id, conn=conn)
+            accepted_version_id = await ChapterVersionRepository().accept_version(
+                version_id, conn=conn
+            )
             await ChapterHeadRepository().update(
                 ChapterHead(
                     project_id=project_id,
                     chapter_number=chapter_number,
-                    current_version_id=version_id,
-                    accepted_version_id=version_id,
+                    current_version_id=accepted_version_id,
+                    accepted_version_id=accepted_version_id,
                     status="accepted",
                 ),
                 conn=conn,
@@ -2260,6 +2288,7 @@ async def accept_with_settlement_boundary(
         except Exception:
             await conn.rollback()
             raise
+    return accepted_version_id
 
 
 def _is_effectively_empty_settlement(settlement: StateSettlement) -> bool:
@@ -2381,13 +2410,18 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
         }
     else:
         # 1. 提取并应用 settlement（核心操作）
+        _genre_rules = (
+            _build_genre_rules(genre, project, goal)
+            if (genre and project and goal)
+            else None
+        )
         try:
             settlement = await extract_settlement(
                 content=version.content,
                 project_id=state["project_id"],
                 chapter_number=state["chapter_number"],
                 version_id=version.version_id,
-                genre_rules=_build_genre_rules(genre, project, goal) if genre else None,
+                genre_rules=_genre_rules,
             )
             if settlement.validation_status != "valid":
                 settlement_validation_status = settlement.validation_status
@@ -2418,7 +2452,7 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
                 )
                 settlement_needs_review = True
             else:
-                await accept_with_settlement_boundary(
+                accepted_version_id = await accept_with_settlement_boundary(
                     project_id=state["project_id"],
                     chapter_number=state["chapter_number"],
                     version_id=version.version_id,
@@ -2427,11 +2461,15 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
                 )
                 settlement_applied = True
                 accepted_for_postprocessing = True
+                # 后续所有后处理都应以 accepted 版本为事实源
+                version = version.model_copy(
+                    update={"version_id": accepted_version_id, "version_type": "accepted"}
+                )
                 logger.info(
                     "settlement_extractor_node.settlement_applied",
                     project_id=state["project_id"],
                     chapter_number=state["chapter_number"],
-                    version_id=version.version_id,
+                    version_id=accepted_version_id,
                     character_updates=len(settlement.character_updates),
                     new_settings=len(settlement.new_settings),
                     foreshadowing_updates=len(settlement.foreshadowing_updates),
@@ -2489,14 +2527,21 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
     # Task 114a: 仅在本次 accept + settlement 事务成功后触发，禁止通过历史 version_type 旁路
     if accepted_for_postprocessing:
         try:
-            mode = load_creative_mode_profile(state.get("mode_id") or project.mode_id)
-            await _index_accepted_chapter(
-                project_id=state["project_id"],
-                chapter_number=state["chapter_number"],
-                version_id=version.version_id,
-                content=version.content,
-                rag_config=mode.rag_config,
-            )
+            mode_id = state.get("mode_id") or (project.mode_id if project else None)
+            if mode_id:
+                mode = load_creative_mode_profile(mode_id)
+                _rag_config = mode.rag_config
+                if isinstance(_rag_config, dict):
+                    rag_config = _RAGConfig(**_rag_config)
+                else:
+                    rag_config = _RAGConfig(**_rag_config.model_dump())
+                await _index_accepted_chapter(
+                    project_id=state["project_id"],
+                    chapter_number=state["chapter_number"],
+                    version_id=version.version_id,
+                    content=version.content,
+                    rag_config=rag_config,
+                )
         except (RuntimeError, OSError, TimeoutError) as exc:
             logger.warning(
                 "settlement_extractor_node.rag_index_failed",
@@ -2540,7 +2585,7 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
 
     # 5. 分层摘要生成（069b：accept 后触发弧/卷摘要更新）
     # Task 114a: 仅在本次 accept + settlement 事务成功后触发，禁止通过历史 version_type 旁路
-    if accepted_for_postprocessing:
+    if accepted_for_postprocessing and project is not None:
         try:
             await trigger_layered_summaries(
                 project_id=state["project_id"],
@@ -2685,6 +2730,7 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
             )
 
     return {
+        "current_version_id": version.version_id if settlement_applied else None,
         "settlement_id": new_id("st") if settlement_applied else None,
         "summary_id": summary_id,
         "status": "settlement_review" if settlement_needs_review else "done",

@@ -13,7 +13,7 @@ from songyan.workflows.checkpointer import (
     reset_checkpointer_instance,
 )
 
-pytestmark = pytest.mark.asyncio
+pytestmark = [pytest.mark.asyncio, pytest.mark.performance]
 
 
 class TestGetCheckpointer:

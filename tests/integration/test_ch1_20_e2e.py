@@ -32,6 +32,8 @@ from .conftest import (
     writer_resp,
 )
 
+pytestmark = pytest.mark.performance
+
 
 def _chapter_responses(n: int) -> list[str]:
     key = {1: "one", 2: "two", 3: "three"}.get(n, f"ch{n}")

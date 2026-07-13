@@ -85,7 +85,7 @@ def _get_llm_cached(
     """缓存 LLM 实例，避免每次调用都重新创建."""
     from langchain_litellm import ChatLiteLLM
 
-    return ChatLiteLLM(
+    return ChatLiteLLM(  # type: ignore[call-arg]  # langchain_litellm stub: base_url/timeout
         model=model,
         api_key=api_key,
         base_url=base_url,

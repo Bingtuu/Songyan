@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import difflib
 from sqlite3 import Row
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import structlog
 
@@ -12,8 +12,8 @@ from songyan.db.connection import get_db
 
 if TYPE_CHECKING:
     import aiosqlite
-from songyan.db.repository import _from_json
 from songyan.models import Decrement, ForeshadowingItem, Increment, NewSetting, NumericalUpdate
+from songyan.utils.json_helpers import from_json as _from_json
 from songyan.utils.json_helpers import model_json as _model_json
 
 logger = structlog.get_logger(__name__)
@@ -26,9 +26,11 @@ class ForeshadowingRepository:
         self,
         item: ForeshadowingItem,
         project_id: str,
-        source_version_id: str | None = None,
+        source_version_id: str,
         conn: aiosqlite.Connection | None = None,
     ) -> None:
+        if not source_version_id:
+            raise ValueError("foreshadowing source_version_id is required")
         async def _do(c: aiosqlite.Connection) -> None:
             await c.execute(
                 """INSERT INTO foreshadowings (
@@ -326,7 +328,7 @@ class ForeshadowingRepository:
         return await _do(conn)
 
 
-    async def list_with_lifecycle(self, project_id: str) -> list[dict]:
+    async def list_with_lifecycle(self, project_id: str) -> list[dict[str, Any]]:
         """返回伏笔（含 lifecycle_status），用于真兑现 vs 逾期归档区分（V6 Task 148）."""
         async with get_db() as conn:
             conn.row_factory = Row
@@ -482,7 +484,7 @@ class SettingSnapshotRepository:
 
     async def list_active_with_tracking(
         self, project_id: str
-    ) -> list[dict]:
+    ) -> list[dict[str, Any]]:
         """返回 active 设定及其 tracking 信息（用于 resolve_confidence 计算）.
 
         V5.0 Task 103: JOIN setting_tracking 获取 last_mentioned_chapter 和 category。
@@ -687,7 +689,7 @@ class SettingDeduplicationService:
                     ORDER BY introduced_in_chapter, tracking_id""",
                 (project_id,),
             )
-            rows = await cursor.fetchall()
+            rows = list(await cursor.fetchall())
             if len(rows) < 2:
                 return 0
 
@@ -772,8 +774,8 @@ class NumericalLedgerRepository:
                 """INSERT INTO numerical_ledgers (
                     ledger_id, project_id, character_id, attribute_name,
                     chapter_number, opening_value, increments, decrements,
-                    closing_value
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    closing_value, formula
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
                     ledger_id,
                     project_id,
@@ -784,6 +786,7 @@ class NumericalLedgerRepository:
                     _model_json(update.increments),
                     _model_json(update.decrements),
                     update.closing_value,
+                    update.formula,
                 ),
             )
 
@@ -824,4 +827,5 @@ class NumericalLedgerRepository:
                 Decrement.model_validate(item) for item in _from_json(row["decrements"], [])
             ],
             closing_value=row["closing_value"],
+            formula=row["formula"] if row["formula"] is not None else "",
         )

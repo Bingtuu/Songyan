@@ -54,17 +54,7 @@ async def get_db() -> AsyncGenerator[aiosqlite.Connection, None]:
             await conn.execute("PRAGMA quick_check")
         except Exception:
             import structlog
+
             structlog.get_logger(__name__).warning("db.integrity_check_failed")
 
-        # RES-04: 清理异常中断后残留的 WAL/SHM 文件（仅在首次连接时）
-        try:
-            db_path = get_db_path()
-            wal_path = db_path.with_suffix(db_path.suffix + "-wal")
-            shm_path = db_path.with_suffix(db_path.suffix + "-shm")
-            if wal_path.exists():
-                wal_path.unlink()
-            if shm_path.exists():
-                shm_path.unlink()
-        except OSError:
-            pass  # 文件可能正被其他进程使用
         yield conn

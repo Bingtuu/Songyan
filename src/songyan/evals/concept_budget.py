@@ -12,6 +12,8 @@ not gate chapter acceptance.
 
 from __future__ import annotations
 
+from typing import Any
+
 from pydantic import BaseModel
 
 from songyan.db.continuity_repo import SettingTrackingRepository
@@ -50,7 +52,7 @@ class ConceptBudgetReport(BaseModel):
 
 
 def build_concept_ledger_from_rows(
-    rows: list[dict],
+    rows: list[dict[str, Any]],
     *,
     current_chapter: int | None = None,
 ) -> list[ConceptLedgerEntry]:

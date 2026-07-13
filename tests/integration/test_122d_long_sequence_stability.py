@@ -45,6 +45,8 @@ from songyan.workflows.phase2_graph import (
 
 from .conftest import writer_resp
 
+pytestmark = pytest.mark.performance
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------

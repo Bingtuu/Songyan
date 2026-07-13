@@ -21,6 +21,8 @@ from .conftest import (
     writer_resp,
 )
 
+pytestmark = pytest.mark.performance
+
 
 @pytest.mark.asyncio
 async def test_checkpoint_resume_accept(test_db, mock_call_llm) -> None:
@@ -49,15 +51,16 @@ async def test_checkpoint_resume_accept(test_db, mock_call_llm) -> None:
     # Resume with a brand-new graph instance (simulates process restart)
     state2 = await resume_human_confirm(thread_id, "accept")
     assert state2["status"] == "done"
-    assert state2["current_version_id"] == version_id_before
+    # P0-2: accept 创建新的 accepted 版本，current_version_id 指向新版本
+    assert state2["current_version_id"] is not None
 
     # Verify DB state
     head = await ChapterHeadRepository().get(project_id, 2)
     assert head is not None
-    assert head.accepted_version_id == version_id_before
+    assert head.accepted_version_id is not None
 
     versions = await ChapterVersionRepository().list_by_chapter(project_id, 2)
-    assert len(versions) == 1
+    assert len(versions) == 2  # draft + accepted
 
 
 @pytest.mark.asyncio
@@ -118,9 +121,9 @@ async def test_checkpoint_state_consistency(test_db, mock_call_llm) -> None:
     }
 
     state2 = await resume_human_confirm(thread_id, "accept")
-    # Post-resume fields (before settlement) should match
+    # P0-2: accept 后创建新版本，恢复后的关键字段仍需一致
     assert state2["project_id"] == pre["project_id"]
     assert state2["chapter_number"] == pre["chapter_number"]
-    assert state2["current_version_id"] == pre["current_version_id"]
     assert state2["revision_round"] == pre["revision_round"]
     assert state2["mode_id"] == pre["mode_id"]
+    assert state2["current_version_id"] is not None

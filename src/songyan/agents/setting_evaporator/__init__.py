@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import structlog
 
@@ -49,7 +49,7 @@ MERGE_SOURCE_WINDOW: int = 50
 
 
 def _calculate_resolve_confidence(
-    setting_row: dict,
+    setting_row: dict[str, Any],
     current_chapter: int,
     chapter_goal: ChapterGoal | None,
 ) -> float:
@@ -107,7 +107,7 @@ def _calculate_resolve_confidence(
     return round(min(max(confidence, 0.0), 1.0), 4)
 
 
-def _setting_bucket(row: dict) -> tuple[str, str]:
+def _setting_bucket(row: dict[str, Any]) -> tuple[str, str]:
     """按 category 与 setting_key 前缀缩小合并候选集."""
     category = str(row.get("category") or "uncategorized")
     setting_key = str(row.get("setting_key") or "")
@@ -119,7 +119,7 @@ def _setting_bucket(row: dict) -> tuple[str, str]:
     return (category, prefix)
 
 
-def _is_recent_setting(row: dict, current_chapter: int | None, window: int) -> bool:
+def _is_recent_setting(row: dict[str, Any], current_chapter: int | None, window: int) -> bool:
     """仅让最近新增/提及的设定主动探测重复项."""
     if current_chapter is None:
         return True
@@ -137,12 +137,12 @@ def _is_recent_setting(row: dict, current_chapter: int | None, window: int) -> b
     return False
 
 
-def _stable_setting_order(row: dict) -> tuple[str, str]:
+def _stable_setting_order(row: dict[str, Any]) -> tuple[str, str]:
     """稳定排序，保证合并结果确定性."""
     return (str(row.get("created_at") or ""), str(row.get("setting_key") or ""))
 
 
-def _setting_similarity(s1: dict, s2: dict) -> float:
+def _setting_similarity(s1: dict[str, Any], s2: dict[str, Any]) -> float:
     """计算设定相似度；同名设定保持旧合并语义."""
     name1 = s1.get("setting_name", "")
     name2 = s2.get("setting_name", "")
@@ -221,7 +221,7 @@ class SettingEvaporator:
     async def merge_similar_settings(
         self,
         project_id: str,
-        settings: list[dict] | None = None,
+        settings: list[dict[str, Any]] | None = None,
         similarity_threshold: float = MERGE_SIMILARITY_THRESHOLD,
         current_chapter: int | None = None,
         source_window: int = MERGE_SOURCE_WINDOW,
@@ -233,7 +233,7 @@ class SettingEvaporator:
             return []
 
         ordered_settings = sorted(settings, key=_stable_setting_order)
-        buckets: dict[tuple[str, str], list[dict]] = {}
+        buckets: dict[tuple[str, str], list[dict[str, Any]]] = {}
         for row in ordered_settings:
             key = row.get("setting_key", "")
             if not key:

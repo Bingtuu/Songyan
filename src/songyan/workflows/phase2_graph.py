@@ -5,7 +5,7 @@ from __future__ import annotations
 import time
 from datetime import datetime
 from sqlite3 import OperationalError, Row
-from typing import Any
+from typing import Any, cast
 
 import structlog
 
@@ -610,6 +610,12 @@ async def run_project_pipeline(
             accumulated_summary=existing_run.accumulated_summary,
         )
 
+    # 公共初始化：新 run 默认值；resume 分支在下面被覆盖
+    failed: list[int] = []
+    accumulated_summary_parts: list[str] = []
+    persisted_summary = ""
+    resume_start = start
+
     if existing_run is not None:
         run_id = existing_run.run_id
         run_state = existing_run
@@ -652,10 +658,6 @@ async def run_project_pipeline(
             status="running",
         )
         await _save_run_state(run_state)
-        failed: list[int] = []
-        accumulated_summary_parts: list[str] = []
-        persisted_summary = ""
-        resume_start = start
         logger.info(
             "project_pipeline.start",
             run_id=run_id,
@@ -671,7 +673,7 @@ async def run_project_pipeline(
     )
 
     # Task 105: 熔断历史窗口（最近 3 章的指标）
-    _recent_results: list[dict] = []
+    _recent_results: list[dict[str, Any]] = []
 
     # Task 125: 保存历史审计数据，供 health_low 异常检测使用
     _previous_health_low_report: Any | None = None
@@ -991,7 +993,7 @@ async def _run_single_chapter(
     previous_health_low_report: Any | None = None,
     previous_p1_counts: list[int] | None = None,
     min_health_score_so_far: float | None = None,
-) -> dict:
+) -> dict[str, Any]:
     """运行单章，含 auto_confirm 处理和失败重试.
 
     Returns:
@@ -1013,7 +1015,7 @@ async def _run_single_chapter(
     thread_id = new_id("thread")
     attempts = 0
     max_attempts = 2 if on_failure == "retry" else 1
-    final_state: dict | None = None
+    final_state: dict[str, Any] | None = None
     error_stage: str | None = None
     _stage: str = "init"  # 跟踪当前阶段，用于异常时 error_stage
 
@@ -1029,14 +1031,14 @@ async def _run_single_chapter(
                 previous_summary=previous_summary,
                 max_revision_rounds=max_revision_rounds,
             )
-            final_state = state
+            final_state = cast(dict[str, Any], state)
 
             # 处理 human_confirm 中断
             if "__interrupt__" in state:
                 if auto_confirm:
                     _stage = "human_confirm"  # 跟踪当前阶段
                     state = await resume_human_confirm(thread_id, "accept")
-                    final_state = state
+                    final_state = cast(dict[str, Any], state)
                 else:
                     error_stage = "human_confirm"
                     break
@@ -1044,7 +1046,7 @@ async def _run_single_chapter(
             # 检查最终状态。Task 121f: 若章节已经完成正文、settlement 与
             # summary，前置 CreativeDirector 等非致命解析错误只能作为诊断，
             # 不能污染最终章节成功判定。
-            if _is_terminal_success_state(state):
+            if _is_terminal_success_state(cast(dict[str, Any], state)):
                 if state.get("error"):
                     logger.info(
                         "project_pipeline.stale_error_ignored_after_terminal_success",
@@ -1091,6 +1093,7 @@ async def _run_single_chapter(
             continuity_health_score: float | None = None
             continuity_health_severity: dict[str, int] | None = None
             health_low_report: Any | None = None
+            assert final_state is not None
             if chapter_number % 3 == 0:
                 try:
                     auditor = ContinuityAuditor()
@@ -1100,7 +1103,7 @@ async def _run_single_chapter(
                     )
                     await auditor.write_constraints(report, version_id=final_version_id)
                     continuity_health_score = report.overall_health_score
-                    continuity_health_severity = classify_report(report)
+                    continuity_health_severity = cast(dict[str, int], classify_report(report))
                     health_low_report = report
                     if report.overall_health_score < continuity_health_threshold:
                         logger.warning(

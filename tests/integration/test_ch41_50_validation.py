@@ -49,6 +49,8 @@ from .conftest import (
     writer_resp,
 )
 
+pytestmark = pytest.mark.performance
+
 # ---------------------------------------------------------------------------
 # Helpers: 构建 Ch2-Ch40 历史数据
 # ---------------------------------------------------------------------------
@@ -285,7 +287,7 @@ async def test_ch41_50_long_chain_validation(test_db, mock_call_llm) -> None:
     assert metrics["character_state_count"] >= 39
 
     # Ch1 seed(1) + Ch2-40 mock(39) + Ch41-50 pipeline(各1版本 draft→accepted) = 50
-    expected_versions = 1 + 39 + 10
+    expected_versions = 1 + 39 + 20  # pipeline 每章产生 draft + accepted 两个版本
     assert metrics["version_count"] == expected_versions
 
     budget_data = metrics["budget_used_per_chapter"]

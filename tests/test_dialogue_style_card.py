@@ -6,6 +6,8 @@ import pytest
 
 from songyan.models.character import Character, DialogueStyleCard
 
+pytestmark = pytest.mark.performance
+
 
 class TestDialogueStyleCardModel:
     """DialogueStyleCard 数据模型测试."""

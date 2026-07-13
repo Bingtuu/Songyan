@@ -44,7 +44,7 @@ def _load_prompt_template() -> str:
     return get_prompt_loader().load_card("goal_planner").system_prompt
 
 
-def _format_thread_lines(threads: list[dict]) -> str:
+def _format_thread_lines(threads: list[dict[str, Any]]) -> str:
     """将线索列表格式化为 prompt 文本（空则显示"（无）"）."""
     if not threads:
         return "（无）"
@@ -58,7 +58,7 @@ def _format_thread_lines(threads: list[dict]) -> str:
     return "\n".join(lines)
 
 
-def _format_foreshadowing_lines(items: list[dict]) -> str:
+def _format_foreshadowing_lines(items: list[dict[str, Any]]) -> str:
     """将临近伏笔列表格式化为 prompt 文本（空则显示"（无）"）."""
     if not items:
         return "（无）"
@@ -240,7 +240,7 @@ async def define_chapter_goal(
     mode_profile: CreativeModeProfile,
     chapter_number: int,
     previous_summary: str = "",
-    character_states: list[dict] | None = None,
+    character_states: list[dict[str, Any]] | None = None,
     narrative_ctx: NarrativeGoalContext | None = None,
     *,
     temperature: float = 0.7,

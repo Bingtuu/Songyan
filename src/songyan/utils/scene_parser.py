@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from typing import Any
 
 SCENE_PATTERN = re.compile(
     r"^###\s*Scene\s+(\d+)\s*[:：:]?", re.IGNORECASE | re.MULTILINE
@@ -125,7 +126,7 @@ def parse_scenes(
     min_scene_chars: int | None = None,
     max_scene_chars: int | None = None,
     target_scene_chars: int | None = None,
-) -> list[dict]:
+) -> list[dict[str, Any]]:
     """按 ### Scene N 标记或空行分割场景.
 
     优先识别 `### Scene N` 标记；若无标记：
@@ -147,10 +148,10 @@ def parse_scenes(
 
     strict = min_scene_chars is not None
     if strict:
-        min_chars = max(min_scene_chars, 1)
-        max_chars = max_scene_chars if max_scene_chars is not None else _DEFAULT_MAX_SCENE_CHARS
+        min_chars: int = max(min_scene_chars or 1, 1)
+        max_chars: int = max_scene_chars if max_scene_chars is not None else _DEFAULT_MAX_SCENE_CHARS
         if target_scene_chars is not None:
-            target_chars = target_scene_chars
+            target_chars: int = target_scene_chars
         else:
             target_chars = _DEFAULT_TARGET_SCENE_CHARS
     else:
@@ -161,7 +162,7 @@ def parse_scenes(
     # 1. 优先使用显式场景标记
     matches = list(SCENE_PATTERN.finditer(content))
     if matches:
-        scenes: list[dict] = []
+        scenes: list[dict[str, Any]] = []
         for i, match in enumerate(matches):
             scene_number = int(match.group(1))
             start = match.end()

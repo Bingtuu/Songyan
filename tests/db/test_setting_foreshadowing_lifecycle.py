@@ -32,6 +32,12 @@ async def lifecycle_db(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
             VALUES (?, ?, ?, ?)""",
             ("p-1", "Test", "xuanhuan", "Lin"),
         )
+        await conn.execute(
+            """INSERT INTO chapter_versions (
+                version_id, project_id, chapter_number, version_number, version_type
+            ) VALUES (?, ?, ?, ?, ?)""",
+            ("v-1", "p-1", 1, 1, "accepted"),
+        )
         await conn.commit()
     return db_path
 
@@ -53,6 +59,7 @@ class TestForeshadowingLifecycle:
                 status="planted",
             ),
             "p-1",
+            "v-1",
         )
         await repo.create(
             ForeshadowingItem(
@@ -63,6 +70,7 @@ class TestForeshadowingLifecycle:
                 status="resolved",
             ),
             "p-1",
+            "v-1",
         )
 
         # 手动将 fs-2 的 lifecycle_status 改为 active（resolved 本应被 archive_resolved 处理）
@@ -91,6 +99,7 @@ class TestForeshadowingLifecycle:
                 status="planted",
             ),
             "p-1",
+            "v-1",
         )
         archived = await repo.archive_overdue("p-1", current_chapter=60, window=5)
         assert archived == 1
@@ -111,6 +120,7 @@ class TestForeshadowingLifecycle:
                 status="resolved",
             ),
             "p-1",
+            "v-1",
         )
         archived = await repo.archive_overdue("p-1", current_chapter=60, window=5)
         assert archived == 0
@@ -127,6 +137,7 @@ class TestForeshadowingLifecycle:
                 status="planted",
             ),
             "p-1",
+            "v-1",
         )
         # 先 dormant
         await repo.archive_overdue("p-1", current_chapter=60, window=5)
@@ -146,6 +157,7 @@ class TestForeshadowingLifecycle:
                 status="resolved",
             ),
             "p-1",
+            "v-1",
         )
         archived = await repo.archive_resolved("p-1")
         assert archived == 1

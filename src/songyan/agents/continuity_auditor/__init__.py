@@ -6,7 +6,9 @@
 
 from __future__ import annotations
 
+import math
 import uuid
+from typing import Any
 
 import structlog
 
@@ -136,13 +138,13 @@ class ContinuityAuditor:
         self,
         orphaned: list[OrphanedSetting],
         forgotten: list[ForgottenItem],
-    ) -> list:
+    ) -> list[Any]:
         """委托给独立函数以保持接口兼容."""
         return _generate_suggested_marks(orphaned, forgotten)
 
     def _generate_constraints(
         self, report: ContinuityReport, version_id: str | None = None
-    ) -> list:
+    ) -> list[Any]:
         """委托给独立函数以保持接口兼容."""
         return _generate_constraints(report, version_id)
 
@@ -176,7 +178,7 @@ class ContinuityAuditor:
             """超过 10 后使用平方根衰减，避免健康分被单一维度快速归零."""
             if count <= 10:
                 return float(count)
-            return 10.0 + (count - 10) ** 0.5
+            return 10.0 + math.sqrt(count - 10)
 
         score = 10.0
         factor = 1.0

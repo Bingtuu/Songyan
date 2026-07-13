@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+from typing import Any
 
 import structlog
 
@@ -51,7 +52,7 @@ def _extract_json_balanced(text: str) -> str | None:
     return text[start:end]
 
 
-def _manual_json_repair(text: str) -> dict | None:
+def _manual_json_repair(text: str) -> dict[str, Any] | None:
     """无 json_repair 库时的手动修复尝试.
 
     处理常见问题：markdown 代码块标记、尾部逗号、单引号、未引用 key 等。
@@ -86,7 +87,8 @@ def _manual_json_repair(text: str) -> dict | None:
 
     # 尝试解析
     try:
-        return json.loads(cleaned)
+        result: dict[str, Any] = json.loads(cleaned)
+        return result
     except json.JSONDecodeError:
         return None
 
@@ -115,7 +117,7 @@ def extract_json(text: str) -> str:
     return text.strip()
 
 
-def parse_llm_response(text: str) -> dict:
+def parse_llm_response(text: str) -> dict[str, Any]:
     """解析 LLM 响应为字典.
 
     先尝试标准 json.loads，失败时 fallback 到 json_repair 库

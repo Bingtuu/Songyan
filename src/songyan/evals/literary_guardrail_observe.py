@@ -6,7 +6,7 @@ import json
 import re
 import uuid
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, cast
 
 from songyan.db.connection import get_db
 from songyan.models import ReviewCategory, ReviewIssue
@@ -295,7 +295,7 @@ async def audit_171w_text_guardrails(
 ) -> list[LiteraryGuardrailObservationRow]:
     """Audit 171w-c guardrail evidence from accepted text and DB facts."""
     async with get_db() as conn:
-        conn.row_factory = lambda cursor, row: {
+        conn.row_factory = lambda cursor, row: {  # type: ignore[assignment]  # aiosqlite row_factory stub mismatch
             col[0]: row[idx] for idx, col in enumerate(cursor.description)
         }
         cursor = await conn.execute(
@@ -312,7 +312,10 @@ async def audit_171w_text_guardrails(
                ORDER BY h.chapter_number""",
             (project_id, start, end),
         )
-        chapter_rows = {int(row["chapter_number"]): row for row in await cursor.fetchall()}
+        chapter_rows = cast(
+            dict[int, dict[str, Any]],
+            {int(row["chapter_number"]): row for row in await cursor.fetchall()},
+        )
 
         cursor = await conn.execute(
             """SELECT st.introduced_in_chapter AS chapter_number,
@@ -329,7 +332,7 @@ async def audit_171w_text_guardrails(
                ORDER BY st.introduced_in_chapter, st.setting_key""",
             (project_id, start, end),
         )
-        setting_rows = await cursor.fetchall()
+        setting_rows = cast(list[dict[str, Any]], await cursor.fetchall())
 
     settings_by_chapter: dict[int, list[dict[str, Any]]] = {}
     seen_setting_keys: set[tuple[int, str]] = set()
@@ -342,15 +345,15 @@ async def audit_171w_text_guardrails(
 
     result: list[LiteraryGuardrailObservationRow] = []
     for chapter in range(start, end + 1):
-        row = chapter_rows.get(chapter)
-        content = str(row["content"] or "") if row else ""
-        supporting_goal = _loads_json(row["supporting_character_goal"], {}) if row else {}
-        concept_budget = _loads_json(row["new_concept_budget"], {}) if row else {}
+        chapter_row: dict[str, Any] | None = chapter_rows.get(chapter)
+        content = str(chapter_row["content"] or "") if chapter_row else ""
+        supporting_goal = _loads_json(chapter_row["supporting_character_goal"], {}) if chapter_row else {}
+        concept_budget = _loads_json(chapter_row["new_concept_budget"], {}) if chapter_row else {}
         max_new_core_concepts = int(concept_budget.get("max_new_core_concepts") or 1)
         result.append(
             LiteraryGuardrailObservationRow(
                 chapter_number=chapter,
-                accepted_version_id=row["accepted_version_id"] if row else None,
+                accepted_version_id=chapter_row["accepted_version_id"] if chapter_row else None,
                 supporting_goal=observe_supporting_character_goal(content, supporting_goal),
                 active_choice=observe_active_choice(content, protagonist_name),
                 concept_budget=observe_concept_budget(

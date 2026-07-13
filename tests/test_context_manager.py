@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import pytest
 from songyan.agents.context_manager import (
     BudgetPruner,
     TokenEstimator,
@@ -251,6 +252,7 @@ class TestTokenEstimator:
 # ---------------------------------------------------------------------------
 # BudgetPruner Tests
 # ---------------------------------------------------------------------------
+@pytest.mark.performance
 class TestBudgetPruner:
     def _make_large_context(self) -> ContextPackage:
         """构造一个超大 ContextPackage 确保会超预算."""

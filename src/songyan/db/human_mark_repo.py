@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from sqlite3 import Row
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import structlog
 
@@ -97,7 +97,7 @@ class HumanMarkRepository:
         async with get_db() as conn:
             conn.row_factory = Row
             conditions = ["project_id = ?", "priority >= ?"]
-            params: list = [project_id, min_priority]
+            params: list[Any] = [project_id, min_priority]
 
             if mark_type:
                 conditions.append("mark_type = ?")
@@ -131,7 +131,7 @@ class HumanMarkRepository:
         async with get_db() as conn:
             conn.row_factory = Row
             conditions = ["project_id = ?", "created_at_chapter BETWEEN ? AND ?"]
-            params: list = [project_id, chapter_start, chapter_end]
+            params: list[Any] = [project_id, chapter_start, chapter_end]
             if source:
                 conditions.append("source = ?")
                 params.append(source)

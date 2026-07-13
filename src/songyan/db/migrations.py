@@ -399,13 +399,13 @@ async def _migrate_lifecycle_status(conn: aiosqlite.Connection) -> None:
             await conn.execute(
                 f"ALTER TABLE {table} ADD COLUMN lifecycle_status TEXT DEFAULT 'active'"
             )
-        cols = (
+        index_cols = (
             "project_id, lifecycle_status"
             if table != "character_states"
             else "lifecycle_status"
         )
         await conn.execute(
-            f"CREATE INDEX IF NOT EXISTS {index_name} ON {table}({cols})"
+            f"CREATE INDEX IF NOT EXISTS {index_name} ON {table}({index_cols})"
         )
 
     # foreshadowings 表已有 status 字段，需添加 lifecycle_status
@@ -904,6 +904,16 @@ async def _migrate_adaptive_halt_decisions(conn: aiosqlite.Connection) -> None:
     )
 
 
+async def _migrate_numerical_ledgers_formula(conn: aiosqlite.Connection) -> None:
+    """为 numerical_ledgers 表添加 formula 列（P1-10）."""
+    cursor = await conn.execute("PRAGMA table_info(numerical_ledgers)")
+    cols = {row[1] for row in await cursor.fetchall()}
+    if "formula" not in cols:
+        await conn.execute(
+            "ALTER TABLE numerical_ledgers ADD COLUMN formula TEXT DEFAULT ''"
+        )
+
+
 async def init_schema(db_path: str | Path | None = None) -> None:
     """读取 schema.sql 并执行，幂等（所有 CREATE 带 IF NOT EXISTS）.
 
@@ -952,6 +962,7 @@ async def init_schema(db_path: str | Path | None = None) -> None:
         await _migrate_setting_tracking_lifecycle_columns(conn)
         await _migrate_run_db_metrics(conn)
         await _migrate_text_cleanliness_metrics(conn)
+        await _migrate_numerical_ledgers_formula(conn)
         await _migrate_replan_proposals(conn)
         await _migrate_foreshadowing_schedule(conn)
         await _migrate_adaptive_gate_signals(conn)
@@ -1012,6 +1023,7 @@ async def run_migrations(conn: aiosqlite.Connection) -> None:
     await _migrate_setting_tracking_lifecycle_columns(conn)
     await _migrate_run_db_metrics(conn)
     await _migrate_text_cleanliness_metrics(conn)
+    await _migrate_numerical_ledgers_formula(conn)
     await _migrate_replan_proposals(conn)
     await _migrate_foreshadowing_schedule(conn)
     await _migrate_adaptive_gate_signals(conn)

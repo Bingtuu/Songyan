@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
 import structlog
 
@@ -33,7 +34,7 @@ class PunchMetrics:
         self.emotion_switches = emotion_switches
         self.emotion_switch_rate = emotion_switch_rate
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "chapter_number": self.chapter_number,
             "word_count": self.word_count,
@@ -60,7 +61,7 @@ async def evaluate_punch_metrics(project_id: str) -> list[PunchMetrics]:
     metrics: list[PunchMetrics] = []
 
     async with get_db() as conn:
-        conn.row_factory = lambda c, r: {
+        conn.row_factory = lambda c, r: {  # type: ignore[assignment]  # aiosqlite row_factory stub mismatch
             col[0]: r[idx] for idx, col in enumerate(c.description)
         }
 

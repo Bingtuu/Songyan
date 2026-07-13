@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import os
-from typing import Any, TypedDict
+from typing import Any, TypedDict, cast
 
 import structlog
 from langgraph.graph import END, StateGraph
@@ -75,16 +75,16 @@ class Phase1State(TypedDict):
     _best_overall_score: float | None
     _best_version_id: str | None
     _best_report_id: str | None
-    _best_score_card: dict | None
+    _best_score_card: dict[str, Any] | None
     _current_issues_count: int | None
     _current_overall_score: float | None
     _revision_rebound: bool
     # Task 098: 跨 rewrite 的累计修订次数（不被 rewrite 重置）
-    _total_revision_count: int = 0
+    _total_revision_count: int
     # 058c: 内容保留率（RevisionHandler 截断检测）
     _content_preservation_ratio: float | None
     # 058d: revision 引入的新问题（序列化后的 ReviewIssue dict 列表）
-    _new_issues_introduced: list[dict] | None
+    _new_issues_introduced: list[dict[str, Any]] | None
     _new_issues_version_id: str | None
     _settlement_needs_human_review: bool
     _settlement_version_id: str | None
@@ -96,7 +96,7 @@ class Phase1State(TypedDict):
     # 077b: BudgetPruner 是否触发过硬断言
     _budget_was_enforced: bool
     # Task 111b: ContextPackage 不入 state，仅保留轻量指标
-    _context_metrics: dict
+    _context_metrics: dict[str, Any]
     # 078: ContinuityAuditor 预算状态
     _deferred_constraints: list[str]
     _continuity_budget_exhausted: bool
@@ -106,12 +106,18 @@ class Phase1State(TypedDict):
     # 当前 gate 类型
     _current_gate: str | None
     # Task 106: 统一评分体系
-    _score_card: dict | None
+    _score_card: dict[str, Any] | None
     # Task 107: 收敛护栏
     _convergence_failed: bool
     _skip_settlement: bool
     # P0/P1: 审查矛盾检测 — 保存上一轮 merged issues
-    _prev_merged_issues: list[dict] | None
+    _prev_merged_issues: list[dict[str, Any]] | None
+    # Task 138h: 前置 mandatory reference 检查是否通过（revision 反弹后使用）
+    _mandatory_reference_check_passed: bool | None
+    # 单章 pipeline 允许的最大 revision 轮次
+    _max_revision_rounds: int
+    # 本次 pipeline 执行的 thread id（便于 resume）
+    thread_id: str | None
 
 
 # =============================================================================
@@ -144,7 +150,7 @@ def revision_router(state: Phase1State) -> str:
     if state.get("error"):
         return "pass"
     needs = state.get("_needs_revision", False)
-    rround = state.get("revision_round", 0)
+    rround = int(state.get("revision_round", 0))
     was_rewritten = state.get("_was_rewritten", False)
 
     # rewrite 是最后一次自动修复；重写后不再进入 revision，避免同章循环生成。
@@ -163,7 +169,7 @@ def revision_router(state: Phase1State) -> str:
             )
             return "rewrite"
         return "pass"
-    max_r = state.get("_max_revision_rounds", _MAX_REVISION_ROUNDS)
+    max_r = int(state.get("_max_revision_rounds", _MAX_REVISION_ROUNDS))
     # AG-04: 显式检查 revision 是否引入了新问题
     new_issues = state.get("_new_issues_introduced")
     if new_issues and rround >= max_r:
@@ -254,19 +260,19 @@ async def build_phase1_graph() -> Any:
     builder = StateGraph(Phase1State)
 
     # 注册节点
-    builder.add_node("goal_planner", goal_planner_node)
-    builder.add_node("creative_director", creative_director_node)
-    builder.add_node("context_manager", context_manager_node)
-    builder.add_node("writer", writer_node)
-    builder.add_node("rule_auditor", rule_auditor_node)
-    builder.add_node("llm_auditor", llm_auditor_node)
-    builder.add_node("review_merger", review_merger_node)
-    builder.add_node("literary_auditor", literary_auditor_node)
-    builder.add_node("revision_handler", revision_handler_node)
-    builder.add_node("rewrite", rewrite_node)
-    builder.add_node("quality_gate", quality_gate_node)
-    builder.add_node("human_confirm", human_confirm_node)
-    builder.add_node("settlement_extractor", settlement_extractor_node)
+    builder.add_node("goal_planner", goal_planner_node)  # type: ignore[type-var]
+    builder.add_node("creative_director", creative_director_node)  # type: ignore[type-var]
+    builder.add_node("context_manager", context_manager_node)  # type: ignore[type-var]
+    builder.add_node("writer", writer_node)  # type: ignore[type-var]
+    builder.add_node("rule_auditor", rule_auditor_node)  # type: ignore[type-var]
+    builder.add_node("llm_auditor", llm_auditor_node)  # type: ignore[type-var]
+    builder.add_node("review_merger", review_merger_node)  # type: ignore[type-var]
+    builder.add_node("literary_auditor", literary_auditor_node)  # type: ignore[type-var]
+    builder.add_node("revision_handler", revision_handler_node)  # type: ignore[type-var]
+    builder.add_node("rewrite", rewrite_node)  # type: ignore[type-var]
+    builder.add_node("quality_gate", quality_gate_node)  # type: ignore[type-var]
+    builder.add_node("human_confirm", human_confirm_node)  # type: ignore[type-var]
+    builder.add_node("settlement_extractor", settlement_extractor_node)  # type: ignore[type-var]
 
     # 顺序边
     builder.set_entry_point("goal_planner")
@@ -410,10 +416,13 @@ async def run_chapter_pipeline(
         "_convergence_failed": False,
         "_max_revision_rounds": max_revision_rounds,
         "_skip_settlement": False,
+        "_prev_merged_issues": None,
+        "_mandatory_reference_check_passed": None,
+        "thread_id": None,
     }
 
     try:
-        result = await graph.ainvoke(initial_state, config=config)
+        result = cast(Phase1State, await graph.ainvoke(initial_state, config=config))
         result["thread_id"] = thread_id
         return result
     except (LLMError, LLMResponseParseError) as exc:
@@ -458,7 +467,7 @@ async def resume_human_confirm(
     if edited_content is not None:
         set_editor_callable(lambda _c: edited_content)
     try:
-        return await graph.ainvoke(Command(resume=decision), config=config)
+        return cast(Phase1State, await graph.ainvoke(Command(resume=decision), config=config))
     finally:
         if edited_content is not None:
             set_editor_callable(None)

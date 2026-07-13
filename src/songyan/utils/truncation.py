@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from typing import Any
 
 from songyan.utils.scene_parser import SCENE_PATTERN, parse_scenes
 from songyan.utils.word_count import count_chinese_words
@@ -37,11 +38,11 @@ def word_count_bounds(
 
 def enforce_word_count(
     content: str,
-    scenes: list[dict],
+    scenes: list[dict[str, Any]],
     word_count_target: int,
     current_word_count: int,
     chapter_type: str | None = None,
-) -> tuple[str, list[dict], int, bool, str]:
+) -> tuple[str, list[dict[str, Any]], int, bool, str]:
     """强制截断正文到目标字数以内，根据章节类型动态调整上限。
 
     删除了 min_scenes 场景数保护 — Task 096 数据证明 1-scene 章节在叙事上合理，

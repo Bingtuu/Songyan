@@ -50,6 +50,21 @@ async def _seed_project(project_id: str = "p1") -> None:
     )
 
 
+async def _seed_version(
+    project_id: str = "p1", version_id: str = "v1", chapter_number: int = 1
+) -> None:
+    from songyan.db.connection import get_db
+
+    async with get_db() as conn:
+        await conn.execute(
+            """INSERT INTO chapter_versions (
+                version_id, project_id, chapter_number, version_number, version_type
+            ) VALUES (?, ?, ?, ?, ?)""",
+            (version_id, project_id, chapter_number, 1, "accepted"),
+        )
+        await conn.commit()
+
+
 # =============================================================================
 # Foreshadowing 自动归档
 # =============================================================================
@@ -59,6 +74,7 @@ class TestArchiveOverdue:
     @pytest.mark.asyncio
     async def test_archives_expected_resolve_past_threshold(self, fs_db: Path) -> None:
         await _seed_project("p1")
+        await _seed_version("p1")
         repo = ForeshadowingRepository()
         # current_chapter=60, threshold = 60/1.2 = 50
         # expected_resolve_chapter < 50 → archived
@@ -71,6 +87,7 @@ class TestArchiveOverdue:
                 status="overdue",
             ),
             "p1",
+            "v1",
         )
         await repo.create(
             ForeshadowingItem(
@@ -81,6 +98,7 @@ class TestArchiveOverdue:
                 status="planted",
             ),
             "p1",
+            "v1",
         )
         archived = await repo.archive_overdue("p1", current_chapter=60)
         assert archived == 1
@@ -93,6 +111,7 @@ class TestArchiveOverdue:
     @pytest.mark.asyncio
     async def test_does_not_archive_resolved(self, fs_db: Path) -> None:
         await _seed_project("p1")
+        await _seed_version("p1")
         repo = ForeshadowingRepository()
         await repo.create(
             ForeshadowingItem(
@@ -103,6 +122,7 @@ class TestArchiveOverdue:
                 status="resolved",
             ),
             "p1",
+            "v1",
         )
         archived = await repo.archive_overdue("p1", current_chapter=60)
         assert archived == 0
@@ -110,6 +130,7 @@ class TestArchiveOverdue:
     @pytest.mark.asyncio
     async def test_archives_zero_expected(self, fs_db: Path) -> None:
         await _seed_project("p1")
+        await _seed_version("p1")
         repo = ForeshadowingRepository()
         # expected_resolve_chapter is None → not archived
         await repo.create(
@@ -121,6 +142,7 @@ class TestArchiveOverdue:
                 status="planted",
             ),
             "p1",
+            "v1",
         )
         archived = await repo.archive_overdue("p1", current_chapter=60)
         assert archived == 0
@@ -135,6 +157,7 @@ class TestListActiveExcludesArchived:
     @pytest.mark.asyncio
     async def test_list_active_no_archived(self, fs_db: Path) -> None:
         await _seed_project("p1")
+        await _seed_version("p1")
         repo = ForeshadowingRepository()
         await repo.create(
             ForeshadowingItem(
@@ -145,6 +168,7 @@ class TestListActiveExcludesArchived:
                 status="planted",
             ),
             "p1",
+            "v1",
         )
         await repo.create(
             ForeshadowingItem(
@@ -155,6 +179,7 @@ class TestListActiveExcludesArchived:
                 status="archived",
             ),
             "p1",
+            "v1",
         )
         active = await repo.list_active("p1")
         assert len(active) == 1
@@ -307,6 +332,7 @@ class TestWriteConstraintsBudget:
     @pytest.mark.asyncio
     async def test_skips_when_budget_exhausted(self, fs_db: Path) -> None:
         await _seed_project("p1")
+        await _seed_version("p1")
         from songyan.db.human_mark_repo import HumanMarkRepository
         from songyan.models.human_mark import HumanMark
 
@@ -349,6 +375,7 @@ class TestWriteConstraintsBudget:
     @pytest.mark.asyncio
     async def test_writes_when_under_budget(self, fs_db: Path) -> None:
         await _seed_project("p1")
+        await _seed_version("p1")
         report = ContinuityReport(
             report_id="r1",
             project_id="p1",
@@ -375,6 +402,7 @@ class TestConstraintsIdempotentWrite:
     async def test_same_mark_not_duplicated(self, fs_db: Path) -> None:
         """验证 INSERT OR REPLACE 幂等: 同一断点更新而非重复."""
         await _seed_project("p1")
+        await _seed_version("p1")
         report = ContinuityReport(
             report_id="r1",
             project_id="p1",

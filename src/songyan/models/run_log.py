@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -61,11 +62,11 @@ class ChapterRunLog(BaseModel):
     soft_refs_loaded: int | None = None
     context_emergency: bool = False
     budget_used_before_emergency: float | None = None
-    context_pressure: dict = Field(default_factory=dict)
+    context_pressure: dict[str, Any] = Field(default_factory=dict)
     quality_gate_passed: bool | None = None
 
     # Task 106: 统一评分体系
-    score_card: dict = Field(default_factory=dict)
+    score_card: dict[str, Any] = Field(default_factory=dict)
 
     # Task 107: 收敛护栏
     convergence_failed: bool = False

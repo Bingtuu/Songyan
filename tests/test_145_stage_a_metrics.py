@@ -9,6 +9,7 @@ from __future__ import annotations
 import asyncio
 from pathlib import Path
 
+import pytest
 from click.testing import CliRunner
 
 from songyan.config import settings
@@ -28,6 +29,8 @@ from songyan.models import (
     OrphanedSetting,
     ProjectSetting,
 )
+
+pytestmark = pytest.mark.performance
 
 PID = "proj-145"
 

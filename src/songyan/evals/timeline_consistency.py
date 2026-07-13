@@ -238,7 +238,7 @@ def extract_time_signals(chapter_no: int, content: str) -> list[TimeSignal]:
             ordinal = _date_ordinal(year, month, day)
             if ordinal is None:
                 continue
-            value = (
+            date_value = (
                 f"{year:04d}-{month:02d}-{day:02d}"
                 if year is not None
                 else f"{month:02d}-{day:02d}"
@@ -250,7 +250,7 @@ def extract_time_signals(chapter_no: int, content: str) -> list[TimeSignal]:
                 text=content,
                 start=match.start(),
                 end=match.end(),
-                value=value,
+                value=date_value,
                 unit="date",
                 normalized_value=ordinal,
             )

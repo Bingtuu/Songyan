@@ -39,6 +39,15 @@ async def _add_fs(
     expected: int | None = None, lifecycle: str = "active",
 ) -> None:
     """建伏笔并按需设置 status/lifecycle_status（后者需直改，因模型不带该列）."""
+    from songyan.db.connection import get_db
+    async with get_db() as conn:
+        await conn.execute(
+            """INSERT OR IGNORE INTO chapter_versions (
+                version_id, project_id, chapter_number, version_number, version_type
+            ) VALUES (?, ?, ?, ?, ?)""",
+            ("v1", PID, planted, 1, "accepted"),
+        )
+        await conn.commit()
     await ForeshadowingRepository().create(
         ForeshadowingItem(
             foreshadowing_id=fid, description=f"fs {fid}",
@@ -46,6 +55,7 @@ async def _add_fs(
             status=status,
         ),
         PID,
+        "v1",
     )
     if lifecycle != "active":
         from songyan.db.connection import get_db

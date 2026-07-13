@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import datetime
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 from pydantic import BaseModel, Field
 
@@ -29,6 +29,7 @@ def normalize_human_instruction(raw: Mapping[str, Any]) -> HumanInstruction:
     action = raw.get("action") or raw.get("type") or "inject"
     if action not in {"edit", "inject", "rewrite"}:
         action = "inject"
+    action = cast(Literal["edit", "inject", "rewrite"], action)
     return HumanInstruction(
         instruction_id=str(raw.get("instruction_id") or "inst-normalized"),
         gate_type=str(raw.get("gate_type") or "unknown"),

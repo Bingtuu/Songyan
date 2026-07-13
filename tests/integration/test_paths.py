@@ -28,6 +28,8 @@ from .conftest import (
     writer_resp,
 )
 
+pytestmark = pytest.mark.performance
+
 
 async def _versions(project_id: str, chapter_number: int = 2):
     repo = ChapterVersionRepository()
@@ -99,8 +101,9 @@ async def test_path_a_no_issues_accept(test_db, mock_call_llm) -> None:
     assert head.status == "accepted"
 
     versions = await _versions(project_id)
-    assert len(versions) == 1
-    assert versions[0].version_type == "accepted"
+    accepted_versions = [v for v in versions if v.version_type == "accepted"]
+    assert len(accepted_versions) == 1
+    assert accepted_versions[0].version_id == final["current_version_id"]
 
     # settlement 数据应已写入
     assert await _summaries(project_id) == 1
@@ -137,13 +140,13 @@ async def test_path_b_one_round_revision_accept(test_db, mock_call_llm) -> None:
     assert final["revision_round"] == 1
 
     versions = await _versions(project_id)
-    assert len(versions) == 2
+    assert len(versions) == 3  # draft v1 + revision v2 + accepted v3
     assert versions[0].version_type == "draft"
-    assert versions[1].version_type == "accepted"
-    assert versions[1].parent_version_id == versions[0].version_id
+    assert versions[2].version_type == "accepted"
+    assert versions[2].parent_version_id == versions[1].version_id
 
     head = await _head(project_id)
-    assert head.accepted_version_id == versions[1].version_id
+    assert head.accepted_version_id == versions[2].version_id
 
     # settlement 数据应已写入
     assert await _summaries(project_id) == 1
@@ -187,7 +190,9 @@ async def test_path_c_two_rounds_forced_pass(test_db, mock_call_llm) -> None:
     assert final.get("_was_rewritten") is False
 
     versions = await _versions(project_id)
-    assert len(versions) == 2
+    accepted_versions = [v for v in versions if v.version_type == "accepted"]
+    assert len(accepted_versions) == 1
+    assert accepted_versions[0].version_id == final["current_version_id"]
 
     # forced pass 后 settlement/summary 也应正常生成
     assert await _summaries(project_id) == 1
@@ -349,8 +354,9 @@ async def test_path_g_major_revision_accept(test_db, mock_call_llm) -> None:
     assert final["revision_round"] == 0
 
     versions = await _versions(project_id)
-    assert len(versions) == 1
-    assert versions[0].version_type == "accepted"
+    accepted_versions = [v for v in versions if v.version_type == "accepted"]
+    assert len(accepted_versions) == 1
+    assert accepted_versions[0].version_id == final["current_version_id"]
 
 
 # ---------------------------------------------------------------------------
@@ -388,11 +394,11 @@ async def test_path_h_non_patchable_skips_revision(test_db, mock_call_llm) -> No
     assert final["revision_round"] == 1
 
     versions = await _versions(project_id)
-    # revision_handler still creates a revision version (even without patches)
-    assert len(versions) == 2
-    assert versions[1].version_type == "accepted"
+    # draft v1 + revision v2 (no patches) + accepted v3
+    assert len(versions) == 3
+    assert versions[2].version_type == "accepted"
     # content should be unchanged since no patches were applied
-    assert versions[0].content == versions[1].content
+    assert versions[0].content == versions[2].content
 
 
 # ---------------------------------------------------------------------------
@@ -428,12 +434,19 @@ async def test_path_i_revision_rebound_rollback(test_db, mock_call_llm) -> None:
     assert final.get("_revision_rebound") is False
 
     versions = await _versions(project_id)
-    # v1 (draft), v2 (revision, discarded due to rebound)
-    assert len(versions) == 2
+    # v1 (draft), v2 (revision, discarded due to rebound), v3 (accepted)
+    assert len(versions) == 3
 
     head = await _head(project_id)
     assert head is not None
-    assert head.accepted_version_id == versions[1].version_id
+    accepted_versions = [v for v in versions if v.version_type == "accepted"]
+    assert len(accepted_versions) == 1
+    assert head.accepted_version_id == accepted_versions[0].version_id
+    # rollback 后 accepted 版本应继承自最佳版本（v1）或当前被接受版本（v2）
+    assert accepted_versions[0].parent_version_id in {
+        versions[0].version_id,
+        versions[1].version_id,
+    }
 
     # settlement/summary should still work on rolled-back version
     assert await _summaries(project_id) == 1

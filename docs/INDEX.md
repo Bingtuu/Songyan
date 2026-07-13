@@ -168,6 +168,13 @@
 | `docs/reports/v7-audit/pass10-performance-observability-report.md` | Pass 10：性能与可观测性审计 |
 | `docs/reports/v7-audit/pass11-security-dependencies-report.md` | Pass 11：安全与依赖审计 |
 | `docs/reports/v7-audit/pass12-docs-consistency-report.md` | Pass 12：文档与状态一致性审计 |
+| `docs/reports/v7-audit/pass13-final-audit-report.md` | **Pass 13 最终审计汇总报告**：V7 阶段 Z 中期审计，P0/P1/P2 分级清单、进入 Ch250 的放行条件 |
+| `docs/reports/v7-audit/pass13-v7-late-subsystems-report.md` | Pass 13：V7 后期新增子系统审计（文学护栏 / 文本洁净 / creative brief 持久化） |
+| `docs/reports/v7-audit/pass14-workflow-langgraph-report.md` | Pass 14：工作流与 LangGraph 节点审计 |
+| `docs/reports/v7-audit/pass15-data-schema-report.md` | Pass 15：数据层与 Schema 审计 |
+| `docs/reports/v7-audit/pass16-test-quality-report.md` | Pass 16：测试 suite 与工程质量审计 |
+| `docs/reports/v7-audit/pass17-agent-settlement-report.md` | Pass 17：Agent 边界与结算模块审计 |
+| `docs/reports/v7-audit/pass13-fix-validation-report.md` | **Pass 13 修复验证报告**：P0 清零、高优先级 P1 修复状态、回归结果与剩余债务 |
 | `docs/superpowers/plans/2026-07-06-v7-code-review-and-architecture-audit-plan.md` | V7 审计执行计划 |
 
 ## 按场景查阅

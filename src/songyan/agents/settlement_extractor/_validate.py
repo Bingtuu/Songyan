@@ -5,6 +5,7 @@ from __future__ import annotations
 import difflib
 import math
 import re
+from typing import Any
 
 import structlog
 
@@ -568,7 +569,7 @@ def _filter_new_characters(
     if not settlement.new_characters:
         return
 
-    kept: list = []
+    kept: list[Any] = []
     seen_names: set[str] = set()
     existing_lower = {n.strip() for n in existing_character_names if n}
 

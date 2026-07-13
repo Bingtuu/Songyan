@@ -111,7 +111,7 @@ class SummaryRepository:
                 characters_appeared=_from_json(row["characters_appeared"], []),
                 impact_score=row["impact_score"] or 0.0,
             )
-            for row in reversed(rows)
+            for row in reversed(list(rows))
         ]
         logger.info(
             "repository.read",
@@ -649,7 +649,7 @@ class CharacterStateRepository:
         self,
         project_id: str,
         up_to_chapter: int,
-    ) -> list[dict]:
+    ) -> list[dict[str, Any]]:
         """获取项目下所有角色的状态历史（含关联的 chapter_number）.
 
         通过 source_version_id JOIN chapter_versions 获取章节号。

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import gc
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.checkpoint.memory import MemorySaver
@@ -15,10 +15,10 @@ if TYPE_CHECKING:
     import aiosqlite
 
 # 模块级单例缓存（保持与旧行为一致：同进程内复用）
-_checkpointer_instance: BaseCheckpointSaver | None = None
+_checkpointer_instance: BaseCheckpointSaver[Any] | None = None
 
 
-async def get_checkpointer() -> BaseCheckpointSaver:
+async def get_checkpointer() -> BaseCheckpointSaver[Any]:
     """根据 settings.checkpointer_mode 返回对应实现.
 
     - "memory" → MemorySaver（测试 / Windows 验证环境，无文件锁）
@@ -51,7 +51,7 @@ async def get_checkpointer() -> BaseCheckpointSaver:
     raise ValueError(f"Unsupported checkpointer_mode: {mode!r}")
 
 
-async def reset_checkpointer_instance(cp: BaseCheckpointSaver | None) -> None:
+async def reset_checkpointer_instance(cp: BaseCheckpointSaver[Any] | None) -> None:
     """彻底释放 checkpointer 资源.
 
     步骤：

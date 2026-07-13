@@ -91,7 +91,7 @@ async def audit_171v_guardrail_persistence(
 ) -> list[GuardrailPersistenceAuditRow]:
     """Audit whether 171v guardrails are persisted and replayable for a range."""
     async with get_db() as conn:
-        conn.row_factory = lambda cursor, row: {
+        conn.row_factory = lambda cursor, row: {  # type: ignore[assignment]  # aiosqlite row_factory stub mismatch
             col[0]: row[idx] for idx, col in enumerate(cursor.description)
         }
 
@@ -99,14 +99,21 @@ async def audit_171v_guardrail_persistence(
             """SELECT cb.*
                FROM creative_briefs cb
                JOIN (
-                   SELECT chapter_number, MAX(created_at || brief_id) AS latest_key
-                   FROM creative_briefs
-                   WHERE project_id = ?
-                     AND chapter_number BETWEEN ? AND ?
-                   GROUP BY chapter_number
+                   SELECT chapter_number, brief_id
+                   FROM (
+                       SELECT chapter_number, brief_id,
+                              ROW_NUMBER() OVER (
+                                  PARTITION BY chapter_number
+                                  ORDER BY created_at DESC, brief_id DESC
+                              ) AS rn
+                       FROM creative_briefs
+                       WHERE project_id = ?
+                         AND chapter_number BETWEEN ? AND ?
+                   )
+                   WHERE rn = 1
                ) latest
                  ON latest.chapter_number = cb.chapter_number
-                AND latest.latest_key = cb.created_at || cb.brief_id
+                AND latest.brief_id = cb.brief_id
                WHERE cb.project_id = ?""",
             (project_id, start, end, project_id),
         )

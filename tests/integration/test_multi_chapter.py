@@ -18,6 +18,8 @@ from .conftest import (
     writer_resp,
 )
 
+pytestmark = pytest.mark.performance
+
 
 def _writer_resp_ch(n: int) -> str:
     """为第 n 章生成不同的 writer 响应."""

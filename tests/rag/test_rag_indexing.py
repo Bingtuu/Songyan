@@ -43,8 +43,8 @@ async def proj_with_version(test_db) -> tuple[str, str]:
 class TestAcceptVersion:
     """ChapterVersionRepository.accept_version — Task 071 fix."""
 
-    async def test_accept_version_updates_type(self, test_db, proj_with_version) -> None:
-        """accept_version 将 version_type 从 draft 更新为 accepted."""
+    async def test_accept_version_creates_accepted_copy(self, test_db, proj_with_version) -> None:
+        """accept_version 保留原版本，创建新的 accepted 版本并返回其 ID."""
         project_id, version_id = proj_with_version
         repo = ChapterVersionRepository()
 
@@ -52,11 +52,19 @@ class TestAcceptVersion:
         assert before is not None
         assert before.version_type == "draft"
 
-        await repo.accept_version(version_id)
+        accepted_version_id = await repo.accept_version(version_id)
 
-        after = await repo.get(version_id)
-        assert after is not None
-        assert after.version_type == "accepted"
+        # 原版本保持 draft 不变
+        original = await repo.get(version_id)
+        assert original is not None
+        assert original.version_type == "draft"
+
+        # 新版本为 accepted
+        accepted = await repo.get(accepted_version_id)
+        assert accepted is not None
+        assert accepted.version_type == "accepted"
+        assert accepted.parent_version_id == version_id
+        assert accepted.content == original.content
 
 
 class TestIndexAcceptedChapter:

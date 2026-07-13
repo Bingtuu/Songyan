@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import structlog
 
 from songyan.db.continuity_repo import (
@@ -68,7 +70,7 @@ async def _find_orphaned_settings(
         if get_human_marked_keys is not None
         else set()
     )
-    rows: list[dict] = []
+    rows: list[dict[str, Any]] = []
     for category, threshold in ORPHANED_THRESHOLDS.items():
         rows.extend(
             await setting_repo.find_orphaned(
@@ -142,7 +144,7 @@ async def _find_state_mismatches(
     )
 
     # 按 character_id + field 分组
-    state_history: dict[str, list[dict]] = {}
+    state_history: dict[str, list[dict[str, Any]]] = {}
     for row in rows:
         # Task 171p + 171r: 排除演进型 field（精确匹配 + 前缀匹配）。
         field = row["field"]

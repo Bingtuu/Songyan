@@ -5,7 +5,7 @@ Task 118: 定义 health_low 分级策略，使 continuity 信号可追踪、可�
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Any, Literal, cast
 
 from songyan.db.continuity_repo import ContinuityReportRepository
 from songyan.db.human_mark_repo import HumanMarkRepository
@@ -33,9 +33,10 @@ def classify_continuity_mark(mark: HumanMark | dict[str, object]) -> Literal["P1
         priority = mark.priority
         note = mark.note
     else:
-        mark_type = mark.get("mark_type", "")
-        priority = mark.get("priority", 5)
-        note = mark.get("note", "")
+        raw = mark
+        mark_type = cast(Literal["setting", "character", "foreshadowing", "item", "custom"], raw.get("mark_type", ""))
+        priority = cast(int, raw.get("priority", 5))
+        note = cast(str, raw.get("note", ""))
 
     # state_mismatch 类（角色状态矛盾）→ P1
     if mark_type == "character" or "mismatch" in note.lower() or "矛盾" in note:
@@ -199,7 +200,7 @@ async def collect_continuity_health_metrics(
     )
 
     health_low_chapters: list[int] = []
-    chapter_details: list[dict] = []
+    chapter_details: list[dict[str, Any]] = []
 
     for report in reports:
         chapter = report.checked_up_to_chapter

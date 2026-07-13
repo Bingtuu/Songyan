@@ -18,6 +18,8 @@ from songyan.llm.client import (
 from songyan.llm.retry import retry_with_backoff
 from songyan.workflows.phase2_graph import run_project_pipeline
 
+pytestmark = pytest.mark.performance
+
 
 class FakeRateLimitError(Exception):
     """模拟 litellm / provider 抛出的 429 异常."""

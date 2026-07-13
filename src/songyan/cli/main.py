@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import uuid
 from pathlib import Path
+from typing import Any, Literal, cast
 
 import click
 
@@ -55,7 +56,7 @@ def _select_mode() -> str:
         click.echo(f"  {idx}. {mode_id} — {profile.name}")
 
     while True:
-        choice = click.prompt("请输入序号", type=int)
+        choice: int = click.prompt("请输入序号", type=int)
         if 1 <= choice <= len(modes):
             return modes[choice - 1]
         click.echo(f"无效输入，请输入 1-{len(modes)} 之间的数字")
@@ -70,7 +71,7 @@ def _select_genre() -> str:
         click.echo(f"  {idx}. {genre_id} — {profile.name}")
 
     while True:
-        choice = click.prompt("请输入序号", type=int)
+        choice: int = click.prompt("请输入序号", type=int)
         if 1 <= choice <= len(genres):
             return genres[choice - 1]
         click.echo(f"无效输入，请输入 1-{len(genres)} 之间的数字")
@@ -91,7 +92,7 @@ def _select_story_structure() -> str:
         click.echo(f"  {idx}. {label}")
 
     while True:
-        choice = click.prompt("请输入序号", default=4, type=int)
+        choice: int = click.prompt("请输入序号", default=4, type=int)
         if 1 <= choice <= len(_STRUCTURE_OPTIONS):
             return _STRUCTURE_OPTIONS[choice - 1][0]
         click.echo(f"无效输入，请输入 1-{len(_STRUCTURE_OPTIONS)} 之间的数字")
@@ -108,7 +109,7 @@ def _select_sub_genre(genre_id: str) -> str | None:
     for idx, sub in enumerate(profile.sub_genres, start=1):
         click.echo(f"  {idx}. {sub.name}")
 
-    choice = click.prompt("请输入序号", default=0, type=int)
+    choice: int = click.prompt("请输入序号", default=0, type=int)
     if 1 <= choice <= len(profile.sub_genres):
         return profile.sub_genres[choice - 1].sub_genre_id
     return None
@@ -158,7 +159,7 @@ async def _create_project_async(outline_file: str | None = None) -> tuple[str, P
         tone=tone,
         estimated_chapters=estimated_chapters,
         words_per_chapter=words_per_chapter,
-        story_structure=story_structure,
+        story_structure=cast(Literal["three_act", "five_act", "serial", "free"], story_structure),
         sub_genre_id=sub_genre_id,
         arc_boundaries=arc_boundaries,
         arc_boundaries_auto=arc_boundaries_auto,
@@ -255,7 +256,7 @@ def mark_add(
         mark = HumanMark(
             mark_id=f"hm_{uuid.uuid4().hex[:8]}",
             project_id=project_id,
-            mark_type=mark_type,
+            mark_type=cast(Literal["setting", "character", "foreshadowing", "item", "custom"], mark_type),
             target_key=target,
             note=note,
             priority=max(1, min(10, priority)),
@@ -372,7 +373,7 @@ def mark_update_priority(project_id: str, mark_id: str, priority: int) -> None:
         raise click.ClickException(str(exc)) from exc
 
 
-async def _list_projects_async() -> list[dict]:
+async def _list_projects_async() -> list[dict[str, Any]]:
     """异步查询所有项目，返回原始行数据列表."""
     await init_schema()
 
@@ -489,7 +490,7 @@ def run(
             os.environ["SONGYAN_RAG_MODE"] = rag_mode
             click.echo(f"RAG 模式: {rag_mode}")
 
-        gate_config = GateConfig.for_mode(gate_mode)
+        gate_config = GateConfig.for_mode(cast(Literal["observe", "enforce"], gate_mode))
         click.echo(f"门禁模式: {gate_mode}")
 
         result = asyncio.run(

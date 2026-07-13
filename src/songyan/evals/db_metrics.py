@@ -13,7 +13,9 @@ from __future__ import annotations
 import json
 import sqlite3
 from collections import Counter
+from collections.abc import Awaitable
 from pathlib import Path
+from typing import Any, TypeVar
 
 from pydantic import BaseModel
 
@@ -26,6 +28,9 @@ from songyan.db.review_repo import LiteraryObservationRepository
 from songyan.db.run_db_metrics_repo import RunDbMetricsRepository
 from songyan.db.run_quality_debt_repo import RunQualityDebtRepository, RunQualityDebtRow
 from songyan.db.settlement_repo import ForeshadowingRepository
+from songyan.models.continuity import ContinuityReport
+
+_T = TypeVar("_T")
 from songyan.evals.concept_budget import (
     collect_concept_budget_report,
     render_concept_budget_section,
@@ -108,7 +113,7 @@ async def collect_orphan_metrics(
         for row in tracking_rows
     }
 
-    latest_by_chapter: dict[int, object] = {}
+    latest_by_chapter: dict[int, ContinuityReport] = {}
     for report in reports:
         latest_by_chapter[report.checked_up_to_chapter] = report
 
@@ -117,7 +122,7 @@ async def collect_orphan_metrics(
         report = latest_by_chapter[chapter]
         critical = recurring = other = 0
         active_orphaned = []
-        for setting in report.orphaned_settings:  # type: ignore[attr-defined]
+        for setting in report.orphaned_settings:
             tracking_key = getattr(setting, "tracking_id", "") or getattr(
                 setting, "setting_key", ""
             )
@@ -142,7 +147,7 @@ async def collect_orphan_metrics(
                 orphan_critical=critical,
                 orphan_recurring=recurring,
                 orphan_other=other,
-                forgotten_items=len(report.forgotten_items),  # type: ignore[attr-defined]
+                forgotten_items=len(report.forgotten_items),
             )
         )
     return points
@@ -261,7 +266,7 @@ def render_setting_lifecycle_section(metrics: SettingLifecycleMetrics | None) ->
     return "\n".join(lines)
 
 
-async def _guard(awaitable, fallback):
+async def _guard(awaitable: Awaitable[_T], fallback: _T) -> _T:
     """执行 collector；表缺失（历史 DB 无该 V6 表）时返回 fallback（优雅降级）."""
     try:
         return await awaitable
@@ -903,13 +908,13 @@ async def collect_db_maintenance_samples(
     start: int,
     end: int,
     repo: RunDbMetricsRepository | None = None,
-) -> list[dict]:
+) -> list[dict[str, Any]]:
     """读取 run_db_metrics 遥测样本，按章范围过滤."""
     repo = repo or RunDbMetricsRepository()
     return await repo.list_by_project(project_id, chapter_start=start, chapter_end=end)
 
 
-def render_db_maintenance_section(samples: list[dict]) -> str:
+def render_db_maintenance_section(samples: list[dict[str, Any]]) -> str:
     """T5：DB 尺寸与连续性扫描耗时红线判定."""
     lines = ["## DB 维护遥测（T5：尺寸 ≤300MB；扫描耗时 ≤ 中位数×2.0）", ""]
     if not samples:

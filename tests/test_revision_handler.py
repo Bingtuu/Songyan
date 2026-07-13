@@ -1076,6 +1076,7 @@ class TestBuildRevisionOutputWithNewIssues:
 # ---------------------------------------------------------------------------
 # Task 095: Scene Split / Merge Strategies
 # ---------------------------------------------------------------------------
+@pytest.mark.performance
 class TestSceneSplitStrategy:
     async def test_rewrite_scene_not_auto_split(self) -> None:
         content = "### Scene 1\n这是一个很长的场景内容。" * 50

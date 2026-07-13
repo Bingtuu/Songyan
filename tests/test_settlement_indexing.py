@@ -11,7 +11,7 @@ from songyan.models.rag import RAGConfig
 from songyan.rag.embedder import Embedder
 from songyan.workflows._helpers import _index_accepted_chapter
 
-pytestmark = pytest.mark.asyncio
+pytestmark = [pytest.mark.asyncio, pytest.mark.performance]
 
 
 class TestSettlementIndexing:

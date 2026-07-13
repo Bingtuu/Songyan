@@ -1,6 +1,6 @@
 """Creative mode profile and creative brief models."""
 
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -107,7 +107,7 @@ class CreativeBrief(BaseModel):
     """创作导演输出 — 创作意图与张力地图."""
 
     mode_id: str  # webnovel | literary | hybrid | webnovel_intense
-    chapter_goal: ChapterGoal
+    chapter_goal: ChapterGoal | None = None
     creative_intent: str = ""
     required_tensions: list[Tension] = Field(default_factory=list)
     forbidden_patterns: list[str] = Field(default_factory=list)
@@ -122,7 +122,7 @@ class CreativeBrief(BaseModel):
     # 叙事充满度 — 0.0 (线索未展开) ~ 1.0 (所有线索已展开)
     narrative_fullness: float = 0.0
     # 角色焦点 — 每个元素指定角色 ID 和详细度
-    character_focus: list[dict] = Field(default_factory=list)
+    character_focus: list[dict[str, Any]] = Field(default_factory=list)
     # 到期伏笔列表 — foreshadowing_id 列表
     foreshadowing_due: list[str] = Field(default_factory=list)
     # 景深 — close(40%) / mid(40%) / wide(15%) / disruption(5%)
@@ -206,7 +206,7 @@ class CreativeModeProfile(BaseModel):
     literary_optimization_plugins: list[str] = Field(default_factory=list)
 
     @classmethod
-    def from_dict(cls, data: dict) -> "CreativeModeProfile":
+    def from_dict(cls, data: dict[str, Any]) -> "CreativeModeProfile":
         """从 dict 加载（JSON 反序列化后调用）."""
         return cls(**data)
 

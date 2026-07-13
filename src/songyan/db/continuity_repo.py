@@ -82,8 +82,8 @@ class SettingTrackingRepository:
 
     async def list_by_project(
         self, project_id: str, conn: aiosqlite.Connection | None = None
-    ) -> list[dict]:
-        async def _do(c: aiosqlite.Connection) -> list[dict]:
+    ) -> list[dict[str, Any]]:
+        async def _do(c: aiosqlite.Connection) -> list[dict[str, Any]]:
             c.row_factory = Row
             cursor = await c.execute(
                 "SELECT * FROM setting_tracking "
@@ -401,7 +401,7 @@ class SettingTrackingRepository:
         up_to_chapter: int,
         threshold: int = 3,
         categories: list[str] | None = None,
-    ) -> list[dict]:
+    ) -> list[dict[str, Any]]:
         """Find settings whose last mention is more than threshold chapters ago."""
         query = """SELECT * FROM setting_tracking
                    WHERE project_id = ?
@@ -421,7 +421,7 @@ class SettingTrackingRepository:
 
     async def new_settings_by_chapter(
         self, project_id: str, start: int, end: int
-    ) -> list[dict]:
+    ) -> list[dict[str, Any]]:
         """按章统计新登记设定数（供 T7：category='critical' AND introduced_in_chapter=N）."""
         async with get_db() as conn:
             conn.row_factory = Row
@@ -474,7 +474,7 @@ class InventoryTrackerRepository:
         else:
             await _do(conn)
 
-    async def list_by_project(self, project_id: str) -> list[dict]:
+    async def list_by_project(self, project_id: str) -> list[dict[str, Any]]:
         async with get_db() as conn:
             conn.row_factory = Row
             cursor = await conn.execute(
@@ -530,7 +530,7 @@ class LocationTrackerRepository:
         else:
             await _do(conn)
 
-    async def list_by_project(self, project_id: str) -> list[dict]:
+    async def list_by_project(self, project_id: str) -> list[dict[str, Any]]:
         async with get_db() as conn:
             conn.row_factory = Row
             cursor = await conn.execute(

@@ -26,6 +26,12 @@ from songyan.models.creative_mode import (
 
 logger = structlog.get_logger(__name__)
 
+try:
+    from pydantic import ValidationError
+except ImportError:  # pragma: no cover
+    class ValidationError(Exception):  # type: ignore[no-redef]
+        """Fallback when pydantic is not available."""
+
 VALID_TENSION_TYPES = {
     "value_conflict",
     "information_asymmetry",
@@ -80,7 +86,8 @@ def _parse_llm_response(text: str) -> dict[str, Any]:
     """解析 LLM 响应为字典."""
     json_text = _extract_json(text)
     try:
-        return json.loads(json_text)
+        result: dict[str, Any] = json.loads(json_text)
+        return result
     except json.JSONDecodeError as e:
         msg = f"LLM 返回内容无法解析为 JSON: {e}"
         raise LLMResponseParseError(msg, raw_response=text) from e
@@ -202,7 +209,7 @@ def _parse_voice_anchors(raw: Any) -> list[VoiceAnchor]:
                     taboo_phrase=str(item.get("taboo_phrase", "")),
                 )
             )
-        except Exception:
+        except ValidationError:
             continue
     return result
 
@@ -238,7 +245,7 @@ def _parse_voice_samples(raw: Any) -> list[VoiceSample]:
                     mood_anchor=str(item.get("mood_anchor", "")),
                 )
             )
-        except Exception:
+        except ValidationError:
             continue
     return result
 
@@ -362,7 +369,7 @@ def _build_creative_brief(
     if isinstance(_raw_fullness, (int, float)):
         _narrative_fullness = max(0.0, min(1.0, float(_raw_fullness)))
 
-    _character_focus: list[dict] = []
+    _character_focus: list[dict[str, Any]] = []
     _raw_focus = data.get("character_focus")
     if isinstance(_raw_focus, list):
         for item in _raw_focus:

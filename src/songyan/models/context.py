@@ -1,7 +1,7 @@
 """Context package and sub-models — Writer 输入的上下文组装结构."""
 
 from datetime import datetime
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -98,8 +98,8 @@ class GenreRules(BaseModel):
     pacing_rule: str = ""
     taboos: list[str] = Field(default_factory=list)
     style_baseline: StyleBaseline | None = None
-    pacing_templates: list[dict] = Field(default_factory=list)
-    sensory_templates: list[dict] = Field(default_factory=list)
+    pacing_templates: list[dict[str, Any]] = Field(default_factory=list)
+    sensory_templates: list[dict[str, Any]] = Field(default_factory=list)
     # Phase 8a: 子类型差异化规则
     sub_genre_rules: list[str] = Field(default_factory=list)
     # V3.1: 审查焦点（按章节类型按需注入）
@@ -207,7 +207,7 @@ class ContextPackage(BaseModel):
     mode_rules: ModeRules | None = None
 
     # === 人类指令（HITL）===
-    human_instructions: list[dict] = Field(default_factory=list)
+    human_instructions: list[dict[str, Any]] = Field(default_factory=list)
 
     # === Phase 4 新增：分层上下文 ===
     arc_context: ArcSummary | None = None
@@ -222,7 +222,7 @@ class ContextPackage(BaseModel):
     dialogue_style_cards: list[DialogueStyleCard] = Field(default_factory=list)
 
     # === Task 138h: 强制连续性约束（critical orphan 硬回收）===
-    mandatory_references: list[dict] = Field(default_factory=list)
+    mandatory_references: list[dict[str, Any]] = Field(default_factory=list)
 
     # === 元信息 ===
     estimated_tokens: int = 0
@@ -231,7 +231,7 @@ class ContextPackage(BaseModel):
     budget_used: float = 0.0
     character_states_total: int = 0  # 080: DB 中总角色状态数（监控用）
     # Task 100c: 上下文压力指标（供后期复盘）
-    context_pressure: dict = Field(default_factory=dict)
+    context_pressure: dict[str, Any] = Field(default_factory=dict)
     # Task 104: 是否触发了 ContextEmergency（预算硬天花板）
     context_emergency: bool = False
     # Task 110c: ContextEmergency 降级级别（1/2/3）
@@ -252,5 +252,5 @@ class ContextSnapshot(BaseModel):
     context_emergency: bool = False
     context_emergency_level: int = 0
     budget_used_before_emergency: float | None = None
-    payload: dict = Field(default_factory=dict)
+    payload: dict[str, Any] = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=datetime.now)

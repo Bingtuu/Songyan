@@ -37,7 +37,7 @@ class TokenEstimator:
         # 回退：中文字符 ≈ 1 token，ASCII ≈ 0.25 token，平均按 len/2
         return max(1, len(text) // 2)
 
-    def estimate_model(self, obj: BaseModel | dict | list | None) -> int:
+    def estimate_model(self, obj: BaseModel | dict[str, Any] | list[Any] | None) -> int:
         """估算 Pydantic 模型 / dict / list 的 Token 数."""
         if obj is None:
             return 0

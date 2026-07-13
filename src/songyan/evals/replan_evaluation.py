@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import Any
+from typing import Any, Literal
 from uuid import uuid4
 
 from songyan.db.context_repo import SummaryRepository
@@ -158,7 +158,7 @@ def _risk_level(
     unresolved_threads: list[str],
     metric_warnings: list[str],
     style_debt_signals: list[str],
-) -> str:
+) -> Literal["none", "low", "medium", "high"]:
     if not has_skeleton:
         return "none"
     if unopened_threads or unresolved_threads:

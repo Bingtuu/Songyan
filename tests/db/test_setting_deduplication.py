@@ -40,6 +40,14 @@ async def _seed_project(project_id: str = "p1") -> None:
         ),
         project_id,
     )
+    async with get_db() as conn:
+        await conn.execute(
+            """INSERT OR IGNORE INTO chapter_versions (
+                version_id, project_id, chapter_number, version_number, version_type
+            ) VALUES (?, ?, ?, ?, ?)""",
+            ("v1", project_id, 1, 1, "accepted"),
+        )
+        await conn.commit()
 
 
 async def _insert_tracking(
@@ -275,13 +283,15 @@ async def _insert_foreshadowing(
     expected_resolve_chapter: int | None,
     status: str,
     project_id: str = "p1",
+    source_version_id: str = "v1",
 ) -> None:
     async with get_db() as conn:
         await conn.execute(
             """INSERT INTO foreshadowings (
                 foreshadowing_id, project_id, description,
-                planted_in_chapter, expected_resolve_chapter, status
-            ) VALUES (?, ?, ?, ?, ?, ?)""",
+                planted_in_chapter, expected_resolve_chapter, status,
+                source_version_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)""",
             (
                 foreshadowing_id,
                 project_id,
@@ -289,6 +299,7 @@ async def _insert_foreshadowing(
                 planted_in_chapter,
                 expected_resolve_chapter,
                 status,
+                source_version_id,
             ),
         )
         await conn.commit()

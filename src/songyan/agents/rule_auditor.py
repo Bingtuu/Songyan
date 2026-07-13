@@ -535,10 +535,10 @@ def collect_text_cleanliness_clean_issues(
                 match, chapter_number=chapter_number, version_id=version_id
             )
         )
-    for match in duplicate_matches:
+    for dup_match in duplicate_matches:
         issues.append(
             _clean_issue_for_duplicate(
-                match, chapter_number=chapter_number, version_id=version_id
+                dup_match, chapter_number=chapter_number, version_id=version_id
             )
         )
     return issues
@@ -861,7 +861,7 @@ def detect_exposition_carriers(
         seen.add(key)
         matches.append(
             ExpositionCarrierMatch(
-                carrier_type="faq_dialogue",  # type: ignore[arg-type]
+                carrier_type="faq_dialogue",
                 matched_text=m.group()[:120],
                 location=_locate_match(text, m.group(), m.start()),
                 severity="info",
@@ -884,7 +884,7 @@ def detect_exposition_carriers(
             seen.add(key)
             matches.append(
                 ExpositionCarrierMatch(
-                    carrier_type="direct_revelation_monologue",  # type: ignore[arg-type]
+                    carrier_type="direct_revelation_monologue",
                     matched_text=m.group()[:120],
                     location=_locate_match(text, m.group(), m.start()),
                     severity="minor",
@@ -902,7 +902,7 @@ def detect_exposition_carriers(
         seen.add(key)
         matches.append(
             ExpositionCarrierMatch(
-                carrier_type="protagonist_summary_tell",  # type: ignore[arg-type]
+                carrier_type="protagonist_summary_tell",
                 matched_text=m.group()[:120],
                 location=_locate_match(text, m.group(), m.start()),
                 severity="minor",
@@ -924,7 +924,7 @@ def detect_exposition_carriers(
             seen.add(key)
             matches.append(
                 ExpositionCarrierMatch(
-                    carrier_type="info_delivery_dialogue",  # type: ignore[arg-type]
+                    carrier_type="info_delivery_dialogue",
                     matched_text=m.group()[:120],
                     location=_locate_match(text, m.group(), m.start()),
                     severity="info",
@@ -962,7 +962,7 @@ def detect_exposition_carriers(
         if count >= 2:
             matches.append(
                 ExpositionCarrierMatch(
-                    carrier_type="repeated_revelation_beat",  # type: ignore[arg-type]
+                    carrier_type="repeated_revelation_beat",
                     matched_text=f"{carrier_type} 出现 {count} 次",
                     location="全章",
                     severity="minor",
@@ -984,12 +984,12 @@ def detect_exposition_carriers(
         else:
             if last_was_non_character:
                 if non_char_consecutive > non_character_consecutive_monologue_limit:
-                    key = ("non_char_consecutive", m.start())
-                    if key not in seen:
-                        seen.add(key)
+                    event_key = ("non_char_consecutive", m.start())
+                    if event_key not in seen:
+                        seen.add(event_key)
                         matches.append(
                             ExpositionCarrierMatch(
-                                carrier_type="non_character_monologue_overflow",  # type: ignore[arg-type]
+                                carrier_type="non_character_monologue_overflow",
                                 matched_text=f"非人实体连续独白 {non_char_consecutive} 句",
                                 location=_locate_match(text, quote, m.start()),
                                 severity="minor",
@@ -1001,12 +1001,12 @@ def detect_exposition_carriers(
 
     # 句尾再检查一次连续独白
     if last_was_non_character and non_char_consecutive > non_character_consecutive_monologue_limit:
-        key = ("non_char_consecutive", len(text))
-        if key not in seen:
-            seen.add(key)
+        event_key = ("non_char_consecutive", len(text))
+        if event_key not in seen:
+            seen.add(event_key)
             matches.append(
                 ExpositionCarrierMatch(
-                    carrier_type="non_character_monologue_overflow",  # type: ignore[arg-type]
+                    carrier_type="non_character_monologue_overflow",
                     matched_text=f"非人实体连续独白 {non_char_consecutive} 句",
                     location="章末",
                     severity="minor",
@@ -1015,12 +1015,12 @@ def detect_exposition_carriers(
             )
 
     if non_char_total_words > non_character_dialogue_word_limit:
-        key = ("non_char_total_words", 0)
-        if key not in seen:
-            seen.add(key)
+        event_key = ("non_char_total_words", 0)
+        if event_key not in seen:
+            seen.add(event_key)
             matches.append(
                 ExpositionCarrierMatch(
-                    carrier_type="non_character_monologue_overflow",  # type: ignore[arg-type]
+                    carrier_type="non_character_monologue_overflow",
                     matched_text=f"非人实体台词总量 {non_char_total_words} 字",
                     location="全章",
                     severity="major",
@@ -1050,12 +1050,12 @@ def detect_exposition_carriers(
             last_end = m.end()
         else:
             if consecutive_expository >= 3:
-                key = ("expository_chain", chain_start)
-                if key not in seen:
-                    seen.add(key)
+                event_key = ("expository_chain", chain_start)
+                if event_key not in seen:
+                    seen.add(event_key)
                     matches.append(
                         ExpositionCarrierMatch(
-                            carrier_type="expository_dialogue_chain",  # type: ignore[arg-type]
+                            carrier_type="expository_dialogue_chain",
                             matched_text=text[chain_start:last_end][:120],
                             location=_locate_match(text, text[chain_start:last_end], chain_start),
                             severity="minor",
@@ -1065,12 +1065,12 @@ def detect_exposition_carriers(
             consecutive_expository = 0
 
     if consecutive_expository >= 3:
-        key = ("expository_chain", chain_start)
-        if key not in seen:
-            seen.add(key)
+        event_key = ("expository_chain", chain_start)
+        if event_key not in seen:
+            seen.add(event_key)
             matches.append(
                 ExpositionCarrierMatch(
-                    carrier_type="expository_dialogue_chain",  # type: ignore[arg-type]
+                    carrier_type="expository_dialogue_chain",
                     matched_text=text[chain_start:last_end][:120],
                     location=_locate_match(text, text[chain_start:last_end], chain_start),
                     severity="minor",
@@ -1091,7 +1091,7 @@ def detect_exposition_carriers(
         if not any(cue in preceding for cue in _EARNED_REVELATION_CUES):
             matches.append(
                 ExpositionCarrierMatch(
-                    carrier_type="unearned_revelation",  # type: ignore[arg-type]
+                    carrier_type="unearned_revelation",
                     matched_text=m.group()[:120],
                     location=_locate_match(text, m.group(), m.start()),
                     severity="info",
@@ -1111,8 +1111,8 @@ def detect_exposition_carriers(
             continue
         if not any(kw in quote for kw in effective_info_delivery_keywords):
             continue
-        key = ("unconflicted", m.start())
-        if key in seen:
+        event_key = ("unconflicted", m.start())
+        if event_key in seen:
             continue
         window_start = max(0, m.start() - 300)
         preceding = text[window_start:m.start()]
@@ -1120,10 +1120,10 @@ def detect_exposition_carriers(
         has_misjudgment = any(cue in preceding for cue in _MISJUDGMENT_CUES)
         has_cost = any(cue in preceding for cue in _COST_CUES)
         if not (has_conflict or has_misjudgment or has_cost):
-            seen.add(key)
+            seen.add(event_key)
             matches.append(
                 ExpositionCarrierMatch(
-                    carrier_type="unconflicted_revelation",  # type: ignore[arg-type]
+                    carrier_type="unconflicted_revelation",
                     matched_text=m.group()[:120],
                     location=_locate_match(text, m.group(), m.start()),
                     severity="info",
@@ -1355,7 +1355,7 @@ def detect_human_voice_homogeneity(
                 ):
                     matches.append(
                         ExpositionCarrierMatch(
-                            carrier_type="human_voice_homogeneity",  # type: ignore[arg-type]
+                            carrier_type="human_voice_homogeneity",
                             matched_text=f"场景{scene_idx}: {names[i]} 与 {names[j]} 对白趋同",
                             location=f"场景{scene_idx}",
                             severity="info",
@@ -1432,7 +1432,7 @@ def _check_punch_points(
 
 def _check_mandatory_references(
     content: str,
-    mandatory_references: list[dict] | None,
+    mandatory_references: list[dict[str, Any]] | None,
 ) -> tuple[bool, list[dict[str, Any]]]:
     """Task 138h: 检测正文中是否缺失 mandatory_reference 的提及.
 
@@ -1445,7 +1445,7 @@ def _check_mandatory_references(
     if not mandatory_references:
         return True, []
 
-    issues: list[str] = []
+    issues: list[dict[str, Any]] = []
     text = content.lower()
     for ref in mandatory_references:
         key = str(ref.get("setting_key") or "").lower()
@@ -1482,7 +1482,7 @@ def run_rule_audit(
     scene_count_target: int = 2,
     numerical_contexts: list[NumericalContext] | None = None,
     punch_points: list[PunchPoint] | None = None,
-    mandatory_references: list[dict] | None = None,
+    mandatory_references: list[dict[str, Any]] | None = None,
     *,
     character_names: set[str] | None = None,
     non_character_keywords: set[str] | None = None,

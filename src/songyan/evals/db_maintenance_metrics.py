@@ -10,7 +10,7 @@ import time
 from collections import defaultdict
 from pathlib import Path
 from statistics import median
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel
 
@@ -129,7 +129,7 @@ def check_t5_latency_redline(
 
 
 def analyze_t5_latency_samples(
-    samples: list[dict],
+    samples: list[dict[str, Any]],
     *,
     factor: float = 2.0,
     extreme_factor: float = 5.0,

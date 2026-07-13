@@ -38,7 +38,7 @@ def _is_valid_source_quote(quote: str, content: str, keyword: str = "") -> bool:
     3. 包含相关关键词（可选）
     """
     if not quote:
-        return True  # 空 quote 不视为错误，直接跳过
+        return False  # 空 quote 不是有效证据，必须被过滤/拒绝
 
     # 1. 长度过滤
     if not (MIN_QUOTE_LENGTH <= len(quote) <= MAX_QUOTE_LENGTH):

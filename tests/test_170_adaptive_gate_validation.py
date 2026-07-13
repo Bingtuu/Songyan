@@ -16,6 +16,8 @@ import importlib.util
 import sys
 from pathlib import Path
 
+import pytest
+
 from songyan.evals.adaptive_halt import evaluate_adaptive_halt
 from songyan.models import (
     AdaptiveGateDataPlaneReport,
@@ -23,6 +25,8 @@ from songyan.models import (
     AdaptiveHaltDecision,
     AdaptiveHaltPolicy,
 )
+
+pytestmark = pytest.mark.performance
 
 _SCRIPT_PATH = Path(__file__).parent.parent / "scripts" / "run_170_adaptive_gate_validation.py"
 

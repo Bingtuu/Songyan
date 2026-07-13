@@ -2409,6 +2409,7 @@ class TestConcurrentSettlement:
         ),
         strict=False,
     )
+    @pytest.mark.performance
     async def test_concurrent_settlement_writes(self, tmp_path) -> None:
         """3 个协程同时向不同 project 写入 settlement，无异常."""
         import asyncio

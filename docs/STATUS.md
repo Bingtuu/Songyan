@@ -12,7 +12,7 @@
 | D1 洁净度 | 171t/171u 后 Ch200 accepted head 达成 D1 hard clean pass：T9 meta/artifact=0、duplicate=0，T6b critical orphan peak=0 |
 | 171v 小窗口 | run `run-e27b763f`，Ch201-Ch220 **20/20 accepted，failed=[], Halt=None, status=completed** |
 | 171w 进展 | 171w-a 报告脚本参数化 / 171w-b 持久化审计 / 171w-c 正文 observe + ReviewMerger 接线 / 171w-d Ch207 settlement 修复 + 重验均已落地 |
-| 当前风险 | P0/P1 工程风险为 0；171w 四个工作包全部落地，可启动 Task 172 Ch250 |
+| 当前风险 | **P0 已全部清零**，高优先级 P1 已按用户决策完成；P1-13 保持"DB 回填 + warning"行为；其余 P1/P2 债务按 pass13 报告分批治理 |
 
 ## 最新证据
 
@@ -31,20 +31,19 @@
 |-------------|------|
 | `python -m pytest tests/test_171v_literary_guardrails.py tests/test_creative_director.py tests/test_writer.py tests/test_rule_auditor.py -q` | 173 passed |
 | `python -m pytest tests/test_171v_literary_guardrails.py tests/test_108_core_nodes.py tests/test_rule_auditor.py -q` | 100 passed |
-| `python -m pytest tests/ -q` | 2602 passed, 2 skipped, 1 xfailed, 2 warnings |
-| `ruff check src/ tests/` | passed |
-| `python -m pytest tests/db/test_schema.py tests/db/test_review_settlement_repository.py tests/test_revision_handler.py tests/test_171v_literary_guardrails.py -q` | 120 passed |
-| `python -m pytest tests/test_171w_guardrail_persistence.py tests/test_171v_literary_guardrails.py tests/test_creative_director.py tests/test_writer.py tests/test_revision_handler.py tests/db/test_schema.py tests/db/test_review_settlement_repository.py -q` | 209 passed |
-| `python -m pytest tests/test_settlement_extractor.py -q` | 132 passed, 1 xfailed |
-| `python -m pytest tests/test_171w_text_guardrail_observe.py -q` | 12 passed |
-| `python -m pytest tests/test_171w_text_guardrail_observe.py tests/test_171w_guardrail_persistence.py tests/test_171v_literary_guardrails.py tests/test_creative_director.py tests/test_writer.py tests/test_revision_handler.py tests/db/test_schema.py tests/db/test_review_settlement_repository.py tests/test_108_core_nodes.py -q` | 233 passed |
-| `ruff check src/ tests/` | passed |
+| `python -m pytest tests/ -q` | 2623 passed, 2 skipped, 1 xfailed, 2 warnings in 644.15s |
+| `python -m pytest -m "not performance" tests/ -q` | 2414 passed, 2 skipped, 210 deselected in 175.59s |
+| `mypy src/` | Success: no issues found in 157 source files |
+| `ruff check src/ tests/` | 14 pre-existing warnings (E501/E402/W292/I001), no new alerts |
 | Ch201-Ch220 171w-d 重验 | 20/20 accepted, failed=[], Halt=None, status=completed |
+| pass13 审计修复验证 | 见 `docs/reports/v7-audit/pass13-fix-validation-report.md` |
 
 ## 下一步
 
-1. 171w 四个工作包（a/b/c/d）已全部落地，Ch201-Ch220 20/20 accepted。
-2. 可启动 Task 172 Ch250 长跑验证。
+1. pass13 审计修复已完成并验证：P0 清零，高优先级 P1 按用户决策完成，详见 `docs/reports/v7-audit/pass13-fix-validation-report.md`。
+2. **P1-13 已决策**：保持 `character_update.old_value` "DB 回填 + warning"行为，不引入严格报错 / `needs_human_review`。
+3. 171w 四个工作包（a/b/c/d）已全部落地，Ch201-Ch220 20/20 accepted。
+4. 可启动 Task 172 Ch250 长跑验证。
 
 ## 入口
 

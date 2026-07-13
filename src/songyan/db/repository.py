@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import sqlite3
+import uuid
 from datetime import datetime
 from sqlite3 import Row
 from typing import TYPE_CHECKING, Any
@@ -306,7 +307,10 @@ class CharacterRepository:
                     _dt(state.created_at),
                 ),
             )
-            return int(cursor.lastrowid)
+            lastrowid = cursor.lastrowid
+            if lastrowid is None:
+                raise RuntimeError("INSERT into character_states did not produce lastrowid")
+            return int(lastrowid)
 
         if conn is None:
             async with get_db() as c:
@@ -506,26 +510,55 @@ class ChapterVersionRepository:
         self,
         version_id: str,
         conn: aiosqlite.Connection | None = None,
-    ) -> None:
-        """将版本标记为 accepted（RAG 索引触发条件）."""
-        async def _do(c: aiosqlite.Connection) -> None:
-            await c.execute(
-                "UPDATE chapter_versions SET version_type = 'accepted' WHERE version_id = ?",
-                (version_id,),
+    ) -> str:
+        """将版本标记为 accepted：创建新的 accepted 版本，保留原版本不变.
+
+        Returns:
+            新创建的 accepted 版本 ID。
+        """
+
+        async def _do(c: aiosqlite.Connection) -> str:
+            old_version = await self.get(version_id)
+            if old_version is None:
+                msg = f"Version not found: {version_id}"
+                raise ValueError(msg)
+
+            cursor = await c.execute(
+                """SELECT COALESCE(MAX(version_number), 0) + 1
+                   FROM chapter_versions
+                   WHERE project_id = ? AND chapter_number = ?""",
+                (old_version.project_id, old_version.chapter_number),
             )
+            row = await cursor.fetchone()
+            next_version_number = row[0] if row else 1
+
+            new_version_id = f"v-{uuid.uuid4().hex[:8]}"
+            new_version = old_version.model_copy(
+                update={
+                    "version_id": new_version_id,
+                    "version_number": next_version_number,
+                    "version_type": "accepted",
+                    "parent_version_id": old_version.version_id,
+                    "created_at": datetime.now(),
+                }
+            )
+            await self.create(new_version, conn=c)
+            return new_version_id
 
         if conn is None:
             async with get_db() as c:
-                await _do(c)
+                new_version_id = await _do(c)
                 await c.commit()
         else:
-            await _do(conn)
+            new_version_id = await _do(conn)
         logger.info(
             "repository.write",
             table="chapter_versions",
             operation="accept_version",
-            version_id=version_id,
+            old_version_id=version_id,
+            version_id=new_version_id,
         )
+        return new_version_id
 
     async def get_next_version_number(
         self, project_id: str, chapter_number: int
@@ -573,7 +606,7 @@ class ChapterVersionRepository:
                 (version_id,),
             )
             rows = await cursor.fetchall()
-        return [_version_from_row(row) for row in reversed(rows)]
+        return [_version_from_row(row) for row in reversed(list(rows))]
 
 
 class ContextSnapshotRepository:

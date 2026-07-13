@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from collections.abc import Sequence
 from pathlib import Path
 
 from songyan.evals.streaming_report import generate_report, read_run_logs, write_report
@@ -65,7 +66,7 @@ def _build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _validate_report_consistency(logs: list[object], report_md: str) -> list[str]:
+def _validate_report_consistency(logs: Sequence[object], report_md: str) -> list[str]:
     """验证报告内容与 JSONL 数据一致性，返回警告列表。"""
     warnings: list[str] = []
 

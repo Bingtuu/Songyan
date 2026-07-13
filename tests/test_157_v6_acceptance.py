@@ -47,6 +47,8 @@ from songyan.models import (
     ProjectSetting,
 )
 
+pytestmark = pytest.mark.performance
+
 PROJECT_ID = "test-157"
 
 

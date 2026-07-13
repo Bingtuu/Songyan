@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import time
-from typing import Any
+from typing import Any, Literal, cast
 
 import structlog
 
@@ -381,7 +381,7 @@ def _build_new_character(data: dict[str, Any]) -> NewCharacter | None:
         role_type = "supporting"
     return NewCharacter(
         name=name,
-        role_type=role_type,  # type: ignore[arg-type]
+        role_type=cast(Literal["supporting", "antagonist"], role_type),
         source_quote=data.get("source_quote", ""),
         background=data.get("background", ""),
     )
@@ -411,7 +411,7 @@ def _build_foreshadowing_update(data: dict[str, Any]) -> ForeshadowingUpdate | N
         return None
     return ForeshadowingUpdate(
         foreshadowing_id=data.get("foreshadowing_id"),
-        operation=operation,  # type: ignore[arg-type]
+        operation=cast(Literal["plant", "resolve", "update_status"], operation),
         description=data.get("description", ""),
         expected_resolve_chapter=_normalize_expected_resolve_chapter(
             data.get("expected_resolve_chapter")
@@ -584,6 +584,7 @@ def _build_state_settlement(data: dict[str, Any]) -> StateSettlement:
         numerical_updates=numerical_updates,
         planted_hooks=_normalize_hooks(data.get("planted_hooks", [])),
         resolved_hooks=_normalize_hooks(data.get("resolved_hooks", [])),
+        impact_score=float(data.get("impact_score", 0.0)),
     )
 
 

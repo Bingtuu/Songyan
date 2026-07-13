@@ -138,6 +138,7 @@ class TestLifecycleCleaners:
 
     async def test_foreshadowing_cleaner(self, lifecycle_db: Path) -> None:
         await _seed_project("p1")
+        await _seed_version("v1", chapter_number=1)
         repo = ForeshadowingRepository()
         await repo.create(
             ForeshadowingItem(
@@ -148,6 +149,7 @@ class TestLifecycleCleaners:
                 status="planted",
             ),
             project_id="p1",
+            source_version_id="v1",
         )
         await repo.create(
             ForeshadowingItem(
@@ -158,6 +160,7 @@ class TestLifecycleCleaners:
                 status="resolved",
             ),
             project_id="p1",
+            source_version_id="v1",
         )
 
         cleaner = ForeshadowingCleaner()
@@ -247,6 +250,7 @@ class TestLifecycleCleaners:
                 planted_in_chapter=1, expected_resolve_chapter=3, status="planted",
             ),
             project_id="p1",
+            source_version_id="v1",
         )
         await HumanMarkRepository().create(
             HumanMark(

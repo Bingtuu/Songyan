@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -115,6 +115,6 @@ class GenreProfile(BaseModel):
     reference_works: list[str] = Field(default_factory=list)
 
     @classmethod
-    def from_dict(cls, data: dict) -> GenreProfile:
+    def from_dict(cls, data: dict[str, Any]) -> GenreProfile:
         """从 dict 加载（JSON 反序列化后调用）."""
         return cls(**data)

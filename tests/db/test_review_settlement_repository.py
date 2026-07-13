@@ -240,6 +240,7 @@ class TestSettlementRepositories:
                     planted_in_chapter=1,
                 ),
                 "missing",
+                source_version_id="v1",
             )
 
     async def test_setting_snapshot_create_and_list_by_project(self, repo_db: Path) -> None:

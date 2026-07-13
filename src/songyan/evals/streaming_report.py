@@ -54,7 +54,7 @@ def _compute_word_count_ratio(log: ChapterRunLog) -> float | None:
     cp = log.context_pressure or {}
     target = cp.get("word_count_target")
     if target and target > 0 and log.word_count > 0:
-        return round(log.word_count / target, 3)
+        return round(float(log.word_count) / float(target), 3)
     return None
 
 

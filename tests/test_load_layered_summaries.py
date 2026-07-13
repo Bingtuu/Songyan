@@ -11,6 +11,8 @@ from songyan.db.repository import ProjectRepository
 from songyan.models import ArcSummary, ChapterSummary, ProjectSetting, VolumeSummary
 from songyan.workflows._helpers import load_layered_summaries
 
+pytestmark = pytest.mark.performance
+
 
 async def _seed_project(project_id: str) -> None:
     await ProjectRepository().create(

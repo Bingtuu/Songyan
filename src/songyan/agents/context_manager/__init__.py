@@ -46,6 +46,18 @@ from ._assemblers import (
     _calculate_dynamic_relevance as _calculate_dynamic_relevance,
 )
 
+__all__ = [
+    "assemble_context_package",
+    "BudgetPruner",
+    "_build_genre_rules",
+    "_calculate_dynamic_relevance",
+    "_calculate_objective_fullness",
+    "_dynamic_max_for_chapter",
+    "_dynamic_max_character_states",
+    "_dynamic_max_soft_refs",
+    "_rank_foreshadowings",
+]
+
 logger = structlog.get_logger(__name__)
 
 # ---------------------------------------------------------------------------
@@ -875,11 +887,11 @@ def assemble_context_package(
     dialogue_style_cards: list[Any] | None = None,
     *,
     narrative_fullness: float = 0.0,
-    character_focus: list[dict] | None = None,
+    character_focus: list[dict[str, Any]] | None = None,
     foreshadowing_due: list[str] | None = None,
     focal_distance: str = "mid",
     last_appeared_chapters: dict[str, int] | None = None,
-    mandatory_references: list[dict] | None = None,
+    mandatory_references: list[dict[str, Any]] | None = None,
 ) -> ContextPackage:
     """组装上下文包并按 Token 预算裁剪.
 

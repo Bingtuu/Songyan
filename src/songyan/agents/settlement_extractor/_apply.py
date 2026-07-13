@@ -380,7 +380,7 @@ async def _recycle_duplicate_setting_clusters(
 
 def _detect_setting_references(
     content: str,
-    active_settings: list[dict],
+    active_settings: list[dict[str, Any]],
 ) -> dict[str, str]:
     """扫描正文，返回被引用的 setting_tracking_id -> setting_key 映射.
 
@@ -732,9 +732,9 @@ async def apply_settlement(
                 if (canonical := _setting_cluster_canonical(s))
             }
             for key in set(settlement.recycled_settings or []):
-                tracking_id = key_to_tracking.get(key)
+                recycled_tracking_id: str | None = key_to_tracking.get(key)
                 refresh_key = key
-                if not tracking_id:
+                if not recycled_tracking_id:
                     canonical = _setting_cluster_canonical(
                         {
                             "setting_key": key,
@@ -743,11 +743,11 @@ async def apply_settlement(
                         }
                     )
                     setting = canonical_to_setting.get(canonical or "")
-                    tracking_id = setting.get("tracking_id") if setting else None
+                    recycled_tracking_id = setting.get("tracking_id") if setting else None
                     refresh_key = setting.get("setting_key", key) if setting else key
-                if tracking_id and refresh_key not in refreshed_keys:
+                if recycled_tracking_id and refresh_key not in refreshed_keys:
                     await setting_tracking_repo.update_last_mentioned(
-                        tracking_id, chapter_number, conn=conn
+                        recycled_tracking_id, chapter_number, conn=conn
                     )
                     refreshed_keys.add(refresh_key)
 

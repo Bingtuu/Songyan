@@ -7,6 +7,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 from songyan.db.foreshadowing_schedule_repo import ForeshadowingScheduleRepository
@@ -25,13 +27,13 @@ class NarrativeGoalContext(BaseModel):
     arc_goal: str = ""
     arc_index: int | None = None
     is_mainline_arc: bool = False
-    open_threads: list[dict] = Field(default_factory=list)       # 本弧未收束线索
-    threads_to_resolve: list[dict] = Field(default_factory=list)  # 本弧应收束线索
-    due_foreshadowings: list[dict] = Field(default_factory=list)  # 临近兑现伏笔
-    scheduled_items: list[dict] = Field(default_factory=list)     # Task 167 主动调度项
+    open_threads: list[dict[str, Any]] = Field(default_factory=list)       # 本弧未收束线索
+    threads_to_resolve: list[dict[str, Any]] = Field(default_factory=list)  # 本弧应收束线索
+    due_foreshadowings: list[dict[str, Any]] = Field(default_factory=list)  # 临近兑现伏笔
+    scheduled_items: list[dict[str, Any]] = Field(default_factory=list)     # Task 167 主动调度项
 
 
-def _thread_brief(thread: PlotThread) -> dict:
+def _thread_brief(thread: PlotThread) -> dict[str, Any]:
     return {
         "thread_id": thread.thread_id,
         "title": thread.title,
@@ -40,7 +42,7 @@ def _thread_brief(thread: PlotThread) -> dict:
     }
 
 
-def _schedule_item_brief(item: ForeshadowingScheduleItem) -> dict:
+def _schedule_item_brief(item: ForeshadowingScheduleItem) -> dict[str, Any]:
     return {
         "item_id": item.item_id,
         "source_type": item.source_type,
@@ -86,13 +88,13 @@ async def load_narrative_goal_context(
         return NarrativeGoalContext(has_skeleton=False)
 
     # 本弧未收束线索：opened / advanced 状态的线索
-    open_threads: list[dict] = []
+    open_threads: list[dict[str, Any]] = []
     for status in _OPEN_STATUSES:
         threads = await repo.list_threads(project_id, status=status)  # type: ignore[arg-type]
         open_threads.extend(_thread_brief(t) for t in threads)
 
     # 本弧应收束线索：arc.threads_to_resolve 引用的线索详情
-    threads_to_resolve: list[dict] = []
+    threads_to_resolve: list[dict[str, Any]] = []
     for tid in arc.threads_to_resolve:
         thread = await repo.get_thread(tid)
         if thread is not None:
@@ -100,7 +102,7 @@ async def load_narrative_goal_context(
 
     # 临近兑现伏笔：复用 ForeshadowingRepository.list_active（planted/due）
     fs_repo = foreshadowing_repo or ForeshadowingRepository()
-    due_foreshadowings: list[dict] = []
+    due_foreshadowings: list[dict[str, Any]] = []
     for item in await fs_repo.list_active(project_id):
         erc = item.expected_resolve_chapter
         if erc is not None and chapter_number <= erc <= chapter_number + due_window:

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any
+from typing import Any, Literal
 
 import structlog
 
@@ -235,7 +235,7 @@ async def _apply_style_constraint_action(
     if action.new_value is None:
         msg = f"style constraint action requires new_value: {action.action_id}"
         raise ReplanApplicationError(msg)
-    constraint_type = (
+    constraint_type: Literal["style_constraint", "planning_constraint"] = (
         "style_constraint"
         if action.field == "style_constraints"
         else "planning_constraint"

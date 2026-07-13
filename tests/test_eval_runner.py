@@ -295,6 +295,7 @@ async def test_import_seed_chapter_success(test_db) -> None:
 
 
 @pytest.mark.asyncio
+@pytest.mark.performance
 async def test_run_seed_project_mock_success(test_db, mock_call_llm) -> None:
     """run_seed_project 在 mock LLM 下完整跑通，返回 success."""
     await reset_checkpointer()
@@ -336,6 +337,7 @@ async def test_run_seed_project_mock_success(test_db, mock_call_llm) -> None:
 
 
 @pytest.mark.asyncio
+@pytest.mark.performance
 async def test_run_seed_project_repeatable(test_db, mock_call_llm) -> None:
     """同一配置重复执行产生不同 project_id，不冲突."""
     await reset_checkpointer()
@@ -386,6 +388,7 @@ async def test_run_seed_project_repeatable(test_db, mock_call_llm) -> None:
     assert result2.success is True
 
 
+@pytest.mark.performance
 @pytest.mark.asyncio
 async def test_run_seed_project_all_configs(test_db, mock_call_llm) -> None:
     """3 个种子配置均可成功导入并跑通."""
@@ -728,6 +731,7 @@ async def test_settlement_field_accuracy_with_updates(test_db) -> None:
 
 @pytest.mark.performance
 @pytest.mark.asyncio
+@pytest.mark.performance
 async def test_single_chapter_loop_mock_under_15s(test_db, mock_call_llm) -> None:
     """mock 下单章完整闭环耗时 < 15s（含 RAG embedding，Windows 环境下放宽阈值）."""
     import time
@@ -801,6 +805,7 @@ async def test_audit_chain_mock_under_1s(
 
 
 @pytest.mark.asyncio
+@pytest.mark.performance
 async def test_metrics_all_keys_present(test_db, mock_call_llm) -> None:
     """EvaluationResult.metrics 包含全部 10 个键."""
     await reset_checkpointer()

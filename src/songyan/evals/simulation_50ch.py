@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
 import structlog
 
@@ -46,7 +47,7 @@ class SimulationReport:
         self.open_thread_count = open_thread_count
         self.permanent_scene_count = permanent_scene_count
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "total_chapters": self.total_chapters,
             "budget_used": round(self.budget_used, 3),

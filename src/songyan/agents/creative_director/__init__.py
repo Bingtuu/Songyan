@@ -69,7 +69,7 @@ def _load_prompt_template() -> str:
 
 def _format_thread_constraints(narrative_ctx: NarrativeGoalContext) -> str:
     """构建线索经济约束文本（本章应推进/应收束线索、非必要不开新线）."""
-    def _fmt(threads: list[dict]) -> str:
+    def _fmt(threads: list[dict[str, Any]]) -> str:
         if not threads:
             return "（无）"
         return "\n".join(
@@ -78,7 +78,7 @@ def _format_thread_constraints(narrative_ctx: NarrativeGoalContext) -> str:
             for t in threads
         )
 
-    def _fmt_schedule(items: list[dict]) -> str:
+    def _fmt_schedule(items: list[dict[str, Any]]) -> str:
         if not items:
             return "（无）"
         lines: list[str] = []
@@ -167,12 +167,11 @@ async def _render_prompt(
             literary_plugins = "\n\n".join(fragments)
     variables["literary_plugins"] = literary_plugins
 
-    has_threads = has_skeleton and (
+    if narrative_ctx is not None and (
         narrative_ctx.open_threads
         or narrative_ctx.threads_to_resolve
         or narrative_ctx.scheduled_items
-    )
-    if has_threads:
+    ):
         variables["thread_constraints"] = _format_thread_constraints(narrative_ctx)
         return render_agent_prompt("creative_director", variables, version="1.0.6")
 
@@ -216,7 +215,7 @@ async def _load_active_settings_to_recycle(
     chapter_number: int,
     limit: int = 10,
     min_silent_chapters: int = 2,
-) -> list[dict]:
+) -> list[dict[str, Any]]:
     """加载近期活跃且未被回收的设定，供 CreativeDirector 提示 Writer 回收.
 
     Task 137: 优先展示即将成为 orphan 的设定（已沉寂 >= min_silent_chapters 章），
@@ -265,7 +264,7 @@ async def _load_active_settings_to_recycle(
     return active[:limit]
 
 
-def _format_active_settings_to_recycle(settings: list[dict]) -> str:
+def _format_active_settings_to_recycle(settings: list[dict[str, Any]]) -> str:
     """格式化需要回收的活跃设定列表."""
     if not settings:
         return "（无近期活跃设定）"
@@ -799,13 +798,13 @@ async def generate_dialogue_style_cards(
 
     try:
         response_text = await call_llm(prompt, temperature=temperature, max_tokens=2048)
-    except (RuntimeError, OSError, ConnectionError, ValueError, TypeError):
+    except LLMError:
         logger.error("creative_director.dialogue_style.llm_failed", project_id=project_id)
         return []
 
     try:
         data = _parse_llm_response(response_text)
-    except (ValueError, TypeError, KeyError):
+    except LLMResponseParseError:
         logger.error(
             "creative_director.dialogue_style.parse_failed",
             project_id=project_id,

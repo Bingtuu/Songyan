@@ -8,6 +8,7 @@ from __future__ import annotations
 import re
 import uuid
 from difflib import SequenceMatcher
+from typing import Any
 
 import structlog
 
@@ -24,7 +25,7 @@ MAX_SCENE_CONTENT_TOKENS = 4000
 MIN_PRESERVATION_RATIO = 0.85  # Task 100a: 从 0.50 提升至 0.85
 
 
-def _split_content_by_scenes(content: str) -> list[dict]:
+def _split_content_by_scenes(content: str) -> list[dict[str, Any]]:
     """按 ### Scene N 或空行分块分割为 scene 段，含原始位置信息.
 
     Returns:
@@ -35,7 +36,7 @@ def _split_content_by_scenes(content: str) -> list[dict]:
 
     matches = list(SCENE_PATTERN.finditer(content))
     if matches:
-        scenes: list[dict] = []
+        scenes: list[dict[str, Any]] = []
         for i, match in enumerate(matches):
             scene_number = int(match.group(1))
             start = match.end()
@@ -83,7 +84,7 @@ def _split_content_by_scenes(content: str) -> list[dict]:
 
 def _map_issues_to_scenes(
     issues: list[ReviewIssue],
-    scenes: list[dict],
+    scenes: list[dict[str, Any]],
     full_content: str,
 ) -> tuple[dict[int, list[ReviewIssue]], list[ReviewIssue]]:
     """将 issue 映射到 scene.
@@ -207,7 +208,7 @@ def _compute_preservation_ratio(original: str, revised: str) -> float:
 
 
 async def _revise_single_scene(
-    scene: dict,
+    scene: dict[str, Any],
     issues: list[ReviewIssue],
     protected_fissures: list[str],
     temperature: float = 0.3,
@@ -517,7 +518,7 @@ def _dedup_reassembled_content(
     return "\n\n".join(deduped).strip()
 
 
-def _reassemble_content(original_scenes: list[dict], revised_scenes: list[str]) -> str:
+def _reassemble_content(original_scenes: list[dict[str, Any]], revised_scenes: list[str]) -> str:
     """按 scene 顺序拼接成完整正文，去除场景标题与重复长段落."""
     parts: list[str] = []
     for i, _scene in enumerate(original_scenes):
@@ -534,11 +535,11 @@ def _reassemble_content(original_scenes: list[dict], revised_scenes: list[str]) 
 
 def _enforce_revision_word_count(
     revision_content: str,
-    revision_scenes: list[dict],
+    revision_scenes: list[dict[str, Any]],
     original_content: str,
     target_word_count: int,
     min_preserve_ratio: float = 0.85,
-) -> tuple[str, list[dict], int, bool, str]:
+) -> tuple[str, list[dict[str, Any]], int, bool, str]:
     """Revision 后字数硬约束 (Task 093 → V4.0 收紧到 ±20% → Task 100a 下限保护).
 
     Revision 字数约束：上限 1.20x，下限 0.80x（与达标标准一致）。

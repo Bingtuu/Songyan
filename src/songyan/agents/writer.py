@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import re
 import uuid
+from typing import Any
 
 import structlog
 
@@ -393,11 +394,11 @@ def _render_prompt(ctx: ContextPackage) -> str:
             "以下设定已沉寂 ≥3 章且属于 critical 级别，"
             "本章必须明确提及、使用、或给出无法回收的剧情原因："
         )
-        for ref in ctx.mandatory_references:
-            name = ref.get("setting_name") or ref.get("setting_key") or "未命名设定"
-            key = ref.get("setting_key") or ""
-            silent = ref.get("silent_chapters", 0)
-            hint = ref.get("recycle_hint", "")
+        for mref in ctx.mandatory_references:
+            name = mref.get("setting_name") or mref.get("setting_key") or "未命名设定"
+            key = mref.get("setting_key") or ""
+            silent = mref.get("silent_chapters", 0)
+            hint = mref.get("recycle_hint", "")
             hint_line = f"\n  【建议】{hint}" if hint else ""
             lines.append(f"- {name}（{key}）：已沉寂 {silent} 章{hint_line}")
         mandatory_references_text = "\n".join(lines)
@@ -562,7 +563,7 @@ def _extract_body(llm_response: str, strip_scene_markers: bool = True) -> str:
     return text.strip()
 
 
-def _build_creative_brief_snapshot(ctx: ContextPackage) -> dict:
+def _build_creative_brief_snapshot(ctx: ContextPackage) -> dict[str, Any]:
     """生成精简 CreativeBrief 快照，供版本 metadata 回放."""
     brief = ctx.creative_brief
     if brief is None:

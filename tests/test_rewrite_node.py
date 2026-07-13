@@ -292,7 +292,10 @@ class TestRewriteNode:
 
     @pytest.mark.asyncio
     async def test_hard_truncate_fallback_on_rewrite(self) -> None:
-        """093: rewrite 后字数严重超标且结构保护阻止截断 → 启用硬截断 (收紧到 1.20x)."""
+        """093: rewrite 后字数严重超标且结构保护阻止截断 → 启用硬截断 (收紧到 1.20x).
+
+        截断后必须创建新版本；原始版本对象不应被就地修改。
+        """
         from unittest.mock import MagicMock
 
         from songyan.agents.writer import _count_chinese_words
@@ -306,6 +309,8 @@ class TestRewriteNode:
         mock_version.content = long_content
         mock_version.word_count = original_wc
         mock_version.scenes = [{"scene_number": 1, "content": long_content}]
+        mock_version.generation_metadata = {}
+        mock_version.creative_brief_id = None
 
         goal = AsyncMock()
         goal.word_count_target = 3000
@@ -325,24 +330,41 @@ class TestRewriteNode:
                     new_callable=AsyncMock,
                     return_value=goal,
                 ):
-                    state = {
-                        "project_id": "p1",
-                        "chapter_number": 1,
-                        "chapter_goal_id": "gp-1",
-                        "creative_brief_id": None,
-                        "review_report_id": None,
-                        "_new_issues_introduced": None,
-                    }
-                    result = await rewrite_node(state)
+                    with patch(
+                        "songyan.workflows._nodes.ChapterVersionRepository",
+                    ) as mock_ver_repo_cls:
+                        mock_ver_repo = MagicMock()
+                        mock_ver_repo_cls.return_value = mock_ver_repo
+                        mock_ver_repo.get_next_version_number = AsyncMock(return_value=2)
+                        mock_ver_repo.create = AsyncMock()
+                        mock_ver_repo.mark_abandoned = AsyncMock()
+                        mock_ver_repo.get = AsyncMock(return_value=None)
+                        with patch(
+                            "songyan.workflows._nodes.ChapterHeadRepository",
+                        ) as mock_head_repo_cls:
+                            mock_head_repo = MagicMock()
+                            mock_head_repo_cls.return_value = mock_head_repo
+                            mock_head_repo.get = AsyncMock(return_value=None)
+                            state = {
+                                "project_id": "p1",
+                                "chapter_number": 1,
+                                "chapter_goal_id": "gp-1",
+                                "creative_brief_id": None,
+                                "review_report_id": None,
+                                "_new_issues_introduced": None,
+                            }
+                            result = await rewrite_node(state)
 
         assert result["_was_rewritten"] is True
-        # 093: 硬截断后字数应 <= 3600 (3000*1.20)
-        assert mock_version.word_count <= 3600
-        # 内容应被修改
-        assert mock_version.content != long_content
-        # scenes 应被重新解析
-        assert len(mock_version.scenes) >= 0
-
+        # 新版本应被创建，旧版本应被废弃
+        assert mock_ver_repo.create.await_count == 1
+        assert mock_ver_repo.mark_abandoned.await_count == 1
+        created_version = mock_ver_repo.create.await_args[0][0]
+        # 硬截断后新版本的 content 字数应 <= 3600
+        assert created_version.word_count <= 3600
+        # 原始版本对象不应被就地修改
+        assert mock_version.word_count == original_wc
+        assert mock_version.content == long_content
 
 class TestRewriteNodeMandatoryReferences:
     """Task 139e: rewrite_node 必须继承 mandatory references."""

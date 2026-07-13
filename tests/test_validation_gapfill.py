@@ -6,6 +6,8 @@ import json
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
+import pytest
+
 from songyan.agents.arc_summary_generator import (
     auto_generate_arc_summaries,
     generate_arc_summary,
@@ -37,6 +39,8 @@ from songyan.models import (
     PunchPoint,
 )
 from songyan.workflows._helpers import new_id
+
+pytestmark = pytest.mark.performance
 
 # ---------------------------------------------------------------------------
 # A3-1: Punch Engine 自动评估

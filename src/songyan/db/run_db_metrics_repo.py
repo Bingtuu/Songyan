@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import uuid
 from sqlite3 import Row
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from songyan.db.connection import get_db
 
@@ -62,11 +62,11 @@ class RunDbMetricsRepository:
         *,
         chapter_start: int | None = None,
         chapter_end: int | None = None,
-    ) -> list[dict]:
+    ) -> list[dict[str, Any]]:
         async with get_db() as conn:
             conn.row_factory = Row
             query = "SELECT * FROM run_db_metrics WHERE project_id = ?"
-            params: list = [project_id]
+            params: list[Any] = [project_id]
             if chapter_start is not None and chapter_end is not None:
                 query += " AND chapter_number BETWEEN ? AND ?"
                 params.extend([chapter_start, chapter_end])
@@ -75,7 +75,7 @@ class RunDbMetricsRepository:
             rows = await cursor.fetchall()
             return [dict(row) for row in rows]
 
-    async def list_by_run(self, run_id: str) -> list[dict]:
+    async def list_by_run(self, run_id: str) -> list[dict[str, Any]]:
         async with get_db() as conn:
             conn.row_factory = Row
             cursor = await conn.execute(

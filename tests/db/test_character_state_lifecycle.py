@@ -21,7 +21,7 @@ from songyan.models import (
     ProjectSetting,
 )
 
-pytestmark = pytest.mark.asyncio
+pytestmark = [pytest.mark.asyncio, pytest.mark.performance]
 
 
 @pytest.fixture

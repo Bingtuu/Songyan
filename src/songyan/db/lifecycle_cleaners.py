@@ -5,18 +5,20 @@ V4.0 Task 087: 统一生命周期清理入口，在 settlement 后触发。
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from songyan.db.lifecycle_scheduler import LifecycleCleaner, TransitionLog
 
 if TYPE_CHECKING:
     import aiosqlite
 
+    from songyan.db.lifecycle_scheduler import LifecycleScheduler
+
 
 class _RepositoryCleanerBase:
     """通用基类 — 通过 before/after 快照记录状态变化."""
 
-    def __init__(self, repo, pk_column: str, table_name: str) -> None:
+    def __init__(self, repo: Any, pk_column: str, table_name: str) -> None:
         self.repo = repo
         self.pk_column = pk_column
         self._table_name = table_name
@@ -25,7 +27,7 @@ class _RepositoryCleanerBase:
     def table_name(self) -> str:
         return self._table_name
 
-    def _snapshot_sql(self) -> tuple[str, tuple]:
+    def _snapshot_sql(self) -> tuple[str, tuple[Any, ...]]:
         """返回 (sql, params) 用于快照查询.
 
         默认直接查本表 project_id；子类可覆盖（如 character_states 需 JOIN）。
@@ -132,7 +134,7 @@ class CharacterStateCleaner(_RepositoryCleanerBase, LifecycleCleaner):
 
         super().__init__(CharacterStateRepository(), "state_id", "character_states")
 
-    def _snapshot_sql(self) -> tuple[str, tuple]:
+    def _snapshot_sql(self) -> tuple[str, tuple[Any, ...]]:
         """character_states 无 project_id，需 JOIN characters."""
         sql = (
             "SELECT cs.state_id, cs.lifecycle_status FROM character_states cs "
@@ -187,7 +189,7 @@ class SettingDeduplicationCleaner(LifecycleCleaner):
         return []
 
 
-def get_default_scheduler():
+def get_default_scheduler() -> LifecycleScheduler:
     """返回预注册了全部清理器的 LifecycleScheduler 实例."""
     from songyan.db.lifecycle_scheduler import LifecycleScheduler
 

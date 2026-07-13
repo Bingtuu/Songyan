@@ -8,12 +8,13 @@ from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 import structlog
 
 from songyan.db.repository import ChapterVersionRepository
 from songyan.db.review_repo import ReviewReportRepository
-from songyan.models import ChapterRunLog
+from songyan.models import ChapterRunLog, RuleAuditResult
 from songyan.workflows._helpers import new_id
 
 logger = structlog.get_logger(__name__)
@@ -26,7 +27,7 @@ def _ensure_logs_dir() -> None:
     _LOGS_DIR.mkdir(parents=True, exist_ok=True)
 
 
-def _compute_rule_score(rule_audit) -> float:
+def _compute_rule_score(rule_audit: RuleAuditResult | None) -> float:
     """从 RuleAuditResult 计算 0-1 质量分."""
     if rule_audit is None:
         return 0.0
@@ -37,10 +38,11 @@ def _compute_rule_score(rule_audit) -> float:
         penalty += 0.1
     if not rule_audit.has_ending_hook:
         penalty += 0.05
-    return max(0.0, round(1.0 - penalty, 2))
+    score = max(0.0, round(1.0 - penalty, 2))
+    return score
 
 
-async def _query_version_metrics(version_id: str) -> dict:
+async def _query_version_metrics(version_id: str) -> dict[str, Any]:
     """查询版本基础指标."""
     version = await ChapterVersionRepository().get(version_id)
     if version is None:
@@ -48,7 +50,7 @@ async def _query_version_metrics(version_id: str) -> dict:
     return {"word_count": version.word_count}
 
 
-async def _query_review_metrics(version_id: str) -> dict:
+async def _query_review_metrics(version_id: str) -> dict[str, Any]:
     """查询审查指标."""
     report = await ReviewReportRepository().get_by_version(version_id)
     if report is None:
@@ -70,7 +72,7 @@ async def _query_review_metrics(version_id: str) -> dict:
     }
 
 
-async def _query_context_metrics(version_id: str) -> dict:
+async def _query_context_metrics(version_id: str) -> dict[str, Any]:
     """从版本链回溯 writer 写入的上下文指标."""
     chain = await ChapterVersionRepository().get_chain(version_id)
     for version in reversed(chain):
@@ -93,14 +95,14 @@ async def collect_chapter_metrics(
     project_id: str,
     chapter_number: int,
     final_version_id: str | None,
-) -> dict:
+) -> dict[str, Any]:
     """收集单章指标 — 从数据库查询.
 
     Returns:
         dict 包含 word_count, rule_violations, rule_audit_score,
         llm_audit_issues, llm_audit_critical
     """
-    metrics: dict = {}
+    metrics: dict[str, Any] = {}
     if final_version_id:
         version_metrics = await _query_version_metrics(final_version_id)
         review_metrics = await _query_review_metrics(final_version_id)
@@ -121,8 +123,8 @@ def build_chapter_run_log(
     success: bool,
     error: str | None = None,
     error_stage: str | None = None,
-    final_state: dict | None = None,
-    metrics: dict | None = None,
+    final_state: dict[str, Any] | None = None,
+    metrics: dict[str, Any] | None = None,
     continuity_health_score: float | None = None,
     continuity_health_severity: dict[str, int] | None = None,
     gate_triggered: bool = False,
@@ -146,7 +148,7 @@ def build_chapter_run_log(
 
     # Task 106: 提取 score_card（含 details 子指标）
     _score_card_raw = state.get("_score_card")
-    _score_card: dict = {}
+    _score_card: dict[str, Any] = {}
     if isinstance(_score_card_raw, dict):
         _allowed_keys = (
             "overall_score",
@@ -271,7 +273,7 @@ async def log_chapter_run(
     success: bool,
     error: str | None = None,
     error_stage: str | None = None,
-    final_state: dict | None = None,
+    final_state: dict[str, Any] | None = None,
     final_version_id: str | None = None,
     continuity_health_score: float | None = None,
     continuity_health_severity: dict[str, int] | None = None,
