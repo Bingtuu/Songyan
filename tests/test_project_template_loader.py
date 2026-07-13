@@ -240,6 +240,9 @@ def test_seed_unknown_genre_raises(tmp_path: Path) -> None:
     )
     with pytest.raises(ProjectTemplateError, match="unknown genre"):
         loader.load("bad_seed")
+
+
+def test_circular_inheritance_raises(tmp_path: Path) -> None:
     base = tmp_path / "project_templates"
     base.mkdir()
     a = base / "a"
