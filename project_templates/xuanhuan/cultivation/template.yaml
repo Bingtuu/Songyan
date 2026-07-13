@@ -1,0 +1,16 @@
+id: xuanhuan_cultivation
+name: 玄幻·正统修仙变体
+extends: xuanhuan
+overwrite:
+  project_setting:
+    title: 万道独尊
+    protagonist_name: 韩立
+  seed:
+    characters:
+      - name: 韩立
+        role: protagonist
+        age: 18
+        description: 出身贫寒的少年，凭借谨慎与毅力在修仙界步步为营。
+        initial_state:
+          cultivation_level: 无
+          spirit_value: 0

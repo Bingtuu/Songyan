@@ -149,14 +149,12 @@ class ProjectTemplateLoader:
             outline, arcs, threads = outline_tuple
             template.set_outline(outline, arcs, threads)
 
-        # 加载 seed.json（变体目录优先；否则继承父模板）
+        # 加载 seed.json（变体目录优先；overwrite/继承合并已在 _merge_overwrite 中完成）
         seed_file = source_dir / "seed.json"
         if seed_file.exists():
             with open(seed_file, encoding="utf-8") as f:
                 seed_data = json.load(f)
             template.seed = TemplateSeed(**seed_data)
-        elif base_template:
-            template.seed = base_template.seed
 
         return template
 
@@ -197,8 +195,12 @@ class ProjectTemplateLoader:
             return src
 
         merged = cast(dict[str, Any], deep_merge(merged, overwrite))
-        # 保留子模板顶层字段
-        for key in ("id", "name", "extends", "project_setting"):
+        # 保留子模板顶层字段；project_setting/seed 等嵌套 dict 需要深度合并
+        for key in ("id", "name", "extends"):
             if key in child_raw:
                 merged[key] = child_raw[key]
+        for key, value in child_raw.items():
+            if key in {"id", "name", "extends", "overwrite", "source_dir"}:
+                continue
+            merged[key] = deep_merge(merged.get(key), value)
         return merged
