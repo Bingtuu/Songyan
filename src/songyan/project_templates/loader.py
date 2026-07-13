@@ -64,8 +64,17 @@ class ProjectTemplateLoader:
                             ids.add(f"{p.name}/{vp.name}")
         if self._seeds_dir.exists():
             for p in self._seeds_dir.glob("*.json"):
-                if p.is_file():
-                    ids.add(p.stem)
+                if not p.is_file():
+                    continue
+                try:
+                    data = json.loads(p.read_text(encoding="utf-8-sig"))
+                except (OSError, json.JSONDecodeError):
+                    logger.warning("Skipping unreadable seed file", path=str(p))
+                    continue
+                if not isinstance(data, dict) or not data.get("genre_id"):
+                    logger.warning("Skipping non-seed JSON file", path=str(p))
+                    continue
+                ids.add(p.stem)
         return sorted(ids)
 
     def load(self, template_id: str) -> ProjectTemplate:

@@ -242,6 +242,13 @@ def test_seed_unknown_genre_raises(tmp_path: Path) -> None:
         loader.load("bad_seed")
 
 
+def test_all_listed_templates_load() -> None:
+    loader = ProjectTemplateLoader()
+    for template_id in loader.list_templates():
+        template = loader.load(template_id)
+        assert template.id
+
+
 def test_circular_inheritance_raises(tmp_path: Path) -> None:
     base = tmp_path / "project_templates"
     base.mkdir()

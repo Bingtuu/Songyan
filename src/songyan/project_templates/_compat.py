@@ -20,7 +20,7 @@ from songyan.models.project_template import (
 
 def seed_to_template(seed_path: Path) -> ProjectTemplate:
     """把单文件种子转换为 ProjectTemplate."""
-    data = json.loads(seed_path.read_text(encoding="utf-8"))
+    data = json.loads(seed_path.read_text(encoding="utf-8-sig"))
 
     project = ProjectSetting(
         title=data.get("project_name", ""),
