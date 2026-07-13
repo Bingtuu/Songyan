@@ -87,6 +87,7 @@ from songyan.models.narrative import (
     StoryOutline,
 )
 from songyan.models.project import ProjectSetting
+from songyan.models.project_run import ProjectRunResult, ProjectRunState
 from songyan.models.project_template import (
     ProjectTemplate,
     TemplateSeed,
@@ -94,7 +95,6 @@ from songyan.models.project_template import (
     TemplateSeedNumericalSystem,
     TemplateSeedSetting,
 )
-from songyan.models.project_run import ProjectRunResult, ProjectRunState
 from songyan.models.rag import ChunkMetadata, RAGConfig, RetrievedChunk, TextChunk
 from songyan.models.replan import (
     ArcOutcomeEvaluation,
