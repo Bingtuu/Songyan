@@ -87,6 +87,13 @@ from songyan.models.narrative import (
     StoryOutline,
 )
 from songyan.models.project import ProjectSetting
+from songyan.models.project_template import (
+    ProjectTemplate,
+    TemplateSeed,
+    TemplateSeedCharacter,
+    TemplateSeedNumericalSystem,
+    TemplateSeedSetting,
+)
 from songyan.models.project_run import ProjectRunResult, ProjectRunState
 from songyan.models.rag import ChunkMetadata, RAGConfig, RetrievedChunk, TextChunk
 from songyan.models.replan import (
@@ -135,6 +142,11 @@ from songyan.models.style_mimicry import StyleSample
 __all__ = [
     # project
     "ProjectSetting",
+    "ProjectTemplate",
+    "TemplateSeed",
+    "TemplateSeedCharacter",
+    "TemplateSeedSetting",
+    "TemplateSeedNumericalSystem",
     # character
     "Character",
     "CharacterState",

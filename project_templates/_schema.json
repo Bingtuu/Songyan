@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Songyan Project Template",
+  "type": "object",
+  "required": ["id", "project_setting"],
+  "properties": {
+    "id": { "type": "string" },
+    "name": { "type": "string" },
+    "extends": { "type": ["string", "null"] },
+    "overwrite": { "type": "object" },
+    "project_setting": {
+      "type": "object",
+      "required": ["genre_id", "protagonist_name"],
+      "properties": {
+        "title": { "type": ["string", "null"] },
+        "genre_id": { "type": "string" },
+        "mode_id": { "type": "string", "default": "webnovel" },
+        "protagonist_name": { "type": "string" },
+        "protagonist_background": { "type": "string" },
+        "core_hook": { "type": "string" },
+        "target_reader_expectation": { "type": "string" },
+        "target_word_count": { "type": "integer", "default": 100000 },
+        "tone": { "type": "string", "default": "热血" },
+        "estimated_chapters": { "type": "integer", "default": 30 },
+        "words_per_chapter": { "type": "integer", "default": 3000 },
+        "story_structure": { "type": "string", "default": "free" },
+        "sub_genre_id": { "type": ["string", "null"] },
+        "arc_boundaries": { "type": "array", "items": { "type": "integer" } },
+        "arc_boundaries_auto": { "type": "boolean", "default": false }
+      }
+    }
+  }
+}
