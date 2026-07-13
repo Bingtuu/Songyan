@@ -1,0 +1,188 @@
+"""ProjectTemplate 加载器."""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+from typing import Any, cast
+
+import structlog
+import yaml
+
+import songyan
+from songyan.cli.outline_import import load_outline_file
+from songyan.creative_modes.registry import load_creative_mode_profile
+from songyan.genres.loader import load_genre_profile
+from songyan.models.project_template import (
+    ProjectTemplate,
+    TemplateSeed,
+)
+from songyan.project_templates._compat import seed_to_template
+
+logger = structlog.get_logger(__name__)
+
+_DEFAULT_TEMPLATES_DIR = (
+    Path(songyan.__file__).resolve().parent.parent.parent / "project_templates"
+)
+_DEFAULT_SEEDS_DIR = (
+    Path(songyan.__file__).resolve().parent.parent.parent / "evals" / "seeds"
+)
+
+
+class ProjectTemplateError(ValueError):
+    """模板加载或校验失败."""
+
+
+class ProjectTemplateNotFoundError(ProjectTemplateError):
+    """模板 ID 不存在."""
+
+
+class ProjectTemplateLoader:
+    """扫描并加载项目模板."""
+
+    def __init__(
+        self,
+        templates_dir: Path | None = None,
+        seeds_dir: Path | None = None,
+    ) -> None:
+        self._templates_dir = templates_dir or _DEFAULT_TEMPLATES_DIR
+        self._seeds_dir = seeds_dir or _DEFAULT_SEEDS_DIR
+
+    def list_templates(self) -> list[str]:
+        """列出可用模板 ID（目录式 + 种子兼容）."""
+        ids: set[str] = set()
+        if self._templates_dir.exists():
+            for p in self._templates_dir.iterdir():
+                if p.is_dir() and (p / "template.yaml").exists():
+                    ids.add(p.name)
+                    # variants
+                    for vp in p.iterdir():
+                        if vp.is_dir() and (vp / "template.yaml").exists():
+                            ids.add(f"{p.name}/{vp.name}")
+        if self._seeds_dir.exists():
+            for p in self._seeds_dir.glob("*.json"):
+                if p.is_file():
+                    ids.add(p.stem)
+        return sorted(ids)
+
+    def load(self, template_id: str) -> ProjectTemplate:
+        """加载指定模板."""
+        return self._load(template_id, seen=set())
+
+    def _load(self, template_id: str, seen: set[str]) -> ProjectTemplate:
+        if template_id in seen:
+            raise ProjectTemplateError(
+                f"Circular template inheritance detected: {' -> '.join(seen)} -> {template_id}"
+            )
+        seen = seen | {template_id}
+
+        # 1. 目录式模板
+        template_path = self._templates_dir / template_id / "template.yaml"
+        if template_path.exists():
+            return self._load_directory_template(template_id, template_path.parent, seen=seen)
+
+        # 2. variants
+        if "/" in template_id:
+            parent, variant = template_id.split("/", 1)
+            variant_path = self._templates_dir / parent / variant / "template.yaml"
+            if variant_path.exists():
+                return self._load_directory_template(
+                    template_id, variant_path.parent, parent_id=parent, seen=seen
+                )
+
+        # 3. evals/seeds 兼容
+        seed_path = self._seeds_dir / f"{template_id}.json"
+        if seed_path.exists():
+            return seed_to_template(seed_path)
+
+        available = self.list_templates()
+        raise ProjectTemplateNotFoundError(
+            f"Template '{template_id}' not found. Available: {available or 'none'}"
+        )
+
+    def _load_directory_template(
+        self,
+        template_id: str,
+        source_dir: Path,
+        parent_id: str | None = None,
+        seen: set[str] | None = None,
+    ) -> ProjectTemplate:
+        seen = seen or set()
+        template_file = source_dir / "template.yaml"
+        with open(template_file, encoding="utf-8") as f:
+            raw = yaml.safe_load(f)
+
+        extends = raw.get("extends")
+        if extends is None and parent_id is not None:
+            extends = parent_id
+
+        # 继承合并
+        base_template: ProjectTemplate | None = None
+        if extends:
+            base_template = self._load(extends, seen)
+            raw = self._merge_overwrite(base_template, raw)
+
+        raw["source_dir"] = source_dir
+        template = ProjectTemplate(**raw)
+
+        # 校验 genre / mode 存在
+        try:
+            load_genre_profile(template.project_setting.genre_id)
+        except Exception as exc:
+            genre_id = template.project_setting.genre_id
+            raise ProjectTemplateError(
+                f"Template '{template_id}' references unknown genre: {genre_id}"
+            ) from exc
+        try:
+            load_creative_mode_profile(template.project_setting.mode_id)
+        except Exception as exc:
+            mode_id = template.project_setting.mode_id
+            raise ProjectTemplateError(
+                f"Template '{template_id}' references unknown mode: {mode_id}"
+            ) from exc
+
+        # 加载 outline.json
+        outline_file = source_dir / "outline.json"
+        if outline_file.exists():
+            outline, arcs, threads = load_outline_file(str(outline_file), "dummy")
+            template.set_outline(outline, arcs, threads)
+        elif base_template and base_template.has_outline:
+            outline_tuple = base_template.outline_tuple
+            assert outline_tuple is not None
+            outline, arcs, threads = outline_tuple
+            template.set_outline(outline, arcs, threads)
+
+        # 加载 seed.json（变体目录优先；否则继承父模板）
+        seed_file = source_dir / "seed.json"
+        if seed_file.exists():
+            with open(seed_file, encoding="utf-8") as f:
+                seed_data = json.load(f)
+            template.seed = TemplateSeed(**seed_data)
+        elif base_template:
+            template.seed = base_template.seed
+
+        return template
+
+    @staticmethod
+    def _merge_overwrite(
+        base: ProjectTemplate, child_raw: dict[str, Any]
+    ) -> dict[str, Any]:
+        """递归合并 overwrite 到父模板 raw dict."""
+        merged = base.model_dump(exclude={"id", "name", "extends", "overwrite", "source_dir"})
+        overwrite = child_raw.get("overwrite") or {}
+
+        def deep_merge(dst: Any, src: Any) -> Any:
+            result: Any
+            if isinstance(dst, dict) and isinstance(src, dict):
+                result = dict(dst)
+                for k, v in src.items():
+                    result[k] = deep_merge(result.get(k), v)
+                return result
+            return src
+
+        merged = cast(dict[str, Any], deep_merge(merged, overwrite))
+        # 保留子模板顶层字段
+        for key in ("id", "name", "extends", "project_setting"):
+            if key in child_raw:
+                merged[key] = child_raw[key]
+        return merged
