@@ -120,6 +120,8 @@ Ch13 早期读（`up_to≥100` 才是终判）：budget 0.938 / CED 10.12（boun
 
 **修复**：两条匹配路径统一把中英文引号纳入 name split（仍受 `len>=2` + low-info 过滤），使正文真实回收被记账，**不改任何门禁阈值**（真正被弃置的 critical setting 仍会 halt）。附带数据修复：`祭坛上的'那个东西'` 与 `'那个东西'的变形能力` 两个 setting 的 `last_mentioned_chapter` 按修复后 matcher 实证的真实末次引用章（Ch29）从 25/26 更正为 29——修复 matcher bug 造成的陈旧数据，非放宽。验证：修复后 Ch30 尺度 critical orphan `1→0`（`hard_p1=0`，halt 不再触发）；`test_172bp_quoted_xuanhuan_name_refreshes_tracking`（引号内实体被记账）+ `test_172bp_quoted_name_absent_does_not_refresh`（缺席仍不记账，门禁仍能捕获真 orphan）；53 recycling + 18 mandatory-reference 测试全绿，两文件 ruff-clean。
 
+**续跑闭环验证（Ch31-35，实跑落地）**：修复后 resume 续跑无 re-halt，逐章正常推进 Ch31→35（各章 draft→revision→accepted，无门禁阻断）。关键实证——**Ch33 continuity 审计（每 3 章一跑）已落库 health=9.4**（从 Ch30 假 orphan 事件的 6.8 恢复），证明引号 matcher 修复**经受住真实审计**，非仅静态预测。`vdim_compare.py` 在 Ch35 深度五门全 PASS（early-warning）：budget 0.981 / CED 10.13（自 Ch28 的 10.40 持续下行，远离 Ch100 ceiling 10.71）/ overdue 76（<scifi 81）/ health 9.4（≥8.0）/ completeness 35/35。§4.2 事故闭环完成。
+
 
 ## 5. 依赖
 
