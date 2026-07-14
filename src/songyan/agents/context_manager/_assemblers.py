@@ -231,17 +231,26 @@ def _resolve_profile_level(
     is_antagonist: bool,
     current_chapter: int,
     last_appeared_chapters: dict[str, int] | None,
+    focal_gaps: dict[str, int] | None = None,
 ) -> Literal["full", "compact", "symbol", "skip"]:
     """V5.0 Task 102: 按未出场章数解析档案衰减级别.
 
-    衰减规则：
+    衰减规则（默认，可被 GenreRuntimeProfile.character_decay.focal_gaps 覆盖）：
     - 0-3 章：完整档案
     - 4-10 章：精简档案
     - 11-30 章：符号档案
     - 30+ 章：不加载（skip）
 
     protagonist / antagonist 核心角色永不衰减（保留完整档案）。
+    V8 Task 172a.6: focal_gaps 按体裁定制（如 xuanhuan 角色出场密，窗口更宽）。
     """
+    full_gap = 3
+    compact_gap = 10
+    symbol_gap = 30
+    if focal_gaps:
+        full_gap = focal_gaps.get("full", full_gap)
+        compact_gap = focal_gaps.get("compact", compact_gap)
+        symbol_gap = focal_gaps.get("symbol", symbol_gap)
     if is_protagonist or is_antagonist:
         return "full"
     if not last_appeared_chapters:
@@ -250,11 +259,11 @@ def _resolve_profile_level(
     if last_chapter == 0:
         return "full"
     gap = current_chapter - last_chapter
-    if gap <= 3:
+    if gap <= full_gap:
         return "full"
-    elif gap <= 10:
+    elif gap <= compact_gap:
         return "compact"
-    elif gap <= 30:
+    elif gap <= symbol_gap:
         return "symbol"
     return "skip"
 
@@ -267,6 +276,7 @@ def _build_character_snapshots(
     current_chapter: int = 0,
     character_focus: list[dict[str, Any]] | None = None,
     last_appeared_chapters: dict[str, int] | None = None,
+    focal_gaps: dict[str, int] | None = None,
 ) -> list[CharacterStateSnapshot]:
     """构建角色状态快照 — 合并角色档案和最新状态.
 
@@ -358,6 +368,7 @@ def _build_character_snapshots(
             is_antagonist,
             current_chapter,
             last_appeared_chapters,
+            focal_gaps,
         )
 
         # character_focus 覆盖 decay 规则（人工指定优先）

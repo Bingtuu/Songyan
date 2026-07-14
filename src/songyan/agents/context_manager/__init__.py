@@ -1043,6 +1043,9 @@ def assemble_context_package(
         current_chapter=chapter_goal.chapter_number,
         character_focus=character_focus,
         last_appeared_chapters=last_appeared_chapters,
+        focal_gaps=(
+            runtime_profile.character_decay.focal_gaps if runtime_profile else None
+        ),
     )
     recent_plot = _build_recent_plot(
         recent_summaries, last_chapter_ending, recent_plot_threads
