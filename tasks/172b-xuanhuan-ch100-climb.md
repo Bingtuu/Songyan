@@ -112,6 +112,14 @@ Ch13 早期读（`up_to≥100` 才是终判）：budget 0.938 / CED 10.12（boun
 
 **修复**：短路条件加 `_compute_resume_start(start,end,accepted) > end`（仅当请求范围已全部 accepted 才短路），否则落入既有 resume 续跑路径（重标 running、更新 end、从首个缺口章续跑）。回归测试 `test_resume_completed_run_expanded_range_continues`（completed run `(1,2)` + 请求 `(1,4)` → 生成 Ch3-4、跳过 Ch1-2）；既有 `test_resume_completed_run_returns_early`（全 accepted 范围仍短路）保持通过，幂等性不破。15/15 resume 测试通过。重启后实跑日志确认 `resume completed_count=25 previous_status=completed` 后 **`chapter_start chapter_number=26`**，续跑生效。
 
+### 4.2 实跑事故记录：Ch30 `health_low_p1_halt` 假 orphan（已修复，commit `0d7cd42`）
+
+**现象**：续跑在 **Ch30 撞墙**，`health_low_p1_halt: P1_count=1 (critical orphaned setting)`，health 6.8（<8.0），overdue 100。分段表 up_to=50 段 accepted=30、halt 非空。
+
+**根因（定点审计，非放宽口径）**：`health_low_p1_halt` 门禁在 `hard_p1 > 0`（≥1 个 `category=='critical'` 的 orphaned setting）时触发（`_gates.py`；`count_hard_p1_for_halt` 仅计 critical，`_scanners.py` critical orphan 阈值=沉寂>3 章）。被判 orphan 的是 `祭坛上的'那个东西'`（key_alias=`entity` 英文）。实测正文 Ch26-29 分别出现「那个东西」×5/3/8/2——**writer 确实在回收**，但 `_setting_reference_terms`（settlement）与 `_check_mandatory_references`（rule_auditor 强制回收）的 name split 集**不含引号**，引号内 4 字核心词「那个东西」永不生成为引用词/候选，导致引用未被记账、`last_mentioned` 冻结在 25 → 假 orphan → 门禁 halt。**非门禁松紧问题**：sci-fi 在 Ch159/165 命中同一 `health_low_p1_halt`（其 run log 实证），门禁对 sci-fi 并未更松；xuanhuan 只是因「引号包裹/短口语化」命名更早触发。
+
+**修复**：两条匹配路径统一把中英文引号纳入 name split（仍受 `len>=2` + low-info 过滤），使正文真实回收被记账，**不改任何门禁阈值**（真正被弃置的 critical setting 仍会 halt）。附带数据修复：`祭坛上的'那个东西'` 与 `'那个东西'的变形能力` 两个 setting 的 `last_mentioned_chapter` 按修复后 matcher 实证的真实末次引用章（Ch29）从 25/26 更正为 29——修复 matcher bug 造成的陈旧数据，非放宽。验证：修复后 Ch30 尺度 critical orphan `1→0`（`hard_p1=0`，halt 不再触发）；`test_172bp_quoted_xuanhuan_name_refreshes_tracking`（引号内实体被记账）+ `test_172bp_quoted_name_absent_does_not_refresh`（缺席仍不记账，门禁仍能捕获真 orphan）；53 recycling + 18 mandatory-reference 测试全绿，两文件 ruff-clean。
+
 
 ## 5. 依赖
 
