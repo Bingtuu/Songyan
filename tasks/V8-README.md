@@ -54,7 +54,7 @@ V8 通过 = 同时满足以下五项：
 
 | Task | 名称 | 状态 | 事实文档 |
 |------|------|:----:|----------|
-| 172a | 体裁运行时画像总览 | 🔄 进行中 | `tasks/172a-v8-genre-runtime-profiles.md` |
+| 172a | 体裁运行时画像总览 | ✅ 完成 | `tasks/172a-v8-genre-runtime-profiles.md` |
 | 172a.1 | 现状审计与常量提取 | ✅ 完成 | `docs/reports/172a.1-context-diet-constants-audit.md` |
 | 172a.2 | `GenreRuntimeProfile` 数据模型 + 数据库表 | ✅ 完成 | 172a 规划 §172a.2 |
 | 172a.3 | 按体裁加载 Profile | ✅ 完成 | 172a 规划 §172a.3 |
@@ -62,7 +62,7 @@ V8 通过 = 同时满足以下五项：
 | 172a.5 | 硬门禁阈值按体裁 | ✅ 完成 | 172a 规划 §172a.5 |
 | 172a.6 | 状态压缩与伏笔蒸发按体裁 | ✅ 完成 | 172a 规划 §172a.6 |
 | 172a.7 | 多体裁短窗口验证 | ✅ 完成 | `docs/reports/172a.7-genre-short-window-validation.md` |
-| 172a.p | 伏笔 horizon 下限（S 维度定点修复） | 🔄 验收中 | `tasks/172a.p-foreshadowing-horizon-floor.md` |
+| 172a.p | 伏笔 horizon 下限（S 维度定点修复） | ✅ 完成 | `tasks/172a.p-foreshadowing-horizon-floor.md` |
 
 ### V8.2：多体裁章数爬坡
 
