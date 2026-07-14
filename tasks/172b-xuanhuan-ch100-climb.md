@@ -97,9 +97,13 @@ Ch13 早期读（`up_to≥100` 才是终判）：budget 0.938 / CED 10.12（boun
 | 风险 | 触发信号 | 172b.p 预案（不放宽口径） |
 |---|---|---|
 | 长尺度 budget 溢出 | Ch50+ budget_used 逼近 1.0 或 halt | ramp_per_chapter 按体裁微调 / genre_rules 内容精简（层 3），非分区权重 |
+| **CED 超 sci-fi 同级** | Ch100 累计 CED > sci-fi × 1.15（≈10.50） | **定点修复 CED 热点章（多轮修订章 issue 计数最高者，如 Ch8/15/19/20），不放宽 tolerance、不改 CED 口径**。口径对称（scifi/xuanhuan 均按全版本 issue 计数），故 CED 超标是真实质量信号（首稿 issue 更密），诚实响应是修订质量提升而非放宽阈值 |
 | overdue 反弹 | Ch100 overdue > sci-fi 同章（>168） | horizon floor 随章号动态 / 主动回收调度（评估是否超 MVP） |
 | 连续性退化 | critical orphan > 0 / mismatch 持续 | continuity 容忍度按体裁（172a.6 已有 Profile 字段） |
 | health 持续下滑 | median < scifi 基线 | 定点诊断，判定真退化则新开修复 Task |
+
+> **CED 中途轨迹观测**（Ch21 深度实读，`.tmp/probe_ced_trend.py`）：累计 CED 在 Ch15（10.84）/Ch20（11.01）**曾超 Ch100 尺度 ceiling（10.50）**，Ch21 回落 10.53。热点集中在多轮修订章（Ch8=74 / Ch19=64 / Ch15=56 / Ch20=55 条 evidence issue）。此为 CED 门在 Ch100 终判的**首要风险**；口径与 sci-fi 严格对称，故若终判 FAIL 走上表 172b.p「定点修复热点章」预案，**严禁放宽 tolerance**。
+
 
 ## 5. 依赖
 
