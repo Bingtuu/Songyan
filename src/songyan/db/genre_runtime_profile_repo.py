@@ -39,7 +39,8 @@ def _default_registry() -> dict[str, GenreRuntimeProfile]:
     # 窗口溢出。真实杠杆是抬高 base_budget，而非分区权重。
     # 实跑标定：
     #   base=12000 -> Ch8 before_emergency 1.03（不再 halt，但每章触发 emergency）
-    #   base=13000 -> end15 15/15 accepted、峰值 before_emergency 1.286（仍每章 emergency，逼近 1.3）
+    #   base=13000 -> end15 15/15 accepted、峰值 before_emergency 1.286
+    #                （仍每章 emergency，逼近 1.3）
     #   base=15000 -> 给不可裁核心（~14K）真实裕度，避免每章 emergency（172a.7 复核）
     xuanhuan = GenreRuntimeProfile(
         genre="xuanhuan",
@@ -56,6 +57,10 @@ def _default_registry() -> dict[str, GenreRuntimeProfile]:
         "technical": 45,
         "historical": 30,
     }
+    # 172a.p: xuanhuan 每章密集埋伏笔且 LLM horizon 偏短 -> Ch15 overdue=28。
+    # plant 时把 horizon 夹到 >= planted+12（实跑 DB 模拟：overdue 28->1），
+    # 压下 S 维度失分；scifi(floor=0) 不受影响。
+    xuanhuan.foreshadowing_horizon_floor = 12
 
     # wuxia: genre_rules +27.7%，中等压力，base_budget 适度抬高
     wuxia = GenreRuntimeProfile(

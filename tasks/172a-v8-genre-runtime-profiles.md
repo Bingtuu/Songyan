@@ -408,3 +408,11 @@ python scripts/run_172a_short_window_preserve.py --templates urban    --end 10 -
 ## 撞墙路由
 
 如 172a.4/172a.5 调参后仍无法压下 xuanhuan budget_used，说明仅调整预算分配不够，需要提前启动 **弧线摘要/大纲降维**（172a.6 子集），或拆出 `172a.p-context-summarization-pilot` 进行 Prompt 级摘要实验，不在 172a 内无限放宽阈值。
+
+### 172a.p（已实际触发）：伏笔 horizon 下限
+
+172a.7 实跑暴露 xuanhuan overdue foreshadowing = 28（目标 < 5），成为 S 维度唯一未达标项。真实 run DB 解剖证明：根因是 plant 时的 horizon 长度差异（scifi 中位 12-13、xuanhuan 峰值 +2/+4/+6），而非回收率（两体裁短窗口 resolved 均为 0）。
+
+解法落在**运行时参数层**：`GenreRuntimeProfile.foreshadowing_horizon_floor`，plant 时把 `expected_resolve_chapter` 夹到 `>= planted + floor`（只抬高）。xuanhuan floor=12（模拟 overdue 28→1），scifi floor=0（零回退）。详见 `tasks/172a.p-foreshadowing-horizon-floor.md`。
+
+> **纠错**：172a.7 初稿"运行时参数化无法压下 overdue"仅对 `foreshadowing_evaporation`（注入排序）成立；plant-time horizon 夹紧同属运行时参数，且实证有效——不是 prompt 工程，不出 MVP 边界。

@@ -2260,6 +2260,17 @@ async def accept_with_settlement_boundary(
     if settlement is not None and settlement.validation_status != "valid":
         raise SettlementError(f"Settlement validation status is {settlement.validation_status}")
 
+    # 172a.p: 按体裁解析伏笔 horizon 下限（load_profile 永不抛错，
+    # 无匹配返回 scifi baseline -> floor=0 -> 旧行为不变）。
+    horizon_floor = 0
+    if settlement is not None:
+        from songyan.db.genre_runtime_profile_repo import load_profile as _load_runtime_profile
+
+        project = await load_project(project_id)
+        if project is not None:
+            runtime_profile = await _load_runtime_profile(project.genre_id)
+            horizon_floor = runtime_profile.foreshadowing_horizon_floor
+
     async with get_db() as conn:
         try:
             if settlement is not None:
@@ -2270,6 +2281,7 @@ async def accept_with_settlement_boundary(
                     version_id=version_id,
                     conn=conn,
                     content=content,
+                    foreshadowing_horizon_floor=horizon_floor,
                 )
             accepted_version_id = await ChapterVersionRepository().accept_version(
                 version_id, conn=conn

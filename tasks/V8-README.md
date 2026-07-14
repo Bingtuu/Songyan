@@ -55,14 +55,14 @@ V8 通过 = 同时满足以下五项：
 | Task | 名称 | 状态 | 事实文档 |
 |------|------|:----:|----------|
 | 172a | 体裁运行时画像总览 | 🔄 进行中 | `tasks/172a-v8-genre-runtime-profiles.md` |
-| 172a.1 | 现状审计与常量提取 | ◻ 规划中 | 待 172a 开工后写 |
-| 172a.2 | `GenreRuntimeProfile` 数据模型 + 数据库表 | ◻ 规划中 | 待 172a.1 后写 |
-| 172a.3 | 按体裁加载 Profile | ◻ 规划中 | 待 172a.2 后写 |
-| 172a.4 | Context Diet 预算分配按体裁 | ◻ 规划中 | 待 172a.3 后写 |
-| 172a.5 | 硬门禁阈值按体裁 | ◻ 规划中 | 待 172a.4 后写 |
-| 172a.6 | 状态压缩与伏笔蒸发按体裁 | ◻ 规划中 | 待 172a.5 后写 |
-| 172a.7 | 多体裁短窗口验证 | ◻ 规划中 | 待 172a.6 后写 |
-| 172a.p | GenreRuntimeProfile 撞墙定点修复（占位） | ⏳ 占位 | 待 172a.7 实跑后确定 |
+| 172a.1 | 现状审计与常量提取 | ✅ 完成 | `docs/reports/172a.1-context-diet-constants-audit.md` |
+| 172a.2 | `GenreRuntimeProfile` 数据模型 + 数据库表 | ✅ 完成 | 172a 规划 §172a.2 |
+| 172a.3 | 按体裁加载 Profile | ✅ 完成 | 172a 规划 §172a.3 |
+| 172a.4 | Context Diet 预算分配按体裁 | ✅ 完成 | `docs/reports/172a.4-budget-decoupling-validation.md` |
+| 172a.5 | 硬门禁阈值按体裁 | ✅ 完成 | 172a 规划 §172a.5 |
+| 172a.6 | 状态压缩与伏笔蒸发按体裁 | ✅ 完成 | 172a 规划 §172a.6 |
+| 172a.7 | 多体裁短窗口验证 | 🔄 进行中 | `docs/reports/172a.7-genre-short-window-validation.md` |
+| 172a.p | 伏笔 horizon 下限（S 维度定点修复） | 🔄 进行中 | `tasks/172a.p-foreshadowing-horizon-floor.md` |
 
 ### V8.2：多体裁章数爬坡
 

@@ -78,6 +78,31 @@ _LOW_INFO_REFERENCE_TOKENS = {
 }
 
 
+def _clamp_foreshadowing_horizon(
+    expected_resolve_chapter: int | None,
+    *,
+    planted_in_chapter: int,
+    horizon_floor: int,
+) -> int | None:
+    """172a.p: 按体裁 horizon 下限夹紧伏笔预计回收章.
+
+    LLM 在结算时选定 ``expected_resolve_chapter``，玄幻等体裁常给出偏短的
+    horizon（如 planted+2），在短窗口内立即 overdue。此函数把 horizon 夹到
+    ``>= planted_in_chapter + horizon_floor``：
+
+    - 只**抬高**，从不缩短（若 LLM 已给出更长 horizon 则保留）；
+    - ``horizon_floor <= 0``（scifi 默认）时**完全不改变**输入，保证回退旧行为；
+    - ``expected_resolve_chapter is None``（未知 horizon）时不夹，保持 None
+      语义（由后续 due/overdue 逻辑处理）。
+
+    这是运行时参数化（GenreRuntimeProfile 字段），不改结算 prompt、不新增节点，
+    符合 V8 MVP 边界。
+    """
+    if horizon_floor <= 0 or expected_resolve_chapter is None:
+        return expected_resolve_chapter
+    return max(expected_resolve_chapter, planted_in_chapter + horizon_floor)
+
+
 def _term_in_content(term: str, content: str) -> bool:
     """判断术语是否作为独立词出现在正文中.
 
@@ -480,6 +505,7 @@ async def apply_settlement(
     foreshadowing_repo: ForeshadowingRepository | None = None,
     numerical_repo: NumericalLedgerRepository | None = None,
     content: str | None = None,
+    foreshadowing_horizon_floor: int = 0,
 ) -> None:
     """将验证通过的结算结果应用到数据库 — INSERT 新快照，不 UPDATE 旧记录.
 
@@ -493,6 +519,9 @@ async def apply_settlement(
         chapter_number: 章节号
         version_id: 关联版本 ID
         conn: 数据库连接；由调用方创建并管理事务。
+        foreshadowing_horizon_floor: 172a.p 按体裁伏笔 horizon 下限（章）；
+            plant 时把 expected_resolve_chapter 夹到 >= planted+floor（只抬高）。
+            0（scifi 默认）= 不夹 = 旧行为。
     """
     if settlement.validation_status != "valid":
         logger.warning(
@@ -627,11 +656,18 @@ async def apply_settlement(
         for fs in settlement.foreshadowing_updates:
             if fs.operation == "plant":
                 fs_id = fs.foreshadowing_id or f"fs-{project_id}-{uuid.uuid4().hex[:8]}"
+                # 172a.p: 按体裁 horizon 下限夹紧 expected_resolve_chapter。
+                # 只抬高、从不缩短；floor=0（scifi 默认）时完全等价旧行为。
+                expected = _clamp_foreshadowing_horizon(
+                    fs.expected_resolve_chapter,
+                    planted_in_chapter=chapter_number,
+                    horizon_floor=foreshadowing_horizon_floor,
+                )
                 item = ForeshadowingItem(
                     foreshadowing_id=fs_id,
                     description=fs.description,
                     planted_in_chapter=chapter_number,
-                    expected_resolve_chapter=fs.expected_resolve_chapter,
+                    expected_resolve_chapter=expected,
                     status="planted",
                 )
                 await foreshadowing_repo.create(item, project_id, version_id, conn=c)
