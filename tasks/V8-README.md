@@ -68,7 +68,7 @@ V8 通过 = 同时满足以下五项：
 
 | Task | 名称 | 状态 | 事实文档 |
 |------|------|:----:|----------|
-| 172b | 非 sci-fi 体裁 Ch100 爬坡验证（首选：xuanhuan） | ◻ 规划中 | `tasks/172b-xuanhuan-ch100-climb.md` |
+| 172b | 非 sci-fi 体裁 Ch100 爬坡验证（首选：xuanhuan） | 🔄 进行中 | `tasks/172b-xuanhuan-ch100-climb.md` |
 | 172b.p | Ch100 撞墙定点修复（占位） | ⏳ 占位 | 待 172b 实跑后确定 |
 | 172c | 第二个非 sci-fi 体裁 Ch100 爬坡验证（候选：wuxia） | ⏳ 占位 | 待 172b 完成后写 |
 | 172c.p | Ch100 撞墙定点修复（占位） | ⏳ 占位 | 待 172c 实跑后确定 |
@@ -107,6 +107,19 @@ V8 通过 = 同时满足以下五项：
 | budget_used | 长期 <1.0 |
 | health | median ≥8.5，无连续真实退化 |
 | critical orphan | 0 |
+
+### sci-fi Ch1-100 逐段基线（172b V 维度对标口径，冻结）
+
+从 V7 实跑 DB `.tmp/task171_ch1_ch200.db`（「轨道蜃景」，220/220 accepted）用 172b harness 同一 `_segment_metrics` 方法（issue 按 `chapter_number <= up_to` 界定）提取，落盘 `.tmp/scifi_ch100_baseline.json`：
+
+| checkpoint | budget_peak | overdue | health | CED/1k |
+|---:|---:|---:|---:|---:|
+| Ch25 | 0.989 | 61 | 9.2 | 9.33 |
+| Ch50 | 0.989 | 110 | 9.4 | 9.28 |
+| Ch75 | 0.989 | 136 | 9.9 | 9.46 |
+| Ch100 | 0.989 | 168 | 10.0 | 9.13 |
+
+> **关键口径**：sci-fi 自身 Ch100 overdue=168（未完结长篇天然携带大量 open thread），CED 稳定 9.13-9.46。172b 判 V 维度用**此 Ch100 尺度**（xuanhuan overdue ≤168、CED ≤ 同级、budget<1.0），**不套用 S 维度 end15 的 `<5`**（短窗口口径）。详见 `tasks/172b-xuanhuan-ch100-climb.md` §1.1。
 
 **V8 的完成标准**：非 sci-fi 体裁在对应窗口内，accepted 率与质量指标必须达到 sci-fi 同级，而不只是"能跑完"。
 
