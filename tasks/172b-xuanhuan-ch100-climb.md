@@ -80,7 +80,7 @@ V8-README V 维度判据：
 
 ### V 维度验收判定器（可证伪）
 
-`.tmp/vdim_compare.py` 用 harness 同一 `_segment_metrics` 读 live xuanhuan DB，按当前爬坡深度线性插值 sci-fi 基线（`.tmp/scifi_ch100_baseline.json`），对 4 个门禁给 PASS/FAIL：
+`.tmp/vdim_compare.py` 读 live xuanhuan DB，按当前爬坡深度线性插值 sci-fi 基线（`.tmp/scifi_ch100_baseline.json`），对 4 个门禁给 PASS/FAIL。**CED 用 chapter-bounded 口径**（issue 与 words 均按 `chapter_number <= up_to` 界定）——比 harness `_segment_metrics` 更严：后者 issue 计数不设章界，在 live DB 上会被 in-flight 章（如正在写的 Ch11 report）污染，判定器自算 bounded CED 规避此偏差，与冻结基线严格同口径。
 
 | gate | 判据 | sci-fi 对标 |
 |---|---|---|
@@ -89,7 +89,7 @@ V8-README V 维度判据：
 | overdue | xuanhuan overdue ≤ sci-fi 同章尺度 | Ch9→61 … Ch100→168 |
 | health | xuanhuan health ≥ 8.0（median 不退化代理） | 9.2-10.0 |
 
-Ch9 早期读（`accepted=100 且 up_to≥100` 才是终判）：budget 0.896 / CED 10.66 / overdue 0 / health 9.8 → **四门全 PASS**（early-warning，非终判）。终判在 Ch100 accepted=100 时给出。
+Ch10 早期读（`accepted=100 且 up_to≥100` 才是终判）：budget 0.938 / CED 10.03（bounded）/ overdue 0 / health 9.8 → **四门全 PASS**（early-warning，非终判）。终判在 Ch100 accepted=100 时给出。
 
 ## 4. 风险与撞墙路由（172b.p 预案）
 
