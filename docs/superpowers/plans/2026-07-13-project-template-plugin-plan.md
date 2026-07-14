@@ -32,7 +32,7 @@
 | `tests/test_project_template_models.py` | 模型校验测试 |
 | `tests/test_project_template_loader.py` | 加载器测试 |
 | `tests/test_project_template_initializer.py` | Initializer DB 写入测试 |
-| `scripts/run_173_short_window.py` | 多体裁短章验证入口 |
+| `scripts/run_172_short_window.py` | 多体裁短章验证入口 |
 
 ### 修改文件
 
@@ -303,7 +303,7 @@ Expected: 5 passed.
 
 ```bash
 git add src/songyan/models/project_template.py src/songyan/models/__init__.py project_templates/_schema.json tests/test_project_template_models.py
-git commit -m "feat(173a): add ProjectTemplate data models and schema"
+git commit -m "feat(172.1): add ProjectTemplate data models and schema"
 ```
 
 ---
@@ -774,7 +774,7 @@ Expected: 4 passed.
 
 ```bash
 git add src/songyan/project_templates/ tests/test_project_template_loader.py
-git commit -m "feat(173b): add ProjectTemplateLoader with directory and seed compatibility"
+git commit -m "feat(172.2): add ProjectTemplateLoader with directory and seed compatibility"
 ```
 
 ---
@@ -1082,7 +1082,7 @@ Expected: 3 passed.
 
 ```bash
 git add src/songyan/project_templates/ tests/test_project_template_initializer.py
-git commit -m "feat(173c): add ProjectInitializer.from_template"
+git commit -m "feat(172.3): add ProjectInitializer.from_template"
 ```
 
 ---
@@ -1370,7 +1370,7 @@ Expected: 包含 `scifi`、`xuanhuan`、`wuxia`、`urban`、`urban_fantasy`、`p
 
 ```bash
 git add project_templates/ scripts/run_171_ch200.py src/songyan/cli/main.py
-git commit -m "feat(173d): add genre project templates and integrate --template into CLI/harness"
+git commit -m "feat(172.4): add genre project templates and integrate --template into CLI/harness"
 ```
 
 ---
@@ -1485,7 +1485,7 @@ Expected: 2 passed.
 
 ```bash
 git add project_templates/xuanhuan/cultivation/ tests/test_project_template_inheritance.py
-git commit -m "feat(173e): add lightweight template inheritance and variants"
+git commit -m "feat(172.5): add lightweight template inheritance and variants"
 ```
 
 ---
@@ -1495,13 +1495,13 @@ git commit -m "feat(173e): add lightweight template inheritance and variants"
 **目标:** 提供统一入口，对每个体裁跑 Ch1–Ch3 小窗口，验证模板机制正确。
 
 **Files:**
-- Create: `scripts/run_173_short_window.py`
+- Create: `scripts/run_172_short_window.py`
 
 ---
 
 ### Step 6.1: 编写短窗口脚本
 
-创建 `scripts/run_173_short_window.py`：
+创建 `scripts/run_172_short_window.py`：
 
 ```python
 """Task 172 短章验证：为每个体裁跑 Ch1-Ch3，检查 completed/T9/字数."""
@@ -1563,7 +1563,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--templates", nargs="+", default=None, help="要验证的模板 ID 列表")
     parser.add_argument("--end", type=int, default=3, help="结束章节")
-    parser.add_argument("--output", default=".tmp/task173_short_window_results.json")
+    parser.add_argument("--output", default=".tmp/task172_short_window_results.json")
     args = parser.parse_args()
 
     templates = args.templates or ProjectTemplateLoader().list_templates()
@@ -1593,17 +1593,17 @@ if __name__ == "__main__":
 ### Step 6.2: 本地手动验证
 
 ```bash
-$env:DATABASE_URL = "sqlite:///.tmp/task173_test.db"
-python scripts/run_173_short_window.py --templates scifi xuanhuan --end 3
+$env:DATABASE_URL = "sqlite:///.tmp/task172_test.db"
+python scripts/run_172_short_window.py --templates scifi xuanhuan --end 3
 ```
 
-Expected: 每个模板 `completed=3`、`t9_hard_issues=0`；若有失败则记录到 `.tmp/task173_short_window_results.json`。
+Expected: 每个模板 `completed=3`、`t9_hard_issues=0`；若有失败则记录到 `.tmp/task172_short_window_results.json`。
 
 ### Step 6.3: 提交
 
 ```bash
-git add scripts/run_173_short_window.py
-git commit -m "feat(173): add short-window validation script for all genres"
+git add scripts/run_172_short_window.py
+git commit -m "feat(172): add short-window validation script for all genres"
 ```
 
 ---
@@ -1620,20 +1620,20 @@ git commit -m "feat(173): add short-window validation script for all genres"
 
 ### Step 7.1: 更新 V7 任务索引
 
-在 `tasks/V7-README.md` 的"阶段 Z"表格中，把 Task 172 下方的 173 占位更新为：
+在 `tasks/V7-README.md` 的"阶段 Z"表格中，把 Task 172 占位更新为：
 
 ```markdown
-| 173 | 项目模板化与体裁可插拔（拆 173a–173e） | 🔄 进行中 | `tasks/173-project-template-plugin-plan.md`；设计 `docs/superpowers/specs/2026-07-13-project-template-plugin-design.md` |
+| 172 | 项目模板化与体裁可插拔（拆 172.1–172.5） | 🔄 进行中 | `docs/superpowers/plans/2026-07-13-project-template-plugin-plan.md`；设计 `docs/superpowers/specs/2026-07-13-project-template-plugin-design.md` |
 ```
 
 并在表格末尾新增占位：
 
 ```markdown
-| 173a | ProjectTemplate 数据模型 + Schema | ◻ 规划中 | ... |
-| 173b | ProjectTemplateLoader 实现 | ◻ 规划中 | ... |
-| 173c | ProjectInitializer.from_template | ◻ 规划中 | ... |
-| 173d | CLI/harness --template 集成 + 7 个体裁模板 | ◻ 规划中 | ... |
-| 173e | 轻量继承/变体 | ◻ 规划中 | ... |
+| 172.1 | ProjectTemplate 数据模型 + Schema | ◻ 规划中 | ... |
+| 172.2 | ProjectTemplateLoader 实现 | ◻ 规划中 | ... |
+| 172.3 | ProjectInitializer.from_template | ◻ 规划中 | ... |
+| 172.4 | CLI/harness --template 集成 + 7 个体裁模板 | ◻ 规划中 | ... |
+| 172.5 | 轻量继承/变体 | ◻ 规划中 | ... |
 ```
 
 ### Step 7.2: 更新 STATUS.md
@@ -1641,13 +1641,13 @@ git commit -m "feat(173): add short-window validation script for all genres"
 在 `docs/STATUS.md` 的"当前风险/下一步"中新增：
 
 ```markdown
-| 当前风险 | P0 已全部清零；高优先级 P1 已完成；Task 172 项目模板化已设计完成，待按 173a–173e 分步实施 |
+| 当前风险 | P0 已全部清零；高优先级 P1 已完成；Task 172 项目模板化已设计完成，待按 172.1–172.5 分步实施 |
 ```
 
 在"下一步"中追加：
 
 ```markdown
-3. 按 Task 172 计划推进项目模板化（173a–173e），每子任务后做短章测试。
+3. 按 Task 172 计划推进项目模板化（172.1–172.5），每子任务后做短章测试。
 ```
 
 ### Step 7.3: 回归测试
@@ -1667,7 +1667,7 @@ Expected:
 
 ```bash
 git add tasks/V7-README.md docs/STATUS.md
-git commit -m "docs(173): update V7 index and STATUS with Task 172 plan"
+git commit -m "docs(172): update V7 index and STATUS with Task 172 plan"
 ```
 
 ---
@@ -1702,7 +1702,7 @@ git commit -m "docs(173): update V7 index and STATUS with Task 172 plan"
 
 1. `ProjectTemplate` 的 `_outline` / `_arc_plans` / `_plot_threads` 以下划线开头，Pydantic 默认会忽略；若需保留可用 `PrivateAttr` 或改为普通 dataclass 字段。实现时根据测试反馈调整。
 2. `_import_seed_characters` 中的 `existing_names = {c.name for c in await char_repo.list_by_project(project_id)}` 需确认 `CharacterRepository.list_by_project` 返回类型。
-3. `scripts/run_173_short_window.py` 依赖 `collect_text_cleanliness_metrics`，若其签名与示例不同，需按实际 API 调整。
+3. `scripts/run_172_short_window.py` 依赖 `collect_text_cleanliness_metrics`，若其签名与示例不同，需按实际 API 调整。
 4. `load_outline_file()` 返回的 `outline` / `arcs` / `threads` 使用 `"dummy"` 作为 project_id；Task 3 中需要替换为真实 project_id。
 
 ---

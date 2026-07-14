@@ -59,7 +59,7 @@ def _sanitize_for_path(value: str) -> str:
 
 async def run_for_template(template_id: str, end_chapter: int = 3) -> dict[str, object]:
     # 每个体裁使用独立临时数据库，避免 Windows 下删除被占用的 songyan.db
-    tmpdir = tempfile.mkdtemp(prefix=f"task173_{_sanitize_for_path(template_id)}_")
+    tmpdir = tempfile.mkdtemp(prefix=f"task172_{_sanitize_for_path(template_id)}_")
     _TEMP_DIRS.append(tmpdir)
     settings.database_url = f"sqlite:///{tmpdir}/songyan.db"
 
@@ -102,7 +102,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--templates", nargs="+", default=None, help="要验证的模板 ID 列表")
     parser.add_argument("--end", type=int, default=3, help="结束章节")
-    parser.add_argument("--output", default=".tmp/task173_short_window_results.json")
+    parser.add_argument("--output", default=".tmp/task172_short_window_results.json")
     args = parser.parse_args()
 
     templates = args.templates or ProjectTemplateLoader().list_templates()
