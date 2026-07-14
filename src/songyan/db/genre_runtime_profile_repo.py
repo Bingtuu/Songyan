@@ -67,6 +67,10 @@ def _default_registry() -> dict[str, GenreRuntimeProfile]:
         genre="wuxia",
         base_budget=9500,
     )
+    # 172a.p: wuxia 埋伏笔 horizon 比 xuanhuan 更短（--end 15 回归实测峰值 +2/+3，
+    # max +11，overdue=25）。实跑 DB 模拟：floor=12 -> overdue@end15 = 5。
+    # 与 xuanhuan 同机制复用，为 172c wuxia Ch100 爬坡做准备。
+    wuxia.foreshadowing_horizon_floor = 12
 
     # urban: genre_rules ≈ scifi（-1.5%），运行时与 scifi 同级
     urban = GenreRuntimeProfile(genre="urban")

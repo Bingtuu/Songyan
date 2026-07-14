@@ -71,4 +71,19 @@ V8-README V 维度判据：
 ## 5. 依赖
 
 - **硬前置**：172a.7 报告全绿（scifi/wuxia/urban 回归 + CED 基线）+ 172a.p overdue<5 实证。**未达标不开工**（V8-README 纪律："172a.7 证明短窗口质量达标后才启动 172b"）。
-- 若 xuanhuan Ch100 达标 → 172c 选 wuxia 做第二体裁（wuxia --end 10 已证 0 halt、peak 0.958）。
+- 若 xuanhuan Ch100 达标 → 172c 选 wuxia 做第二体裁（wuxia --end 10 已证 0 halt、peak 0.958、CED 8.48 优于 scifi）。
+
+## 172c 预备情报：wuxia 需要 horizon floor
+
+wuxia --end 15 回归 DB 解剖（`.tmp/analyze_foreshadowing.py`）显示 wuxia 的 plant-time horizon **比 xuanhuan 更短**：分布峰值在 +2（8 条）/+3（8 条），max 仅 +11，overdue 达 25（end15, floor=0）。这是与 xuanhuan 相同的短 horizon 病理，且更严重。
+
+实跑 DB 模拟 horizon floor 效果：
+
+| floor | overdue @end10 | overdue @end15 |
+|---|---|---|
+| 0（现状） | 12 | 25 |
+| 8 | 1 | 16 |
+| 10 | 0 | 12 |
+| **12** | 0 | **5** |
+
+**结论**：172c 启动 wuxia Ch100 前，必须给 wuxia profile 设 `foreshadowing_horizon_floor`（建议 **≥12**，与 xuanhuan 同级；长窗口可能需更高）。这是 172a.p 机制的直接复用，无需新代码——只在 `_default_registry()` wuxia 条目加一行 `foreshadowing_horizon_floor=12`。

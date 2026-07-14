@@ -63,6 +63,11 @@ def test_xuanhuan_registry_has_horizon_floor() -> None:
     assert load_profile_from_registry("xuanhuan").foreshadowing_horizon_floor == 12
 
 
+def test_wuxia_registry_has_horizon_floor() -> None:
+    # 172a.p: wuxia horizon 比 xuanhuan 更短，同机制设 floor=12（172c 准备）
+    assert load_profile_from_registry("wuxia").foreshadowing_horizon_floor == 12
+
+
 def test_unknown_genre_floor_falls_back_to_scifi() -> None:
     # no-profile genres must behave like scifi (floor 0 -> no clamp)
     assert load_profile_from_registry("nonexistent").foreshadowing_horizon_floor == 0
