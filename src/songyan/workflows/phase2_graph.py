@@ -559,6 +559,38 @@ async def run_project_pipeline(
     start_time = time.monotonic()
     start, end = chapter_range
 
+    # V8 Task 172a.5: 修复 GateConfig 构建时序 —— CLI 在 genre 已知前就构建了全局
+    # GateConfig。此处 genre 已确定，按体裁运行时画像覆盖门禁阈值（emergency_halt_ratio）。
+    # 无匹配 profile 时 load_profile 回退 scifi baseline（阈值 1.3），行为不变。
+    try:
+        from songyan.db.genre_runtime_profile_repo import load_profile as _load_rt_profile
+        from songyan.workflows._helpers import load_project as _load_project_for_gate
+
+        _project_for_gate = await _load_project_for_gate(project_id)
+        if _project_for_gate is not None:
+            _rt_profile = await _load_rt_profile(_project_for_gate.genre_id)
+            if (
+                _rt_profile.emergency_halt_ratio
+                != gate_config.context_emergency_budget_ratio_threshold
+            ):
+                gate_config = gate_config.model_copy(
+                    update={
+                        "context_emergency_budget_ratio_threshold": _rt_profile.emergency_halt_ratio
+                    }
+                )
+                logger.info(
+                    "project_pipeline.gate_config_profile_override",
+                    project_id=project_id,
+                    genre=_project_for_gate.genre_id,
+                    emergency_halt_ratio=_rt_profile.emergency_halt_ratio,
+                )
+    except Exception as exc:  # noqa: BLE001 - profile 加载失败不阻断运行，用原 gate_config
+        logger.warning(
+            "project_pipeline.gate_config_profile_skip",
+            project_id=project_id,
+            error=str(exc),
+        )
+
     # ---- 参数校验 ----
     if start > end:
         raise ValueError(f"chapter_range start ({start}) must be <= end ({end})")
