@@ -114,6 +114,15 @@ class GenreProfile(BaseModel):
     style_baseline: StyleBaseline | None = None
     reference_works: list[str] = Field(default_factory=list)
 
+    # V8 Task 172d: 文学护栏 lexicon（层 3 风格实现）。
+    # 用于 literary_guardrail_observe 判定主动选择/配角目标/代价。默认空列表；
+    # 空时观察器回退到科幻默认组，保证无 profile 体裁行为不变。
+    active_verbs: list[str] = Field(default_factory=list)
+    passive_only_patterns: list[str] = Field(default_factory=list)
+    cost_keywords: list[str] = Field(default_factory=list)
+    supporting_action_keywords: list[str] = Field(default_factory=list)
+    consequence_keywords: list[str] = Field(default_factory=list)
+
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> GenreProfile:
         """从 dict 加载（JSON 反序列化后调用）."""

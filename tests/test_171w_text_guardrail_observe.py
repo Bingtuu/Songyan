@@ -108,8 +108,8 @@ def test_supporting_character_goal_observe_fails_when_character_missing() -> Non
 
 
 def test_active_choice_observe_distinguishes_passive_continuation() -> None:
-    passed = observe_active_choice("林渊主动切断供能，代价是暴露位置。")
-    failed = observe_active_choice("林渊继续破解协议，等待倒计时逼近。")
+    passed = observe_active_choice("林渊主动切断供能，代价是暴露位置。", "林渊")
+    failed = observe_active_choice("林渊继续破解协议，等待倒计时逼近。", "林渊")
 
     assert passed.passed
     assert passed.cost_evidence
@@ -253,7 +253,7 @@ async def test_audit_171w_text_guardrails_flags_concept_budget_spike(
 
 
 def test_render_text_guardrail_observe_section() -> None:
-    active = observe_active_choice("林渊主动切断供能，代价是暴露位置。")
+    active = observe_active_choice("林渊主动切断供能，代价是暴露位置。", "林渊")
     supporting = observe_supporting_character_goal(
         "赵铭拒绝撤离，迫使林渊改变路线。",
         {"character": "赵铭", "goal": "撤离"},

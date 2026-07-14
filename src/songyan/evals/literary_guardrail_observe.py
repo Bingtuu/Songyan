@@ -64,6 +64,45 @@ _CONSEQUENCE_KEYWORDS: tuple[str, ...] = (
 
 
 @dataclass(slots=True)
+class GuardrailLexicon:
+    """文学护栏 lexicon（172d）：按体裁可插拔的判定词表.
+
+    每组 lexicon 空时回退科幻默认组，保证无 profile 体裁行为不变。
+    """
+
+    active_verbs: tuple[str, ...] = _ACTIVE_VERBS
+    passive_only_patterns: tuple[str, ...] = _PASSIVE_ONLY_PATTERNS
+    cost_keywords: tuple[str, ...] = _COST_KEYWORDS
+    supporting_action_keywords: tuple[str, ...] = _SUPPORTING_ACTION_KEYWORDS
+    consequence_keywords: tuple[str, ...] = _CONSEQUENCE_KEYWORDS
+
+    @classmethod
+    def from_genre_profile(cls, genre_profile: object | None) -> GuardrailLexicon:
+        """从 GenreProfile 构建 lexicon；某组为空则回退科幻默认组."""
+        if genre_profile is None:
+            return cls()
+
+        def _pick(attr: str, fallback: tuple[str, ...]) -> tuple[str, ...]:
+            value = getattr(genre_profile, attr, None)
+            if value:
+                return tuple(value)
+            return fallback
+
+        return cls(
+            active_verbs=_pick("active_verbs", _ACTIVE_VERBS),
+            passive_only_patterns=_pick("passive_only_patterns", _PASSIVE_ONLY_PATTERNS),
+            cost_keywords=_pick("cost_keywords", _COST_KEYWORDS),
+            supporting_action_keywords=_pick(
+                "supporting_action_keywords", _SUPPORTING_ACTION_KEYWORDS
+            ),
+            consequence_keywords=_pick("consequence_keywords", _CONSEQUENCE_KEYWORDS),
+        )
+
+
+_DEFAULT_LEXICON = GuardrailLexicon()
+
+
+@dataclass(slots=True)
 class SupportingGoalObservation:
     character: str = ""
     goal: str = ""
@@ -188,8 +227,11 @@ def _first_sentence_with(
 def observe_supporting_character_goal(
     content: str,
     supporting_goal: dict[str, Any] | None,
+    *,
+    lexicon: GuardrailLexicon | None = None,
 ) -> SupportingGoalObservation:
     """Observe whether a supporting-character goal is actually carried by text."""
+    lex = lexicon or _DEFAULT_LEXICON
     if not supporting_goal:
         return SupportingGoalObservation(skipped=True, passed=True)
     character = str(supporting_goal.get("character") or "").strip()
@@ -198,12 +240,14 @@ def observe_supporting_character_goal(
         return SupportingGoalObservation(goal=goal, skipped=True, passed=True)
 
     sentences = _split_sentences(content)
-    action_evidence = _first_sentence_with(sentences, character, _SUPPORTING_ACTION_KEYWORDS)
+    action_evidence = _first_sentence_with(
+        sentences, character, lex.supporting_action_keywords
+    )
     consequence_evidence = ""
     if action_evidence:
         idx = sentences.index(action_evidence)
         window = "。".join(sentences[max(0, idx - 1) : idx + 2])
-        if any(keyword in window for keyword in _CONSEQUENCE_KEYWORDS):
+        if any(keyword in window for keyword in lex.consequence_keywords):
             consequence_evidence = window
 
     character_present = character in content
@@ -219,19 +263,26 @@ def observe_supporting_character_goal(
 
 def observe_active_choice(
     content: str,
-    protagonist_name: str = "林渊",
+    protagonist_name: str,
+    *,
+    lexicon: GuardrailLexicon | None = None,
 ) -> ActiveChoiceObservation:
-    """Observe whether the protagonist makes a concrete active choice."""
+    """Observe whether the protagonist makes a concrete active choice.
+
+    172d: protagonist_name is required (sourced from project protagonist),
+    lexicon is genre-pluggable (falls back to sci-fi default group).
+    """
+    lex = lexicon or _DEFAULT_LEXICON
     sentences = _split_sentences(content)
-    active_evidence = _first_sentence_with(sentences, protagonist_name, _ACTIVE_VERBS)
+    active_evidence = _first_sentence_with(sentences, protagonist_name, lex.active_verbs)
     cost_evidence = ""
     if active_evidence:
         idx = sentences.index(active_evidence)
         window = "。".join(sentences[max(0, idx - 1) : idx + 2])
-        if any(keyword in window for keyword in _COST_KEYWORDS):
+        if any(keyword in window for keyword in lex.cost_keywords):
             cost_evidence = window
     passive_only = (
-        any(pattern in content for pattern in _PASSIVE_ONLY_PATTERNS)
+        any(pattern in content for pattern in lex.passive_only_patterns)
         and not active_evidence
     )
     return ActiveChoiceObservation(
@@ -286,14 +337,53 @@ def observe_concept_budget(
     )
 
 
+async def _resolve_project_guardrail_config(
+    project_id: str,
+    protagonist_name: str | None,
+) -> tuple[str, GuardrailLexicon]:
+    """Resolve protagonist name + genre lexicon for a project (172d).
+
+    Protagonist name: explicit arg > project.protagonist_name > "" .
+    Lexicon: genre profile lexicon fields, falling back to sci-fi defaults
+    per-field (GuardrailLexicon.from_genre_profile).
+    """
+    name = (protagonist_name or "").strip()
+    lexicon = _DEFAULT_LEXICON
+    try:
+        from songyan.db.repository import ProjectRepository
+
+        project = await ProjectRepository().get(project_id)
+        if project is not None:
+            if not name:
+                name = (getattr(project, "protagonist_name", "") or "").strip()
+            try:
+                from songyan.genres.loader import load_genre_profile
+
+                genre_profile = load_genre_profile(project.genre_id)
+                lexicon = GuardrailLexicon.from_genre_profile(genre_profile)
+            except Exception:  # noqa: BLE001 - 无 genre profile 时用科幻默认 lexicon
+                lexicon = _DEFAULT_LEXICON
+    except Exception:  # noqa: BLE001 - 项目加载失败时退化为默认，不阻断审计
+        pass
+    return name, lexicon
+
+
 async def audit_171w_text_guardrails(
     project_id: str,
     start: int,
     end: int,
     *,
-    protagonist_name: str = "林渊",
+    protagonist_name: str | None = None,
 ) -> list[LiteraryGuardrailObservationRow]:
-    """Audit 171w-c guardrail evidence from accepted text and DB facts."""
+    """Audit 171w-c guardrail evidence from accepted text and DB facts.
+
+    172d: protagonist_name and lexicon are resolved from the project / genre
+    when not explicitly given (no sci-fi hardcoding).
+    """
+    # 172d: 从项目解析主角名与体裁 lexicon，替代硬编码 "林渊" + 科幻词表
+    resolved_name, lexicon = await _resolve_project_guardrail_config(
+        project_id, protagonist_name
+    )
     async with get_db() as conn:
         conn.row_factory = lambda cursor, row: {  # type: ignore[assignment]  # aiosqlite row_factory stub mismatch
             col[0]: row[idx] for idx, col in enumerate(cursor.description)
@@ -347,15 +437,23 @@ async def audit_171w_text_guardrails(
     for chapter in range(start, end + 1):
         chapter_row: dict[str, Any] | None = chapter_rows.get(chapter)
         content = str(chapter_row["content"] or "") if chapter_row else ""
-        supporting_goal = _loads_json(chapter_row["supporting_character_goal"], {}) if chapter_row else {}
-        concept_budget = _loads_json(chapter_row["new_concept_budget"], {}) if chapter_row else {}
+        supporting_goal = (
+            _loads_json(chapter_row["supporting_character_goal"], {}) if chapter_row else {}
+        )
+        concept_budget = (
+            _loads_json(chapter_row["new_concept_budget"], {}) if chapter_row else {}
+        )
         max_new_core_concepts = int(concept_budget.get("max_new_core_concepts") or 1)
         result.append(
             LiteraryGuardrailObservationRow(
                 chapter_number=chapter,
                 accepted_version_id=chapter_row["accepted_version_id"] if chapter_row else None,
-                supporting_goal=observe_supporting_character_goal(content, supporting_goal),
-                active_choice=observe_active_choice(content, protagonist_name),
+                supporting_goal=observe_supporting_character_goal(
+                    content, supporting_goal, lexicon=lexicon
+                ),
+                active_choice=observe_active_choice(
+                    content, resolved_name, lexicon=lexicon
+                ),
                 concept_budget=observe_concept_budget(
                     content,
                     settings_by_chapter.get(chapter, []),
