@@ -1,10 +1,10 @@
-# Task 173: 体裁运行时画像（Genre Runtime Profiles）
+# Task 172a: 体裁运行时画像（Genre Runtime Profiles）
 
-> **框架**: V7 阶段 Z 多体裁可插拔支撑  
+> **阶段**: V8 多体裁可插拔支撑  
 > **类型**: 架构/基础设施（Context Diet 2.0 运行时解耦）  
-> **优先级**: P0（xuanhuan Ch8 硬门禁暂停后启动）  
-> **依赖**: 173a 现状审计完成；xuanhuan `--end 15` 趋势数据已落 `.tmp/task173_short_window_preserve_end15_results.json`  
-> **状态**: 拆分完成，待 173a 开工
+> **优先级**: P0  
+> **依赖**: 172a.1 现状审计完成  
+> **状态**: 拆分完成，待 172a.1 开工
 
 ## 背景
 
@@ -24,7 +24,7 @@ context_emergency_budget_ratio_halt: budget_used_before_emergency=1.4019 >= thre
 | Ch8 伏笔状态 | 10 planted / 3 due / 13 overdue | 回收链已崩 |
 | 连续性审计 mismatch | Ch3=1, Ch6=2 | 随章节数恶化 |
 
-V5/V6 的 Ch150/Ch200 验证全部集中在 `scifi/space_opera + webnovel_intense`，系统是按科幻的状态动力学调优的：角色少、设定集中、状态变化慢。xuanhuan 状态膨胀曲线完全不同——功法、境界、势力、法宝、地图等离散状态项多，导致 Context Diet 2.0 默认参数直接溢出。
+V5–V7 的 Ch150/Ch200 验证全部集中在 `scifi/space_opera + webnovel_intense`，系统是按科幻的状态动力学调优的：角色少、设定集中、状态变化慢。xuanhuan 状态膨胀曲线完全不同——功法、境界、势力、法宝、地图等离散状态项多，导致 Context Diet 2.0 默认参数直接溢出。
 
 这不是 xuanhuan 个例，而是**系统性过拟合**：默认运行时是科幻体裁的隐式画像。
 
@@ -48,7 +48,7 @@ V5/V6 的 Ch150/Ch200 验证全部集中在 `scifi/space_opera + webnovel_intens
 
 ## 外部调研
 
-完整长调研报告见 `docs/reports/v8-literature-and-landscape-review.md`。本节只摘录对 173 设计有直接影响的结论。
+完整长调研报告见 `docs/reports/v8-literature-and-landscape-review.md`。本节只摘录对 172a 设计有直接影响的结论。
 
 ### 关键结论
 
@@ -76,29 +76,91 @@ V5/V6 的 Ch150/Ch200 验证全部集中在 `scifi/space_opera + webnovel_intens
 - **FactTrack**（arXiv:2407.16347）：time-aware world state tracking with validity intervals。
 - **CHIRON**（arXiv:2406.10190）：rich character sheet + validation module。
 
-## 方案：GenreRuntimeProfile
+## 技术方案：GenreRuntimeProfile
 
 引入 `GenreRuntimeProfile` Pydantic 模型，作为 Context Diet 2.0 的运行时契约。每个体裁可注册一个 Profile；系统启动时按项目 `genre` 加载对应 Profile；无 Profile 时回退到当前默认值（即 sci-fi 行为）。
 
-核心原则：
+### 数据模型（Pydantic v2）
+
+```python
+class GenreRuntimeProfile(BaseModel):
+    genre: str
+    version: str
+
+    # 上下文预算
+    context_budget_total: int = 32768
+    context_budget_weights: dict[str, float] = {
+        "genre_rules": 0.10,
+        "mode_rules": 0.05,
+        "chapter_goal": 0.10,
+        "creative_brief": 0.05,
+        "protagonist_profile": 0.10,
+        "character_profiles": 0.25,
+        "setting": 0.15,
+        "foreshadowing": 0.08,
+        "recent_chapters": 0.08,
+        "summary": 0.04,
+    }
+
+    # 角色/设定/伏笔状态压缩
+    character_decay_chapters: int = 5
+    setting_evaporation_profile: SettingEvaporationProfile
+    foreshadowing_evaporation_profile: ForeshadowingEvaporationProfile
+
+    # 门禁阈值
+    emergency_halt_threshold: float = 1.3
+    chapter_health_low_threshold: float = 6.5
+    continuity_mismatch_tolerance: dict[str, int] = {
+        "critical": 0,
+        "major": 1,
+        "minor": 3,
+    }
+
+    # 高级策略开关
+    arc_summarization_enabled: bool = False
+    outline_dimming_enabled: bool = False
+```
+
+### 核心原则
 
 1. **可插拔**：新增体裁只需新增一个 Profile 文件/记录，不修改核心逻辑。
 2. **可回退**：无画像项目 100% 保持旧行为。
 3. **可观测**：每个 Profile 字段必须进入 telemetry 表，便于审计不同体裁的运行时差异。
-4. **MVP 边界**：173 不新增 Agent/Workflow 节点，只做运行时参数解耦与注册表。
+4. **MVP 边界**：172a 不新增 Agent/Workflow 节点，只做运行时参数解耦与注册表。
+
+### 加载机制
+
+```
+project.genre -> lookup genre_runtime_profiles table
+                -> if found: load and cache
+                -> if not found: fallback to code-level default registry (scifi profile)
+```
+
+- 数据库优先：允许运行时调参后无需改代码即可生效。
+- 代码默认注册表兜底：保证新环境/测试可立即运行。
+- Project 记录 `runtime_profile_id` + `runtime_profile_snapshot`，确保每次生成可审计。
+
+### 注入点
+
+- `ContextManager.assemble_context()`：预算权重与总预算。
+- `ContextEmergency`：halt 阈值与总预算。
+- `HaltService` / `HealthGate`：health_low_threshold。
+- `ContinuityAuditor`：mismatch 容忍度。
+- `SettingEvaporator` / `ForeshadowingScheduleRepo`：蒸发曲线。
+- `CharacterStateRepo`：衰减窗口。
 
 ## 子任务拆分
 
-### 173a: 现状审计与常量提取
+### 172a.1: 现状审计与常量提取
 
 **目标**：把当前 Context Diet 2.0 中所有与体裁相关的硬编码常量/环境变量枚举出来，形成审计清单；并把当前 sci-fi 默认行为显式固化为 `GenreRuntimeProfile` 的 `scifi` profile。
 
 **做**：
 
 1. 在 `src/songyan/context/`、`src/songyan/agents/context_manager/`、`src/songyan/services/` 中扫描与 token budget、衰减、halt 阈值相关的常量。
-2. 输出审计报告到 `docs/reports/173a-context-diet-constants-audit.md`，字段包括：常量名、当前值、所在文件、是否体裁敏感、建议归属 Profile 字段。
+2. 输出审计报告到 `docs/reports/172a.1-context-diet-constants-audit.md`，字段包括：常量名、当前值、所在文件、是否体裁敏感、建议归属 Profile 字段。
 3. 识别哪些字段已被环境变量覆盖，哪些完全硬编码。
-4. **新增**：基于当前默认值，先生成 `scifi` profile 的完整字段快照，作为后续所有体裁调参的 baseline；该快照写入 `docs/reports/173a-scifi-baseline-profile.json` 并登记到 `genre_runtime_profiles` 表。
+4. 基于当前默认值，先生成 `scifi` profile 的完整字段快照，作为后续所有体裁调参的 baseline；该快照写入 `docs/reports/172a.1-scifi-baseline-profile.json` 并登记到 `genre_runtime_profiles` 表。
 
 **不做**：
 
@@ -112,7 +174,7 @@ V5/V6 的 Ch150/Ch200 验证全部集中在 `scifi/space_opera + webnovel_intens
 
 ---
 
-### 173b: GenreRuntimeProfile 数据模型
+### 172a.2: GenreRuntimeProfile 数据模型 + 数据库表
 
 **目标**：建立 `GenreRuntimeProfile` Pydantic v2 模型与数据库表。
 
@@ -121,13 +183,13 @@ V5/V6 的 Ch150/Ch200 验证全部集中在 `scifi/space_opera + webnovel_intens
 1. 新增 `src/songyan/models/genre_runtime_profile.py`，定义 `GenreRuntimeProfile`。
 2. 字段覆盖：
    - `context_budget_total`: int（默认 32768）
-   - `context_budget_weights`: dict[str, float]（genre_rules / mode_rules / chapter_goal / creative_brief / protagonist_profile / character_profiles / setting / foreshadowing / recent_chapters / summary 等权重）
-   - `character_decay_chapters`: int（未出场多少章后进入衰减/归档）
+   - `context_budget_weights`: dict[str, float]
+   - `character_decay_chapters`: int
    - `setting_evaporation_profile`: dict（resolve_confidence 阈值与蒸发速率）
    - `foreshadowing_evaporation_profile`: dict（due 窗口、overdue 阈值）
-   - `emergency_halt_threshold`: float（如 1.3）
+   - `emergency_halt_threshold`: float
    - `chapter_health_low_threshold`: float
-   - `continuity_mismatch_tolerance`: dict（按 severity 的阈值）
+   - `continuity_mismatch_tolerance`: dict
    - `arc_summarization_enabled`: bool
    - `outline_dimming_enabled`: bool
 3. 新增 migration 在 SQLite 创建 `genre_runtime_profiles` 表；`genre` 字段唯一。
@@ -158,7 +220,7 @@ def test_xuanhuan_profile_has_higher_budget():
 
 ---
 
-### 173c: 按体裁加载 Profile
+### 172a.3: 按体裁加载 Profile
 
 **目标**：项目初始化时根据 `genre` 加载对应 Profile；无匹配时回退默认。
 
@@ -181,7 +243,7 @@ def test_xuanhuan_profile_has_higher_budget():
 
 ---
 
-### 173d: Context Diet 预算分配按体裁
+### 172a.4: Context Diet 预算分配按体裁
 
 **目标**：让 `ContextManager` 按 Profile 的权重和总预算组装上下文包。
 
@@ -202,7 +264,7 @@ def test_xuanhuan_profile_has_higher_budget():
 
 ---
 
-### 173e: 硬门禁阈值按体裁
+### 172a.5: 硬门禁阈值按体裁
 
 **目标**：把 halt/health 等硬门禁阈值从全局常量迁移到 Profile。
 
@@ -223,7 +285,7 @@ def test_xuanhuan_profile_has_higher_budget():
 
 ---
 
-### 173f: 状态压缩与伏笔蒸发按体裁
+### 172a.6: 状态压缩与伏笔蒸发按体裁
 
 **目标**：角色衰减、设定蒸发、伏笔回收策略按体裁定制。
 
@@ -248,25 +310,25 @@ def test_xuanhuan_profile_has_higher_budget():
 
 ---
 
-### 173g: 多体裁验证窗口与回归
+### 172a.7: 多体裁验证窗口与回归
 
 **目标**：建立多体裁短窗口验证 harness，确保改动不破坏 sci-fi，同时让 xuanhuan 通过 end 15/20。
 
 **做**：
 
-1. 新增/复用 `scripts/run_173_short_window_preserve.py`，支持 `--templates xuanhuan|wuxia|urban|scifi --end N`。
+1. 新增/复用 `scripts/run_172a_short_window_preserve.py`，支持 `--templates xuanhuan|wuxia|urban|scifi --end N`。
 2. 每个子任务完成后跑：
    - scifi `--end 10`（回归）；
    - xuanhuan `--end 15`；
    - xuanhuan `--end 20`（最终）；
    - wuxia `--end 10`；
    - urban `--end 10`。
-3. 输出指标：ContextEmergency 频率、budget_used 峰值、连续性审计 mismatch 数、伏笔 planted/due/overdue、accepted 率。
-4. 将结果写入 `docs/reports/173g-genre-short-window-validation.md`。
+3. 输出指标：ContextEmergency 频率、budget_used 峰值、连续性审计 mismatch 数、伏笔 planted/due/overdue、accepted 率、CED。
+4. 将结果写入 `docs/reports/172a.7-genre-short-window-validation.md`。
 
 **不做**：
 
-- 不在 173 内做 Ch100+ 长跑；只验证短窗口。
+- 不在 172a 内做 Ch100+ 长跑；只验证短窗口。
 
 **验收**：
 
@@ -291,13 +353,13 @@ def test_xuanhuan_profile_has_higher_budget():
 
 ## 出口标准
 
-Task 173 完成后需产出：
+Task 172a 完成后需产出：
 
-1. `tasks/173-genre-runtime-profiles-DONE.md` 记录最终参数与验证结果；
-2. `docs/reports/173a-context-diet-constants-audit.md` 与 `docs/reports/173a-scifi-baseline-profile.json`；
-3. `docs/reports/173g-genre-short-window-validation.md` 多体裁短窗口报告；
+1. `tasks/172a-v8-genre-runtime-profiles-DONE.md` 记录最终参数与验证结果；
+2. `docs/reports/172a.1-context-diet-constants-audit.md` 与 `docs/reports/172a.1-scifi-baseline-profile.json`；
+3. `docs/reports/172a.7-genre-short-window-validation.md` 多体裁短窗口报告；
 4. 将 xuanhuan/wuxia/urban Profile 登记到 `docs/STATUS.md` 的 V8 阶段事实；
-5. 明确 Task 174（Ch100+ 多体裁长跑验证）的触发条件。
+5. 明确 Task 172b（Ch100+ 多体裁长跑验证）的触发条件。
 
 ## 验证命令
 
@@ -307,13 +369,13 @@ python -m pytest tests/ -q
 ruff check src/ tests/
 
 # 多体裁短窗口验证
-python scripts/run_173_short_window_preserve.py --templates xuanhuan --end 15 --output .tmp/task173_xuanhuan_end15.json
-python scripts/run_173_short_window_preserve.py --templates xuanhuan --end 20 --output .tmp/task173_xuanhuan_end20.json
-python scripts/run_173_short_window_preserve.py --templates scifi    --end 10 --output .tmp/task173_scifi_end10.json
-python scripts/run_173_short_window_preserve.py --templates wuxia    --end 10 --output .tmp/task173_wuxia_end10.json
-python scripts/run_173_short_window_preserve.py --templates urban    --end 10 --output .tmp/task173_urban_end10.json
+python scripts/run_172a_short_window_preserve.py --templates xuanhuan --end 15 --output .tmp/task172a_xuanhuan_end15.json
+python scripts/run_172a_short_window_preserve.py --templates xuanhuan --end 20 --output .tmp/task172a_xuanhuan_end20.json
+python scripts/run_172a_short_window_preserve.py --templates scifi    --end 10 --output .tmp/task172a_scifi_end10.json
+python scripts/run_172a_short_window_preserve.py --templates wuxia    --end 10 --output .tmp/task172a_wuxia_end10.json
+python scripts/run_172a_short_window_preserve.py --templates urban    --end 10 --output .tmp/task172a_urban_end10.json
 ```
 
 ## 撞墙路由
 
-如 173d/173e 调参后仍无法压下 xuanhuan budget_used，说明仅调整预算分配不够，需要提前启动 **弧线摘要/大纲降维**（173f 子集），或拆出 `173p-context-summarization-pilot` 进行 Prompt 级摘要实验，不在 173 内无限放宽阈值。
+如 172a.4/172a.5 调参后仍无法压下 xuanhuan budget_used，说明仅调整预算分配不够，需要提前启动 **弧线摘要/大纲降维**（172a.6 子集），或拆出 `172a.p-context-summarization-pilot` 进行 Prompt 级摘要实验，不在 172a 内无限放宽阈值。

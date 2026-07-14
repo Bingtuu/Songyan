@@ -134,7 +134,7 @@ Songyan 当前已有 T9/T10/T12、连续性审计、health、orphan 等指标，
 
 ### 5.1 认可当前 V8 方向
 
-当前 `tasks/V8-README.md` 与 `tasks/173-genre-runtime-profiles.md` 的方向是正确的：
+当前 `tasks/V8-README.md` 与 `tasks/172a-v8-genre-runtime-profiles.md` 的方向是正确的：
 
 - 把 Context Diet 2.0 的运行时契约从 sci-fi 隐式画像解耦；
 - 用短窗口（end 10/15/20）快速验证多体裁质量同标；
@@ -158,8 +158,8 @@ V7 的 sci-fi 成功依赖于一组**未文档化的默认参数**。建议：
 
 xuanhuan 的高状态密度使其成为 Context Diet 2.0 的极端压力测试。建议：
 
-- 在 173a 审计中把 xuanhuan Ch8 的 `budget_used=1.4019` 作为关键 case study；
-- 173d 的目标不应只是“不触发 halt”，而是“budget_used 峰值 < 1.0 且不连续触发 ContextEmergency”。
+- 在 172a.1 审计中把 xuanhuan Ch8 的 `budget_used=1.4019` 作为关键 case study；
+- 172a.4 的目标不应只是“不触发 halt”，而是“budget_used 峰值 < 1.0 且不连续触发 ContextEmergency”。
 
 #### （3）引入 CED-like 一致性密度指标
 
@@ -205,7 +205,7 @@ python scripts/run_173_short_window_preserve.py --templates urban    --end 10
 3. **V8 的边界合理**：先做运行时参数解耦，再做状态结构升级（CHIRON/FactTrack 留到 V9）。
 4. **验收标准应包含一致性密度指标**，而不仅是 accepted 率。
 
-建议按现有 173a–173g 子任务推进，同时补充 sci-fi profile 显式化与 CED 指标。
+建议按现有 172a.1–172a.7 子任务推进，同时补充 sci-fi profile 显式化与 CED 指标。
 
 ---
 

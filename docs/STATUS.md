@@ -8,8 +8,8 @@
 |----|------|
 | 当前阶段 | **V8**：多体裁可插拔质量 + 章数爬坡 |
 | V7 收尾 | **已完成**。sci-fi/space_opera + webnovel_intense 单一体裁稳定跑到 Ch200，200/200 accepted，D1 hard clean pass；Ch201-Ch220 20/20 accepted |
-| V7→V8 调整 | 结束单一体裁 Ch250/Ch300 继续爬坡；原 Task 172 取消归档，Task 173 从"Ch300 验收"改判为"多体裁运行时画像" |
-| V8 主线 | **Task 173 体裁运行时画像（GenreRuntimeProfile）**：把 Context Diet 2.0 的运行时契约从 sci-fi 默认值解耦 |
+| V7→V8 调整 | 结束单一体裁 Ch250/Ch300 继续爬坡；原 Task 172 取消归档，V8 从 **Task 172a** 开始 |
+| V8 主线 | **Task 172a 体裁运行时画像（GenreRuntimeProfile）**：把 Context Diet 2.0 的运行时契约从 sci-fi 默认值解耦 |
 | 当前风险 | xuanhuan `--end 15` 在 Ch8 因 `budget_used_before_emergency=1.4019 >= 1.3` 触发硬门禁暂停，暴露系统对科幻状态动力学过拟合 |
 
 ## 最新证据
@@ -41,9 +41,9 @@
 
 ## 下一步
 
-1. **V8 P0**：启动 Task 173 `GenreRuntimeProfile`。
-2. 先完成 173a 现状审计，把 Context Diet 2.0 中体裁敏感的常量/阈值枚举清楚，并**把当前 sci-fi 默认行为显式固化为 baseline profile**。
-3. 按 173b→173g 依次推进；过程中引入 **Consistency Error Density (CED)** 作为跨体裁可比指标。
+1. **V8 P0**：启动 Task 172a `GenreRuntimeProfile`。
+2. 先完成 172a.1 现状审计，把 Context Diet 2.0 中体裁敏感的常量/阈值枚举清楚，并**把当前 sci-fi 默认行为显式固化为 baseline profile**。
+3. 按 172a.2→172a.7 依次推进；过程中引入 **Consistency Error Density (CED)** 作为跨体裁可比指标。
 4. 长调研结论已写入 `docs/reports/v8-literature-and-landscape-review.md`，后续设计以此报告为外部依据。
 
 ## 入口
@@ -51,7 +51,7 @@
 - V8 任务事实：`tasks/V8-README.md`
 - V7 历史事实：`tasks/V7-README.md`
 - 文档路由：`docs/INDEX.md`
-- Task 173 规划：`tasks/173-genre-runtime-profiles.md`
+- Task 172a 规划：`tasks/172a-v8-genre-runtime-profiles.md`
 - V7 归档：`archive/v7/INDEX.md`
 - V6 归档：`archive/v6/INDEX.md`
 - V5 归档：`archive/v5/INDEX.md`

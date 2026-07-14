@@ -8,8 +8,8 @@
 |------|------|
 | `AGENTS.md` | 开发代理短指令与不可违背规则 |
 | `docs/STATUS.md` | 当前状态、测试口径、下一步 |
-| `tasks/V8-README.md` | **V8 任务事实入口（当前阶段）**：多体裁可插拔质量 + 章数爬坡，Task 173-175 |
-| `tasks/173-genre-runtime-profiles.md` | **Task 173（V8 P0）**：体裁运行时画像设计、子任务拆分、验证指标 |
+| `tasks/V8-README.md` | **V8 任务事实入口（当前阶段）**：多体裁可插拔质量 + 章数爬坡，Task 172a-172c |
+| `tasks/172a-v8-genre-runtime-profiles.md` | **Task 172a（V8 P0）**：体裁运行时画像设计、子任务拆分、验证指标 |
 | `tasks/V7-README.md` | **V7 历史任务事实入口（已收尾）**：sci-fi 单一体裁 Ch200 达成 |
 | `tasks/V6-README.md` | V6 历史任务事实入口：叙事骨架 MVP + 度量 + 长跑底盘，Task 141-159 |
 | `tasks/V5-README.md` | V5.0 历史任务事实入口 |
@@ -19,7 +19,7 @@
 | 文件 | 用途 |
 |------|------|
 | `tasks/V8-README.md` | V8 任务总索引、阶段验收标准、依赖关系 |
-| `tasks/173-genre-runtime-profiles.md` | Task 173：体裁运行时画像（GenreRuntimeProfile） |
+| `tasks/172a-v8-genre-runtime-profiles.md` | Task 172a：体裁运行时画像（GenreRuntimeProfile） |
 
 ## V7 历史产物（保留入口）
 
@@ -86,7 +86,7 @@
 | 场景 | 文件 |
 |------|------|
 | V8 当前阶段入口 | `tasks/V8-README.md` |
-| V8 P0 任务规划 | `tasks/173-genre-runtime-profiles.md` |
+| V8 P0 任务规划 | `tasks/172a-v8-genre-runtime-profiles.md` |
 | V7 历史任务入口 | `tasks/V7-README.md` |
 | V6 历史任务入口 | `tasks/V6-README.md` |
 | V5 历史任务入口 | `tasks/V5-README.md` |
