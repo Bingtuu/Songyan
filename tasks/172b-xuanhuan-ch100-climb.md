@@ -78,12 +78,25 @@ V8-README V 维度判据：
 
 产出 `docs/reports/172b-xuanhuan-ch100-climb.md`：逐段 budget 曲线、ContextEmergency 频率、overdue 轨迹、CED vs scifi Ch1-100 基线、health 趋势、失败清单。
 
+### V 维度验收判定器（可证伪）
+
+`.tmp/vdim_compare.py` 用 harness 同一 `_segment_metrics` 读 live xuanhuan DB，按当前爬坡深度线性插值 sci-fi 基线（`.tmp/scifi_ch100_baseline.json`），对 4 个门禁给 PASS/FAIL：
+
+| gate | 判据 | sci-fi 对标 |
+|---|---|---|
+| budget | xuanhuan budget_peak < 1.0 且无 halt | 峰值 0.989 |
+| CED | xuanhuan CED ≤ sci-fi × 1.15（172a.7「同级」口径） | 9.13-9.46 |
+| overdue | xuanhuan overdue ≤ sci-fi 同章尺度 | Ch9→61 … Ch100→168 |
+| health | xuanhuan health ≥ 8.0（median 不退化代理） | 9.2-10.0 |
+
+Ch9 早期读（`accepted=100 且 up_to≥100` 才是终判）：budget 0.896 / CED 10.66 / overdue 0 / health 9.8 → **四门全 PASS**（early-warning，非终判）。终判在 Ch100 accepted=100 时给出。
+
 ## 4. 风险与撞墙路由（172b.p 预案）
 
 | 风险 | 触发信号 | 172b.p 预案（不放宽口径） |
 |---|---|---|
 | 长尺度 budget 溢出 | Ch50+ budget_used 逼近 1.0 或 halt | ramp_per_chapter 按体裁微调 / genre_rules 内容精简（层 3），非分区权重 |
-| overdue 反弹 | Ch100 overdue >> 5 | horizon floor 随章号动态 / 主动回收调度（评估是否超 MVP） |
+| overdue 反弹 | Ch100 overdue > sci-fi 同章（>168） | horizon floor 随章号动态 / 主动回收调度（评估是否超 MVP） |
 | 连续性退化 | critical orphan > 0 / mismatch 持续 | continuity 容忍度按体裁（172a.6 已有 Profile 字段） |
 | health 持续下滑 | median < scifi 基线 | 定点诊断，判定真退化则新开修复 Task |
 
