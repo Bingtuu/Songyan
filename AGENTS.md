@@ -15,6 +15,7 @@
 - 项目状态：`docs/STATUS.md`
 - 文档路由：`docs/INDEX.md`
 - V8 任务事实（当前阶段）：`tasks/V8-README.md`
+- Task 172 完成报告：`tasks/172-project-template-plugin-DONE.md`
 - V8 P0 任务规划：`tasks/172a-v8-genre-runtime-profiles.md`
 - V7 历史任务事实（已收尾）：`tasks/V7-README.md`
 - V6 历史任务事实（已收尾）：`tasks/V6-README.md`
@@ -28,9 +29,9 @@ V5（V5.0/V5.1/V5.2）已全部工程验收通过：Context Diet 2.0 支撑长�
 
 V6（Task 141-159）已完成：叙事骨架 MVP（StoryOutline / ArcPlan / PlotThread）、长篇质量度量、无人值守长跑底盘，验证到 Ch100-150。
 
-V7（Task 160-171w）已收尾：篇章级质量修复 → 叙事自驱 → enforce 可生产化 → **sci-fi 单一体裁 Ch200 达成**。原 Task 172/173 单一体裁 Ch250/Ch300 目标取消。
+V7（Task 160-171w）已收尾：篇章级质量修复 → 叙事自驱 → enforce 可生产化 → **sci-fi 单一体裁 Ch200 达成**。原 Task 172/173 单一体裁 Ch250/Ch300 目标取消；V8 复用 Task 172 编号作为项目模板化任务。
 
-当前进入 **V8**（Task 172a-172c）：**多体裁可插拔质量 + 章数爬坡**。核心是把 Context Diet 2.0 的运行时契约从 sci-fi 隐式画像解耦，建立 `GenreRuntimeProfile`，让 xuanhuan/wuxia/urban 等体裁在短窗口稳定通过，再逐步爬坡到 Ch100/Ch150。首批优先级：
+当前进入 **V8**（Task 172-172c）：**多体裁可插拔质量 + 章数爬坡**。Task 172 已完成 `ProjectTemplate` 项目模板化，为 7 个体裁提供统一初始化入口；当前主线是把 Context Diet 2.0 的运行时契约从 sci-fi 隐式画像解耦，建立 `GenreRuntimeProfile`，让 xuanhuan/wuxia/urban 等体裁在短窗口稳定通过，再逐步爬坡到 Ch100/Ch150。首批优先级：
 
 1. **Task 172a.1-172a.7**：建立 `GenreRuntimeProfile` 机制（数据模型、加载、预算分配、门禁阈值、状态压缩、多体裁短窗口验证）。
 2. **Task 172b/172c**：选择 1-2 个非 sci-fi 体裁推进到 Ch100/Ch150。

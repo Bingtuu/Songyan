@@ -1,4 +1,4 @@
-"""Task 173 短章验证：为每个体裁跑 Ch1-Ch3，检查 completed/T9/字数."""
+"""Task 172 短章验证：为每个体裁跑 Ch1-Ch3，检查 completed/T9/字数."""
 
 from __future__ import annotations
 

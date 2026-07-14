@@ -95,7 +95,7 @@ _TELEMETRY_ATTRIBUTE_KEYWORDS = (
     "arcsecond",
     "error",
     "deviation",
-    # Task 173: 玄幻/武侠寿命读数
+    # Task 172: 玄幻/武侠寿命读数
     "lifespan",
     "life_span",
     "remaining_lifespan",
@@ -175,7 +175,7 @@ _TELEMETRY_ALIAS_GROUPS: tuple[tuple[tuple[str, ...], tuple[str, ...]], ...] = (
     ),
     (("脉冲数",), ("脉冲数", "指令脉冲数", "自毁指令脉冲数")),
     (("文字数量", "文字数"), ("文字数量", "文字数")),
-    # Task 173: 玄幻/武侠寿命读数（余寿、寿元等）按遥测快照处理
+    # Task 172: 玄幻/武侠寿命读数（余寿、寿元等）按遥测快照处理
     (
         ("lifespan", "life_span", "remaining_lifespan", "寿元", "余寿", "剩余寿命", "寿命"),
         (

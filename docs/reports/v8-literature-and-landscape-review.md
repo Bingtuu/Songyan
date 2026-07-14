@@ -176,10 +176,10 @@ CED = (critical + major issues with evidence_quote) / total_chapter_words
 建议把以下命令纳入 CI/验证清单：
 
 ```powershell
-python scripts/run_173_short_window_preserve.py --templates scifi    --end 10
-python scripts/run_173_short_window_preserve.py --templates xuanhuan --end 15
-python scripts/run_173_short_window_preserve.py --templates wuxia    --end 10
-python scripts/run_173_short_window_preserve.py --templates urban    --end 10
+python scripts/run_172a_short_window_preserve.py --templates scifi    --end 10
+python scripts/run_172a_short_window_preserve.py --templates xuanhuan --end 15
+python scripts/run_172a_short_window_preserve.py --templates wuxia    --end 10
+python scripts/run_172a_short_window_preserve.py --templates urban    --end 10
 ```
 
 并记录：ContextEmergency 频率、budget_used 峰值、CED、overdue foreshadowing 数。

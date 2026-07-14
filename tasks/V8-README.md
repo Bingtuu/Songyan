@@ -2,7 +2,7 @@
 
 > **阶段**: 多体裁可插拔质量 → 多体裁章数爬坡  
 > **当前口径**: V7 在 sci-fi 单一体裁下达成 Ch200 后收尾。V8 的目标不是再做一轮类似 Task 170 的"文学性专项 prompt 工程"，而是把支撑 sci-fi 长跑的**工程底盘**（Context Diet 2.0、门禁、结算、连续性审计）从科幻隐式画像解耦，建立 `GenreRuntimeProfile`，让 xuanhuan/wuxia/urban 等体裁也能达到与 sci-fi **同等的完成度和质量基线**，再向中篇（Ch100/Ch150）爬坡。  
-> **任务编号**: V8 从 Task 172a 开始（原 Task 172 的 Ch250 目标已取消归档）。  
+> **任务编号**: V8 从 Task 172 开始：Task 172 为项目模板化与体裁可插拔（`ProjectTemplate`），172a 为体裁运行时画像（`GenreRuntimeProfile`）。原 Task 172 的 Ch250 目标已取消归档。  
 > **最后整理**: 2026-07-14（V7 收尾，V8 启动，历史报告归档）
 
 本文是 V8 阶段任务文档的事实入口。V7 历史事实入口见 `tasks/V7-README.md`；V6 见 `tasks/V6-README.md`；V5 见 `tasks/V5-README.md`；历史规划稿统一归档到 `archive/`，仅在追溯设计边界时查阅。
@@ -41,6 +41,14 @@ V8 通过 = 同时满足以下五项：
 ## Task 状态
 
 > 状态口径：`◻ 规划中`（有规划稿，未开工）/ `🔄 进行中` / `✅ 完成`（有 `*-DONE.md`）/ `⚠️ 条件完成` / `⚠️ 条件未通过` / `⏳ 占位`（骨架占位，详细文档待前置数据出炉后写）。
+
+### V8.0：项目模板化与体裁可插拔（ProjectTemplate）
+
+| Task | 名称 | 状态 | 事实文档 |
+|------|------|:----:|----------|
+| 172 | 项目模板化与体裁可插拔 | ✅ 完成 | `tasks/172-project-template-plugin-DONE.md` |
+| 172-TEST | 合并到 main 门槛值与测试计划 | ✅ 完成 | `tasks/172-project-template-plugin-TEST-PLAN.md` |
+| 172-PLAN | 实施计划 | ✅ 完成 | `docs/superpowers/plans/2026-07-13-project-template-plugin-plan.md` |
 
 ### V8.1：体裁运行时画像（GenreRuntimeProfile）
 
@@ -137,6 +145,9 @@ project.genre
 ## 依赖关系与执行纪律
 
 ```
+172 项目模板化 ─────────────────────────────────────────────────────────────────────┐
+                                                                                    │
+                                                                                    ▼
 172a.1 常量审计 ──► 172a.2 模型 ──► 172a.3 加载机制 ──► 172a.4 预算分配 ──► 172a.5 门禁阈值 ──► 172a.6 状态压缩 ──► 172a.7 短窗口验证
                                                                                                                   │
                                                                                                                   ▼
@@ -146,6 +157,7 @@ project.genre
                                                                                                           172c 第二体裁 Ch100 爬坡
 ```
 
+- **172 是 172a 的前置**：`ProjectTemplate` 为各体裁提供统一的项目初始化入口；`GenreRuntimeProfile` 依赖模板化的项目结构来按 genre 加载运行时参数。
 - **172a 串行为主**：Profile 机制是后续所有体裁调参的地基，必须等模型与加载机制落地后才能调预算/阈值/压缩策略。
 - **不回退 sci-fi**：任何 Profile 改动必须通过 sci-fi `--end 10` 回归，保证旧行为不变。
 - **短窗口是对标手段，不是终点**：V8.1 用 end 10/15/20 快速验证各体裁是否能达到 sci-fi 同级质量；通不过不进 172b。
@@ -171,6 +183,8 @@ project.genre
 ## 文档入口
 
 - V8 任务事实：`tasks/V8-README.md`
+- Task 172 完成报告：`tasks/172-project-template-plugin-DONE.md`
+- Task 172 测试计划：`tasks/172-project-template-plugin-TEST-PLAN.md`
 - V8 P0 详细规划：`tasks/172a-v8-genre-runtime-profiles.md`
 - V8 长调研报告：`docs/reports/v8-literature-and-landscape-review.md`
 - 项目状态：`docs/STATUS.md`

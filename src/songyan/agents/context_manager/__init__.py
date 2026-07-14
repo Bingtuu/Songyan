@@ -855,7 +855,7 @@ class BudgetPruner:
             rp.open_threads = []
             ctx.recent_plot = rp
 
-        # Task 173: emergency 下裁剪 creative_brief，避免硬保留分区仍超预算
+        # Task 172: emergency 下裁剪 creative_brief，避免硬保留分区仍超预算
         if ctx.creative_brief is not None:
             ctx.creative_brief = self._trim_creative_brief_for_emergency(ctx.creative_brief)
 

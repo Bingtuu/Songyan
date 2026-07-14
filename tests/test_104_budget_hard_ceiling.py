@@ -432,7 +432,7 @@ class TestContextEmergency:
         assert ctx.context_emergency is False
 
     def test_emergency_trims_large_creative_brief_to_fit_budget(self) -> None:
-        """Task 173: 大 creative_brief 触发 emergency 后必须被裁剪到预算内."""
+        """Task 172: 大 creative_brief 触发 emergency 后必须被裁剪到预算内."""
         pruner = BudgetPruner()
         ctx = _make_xuanhuan_like_context()
         budget = 8500

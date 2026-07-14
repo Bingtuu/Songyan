@@ -1,4 +1,4 @@
-# Task 173: 项目模板化与体裁可插拔实施计划
+# Task 172: 项目模板化与体裁可插拔实施计划
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` (recommended) or `superpowers:executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -41,7 +41,7 @@
 | `scripts/run_171_ch200.py` | 用 `ProjectTemplateLoader` + `ProjectInitializer` 替换硬编码 `_project_setting()` / `_build_outline()` |
 | `src/songyan/cli/main.py` | `create_project` 新增 `--template` 选项 |
 | `src/songyan/models/__init__.py` | 导出 `ProjectTemplate` 相关模型 |
-| `tasks/V7-README.md` | 添加 Task 173 状态入口 |
+| `tasks/V7-README.md` | 添加 Task 172 状态入口 |
 | `docs/STATUS.md` | 更新当前任务状态 |
 
 ---
@@ -1504,7 +1504,7 @@ git commit -m "feat(173e): add lightweight template inheritance and variants"
 创建 `scripts/run_173_short_window.py`：
 
 ```python
-"""Task 173 短章验证：为每个体裁跑 Ch1-Ch3，检查 completed/T9/字数."""
+"""Task 172 短章验证：为每个体裁跑 Ch1-Ch3，检查 completed/T9/字数."""
 
 from __future__ import annotations
 
@@ -1641,13 +1641,13 @@ git commit -m "feat(173): add short-window validation script for all genres"
 在 `docs/STATUS.md` 的"当前风险/下一步"中新增：
 
 ```markdown
-| 当前风险 | P0 已全部清零；高优先级 P1 已完成；Task 173 项目模板化已设计完成，待按 173a–173e 分步实施 |
+| 当前风险 | P0 已全部清零；高优先级 P1 已完成；Task 172 项目模板化已设计完成，待按 173a–173e 分步实施 |
 ```
 
 在"下一步"中追加：
 
 ```markdown
-3. 按 Task 173 计划推进项目模板化（173a–173e），每子任务后做短章测试。
+3. 按 Task 172 计划推进项目模板化（173a–173e），每子任务后做短章测试。
 ```
 
 ### Step 7.3: 回归测试
@@ -1667,7 +1667,7 @@ Expected:
 
 ```bash
 git add tasks/V7-README.md docs/STATUS.md
-git commit -m "docs(173): update V7 index and STATUS with Task 173 plan"
+git commit -m "docs(173): update V7 index and STATUS with Task 172 plan"
 ```
 
 ---
