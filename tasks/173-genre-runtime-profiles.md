@@ -48,6 +48,15 @@ V5/V6 的 Ch150/Ch200 验证全部集中在 `scifi/space_opera + webnovel_intens
 
 ## 外部调研
 
+完整长调研报告见 `docs/reports/v8-literature-and-landscape-review.md`。本节只摘录对 173 设计有直接影响的结论。
+
+### 关键结论
+
+1. **体裁差异是状态动力学差异**：xuanhuan 的功法/境界/势力/法宝/地图等高状态密度不是“prompt 风格”问题，而是导致上下文预算溢出的结构性问题（CreAgentive、DOME、ConStory-Bench 共同支持）。
+2. **没有单一上下文策略能覆盖所有体裁**：外部最佳实践（AI Dungeon Memory/Lorebook、DOME hierarchical outline、StoryWriter 动态压缩）都强调按体裁调整运行时上下文策略。
+3. **一致性评估需要专用密度指标**：ConStory-Bench 的 Consistency Error Density (CED) 可跨体裁公平比较，V8 验收应纳入。
+4. **状态跟踪可升级方向**：FactTrack 的 pre-facts/post-facts + validity interval、CHIRON 的角色表 + 验证模块，可作为 V9 结构升级储备。
+
 ### GitHub 开源项目
 
 - **[Novelgen](https://github.com/kirinonakar/Novelgen)**：使用**分层上下文 + 弧线管理**。长小说（13 章以上）仅保留当前 part 与相邻 part 的详细大纲，远端章节降维为标题+摘要；同时维护 Current Arc / Closed Arcs 两层结构，已闭合弧线用摘要代替原文。其 Context Management 明确区分了不同体裁的推荐上下文长度（短 outline 16k-24k，一般长篇 32k）。
@@ -61,11 +70,11 @@ V5/V6 的 Ch150/Ch200 验证全部集中在 `scifi/space_opera + webnovel_intens
 
 ### 学术论文
 
-- **Recursive Summarization for Long-Term Dialogue Memory**（arXiv:2308.15022）：通过递归摘要把长对话压缩成分层记忆，避免简单滑动窗口丢失关键信息。
-- **SCORE**（arXiv:2503.23512）：用 episode summaries + key item tracking + RAG 维护长篇一致性。
-- **ComoRAG**（arXiv:2508.10419）：动态记忆工作区 + 迭代检索，根据当前生成任务按需加载上下文。
-
-共同结论：**没有单一上下文策略能覆盖所有体裁**；必须在运行时根据体裁状态动力学调整预算分配、摘要策略与检索策略。
+- **CreAgentive**（arXiv:2509.26461）：genre-agnostic Story Prototype + 多体裁三阶段 Agent workflow。
+- **DOME**（arXiv:2412.13575）：Dynamic Hierarchical Outlining + temporal knowledge graph memory。
+- **ConStory-Bench**（arXiv:2603.05890）：长故事一致性基准，提出 CED / GRR 指标。
+- **FactTrack**（arXiv:2407.16347）：time-aware world state tracking with validity intervals。
+- **CHIRON**（arXiv:2406.10190）：rich character sheet + validation module。
 
 ## 方案：GenreRuntimeProfile
 
@@ -82,20 +91,24 @@ V5/V6 的 Ch150/Ch200 验证全部集中在 `scifi/space_opera + webnovel_intens
 
 ### 173a: 现状审计与常量提取
 
-**目标**：把当前 Context Diet 2.0 中所有与体裁相关的硬编码常量/环境变量枚举出来，形成审计清单。
+**目标**：把当前 Context Diet 2.0 中所有与体裁相关的硬编码常量/环境变量枚举出来，形成审计清单；并把当前 sci-fi 默认行为显式固化为 `GenreRuntimeProfile` 的 `scifi` profile。
 
 **做**：
 
 1. 在 `src/songyan/context/`、`src/songyan/agents/context_manager/`、`src/songyan/services/` 中扫描与 token budget、衰减、halt 阈值相关的常量。
 2. 输出审计报告到 `docs/reports/173a-context-diet-constants-audit.md`，字段包括：常量名、当前值、所在文件、是否体裁敏感、建议归属 Profile 字段。
 3. 识别哪些字段已被环境变量覆盖，哪些完全硬编码。
+4. **新增**：基于当前默认值，先生成 `scifi` profile 的完整字段快照，作为后续所有体裁调参的 baseline；该快照写入 `docs/reports/173a-scifi-baseline-profile.json` 并登记到 `genre_runtime_profiles` 表。
 
 **不做**：
 
 - 不修改任何常量值；
 - 不引入新抽象。
 
-**验收**：审计报告覆盖 ContextManager、ContextEmergency、ChapterGoal 装配、伏笔蒸发、角色衰减等模块；报告通过 code review。
+**验收**：
+
+- 审计报告覆盖 ContextManager、ContextEmergency、ChapterGoal 装配、伏笔蒸发、角色衰减等模块；报告通过 code review。
+- `scifi` baseline profile 完整字段快照与当前默认行为等价，可被后续回归验证。
 
 ---
 
@@ -267,11 +280,13 @@ def test_xuanhuan_profile_has_higher_budget():
 |---|---|
 | 架构 | GenreRuntimeProfile 可插拔，无画像回退旧行为 |
 | 数据 | `genre_runtime_profiles` 表存在，默认 sci-fi 记录与当前行为等价 |
+| 基线 | `scifi` profile 快照完整，可通过 `--end 10` 回归验证行为等价 |
 | xuanhuan end 15 | 8/8 accepted，无 context_emergency_budget_ratio_halt |
 | xuanhuan end 20 | 20/20 accepted，或 gaps 有明确 isolate 记录 |
 | scifi regression | `--end 10` 100% accepted，指标不劣化 |
 | wuxia/urban | `--end 10` 无 budget halt |
-| 连续性 | xuanhuan Ch8 overdue foreshadowing < 5（基线 13） |
+| 一致性 | xuanhuan Ch8 overdue foreshadowing < 5（基线 13） |
+| 密度 | 引入 Consistency Error Density (CED)：`(critical + major issues with evidence_quote) / chapter_words`，各体裁 CED ≤ sci-fi 同级 |
 | 测试 | pytest 全绿，ruff 无新增错误 |
 
 ## 出口标准
@@ -279,9 +294,10 @@ def test_xuanhuan_profile_has_higher_budget():
 Task 173 完成后需产出：
 
 1. `tasks/173-genre-runtime-profiles-DONE.md` 记录最终参数与验证结果；
-2. `docs/reports/173g-genre-short-window-validation.md` 多体裁短窗口报告；
-3. 将 xuanhuan/wuxia/urban Profile 登记到 `docs/STATUS.md` 的 V7 阶段事实；
-4. 明确 Task 174（Ch100+ 多体裁长跑验证）的触发条件。
+2. `docs/reports/173a-context-diet-constants-audit.md` 与 `docs/reports/173a-scifi-baseline-profile.json`；
+3. `docs/reports/173g-genre-short-window-validation.md` 多体裁短窗口报告；
+4. 将 xuanhuan/wuxia/urban Profile 登记到 `docs/STATUS.md` 的 V8 阶段事实；
+5. 明确 Task 174（Ch100+ 多体裁长跑验证）的触发条件。
 
 ## 验证命令
 

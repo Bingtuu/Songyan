@@ -42,8 +42,9 @@
 ## 下一步
 
 1. **V8 P0**：启动 Task 173 `GenreRuntimeProfile`。
-2. 先完成 173a 现状审计，把 Context Diet 2.0 中体裁敏感的常量/阈值枚举清楚。
-3. 再依次完成 173b 数据模型、173c 加载机制、173d 预算分配、173e 门禁阈值、173f 状态压缩、173g 多体裁短窗口验证。
+2. 先完成 173a 现状审计，把 Context Diet 2.0 中体裁敏感的常量/阈值枚举清楚，并**把当前 sci-fi 默认行为显式固化为 baseline profile**。
+3. 按 173b→173g 依次推进；过程中引入 **Consistency Error Density (CED)** 作为跨体裁可比指标。
+4. 长调研结论已写入 `docs/reports/v8-literature-and-landscape-review.md`，后续设计以此报告为外部依据。
 
 ## 入口
 
