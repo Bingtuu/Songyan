@@ -77,7 +77,7 @@ V8 通过 = 同时满足以下五项：
 
 | Task | 名称 | 状态 | 事实文档 |
 |------|------|:----:|----------|
-| 172d | 文学护栏 lexicon + 主角名跨体裁化 | ◻ 规划中 | `tasks/172d-cross-genre-literary-guardrails.md` |
+| 172d | 文学护栏 lexicon + 主角名跨体裁化 | 🔄 代码完成 | `tasks/172d-cross-genre-literary-guardrails.md` |
 
 > **172d 定位**：把 `literary_guardrail_observe.py` 的科幻硬编码（`protagonist_name="林渊"` + 5 组主动选择/配角/代价 lexicon）参数化——主角名从 `protagonist_profile` 读取，lexicon 迁入 `GenreProfile` 并为 xuanhuan/wuxia/urban 各配一套，无 profile 回退科幻组。**172d 必须先于 172a.7 落地**：172a.7 的多体裁短窗口质量报告正是用文学 observe 路径渲染的，不修 172d 则 xuanhuan 报告会因找不到"林渊/按下"而每章判 MISSING，验收报告失真。
 
