@@ -229,7 +229,7 @@ def create_project(outline_file: str | None, template_id: str | None) -> None:
     except _CLI_CATCHABLE as exc:
         raise click.ClickException(str(exc)) from exc
 
-    click.echo(f"\n✓ 项目已创建: {project_id}")
+    click.echo(f"\n[OK] 项目已创建: {project_id}")
     click.echo(f"  模式: {project.mode_id}")
     click.echo(f"  题材: {project.genre_id}")
     click.echo(f"  标题: {project.title or '(未命名)'}")

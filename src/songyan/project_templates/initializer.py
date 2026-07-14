@@ -17,9 +17,11 @@ from songyan.db.settlement_repo import (
     SettingSnapshotRepository,
 )
 from songyan.models import (
+    ArcPlan,
     Character,
     NewSetting,
     NumericalUpdate,
+    PlotThread,
     ProjectSetting,
 )
 from songyan.models.character import DialogueStyleCard
@@ -64,12 +66,12 @@ class ProjectInitializer:
             outline, arcs, threads = outline_tuple
             # outline 是 dummy project_id 加载的，需要替换为真实 project_id
             outline.project_id = project_id
+            # 线索 ID 在全局唯一，多项目共库时会冲突；按项目作用域前缀化
+            threads, arcs = _prefix_thread_ids(project_id, threads, arcs)
             for arc in arcs:
                 arc.project_id = project_id
                 if arc.arc_id.startswith("dummy-"):
                     arc.arc_id = arc.arc_id.replace("dummy", project_id, 1)
-            for thread in threads:
-                thread.project_id = project_id
             await NarrativeRepository().import_outline(project_id, outline, arcs, threads)
 
         return project_id, template.project_setting
@@ -151,3 +153,41 @@ async def _import_seed_numerical_system(
             )
             ledger_id = new_id("num")
             await numerical_repo.create(update, project_id, 0, ledger_id)
+
+
+def _prefix_thread_ids(
+    project_id: str,
+    threads: list[PlotThread],
+    arcs: list[ArcPlan],
+) -> tuple[list[PlotThread], list[ArcPlan]]:
+    """把线索 ID 加上项目前缀，避免同一数据库中多项目冲突.
+
+    同时更新 arc_plans 中对线索的引用。返回深拷贝后的新对象，不污染模板实例。
+    """
+    mapping: dict[str, str] = {}
+    new_threads: list[PlotThread] = []
+    for thread in threads:
+        new_id_val = f"{project_id}-{thread.thread_id}"
+        mapping[thread.thread_id] = new_id_val
+        new_threads.append(
+            thread.model_copy(
+                update={"project_id": project_id, "thread_id": new_id_val}, deep=True
+            )
+        )
+
+    new_arcs: list[ArcPlan] = []
+    for arc in arcs:
+        new_open = [mapping.get(tid, tid) for tid in arc.threads_to_open]
+        new_resolve = [mapping.get(tid, tid) for tid in arc.threads_to_resolve]
+        new_arcs.append(
+            arc.model_copy(
+                update={
+                    "project_id": project_id,
+                    "threads_to_open": new_open,
+                    "threads_to_resolve": new_resolve,
+                },
+                deep=True,
+            )
+        )
+
+    return new_threads, new_arcs

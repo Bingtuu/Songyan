@@ -101,3 +101,27 @@
 
 - `ProjectInitializer.from_template()` 按现有 repository 模式顺序写入 DB，非原子事务；这是当前 repository 层的已知限制，与 Task 172 范围无关。
 - `scripts/run_172_short_window.py` 全量运行消耗 API 预算；合并前只需完成降级策略即可。
+
+---
+
+## 六、执行记录（2026-07-14）
+
+- [x] P0-1：20 passed
+- [x] P0-2：2441 passed, 2 skipped, 210 deselected
+- [x] P0-3：ruff / mypy 无新增告警
+- [x] P1-1：7 个体裁模板加载 + 携带大纲全部 True
+- [x] P1-2：变体模板 `xuanhuan/cultivation` 加载输出 `万道独尊 韩立 韩立 True`
+- [x] P1-3：CLI `--template` 为 7 个体裁均成功创建项目
+- [x] P1-4：Harness `--init` 为 7 个体裁均成功创建项目
+- [x] P1-5：`run_172_short_window.py --help` 正常
+- [ ] P2-1：`scifi + xuanhuan` Ch1–Ch3 LLM 短章验证正在后台运行（`bash-nhrurdrk`）
+- [ ] P2-2 / P2-3：未执行
+- [x] P3-1：未知模板报错友好
+- [x] P3-2：循环继承检测 2 passed
+- [x] P3-3：无模板交互式 CLI 在 UTF-8 终端正常创建项目
+- [x] P3-4：`run_171_ch200.py --init` 默认 `scifi` 行为不变
+
+### 合并前修复
+
+1. `src/songyan/project_templates/initializer.py`：从模板导入大纲时，将 `thread_id` 前缀化为 `{project_id}-{original_thread_id}`，避免同一数据库中多项目线索 ID 冲突；同步更新 `arc_plans` 中的 `threads_to_open` / `threads_to_resolve` 引用。
+2. `src/songyan/cli/main.py`：将项目创建成功提示中的 Unicode 对勾 `✓` 替换为 ASCII `[OK]`，避免 Windows GBK 控制台编码错误导致 CLI 退出码非零。
