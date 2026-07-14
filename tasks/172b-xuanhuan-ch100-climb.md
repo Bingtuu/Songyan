@@ -104,6 +104,14 @@ Ch13 早期读（`up_to≥100` 才是终判）：budget 0.938 / CED 10.12（boun
 
 > **CED 中途轨迹观测**（Ch21 深度实读，`.tmp/probe_ced_trend.py`）：累计 CED 在 Ch15（10.84）/Ch20（11.01）**曾超 Ch100 尺度 ceiling（10.50）**，Ch21 回落 10.53。热点集中在多轮修订章（Ch8=74 / Ch19=64 / Ch15=56 / Ch20=55 条 evidence issue）。此为 CED 门在 Ch100 终判的**首要风险**；口径与 sci-fi 严格对称，故若终判 FAIL 走上表 172b.p「定点修复热点章」预案，**严禁放宽 tolerance**。
 
+### 4.1 实跑事故记录：resume 短路致 Ch26-100 从未生成（已修复，commit `dd5ac8a`）
+
+**现象**：首轮爬坡在 Ch25 accepted 后「完成」，报告 4 段 accepted 恒为 25，Ch26-100 从未产出（分段表 up_to=50/75/100 的 accepted 均为 25，words 恒 86066）。
+
+**根因**：`run_project_pipeline` 的 completed-run 幂等短路（`phase2_graph.py`）只判 `existing_run.status == "completed"`，未判「请求范围是否已全部 accepted」。分段爬坡逐段扩大 end（seg1 `(1,25)` 完成并把 run 标 completed；seg2/3/4 `(1,50)/(1,75)/(1,100)` resume 复用该 run），后续段命中 completed 即在 ~3s 内 0 生成短路返回。
+
+**修复**：短路条件加 `_compute_resume_start(start,end,accepted) > end`（仅当请求范围已全部 accepted 才短路），否则落入既有 resume 续跑路径（重标 running、更新 end、从首个缺口章续跑）。回归测试 `test_resume_completed_run_expanded_range_continues`（completed run `(1,2)` + 请求 `(1,4)` → 生成 Ch3-4、跳过 Ch1-2）；既有 `test_resume_completed_run_returns_early`（全 accepted 范围仍短路）保持通过，幂等性不破。15/15 resume 测试通过。重启后实跑日志确认 `resume completed_count=25 previous_status=completed` 后 **`chapter_start chapter_number=26`**，续跑生效。
+
 
 ## 5. 依赖
 
