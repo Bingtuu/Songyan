@@ -70,6 +70,8 @@ _EXPECTED_TABLES: list[str] = [
     "adaptive_gate_signal_snapshots",
     # V7 阶段 Y: adaptive halt decisions（Task 169a）
     "adaptive_halt_decisions",
+    # V8 Task 172a.2: 体裁运行时画像
+    "genre_runtime_profiles",
 ]
 
 
@@ -967,7 +969,25 @@ async def init_schema(db_path: str | Path | None = None) -> None:
         await _migrate_foreshadowing_schedule(conn)
         await _migrate_adaptive_gate_signals(conn)
         await _migrate_adaptive_halt_decisions(conn)
+        await _migrate_genre_runtime_profiles(conn)
         await conn.commit()
+
+
+async def _migrate_genre_runtime_profiles(conn: aiosqlite.Connection) -> None:
+    """创建体裁运行时画像表（V8 Task 172a.2）.
+
+    存储 GenreRuntimeProfile 的序列化快照，按 genre 唯一。无记录体裁在
+    load_profile 层回退代码内 scifi baseline，保证旧行为不变。
+    """
+    await conn.execute(
+        """CREATE TABLE IF NOT EXISTS genre_runtime_profiles (
+            genre        TEXT PRIMARY KEY,
+            version      TEXT NOT NULL DEFAULT '172a.2',
+            profile_json TEXT NOT NULL DEFAULT '{}',
+            created_at   TEXT DEFAULT (datetime('now')),
+            updated_at   TEXT DEFAULT (datetime('now'))
+        )"""
+    )
 
 
 async def verify_schema(conn: aiosqlite.Connection) -> list[str]:
@@ -1028,4 +1048,5 @@ async def run_migrations(conn: aiosqlite.Connection) -> None:
     await _migrate_foreshadowing_schedule(conn)
     await _migrate_adaptive_gate_signals(conn)
     await _migrate_adaptive_halt_decisions(conn)
+    await _migrate_genre_runtime_profiles(conn)
     logger.info("migrations.run_all", status="complete")

@@ -77,6 +77,13 @@ from songyan.models.genre import (
     StyleBaseline,
     SubGenre,
 )
+from songyan.models.genre_runtime_profile import (
+    CharacterDecayProfile,
+    ContinuityToleranceProfile,
+    ForeshadowingEvaporationProfile,
+    GenreRuntimeProfile,
+    SettingEvaporationProfile,
+)
 from songyan.models.human_instruction import HumanInstruction
 from songyan.models.human_mark import HumanMark, SuggestedMark
 from songyan.models.literary import LiteraryAuditResult, LiteraryObservation
@@ -163,6 +170,12 @@ __all__ = [
     "SensoryTemplate",
     "EmotionArc",
     "StyleBaseline",
+    # genre runtime profile (Task 172a)
+    "GenreRuntimeProfile",
+    "SettingEvaporationProfile",
+    "ForeshadowingEvaporationProfile",
+    "CharacterDecayProfile",
+    "ContinuityToleranceProfile",
     # creative_mode
     "CreativeModeProfile",
     "CreativeBrief",
