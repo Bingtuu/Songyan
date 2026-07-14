@@ -60,7 +60,7 @@ class NewModel(BaseModel):
 ## 验收标准（Acceptance Criteria）
 
 - [ ] `pytest tests/test_xxx.py -v` 全部通过
-- [ ] 代码符合 CLAUDE.md 规范（类型标注、单文件 < 400 行等）
+- [ ] 代码符合 AGENTS.md 规范（类型标注、单文件 < 400 行等）
 - [ ] 不违反任何不可违背规则
 - [ ] 更新了 docs/STATUS.md
 - [ ] 生成了 tasks/00x-xxx-DONE.md 交接文件

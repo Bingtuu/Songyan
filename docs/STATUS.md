@@ -1,57 +1,56 @@
 # Songyan 项目状态
 
-> 短状态板。这里只保留当前判断、最新证据和下一步，避免挤占开发上下文。任务细节看 `tasks/V7-README.md`，文档路由看 `docs/INDEX.md`，长历史看 `archive/`。
+> 短状态板。这里只保留当前判断、最新证据和下一步，避免挤占开发上下文。任务细节看 `tasks/V8-README.md`，文档路由看 `docs/INDEX.md`，长历史看 `archive/`。
 
 ## 当前判断
 
 | 项 | 结论 |
 |----|------|
-| 当前阶段 | V7 阶段 Z：Ch200 已完成，171w 硬化已闭环，可评估进入 172 |
-| 是否可进入 172 | **是**。Ch201-Ch220 20/20 accepted，Ch207 settlement 缺口已修复；171w-a/b/c/d 四工作包全部落地 |
-| 主线事实 | Task 171 Ch200：run `run-fb39245c`，200/200 accepted，gaps=[]，Halt=None |
-| D1 洁净度 | 171t/171u 后 Ch200 accepted head 达成 D1 hard clean pass：T9 meta/artifact=0、duplicate=0，T6b critical orphan peak=0 |
-| 171v 小窗口 | run `run-e27b763f`，Ch201-Ch220 **20/20 accepted，failed=[], Halt=None, status=completed** |
-| 171w 进展 | 171w-a 报告脚本参数化 / 171w-b 持久化审计 / 171w-c 正文 observe + ReviewMerger 接线 / 171w-d Ch207 settlement 修复 + 重验均已落地 |
-| 当前风险 | **P0 已全部清零**，高优先级 P1 已按用户决策完成；P1-13 保持"DB 回填 + warning"行为；其余 P1/P2 债务按 pass13 报告分批治理 |
+| 当前阶段 | **V8**：多体裁可插拔质量 + 章数爬坡 |
+| V7 收尾 | **已完成**。sci-fi/space_opera + webnovel_intense 单一体裁稳定跑到 Ch200，200/200 accepted，D1 hard clean pass；Ch201-Ch220 20/20 accepted |
+| V7→V8 调整 | 结束单一体裁 Ch250/Ch300 继续爬坡；原 Task 172 取消归档，Task 173 从"Ch300 验收"改判为"多体裁运行时画像" |
+| V8 主线 | **Task 173 体裁运行时画像（GenreRuntimeProfile）**：把 Context Diet 2.0 的运行时契约从 sci-fi 默认值解耦 |
+| 当前风险 | xuanhuan `--end 15` 在 Ch8 因 `budget_used_before_emergency=1.4019 >= 1.3` 触发硬门禁暂停，暴露系统对科幻状态动力学过拟合 |
 
 ## 最新证据
 
 | 维度 | 事实 |
 |------|------|
-| 小窗口稳定性 | Ch201-Ch220 **20/20 accepted，failed=[], Halt=None, status=completed** |
-| Ch207 修复 | Settlement 数值闭合：解析层 + 验证层双层兜底，LLM 返回 closing_value=0.0 时自动从公式推导；已 accept（`rev-207-7-edf1218b`） |
-| T9 hard clean | accepted 20 章 meta/artifact=0、duplicate=0，D1 洁净护栏继续有效 |
-| 171v 护栏持久化 | `creative_briefs` 四字段（protagonist_active_choice / new_concept_budget / fatigue_motif_replacements / supporting_character_goal）已完整持久化，可回读审计 |
-| 配角目标检测 | 正文 observe 已硬化；ReviewMerger 接线将缺失升级为 major patchable issue（CHARACTER_BEHAVIOR） |
-| 报告口径 | Ch200 主报告 run_id 已校准为 `run-fb39245c`；脚本支持 `--run-id` / `--output` / `--include-legacy-harness`；旧 V6 harness 表默认不输出 |
+| V7 单一体裁达成 | Ch1-Ch200 200/200 accepted；Ch201-Ch220 20/20 accepted；T9 hard clean 持续为 0 |
+| 多体裁短窗口 | xuanhuan `--end 3` 通过；`--end 15` 在 Ch8 被 budget ratio halt 阻塞 |
+| 根因 | V5/V6/V7 验证集中在 sci-fi，默认运行时是科幻的隐式画像；xuanhuan 状态项密度（功法/境界/势力/法宝/地图）远超科幻，导致 Context Diet 默认预算溢出 |
+| 方向 | 结束单一体裁无限爬坡，建立按体裁定制的 `GenreRuntimeProfile` |
 
 ## 最近验证
 
 | 命令 / 证据 | 结果 |
 |-------------|------|
-| `python -m pytest tests/test_171v_literary_guardrails.py tests/test_creative_director.py tests/test_writer.py tests/test_rule_auditor.py -q` | 173 passed |
-| `python -m pytest tests/test_171v_literary_guardrails.py tests/test_108_core_nodes.py tests/test_rule_auditor.py -q` | 100 passed |
-| `python -m pytest tests/ -q` | 2623 passed, 2 skipped, 1 xfailed, 2 warnings in 644.15s |
-| `python -m pytest -m "not performance" tests/ -q` | 2414 passed, 2 skipped, 210 deselected in 175.59s |
-| `mypy src/` | Success: no issues found in 157 source files |
-| `ruff check src/ tests/` | 14 pre-existing warnings (E501/E402/W292/I001), no new alerts |
-| Ch201-Ch220 171w-d 重验 | 20/20 accepted, failed=[], Halt=None, status=completed |
-| pass13 审计修复验证 | 见 `docs/reports/v7-audit/pass13-fix-validation-report.md` |
+| V7 收尾验证 | Ch1-Ch220 全 accepted，T9=0，Halt=None |
+| xuanhuan `--end 3` | completed=[1,2,3]，failed=[]，T9=0（后台任务已超时结束） |
+| xuanhuan `--end 15` | Ch8 触发 `context_emergency_budget_ratio_halt`（后台任务已清理） |
+| `python -m pytest tests/test_163_concept_budget.py tests/test_164_text_cleanliness.py tests/test_171u_d1_clean_application.py -q` | 31 passed |
+| `ruff check src/ tests/` | 14 pre-existing warnings，无新增 |
+
+## 项目整理
+
+- V5/V6/V7 历史报告已归档到 `archive/v5/reports/`、`archive/v6/reports/`、`archive/v7/reports/`。
+- Task 170 文学提质中间过程稿已归档到 `archive/v7/tasks/`，入口保留总览与关键 DONE 文档。
+- Task 172（Ch250）已归档到 `archive/v7/tasks/172-ch250-transition-validation-archived.md`。
+- `.tmp/` 已清理，仅保留当前关键数据库与实验数据。
+- 后台任务已全部清理，当前无活动后台任务。
 
 ## 下一步
 
-1. pass13 审计修复已完成并验证：P0 清零，高优先级 P1 按用户决策完成，详见 `docs/reports/v7-audit/pass13-fix-validation-report.md`。
-2. **P1-13 已决策**：保持 `character_update.old_value` "DB 回填 + warning"行为，不引入严格报错 / `needs_human_review`。
-3. 171w 四个工作包（a/b/c/d）已全部落地，Ch201-Ch220 20/20 accepted。
-4. 可启动 Task 172 Ch250 长跑验证。
+1. **V8 P0**：启动 Task 173 `GenreRuntimeProfile`。
+2. 先完成 173a 现状审计，把 Context Diet 2.0 中体裁敏感的常量/阈值枚举清楚。
+3. 再依次完成 173b 数据模型、173c 加载机制、173d 预算分配、173e 门禁阈值、173f 状态压缩、173g 多体裁短窗口验证。
 
 ## 入口
 
-- V7 任务事实：`tasks/V7-README.md`
-- 171v 任务事实：`tasks/171v-ch200-plus-literary-readability-guardrails.md`
-- 当前 hardening 规格：`tasks/171w-171v-hardening-and-ch201-ch220-rerun.md`
-- Ch200 主报告：`docs/reports/task-171-ch200-long-run-report.md`
-- Ch201-Ch220 窗口报告：`docs/reports/task-171w-ch201-ch220-window-report.md`
-- Ch200 分析：`docs/reports/task-171-ch200-analysis-and-next-step-report.md`
-- 文学框架：`docs/reports/v7-literary-framework-review.md`
-- 文档索引：`docs/INDEX.md`
+- V8 任务事实：`tasks/V8-README.md`
+- V7 历史事实：`tasks/V7-README.md`
+- 文档路由：`docs/INDEX.md`
+- Task 173 规划：`tasks/173-genre-runtime-profiles.md`
+- V7 归档：`archive/v7/INDEX.md`
+- V6 归档：`archive/v6/INDEX.md`
+- V5 归档：`archive/v5/INDEX.md`

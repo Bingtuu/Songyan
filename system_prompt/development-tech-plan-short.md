@@ -142,7 +142,7 @@ GoalPlanner ──▶ CreativeDirector ──▶ ContextManager ──▶ Writer
 ```
 songyan/
 ├── pyproject.toml, .env.example, README.md
-├── CLAUDE.md                     # 不可违背规则清单
+├── AGENTS.md                     # 不可违背规则清单
 ├── creative_modes/               # 创作模式配置（webnovel/literary/hybrid.json）
 ├── genres/                       # 题材配置（xuanhuan/urban/scifi.json）
 ├── prompts/                      # Agent Prompt 模板（不在代码里写长字符串）

@@ -39,7 +39,7 @@ LLM_TEMPERATURE=0.7
 
 ```
                     ┌──────────────┐
-                    │   CLAUDE.md   │  ← 所有 AI 必须读，不可违背规则
+                    │   AGENTS.md   │  ← 所有 AI 必须读，不可违背规则
                     │  (全局约束)   │
                     └──────┬───────┘
                            │
@@ -67,7 +67,7 @@ LLM_TEMPERATURE=0.7
 ```markdown
 ## 启动协议
 
-1. 读取 `CLAUDE.md`（全局约束）
+1. 读取 `AGENTS.md`（全局约束）
 2. 读取 `system_prompt/development-tech-plan-v2.md`（技术方案）
 3. 读取 `docs/STATUS.md`（当前项目状态）
 4. 读取 `tasks/00x-xxx.md`（当前 Task 规格）
@@ -78,7 +78,7 @@ LLM_TEMPERATURE=0.7
 
 ### 2.3 为什么能保持一致性
 
-- **CLAUDE.md 是"宪法"**：所有 AI 必须遵守，违反会触发审查
+- **AGENTS.md 是"宪法"**：所有 AI 必须遵守，违反会触发审查
 - **Task 文件是"合同"**：当前 AI 只对这个 Task 负责，不越界
 - **STATUS.md 是"黑板"**：记录当前进度，防止 AI 重复做已完成的任务
 
@@ -164,7 +164,7 @@ AI-2 接手 Task 009
   │
   ├──▶ 读取 docs/STATUS.md（了解当前状态）
   ├──▶ 读取 tasks/008-goal-planner-DONE.md（了解上游输出）
-  ├──▶ 读取 CLAUDE.md + 技术方案（确认规范）
+  ├──▶ 读取 AGENTS.md + 技术方案（确认规范）
   ├──▶ 读取 tasks/009-creative-director.md（当前 Task）
   │
   └──▶ 执行"先读后做"协议 → 开始开发
@@ -192,7 +192,7 @@ AI 完成任务时必须确认：
 
 - [ ] 代码实现完成
 - [ ] 测试通过（pytest -v）
-- [ ] 不违反 CLAUDE.md 任何规则
+- [ ] 不违反 AGENTS.md 任何规则
 - [ ] 更新了 docs/STATUS.md
 - [ ] 生成了 tasks/00x-xxx-DONE.md 交接文件
 - [ ] git commit 提交（包含代码 + 文档）
@@ -200,7 +200,7 @@ AI 完成任务时必须确认：
 
 AI 接手任务时必须确认：
 
-- [ ] 读取了 CLAUDE.md
+- [ ] 读取了 AGENTS.md
 - [ ] 读取了技术方案 V2
 - [ ] 读取了 docs/STATUS.md
 - [ ] 读取了当前 Task 文件

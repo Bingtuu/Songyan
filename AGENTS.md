@@ -6,7 +6,7 @@
 
 1. 读取 `AGENTS.md`。
 2. 读取 `docs/STATUS.md`。
-3. 若任务指定 Task，读取对应 `tasks/<id>-*.md` 或相关 `*-DONE.md`；V1-V5.0 早期任务（001-120）已归档到 `archive/tasks/`。
+3. 若任务指定 Task，读取对应 `tasks/<id>-*.md` 或相关 `*-DONE.md`；V1-V5.0 早期任务（001-120）已归档到 `archive/tasks/`；V6/V7 任务已收尾，事实入口分别见 `tasks/V6-README.md`、`tasks/V7-README.md`。
 4. 用 5-8 行说明任务边界，再改代码或文档。
 5. 默认按现有架构和文档事实源推进，不重复扫描归档目录。
 
@@ -14,20 +14,26 @@
 
 - 项目状态：`docs/STATUS.md`
 - 文档路由：`docs/INDEX.md`
-- V6 任务事实（当前阶段）：`tasks/V6-README.md`
-- V6 阶段规划：`docs/v6-plan.md`；论证基础：`docs/300-chapter-gap-analysis.md`
+- V8 任务事实（当前阶段）：`tasks/V8-README.md`
+- V8 P0 任务规划：`tasks/173-genre-runtime-profiles.md`
+- V7 历史任务事实（已收尾）：`tasks/V7-README.md`
+- V6 历史任务事实（已收尾）：`tasks/V6-README.md`
 - V5 历史任务事实：`tasks/V5-README.md`
-- 历史归档：`archive/v5/INDEX.md`、`archive/v4/INDEX.md`；V1-V5.0 早期任务见 `archive/tasks/`
+- 论证基础：`docs/300-chapter-gap-analysis.md`
+- 历史归档：`archive/v7/INDEX.md`、`archive/v6/INDEX.md`、`archive/v5/INDEX.md`、`archive/v4/INDEX.md`；V1-V5.0 早期任务见 `archive/tasks/`
 
 ## 项目定位
 
 V5（V5.0/V5.1/V5.2）已全部工程验收通过：Context Diet 2.0 支撑长篇生成，enforce 默认启用，Ch1-Ch150 150/150 accept，P0/P1 风险为 0。
 
-当前进入 **V6**（Task 141-159）：给系统装上最小可用的叙事骨架（自顶向下大纲 / 弧 / 线索经济 MVP），同步建立长篇质量度量，并补足无人值守长跑底盘，目标验证到 Ch100-150。首批优先级：
+V6（Task 141-159）已完成：叙事骨架 MVP（StoryOutline / ArcPlan / PlotThread）、长篇质量度量、无人值守长跑底盘，验证到 Ch100-150。
 
-1. 阶段 0：叙事骨架数据模型（StoryOutline / ArcPlan / PlotThread）与 GoalPlanner 自顶向下派生（Task 141-144）。
-2. 阶段 A：orphan 绝对量 / 新 critical 速率 / 质量债 / 文学趋势 / 弧级伏笔兑现率入库度量（Task 145-148）。
-3. 阶段 B/C：末端治理与 run 级断点续跑（须待骨架 + 度量落地后再开工）。
+V7（Task 160-171w）已收尾：篇章级质量修复 → 叙事自驱 → enforce 可生产化 → **sci-fi 单一体裁 Ch200 达成**。原 Task 172/173 单一体裁 Ch250/Ch300 目标取消。
+
+当前进入 **V8**（Task 173-175）：**多体裁可插拔质量 + 章数爬坡**。核心是把 Context Diet 2.0 的运行时契约从 sci-fi 隐式画像解耦，建立 `GenreRuntimeProfile`，让 xuanhuan/wuxia/urban 等体裁在短窗口稳定通过，再逐步爬坡到 Ch100/Ch150。首批优先级：
+
+1. **Task 173a-g**：建立 `GenreRuntimeProfile` 机制（数据模型、加载、预算分配、门禁阈值、状态压缩、多体裁短窗口验证）。
+2. **Task 174/175**：选择 1-2 个非 sci-fi 体裁推进到 Ch100/Ch150。
 
 ## 不可违背规则
 
@@ -80,6 +86,7 @@ V5（V5.0/V5.1/V5.2）已全部工程验收通过：Context Diet 2.0 支撑长�
 - 设定/伏笔按 `resolve_confidence` 蒸发，低 confidence 自动 archive。
 - `budget_used > 1.0` 时触发 ContextEmergency，只保留硬约束 + 主角档案 + ChapterGoal。
 - Context Diet 2.0 四组件协同生效，不单独启用。
+- **V8 新增**：Context Diet 2.0 的运行时契约（预算分配、门禁阈值、状态压缩、伏笔蒸发）必须能按体裁通过 `GenreRuntimeProfile` 定制；无 Profile 体裁必须 100% 回退旧行为。
 
 ## 代码规范
 
@@ -90,7 +97,7 @@ V5（V5.0/V5.1/V5.2）已全部工程验收通过：Context Diet 2.0 支撑长�
 - IO 操作优先 async/await。
 - 日志用 structlog，不用 print。
 - 错误处理用自定义异常，不用裸 except。
-- 不新增无用抽象。V6 允许新增叙事骨架相关模型/表（StoryOutline / ArcPlan / PlotThread）与度量入库逻辑，但仍遵守 MVP 边界：不做自动重规划闭环、不新增 Genre / Mode / Agent / Workflow 节点（除非规划稿明确要求）；无大纲项目必须能回退旧行为。
+- 不新增无用抽象。V8 允许新增 `GenreRuntimeProfile` 相关模型/表与加载逻辑，但仍遵守 MVP 边界：不做自动重规划闭环、不新增 Agent / Workflow 节点（除非规划稿明确要求）；无 Profile 项目必须能回退旧行为。
 
 ## 验证要求
 
@@ -109,3 +116,4 @@ Windows 下长跑或 pytest 卡住时，按 `archive/v5/context-docs/AGENTS-full
 - 不用 `git reset --hard` 或 `git checkout --` 覆盖用户改动。
 - 当前入口保持短；长历史、旧规划、旧报告放入 `archive/`。
 - 归档内容默认不读，除非用户要求追溯历史决策。
+- V8 新增的历史产物（V5/V6/V7 报告、Task 170/172 等）已归档至 `archive/v5/`、`archive/v6/`、`archive/v7/`，入口见各 `INDEX.md`。

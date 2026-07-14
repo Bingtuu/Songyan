@@ -22,13 +22,13 @@ AI 的上下文窗口有限（通常 200K tokens）。当多个 AI 分步开发�
 
 | 文档 | 大小 | 加载方式 |
 |------|------|----------|
-| CLAUDE.md | ~5K tokens | **每次启动必加载**（全局约束） |
+| AGENTS.md | ~5K tokens | **每次启动必加载**（全局约束） |
 | development-tech-plan-v2.md | ~8K tokens | **每次启动必加载**（架构层） |
 | ai-collaboration-guide.md | ~4K tokens | 首次参与时加载，后续可选 |
 | docs/STATUS.md | ~1K tokens | **每次启动必加载**（状态看板） |
 | docs/INDEX.md | ~0.5K tokens | 首次参与时加载 |
 
-**固定开销合计：~10-15K tokens**（CLAUDE.md + 技术方案 + STATUS.md）
+**固定开销合计：~10-15K tokens**（AGENTS.md + 技术方案 + STATUS.md）
 
 ### 2.2 任务层（按需加载，只加载当前相关）
 
@@ -66,7 +66,7 @@ class AgentContextBudget:
     total_budget: int = 128_000           # 总上下文窗口
     
     # 固定开销（必读）
-    claude_md: int = 5_000                # CLAUDE.md
+    claude_md: int = 5_000                # AGENTS.md
     tech_plan: int = 8_000                # V2 技术方案
     status_md: int = 1_000                # STATUS.md
     

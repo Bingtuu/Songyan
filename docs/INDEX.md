@@ -8,234 +8,91 @@
 |------|------|
 | `AGENTS.md` | 开发代理短指令与不可违背规则 |
 | `docs/STATUS.md` | 当前状态、测试口径、下一步 |
-| `tasks/V7-README.md` | **V7 任务事实入口（当前阶段）**：篇章级质量修复 → 叙事自驱 → enforce 可生产化 → Ch300 渐进爬坡，Task 160-173 |
-| `tasks/160-meta-tag-leak-eradication-DONE.md` | Task 160：元标记泄漏根治（Writer/RevisionHandler 默认清洗 + ReviewMerger 阻塞） |
-| `tasks/161-paragraph-dedup-DONE.md` | Task 161：段落级去重（分段修订拼接去重 + 重复长段落诊断） |
-| `tasks/162-cross-chapter-timeline-consistency-DONE.md` | Task 162：跨章时间线一致性诊断（确定性时间信号 + metrics 诊断段） |
-| `tasks/163-concept-budget-constraint-DONE.md` | Task 163：概念预算约束（概念台账 + CreativeDirector 规划侧约束 + metrics 诊断段） |
-| `tasks/164-text-cleanliness-metrics-DONE.md` | Task 164：文本洁净度度量入库 + metrics 展示 + T9 harness |
-| `tasks/165-stage-w-ch150-rerun-and-threshold-freeze-DONE.md` | Task 165：阶段 W 出口 Ch1-Ch150 复跑验证 + T9/T10 冻结（已完成） |
-| `tasks/165p-stage-w-harness-calibration-DONE.md` | Task 165p：阶段 W 出口阻断项，T5/T6 harness 口径校准（已完成） |
-| `docs/reports/task-165-stage-w-exit-report.md` | Task 165：阶段 W 出口报告（150/150 accepted，P/L/不回退均通过） |
-| `tasks/166-plan-generate-replan-loop-DONE.md` | Task 166：plan→generate→re-plan 闭环总览（已完成） |
-| `tasks/166a-arc-outcome-evaluation-and-replan-proposal-DONE.md` | Task 166a：弧后评估与 ReplanProposal 生成（已完成） |
-| `tasks/166b-approved-replan-application-DONE.md` | Task 166b：人工确认后的 re-plan 应用（已完成） |
-| `tasks/167-long-range-foreshadowing-active-scheduling.md` | Task 167：长程伏笔主动兑现调度（规划文档，拆 167a/167b） |
-| `tasks/167-long-range-foreshadowing-active-scheduling-DONE.md` | Task 167：长程伏笔主动兑现调度（已完成） |
-| `tasks/167a-foreshadowing-schedule-plan-DONE.md` | Task 167a：主动伏笔调度计划生成（已完成） |
-| `tasks/167b-schedule-injection-and-lifecycle-DONE.md` | Task 167b：调度计划注入与生命周期推进（已完成） |
-| `tasks/168-adaptive-gate-data-plane.md` | Task 168：自适应门禁数据面（规划文档，拆 168a/168b） |
-| `tasks/168-adaptive-gate-data-plane-DONE.md` | Task 168：自适应门禁数据面（已完成） |
-| `tasks/168a-adaptive-gate-signal-snapshot.md` | Task 168a：自适应门禁信号快照模型（规划文档） |
-| `tasks/168a-adaptive-gate-signal-snapshot-DONE.md` | Task 168a：自适应门禁信号快照模型（已完成） |
-| `tasks/168b-adaptive-gate-window-reporting.md` | Task 168b：自适应门禁窗口聚合与报告出口（规划文档） |
-| `tasks/168b-adaptive-gate-window-reporting-DONE.md` | Task 168b：自适应门禁窗口聚合与报告出口（已完成） |
-| `tasks/169-adaptive-halt-decision.md` | Task 169：自适应 halt 判定（规划文档，拆 169a/169b） |
-| `tasks/169-adaptive-halt-decision-DONE.md` | Task 169：自适应 halt 判定（已完成） |
-| `tasks/169a-adaptive-halt-decision-engine.md` | Task 169a：自适应 halt 判定引擎与决策账本（规划文档） |
-| `tasks/169a-adaptive-halt-decision-engine-DONE.md` | Task 169a：自适应 halt 判定引擎与决策账本（已完成） |
-| `tasks/169b-adaptive-halt-workflow-integration.md` | Task 169b：自适应 halt workflow 接入（规划文档） |
-| `tasks/169b-adaptive-halt-workflow-integration-DONE.md` | Task 169b：自适应 halt workflow 接入（已完成） |
-| `tasks/170-enforce-small-window-validation-and-t12-calibration-DONE.md` | Task 170：enforce 小窗口验证 + T12 误报率标定（已完成；良性 FP rate=0、真实退化拦截率 100%，T12 已冻结） |
-| `tasks/170-literary-quality-remediation-README.md` | **文学提质专项总览（170b–170p，已结束）**：历史记录——量具优先原则、路径 B 复盘；其"Ch200 硬前置门"框架已被 `docs/reports/v7-literary-framework-review.md` 推翻改判 |
-| `tasks/170o-voice-homogeneity-attribution-calibration-DONE.md` | Task 170o：voice 量具 `detect_human_voice_homogeneity` 说话人归因校准（叙事归因 + 角色注册表 gating），暴露 seeding gap |
-| `tasks/170p-settlement-new-character-seeding-DONE.md` | Task 170p：修复 seeding gap（SettlementExtractor 新配角证据门禁入库 + 工艺卡 1.0.3）；`run-bcf3b8f1` 实证 characters 1→4；同批修复 2 个合并遗留 broken 测试 |
-| `docs/reports/v7-literary-framework-review.md` | **文学质量框架级复盘 + V7 阶段目标与验收标准**：Task 170 结束改判为"改契约 + 并行"，旧框架 5 个结构性错误、三层契约、R0/R1/R2、§8 阶段验收标准（A/B/C/D/E） |
-| `tasks/171-ch200-long-run.md` | **Task 171：Ch200 长跑（阶段 Z 主线）**——run `run-fb39245c` 200/200 accepted、gaps=[]、Halt=None；171t/171u 后 D1 hard clean pass |
-| `docs/reports/task-171-ch200-long-run-report.md` | Task 171 Ch200 长跑报告：稳定性面与三层契约观测结果 |
-| `docs/reports/task-171-ch200-analysis-and-next-step-report.md` | Task 171 Ch200 分析与下一步：20% 抽读、171t/171u D1 收口结果、171v/172 路线 |
-| `scripts/run_171_ch200.py` | Task 171/172 渐进爬坡 harness：Ch200 report/resume 与后续 Ch250 复用 |
-| `tasks/171p-ch200-wall-fix.md` | Task 171p：Ch200 撞墙定点修复——state_mismatch 演进型 field 构念修正 |
-| `tasks/171p-ch200-wall-fix-DONE.md` | Task 171p DONE：Ch3 假阳性收敛，state_mismatch 从阻塞信号降级为观测 |
-| `tasks/171q-ch200-wall-fix-duplicate.md` | Task 171q：分段修订 T9 duplicate 阈值口径对齐 |
-| `tasks/171s-critical-setting-reference-refresh.md` | Task 171s：critical setting 同义提及刷新，修复 Ch159/165 false orphan 阻断 |
-| `tasks/171t-ch200-d1-hard-clean.md` | Task 171t：Ch200 D1 文本洁净量具补强（已完成） |
-| `tasks/171u-ch200-d1-clean-application-and-report-refresh.md` | Task 171u：Ch200 D1 清洁应用与报告事实源复算（已完成，T9 hard issue=0，T6b peak=0） |
-| `tasks/171v-ch200-plus-literary-readability-guardrails.md` | Task 171v：Ch200+ 文学性与可读性护栏（小窗口 partial，条件未通过） |
-| `tasks/171w-171v-hardening-and-ch201-ch220-rerun.md` | Task 171w：171v-hardening 与 Ch201-Ch220 重验（172 前置） |
-| `tasks/172-ch250-transition-validation.md` | Task 172：Ch250 过渡验证占位 |
-| `archive/v7/INDEX.md` | V7 已完成 R&D 归档入口（171a/171a-1/171b/171c/171d） |
-| `archive/v7/tasks/171a-literary-metric-validity-rebuild-DONE.md` | Task 171a DONE：文学量具效度重建（代码侧 B1/B4/B5） |
-| `archive/v7/reports/task-171a-metric-validity-report.md` | Task 171a 效度报告 |
-| `archive/v7/tasks/171a-1-metric-validity-quantification-DONE.md` | Task 171a-1 DONE：两体裁 voice/exposition P/R/F1 量化 |
-| `archive/v7/reports/task-171a-1-metric-prf-report.md` | Task 171a-1 P/R/F1 报告 |
-| `archive/v7/tasks/171b-representative-sampling-DONE.md` | Task 171b DONE：代表性样本集与 2×2 归因 |
-| `archive/v7/reports/task-171b-representative-sampling-report.md` | Task 171b 报告 |
-| `archive/v7/tasks/171c-improvement-levers-DONE.md` | Task 171c DONE：杠杆组合验证，确定性后处理 Goodhart 退出 |
-| `archive/v7/reports/task-171c-improvement-levers-report.md` | Task 171c 报告 |
-| `archive/v7/tasks/171d-three-tier-contract-DONE.md` | Task 171d DONE：三层契约落地 |
-| `archive/v7/reports/task-171d-three-tier-contract-report.md` | Task 171d 报告 |
-| `tasks/V6-README.md` | V6 任务事实入口（前置阶段）：叙事骨架 MVP + 度量 + 长跑底盘，Task 141-159 |
-| `tasks/V5-README.md` | V5.0 任务事实入口 |
-| `tasks/121a-v50-goal-assessment-and-v51-plan.md` | Task 121a：V5.0 目标评估与 V5.1 规划 |
-| `tasks/121b-ch1-ch150-single-run-rehearsal-DONE.md` | Ch1-Ch150 single-run rehearsal 结果 |
-| `tasks/121c-rewrite-fallback-settlement-contract-DONE.md` | rewrite fallback 后 settlement 契约修复 |
-| `tasks/121d-ch1-ch150-single-run-rerun-DONE.md` | Task 121d：修复后 single-run 重跑结果 |
-| `tasks/121e-ch8-settlement-foreshadowing-validation-fix-DONE.md` | Task 121e：Ch8 settlement 伏笔校验修复 |
-| `tasks/121f-ch18-creative-director-error-contract-DONE.md` | Task 121f：Ch18 CreativeDirector 错误传播修复 |
-| `tasks/121g-ch1-ch150-single-run-rerun-ch115-blocker-DONE.md` | Task 121g：Ch1-Ch150 完整重跑与 Ch115 新阻断定位 |
-| `tasks/121h-ch115-quality-gate-rewrite-state-review-DONE.md` | Task 121h：Ch115 quality gate / best-version rewrite 工程修复 |
-| `tasks/121i-ch115-focused-rerun-and-quality-window-DONE.md` | Task 121i：Ch115 聚焦重跑与质量窗口复核 |
-| `tasks/121j-ch1-ch150-single-run-after-ch115-fix-DONE.md` | Task 121j：Ch115 修复后 Ch1-Ch150 full single-run |
-| `tasks/121k-prompt-quality-cleanup-plan-DONE.md` | Task 121k：Prompt / 正文质量清理 |
-| `tasks/121l-context-emergency-autohalt-review-DONE.md` | Task 121l：连续 ContextEmergency AutoHalt review |
-| `tasks/121m-qg-false-block-and-meta-tag-cleanup-DONE.md` | Task 121m：QG false 硬拦截与元标记泄漏清理 |
-| `tasks/121n-context-diet-budget-and-human-marks-lifecycle-DONE.md` | Task 121n：Context Diet 2.0 预算调整与 human_marks 生命周期优化 |
-| `tasks/121o-ch1-ch18-focused-rerun-validation-DONE.md` | Task 121o：Ch1-Ch18 聚焦验证重跑 |
-| `tasks/121p-ch1-ch150-single-run-rag-embedder-timeout-DONE.md` | Task 121p：Ch1-Ch150 full single-run RAG embedder 超时阻断 |
-| `tasks/121q-safe-best-threshold-dynamic-fix-DONE.md` | Task 121q：Safe-Best 阈值动态化修复；**full single-run `run-a2bed648` Ch1-Ch150 150/150** |
-| `tasks/121r-prompt-quality-cleanup-execution-DONE.md` | Task 121r：Prompt / 正文质量清理执行 |
-| `tasks/122a-unit-test-matrix-dynamic-thresholds-DONE.md` | Task 122a：单元测试矩阵——动态阈值与降级回滚 |
-| `tasks/122b-integration-test-pipeline-scenarios-DONE.md` | Task 122b：集成测试——Pipeline 关键场景 |
-| `tasks/122c-e2e-validation-windows-DONE.md` | Task 122c：端到端验证窗口 |
-| `tasks/122d-stress-test-long-sequence-stability-DONE.md` | Task 122d：压力测试——150 章长序列稳定性 |
-| `tasks/123-context-emergency-health-low-gate-proposal-DONE.md` | Task 123：ContextEmergency / health_low 候选硬门禁提案 |
-| `tasks/124-context-emergency-health-low-gate-impact-analysis-DONE.md` | Task 124：候选硬门禁离线影响面分析 |
-| `tasks/125-gate-threshold-tuning-and-validation-DONE.md` | Task 125：候选硬门禁阈值调优与验证 |
-| `tasks/126-small-window-enforce-validation-DONE.md` | Task 126：候选硬门禁 enforce 模式小窗口实跑验证 |
-| `tasks/127-health-low-score-halt-refactor-DONE.md` | Task 127：重构 `health_low_score_halt` 复合条件 |
-| `tasks/128-strict-mode-fault-tolerance-and-quality-ramp-DONE.md` | Task 128：严格模式容错与开局期质量爬坡 |
-| `tasks/129-enforce-mode-ch1-ch50-validation-DONE.md` | Task 129：enforce 模式 Ch1–Ch50 验证 |
-| `tasks/130-gate-mode-default-decision-DONE.md` | Task 130：gate_mode 默认模式决策 |
-| `tasks/131-task-docs-archive-and-status-cleanup-DONE.md` | Task 131：任务文档归档与状态一致性清理 |
-| `tasks/132-v51-final-acceptance-package-DONE.md` | Task 132：V5.1 最终验收包 |
-| `tasks/133-writer-multi-scene-structure-fix-DONE.md` | Task 133：Writer 多场景结构修复（V5.2） |
-| `tasks/134-settlement-character-numerical-extraction-fix-DONE.md` | Task 134：SettlementExtractor 角色/数值提取修复（V5.2） |
-| `tasks/135-setting-recycling-and-continuity-health-governance-DONE.md` | Task 135：设定回收与 continuity health 治理（V5.2） |
-| `tasks/136-v52-enforce-ch1-ch20-validation-DONE.md` | Task 136：V5.2 Ch1–Ch20 采集窗口跨项目实跑验证（已完成；后续 138n/138o 长窗口验证已证明 orphan 问题收敛） |
-| `tasks/137-setting-recycling-closed-loop.md` | Task 137：设定回收闭环与 tracking 刷新机制（V5.2，已关闭；工作由 138a-138f 承接完成，138e 明确不归档） |
-| `tasks/138a-remaining-orphan-classification-DONE.md` | Task 138a：剩余 orphan 分类与证据表（`run-4fd48756` 的 16 个 orphan） |
-| `tasks/138b-orphan-root-cause-decision-DONE.md` | Task 138b：基于分类结果确定最小动作 |
-| `tasks/138c-orphan-minimal-fix-DONE.md` | Task 138c：剩余 orphan 最小修复 |
-| `tasks/138d-ch10-ch12-post-fix-rerun-DONE.md` | Task 138d/138d-R2：修复后 Ch10-Ch12 聚焦复跑验证（R2 最新 `run-bcee6ab6` completed，Ch12 continuity `orphaned=14`） |
-| `tasks/138e-task137-fact-sync-and-closure-DONE.md` | Task 138e：事实源同步与 Task 137 收尾判断（已完成；Task 137 不归档） |
-| `tasks/138f-settlement-evidence-gated-numerical-extraction-DONE.md` | Task 138f：Settlement 数值结算证据门禁工程化修复（已完成） |
-| `tasks/138g-critical-orphan-root-cause-review.md` | Task 138g：critical orphan 根因复核与最小收口（已关闭；根因分析与修复由 138m/138n/138o 完成） |
-| `tasks/138h-critical-orphan-mandatory-recall-loop-DONE.md` | Task 138h：critical orphan 强制回收闭环（已完成；子项 A+B 已落地） |
-| `tasks/138i-writer-prompt-mandatory-reference-tone-hardening-DONE.md` | Task 138i：Writer prompt 措辞硬化（已完成但效果有限） |
-| `tasks/138j-writer-mandatory-reference-recycle-hints-DONE.md` | Task 138j：Writer 回收提示（已完成；P1 5→2，health 3.0→3.9） |
-| `tasks/138k-long-window-rehearsal-ch1-ch50.md` | Task 138k：长窗口 rehearsal Ch1-Ch50/100（已完成 Ch1-Ch30；暴露 Ch21+ health 下滑） |
-| `tasks/138m-critical-orphan-root-cause-and-v52-boundary.md` | Task 138m：Ch21-Ch30 critical orphan 根因分析与 V5.2 边界决策（已完成；报告见 `docs/reports/task-138m-critical-orphan-root-cause-report.md`） |
-| `tasks/138n-qg-mandatory-reference-revision-loop-DONE.md` | Task 138n：QG 阻断式 critical orphan revision + mandatory_reference 上限调优（已完成；Ch30 health 8.5 / P1=0） |
-| `docs/reports/task-138n-ch1-ch30-rerun-report.md` | Task 138n：Ch1-Ch30 重跑验证报告 |
-| `tasks/138o-ch31-ch50-long-window-validation-DONE.md` | Task 138o：Ch31-Ch50 长窗口延续验证（已完成；Ch50 health 8.8 / P1=0） |
-| `docs/reports/task-138o-ch31-ch50-long-window-validation-report.md` | Task 138o：Ch31-Ch50 长窗口延续验证报告 |
-| `tasks/138p-character-id-alias-in-cloned-projects-DONE.md` | Task 138p：克隆/延续项目角色 ID alias 断裂修复（已完成；新增 `tests/test_task138p_character_id_alias.py`） |
-| `tasks/139a-v52-enforce-gate-config-final-audit.md` | Task 139a：V5.2 enforce 门禁配置最终审计（已完成；Ch1-Ch50 离线模拟零 gate 触发） |
-| `docs/reports/task-139a-enforce-gate-config-audit.md` | Task 139a：enforce 门禁配置审计报告 |
-| `tasks/139b-v52-enforce-ch1-ch50-validation.md` | Task 139b：V5.2 enforce 模式 Ch1-Ch50 复跑验证（已完成；`run-813a9ed7` 50/50 accept，无 AutoHalt） |
-| `tasks/139e-v52-rewrite-mandatory-reference-fix.md` | Task 139e：rewrite_node 丢失 mandatory reference 修复（已完成） |
-| `tasks/139f-v52-revision-router-mandatory-reference-bypass-fix.md` | Task 139f：revision_router 回滚 bypass mandatory reference 修复（已完成） |
-| `docs/reports/task-139b-enforce-ch1-ch50-validation-report.md` | Task 139b：首次 enforce 实跑验证报告（Ch1-Ch21） |
-| `docs/reports/task-139b-enforce-ch1-ch50-validation-report.md` | Task 139b：第一次重跑 enforce 实跑验证报告（Ch1-Ch24） |
-| `docs/reports/task-139b-enforce-ch1-ch50-validation-report.md` | Task 139b：第二次重跑 enforce 实跑验证报告（Ch1-Ch50，通过） |
-| `tasks/139c-v52-enforce-ch51-ch150-validation.md` | Task 139c：V5.2 enforce 模式 Ch51-Ch150 长窗口验证（已完成；`run-c68a1384` + `run-7b45c17d` + `run-df933dbf` 合计 100/100 accept） |
-| `tasks/139d-v52-default-enforce-switch-and-final-acceptance.md` | Task 139d：V5.2 默认 gate_mode 切换为 enforce 与最终验收包交付（已完成；CLI 默认 `enforce`，验收包已交付） |
-| `docs/reports/task-139d-v52-final-acceptance-package.md` | Task 139d：V5.2 最终验收包（已验收；Ch1-Ch150 150/150 accept） |
-| `tasks/139g-v52-settlement-llm-timeout-fix.md` | Task 139g：V5.2 settlement LLM 超时修复（已完成） |
-| `tasks/139h-v52-ch80-revision-word-count-blowup-fix.md` | Task 139h：V5.2 Ch80 revision 字数膨胀修复（已完成；`run-7b45c17d` Ch80 accept，生成 `v-80-12-e017e643`） |
-| `tasks/140-v52-legacy-task-cleanup-DONE.md` | Task 140：V5.2 遗留任务状态清理（已完成） |
-| `archive/v5/138m-analysis/` | Task 138m 根因分析中间数据与脚本（已归档） |
-| `docs/reports/task-137-v52-enforce-ch1-ch20-rerun-report.md` | Task 137：Ch1–Ch20 采集窗口复跑报告（`run-06ae5101` partial） |
-| `docs/reports/task-137-ch10-focus-validation-report.md` | Task 138d/138e/138d-R2/138g：Ch10 起点聚焦验证报告（最新 `run-715f7d09` completed，Ch12 `health=3.0`、`orphaned=16`） |
+| `tasks/V8-README.md` | **V8 任务事实入口（当前阶段）**：多体裁可插拔质量 + 章数爬坡，Task 173-175 |
+| `tasks/173-genre-runtime-profiles.md` | **Task 173（V8 P0）**：体裁运行时画像设计、子任务拆分、验证指标 |
+| `tasks/V7-README.md` | **V7 历史任务事实入口（已收尾）**：sci-fi 单一体裁 Ch200 达成 |
+| `tasks/V6-README.md` | V6 历史任务事实入口：叙事骨架 MVP + 度量 + 长跑底盘，Task 141-159 |
+| `tasks/V5-README.md` | V5.0 历史任务事实入口 |
 
-## 长期规划（300 章目标）
+## V8 当前阶段
 
 | 文件 | 用途 |
 |------|------|
-| `tasks/V7-README.md` | **V7 任务事实入口（当前阶段）**：Task 160-173 状态、P/L/T/G/V 阶段验收判定、依赖关系与执行纪律 |
-| `tasks/V6-README.md` | V6 任务事实入口（前置）：Task 141-159 状态、阶段验收判定、依赖关系与执行纪律 |
-| `docs/300-chapter-gap-analysis.md` | 300 章卡点与解决路径（含根因：缺自顶向下叙事架构）的代码级分析（V6/V7 论证基础） |
-| `docs/v6-plan.md` | V6 阶段规划：叙事骨架 MVP + 长篇质量度量 + 可靠长跑底盘 + Task 141-159 路线图 |
-| `docs/v7-vision.md` | V7 构想（方向性）：从叙事骨架到完整线索经济 + 满 Ch300 渐进验证 |
-| `docs/v7-plan.md` | V7 阶段规划：篇章级质量修复 + 叙事自驱 + enforce 可生产化 + Ch300 渐进爬坡 + Task 160-173 路线图 |
-| `docs/reports/v7-literary-framework-review.md` | **V7 文学质量框架级复盘（当前阶段目标 + 验收标准）**：Task 170 结束改判为"改契约 + 并行"，三层契约、R0/R1/R2（171a/b/c）、§8 阶段 PASS 判据 |
+| `tasks/V8-README.md` | V8 任务总索引、阶段验收标准、依赖关系 |
+| `tasks/173-genre-runtime-profiles.md` | Task 173：体裁运行时画像（GenreRuntimeProfile） |
+
+## V7 历史产物（保留入口）
+
+| 文件 | 用途 |
+|------|------|
+| `docs/reports/v7-literary-framework-review.md` | 文学质量框架级复盘 + V7 阶段验收标准 |
+| `docs/reports/task-171-ch200-long-run-report.md` | Task 171 Ch200 长跑报告 |
+| `docs/reports/task-171-ch200-analysis-and-next-step-report.md` | Task 171 Ch200 分析与 V7→V8 过渡 |
+| `docs/reports/task-171w-ch201-ch220-window-report.md` | 171w Ch201-Ch220 窗口报告 |
+| `docs/reports/task-165-stage-w-exit-report.md` | V7 阶段 W 出口报告 |
+| `docs/reports/task-165-v7-threshold-calibration.md` | V7 阈值标定 |
+| `tasks/171-ch200-long-run.md` | Task 171 Ch200 长跑 |
+| `tasks/171p-ch200-wall-fix-DONE.md` | 171p state_mismatch 构念修正 |
+| `tasks/171p-ch200-wall-fix.md` | 171p 规划稿 |
+| `tasks/171q-ch200-wall-fix-duplicate.md` | 171q T9 重复阈值对齐 |
+| `tasks/171s-critical-setting-reference-refresh.md` | 171s critical setting 同义刷新 |
+| `tasks/171t-ch200-d1-hard-clean.md` | 171t D1 文本洁净量具补强 |
+| `tasks/171u-ch200-d1-clean-application-and-report-refresh.md` | 171u Ch200 清洁应用与报告复算 |
+| `tasks/171v-ch200-plus-literary-readability-guardrails.md` | 171v Ch200+ 文学护栏 |
+| `tasks/171w-171v-hardening-and-ch201-ch220-rerun.md` | 171w hardening 与 Ch201-Ch220 重验 |
+| `tasks/170-literary-quality-remediation-README.md` | 文学提质专项总览（已结束） |
+| `tasks/170-enforce-small-window-validation-and-t12-calibration-DONE.md` | Task 170：enforce 小窗口验证 + T12 冻结 |
+| `tasks/170c-t9-near-duplicate-detection-DONE.md` | Task 170c：T9 近似重复检测 |
+| `tasks/170d-literary-auditor-calibration-DONE.md` | Task 170d：LiteraryAuditor 校准 |
+| `tasks/170p-settlement-new-character-seeding-DONE.md` | Task 170p：新配角证据门禁入库 |
+
+## V6 历史产物
+
+| 文件 | 用途 |
+|------|------|
+| `tasks/V6-README.md` | V6 任务总索引 |
+| `archive/v6/reports/task-157-ch1-ch50-integration-validation-report.md` | Task 157 Ch1-Ch50 集成验证 |
+| `archive/v6/reports/task-158-ch1-ch100-long-run-validation-report.md` | Task 158 Ch1-Ch100 长跑验证 |
+| `archive/v6/reports/task-158r-kill-resume-drill-report.md` | Task 158r kill-resume 演练 |
+| `archive/v6/reports/task-159-v6-final-acceptance-report.md` | V6 最终验收报告 |
+| `archive/v6/reports/v6-stageA-threshold-calibration.md` | V6 阶段 A 阈值标定 |
+
+## V5 历史产物
+
+| 文件 | 用途 |
+|------|------|
+| `tasks/V5-README.md` | V5.0 任务总索引 |
+| `archive/v5/INDEX.md` | V5 归档索引 |
+| `archive/v5/reports/` | Task 124/129/136-139d 等 V5.2 阶段报告 |
+| `archive/v5/plans/` | V5 历史规划稿 |
+| `archive/v5/context-docs/` | AGENTS/STATUS/INDEX 长版快照 |
+
+## 长期规划
+
+| 文件 | 用途 |
+|------|------|
+| `docs/300-chapter-gap-analysis.md` | 300 章卡点与解决路径的代码级分析 |
+| `archive/v6/plans/v6-plan.md` | V6 阶段规划 |
+| `archive/v7/plans/v7-vision.md` | V7 构想 |
+| `archive/v7/plans/v7-plan.md` | V7 阶段规划 |
+| `docs/reports/v7-literary-framework-review.md` | V7 文学质量框架级复盘 |
 
 ## V7 代码审查与架构审计
 
-| 文件 | 用途 |
-|------|------|
-| `docs/reports/v7-audit/final-audit-report.md` | **V7 最终审计汇总报告**：P0/P1/P2 分级清单、风险热力图、进入 Ch200 的放行条件 |
-| `docs/reports/v7-audit/pass1-compliance-report.md` | Pass 1：合规性审查（不可违背规则基线） |
-| `docs/reports/v7-audit/pass2-architecture-report.md` | Pass 2：架构审计（职责分离与文件规模） |
-| `docs/reports/v7-audit/pass3-data-and-schema-report.md` | Pass 3：数据事实源与 Schema 审计 |
-| `docs/reports/v7-audit/pass4-workflow-report.md` | Pass 4：工作流与 LangGraph 状态机审计 |
-| `docs/reports/v7-audit/pass5-agent-boundaries-report.md` | Pass 5：Agent 边界与职责审计 |
-| `docs/reports/v7-audit/pass6-quality-gates-report.md` | Pass 6：质量门与审查体系审计 |
-| `docs/reports/v7-audit/pass7-v7-subsystems-report.md` | Pass 7：V7 新子系统审计（叙事自驱 + 自适应门禁） |
-| `docs/reports/v7-audit/pass8-testing-report.md` | Pass 8：测试质量与覆盖审计 |
-| `docs/reports/v7-audit/pass9-prompts-config-report.md` | Pass 9：Prompt 与配置管理审计 |
-| `docs/reports/v7-audit/pass10-performance-observability-report.md` | Pass 10：性能与可观测性审计 |
-| `docs/reports/v7-audit/pass11-security-dependencies-report.md` | Pass 11：安全与依赖审计 |
-| `docs/reports/v7-audit/pass12-docs-consistency-report.md` | Pass 12：文档与状态一致性审计 |
-| `docs/reports/v7-audit/pass13-final-audit-report.md` | **Pass 13 最终审计汇总报告**：V7 阶段 Z 中期审计，P0/P1/P2 分级清单、进入 Ch250 的放行条件 |
-| `docs/reports/v7-audit/pass13-v7-late-subsystems-report.md` | Pass 13：V7 后期新增子系统审计（文学护栏 / 文本洁净 / creative brief 持久化） |
-| `docs/reports/v7-audit/pass14-workflow-langgraph-report.md` | Pass 14：工作流与 LangGraph 节点审计 |
-| `docs/reports/v7-audit/pass15-data-schema-report.md` | Pass 15：数据层与 Schema 审计 |
-| `docs/reports/v7-audit/pass16-test-quality-report.md` | Pass 16：测试 suite 与工程质量审计 |
-| `docs/reports/v7-audit/pass17-agent-settlement-report.md` | Pass 17：Agent 边界与结算模块审计 |
-| `docs/reports/v7-audit/pass13-fix-validation-report.md` | **Pass 13 修复验证报告**：P0 清零、高优先级 P1 修复状态、回归结果与剩余债务 |
-| `docs/superpowers/plans/2026-07-06-v7-code-review-and-architecture-audit-plan.md` | V7 审计执行计划 |
+已归档至 `archive/v7/audit/`，入口见 `archive/v7/INDEX.md`。
 
 ## 按场景查阅
 
 | 场景 | 文件 |
 |------|------|
-| V5.0 最终是否通过 | `archive/tasks/120-v5-final-acceptance-DONE.md` |
-| 报告入口 / wrapper | `archive/tasks/119-reporting-wrapper-hardening-DONE.md` |
-| health_low 治理 | `archive/tasks/118-continuity-health-governance-DONE.md` |
-| DG-2 风险窗口复验 | `archive/tasks/117-dg2-risk-window-revalidation-DONE.md` |
-| Ch111-Ch150 验证 | `archive/tasks/114-ch101-ch150-streaming-validation-DONE.md` |
-| Ch102/Ch103 settlement 验证窗口 | `archive/tasks/114b2-qg-convergence-settlement-window-DONE.md` |
-| Ch1-Ch150 single-run rehearsal | `tasks/121b-ch1-ch150-single-run-rehearsal-DONE.md` |
-| Ch5 settlement skip 修复 | `tasks/121c-rewrite-fallback-settlement-contract-DONE.md` |
-| 修复后 single-run 重跑 / Ch8 新阻断 | `tasks/121d-ch1-ch150-single-run-rerun-DONE.md` |
-| Ch8 settlement 伏笔校验修复 | `tasks/121e-ch8-settlement-foreshadowing-validation-fix-DONE.md` |
-| Ch18 CreativeDirector 错误传播修复 | `tasks/121f-ch18-creative-director-error-contract-DONE.md` |
-| Ch1-Ch150 完整重跑 / Ch115 阻断 | `tasks/121g-ch1-ch150-single-run-rerun-ch115-blocker-DONE.md` |
-| Ch115 工程修复 | `tasks/121h-ch115-quality-gate-rewrite-state-review-DONE.md` |
-| Ch115 聚焦验证 | `tasks/121i-ch115-focused-rerun-and-quality-window-DONE.md` |
-| Ch1-Ch150 修复后 full single-run | `tasks/121j-ch1-ch150-single-run-after-ch115-fix-DONE.md` |
-| Ch1-Ch150 RAG embedder 超时阻断 | `tasks/121p-ch1-ch150-single-run-rag-embedder-timeout-DONE.md` |
-| Ch1-Ch150 full single-run 最终证据 | `tasks/121q-safe-best-threshold-dynamic-fix-DONE.md` |
-| Safe-Best 阈值动态化 | `tasks/121q-safe-best-threshold-dynamic-fix-DONE.md` |
-| Prompt / 正文质量清理 | `tasks/121k-prompt-quality-cleanup-plan-DONE.md` |
-| Prompt 质量清理执行 | `tasks/121r-prompt-quality-cleanup-execution-DONE.md` |
-| 单元测试矩阵 | `tasks/122a-unit-test-matrix-dynamic-thresholds-DONE.md` |
-| 集成测试场景 | `tasks/122b-integration-test-pipeline-scenarios-DONE.md` |
-| 端到端验证窗口 | `tasks/122c-e2e-validation-windows-DONE.md` |
-| 压力测试长序列 | `tasks/122d-stress-test-long-sequence-stability-DONE.md` |
-| ContextEmergency AutoHalt review | `tasks/121l-context-emergency-autohalt-review-DONE.md` |
-| QG false 拦截与元标记清理 | `tasks/121m-qg-false-block-and-meta-tag-cleanup-DONE.md` |
-| Context Diet 预算与 human marks 生命周期 | `tasks/121n-context-diet-budget-and-human-marks-lifecycle-DONE.md` |
-| Ch1-Ch18 聚焦验证 | `tasks/121o-ch1-ch18-focused-rerun-validation-DONE.md` |
-| ContextEmergency / health_low 候选硬门禁 | `tasks/123-context-emergency-health-low-gate-proposal-DONE.md` |
-| 候选硬门禁影响面分析 | `tasks/124-context-emergency-health-low-gate-impact-analysis-DONE.md` |
-| 候选硬门禁阈值调优 | `tasks/125-gate-threshold-tuning-and-validation-DONE.md` |
-| 候选硬门禁 enforce 小窗口验证 | `tasks/126-small-window-enforce-validation-DONE.md` |
-| health_low score halt 重构 | `tasks/127-health-low-score-halt-refactor-DONE.md` |
-| 严格模式容错与开局期质量爬坡 | `tasks/128-strict-mode-fault-tolerance-and-quality-ramp-DONE.md` |
-| enforce 模式 Ch1–Ch50 验证 | `tasks/129-enforce-mode-ch1-ch50-validation-DONE.md` |
-| gate_mode 默认模式决策 | `tasks/130-gate-mode-default-decision-DONE.md` |
-| 任务文档归档与状态清理 | `tasks/131-task-docs-archive-and-status-cleanup-DONE.md` |
-| V5.1 最终验收包 | `tasks/132-v51-final-acceptance-package-DONE.md` |
-| Writer 多场景结构修复（V5.2） | `tasks/133-writer-multi-scene-structure-fix-DONE.md` |
-| SettlementExtractor 角色/数值提取修复（V5.2） | `tasks/134-settlement-character-numerical-extraction-fix-DONE.md` |
-| 设定回收与 continuity health 治理（V5.2） | `tasks/135-setting-recycling-and-continuity-health-governance-DONE.md` |
-| V5.2 Ch1–Ch20 采集窗口实跑验证 | `tasks/136-v52-enforce-ch1-ch20-validation-DONE.md` |
-| 设定回收闭环与 tracking 刷新机制（V5.2，已关闭） | `tasks/137-setting-recycling-closed-loop.md` |
-| 剩余 orphan 分类与证据表 | `tasks/138a-remaining-orphan-classification-DONE.md` |
-| 基于分类结果确定最小动作 | `tasks/138b-orphan-root-cause-decision-DONE.md` |
-| 剩余 orphan 最小修复 | `tasks/138c-orphan-minimal-fix-DONE.md` |
-| 修复后 Ch10-Ch12 聚焦复跑验证 | `tasks/138d-ch10-ch12-post-fix-rerun-DONE.md`（R2 最新 `run-bcee6ab6`） |
-| 事实源同步与 Task 137 收尾判断（已完成；Task 137 不归档） | `tasks/138e-task137-fact-sync-and-closure-DONE.md` |
-| Settlement 数值结算证据门禁工程化修复（已完成） | `tasks/138f-settlement-evidence-gated-numerical-extraction-DONE.md` |
-| critical orphan 根因复核与最小收口（已关闭） | `tasks/138g-critical-orphan-root-cause-review.md` |
-| Task 138m critical orphan 根因分析决策报告 | `docs/reports/task-138m-critical-orphan-root-cause-report.md` |
-| critical orphan 强制回收闭环（已完成；子项 A+B 已落地） | `tasks/138h-critical-orphan-mandatory-recall-loop-DONE.md` |
-| settlement 数值遥测误报修复（已完成） | `tasks/138l-settlement-telemetry-false-positive-fix-DONE.md` |
-| V5.1 Code Review 总规划（已归档） | `archive/v5/reports/pass14-to-pass18-v51-review-roadmap.md` |
-| V5.1 Code Review 修复汇总（已归档） | `archive/v5/reports/pass14-final-fix-summary.md` |
+| V8 当前阶段入口 | `tasks/V8-README.md` |
+| V8 P0 任务规划 | `tasks/173-genre-runtime-profiles.md` |
+| V7 历史任务入口 | `tasks/V7-README.md` |
+| V6 历史任务入口 | `tasks/V6-README.md` |
+| V5 历史任务入口 | `tasks/V5-README.md` |
+| 当前项目状态 | `docs/STATUS.md` |
+| 开发规范 | `AGENTS.md` |
+| 300 章卡点分析 | `docs/300-chapter-gap-analysis.md` |
 | 架构手册 | `docs/architecture/04-vibe-coding-engineering.md` |
 | 技术参考 | `docs/architecture/05-tech-reference.md` |
 | Code Review | `docs/code-review-plan.md` |
@@ -245,10 +102,9 @@
 
 归档内容默认不读，仅在追溯历史决策时查阅。
 
-- `archive/v5/INDEX.md` — V5 归档索引
-- `archive/v7/INDEX.md` — V7 已完成 R&D 产物归档（171a–171d）
-- `archive/v5/context-docs/` — AGENTS / STATUS / INDEX 长版快照
-- `archive/v5/plans/` — V5.0 已完成任务的历史规划稿
-- `archive/v4/INDEX.md` — V4.x 历史结论
 - `archive/v3/INDEX.md` — V3.x 历史结论
-- `archive/tasks/` — 历史任务规划稿与交接报告（V5.0/V5.1 已完成任务的历史规划稿已归档至此，状态以各任务 `-DONE.md` 为准）
+- `archive/v4/INDEX.md` — V4.x 历史结论
+- `archive/v5/INDEX.md` — V5 归档索引
+- `archive/v6/INDEX.md` — V6 归档索引
+- `archive/v7/INDEX.md` — V7 历史产物归档
+- `archive/tasks/` — 历史任务规划稿与交接报告

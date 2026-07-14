@@ -1,6 +1,6 @@
 # V5.0 归档索引
 
-> 本目录存放 V5.0 已完成后的历史规划稿和被替代脚本。默认不作为当前开发入口；当前事实入口仍是 `tasks/V5-README.md`、`docs/STATUS.md` 和 `docs/INDEX.md`。
+> 本目录存放 V5.0/V5.1/V5.2 已完成后的历史规划稿、被替代脚本和阶段报告。默认不作为当前开发入口；当前事实入口仍是 `tasks/V5-README.md`、`docs/STATUS.md` 和 `docs/INDEX.md`。
 
 ## context-docs/
 
@@ -18,6 +18,21 @@
 - `118-continuity-health-governance.md` — Task 118 历史规划稿
 - `119-reporting-wrapper-hardening.md` — Task 119 历史规划稿
 - `120-v5-final-acceptance-package.md` — Task 120 历史规划稿
+
+## reports/
+
+- `124-gate-impact-analysis-run-a2bed648.md` — Task 124 候选硬门禁影响面分析
+- `task-129-enforce-validation-report.md` — Task 129 enforce 模式验证报告
+- `task-136-v52-enforce-ch1-ch20-validation-report.md` — V5.2 Ch1-Ch20 采集窗口验证
+- `task-137-ch10-focus-validation-report.md` / `task-137-v52-enforce-ch1-ch20-rerun-report.md` — Task 137/138d Ch10 聚焦验证
+- `task-138k-long-window-rehearsal-report.md` — Task 138k Ch1-Ch30 长窗口 rehearsal
+- `task-138m-critical-orphan-root-cause-report.md` — Task 138m critical orphan 根因分析
+- `task-138n-ch1-ch30-rerun-report.md` — Task 138n Ch1-Ch30 重跑验证
+- `task-138o-ch31-ch50-long-window-validation-report.md` — Task 138o Ch31-Ch50 长窗口验证
+- `task-139a-enforce-gate-config-audit.md` — V5.2 enforce 门禁配置审计
+- `task-139b-enforce-ch1-ch50-validation-report.md` — V5.2 Ch1-Ch50 enforce 验证
+- `task-139c-enforce-ch51-ch150-validation-report.md` — V5.2 Ch51-Ch150 长窗口验证
+- `task-139d-v52-final-acceptance-package.md` — V5.2 最终验收包（150/150 accept）
 
 ## scripts/
 

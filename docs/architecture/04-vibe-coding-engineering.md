@@ -49,7 +49,7 @@ songyan/
 ├── pyproject.toml                          # 项目配置
 ├── .env.example                            # 环境变量模板
 ├── README.md                               # 项目说明
-├── CLAUDE.md                               # 不可违背规则（约束清单）
+├── AGENTS.md                               # 不可违背规则（约束清单）
 ├── creative_modes/                         # ⭐ 创作模式配置
 │   ├── webnovel.json
 │   ├── literary.json
@@ -354,7 +354,7 @@ status: str                               # 状态机
 ```
 1. 更新 docs/STATUS.md（当前状态）
 2. 写/读 tasks/00x-xxx.md（任务规格）
-3. Prompt 里只引用 CLAUDE.md + docs/INDEX.md + 当前 task
+3. Prompt 里只引用 AGENTS.md + docs/INDEX.md + 当前 task
 4. Agent 执行 → 完成后运行测试
 5. 更新 docs/STATUS.md（记录结果）
 6. 下一个任务继续
@@ -366,7 +366,7 @@ status: str                               # 状态机
 
 ```
 请先阅读：
-1. CLAUDE.md（约束清单）
+1. AGENTS.md（约束清单）
 2. docs/INDEX.md（文档索引）
 3. 当前任务文件（tasks/00x-xxx.md）
 
@@ -382,7 +382,7 @@ status: str                               # 状态机
 
 ## Project Context
 当前项目：Songyan V1.0 单章闭环 MVP。
-遵守 `CLAUDE.md`。
+遵守 `AGENTS.md`。
 
 ## Read
 - docs/INDEX.md
@@ -461,7 +461,7 @@ status: str                               # 状态机
 - pyproject.toml（依赖：pydantic, langgraph, langchain, litellm, click, structlog, pytest-asyncio, tiktoken）
 - .env.example（LLM_API_KEY, LLM_BASE_URL, LLM_MODEL）
 - 完整目录结构（src/songyan/ 下所有子目录和 __init__.py）
-- CLAUDE.md（不可违背规则清单，含 CreativeModeProfile + SettlementExtractor 规则）
+- AGENTS.md（不可违背规则清单，含 CreativeModeProfile + SettlementExtractor 规则）
 - docs/INDEX.md（文档索引框架）
 - docs/STATUS.md（初始状态）
 - genres/ 目录（空）
@@ -478,7 +478,7 @@ status: str                               # 状态机
 - [ ] `pip install -e ".[dev]"` 成功
 - [ ] 目录结构与规范一致（含 creative_modes/）
 - [ ] `python -c "import songyan"` 成功
-- [ ] CLAUDE.md 包含所有约束规则（含 CreativeModeProfile + SettlementExtractor）
+- [ ] AGENTS.md 包含所有约束规则（含 CreativeModeProfile + SettlementExtractor）
 ```
 
 ### Task 002: 数据模型
@@ -1429,7 +1429,7 @@ Task NNN: 任务标题
   - [ ] 人物语言区分度 ⭐
 - [ ] 文档更新：
   - [ ] README.md
-  - [ ] CLAUDE.md
+  - [ ] AGENTS.md
   - [ ] docs/INDEX.md
 
 ### 代码质量检查

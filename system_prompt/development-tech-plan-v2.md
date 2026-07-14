@@ -289,7 +289,7 @@ class DBOperation(BaseModel):
 ```
 songyan/
 ├── pyproject.toml, .env.example, README.md
-├── CLAUDE.md                     # 不可违背规则清单
+├── AGENTS.md                     # 不可违背规则清单
 ├── creative_modes/               # 创作模式配置
 │   ├── webnovel.json
 │   ├── literary.json             # 预置但不验收

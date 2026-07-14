@@ -1,0 +1,49 @@
+{
+  "arm": "postproc_scifi",
+  "db": ".tmp/task170p_validation.db",
+  "postproc": true,
+  "quotes_split": 4,
+  "registry": [
+    "指挥官",
+    "林渊",
+    "老雷",
+    "赵海"
+  ],
+  "chapters_scored": 5,
+  "exposition_total": 0,
+  "voice_homogeneity_total": 1,
+  "exposition_per_chapter": 0.0,
+  "voice_per_chapter": 0.2,
+  "per_chapter": [
+    {
+      "chapter": 1,
+      "layer": "dialogue",
+      "exposition_count": 0,
+      "voice_homogeneity_count": 0
+    },
+    {
+      "chapter": 2,
+      "layer": "dialogue",
+      "exposition_count": 0,
+      "voice_homogeneity_count": 1
+    },
+    {
+      "chapter": 3,
+      "layer": "dialogue",
+      "exposition_count": 0,
+      "voice_homogeneity_count": 0
+    },
+    {
+      "chapter": 4,
+      "layer": "mixed",
+      "exposition_count": 0,
+      "voice_homogeneity_count": 0
+    },
+    {
+      "chapter": 5,
+      "layer": "dialogue",
+      "exposition_count": 0,
+      "voice_homogeneity_count": 0
+    }
+  ]
+}

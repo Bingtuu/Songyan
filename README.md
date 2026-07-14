@@ -13,7 +13,7 @@
 
 Songyan 是一个用多个 AI Agent 协作写中文长篇小说的系统。它不是"调用一次模型生成一章"的简单封装——而是把长篇写作拆成规划、生成、审查、修订、结算和连续性维护六个环节，每个环节由独立的 Agent 负责，共同维护一个长期事实数据库。
 
-当前已稳定支持 **200 章以上**的连续生成，并在向 300 章推进。
+当前已在 **sci-fi 单一体裁**下稳定支持 **200 章**连续生成（200/200 accepted）。V8 阶段目标是把这一能力从科幻的隐式画像解耦，建立可插拔的**体裁运行时画像（GenreRuntimeProfile）**，先让玄幻、武侠、都市等体裁在短窗口稳定通过，再逐步爬坡章数。
 
 ### 它解决什么问题？
 
@@ -159,7 +159,7 @@ flowchart TB
 
 ## 当前能力
 
-Songyan 已经过 **200 章**规模的实战验证。以下是已验证的关键能力：
+Songyan 已经过 **200 章**规模的实战验证（**sci-fi 单一体裁**）。以下是已验证的关键能力：
 
 | 能力 | 说明 |
 |------|------|
@@ -230,7 +230,7 @@ songyan run --project-id <id> --chapters 1-5 --auto-confirm
 songyan run --project-id <id> --chapters 1-200 --auto-confirm --resume
 ```
 
-### 长跑脚本
+### 长跑脚本（V7 sci-fi 示例）
 
 ```bash
 # 初始化 DB + 创建项目
@@ -265,7 +265,8 @@ python scripts/run_171_ch200.py --report
 
 - [`docs/STATUS.md`](docs/STATUS.md) — 当前状态、最新验证、下一步
 - [`docs/INDEX.md`](docs/INDEX.md) — 文档索引
-- [`tasks/V7-README.md`](tasks/V7-README.md) — 当前阶段任务事实
+- [`tasks/V8-README.md`](tasks/V8-README.md) — 当前阶段任务事实
+- [`tasks/V7-README.md`](tasks/V7-README.md) — V7 历史任务事实（已收尾）
 - [`AGENTS.md`](AGENTS.md) — 开发规范与工程纪律
 
 ---
