@@ -61,8 +61,8 @@ V8 通过 = 同时满足以下五项：
 | 172a.4 | Context Diet 预算分配按体裁 | ✅ 完成 | `docs/reports/172a.4-budget-decoupling-validation.md` |
 | 172a.5 | 硬门禁阈值按体裁 | ✅ 完成 | 172a 规划 §172a.5 |
 | 172a.6 | 状态压缩与伏笔蒸发按体裁 | ✅ 完成 | 172a 规划 §172a.6 |
-| 172a.7 | 多体裁短窗口验证 | 🔄 进行中 | `docs/reports/172a.7-genre-short-window-validation.md` |
-| 172a.p | 伏笔 horizon 下限（S 维度定点修复） | 🔄 进行中 | `tasks/172a.p-foreshadowing-horizon-floor.md` |
+| 172a.7 | 多体裁短窗口验证 | ✅ 完成 | `docs/reports/172a.7-genre-short-window-validation.md` |
+| 172a.p | 伏笔 horizon 下限（S 维度定点修复） | 🔄 验收中 | `tasks/172a.p-foreshadowing-horizon-floor.md` |
 
 ### V8.2：多体裁章数爬坡
 
