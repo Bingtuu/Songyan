@@ -484,8 +484,13 @@ def _extract_body(llm_response: str, strip_scene_markers: bool = True) -> str:
     text = re.sub(r"^(以下是|以下是第.*章|正文[：:]\s*)\s*", "", text, flags=re.IGNORECASE)
     text = re.sub(r"\s*(完|——完|THE END)\s*$", "", text, flags=re.IGNORECASE)
 
-    # 去除 LLM 偶尔输出的 `# 第N章` / `## 第N章` / `### 第N章` 标题行
-    text = re.sub(r"^#+\s*第\s*\d+\s*章\s*\n?", "", text, flags=re.MULTILINE)
+    # 去除 LLM 偶尔输出的 `# 第一章` / `## 第一章` / `# 第1章` 等 Markdown 章节标题行
+    text = re.sub(
+        r"^#+\s*第\s*[一二三四五六七八九十百千万零〇两\d]+\s*章\s*\n?",
+        "",
+        text,
+        flags=re.MULTILINE,
+    )
 
     # 去除场景清单（从 # 场景清单 到 --- 或下一个 ### Scene）
     text = re.sub(

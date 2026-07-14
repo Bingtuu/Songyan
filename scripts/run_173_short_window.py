@@ -5,21 +5,39 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import re
+import shutil
 import sys
+import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from songyan.db.connection import get_db_path
+from songyan.config import settings
 from songyan.db.repository import ChapterHeadRepository, ChapterVersionRepository
 from songyan.evals.text_cleanliness import collect_text_cleanliness_metrics
 from songyan.models import GateConfig
 from songyan.project_templates import ProjectInitializer, ProjectTemplateLoader
 from songyan.workflows.phase2_graph import run_project_pipeline
 
+_TEMP_DIRS: list[str] = []
+
+
+def _cleanup_temp_dirs() -> None:
+    """脚本退出前尝试清理临时数据库目录；Windows 句柄未释放时忽略."""
+    for tmpdir in _TEMP_DIRS:
+        shutil.rmtree(tmpdir, ignore_errors=True)
+
+
+def _word_count(content: str) -> int:
+    """与项目内部保持一致的字数统计：CJK 字符 + 英文/数字词."""
+    chinese_chars = len(re.findall(r"[\u4e00-\u9fff]", content))
+    other_words = len(re.findall(r"[a-zA-Z0-9]+", content))
+    return chinese_chars + other_words
+
 
 async def _accepted_word_counts(project_id: str, end_chapter: int) -> dict[int, int]:
-    """Return accepted chapter word counts (Chinese characters) for Ch1..end."""
+    """Return accepted chapter word counts for Ch1..end."""
     head_repo = ChapterHeadRepository()
     version_repo = ChapterVersionRepository()
     counts: dict[int, int] = {}
@@ -30,16 +48,20 @@ async def _accepted_word_counts(project_id: str, end_chapter: int) -> dict[int, 
         version = await version_repo.get(head.accepted_version_id)
         if version is None:
             continue
-        counts[chapter_number] = len(version.content)
+        counts[chapter_number] = _word_count(version.content)
     return counts
 
 
+def _sanitize_for_path(value: str) -> str:
+    """把模板 ID 中的路径非法字符替换为下划线，避免 Windows mkdtemp 失败."""
+    return re.sub(r"[^\w-]", "_", value)
+
+
 async def run_for_template(template_id: str, end_chapter: int = 3) -> dict[str, object]:
-    db_path = get_db_path()
-    for suffix in ("", "-wal", "-shm"):
-        p = db_path.with_name(db_path.name + suffix) if suffix else db_path
-        if p.exists():
-            p.unlink()
+    # 每个体裁使用独立临时数据库，避免 Windows 下删除被占用的 songyan.db
+    tmpdir = tempfile.mkdtemp(prefix=f"task173_{_sanitize_for_path(template_id)}_")
+    _TEMP_DIRS.append(tmpdir)
+    settings.database_url = f"sqlite:///{tmpdir}/songyan.db"
 
     template = ProjectTemplateLoader().load(template_id)
     project_id, project = await ProjectInitializer.from_template(template)
@@ -94,6 +116,8 @@ def main() -> None:
         except Exception as exc:
             results.append({"template_id": template_id, "error": str(exc)})
             print(f"ERROR: {exc}")
+
+    _cleanup_temp_dirs()
 
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)

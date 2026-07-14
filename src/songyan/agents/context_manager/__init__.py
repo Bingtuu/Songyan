@@ -767,12 +767,71 @@ class BudgetPruner:
 
         return ctx
 
-    def _context_emergency(self, ctx: ContextPackage, budget: int) -> ContextPackage:
-        """ContextEmergency — 真正超预算后的最终硬裁。
+    @staticmethod
+    def _trim_creative_brief_for_emergency(
+        brief: CreativeBrief,
+        *,
+        max_intent_chars: int = 80,
+        max_tensions: int = 2,
+        max_punch_points: int = 2,
+        max_style_constraints: int = 2,
+        max_forbidden_patterns: int = 3,
+        max_fissures: int = 2,
+        max_contract_chars: int = 80,
+        max_item_description_chars: int = 80,
+    ) -> CreativeBrief:
+        """ContextEmergency 下将 CreativeBrief 压缩到最小可用核心.
 
-        Task 111c: pre-emergency / soft-degrade 不再使用 context_emergency 表示。
+        保留创作意图、核心张力、关键刺激点、风格护栏和读者契约，
+        丢弃声纹样例、情绪曲线、复调注释等可牺牲字段。
+        """
+        trimmed = brief.model_copy(deep=True)
+
+        trimmed.creative_intent = trimmed.creative_intent[:max_intent_chars]
+        trimmed.reader_contract = trimmed.reader_contract[:max_contract_chars]
+
+        if trimmed.required_tensions:
+            trimmed.required_tensions = [
+                t.model_copy(update={"description": t.description[:max_item_description_chars]})
+                for t in trimmed.required_tensions[:max_tensions]
+            ]
+
+        if trimmed.punch_points:
+            trimmed.punch_points = [
+                p.model_copy(update={"description": p.description[:max_item_description_chars]})
+                for p in trimmed.punch_points[:max_punch_points]
+            ]
+
+        trimmed.style_constraints = [
+            c[:max_item_description_chars]
+            for c in trimmed.style_constraints[:max_style_constraints]
+        ]
+        trimmed.forbidden_patterns = trimmed.forbidden_patterns[:max_forbidden_patterns]
+        trimmed.allowed_fissures = trimmed.allowed_fissures[:max_fissures]
+
+        # 可牺牲字段：在 emergency 下直接清空
+        trimmed.polyphony_notes = []
+        trimmed.emotion_arc = []
+        trimmed.voice_anchors = []
+        trimmed.voice_samples = []
+        trimmed.fatigue_motif_replacements = []
+        trimmed.supporting_character_goal = None
+
+        if trimmed.protagonist_active_choice:
+            pac = trimmed.protagonist_active_choice.model_copy(deep=True)
+            pac.alternatives = []
+            pac.cost = ""
+            pac.irreversible_consequence = ""
+            trimmed.protagonist_active_choice = pac
+
+        return trimmed
+
+    def _context_emergency(self, ctx: ContextPackage, budget: int) -> ContextPackage:
+        """ContextEmergency — 真正超预算后的最终硬裁.
+
+        Task 111c: pre-emergency / soft-degrade 不再使用 context_emergency 表示.
         一旦 budget_used > 1.0，最终形态只保留硬约束、规则、章节目标、
-        creative_brief 和主角/最高优先级角色状态。
+        压缩后的 creative_brief 和主角/最高优先级角色状态.
         """
         before = self._estimate_package(ctx)
         level = 3
@@ -795,6 +854,10 @@ class BudgetPruner:
             rp.last_chapter_ending = ""
             rp.open_threads = []
             ctx.recent_plot = rp
+
+        # Task 173: emergency 下裁剪 creative_brief，避免硬保留分区仍超预算
+        if ctx.creative_brief is not None:
+            ctx.creative_brief = self._trim_creative_brief_for_emergency(ctx.creative_brief)
 
         ctx.context_emergency = True
         ctx.context_emergency_level = level

@@ -81,6 +81,24 @@ class TestSceneMarkerCleaning:
         assert "### Scene 2" in body
         assert "第一段正文" in body
 
+    def test_extract_body_strips_chinese_numeral_chapter_heading(self) -> None:
+        response = "# 第一章\n\n正文第一段。\n\n正文第二段。"
+
+        body = _extract_body(response)
+
+        assert "# 第一章" not in body
+        assert "第一章" not in body
+        assert "正文第一段" in body
+        assert "正文第二段" in body
+
+    def test_extract_body_strips_mixed_numeral_chapter_heading(self) -> None:
+        response = "## 第1章 灵渊纪\n正文开始。"
+
+        body = _extract_body(response)
+
+        assert "## 第1章" not in body
+        assert "正文开始" in body
+
 
 class TestReviewMergerBlocking:
     def test_rule_audit_scene_markers_convert_to_patchable_major_issue(self) -> None:

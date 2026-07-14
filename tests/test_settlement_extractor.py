@@ -910,6 +910,46 @@ class TestValidateSettlement:
         assert update.formula == f"telemetry_snapshot: {closing_value}"
 
     @pytest.mark.parametrize(
+        ("attribute_name", "content", "closing_value"),
+        [
+            ("remaining_lifespan_days", "赵六冷笑，他活不过三日。", 3.0),
+            ("remaining_lifespan_days", "医师摇头：余寿三日，无药可医。", 3.0),
+            ("remaining_lifespan_days", "生机耗尽，他跌坐在地。", 0.0),
+            ("寿命", "令牌显示，陆沉的寿命只剩三天。", 3.0),
+        ],
+    )
+    async def test_lifespan_telemetry_reading_normalized_as_snapshot(
+        self,
+        attribute_name: str,
+        content: str,
+        closing_value: float,
+    ) -> None:
+        """玄幻/武侠中‘寿命/余寿/remaining_lifespan_days’是叙事读数，不是台账。"""
+        settlement = StateSettlement(
+            numerical_updates=[
+                NumericalUpdate(
+                    character_id="char-7f60fa1d",
+                    attribute_name=attribute_name,
+                    opening_value=4745.0,
+                    increments=[],
+                    decrements=[],
+                    closing_value=closing_value,
+                    formula="4745 - 4742 = snapshot",
+                )
+            ]
+        )
+
+        errors = await _validate_settlement(settlement, content, [], [])
+
+        update = settlement.numerical_updates[0]
+        assert errors == []
+        assert update.opening_value == closing_value
+        assert update.closing_value == closing_value
+        assert update.increments == []
+        assert update.decrements == []
+        assert update.formula == f"telemetry_snapshot: {closing_value}"
+
+    @pytest.mark.parametrize(
         ("attribute_name", "content", "source_quote", "closing_value"),
         [
             ("heart_rate", "林深腕上的心率读数稳定在 142，警报还没解除。", "", 142.0),

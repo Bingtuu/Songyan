@@ -95,6 +95,14 @@ _TELEMETRY_ATTRIBUTE_KEYWORDS = (
     "arcsecond",
     "error",
     "deviation",
+    # Task 173: 玄幻/武侠寿命读数
+    "lifespan",
+    "life_span",
+    "remaining_lifespan",
+    "寿元",
+    "余寿",
+    "剩余寿命",
+    "寿命",
 )
 _TELEMETRY_QUANTITY_ATTRIBUTE_PATTERNS = ("文字数量", "文字数", "脉冲数")
 _TELEMETRY_ALIAS_GROUPS: tuple[tuple[tuple[str, ...], tuple[str, ...]], ...] = (
@@ -167,6 +175,20 @@ _TELEMETRY_ALIAS_GROUPS: tuple[tuple[tuple[str, ...], tuple[str, ...]], ...] = (
     ),
     (("脉冲数",), ("脉冲数", "指令脉冲数", "自毁指令脉冲数")),
     (("文字数量", "文字数"), ("文字数量", "文字数")),
+    # Task 173: 玄幻/武侠寿命读数（余寿、寿元等）按遥测快照处理
+    (
+        ("lifespan", "life_span", "remaining_lifespan", "寿元", "余寿", "剩余寿命", "寿命"),
+        (
+            "lifespan",
+            "life_span",
+            "remaining_lifespan",
+            "remaining_lifespan_days",
+            "寿元",
+            "余寿",
+            "剩余寿命",
+            "寿命",
+        ),
+    ),
 )
 _CHINESE_DIGITS = {
     "零": 0,
@@ -397,6 +419,56 @@ def _extract_progress_readings(text: str) -> list[float]:
     return readings
 
 
+def _convert_lifespan_unit(value: float, unit: str) -> float:
+    """统一寿命单位为天数；年/岁按 365 天换算。"""
+    if unit in ("年", "岁"):
+        return value * 365.0
+    return value
+
+
+def _extract_lifespan_readings(text: str) -> list[float]:
+    """提取寿命/余寿/寿元类读数，统一为天数。
+
+    覆盖常见表达：
+    - “活不过三日”“余寿三日”“寿命只剩三天”
+    - “寿元将尽”“生机耗尽”等归零表述
+    """
+    readings: list[float] = []
+    number = _numeric_reading_pattern()
+    unit = r"(天|日|年|岁)"
+    keyword_pattern = (
+        r"(?:余寿|剩余寿命|寿命|活不过|只剩|仅余|仅剩下|"
+        r"只剩下|余下|还有|可活|命|寿元)"
+    )
+
+    # keyword + number + unit，如“寿命只剩三天”
+    for match in re.finditer(
+        rf"{keyword_pattern}[^\d零〇一二两三四五六七八九十百点\n]{{0,16}}"
+        rf"{number}\s*{unit}",
+        text,
+    ):
+        value = _parse_numeric_reading(match.group(1))
+        if value is not None:
+            readings.append(_convert_lifespan_unit(value, match.group(2)))
+
+    # number + unit + keyword，如“三日可活”
+    for match in re.finditer(
+        rf"{number}\s*{unit}[^\d零〇一二两三四五六七八九十百点\n]{{0,16}}"
+        rf"{keyword_pattern}",
+        text,
+    ):
+        value = _parse_numeric_reading(match.group(1))
+        if value is not None:
+            readings.append(_convert_lifespan_unit(value, match.group(2)))
+
+    # 无数字的归零表述
+    zero_phrases = r"(?:生机耗尽|寿元耗尽|将死|濒死|命不久矣|必死无疑|死期将至)"
+    if re.search(zero_phrases, text):
+        readings.append(0.0)
+
+    return readings
+
+
 def _numeric_reading_pattern() -> str:
     chinese_number = r"[零〇一二两三四五六七八九十百点]+"
     return rf"(-?\d+(?:\.\d+)?|{chinese_number})"
@@ -465,6 +537,14 @@ def _find_telemetry_reading(num: NumericalUpdate, content: str) -> float | None:
         or "match_rate" in attr
     ):
         readings = _extract_progress_readings(evidence)
+    elif (
+        "寿命" in attr
+        or "lifespan" in attr
+        or "life_span" in attr
+        or "寿元" in attr
+        or "余寿" in attr
+    ):
+        readings = _extract_lifespan_readings(evidence)
     else:
         readings = _extract_alias_telemetry_readings(
             evidence, _telemetry_aliases(num.attribute_name)
