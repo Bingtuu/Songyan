@@ -449,6 +449,11 @@ async def assemble_context_package(
     genre_profile = load_genre_profile(project.genre_id)
     mode_profile = load_creative_mode_profile(project.mode_id)
 
+    # V8 Task 172a.3: 按项目 genre 加载运行时画像（DB → 代码注册表 → scifi 回退）。
+    # load_profile 永不抛错，无匹配返回 scifi baseline，保证旧行为不变。
+    from songyan.db.genre_runtime_profile_repo import load_profile as _load_runtime_profile
+    runtime_profile = await _load_runtime_profile(project.genre_id)
+
     # Phase 8b: RAG 检索
     rag_chunks = None
     rag_config = mode_profile.rag_config
@@ -575,6 +580,7 @@ async def assemble_context_package(
         focal_distance=focal_distance,
         last_appeared_chapters=last_appeared,
         mandatory_references=mandatory_references,
+        runtime_profile=runtime_profile,
     )
 
 

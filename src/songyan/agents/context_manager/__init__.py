@@ -18,6 +18,7 @@ from songyan.models import (
     CreativeModeProfile,
     ForeshadowingItem,
     GenreProfile,
+    GenreRuntimeProfile,
     HumanMark,
     NewSetting,
     OpenThread,
@@ -955,6 +956,7 @@ def assemble_context_package(
     focal_distance: str = "mid",
     last_appeared_chapters: dict[str, int] | None = None,
     mandatory_references: list[dict[str, Any]] | None = None,
+    runtime_profile: GenreRuntimeProfile | None = None,
 ) -> ContextPackage:
     """组装上下文包并按 Token 预算裁剪.
 
@@ -982,20 +984,29 @@ def assemble_context_package(
         组装并裁剪后的 ContextPackage
     """
     # Phase 4: 动态预算调整
-    budget_tokens = _dynamic_budget(chapter_goal.chapter_number, budget_tokens)
+    # V8 Task 172a.3/172a.4: 有 runtime_profile 时用其 base_budget/ramp 计算预算；
+    # 无 profile 时保持旧公式（DEFAULT_BASE_BUDGET + chapter * BUDGET_INCREMENT）不变。
+    if runtime_profile is not None:
+        budget_tokens = runtime_profile.dynamic_budget(chapter_goal.chapter_number)
+        min_budget = runtime_profile.min_budget
+    else:
+        budget_tokens = _dynamic_budget(chapter_goal.chapter_number, budget_tokens)
+        min_budget = MIN_BUDGET_TOKENS
 
-    if budget_tokens < MIN_BUDGET_TOKENS:
+    if budget_tokens < min_budget:
         logger.warning(
             "context_manager.low_budget",
             budget=budget_tokens,
-            min_budget=MIN_BUDGET_TOKENS,
+            min_budget=min_budget,
         )
-        budget_tokens = MIN_BUDGET_TOKENS
+        budget_tokens = min_budget
 
     logger.info(
         "context_manager.assemble_start",
         chapter_number=chapter_goal.chapter_number,
         budget=budget_tokens,
+        runtime_profile_genre=runtime_profile.genre if runtime_profile else None,
+        runtime_profile_version=runtime_profile.version if runtime_profile else None,
     )
 
     # Phase 7: 过滤 human marks
