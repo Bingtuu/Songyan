@@ -36,11 +36,13 @@ def _default_registry() -> dict[str, GenreRuntimeProfile]:
     scifi = GenreRuntimeProfile(genre="scifi")
 
     # xuanhuan: genre_rules 实测比 scifi 贵 +79.9%（172a.1），不可裁核心在低预算
-    # 窗口溢出。真实杠杆是抬高 base_budget，而非分区权重。此处仅给出安全的初值，
-    # 具体压到 budget_used<1.0 的调参在 172a.4 用实跑确定。
+    # 窗口溢出。真实杠杆是抬高 base_budget，而非分区权重。
+    # 实跑标定（172a.4）：base_budget=12000 时 Ch8 budget_used_before_emergency
+    # 从历史 1.4019 降到 1.0318（不再 halt），但仍略高于 1.0 触发一次 emergency；
+    # 提到 13000 给 Ch8+ 留出裕度，目标峰值 < 1.0。
     xuanhuan = GenreRuntimeProfile(
         genre="xuanhuan",
-        base_budget=12000,
+        base_budget=13000,
         ramp_per_chapter=250,
     )
     # xuanhuan 状态密度高：角色出场密、设定（功法/境界）需长期保持

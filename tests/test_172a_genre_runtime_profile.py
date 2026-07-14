@@ -112,9 +112,9 @@ async def test_repo_get_missing_returns_none(test_db: Path) -> None:
 
 async def test_load_profile_db_priority_then_registry(test_db: Path) -> None:
     repo = GenreRuntimeProfileRepository()
-    # DB 无记录 -> 回退注册表 xuanhuan (base_budget=12000)
+    # DB 无记录 -> 回退注册表 xuanhuan (base_budget=13000, 172a.4 calibrated)
     reg = await load_profile("xuanhuan")
-    assert reg.base_budget == 12000
+    assert reg.base_budget == 13000
 
     # 写 DB 覆盖 -> DB 优先
     await repo.upsert(GenreRuntimeProfile(genre="xuanhuan", base_budget=15000))
