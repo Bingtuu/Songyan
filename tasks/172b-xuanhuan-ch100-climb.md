@@ -80,7 +80,7 @@ V8-README V 维度判据：
 
 ### V 维度验收判定器（可证伪）
 
-`.tmp/vdim_compare.py` 读 live xuanhuan DB，按当前爬坡深度线性插值 sci-fi 基线（`.tmp/scifi_ch100_baseline.json`），对 4 个门禁给 PASS/FAIL。**CED 用 chapter-bounded 口径**（issue 与 words 均按 `chapter_number <= up_to` 界定）——比 harness `_segment_metrics` 更严：后者 issue 计数不设章界，在 live DB 上会被 in-flight 章（如正在写的 Ch11 report）污染，判定器自算 bounded CED 规避此偏差，与冻结基线严格同口径。
+`.tmp/vdim_compare.py` 读 live xuanhuan DB，按当前爬坡深度线性插值 sci-fi 基线（`.tmp/scifi_ch100_baseline.json`），对 5 个门禁给 PASS/FAIL。**CED 用 chapter-bounded 口径**（issue 与 words 均按 `chapter_number <= up_to` 界定）——比 harness `_segment_metrics` 更严：后者 issue 计数不设章界，在 live DB 上会被 in-flight 章（如正在写的 Ch11 report）污染，判定器自算 bounded CED 规避此偏差，与冻结基线严格同口径。
 
 | gate | 判据 | sci-fi 对标 |
 |---|---|---|
@@ -88,8 +88,9 @@ V8-README V 维度判据：
 | CED | xuanhuan CED ≤ sci-fi × 1.15（172a.7「同级」口径） | 9.13-9.46 |
 | overdue | xuanhuan overdue ≤ sci-fi 同章尺度 | Ch9→61 … Ch100→168 |
 | health | xuanhuan health ≥ 8.0（median 不退化代理） | 9.2-10.0 |
+| completeness | accepted ≥ up_to−1（gap≤1 自动过；gap>1 转 documented-isolate 复核，不静默阻断） | 100/100 |
 
-Ch10 早期读（`accepted=100 且 up_to≥100` 才是终判）：budget 0.938 / CED 10.03（bounded）/ overdue 0 / health 9.8 → **四门全 PASS**（early-warning，非终判）。终判在 Ch100 accepted=100 时给出。
+Ch13 早期读（`up_to≥100` 才是终判）：budget 0.938 / CED 10.12（bounded）/ overdue 0 / health 9.0 / completeness 13/13 → **五门全 PASS**（early-warning，非终判）。终判在 climb 到达 Ch100 深度时给出：`final` 以「爬坡触达 Ch100」为终态，单章瞬时 isolate 会在 completeness 门显性报 REVIEW，而非永久判 partial。
 
 ## 4. 风险与撞墙路由（172b.p 预案）
 
