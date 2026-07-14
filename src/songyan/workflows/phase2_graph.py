@@ -626,7 +626,15 @@ async def run_project_pipeline(
     existing_run = await _find_resume_run(
         project_id, resume=resume, run_id=run_id
     )
-    if existing_run is not None and existing_run.status == "completed":
+    # Bug B 修复（V8 172b）：completed run 的幂等短路只在「请求范围已全部 accepted」时成立。
+    # 分段爬坡逐段扩大 end（25→50→75→100）并 resume 复用最近 run；若该 run 上一段已
+    # completed 但本段请求 end 超出已 accepted 范围，则仍有 Ch(resume_start..end) 待生成，
+    # 绝不能短路返回，否则后续段 0 生成直接返回（曾致 Ch26-100 从未产出）。
+    if (
+        existing_run is not None
+        and existing_run.status == "completed"
+        and _compute_resume_start(start, end, accepted_chapters) > end
+    ):
         logger.info(
             "project_pipeline.resume_already_completed",
             run_id=existing_run.run_id,

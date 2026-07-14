@@ -437,6 +437,56 @@ class TestPipelineResume:
         assert result.final_status == "completed"
         assert result.chapters_completed == [1, 2]
 
+    async def test_resume_completed_run_expanded_range_continues(
+        self, test_db: Any
+    ) -> None:
+        """Bug B（V8 172b）：completed run 但请求 end 超出已 accepted 范围时不得短路.
+
+        分段爬坡逐段扩大 end（如 seg1 完成 Ch1-2 并 completed，seg2 请求 (1,4)）。
+        旧逻辑一律短路返回，导致 Ch3-4 从未生成。修复后应 resume 续跑缺口章。
+        """
+        await _seed_project_and_run(completed=[1, 2], status="completed", end=2)
+        await _accept_chapters([1, 2])
+
+        generated: list[int] = []
+
+        async def _fake_run(**kwargs: Any) -> dict[str, Any]:
+            generated.append(kwargs["chapter_number"])
+            return {
+                "success": True,
+                "summary_text": f"summary-{kwargs['chapter_number']}",
+                "error": None,
+                "final_state": {},
+                "final_version_id": f"v-{kwargs['chapter_number']}",
+                "budget_used": 0.8,
+                "context_emergency": False,
+                "quality_gate_passed": True,
+                "settlement_success": True,
+                "summary_success": True,
+            }
+
+        with (
+            patch("songyan.workflows.phase2_graph._run_single_chapter", side_effect=_fake_run),
+            patch("songyan.workflows.phase2_graph._save_run_state", new_callable=AsyncMock),
+            patch("songyan.workflows.phase2_graph.reset_checkpointer", new_callable=AsyncMock),
+            patch(
+                "songyan.workflows.checkpointer.prune_orphan_checkpoints",
+                new_callable=AsyncMock,
+                return_value=0,
+            ),
+        ):
+            result = await run_project_pipeline(
+                project_id=PID,
+                chapter_range=(1, 4),
+                auto_confirm=True,
+                resume=True,
+            )
+
+        # 关键断言：Ch3-4 缺口必须被驱动生成（不再 0 生成短路），已 accepted 的 Ch1-2 跳过
+        assert sorted(generated) == [3, 4], f"only Ch3-4 must be generated, got {sorted(generated)}"
+        assert result.final_status == "completed"
+        assert result.chapters_completed == [1, 2, 3, 4]
+
 
 # --------------------------------------------------------------------------- #
 # Checkpoint pruning
