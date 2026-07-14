@@ -19,12 +19,17 @@ context_emergency_budget_ratio_halt: budget_used_before_emergency=1.4019 >= thre
 | 指标 | 数值 | 说明 |
 |---|---|---|
 | ContextEmergency 触发 | 8/8 | 每章都触发紧急裁剪 |
-| budget_used 峰值 | 1.40 | 超出默认 32K 预算 40% |
-| genre_rules 长度 | 3499 字符 | scifi 仅 2531 字符，长 38% |
+| Ch8 动态预算 | **10,000 token** | `8000 + 8×250`（`_assemblers.py:_dynamic_budget`），**不是 32K** |
+| budget_used 峰值 | 1.4019 | **核裁后残值**（`_context_emergency` 在 `_enforce_budget_hard` 之后测量） |
+| genre_rules 长度 | 3499 字符 | scifi 仅 2531 字符，长 38%（**char 数，需 172a.1 用 token 重测**） |
 | Ch8 伏笔状态 | 10 planted / 3 due / 13 overdue | 回收链已崩 |
 | 连续性审计 mismatch | Ch3=1, Ch6=2 | 随章节数恶化 |
 
-V5–V7 的 Ch150/Ch200 验证全部集中在 `scifi/space_opera + webnovel_intense`，系统是按科幻的状态动力学调优的：角色少、设定集中、状态变化慢。xuanhuan 状态膨胀曲线完全不同——功法、境界、势力、法宝、地图等离散状态项多，导致 Context Diet 2.0 默认参数直接溢出。
+> **根因修正（三轮代码审计）**：`budget_used_before_emergency=1.4019` 是在 `_enforce_budget_hard`（核裁，已丢弃 dialogue_cards/open_threads/soft_refs/foreshadowing/character_states）**之后**测得的残值（`context_manager/__init__.py:836-838`）。核裁与 `_context_emergency` **都从不裁剪** `hard_constraints / genre_rules / mode_rules / chapter_goal`（`__init__.py:668`、`:840-860`）。因此 Ch8 的 ~14,000 token 残值（1.40 × 10,000）**几乎全是不可裁核心**——溢出不在可裁分区之间的权重分配，而在不可裁核心本身。
+>
+> **推论**：调整 `character_states/recent_plot/soft_references/foreshadowing` 分区权重比例（`__init__.py:342-346`）**无法**压下这个溢出。真正的杠杆是 **(a) 抬高 base budget / 爬坡起点（`DEFAULT_BASE_BUDGET`/`BUDGET_INCREMENT_PER_CHAPTER`）**、**(b) 缩短 xuanhuan genre_rules 内容本身（层 3 内容编辑，非层 2 权重）**、**(c) 抬 halt 阈值**。
+
+V5–V7 的 Ch150/Ch200 验证全部集中在 `scifi/space_opera + webnovel_intense`，系统是按科幻的状态动力学调优的：角色少、设定集中、状态变化慢。xuanhuan 状态膨胀曲线完全不同——功法、境界、势力、法宝、地图等离散状态项多，加上更长的 genre_rules，在低预算窗口（Ch8 仅 10K）直接把不可裁核心撑爆。
 
 这不是 xuanhuan 个例，而是**系统性过拟合**：默认运行时是科幻体裁的隐式画像。
 
@@ -82,34 +87,41 @@ V5–V7 的 Ch150/Ch200 验证全部集中在 `scifi/space_opera + webnovel_inte
 
 ### 数据模型（Pydantic v2）
 
+> **模型以真实代码常量为准，字段最终形态由 172a.1 审计确定。** 下方是修正后的骨架（已剔除 32768 静态预算与虚构权重键）：
+
 ```python
 class GenreRuntimeProfile(BaseModel):
     genre: str
     version: str
 
-    # 上下文预算
-    context_budget_total: int = 32768
-    context_budget_weights: dict[str, float] = {
-        "genre_rules": 0.10,
-        "mode_rules": 0.05,
-        "chapter_goal": 0.10,
-        "creative_brief": 0.05,
-        "protagonist_profile": 0.10,
-        "character_profiles": 0.25,
-        "setting": 0.15,
-        "foreshadowing": 0.08,
-        "recent_chapters": 0.08,
-        "summary": 0.04,
+    # 上下文预算：真实机制是 base + 章号 × ramp（_assemblers.py:_dynamic_budget）
+    # 不存在 32768 静态默认值；32K 是 Ch~100 才爬到的动态值
+    base_budget: int = 8000              # = DEFAULT_BASE_BUDGET
+    ramp_per_chapter: int = 250          # = BUDGET_INCREMENT_PER_CHAPTER
+    min_budget: int = 2000               # = MIN_BUDGET_TOKENS
+
+    # 可裁分区权重（仅作用于 character_states/recent_plot/soft_references/foreshadowing，
+    # __init__.py:342-346；注意：这些权重压不动 genre_rules 等不可裁核心）
+    partition_ratios: dict[str, float] = {
+        "character_states": 0.30,
+        "recent_plot": 0.20,
+        "soft_references": 0.15,
+        "foreshadowing": 0.10,
     }
+    # 分区硬上限（__init__.py:73-81）
+    max_soft_refs: int = 10
+    max_foreshadowing: int = 8
+    max_character_states: int = 4
 
     # 角色/设定/伏笔状态压缩
-    character_decay_chapters: int = 5
+    character_decay_chapters: int = 5    # 注意：角色衰减劈裂在两个子系统，见 172a.6
     setting_evaporation_profile: SettingEvaporationProfile
     foreshadowing_evaporation_profile: ForeshadowingEvaporationProfile
 
-    # 门禁阈值
-    emergency_halt_threshold: float = 1.3
-    chapter_health_low_threshold: float = 6.5
+    # 门禁阈值：两个不同的 1.3，必须分开
+    emergency_halt_ratio: float = 1.3    # context_emergency_budget_ratio_threshold @gate_config.py:102
+    hard_enforce_ratio: float = 1.3      # HARD_ENFORCE_THRESHOLD @context_manager/__init__.py:84（核裁，非 halt）
+    # health 阈值族（gate_config.py:28-91；无单一 health_low_threshold 字段，是一组字段）
     continuity_mismatch_tolerance: dict[str, int] = {
         "critical": 0,
         "major": 1,
@@ -120,6 +132,11 @@ class GenreRuntimeProfile(BaseModel):
     arc_summarization_enabled: bool = False
     outline_dimming_enabled: bool = False
 ```
+
+> **两个 1.3 的区别（三轮审计确认）**：
+> - `hard_enforce_ratio`（`HARD_ENFORCE_THRESHOLD`，`context_manager/__init__.py:84`）：超预算 130% 时触发**核裁**（逐级丢弃低优先级可裁分区）。
+> - `emergency_halt_ratio`（`context_emergency_budget_ratio_threshold`，`gate_config.py:102`）：核裁 + emergency 后**仍**超此比例则**门禁 halt**。
+> - 二者数值巧合都是 1.3，但语义与位置不同；参数化时不能合并成一个字段。
 
 ### 核心原则
 
@@ -142,12 +159,13 @@ project.genre -> lookup genre_runtime_profiles table
 
 ### 注入点
 
-- `ContextManager.assemble_context()`：预算权重与总预算。
-- `ContextEmergency`：halt 阈值与总预算。
-- `HaltService` / `HealthGate`：health_low_threshold。
-- `ContinuityAuditor`：mismatch 容忍度。
-- `SettingEvaporator` / `ForeshadowingScheduleRepo`：蒸发曲线。
-- `CharacterStateRepo`：衰减窗口。
+- `ContextManager` / `_assemblers.py:_dynamic_budget`：`base_budget` + `ramp_per_chapter`（**不是"总预算+组件权重"**）。
+- `BudgetPruner._apply_partition_budgets`（`__init__.py:342-346`）：可裁分区权重（压不动不可裁核心）。
+- `ContextEmergency` / `_enforce_budget_hard`：核裁与 emergency 阈值；二者不裁 genre_rules/mode_rules/chapter_goal/hard_constraints。
+- `GateConfig`（`gate_config.py`）+ `_gates.py`：`emergency_halt_ratio` + health 阈值族；**构建时序须先 resolve genre 再建 config**（当前 `cli/main.py:521` 在 genre 已知前构建）。
+- `ContinuityAuditor` / `_scanners.py`：mismatch 容忍度（`FORGOTTEN_THRESHOLD`/`STATE_MISMATCH_WINDOW` 两处重复）。
+- `SettingEvaporator` + `_rank_foreshadowings`：蒸发曲线、due/overdue 排序窗口。
+- `CharacterStateRepository`（归档窗口 30/60/8）+ `_resolve_profile_level`（focal gap 3/10/30）：**角色衰减劈裂两处**。
 
 ## 子任务拆分
 
@@ -181,19 +199,20 @@ project.genre -> lookup genre_runtime_profiles table
 **做**：
 
 1. 新增 `src/songyan/models/genre_runtime_profile.py`，定义 `GenreRuntimeProfile`。
-2. 字段覆盖：
-   - `context_budget_total`: int（默认 32768）
-   - `context_budget_weights`: dict[str, float]
+2. 字段覆盖（**以 172a.1 审计的真实常量为准**，不用 32768/虚构权重）：
+   - `base_budget`: int（默认 8000 = `DEFAULT_BASE_BUDGET`）
+   - `ramp_per_chapter`: int（默认 250）、`min_budget`: int（默认 2000）
+   - `partition_ratios`: dict（仅 character_states/recent_plot/soft_references/foreshadowing）
+   - `max_soft_refs` / `max_foreshadowing` / `max_character_states`: int
    - `character_decay_chapters`: int
    - `setting_evaporation_profile`: dict（resolve_confidence 阈值与蒸发速率）
    - `foreshadowing_evaporation_profile`: dict（due 窗口、overdue 阈值）
-   - `emergency_halt_threshold`: float
-   - `chapter_health_low_threshold`: float
+   - `emergency_halt_ratio`: float（gate halt，默认 1.3）
+   - `hard_enforce_ratio`: float（核裁，默认 1.3，与上一字段区分）
    - `continuity_mismatch_tolerance`: dict
-   - `arc_summarization_enabled`: bool
-   - `outline_dimming_enabled`: bool
+   - `arc_summarization_enabled` / `outline_dimming_enabled`: bool
 3. 新增 migration 在 SQLite 创建 `genre_runtime_profiles` 表；`genre` 字段唯一。
-4. 注册默认 Profile（即当前 sci-fi 行为），保证回退。
+4. 注册默认 Profile（即当前 sci-fi 行为，来自 172a.1 baseline 快照），保证回退。
 
 **不做**：
 
@@ -211,11 +230,17 @@ project.genre -> lookup genre_runtime_profiles table
 # tests/models/test_genre_runtime_profile.py
 def test_default_profile_is_sci_fi_fallback():
     profile = load_profile("scifi")
-    assert profile.context_budget_total == 32768
+    assert profile.base_budget == 8000
+    assert profile.ramp_per_chapter == 250
 
-def test_xuanhuan_profile_has_higher_budget():
-    profile = load_profile("xuanhuan")
-    assert profile.context_budget_weights["setting"] > load_profile("scifi").context_budget_weights["setting"]
+def test_xuanhuan_profile_has_higher_base_budget():
+    # 真实杠杆是 base budget（不可裁核心在低预算窗口溢出），不是分区权重
+    assert load_profile("xuanhuan").base_budget > load_profile("scifi").base_budget
+
+def test_two_distinct_ratio_fields():
+    p = load_profile("scifi")
+    assert p.emergency_halt_ratio == 1.3   # gate halt
+    assert p.hard_enforce_ratio == 1.3     # 核裁，独立字段
 ```
 
 ---
@@ -245,38 +270,42 @@ def test_xuanhuan_profile_has_higher_budget():
 
 ### 172a.4: Context Diet 预算分配按体裁
 
-**目标**：让 `ContextManager` 按 Profile 的权重和总预算组装上下文包。
+**目标**：让 `ContextManager` 按 Profile 的 base_budget/ramp 组装上下文包，压下 xuanhuan 在低预算窗口的不可裁核心溢出。
 
 **做**：
 
-1. 修改 `ContextManager.assemble_context()`，将硬编码的预算分配替换为 `profile.context_budget_weights`。
-2. `ContextEmergency` 触发逻辑改用 `profile.context_budget_total` 与 `profile.emergency_halt_threshold`。
-3. 对 xuanhuan Profile 初步调参：提高 setting 权重、降低部分 genre_rules 挤占；确保 Ch8 budget_used 峰值 < 1.0（不触发 emergency）。
+1. 修改 `_assemblers.py:_dynamic_budget`，`base_budget` 与 `ramp_per_chapter` 来自 profile（替换 `DEFAULT_BASE_BUDGET`/`BUDGET_INCREMENT_PER_CHAPTER` 全局常量）。
+2. `_apply_partition_budgets` 的分区比例、`prune()` 的硬上限来自 `profile.partition_ratios` / `max_*`（仅影响可裁分区）。
+3. `_enforce_budget_hard` / `_context_emergency` 的阈值来自 `profile.hard_enforce_ratio`。
+4. 对 xuanhuan Profile 初步调参：**优先抬高 `base_budget`（例如 8000→12000）与/或缩短 genre_rules 内容**，使 Ch8 有效预算容纳不可裁核心，目标 budget_used 峰值 < 1.0（不触发 emergency）。**不靠调分区权重压核心溢出**（权重压不动 genre_rules）。
 
 **不做**：
 
-- 不调整 Prompt 内容本身；只调整装配预算。
+- 不调整 Prompt 内容本身（genre_rules 内容缩短归 172d/层 3，本任务只调运行时预算数值）；
+- 不靠分区权重比例去解决核心溢出。
 
 **验收**：
 
-- xuanhuan `--end 15` 不再因 budget_used > 1.3 被 halt；
-- scifi `--end 10` regression 通过。
+- xuanhuan `--end 15` budget_used 峰值 < 1.0，不触发连续 ContextEmergency，不被 halt；
+- scifi `--end 10` regression 通过（base_budget=8000 不变时行为等价）。
 
 ---
 
 ### 172a.5: 硬门禁阈值按体裁
 
-**目标**：把 halt/health 等硬门禁阈值从全局常量迁移到 Profile。
+**目标**：把 halt/health 等硬门禁阈值从全局常量迁移到 Profile，并修复 GateConfig 构建时序。
 
 **做**：
 
-1. 修改 `src/songyan/services/halt_service.py`（或对应门禁服务），从 Profile 读取阈值。
-2. 修改 health/orphan/T12 等 gate 的判定阈值来源。
-3. 对 xuanhuan 调整：`context_emergency_budget_ratio_halt` 可适度提高（如 1.5），但同步要求 ContextManager 把 budget_used 压到 < 1.0；health_low_threshold 保持不变。
+1. 修改 `_gates.py` / `GateConfig`，`emergency_halt_ratio` 与 health 阈值族从 profile 读取。
+2. **修复构建时序**：`cli/main.py:521` 当前在 genre 已知前就构建全局 `GateConfig.for_mode(gate_mode)`。改为先 `load project → resolve genre → load profile`，再用 profile 构建 GateConfig（或把 ratio 检查下沉到 project 已知的节点）。
+3. 对 xuanhuan 调整：`emergency_halt_ratio` 可适度提高（如 1.5）作为兜底，但**主压力仍靠 172a.4 把 budget_used 压到 < 1.0**；health 阈值族保持不变。
+4. 区分两个 1.3：只调 `emergency_halt_ratio`（gate），`hard_enforce_ratio`（核裁）默认不动。
 
 **不做**：
 
-- 不放宽 T9/T10/T12 冻结口径。
+- 不放宽 T9/T10/T12 冻结口径；
+- 不把 halt 阈值当成掩盖预算问题的手段（阈值提高必须伴随 budget_used 实际下降）。
 
 **验收**：
 

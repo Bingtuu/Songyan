@@ -1,9 +1,9 @@
 # V8 Task 总索引
 
 > **阶段**: 多体裁可插拔质量 → 多体裁章数爬坡  
-> **当前口径**: V7 在 sci-fi 单一体裁下达成 Ch200 后收尾。V8 的目标不是再做一轮类似 Task 170 的"文学性专项 prompt 工程"，而是把支撑 sci-fi 长跑的**工程底盘**（Context Diet 2.0、门禁、结算、连续性审计）从科幻隐式画像解耦，建立 `GenreRuntimeProfile`，让 xuanhuan/wuxia/urban 等体裁也能达到与 sci-fi **同等的完成度和质量基线**，再向中篇（Ch100/Ch150）爬坡。  
-> **任务编号**: V8 从 Task 172 开始：Task 172 为项目模板化与体裁可插拔（`ProjectTemplate`），172a 为体裁运行时画像（`GenreRuntimeProfile`）。原 Task 172 的 Ch250 目标已取消归档。  
-> **最后整理**: 2026-07-14（V7 收尾，V8 启动，历史报告归档）
+> **当前口径**: V7 在 sci-fi 单一体裁下达成 Ch200 后收尾。V8 的目标不是再做一轮类似 Task 170 的"文学性提分 prompt 工程"，而是把支撑 sci-fi 长跑的**工程底盘**（Context Diet 2.0、门禁、结算、连续性审计）以及**既有文学护栏**从科幻隐式画像解耦——运行时契约建立 `GenreRuntimeProfile`（层 2），文学护栏 lexicon/主角名参数化到 `GenreProfile`（层 3，Task 172d），让 xuanhuan/wuxia/urban 等体裁达到与 sci-fi **同等的完成度和质量基线**，再向中篇（Ch100/Ch150）爬坡。  
+> **任务编号**: V8 从 Task 172 开始：Task 172 为项目模板化与体裁可插拔（`ProjectTemplate`），172a 为体裁运行时画像（`GenreRuntimeProfile`），172d 为文学护栏跨体裁化。原 Task 172 的 Ch250 目标已取消归档。  
+> **最后整理**: 2026-07-14（V7 收尾，V8 启动，历史报告归档；三轮审计后修正数据模型事实与文学层范围）
 
 本文是 V8 阶段任务文档的事实入口。V7 历史事实入口见 `tasks/V7-README.md`；V6 见 `tasks/V6-README.md`；V5 见 `tasks/V5-README.md`；历史规划稿统一归档到 `archive/`，仅在追溯设计边界时查阅。
 
@@ -23,7 +23,7 @@ V8 通过 = 同时满足以下五项：
 |------|------|
 | **P（可插拔）** | `GenreRuntimeProfile` 机制可插拔：新增体裁只需新增 Profile 文件/记录，不修改核心逻辑；无 Profile 体裁 100% 回退旧行为 |
 | **C（完成度）** | xuanhuan/wuxia/urban 短窗口验证 accepted 率达到 sci-fi 同级：**--end 10 全 accepted，--end 15 全 accepted，--end 20 gap ≤1 且有明确 isolate 记录** |
-| **Q（质量同标）** | 各体裁短窗口质量指标对齐 sci-fi 基线：T9 hard issue = 0；ContextEmergency 不连续触发；budget_used 峰值 < 1.0；health 不持续退化；连续性审计 critical mismatch = 0；**一致性错误密度 CED ≤ sci-fi 同级** |
+| **Q（质量同标）** | 各体裁短窗口质量指标对齐 sci-fi 基线：T9 hard issue = 0；ContextEmergency 不连续触发；budget_used 峰值 < 1.0；health 不持续退化；连续性审计 critical mismatch = 0；**一致性错误密度 CED ≤ sci-fi 同级**。**CED 只计入体裁中性的带证据 issue**（live 门禁如 `check_supporting_character_goal_presence` 是体裁中性的，按配角名判定，计入）；文学 observe 路径（`observe_active_choice` 等）当前科幻硬编码，**在 172d 落地前不计入 CED、也不作为验收依据**（否则 xuanhuan 会因找不到"林渊/按下"而假失败） |
 | **S（状态可控）** | xuanhuan end 15/20 中 overdue foreshadowing < 5（基线 13），伏笔回收链不崩；角色/设定状态膨胀受控 |
 | **V（中篇爬坡）** | 至少一个非 sci-fi 体裁稳定推进到 Ch100，且前 100 章质量指标不劣于 sci-fi Ch1-Ch100 基线 |
 
@@ -73,6 +73,14 @@ V8 通过 = 同时满足以下五项：
 | 172c | 第二个非 sci-fi 体裁 Ch100 爬坡验证 | ⏳ 占位 | 待 172b 完成后写 |
 | 172c.p | Ch100 撞墙定点修复（占位） | ⏳ 占位 | 待 172c 实跑后确定 |
 
+### V8.3：文学护栏跨体裁化（GenreProfile 层 3）
+
+| Task | 名称 | 状态 | 事实文档 |
+|------|------|:----:|----------|
+| 172d | 文学护栏 lexicon + 主角名跨体裁化 | ◻ 规划中 | `tasks/172d-cross-genre-literary-guardrails.md` |
+
+> **172d 定位**：把 `literary_guardrail_observe.py` 的科幻硬编码（`protagonist_name="林渊"` + 5 组主动选择/配角/代价 lexicon）参数化——主角名从 `protagonist_profile` 读取，lexicon 迁入 `GenreProfile` 并为 xuanhuan/wuxia/urban 各配一套，无 profile 回退科幻组。**172d 必须先于 172a.7 落地**：172a.7 的多体裁短窗口质量报告正是用文学 observe 路径渲染的，不修 172d 则 xuanhuan 报告会因找不到"林渊/按下"而每章判 MISSING，验收报告失真。
+
 ---
 
 ## 关键数据
@@ -110,10 +118,12 @@ V8 通过 = 同时满足以下五项：
 
 `GenreRuntimeProfile` 是 Context Diet 2.0 的运行时契约，每个体裁拥有独立配置：
 
-- **上下文预算**：总 token 预算与各组件权重（genre_rules、mode_rules、character_profiles、setting、foreshadowing 等）。
+- **上下文预算**：**base budget + 每章增量（真实机制：`8000 + 章号 × 250`，见 `_assemblers.py:_dynamic_budget`；不是静态 32K，32K 是 Ch~100 才爬到的动态值）**。profile 参数化 `base_budget` 与 `ramp_per_chapter`。
 - **状态压缩**：角色衰减窗口、设定蒸发曲线、伏笔置信度衰减。
-- **门禁阈值**：context_emergency_budget_ratio_halt、health_low_threshold、continuity mismatch 容忍度。
+- **门禁阈值**：`context_emergency_budget_ratio_threshold`（halt，@gate_config）、`HARD_ENFORCE_THRESHOLD`（核裁，@context_manager，与前者是**两个不同的 1.3**）、health 阈值族、continuity mismatch 容忍度。
 - **高级策略**：arc_summarization_enabled、outline_dimming_enabled。
+
+> **根因修正（三轮审计结论）**：xuanhuan Ch8 被 halt 时，动态预算仅 `8000 + 8×250 = 10,000` token，`budget_used_before_emergency=1.4019` 是**核裁之后**测得的残值（`_context_emergency` 在 `_enforce_budget_hard` 之后运行）。核裁与 emergency **从不裁剪** `hard_constraints / genre_rules / mode_rules / chapter_goal`，所以 1.40 残值几乎全是**不可裁核心**。因此**调整分区权重（character_states/recent_plot/soft_references/foreshadowing 之间的比例）无法压下溢出**——溢出发生在不可裁核心。真正的杠杆是：**(a) 抬高 base budget / 爬坡起点**、**(b) 缩短 xuanhuan genre_rules 内容本身（层 3 内容编辑）**、**(c) 抬 halt 阈值**。
 
 加载顺序：
 
@@ -128,12 +138,13 @@ project.genre
 
 ### 注入点
 
-- `ContextManager.assemble_context()`
-- `ContextEmergency`
-- `HaltService` / `HealthGate`
-- `ContinuityAuditor`
-- `SettingEvaporator` / `ForeshadowingScheduleRepo`
-- `CharacterStateRepo`
+- `ContextManager` 预算装配（`_dynamic_budget` base/ramp；分区权重仅作用于**可裁分区**）
+- `ContextEmergency` / `_enforce_budget_hard`（halt/核裁阈值；注意二者不裁不可裁核心）
+- 门禁服务 `_gates.py` / `GateConfig`（health 阈值族 + halt 阈值；**构建时序需先 resolve genre 再建 config**，当前 `cli/main.py:521` 在 genre 已知前就构建了全局 GateConfig）
+- `ContinuityAuditor` / `_scanners.py`（mismatch 容忍度；注意 `FORGOTTEN_THRESHOLD`/`STATE_MISMATCH_WINDOW` 在两处重复定义）
+- `SettingEvaporator` / 伏笔排序（蒸发曲线、due/overdue 窗口）
+- `CharacterStateRepository`（归档窗口 30/60/8）+ `_resolve_profile_level`（focal gap 3/10/30）——**角色衰减劈裂在两个子系统**
+- **（层 3，172d）** `literary_guardrail_observe.py` lexicon + 主角名 → `GenreProfile` / `protagonist_profile`
 
 ### 可插拔与回退
 
@@ -148,17 +159,23 @@ project.genre
 172 项目模板化 ─────────────────────────────────────────────────────────────────────┐
                                                                                     │
                                                                                     ▼
-172a.1 常量审计 ──► 172a.2 模型 ──► 172a.3 加载机制 ──► 172a.4 预算分配 ──► 172a.5 门禁阈值 ──► 172a.6 状态压缩 ──► 172a.7 短窗口验证
-                                                                                                                  │
-                                                                                                                  ▼
-                                                                                                          172b Ch100 爬坡（候选 xuanhuan）
-                                                                                                                  │
-                                                                                                                  ▼
-                                                                                                          172c 第二体裁 Ch100 爬坡
+172a.1 常量审计 ──► 172a.2 模型 ──► 172a.3 加载机制 ──► 172a.4 预算分配 ──► 172a.5 门禁阈值 ──► 172a.6 状态压缩 ──┐
+                                                                                                              │
+172d 文学护栏跨体裁化（可与 172a.2–172a.6 并行）──────────────────────────────────────────────────────────────┤
+                                                                                                              ▼
+                                                                                                      172a.7 短窗口验证 + 多体裁质量报告
+                                                                                                              │
+                                                                                                              ▼
+                                                                                                      172b Ch100 爬坡（候选 xuanhuan）
+                                                                                                              │
+                                                                                                              ▼
+                                                                                                      172c 第二体裁 Ch100 爬坡
 ```
 
 - **172 是 172a 的前置**：`ProjectTemplate` 为各体裁提供统一的项目初始化入口；`GenreRuntimeProfile` 依赖模板化的项目结构来按 genre 加载运行时参数。
 - **172a 串行为主**：Profile 机制是后续所有体裁调参的地基，必须等模型与加载机制落地后才能调预算/阈值/压缩策略。
+- **172d 是 172a.7 的硬前置**：172a.7 的多体裁质量报告用文学 observe 路径渲染；172d 未落地则 xuanhuan/wuxia/urban 报告失真。172d 可与 172a.2–172a.6 并行开发（改的是 `GenreProfile` 层，与运行时层解耦），但必须在 172a.7 前合入。
+- **预算杠杆是 base_budget/genre_rules 内容，不是分区权重**：溢出在不可裁核心，172a.4 调 base_budget 爬坡起点 + 缩短 genre_rules 内容，不调可裁分区权重比例。
 - **不回退 sci-fi**：任何 Profile 改动必须通过 sci-fi `--end 10` 回归，保证旧行为不变。
 - **短窗口是对标手段，不是终点**：V8.1 用 end 10/15/20 快速验证各体裁是否能达到 sci-fi 同级质量；通不过不进 172b。
 - **质量同标，不放宽口径**：非 sci-fi 体裁的 T9/health/orphan/伏笔回收等硬指标与 sci-fi 使用同一套冻结口径，不因"体裁特殊"而降低验收。
@@ -171,12 +188,14 @@ project.genre
 
 | 项 | 归属 |
 |----|------|
-| 重复 Task 170 式文学性专项 prompt 工程 | V8 是工程底盘解耦，不是文学 rubric 调优；文学质量仍按 V7 三层契约观测，不作为阻塞门 |
-| 新增 Agent / Workflow 节点 | V8 只做运行时参数解耦，不新增节点 |
-| 全自动跨体裁 LLM 改写闭环 | 不做；只调 Context Diet 预算、阈值、压缩策略 |
+| 重复 Task 170 式**文学性 rubric 调优 / prompt 工程**（新增 rubric、重写 Writer prompt 追求文学高分） | V8 不做文学质量提分；文学**内容质量**仍按 V7 三层契约观测，不作为阻塞门 |
+| 新增 Agent / Workflow 节点 | V8 只做运行时参数解耦 + 既有护栏参数化，不新增节点 |
+| 全自动跨体裁 LLM 改写闭环 | 不做；只调 Context Diet 预算、阈值、压缩策略 + 既有文学护栏 lexicon 参数化 |
 | 所有体裁一次验证到 Ch200 | V8 目标先做到短窗口质量同标 + 1-2 体裁 Ch100；Ch200 跨体裁验证划归 V9 或更晚 |
 | 多项目并发 / 分布式长跑 | 不做 |
 | 继续优化 sci-fi 单一体裁到 Ch250/Ch300 | 已取消，划归 V7 历史目标 |
+
+> **范围澄清（172d 归属）**：既有文学护栏（`literary_guardrail_observe.py`）当前把主角名 `林渊` 与主动选择/配角/代价 lexicon **硬编码为科幻形状**。将其**参数化为按体裁可插拔**（主角名从 `protagonist_profile` 读取、lexicon 迁入 `GenreProfile`）**属于 V8 范围**（Task 172d，风格实现层解耦），与"重做 Task 170 式文学提分"是两回事——前者是让既有护栏在非科幻体裁不失真，后者是追求更高文学分。V8 只做前者。
 
 ---
 
@@ -186,6 +205,7 @@ project.genre
 - Task 172 完成报告：`tasks/172-project-template-plugin-DONE.md`
 - Task 172 测试计划：`tasks/172-project-template-plugin-TEST-PLAN.md`
 - V8 P0 详细规划：`tasks/172a-v8-genre-runtime-profiles.md`
+- V8 文学护栏跨体裁化：`tasks/172d-cross-genre-literary-guardrails.md`
 - V8 长调研报告：`docs/reports/v8-literature-and-landscape-review.md`
 - 项目状态：`docs/STATUS.md`
 - 文档路由：`docs/INDEX.md`
