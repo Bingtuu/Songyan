@@ -321,7 +321,13 @@ def _setting_reference_terms(setting: dict[str, Any]) -> set[str]:
     name = (setting.get("setting_name") or "").strip()
     if len(name) >= 2:
         terms.add(name)
-        for part in re.split(r"[·—\-_/（）()\[\]【】,，、;；:\s]+", name):
+        # Bug（V8 172b.p）：xuanhuan 惯用引号包裹的口语化设定名（如 祭坛上的'那个东西'），
+        # 旧 split 集不含引号，导致引号内的 4 字核心词（那个东西）永远不生成为引用词，
+        # 正文明明多次出现却判为 orphan → 误触 health_low_p1_halt。将中英文引号纳入
+        # 分隔符，使引号内实体成为独立 name-part term（仍受 len>=2 与 low-info 过滤约束）。
+        for part in re.split(
+            r"[·—\-_/（）()\[\]【】,，、;；:\s'\u2018\u2019\u201c\u201d\"“”]+", name
+        ):
             cleaned = part.strip()
             if len(cleaned) >= 2:
                 terms.add(cleaned)

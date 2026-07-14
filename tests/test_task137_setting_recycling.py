@@ -112,6 +112,44 @@ class TestDetectSettingReferences:
 
         assert refs == {}
 
+    def test_172bp_quoted_xuanhuan_name_refreshes_tracking(self) -> None:
+        """V8 172b.p: 引号包裹的口语化 xuanhuan 设定名，正文出现引号内实体应刷新 tracking.
+
+        真实事故：设定名 祭坛上的'那个东西'，key_alias=entity（英文），旧 split 集不含
+        引号，正文多次出现「那个东西」却判为 orphan → 误触 health_low_p1_halt。
+        """
+        settings = [
+            {
+                "tracking_id": "t1",
+                "setting_key": "xuanhuan_lingyuan_heritage.altar.entity",
+                "setting_name": "祭坛上的'那个东西'",
+                "category": "critical",
+                "status": "active",
+            }
+        ]
+        content = "陆沉盯着祭坛，那个东西的轮廓在幽光里微微起伏，仿佛在呼吸。"
+
+        refs = _detect_setting_references(content, settings)
+
+        assert refs == {"t1": "xuanhuan_lingyuan_heritage.altar.entity"}
+
+    def test_172bp_quoted_name_absent_does_not_refresh(self) -> None:
+        """V8 172b.p: 引号内实体在正文缺席时不应刷新（门禁仍能捕获真实 orphan）."""
+        settings = [
+            {
+                "tracking_id": "t1",
+                "setting_key": "xuanhuan_lingyuan_heritage.altar.entity",
+                "setting_name": "祭坛上的'那个东西'",
+                "category": "critical",
+                "status": "active",
+            }
+        ]
+        content = "他离开了灵渊，前往东境的城池，再未回望那座祭坛之外的群山。"
+
+        refs = _detect_setting_references(content, settings)
+
+        assert refs == {}
+
     def test_avoids_substring_inside_longer_word(self) -> None:
         settings = [
             {

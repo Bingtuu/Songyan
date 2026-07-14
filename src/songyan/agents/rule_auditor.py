@@ -1453,8 +1453,21 @@ def _check_mandatory_references(
         # 取 key 的最后一个 segment 作为别名（如 surface_material）
         key_alias = key.split(".")[-1] if key else ""
 
+        # Bug（V8 172b.p）：xuanhuan 惯用引号包裹的口语化设定名（祭坛上的'那个东西'），
+        # 全名含引号在正文不逐字出现、key_alias 又是英文（entity），旧三元候选全落空，
+        # 与 settlement 的引用检测口径不一致 → 反复要求回收、误判 orphan。此处按同一套
+        # 分隔符（含中英文引号）拆出 name-part 候选（len>=2），使两条路径口径一致。
+        candidates = [name, key_alias, key]
+        if name:
+            for part in re.split(
+                r"[·—\-_/（）()\[\]【】,，、;；:\s'\u2018\u2019\u201c\u201d\"“”]+", name
+            ):
+                cleaned = part.strip()
+                if len(cleaned) >= 2:
+                    candidates.append(cleaned)
+
         found = False
-        for candidate in (name, key_alias, key):
+        for candidate in candidates:
             if candidate and candidate in text:
                 found = True
                 break
