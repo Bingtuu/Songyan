@@ -34,6 +34,6 @@ def test_xuanhuan_profile_budget_is_higher_at_ch8() -> None:
     xuanhuan = load_profile_from_registry("xuanhuan")
     # Ch8 is where xuanhuan halted; higher base budget must give more headroom
     assert xuanhuan.dynamic_budget(8) > scifi.dynamic_budget(8)
-    # scifi Ch8 = 8000 + 8*250 = 10000; xuanhuan base 13000 (172a.4 calibrated) -> 15000
+    # scifi Ch8 = 8000 + 8*250 = 10000; xuanhuan base 15000 (172a.7 calibrated) -> 17000
     assert scifi.dynamic_budget(8) == 10000
-    assert xuanhuan.dynamic_budget(8) == 15000
+    assert xuanhuan.dynamic_budget(8) == 17000

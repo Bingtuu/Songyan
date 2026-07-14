@@ -112,14 +112,14 @@ async def test_repo_get_missing_returns_none(test_db: Path) -> None:
 
 async def test_load_profile_db_priority_then_registry(test_db: Path) -> None:
     repo = GenreRuntimeProfileRepository()
-    # DB 无记录 -> 回退注册表 xuanhuan (base_budget=13000, 172a.4 calibrated)
+    # DB 无记录 -> 回退注册表 xuanhuan (base_budget=15000, 172a.7 calibrated)
     reg = await load_profile("xuanhuan")
-    assert reg.base_budget == 13000
+    assert reg.base_budget == 15000
 
-    # 写 DB 覆盖 -> DB 优先
-    await repo.upsert(GenreRuntimeProfile(genre="xuanhuan", base_budget=15000))
+    # 写 DB 覆盖 -> DB 优先（用与注册表不同的值证明 DB 生效）
+    await repo.upsert(GenreRuntimeProfile(genre="xuanhuan", base_budget=18000))
     db_first = await load_profile("xuanhuan")
-    assert db_first.base_budget == 15000
+    assert db_first.base_budget == 18000
 
 
 async def test_load_profile_unknown_genre_returns_scifi(test_db: Path) -> None:
