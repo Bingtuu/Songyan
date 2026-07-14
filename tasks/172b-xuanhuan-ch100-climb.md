@@ -1,9 +1,10 @@
 # Task 172b — 非 sci-fi 体裁 Ch100 爬坡验证
 
-> **状态**: ◻ 规划中（待 172a.7 + 172a.p 短窗口验收全绿后开工）
+> **状态**: 🔄 进行中（172a.7 + 172a.p 全绿，Ch100 爬坡实跑中）
 > **归属**: V8.2 多体裁章数爬坡（V8 验收 **V 维度**）
-> **前置**: 172a.7 短窗口质量同标 + 172a.p S 维度达标（overdue<5）
+> **前置**: 172a.7 短窗口质量同标 + 172a.p S 维度达标（overdue<5）✅
 > **候选体裁**: **xuanhuan**（首选）
+> **对标基线**: sci-fi Ch1-100（`.tmp/task171_ch1_ch200.db` = V7「轨道蜃景」220/220 accepted，见 §1.1）
 
 ---
 
@@ -25,6 +26,24 @@ V8-README V 维度判据：
 | **S（伏笔）** | overdue foreshadowing 受控（172a.p horizon floor 在 Ch100 尺度仍有效） | — |
 
 > **质量同标纪律**：不因"玄幻状态密度高"放宽任何硬指标。撞墙则路由 `172b.p` 定点修复，不放宽阈值、不做 prompt 工程。
+
+### 1.1 sci-fi Ch1-100 基线（冻结对标口径）
+
+用 172b harness 的 `_segment_metrics` 同一方法（issue 数按 `chapter_number <= up_to` 界定）从 V7 sci-fi 实跑 DB `.tmp/task171_ch1_ch200.db`（project `835afdf1…`，genre=scifi，220/220 accepted）提取，脚本 `.tmp/compute_scifi_baseline.py`，落盘 `.tmp/scifi_ch100_baseline.json`：
+
+| checkpoint | accepted | budget_peak | before_emerg_peak | emergency | overdue | health | CED/1k |
+|---:|---:|---:|---:|---:|---:|---:|---:|
+| Ch25 | 25/25 | 0.989 | 1.267 | 28 | 61 | 9.2 | 9.33 |
+| Ch50 | 50/50 | 0.989 | 1.267 | 32 | 110 | 9.4 | 9.28 |
+| Ch75 | 75/75 | 0.989 | 1.267 | 32 | 136 | 9.9 | 9.46 |
+| Ch100 | 100/100 | 0.989 | 1.267 | 32 | 168 | 10.0 | 9.13 |
+
+**对标口径澄清**（关键，避免误判）：
+
+1. **budget < 1.0**：sci-fi 峰值 0.989（近上限但从不 halt）。xuanhuan 峰值应同样 < 1.0、无 `context_emergency_budget_ratio_halt`。
+2. **CED ≤ sci-fi 同级**：sci-fi Ch1-100 CED 稳定在 **9.13-9.46**（不随章数衰减，证明 harness CED 已正确密度归一）。xuanhuan 应 ≤ 该量级（短窗口 end15 已测 10.48，约 +14%，Ch100 尺度需实测）。
+3. **overdue 用 Ch100 尺度判**：sci-fi 自身 Ch100 overdue = **168**（未完结长篇天然携带大量 open thread）。V 维度是「≥ sci-fi 基线」——xuanhuan Ch100 overdue 只要 **≤ sci-fi 同尺度（≤168）** 即达标，**不套用 S 维度 end15 的 `<5`**（那是短窗口口径）。172a.p 的 floor=12 保证 xuanhuan 不会比 sci-fi 更短视。
+4. **health median ≥ sci-fi**：sci-fi Ch25-100 health 9.2→10.0。xuanhuan median 不持续退化即可。
 
 ## 2. 为什么选 xuanhuan
 
