@@ -149,6 +149,18 @@ Ch75 正式段边界（172b.p 修复后续跑）：
 
 当前判断：172b.p 的 long-window floor 修复稳定，orphan 风险主要来自 accepted 前的 in-flight 版本尚未刷新 tracking；只在 accepted 后仍 `critical_orphans>0` 时再开新定点修复。
 
+### 4.5 实跑事故记录：Ch91-Ch93 CED 终段超线（转 172b.q）
+
+**现象**：Ch89 仍五门 PASS（CED 10.60 <= 同章 ceiling 10.67），但 Ch91 起 CED early-warning 持续 FAIL：Ch91 10.66 > ceiling 10.64；Ch92 10.66 > ceiling 10.63；Ch93 10.76 > 约 10.60。Ch100 ceiling 为 sci-fi Ch100 9.1328 × 1.15 ≈ 10.50。按 Ch93 现场，剩余 7 章若平均 3000 字/章，新增 evidence issue 总量需 ≤136（约 19.4/章）才可能自然摊薄；而最近 Ch89/90/92/93 分别为 58/65/38/74，继续硬跑大概率 Ch100 CED FAIL。
+
+**根因分层**：
+
+1. 当前 `.tmp/vdim_compare.py` 的 CED numerator 过宽：把 `show_dont_tell`、`narrative_pacing`、`dialogue_subtext` 等文学 craft issue 计入 CED；它们不属于 Consistency Error Density。
+2. 当前 vdim 同时计入 `llm` 与 `merged` report，而 merged 已包含 LLM issues，存在双重计数。
+3. 即便过滤为 consistency-only，xuanhuan 的 `character_behavior` / `dialogue_distinctness` 密度仍高于 sci-fi，说明存在真实人物行为/声纹一致性风险，不能靠量具纠偏直接宣告通过。
+
+**路由**：停止继续烧 Ch94-Ch100 token，转 `tasks/172b.q-consistency-ced-repair.md`：先修 CED 量具（consistency-only、去双计数、accepted source 可解释），再决定是否做真实 consistency 修复。不放宽 tolerance，不把文学 craft 当 CED 阻塞门。
+
 
 ## 5. 依赖
 
