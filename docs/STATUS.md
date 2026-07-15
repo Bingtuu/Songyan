@@ -50,7 +50,7 @@
 
 1. **V8 技术债清理**：✅ 已完成（172e-172i）。`GenreRuntimeProfile` 声明后未接线的字段已全部接到消费者；`load_profile()` 已改为注册表基线 + DB 字段级覆盖层；`arc_summarization_enabled` / `outline_dimming_enabled` / `mismatch_tolerance` 占位字段已移除。
 2. **V8 收口**：172b 已达标，V8 五维验收全绿；保持 `tasks/V8-README.md` 为事实入口，并按其中的编号治理规则维护后续任务。
-3. **后续增强**：如需扩大长窗口佐证，再启动 **172c** 第二体裁（wuxia，已预置 horizon_floor=12）Ch100 爬坡；启动前必须先补 `tasks/172c-*.md`，不能直接从占位行开跑。
+3. **后续增强**：如需扩大长窗口佐证，再启动 **172c** 第二体裁（wuxia，已预置 horizon_floor=12）Ch100 爬坡；任务文档已补齐（`tasks/172c-wuxia-ch100-climb.md`），按其 §5 前置检查清单启动。
 4. **守护项**：后续 CED 仍使用 consistency-only、merged/source、正文证据口径；不得把文学 craft 或 `rule-mr-*` 聚合工作项计入 CED。
 
 ## 入口

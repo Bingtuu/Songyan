@@ -105,7 +105,7 @@ V8 当前完成判据已满足。172c（wuxia 第二体裁 Ch100）保留为 V8-
 | Task | 名称 | 状态 | 事实文档 |
 |------|------|:----:|----------|
 | 172b | 非 sci-fi 体裁 Ch100 爬坡验证（首选：xuanhuan） | ✅ 完成 | `tasks/172b-xuanhuan-ch100-climb.md` |
-| 172c | 第二个非 sci-fi 体裁 Ch100 爬坡验证（候选：wuxia） | ⏳ 占位 | V8-pass 后续增强，启动前补任务文档 |
+| 172c | 第二个非 sci-fi 体裁 Ch100 爬坡验证（候选：wuxia） | ◻ 规划中 | `tasks/172c-wuxia-ch100-climb.md` |
 
 #### 172b 撞墙定点修复（从属于 172b，不是独立阶段）
 
@@ -265,7 +265,7 @@ project.genre
                                                                                                       V8 验收完成（P/C/Q/S/V 五维全绿）
                                                                                                               │
                                                                                                               ▼
-                                                                                                      172e-172i 运行时契约补完（V8-pass 后技术债；可并行）
+                                                                                                      172e-172i 运行时契约补完（V8-pass 后技术债；已全部完成）
 ```
 
 - **172 是 172a 的前置**：`ProjectTemplate` 为各体裁提供统一的项目初始化入口；`GenreRuntimeProfile` 依赖模板化的项目结构来按 genre 加载运行时参数。
@@ -303,6 +303,7 @@ project.genre
 - V8 P0 详细规划：`tasks/172a-v8-genre-runtime-profiles.md`
 - V8 文学护栏跨体裁化：`tasks/172d-cross-genre-literary-guardrails-DONE.md`
 - V8 xuanhuan Ch100 爬坡：`tasks/172b-xuanhuan-ch100-climb.md`
+- V8 wuxia Ch100 爬坡（规划中）：`tasks/172c-wuxia-ch100-climb.md`
 - V8 xuanhuan Ch100 报告：`docs/reports/172b-xuanhuan-ch100-climb.md`
 - V8 CED 终段修复：`tasks/172b.q-consistency-ced-repair.md`
 - V8 运行时契约补完：
