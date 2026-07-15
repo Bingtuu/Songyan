@@ -47,10 +47,11 @@ from songyan.project_templates import ProjectInitializer, ProjectTemplateLoader
 from songyan.workflows.phase2_graph import run_project_pipeline
 
 TEMPLATE_ID = os.getenv("TEMPLATE_ID", "xuanhuan")
+RUN_ID = os.getenv("RUN_ID", "172b")
 DB_PATH = Path(f".tmp/task172b_{TEMPLATE_ID}_ch100.db")
 SEGMENT = int(os.getenv("SEGMENT", "25"))
 PROJECT_FILE = Path(f".tmp/task172b_{TEMPLATE_ID}_project.json")
-REPORT_PATH = Path(f"docs/reports/172b-{TEMPLATE_ID}-ch100-climb.md")
+REPORT_PATH = Path(f"docs/reports/{RUN_ID}-{TEMPLATE_ID}-ch100-climb.md")
 METRICS_PATH = Path(f".tmp/task172b_{TEMPLATE_ID}_segments.jsonl")
 
 

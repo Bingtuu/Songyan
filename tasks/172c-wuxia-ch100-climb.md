@@ -43,12 +43,13 @@ V8-README V 维度判据已由 172b（xuanhuan）闭合；172c 是**已承诺的
 
 ```powershell
 $env:TEMPLATE_ID = "wuxia"          # 默认 xuanhuan；DB/报告路径随模板名变化
+$env:RUN_ID = "172c"                # 报告编号前缀（默认 172b 保持向后兼容）
 $env:DATABASE_URL = "sqlite:///.tmp/task172b_wuxia_ch100.db"
 python scripts/run_172b_ch100_climb.py --init     # ProjectInitializer.from_template("wuxia")
 python scripts/run_172b_ch100_climb.py --to 100   # 分段爬坡，自动 resume
 ```
 
-启动前一行调整：harness `REPORT_PATH` 前缀硬编码 `172b-{TEMPLATE_ID}`，改为 `172c-{TEMPLATE_ID}`（或参数化），避免 wuxia 报告落到 172b 编号下。
+报告编号已参数化：harness `REPORT_PATH` 前缀由 `RUN_ID` 环境变量控制（默认 `172b`），wuxia 报告落盘 `docs/reports/172c-wuxia-ch100-climb.md`。
 
 ### 分段爬坡计划（沿用 172b，25 章一段 = arc 边界）
 
@@ -84,8 +85,8 @@ python scripts/run_172b_ch100_climb.py --to 100   # 分段爬坡，自动 resume
 - [x] wuxia profile 已预置 `base_budget=9500` + `foreshadowing_horizon_floor=12`
 - [x] wuxia 模板骨架 9-arc/3-thread 覆盖 Ch1-250（2026-07-15 核实）
 - [x] 172e-172i 运行时契约补完（profile 字段全接线；scifi 回退回归 2746 passed）
-- [ ] `.tmp/vdim_compare.py` 与 `.tmp/scifi_ch100_baseline.json` 在位（启动时核实）
-- [ ] harness `REPORT_PATH` 编号调整为 172c
+- [x] `.tmp/vdim_compare.py` 与 `.tmp/scifi_ch100_baseline.json` 在位（2026-07-15 核实）
+- [x] harness `REPORT_PATH` 编号参数化（`RUN_ID` 环境变量，默认 `172b` 向后兼容）
 - [ ] 实跑前 scifi `--end 10` 回归确认旧行为不变
 
 ## 6. 依赖
