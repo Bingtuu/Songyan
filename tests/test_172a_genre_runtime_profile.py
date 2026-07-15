@@ -59,6 +59,13 @@ def test_xuanhuan_registry_has_higher_base_budget() -> None:
     assert xuanhuan.base_budget > scifi.base_budget
 
 
+def test_xuanhuan_registry_loads_more_character_state_for_consistency() -> None:
+    xuanhuan = load_profile_from_registry("xuanhuan")
+    scifi = load_profile_from_registry("scifi")
+    assert xuanhuan.max_character_states == 6
+    assert xuanhuan.max_character_states > scifi.max_character_states
+
+
 # --- registry fallback ---------------------------------------------------
 
 

@@ -48,8 +48,12 @@ def _default_registry() -> dict[str, GenreRuntimeProfile]:
         ramp_per_chapter=250,
     )
     # xuanhuan 状态密度高：角色出场密、设定（功法/境界）需长期保持
+    # 172b.q: Ch90+ consistency CED 热点集中在 character_behavior /
+    # dialogue_distinctness；后段预算充足，增加角色状态装载量与 full/compact
+    # 保留窗口，给 Writer/Auditor 更多声纹与行为约束。
+    xuanhuan.max_character_states = 6
     xuanhuan.character_decay.dormant_window = 20
-    xuanhuan.character_decay.focal_gaps = {"full": 4, "compact": 12, "symbol": 40}
+    xuanhuan.character_decay.focal_gaps = {"full": 6, "compact": 16, "symbol": 48}
     xuanhuan.setting_evaporation.time_denominators = {
         "critical": 140,
         "recurring": 110,

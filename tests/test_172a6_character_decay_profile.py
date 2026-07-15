@@ -17,12 +17,18 @@ def test_default_gaps_match_legacy_thresholds() -> None:
 
 def test_xuanhuan_wider_gaps_keep_character_longer() -> None:
     xuanhuan = load_profile_from_registry("xuanhuan")
-    gaps = xuanhuan.character_decay.focal_gaps  # full=4, compact=12, symbol=40
+    gaps = xuanhuan.character_decay.focal_gaps  # full=6, compact=16, symbol=48
     laf = {"c": 100}
-    # gap 40: 默认阈值 symbol_gap=30 -> skip；xuanhuan symbol_gap=40 -> 仍 symbol
+    # gap 48: 默认阈值 symbol_gap=30 -> skip；xuanhuan symbol_gap=48 -> 仍 symbol
+    assert _resolve_profile_level("c", False, False, 148, laf) == "skip"
+    assert _resolve_profile_level("c", False, False, 148, laf, gaps) == "symbol"
+    # 旧 floor=40 仍保持 symbol，证明后段角色声纹保留更宽。
     assert _resolve_profile_level("c", False, False, 140, laf) == "skip"
     assert _resolve_profile_level("c", False, False, 140, laf, gaps) == "symbol"
-    # gap 12: 默认 compact_gap=10 -> symbol；xuanhuan compact_gap=12 -> compact
+    # gap 16: 默认 compact_gap=10 -> symbol；xuanhuan compact_gap=16 -> compact
+    assert _resolve_profile_level("c", False, False, 116, laf) == "symbol"
+    assert _resolve_profile_level("c", False, False, 116, laf, gaps) == "compact"
+    # 旧 compact=12 仍保持 compact。
     assert _resolve_profile_level("c", False, False, 112, laf) == "symbol"
     assert _resolve_profile_level("c", False, False, 112, laf, gaps) == "compact"
 
