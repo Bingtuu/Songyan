@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from sqlite3 import Row
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import aiosqlite
 import structlog
@@ -11,6 +11,9 @@ import structlog
 from songyan.db.connection import get_db
 from songyan.models import ChapterSummary, CharacterState
 from songyan.utils.json_helpers import from_json as _from_json
+
+if TYPE_CHECKING:
+    from songyan.models import GenreRuntimeProfile
 
 logger = structlog.get_logger(__name__)
 
@@ -236,13 +239,23 @@ class CharacterStateRepository:
         self,
         project_id: str,
         current_chapter: int,
-        window: int = 30,
+        window: int | None = None,
         conn: aiosqlite.Connection | None = None,
+        runtime_profile: GenreRuntimeProfile | None = None,
     ) -> int:
-        """将 30 章未出场的非核心角色标记为 dormant.
+        """将未出场 window 章的非核心角色标记为 dormant.
+
+        window 优先级：显式传入值 > profile.character_decay.dormant_window > 默认值 30。
 
         返回: 影响的记录数
         """
+        if window is None:
+            window = (
+                runtime_profile.character_decay.dormant_window
+                if runtime_profile
+                else 30
+            )
+
         async def _do(c: aiosqlite.Connection) -> int:
             threshold = current_chapter - window
             # 获取每个非 protagonist 角色的最新 state_id
@@ -299,13 +312,23 @@ class CharacterStateRepository:
         self,
         project_id: str,
         current_chapter: int,
-        window: int = 60,
+        window: int | None = None,
         conn: aiosqlite.Connection | None = None,
+        runtime_profile: GenreRuntimeProfile | None = None,
     ) -> int:
-        """将 60 章未出场的 dormant 角色标记为 archived.
+        """将未出场 window 章的 dormant 角色标记为 archived.
+
+        window 优先级：显式传入值 > profile.character_decay.archive_window > 默认值 60。
 
         返回: 影响的记录数
         """
+        if window is None:
+            window = (
+                runtime_profile.character_decay.archive_window
+                if runtime_profile
+                else 60
+            )
+
         async def _do(c: aiosqlite.Connection) -> int:
             threshold = current_chapter - window
             cursor = await c.execute(
@@ -416,10 +439,21 @@ class CharacterStateRepository:
         self,
         project_id: str,
         current_chapter: int,
-        window: int = 8,
+        window: int | None = None,
         conn: aiosqlite.Connection | None = None,
+        runtime_profile: GenreRuntimeProfile | None = None,
     ) -> int:
-        """将 8 章未出场的功能性角色（无 goals/relationships）标记为 dormant."""
+        """将未出场 window 章的功能性角色（无 goals/relationships）标记为 dormant.
+
+        window 优先级：显式传入值 > profile.character_decay.functional_window > 默认值 8。
+        """
+        if window is None:
+            window = (
+                runtime_profile.character_decay.functional_window
+                if runtime_profile
+                else 8
+            )
+
         async def _do(c: aiosqlite.Connection) -> int:
             threshold = current_chapter - window
             cursor = await c.execute(

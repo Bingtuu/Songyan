@@ -15,6 +15,20 @@ if TYPE_CHECKING:
     from songyan.db.lifecycle_scheduler import LifecycleScheduler
 
 
+async def _load_project_for_cleaner(project_id: str):
+    """加载 project 以便 cleaner 获取 genre_id."""
+    from songyan.workflows._helpers import load_project
+
+    return await load_project(project_id)
+
+
+async def _load_runtime_profile_for_cleaner(genre_id: str | None):
+    """按 genre_id 加载 runtime profile."""
+    from songyan.db.genre_runtime_profile_repo import load_profile
+
+    return await load_profile(genre_id)
+
+
 class _RepositoryCleanerBase:
     """通用基类 — 通过 before/after 快照记录状态变化."""
 
@@ -146,11 +160,20 @@ class CharacterStateCleaner(_RepositoryCleanerBase, LifecycleCleaner):
     async def _do_archive(
         self, project_id: str, current_chapter: int, conn: aiosqlite.Connection
     ) -> None:
-        await self.repo.archive_stale(project_id, current_chapter, conn=conn)
-        await self.repo.archive_stale_functional(
-            project_id, current_chapter, conn=conn
+        project = await _load_project_for_cleaner(project_id)
+        runtime_profile = None
+        if project is not None:
+            runtime_profile = await _load_runtime_profile_for_cleaner(project.genre_id)
+
+        await self.repo.archive_stale(
+            project_id, current_chapter, conn=conn, runtime_profile=runtime_profile
         )
-        await self.repo.archive_very_stale(project_id, current_chapter, conn=conn)
+        await self.repo.archive_stale_functional(
+            project_id, current_chapter, conn=conn, runtime_profile=runtime_profile
+        )
+        await self.repo.archive_very_stale(
+            project_id, current_chapter, conn=conn, runtime_profile=runtime_profile
+        )
         await self.repo.archive_overflow(project_id, current_chapter, conn=conn)
 
 

@@ -95,10 +95,6 @@ class ContinuityToleranceProfile(BaseModel):
         },
         description="按类别的孤立设定回收窗口",
     )
-    mismatch_tolerance: dict[str, int] = Field(
-        default_factory=lambda: {"critical": 0, "major": 1, "minor": 3},
-        description="按严重度可容忍的 mismatch 数",
-    )
 
 
 class GenreRuntimeProfile(BaseModel):
@@ -170,10 +166,6 @@ class GenreRuntimeProfile(BaseModel):
     continuity: ContinuityToleranceProfile = Field(
         default_factory=ContinuityToleranceProfile
     )
-
-    # --- 高级策略开关 ---
-    arc_summarization_enabled: bool = Field(default=False)
-    outline_dimming_enabled: bool = Field(default=False)
 
     def dynamic_budget(self, chapter_number: int) -> int:
         """按本 Profile 计算某章的动态预算（等价 _assemblers._dynamic_budget）."""

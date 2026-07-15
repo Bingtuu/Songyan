@@ -2567,8 +2567,12 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
     if accepted_for_postprocessing:
         try:
             from songyan.agents.setting_evaporator import SettingEvaporator
+            from songyan.db.genre_runtime_profile_repo import load_profile as _load_runtime_profile
 
-            evaporator = SettingEvaporator()
+            runtime_profile = await _load_runtime_profile(
+                project.genre_id if project else None
+            )
+            evaporator = SettingEvaporator(runtime_profile=runtime_profile)
             archived_keys = await evaporator.run(
                 project_id=state["project_id"],
                 current_chapter=state["chapter_number"],

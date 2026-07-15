@@ -88,6 +88,7 @@ V7（Task 160-171w）已收尾：篇章级质量修复 → 叙事自驱 → enfo
 - `budget_used > 1.0` 时触发 ContextEmergency，只保留硬约束 + 主角档案 + ChapterGoal。
 - Context Diet 2.0 四组件协同生效，不单独启用。
 - **V8 新增**：Context Diet 2.0 的运行时契约（预算分配、门禁阈值、状态压缩、伏笔蒸发）必须能按体裁通过 `GenreRuntimeProfile` 定制；无 Profile 体裁必须 100% 回退旧行为。
+- **172i 新增**：`load_profile()` 以代码注册表为体裁默认值基线，DB 记录作为字段级覆盖层；DB 未命中/不可用时回退代码注册表；未知体裁回退 scifi baseline。嵌套子模型按整体替换，不细粒度合并内部键。
 
 ## 代码规范
 

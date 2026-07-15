@@ -17,7 +17,7 @@ from songyan.agents.context_manager._assemblers import (
 from songyan.db.settlement_repo import SettingSnapshotRepository
 
 if TYPE_CHECKING:
-    from songyan.models import ChapterGoal
+    from songyan.models import ChapterGoal, GenreRuntimeProfile
 
 logger = structlog.get_logger(__name__)
 
@@ -52,6 +52,7 @@ def _calculate_resolve_confidence(
     setting_row: dict[str, Any],
     current_chapter: int,
     chapter_goal: ChapterGoal | None,
+    runtime_profile: GenreRuntimeProfile | None = None,
 ) -> float:
     """计算设定的 resolve_confidence（纯规则，<10ms/条）.
 
@@ -64,6 +65,14 @@ def _calculate_resolve_confidence(
     narrative_relevance_score 使用已有 _compute_keyword_overlap 实现，
     避免调用 Embedder 保证性能。
     """
+    if runtime_profile is not None:
+        evap = runtime_profile.setting_evaporation
+        time_denominators = evap.time_denominators
+        legacy_time_denominator = evap.legacy_time_denominator
+    else:
+        time_denominators = CATEGORY_TIME_DENOMINATORS
+        legacy_time_denominator = TIME_DECAY_DENOMINATOR
+
     last_mentioned = setting_row.get("last_mentioned_chapter") or 0
     setting_name = setting_row.get("setting_name", "")
     setting_key = setting_row.get("setting_key", "")
@@ -71,7 +80,7 @@ def _calculate_resolve_confidence(
     # 1. 时间衰减因子（最近引用离当前章节越远，confidence 越低）
     chapters_since = max(0, current_chapter - last_mentioned)
     category = setting_row.get("category", "background")
-    denom = CATEGORY_TIME_DENOMINATORS.get(category, TIME_DECAY_DENOMINATOR)
+    denom = time_denominators.get(category, legacy_time_denominator)
     time_factor = max(0.0, 1.0 - chapters_since / float(denom))
 
     # 2. 叙事相关性（与当前 ChapterGoal 的关键词重叠度）
@@ -157,8 +166,12 @@ def _setting_similarity(s1: dict[str, Any], s2: dict[str, Any]) -> float:
 class SettingEvaporator:
     """设定蒸发器 — 轻量规则节点."""
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        runtime_profile: GenreRuntimeProfile | None = None,
+    ) -> None:
         self.repo = SettingSnapshotRepository()
+        self.runtime_profile = runtime_profile
 
     async def run(
         self,
@@ -174,16 +187,23 @@ class SettingEvaporator:
         if not active_settings:
             return []
 
+        if self.runtime_profile is not None:
+            archive_thresholds = self.runtime_profile.setting_evaporation.archive_thresholds
+            legacy_threshold = self.runtime_profile.setting_evaporation.legacy_archive_threshold
+        else:
+            archive_thresholds = CONFIDENCE_ARCHIVE_THRESHOLDS
+            legacy_threshold = CONFIDENCE_ARCHIVE_THRESHOLD
+
         low_confidence_keys: list[str] = []
         for row in active_settings:
             key = row.get("setting_key", "")
             if not key:
                 continue
-            conf = _calculate_resolve_confidence(row, current_chapter, chapter_goal)
-            category = row.get("category", "background")
-            threshold = CONFIDENCE_ARCHIVE_THRESHOLDS.get(
-                category, CONFIDENCE_ARCHIVE_THRESHOLD
+            conf = _calculate_resolve_confidence(
+                row, current_chapter, chapter_goal, self.runtime_profile
             )
+            category = row.get("category", "background")
+            threshold = archive_thresholds.get(category, legacy_threshold)
             if conf < threshold:
                 low_confidence_keys.append(key)
                 logger.info(

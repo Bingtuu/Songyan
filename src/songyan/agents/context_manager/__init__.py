@@ -84,6 +84,14 @@ MAX_SETTING_INPUT: int = 10       # is_critical 不计入上限
 # 077b: BudgetPruner 硬断言阈值
 HARD_ENFORCE_THRESHOLD: float = 1.3  # 超过预算 130% 时触发硬断言核裁
 
+# 172e: 默认分区预算比例（无 runtime_profile 时回退）
+DEFAULT_PARTITION_RATIOS: dict[str, float] = {
+    "character_states": 0.30,
+    "recent_plot": 0.20,
+    "soft_references": 0.15,
+    "foreshadowing": 0.10,
+}
+
 
 # ---------------------------------------------------------------------------
 # Task 110c: 按章节阶段动态调整硬上限
@@ -152,8 +160,13 @@ PARTITION_PRIORITY: dict[str, int] = {
 class BudgetPruner:
     """按 Token 预算裁剪 ContextPackage."""
 
-    def __init__(self, estimator: TokenEstimator | None = None) -> None:
+    def __init__(
+        self,
+        estimator: TokenEstimator | None = None,
+        runtime_profile: GenreRuntimeProfile | None = None,
+    ) -> None:
         self.estimator = estimator or TokenEstimator()
+        self.runtime_profile = runtime_profile
 
     def _log_breakdown(self, ctx: ContextPackage, budget: int, step: str) -> None:
         """诊断日志：记录各分区 token 分配."""
@@ -290,7 +303,12 @@ class BudgetPruner:
         current = self._estimate_package(ctx)
 
         # 077b: 硬断言 — 逐层裁剪后仍超预算时启动核裁
-        if current > int(budget_tokens * HARD_ENFORCE_THRESHOLD):
+        hard_enforce_ratio = (
+            self.runtime_profile.hard_enforce_ratio
+            if self.runtime_profile
+            else HARD_ENFORCE_THRESHOLD
+        )
+        if current > int(budget_tokens * hard_enforce_ratio):
             ctx = self._enforce_budget_hard(ctx, budget_tokens)
             current = self._estimate_package(ctx)
             ctx._budget_enforced = True
@@ -300,7 +318,12 @@ class BudgetPruner:
         ctx.budget_used = current / budget_tokens if budget_tokens > 0 else 0.0
 
         # Task 104: ContextEmergency — 硬天花板最后防线
-        if ctx.budget_used > 1.0:
+        emergency_trigger_ratio = (
+            self.runtime_profile.context_emergency_trigger_ratio
+            if self.runtime_profile
+            else 1.0
+        )
+        if ctx.budget_used > emergency_trigger_ratio:
             ctx = self._context_emergency(ctx, budget_tokens)
             current = self._estimate_package(ctx)
             ctx.estimated_tokens = current
@@ -340,11 +363,17 @@ class BudgetPruner:
         if budget <= 0:
             return ctx
 
+        partition_ratios = (
+            self.runtime_profile.partition_ratios
+            if self.runtime_profile
+            else DEFAULT_PARTITION_RATIOS
+        )
+
         partitions: dict[str, tuple[Any, float]] = {
-            "character_states": (ctx.character_states, 0.30),
-            "recent_plot": (ctx.recent_plot, 0.20),
-            "soft_references": (ctx.soft_references, 0.15),
-            "foreshadowing": (ctx.foreshadowing, 0.10),
+            "character_states": (ctx.character_states, partition_ratios.get("character_states", 0.30)),  # noqa: E501
+            "recent_plot": (ctx.recent_plot, partition_ratios.get("recent_plot", 0.20)),
+            "soft_references": (ctx.soft_references, partition_ratios.get("soft_references", 0.15)),
+            "foreshadowing": (ctx.foreshadowing, partition_ratios.get("foreshadowing", 0.10)),
         }
 
         for name, (data, ratio) in partitions.items():
@@ -424,7 +453,11 @@ class BudgetPruner:
         self, ctx: ContextPackage, budget: int, max_refs: int | None = None
     ) -> ContextPackage:
         """裁剪 soft_references — 按 relevance_score 排序保留高分，有硬上限."""
-        _max = max_refs if max_refs is not None else MAX_SOFT_REFS
+        _max = max_refs if max_refs is not None else (
+            self.runtime_profile.max_soft_refs
+            if self.runtime_profile
+            else MAX_SOFT_REFS
+        )
         if not ctx.soft_references:
             return ctx
         current = self._estimate_package(ctx)
@@ -448,7 +481,11 @@ class BudgetPruner:
         self, ctx: ContextPackage, budget: int, max_items: int | None = None
     ) -> ContextPackage:
         """裁剪 foreshadowing — 保留 due/overdue，再按 planted_in_chapter 保留新的."""
-        _max = max_items if max_items is not None else MAX_FORESHADOWING
+        _max = max_items if max_items is not None else (
+            self.runtime_profile.max_foreshadowing
+            if self.runtime_profile
+            else MAX_FORESHADOWING
+        )
         if not ctx.foreshadowing:
             return ctx
         current = self._estimate_package(ctx)
@@ -487,7 +524,11 @@ class BudgetPruner:
         self, ctx: ContextPackage, budget: int, max_states: int | None = None
     ) -> ContextPackage:
         """裁剪 character_states — 只保留主角和重要角色，有硬上限."""
-        _max = max_states if max_states is not None else MAX_CHARACTER_STATES
+        _max = max_states if max_states is not None else (
+            self.runtime_profile.max_character_states
+            if self.runtime_profile
+            else MAX_CHARACTER_STATES
+        )
         if not ctx.character_states:
             return ctx
         current = self._estimate_package(ctx)
@@ -890,6 +931,7 @@ def _rank_foreshadowings(
     *,
     foreshadowing_due: list[str],
     current_chapter: int,
+    runtime_profile: GenreRuntimeProfile | None = None,
 ) -> list[ForeshadowingItem]:
     """按紧迫性对伏笔排序.
 
@@ -900,22 +942,34 @@ def _rank_foreshadowings(
     4. 与当前章出场角色相关 → 中等紧迫（urgency +1.0）
     5. 按 planted_in_chapter 降序（新的优先）
     """
+    if runtime_profile is not None:
+        weights = runtime_profile.foreshadowing_evaporation
+        due_bump = weights.urgency_due_bump
+        overdue_bump = weights.urgency_overdue_bump
+        within_2_bump = weights.urgency_within_2_bump
+        due_soft = weights.urgency_due_soft
+    else:
+        due_bump = 3.0
+        overdue_bump = 2.5
+        within_2_bump = 2.0
+        due_soft = 1.5
+
     ranked: list[tuple[ForeshadowingItem, float]] = []
     due_set = set(foreshadowing_due)
 
     for item in items:
         urgency = 0.0
         if item.foreshadowing_id in due_set:
-            urgency += 3.0
+            urgency += due_bump
         if item.status == "overdue":
-            urgency += 2.5
+            urgency += overdue_bump
         elif (
             item.expected_resolve_chapter
             and (item.expected_resolve_chapter - current_chapter) <= 2
         ):
-            urgency += 2.0
+            urgency += within_2_bump
         if item.status == "due":
-            urgency += 1.5
+            urgency += due_soft
         # 新的伏笔优先级略高
         if item.planted_in_chapter:
             urgency += item.planted_in_chapter * 0.01
@@ -1070,6 +1124,12 @@ def assemble_context_package(
             else:
                 non_critical.append(s)
         _max_setting_input = _dyn_caps["max_setting_input"]
+        profile_max_setting_input = (
+            runtime_profile.max_setting_input
+            if runtime_profile
+            else MAX_SETTING_INPUT
+        )
+        _max_setting_input = min(profile_max_setting_input, _max_setting_input)
         if len(non_critical) > _max_setting_input:
             non_critical = non_critical[-_max_setting_input:]
         limited = sorted(critical + non_critical, key=lambda s: s.chapter_number)
@@ -1079,6 +1139,7 @@ def assemble_context_package(
             after=len(limited),
             critical=len(critical),
             max_setting_input=_max_setting_input,
+            profile_max_setting_input=profile_max_setting_input,
         )
         setting_snapshots = limited
 
@@ -1125,6 +1186,7 @@ def assemble_context_package(
             _foreshadowings,
             foreshadowing_due=foreshadowing_due,
             current_chapter=chapter_goal.chapter_number,
+            runtime_profile=runtime_profile,
         )
     # Task 110c: 只保留 due/overdue + 最近 planted 的 N 个
     _max_fs = _dyn_caps["max_foreshadowing"]
@@ -1172,7 +1234,7 @@ def assemble_context_package(
     _dyn_max_soft = _dynamic_max_soft_refs(len(setting_snapshots))
 
     # Task 098 + Task 110c: Token 预算裁剪（集成 narrative_fullness + focal_distance）
-    pruner = BudgetPruner()
+    pruner = BudgetPruner(runtime_profile=runtime_profile)
     ctx = pruner.prune(
         ctx,
         budget_tokens,

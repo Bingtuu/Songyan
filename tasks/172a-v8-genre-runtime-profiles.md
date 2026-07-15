@@ -4,7 +4,7 @@
 > **类型**: 架构/基础设施（Context Diet 2.0 运行时解耦）  
 > **优先级**: P0  
 > **依赖**: 172a.1 现状审计完成  
-> **状态**: 拆分完成，待 172a.1 开工
+> **状态**: ✅ 完成（172i 补完接线后归档）
 
 ## 背景
 
@@ -122,15 +122,6 @@ class GenreRuntimeProfile(BaseModel):
     emergency_halt_ratio: float = 1.3    # context_emergency_budget_ratio_threshold @gate_config.py:102
     hard_enforce_ratio: float = 1.3      # HARD_ENFORCE_THRESHOLD @context_manager/__init__.py:84（核裁，非 halt）
     # health 阈值族（gate_config.py:28-91；无单一 health_low_threshold 字段，是一组字段）
-    continuity_mismatch_tolerance: dict[str, int] = {
-        "critical": 0,
-        "major": 1,
-        "minor": 3,
-    }
-
-    # 高级策略开关
-    arc_summarization_enabled: bool = False
-    outline_dimming_enabled: bool = False
 ```
 
 > **两个 1.3 的区别（三轮审计确认）**：
@@ -209,7 +200,6 @@ project.genre -> lookup genre_runtime_profiles table
    - `foreshadowing_evaporation_profile`: dict（due 窗口、overdue 阈值）
    - `emergency_halt_ratio`: float（gate halt，默认 1.3）
    - `hard_enforce_ratio`: float（核裁，默认 1.3，与上一字段区分）
-   - `continuity_mismatch_tolerance`: dict
    - `arc_summarization_enabled` / `outline_dimming_enabled`: bool
 3. 新增 migration 在 SQLite 创建 `genre_runtime_profiles` 表；`genre` 字段唯一。
 4. 注册默认 Profile（即当前 sci-fi 行为，来自 172a.1 baseline 快照），保证回退。
@@ -398,11 +388,11 @@ python -m pytest tests/ -q
 ruff check src/ tests/
 
 # 多体裁短窗口验证
-python scripts/run_172a_short_window_preserve.py --templates xuanhuan --end 15 --output .tmp/task172a_xuanhuan_end15.json
-python scripts/run_172a_short_window_preserve.py --templates xuanhuan --end 20 --output .tmp/task172a_xuanhuan_end20.json
-python scripts/run_172a_short_window_preserve.py --templates scifi    --end 10 --output .tmp/task172a_scifi_end10.json
-python scripts/run_172a_short_window_preserve.py --templates wuxia    --end 10 --output .tmp/task172a_wuxia_end10.json
-python scripts/run_172a_short_window_preserve.py --templates urban    --end 10 --output .tmp/task172a_urban_end10.json
+python scripts/run_172a7_genre_validation.py --templates xuanhuan --end 15 --output .tmp/task172a_xuanhuan_end15.json
+python scripts/run_172a7_genre_validation.py --templates xuanhuan --end 20 --output .tmp/task172a_xuanhuan_end20.json
+python scripts/run_172a7_genre_validation.py --templates scifi    --end 10 --output .tmp/task172a_scifi_end10.json
+python scripts/run_172a7_genre_validation.py --templates wuxia    --end 10 --output .tmp/task172a_wuxia_end10.json
+python scripts/run_172a7_genre_validation.py --templates urban    --end 10 --output .tmp/task172a_urban_end10.json
 ```
 
 ## 撞墙路由

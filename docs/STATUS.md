@@ -13,6 +13,7 @@
 | V8 当前主线 | **Task 172b 已完成**：xuanhuan Ch100 中篇爬坡五门 PASS |
 | V8 验收进度 | **P/C/Q/S/V 五维度已实证达标** |
 | V8 文档治理 | **已完成**：`tasks/V8-README.md` 已明确 Task 编号是 trace id；阶段任务、前置并行、撞墙修复、后续增强已分层展示 |
+| **V8 技术债** | **172e-172i 已完成**：`GenreRuntimeProfile` 声明后未接线的字段已全部接到消费者；`load_profile()` 已改为注册表基线 + DB 字段级覆盖层 |
 
 ## 最新证据
 
@@ -34,7 +35,7 @@
 | `ruff check src/ tests/` | 无新增 error |
 | 172b `--to 100` | Ch1-Ch100 100/100 accepted、0 halt；`python .tmp/vdim_compare.py 100` → 五门 PASS |
 | 172b.q CED 终判 | xuanhuan 154 consistency issues / 347,290 words = 0.4434；sci-fi 157 / 394,839 = 0.3976；≤ ×1.15 ceiling 0.4573 |
-| `python -m pytest tests/ -q` | **2705 passed, 2 skipped, 1 xfailed**（2 warnings） |
+| `python -m pytest tests/ -q --ignore=tests/cli/test_cli.py` | **2746 passed, 2 skipped, 1 xfailed**（395s；172e-172i 新增 41 测试全绿；`tests/cli/test_cli.py` 4 个失败为既有 CLI 输出格式问题，与本次改动无关） |
 | `ruff check src/ tests/` | **All checks passed** |
 
 ## 项目整理
@@ -43,12 +44,14 @@
 - Task 170 文学提质中间过程稿已归档到 `archive/v7/tasks/`，入口保留总览与关键 DONE 文档。
 - Task 172（Ch250）已归档到 `archive/v7/tasks/172-ch250-transition-validation-archived.md`。
 - V8 新产物：172a.1 常量审计 + scifi baseline、172a.4 预算解耦、172a.7 多体裁矩阵报告、172b Ch100 报告，均在 `docs/reports/`；172a.p/172b/172b.p/172b.q/172d 任务书在 `tasks/`；Task 编号治理规则已内嵌到 `tasks/V8-README.md`。
+- **V8 后续技术债**：172e-172i 已全部完成，覆盖 `GenreRuntimeProfile` 字段接线、回退语义澄清、占位字段移除与文档修复。
 
 ## 下一步
 
-1. **V8 收口**：172b 已达标，V8 五维验收全绿；保持 `tasks/V8-README.md` 为事实入口，并按其中的编号治理规则维护后续任务。
-2. **后续增强**：如需扩大长窗口佐证，再启动 **172c** 第二体裁（wuxia，已预置 horizon_floor=12）Ch100 爬坡；启动前必须先补 `tasks/172c-*.md`，不能直接从占位行开跑。
-3. **守护项**：后续 CED 仍使用 consistency-only、merged/source、正文证据口径；不得把文学 craft 或 `rule-mr-*` 聚合工作项计入 CED。
+1. **V8 技术债清理**：✅ 已完成（172e-172i）。`GenreRuntimeProfile` 声明后未接线的字段已全部接到消费者；`load_profile()` 已改为注册表基线 + DB 字段级覆盖层；`arc_summarization_enabled` / `outline_dimming_enabled` / `mismatch_tolerance` 占位字段已移除。
+2. **V8 收口**：172b 已达标，V8 五维验收全绿；保持 `tasks/V8-README.md` 为事实入口，并按其中的编号治理规则维护后续任务。
+3. **后续增强**：如需扩大长窗口佐证，再启动 **172c** 第二体裁（wuxia，已预置 horizon_floor=12）Ch100 爬坡；启动前必须先补 `tasks/172c-*.md`，不能直接从占位行开跑。
+4. **守护项**：后续 CED 仍使用 consistency-only、merged/source、正文证据口径；不得把文学 craft 或 `rule-mr-*` 聚合工作项计入 CED。
 
 ## 入口
 
@@ -61,6 +64,12 @@
 - Task 172b Ch100 报告：`docs/reports/172b-xuanhuan-ch100-climb.md`
 - Task 172b.q CED 终段修复：`tasks/172b.q-consistency-ced-repair.md`
 - Task 172d 文学护栏跨体裁化：`tasks/172d-cross-genre-literary-guardrails.md`
+- V8 运行时契约补完（172e-172i）：
+  - `tasks/172e-context-manager-profile-wiring.md`
+  - `tasks/172f-evaporation-profile-wiring.md`
+  - `tasks/172g-character-decay-profile-wiring.md`
+  - `tasks/172h-continuity-profile-wiring.md`
+  - `tasks/172i-profile-fallback-semantics-and-docs.md`
 - V7 归档：`archive/v7/INDEX.md`
 - V6 归档：`archive/v6/INDEX.md`
 - V5 归档：`archive/v5/INDEX.md`

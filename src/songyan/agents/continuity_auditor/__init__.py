@@ -26,6 +26,7 @@ from songyan.models.continuity import (
     OverdueForeshadowing,
     StateMismatch,
 )
+from songyan.models.genre_runtime_profile import GenreRuntimeProfile
 
 from ._constraints import _generate_constraints, write_constraints
 from ._scanners import (
@@ -48,11 +49,11 @@ class ContinuityAuditor:
     - character state mismatch = 0
     """
 
-    # Task 135: 阈值已迁移到 _scanners.ORPHANED_THRESHOLDS（按类别）
-    FORGOTTEN_THRESHOLD = 3  # 3 章未使用即视为 forgotten
-    STATE_MISMATCH_WINDOW = 2  # 2 章内剧烈变化视为 mismatch
-
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        runtime_profile: GenreRuntimeProfile | None = None,
+    ) -> None:
+        self.runtime_profile = runtime_profile
         self.setting_repo = SettingTrackingRepository()
         self.inventory_repo = InventoryTrackerRepository()
         self.location_repo = LocationTrackerRepository()
@@ -89,12 +90,14 @@ class ContinuityAuditor:
             )
 
         orphaned = await _find_orphaned_settings(
-            project_id, up_to_chapter, self.setting_repo
+            project_id, up_to_chapter, self.setting_repo, self.runtime_profile
         )
         forgotten = await _find_forgotten_items(
-            project_id, up_to_chapter, self.inventory_repo
+            project_id, up_to_chapter, self.inventory_repo, self.runtime_profile
         )
-        mismatches = await _find_state_mismatches(project_id, up_to_chapter)
+        mismatches = await _find_state_mismatches(
+            project_id, up_to_chapter, self.runtime_profile
+        )
         overdue = await _find_overdue_foreshadowings(
             project_id, up_to_chapter, self.foreshadowing_repo
         )
@@ -132,7 +135,9 @@ class ContinuityAuditor:
         self, project_id: str, up_to_chapter: int
     ) -> list[StateMismatch]:
         """委托给独立函数以保持接口兼容."""
-        return await _find_state_mismatches(project_id, up_to_chapter)
+        return await _find_state_mismatches(
+            project_id, up_to_chapter, self.runtime_profile
+        )
 
     def _generate_suggested_marks(
         self,

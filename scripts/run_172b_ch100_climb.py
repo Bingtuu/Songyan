@@ -4,7 +4,7 @@
 - 项目初始化改用 ProjectInitializer.from_template("xuanhuan")（自动导入 9-arc/3-thread 骨架），
   不再手搓 outline。
 - runtime_profile 由 pipeline 按 genre 自动加载
-  （xuanhuan base=15000, foreshadowing_horizon_floor=12）。
+  （xuanhuan base=15000, foreshadowing_horizon_floor=48）。
 - 分段爬坡（默认每 25 章一段 = arc 边界），段间读 DB 汇总
   budget/overdue/health/CED，任一段触发 halt 或指标劣化即停并路由 172b.p。
 

@@ -1,11 +1,17 @@
-"""Task 172a.2/172a.3: GenreRuntimeProfile 默认注册表 + 加载器 + 仓储.
+"""Task 172a.2/172a.3/172i: GenreRuntimeProfile 默认注册表 + 加载器 + 仓储.
 
-加载顺序（AGENTS.md V8 硬约束）：
-    genre -> DB genre_runtime_profiles
-        -> 命中：反序列化返回
-        -> 未命中：回退代码内默认注册表
-            -> 注册表命中（scifi/xuanhuan/...）：返回
-            -> 注册表未命中：返回 scifi baseline（保证旧行为不变）
+加载语义（172i 最终版）：
+    代码注册表是体裁基线（含 V8 实证调校）；DB 记录是字段级覆盖层。
+    未知体裁或无 DB 记录时回退代码注册表；注册表未命中则回退 scifi baseline。
+
+加载顺序：
+    1. genre -> 代码默认注册表 -> 命中返回基线副本；未命中返回 scifi baseline 副本。
+    2. 若 DB 中有该体裁记录，用 DB 显式字段覆盖基线；未提供字段保留基线值。
+    3. 若 DB 不可用或无记录，直接返回注册表基线。
+
+嵌套模型（setting_evaporation / foreshadowing_evaporation / character_decay /
+continuity）按子模型整体替换：DB 提供则整体替换，不提供则保留基线子模型，
+不细粒度合并子模型内部键，避免歧义。
 
 代码默认注册表兜底保证新环境/测试无需 DB 预置即可运行。
 """
@@ -153,18 +159,49 @@ def load_profile_from_registry(genre: str | None) -> GenreRuntimeProfile:
 
 
 async def load_profile(genre: str | None) -> GenreRuntimeProfile:
-    """按加载顺序解析 Profile：DB 优先，其次代码注册表，最后 scifi 回退."""
+    """按体裁加载 Profile：代码注册表为基线，DB 记录为字段级覆盖层.
+
+    加载顺序与语义：
+    1. 先从代码注册表取体裁默认值（含 V8 实证调校）；未知体裁回退 scifi baseline。
+    2. 若 DB 中有该体裁记录，用 DB 记录的显式字段覆盖注册表基线；未提供的字段
+       保留基线值。
+    3. 若 DB 不可用或无记录，直接返回注册表基线。
+
+    嵌套模型（setting_evaporation / foreshadowing_evaporation / character_decay /
+    continuity）按子模型整体替换：DB 提供则整体替换，不提供则保留基线子模型，
+    不细粒度合并子模型内部键，避免歧义。
+    """
     key = (genre or "").strip().lower()
-    if key:
-        try:
-            repo = GenreRuntimeProfileRepository()
-            db_profile = await repo.get(key)
-            if db_profile is not None:
-                return db_profile
-        except Exception as exc:  # noqa: BLE001 - DB 不可用时回退注册表，不阻断生成
-            logger.warning(
-                "genre_runtime_profile.db_load_failed",
-                genre=key,
-                error=str(exc),
-            )
-    return load_profile_from_registry(key)
+    base = load_profile_from_registry(key)
+
+    if not key:
+        return base
+
+    try:
+        repo = GenreRuntimeProfileRepository()
+        override = await repo.get(key)
+    except Exception as exc:  # noqa: BLE001 - DB 不可用时回退基线，不阻断生成
+        logger.warning(
+            "genre_runtime_profile.db_load_failed",
+            genre=key,
+            error=str(exc),
+        )
+        return base
+
+    if override is None:
+        return base
+
+    # 字段级覆盖：DB 中异于模型默认值的字段视为显式覆盖，覆盖注册表基线；
+    # 与默认值相同的字段视为未显式覆盖，保留注册表基线。
+    # 嵌套子模型按整体替换：DB 提供且异于默认时替换整个子模型，否则保留基线子模型。
+    base_data = base.model_dump(mode="json")
+    override_data = override.model_dump(mode="json")
+    default_for_genre = GenreRuntimeProfile(genre=override.genre)
+    default_data = default_for_genre.model_dump(mode="json")
+    diff = {
+        k: v
+        for k, v in override_data.items()
+        if k != "genre" and v != default_data.get(k)
+    }
+    merged = {**base_data, **diff}
+    return GenreRuntimeProfile.model_validate(merged)

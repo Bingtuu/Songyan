@@ -17,6 +17,7 @@ from songyan.models.continuity import (
     OverdueForeshadowing,
     StateMismatch,
 )
+from songyan.models.genre_runtime_profile import GenreRuntimeProfile
 from songyan.models.human_mark import SuggestedMark
 
 logger = structlog.get_logger(__name__)
@@ -60,10 +61,18 @@ _EVOLVING_STATE_FIELD_PREFIXES: tuple[str, ...] = (
 
 
 async def _find_orphaned_settings(
-    project_id: str, up_to_chapter: int,
+    project_id: str,
+    up_to_chapter: int,
     setting_repo: SettingTrackingRepository,
+    runtime_profile: GenreRuntimeProfile | None = None,
 ) -> list[OrphanedSetting]:
     """按类别阈值找出 last_mentioned_chapter 距离当前过远的 setting."""
+    thresholds = (
+        runtime_profile.continuity.orphaned_thresholds
+        if runtime_profile is not None
+        else ORPHANED_THRESHOLDS
+    )
+
     get_human_marked_keys = getattr(setting_repo, "active_setting_mark_keys", None)
     human_marked_keys = (
         await get_human_marked_keys(project_id, current_chapter=up_to_chapter)
@@ -71,7 +80,7 @@ async def _find_orphaned_settings(
         else set()
     )
     rows: list[dict[str, Any]] = []
-    for category, threshold in ORPHANED_THRESHOLDS.items():
+    for category, threshold in thresholds.items():
         rows.extend(
             await setting_repo.find_orphaned(
                 project_id,
@@ -103,17 +112,24 @@ async def _find_orphaned_settings(
 
 
 async def _find_forgotten_items(
-    project_id: str, up_to_chapter: int,
+    project_id: str,
+    up_to_chapter: int,
     inventory_repo: InventoryTrackerRepository,
+    runtime_profile: GenreRuntimeProfile | None = None,
 ) -> list[ForgottenItem]:
     """找出 last_used_chapter 距离当前超过阈值的物品."""
+    threshold = (
+        runtime_profile.continuity.forgotten_threshold
+        if runtime_profile is not None
+        else FORGOTTEN_THRESHOLD
+    )
     rows = await inventory_repo.list_by_project(project_id)
     result: list[ForgottenItem] = []
     for r in rows:
         if r["status"] != "held":
             continue
         last_used = r["last_used_chapter"] or r["acquired_in_chapter"]
-        if up_to_chapter - last_used >= FORGOTTEN_THRESHOLD:
+        if up_to_chapter - last_used >= threshold:
             result.append(
                 ForgottenItem(
                     track_id=r["track_id"],
@@ -127,15 +143,22 @@ async def _find_forgotten_items(
 
 
 async def _find_state_mismatches(
-    project_id: str, up_to_chapter: int,
+    project_id: str,
+    up_to_chapter: int,
+    runtime_profile: GenreRuntimeProfile | None = None,
 ) -> list[StateMismatch]:
     """检测角色状态在短时间内剧烈变化.
 
     扫描 character_states 表，通过 source_version_id 关联 chapter_versions
-    获取 chapter_number，检测同一角色同一 field 在 STATE_MISMATCH_WINDOW
-    章内出现不同值。
+    获取 chapter_number，检测同一角色同一 field 在窗口内出现不同值。
     """
     from songyan.db.context_repo import CharacterStateRepository
+
+    window = (
+        runtime_profile.continuity.state_mismatch_window
+        if runtime_profile is not None
+        else STATE_MISMATCH_WINDOW
+    )
 
     mismatches: list[StateMismatch] = []
 
@@ -168,7 +191,7 @@ async def _find_state_mismatches(
             chapter_diff = curr["chapter_number"] - prev["chapter_number"]
 
             if (
-                chapter_diff <= STATE_MISMATCH_WINDOW
+                chapter_diff <= window
                 and prev["value"] != curr["value"]
             ):
                 mismatches.append(

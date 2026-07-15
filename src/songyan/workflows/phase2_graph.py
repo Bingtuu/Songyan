@@ -13,6 +13,7 @@ from songyan.agents.continuity_auditor import ContinuityAuditor
 from songyan.agents.continuity_auditor.continuity_health import classify_report
 from songyan.db.adaptive_halt_repo import AdaptiveHaltDecisionRepository
 from songyan.db.connection import get_db
+from songyan.db.genre_runtime_profile_repo import load_profile as _load_runtime_profile
 from songyan.db.project_run_repo import ProjectRunRepository
 from songyan.db.repository import ChapterHeadRepository
 from songyan.db.run_db_metrics_repo import RunDbMetricsRepository
@@ -38,7 +39,13 @@ from songyan.workflows._gates import (
     check_health_low_streak_gate,
     evaluate_all_gates,
 )
-from songyan.workflows._helpers import ensure_protagonist_character, new_id
+from songyan.workflows._helpers import (
+    ensure_protagonist_character,
+    new_id,
+)
+from songyan.workflows._helpers import (
+    load_project as _load_project_for_audit,
+)
 from songyan.workflows._run_logger import log_chapter_run
 from songyan.workflows.phase1_graph import (
     reset_checkpointer,
@@ -1136,7 +1143,14 @@ async def _run_single_chapter(
             assert final_state is not None
             if chapter_number % 3 == 0:
                 try:
-                    auditor = ContinuityAuditor()
+                    project_for_audit = await _load_project_for_audit(project_id)
+                    runtime_profile = None
+                    if project_for_audit is not None:
+                        runtime_profile = await _load_runtime_profile(
+                            project_for_audit.genre_id
+                        )
+
+                    auditor = ContinuityAuditor(runtime_profile=runtime_profile)
                     report = await auditor.audit(
                         project_id=project_id,
                         up_to_chapter=chapter_number,

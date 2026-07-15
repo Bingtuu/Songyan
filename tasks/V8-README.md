@@ -3,7 +3,7 @@
 > **阶段**: 多体裁可插拔质量 → 多体裁章数爬坡（P/C/Q/S/V 五维验收完成）
 > **当前口径**: V7 在 sci-fi 单一体裁下达成 Ch200 后收尾。V8 的目标不是再做一轮类似 Task 170 的"文学性提分 prompt 工程"，而是把支撑 sci-fi 长跑的**工程底盘**（Context Diet 2.0、门禁、结算、连续性审计）以及**既有文学护栏**从科幻隐式画像解耦——运行时契约建立 `GenreRuntimeProfile`（层 2），文学护栏 lexicon/主角名参数化到 `GenreProfile`（层 3，Task 172d），让 xuanhuan/wuxia/urban 等体裁达到与 sci-fi **同等的完成度和质量基线**，再向中篇（Ch100/Ch150）爬坡。  
 > **任务编号**: V8 从 Task 172 开始；编号是 trace id，不等同于严格执行顺序。原 V7 Task 172（Ch250）已取消并归档，V8 复用 172 作为项目模板化入口。
-> **最后整理**: 2026-07-15（172b xuanhuan Ch100 五门 PASS，V 维度闭合；补充 Task 编号治理规则；172c 作为 V8-pass 后续增强）
+> **最后整理**: 2026-07-15（172b xuanhuan Ch100 五门 PASS，V 维度闭合；172e-172i 运行时契约补完全部完成，技术债清零；172c 作为 V8-pass 后续增强）
 
 本文是 V8 阶段任务文档的事实入口。V7 历史事实入口见 `tasks/V7-README.md`；V6 见 `tasks/V6-README.md`；V5 见 `tasks/V5-README.md`；历史规划稿统一归档到 `archive/`，仅在追溯设计边界时查阅。
 
@@ -38,6 +38,8 @@ V8 通过 = 同时满足以下五项：
 | V | ✅ PASS | xuanhuan Ch1-Ch100 100/100 accepted，budget / CED / overdue / health / completeness 五门全 PASS |
 
 V8 当前完成判据已满足。172c（wuxia 第二体裁 Ch100）保留为 V8-pass 后续增强，用于扩展多体裁长窗口佐证，不回溯性阻塞本次 V8 完成判定。
+
+**V8-pass 后技术债（已清零）**：`GenreRuntimeProfile` 中 `partition_ratios`、`max_*`、`hard_enforce_ratio`、`setting_evaporation`、`character_decay.dormant_window`、`continuity.*` 等声明后未接线字段已由 172e-172i 全部接到消费者；`load_profile()` 语义已澄清为注册表基线 + DB 字段级覆盖层；占位字段 `arc_summarization_enabled` / `outline_dimming_enabled` / `mismatch_tolerance` 已移除。
 
 ### 外部调研支撑
 
@@ -116,6 +118,20 @@ V8 当前完成判据已满足。172c（wuxia 第二体裁 Ch100）保留为 V8-
 
 ---
 
+### V8.4：运行时契约补完（V8-pass 后技术债）
+
+> V8 验收时发现 `GenreRuntimeProfile` 大量字段声明后未接线。172e-172i 是 V8-pass 后补完接线与文档的技术债清理，不阻塞 V8 完成判定，但阻塞 V9 按体裁深度调参。**2026-07-15 已全部完成，技术债清零。**
+
+| Task | 名称 | 状态 | 事实文档 |
+|------|------|:----:|----------|
+| 172e | ContextManager / BudgetPruner 字段接线 | ✅ 完成 | `tasks/172e-context-manager-profile-wiring.md` |
+| 172f | SettingEvaporator / 伏笔排序字段接线 | ✅ 完成 | `tasks/172f-evaporation-profile-wiring.md` |
+| 172g | 角色归档窗口字段接线 | ✅ 完成 | `tasks/172g-character-decay-profile-wiring.md` |
+| 172h | 连续性审计字段接线 + 消除重复常量 | ✅ 完成 | `tasks/172h-continuity-profile-wiring.md` |
+| 172i | Profile 回退语义澄清 + V8 文档修复 | ✅ 完成 | `tasks/172i-profile-fallback-semantics-and-docs.md` |
+
+---
+
 ## 关键数据
 
 ### xuanhuan 短窗口现状（V8 启动基线）
@@ -162,35 +178,66 @@ V8 当前完成判据已满足。172c（wuxia 第二体裁 Ch100）保留为 V8-
 
 ### 核心抽象：GenreRuntimeProfile
 
-`GenreRuntimeProfile` 是 Context Diet 2.0 的运行时契约，每个体裁拥有独立配置：
+`GenreRuntimeProfile` 是 Context Diet 2.0 的运行时契约，每个体裁拥有独立配置。V8 验收时已完成核心杠杆接线；剩余声明后未接线字段已由 172e-172i 全部接线或移除（见下）。
 
-- **上下文预算**：**base budget + 每章增量（真实机制：`8000 + 章号 × 250`，见 `_assemblers.py:_dynamic_budget`；不是静态 32K，32K 是 Ch~100 才爬到的动态值）**。profile 参数化 `base_budget` 与 `ramp_per_chapter`。
-- **状态压缩**：角色衰减窗口、设定蒸发曲线、伏笔置信度衰减。
-- **门禁阈值**：`context_emergency_budget_ratio_threshold`（halt，@gate_config）、`HARD_ENFORCE_THRESHOLD`（核裁，@context_manager，与前者是**两个不同的 1.3**）、health 阈值族、continuity mismatch 容忍度。
-- **高级策略**：arc_summarization_enabled、outline_dimming_enabled。
+**已接线（V8 验收完成）**：
 
+- **上下文预算**：`base_budget` / `ramp_per_chapter` / `min_budget` 已接入 `ContextManager.dynamic_budget()`；xuanhuan base_budget=15000 解决 Ch8 halt。
+- **伏笔 horizon 下限**：`foreshadowing_horizon_floor` 已接入 `SettlementExtractor`；xuanhuan floor=48 保证 Ch100 overdue 受控。
+- **halt 门禁阈值**：`emergency_halt_ratio` 已接入 `phase2_graph.py`，在 genre 已知后覆盖 `GateConfig`。
+- **角色档案 focal gaps**：`character_decay.focal_gaps` 已接入 `_resolve_profile_level()`，控制角色档案加载密度。
+
+**已接线（172e-172i 完成）**：
+
+- **可裁分区比例/硬上限**：`partition_ratios`、`max_soft_refs`、`max_foreshadowing`、`max_character_states`、`max_setting_input` 已接入 `BudgetPruner`（172e）。
+- **核裁/emergency 触发阈值**：`hard_enforce_ratio`、`context_emergency_trigger_ratio` 已替换 `HARD_ENFORCE_THRESHOLD=1.3` 与硬编码 `budget_used > 1.0`（172e）。
+- **状态蒸发曲线**：`setting_evaporation`、`foreshadowing_evaporation` 已接入 `SettingEvaporator` 与 `_rank_foreshadowings`（172f）。
+- **角色生命周期归档窗口**：`character_decay.dormant_window` / `archive_window` / `functional_window` 已接入 `CharacterStateRepository`，替换硬编码 30/60（172g）。
+- **连续性审计容差**：`continuity.forgotten_threshold` / `state_mismatch_window` / `orphaned_thresholds` 已接入 `_scanners.py`，消除重复常量（172h）。
+- **占位字段移除**：`arc_summarization_enabled`、`outline_dimming_enabled`（172i）、`mismatch_tolerance`（172h）已从模型删除。
 > **根因修正（三轮审计结论）**：xuanhuan Ch8 被 halt 时，动态预算仅 `8000 + 8×250 = 10,000` token，`budget_used_before_emergency=1.4019` 是**核裁之后**测得的残值（`_context_emergency` 在 `_enforce_budget_hard` 之后运行）。核裁与 emergency **从不裁剪** `hard_constraints / genre_rules / mode_rules / chapter_goal`，所以 1.40 残值几乎全是**不可裁核心**。因此**调整分区权重（character_states/recent_plot/soft_references/foreshadowing 之间的比例）无法压下溢出**——溢出发生在不可裁核心。真正的杠杆是：**(a) 抬高 base budget / 爬坡起点**、**(b) 缩短 xuanhuan genre_rules 内容本身（层 3 内容编辑）**、**(c) 抬 halt 阈值**。
 
-加载顺序：
+加载顺序（172i 最终语义）：
 
 ```
 project.genre
+    → 代码默认注册表取体裁基线（含 V8 实证调校）
+        → 未知体裁：回退 scifi baseline
     → 查 SQLite genre_runtime_profiles
-        → 命中：加载并缓存
-        → 未命中：fallback 代码内默认注册表（scifi profile）
+        → 命中：DB 字段级覆盖注册表基线；未提供/与默认值相同的字段保留基线值
+        → 未命中：返回注册表基线
+        → DB 异常：返回注册表基线，不阻断生成
 ```
 
 每个项目记录 `runtime_profile_id` + `runtime_profile_snapshot`，保证可审计。
 
 ### 注入点
 
-- `ContextManager` 预算装配（`_dynamic_budget` base/ramp；分区权重仅作用于**可裁分区**）
-- `ContextEmergency` / `_enforce_budget_hard`（halt/核裁阈值；注意二者不裁不可裁核心）
-- 门禁服务 `_gates.py` / `GateConfig`（health 阈值族 + halt 阈值；**构建时序需先 resolve genre 再建 config**，当前 `cli/main.py:521` 在 genre 已知前就构建了全局 GateConfig）
-- `ContinuityAuditor` / `_scanners.py`（mismatch 容忍度；注意 `FORGOTTEN_THRESHOLD`/`STATE_MISMATCH_WINDOW` 在两处重复定义）
-- `SettingEvaporator` / 伏笔排序（蒸发曲线、due/overdue 窗口）
-- `CharacterStateRepository`（归档窗口 30/60/8）+ `_resolve_profile_level`（focal gap 3/10/30）——**角色衰减劈裂在两个子系统**
-- **（层 3，172d）** `literary_guardrail_observe.py` lexicon + 主角名 → `GenreProfile` / `protagonist_profile`
+**已注入（V8 验收完成）**：
+
+- `ContextManager` 动态预算（`_dynamic_budget` base/ramp；`assemble_context_package()` 按 genre 加载 profile）。
+- `SettlementExtractor` 伏笔 horizon 下限（`_clamp_foreshadowing_horizon()`）。
+- `phase2_graph.py` halt 阈值覆盖（`emergency_halt_ratio` → `GateConfig.context_emergency_budget_ratio_threshold`）。
+- `_resolve_profile_level()` 角色 focal gaps（`character_decay.focal_gaps`）。
+- `literary_guardrail_observe.py` lexicon + 主角名（172d，层 3）。
+
+**已注入（172i 完成）**：
+
+- `load_profile()` DB/注册表回退语义：代码注册表为基线，DB 为字段级覆盖层；DB 未命中/异常时回退注册表；未知体裁回退 scifi baseline。
+
+**已注入（172e-172h 完成）**：
+
+- `BudgetPruner._apply_partition_budgets` / `_prune_*` 分区比例与硬上限（172e）。
+- `BudgetPruner._enforce_budget_hard` 核裁阈值 + `_context_emergency` 触发比例（172e）。
+- `SettingEvaporator._calculate_resolve_confidence` 蒸发曲线（172f）。
+- `_rank_foreshadowings` 伏笔紧迫性权重（172f）。
+- `CharacterStateRepository.archive_stale` / `archive_very_stale` 归档窗口（172g）。
+- `continuity_auditor/_scanners.py` forgotten / state_mismatch / orphaned 三处容差（172h）。
+
+**已知设计缺陷**：
+
+- 门禁服务 `GateConfig` 构建时序：当前 `cli/main.py:521` 在 genre 已知前就构建了全局 `GateConfig`，`phase2_graph.py` 只能在运行时逐个字段覆盖。后续重构候选：genre 已知后统一构造（不阻塞 V9 调参，172e-172i 未动此路径）。
+- ~~角色衰减劈裂~~：已由 172g 统一——`dormant_window` / `archive_window` / `functional_window` 已接入 `CharacterStateRepository`，与 `_resolve_profile_level()` 的 `focal_gaps` 同属 `character_decay` profile。
 
 ### 可插拔与回退
 
@@ -212,10 +259,13 @@ project.genre
                                                                                                       172a.7 短窗口验证 + 多体裁质量报告
                                                                                                               │
                                                                                                               ▼
-                                                                                                      172b Ch100 爬坡（候选 xuanhuan）
+                                                                                                      172b Ch100 爬坡（候选 xuanhuan） ──► 172c 第二体裁 Ch100 爬坡（可选增强）
                                                                                                               │
                                                                                                               ▼
-                                                                                                      172c 第二体裁 Ch100 爬坡
+                                                                                                      V8 验收完成（P/C/Q/S/V 五维全绿）
+                                                                                                              │
+                                                                                                              ▼
+                                                                                                      172e-172i 运行时契约补完（V8-pass 后技术债；可并行）
 ```
 
 - **172 是 172a 的前置**：`ProjectTemplate` 为各体裁提供统一的项目初始化入口；`GenreRuntimeProfile` 依赖模板化的项目结构来按 genre 加载运行时参数。
@@ -255,6 +305,12 @@ project.genre
 - V8 xuanhuan Ch100 爬坡：`tasks/172b-xuanhuan-ch100-climb.md`
 - V8 xuanhuan Ch100 报告：`docs/reports/172b-xuanhuan-ch100-climb.md`
 - V8 CED 终段修复：`tasks/172b.q-consistency-ced-repair.md`
+- V8 运行时契约补完：
+  - `tasks/172e-context-manager-profile-wiring.md`
+  - `tasks/172f-evaporation-profile-wiring.md`
+  - `tasks/172g-character-decay-profile-wiring.md`
+  - `tasks/172h-continuity-profile-wiring.md`
+  - `tasks/172i-profile-fallback-semantics-and-docs.md`
 - V8 长调研报告：`docs/reports/v8-literature-and-landscape-review.md`
 - 项目状态：`docs/STATUS.md`
 - 文档路由：`docs/INDEX.md`
