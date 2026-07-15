@@ -34,7 +34,10 @@ def classify_continuity_mark(mark: HumanMark | dict[str, object]) -> Literal["P1
         note = mark.note
     else:
         raw = mark
-        mark_type = cast(Literal["setting", "character", "foreshadowing", "item", "custom"], raw.get("mark_type", ""))
+        mark_type = cast(
+            Literal["setting", "character", "foreshadowing", "item", "custom"],
+            raw.get("mark_type", ""),
+        )
         priority = cast(int, raw.get("priority", 5))
         note = cast(str, raw.get("note", ""))
 

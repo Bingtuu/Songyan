@@ -28,9 +28,6 @@ from songyan.db.review_repo import LiteraryObservationRepository
 from songyan.db.run_db_metrics_repo import RunDbMetricsRepository
 from songyan.db.run_quality_debt_repo import RunQualityDebtRepository, RunQualityDebtRow
 from songyan.db.settlement_repo import ForeshadowingRepository
-from songyan.models.continuity import ContinuityReport
-
-_T = TypeVar("_T")
 from songyan.evals.concept_budget import (
     collect_concept_budget_report,
     render_concept_budget_section,
@@ -48,7 +45,10 @@ from songyan.evals.timeline_consistency import (
     collect_timeline_conflicts,
     render_timeline_consistency_section,
 )
+from songyan.models.continuity import ContinuityReport
 from songyan.models.run_log import ChapterRunLog
+
+_T = TypeVar("_T")
 
 # --------------------------------------------------------------------------- #
 # Row models

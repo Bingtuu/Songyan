@@ -13,7 +13,7 @@
 
 Songyan 是一个用多个 AI Agent 协作写中文长篇小说的系统。它不是"调用一次模型生成一章"的简单封装——而是把长篇写作拆成规划、生成、审查、修订、结算和连续性维护六个环节，每个环节由独立的 Agent 负责，共同维护一个长期事实数据库。
 
-当前已在 **sci-fi 单一体裁**下稳定支持 **200 章**连续生成（200/200 accepted）。V8 阶段目标是把这一能力从科幻的隐式画像解耦，建立可插拔的**体裁运行时画像（GenreRuntimeProfile）**，先让玄幻、武侠、都市等体裁在短窗口稳定通过，再逐步爬坡章数。
+当前已在 **sci-fi 单一体裁**下稳定支持 **220 章**连续生成（220/220 accepted）。V8 阶段已把这一能力从科幻的隐式画像解耦，建立了可插拔的**体裁运行时画像（GenreRuntimeProfile）**——玄幻、武侠、都市三体裁在短窗口（10-15 章）已达到与科幻同等的完成度和质量基线；**玄幻（xuanhuan）更已完成 Ch100 中篇爬坡验证**（100/100 accepted，五门质量闸口全绿）。
 
 ### 它解决什么问题？
 
@@ -159,20 +159,23 @@ flowchart TB
 
 ## 当前能力
 
-Songyan 已经过 **200 章**规模的实战验证（**sci-fi 单一体裁**）。以下是已验证的关键能力：
+Songyan 已经过 **sci-fi 220 章**和 **xuanhuan 100 章**的实战验证，**wuxia/urban 短窗口**质量同标也已达标。以下是已验证的关键能力：
 
 | 能力 | 说明 |
 |------|------|
-| 200 章连续生成 | 单次运行完成 200 章，无人工干预，无结构性塌陷 |
+| 长篇连续生成 | sci-fi 220/220 accepted；xuanhuan 100/100 accepted；0 halt |
+| 多体裁可插拔 | `GenreRuntimeProfile` 按体裁定制预算、门禁、状态压缩；新增体裁只需新增 Profile 文件，不修改核心逻辑 |
 | 文本洁净 | 零 Markdown 泄漏、零段落重复、零 AI 保护指令进入正文 |
 | 事实一致性 | 角色状态、世界设定、数值读数均可追溯到正文证据 |
+| 跨体裁一致性度量 | Consistency Error Density (CED) 按 consistency-only、merged/source、正文证据口径跨体裁公平比较 |
 | 跨章连续性 | 孤立设定和遗忘伏笔自动检测；health 评分全程稳定 |
-| 上下文控制 | Context Diet 2.0 支撑 200+ 章不溢出 |
+| 上下文控制 | Context Diet 2.0 四组件协同（分层摘要 / 角色衰减 / 设定蒸发 / 硬天花板）支撑 220+ 章不溢出 |
 | 断点续跑 | kill 后 `--resume` 继续，自动跳过已完成章节 |
-| 自适应门禁 | 正常波动不误伤，真实退化自动暂停 |
-| 叙事骨架 | 全书大纲 → 弧规划 → 章节目标自顶向下派生 |
-| 伏笔调度 | 长程伏笔主动兑现，生命周期可追踪 |
-| 文学护栏 | 配角目标、主动选择、概念预算在 prompt 和审查中双重约束 |
+| 自适应门禁 | 正常波动不误伤，真实退化自动暂停（AutoHalt） |
+| 叙事骨架 | 全书大纲 → 弧规划 → 章节目标自顶向下派生；xuanhuan 已用 9-arc/3-thread 骨架跑完 Ch100 |
+| 伏笔调度 | 长程伏笔主动兑现，按体裁设 horizon floor（xuanhuan=48）防止长窗口 overdue 失控 |
+| 文学护栏 | 配角目标、主动选择、概念预算在 prompt 和审查中双重约束；lexicon 按体裁参数化（xuanhuan/wuxia/urban 各一套） |
+| 项目模板化 | `ProjectTemplate` 为 7 个体裁提供统一初始化入口，一键创建完整项目骨架 |
 
 > 最新验证数据和进展见 [`docs/STATUS.md`](docs/STATUS.md)。
 
@@ -191,8 +194,9 @@ songyan/
 │   ├── workflows/           # LangGraph 单章闭环 + 多章运行器
 │   ├── db/                  # SQLite schema、repository、迁移
 │   ├── models/              # Pydantic v2 数据模型
-│   ├── evals/               # 质量度量、文学诊断、护栏审计
+│   ├── evals/               # 质量度量、文学诊断、护栏审计、CED 量具
 │   └── llm/                 # LLM 调用、重试、结构化输出
+├── genres/                  # 体裁 Profile JSON（scifi/xuanhuan/wuxia/urban 等 7 种）
 ├── prompts/cards/           # Agent 工艺卡（YAML 版本化）
 ├── tests/                   # 单元 / 集成 / E2E / 长序列测试
 ├── docs/                    # 状态、架构文档、报告
@@ -207,7 +211,7 @@ songyan/
 
 - Python >= 3.11
 - DeepSeek API Key（或兼容 OpenAI 接口的 LLM）
-- 磁盘空间：200 章数据库约 160MB
+- 磁盘空间：100 章数据库约 100MB，200 章约 160MB
 
 ### 安装
 
@@ -220,28 +224,25 @@ cp .env.example .env
 ### 创建项目并生成
 
 ```bash
-# 创建项目
-songyan create-project
+# 从体裁模板创建项目（支持 scifi/xuanhuan/wuxia/urban 等 7 种）
+songyan create-project --template xuanhuan
 
 # 生成第 1-5 章（自动确认模式）
 songyan run --project-id <id> --chapters 1-5 --auto-confirm
 
 # 断点续跑
-songyan run --project-id <id> --chapters 1-200 --auto-confirm --resume
+songyan run --project-id <id> --chapters 1-100 --auto-confirm --resume
 ```
 
-### 长跑脚本（V7 sci-fi 示例）
+### 长跑脚本示例
 
 ```bash
-# 初始化 DB + 创建项目
+# 初始化 DB + 从模板创建项目
 $env:DATABASE_URL = "sqlite:///.tmp/myproject.db"
-python scripts/run_171_ch200.py --init
+python scripts/run_172b_ch100_climb.py --init --template xuanhuan
 
-# 无人值守跑 Ch1-Ch200
-python scripts/run_171_ch200.py
-
-# 生成报告
-python scripts/run_171_ch200.py --report
+# 无人值守跑 Ch1-Ch100（分段爬坡，自动 resume）
+python scripts/run_172b_ch100_climb.py --to 100
 ```
 
 ---
@@ -257,16 +258,19 @@ python scripts/run_171_ch200.py --report
 | LLM 接入 | LiteLLM |
 | CLI | Click |
 | 日志 | structlog |
-| 测试 | pytest（2600+ 用例） |
+| 测试 | pytest（2700+ 用例） |
 
 ---
 
 ## 开发文档
 
-- [`docs/STATUS.md`](docs/STATUS.md) — 当前状态、最新验证、下一步
+- [`docs/STATUS.md`](docs/STATUS.md) — 当前状态、五维验收证据、下一步
 - [`docs/INDEX.md`](docs/INDEX.md) — 文档索引
-- [`tasks/V8-README.md`](tasks/V8-README.md) — 当前阶段任务事实
+- [`tasks/V8-README.md`](tasks/V8-README.md) — V8 任务事实入口（含编号治理规则）
 - [`tasks/V7-README.md`](tasks/V7-README.md) — V7 历史任务事实（已收尾）
+- [`tasks/172b-xuanhuan-ch100-climb.md`](tasks/172b-xuanhuan-ch100-climb.md) — xuanhuan Ch100 爬坡任务书
+- [`docs/reports/172b-xuanhuan-ch100-climb.md`](docs/reports/172b-xuanhuan-ch100-climb.md) — xuanhuan Ch100 验收报告
+- [`docs/reports/172a.7-genre-short-window-validation.md`](docs/reports/172a.7-genre-short-window-validation.md) — 多体裁短窗口验证报告
 - [`AGENTS.md`](AGENTS.md) — 开发规范与工程纪律
 
 ---

@@ -8,6 +8,7 @@ from songyan.evals.consistency_ced import (
     ReviewIssueReport,
     count_consistency_issues,
     count_evidence_issues,
+    is_ced_evidence_issue,
     is_consistency_issue,
 )
 
@@ -35,6 +36,15 @@ def test_character_and_world_consistency_categories_count() -> None:
     assert is_consistency_issue(_issue("character_behavior"))
     assert is_consistency_issue(_issue("dialogue_distinctness"))
     assert is_consistency_issue(_issue("world_consistency"))
+
+
+def test_mandatory_reference_aggregate_does_not_count_as_ced_evidence() -> None:
+    issue = _issue("world_consistency", severity="critical")
+    issue["issue_id"] = "rule-mr-version-1"
+    issue["evidence_quote"] = "xuanhuan.hidden.setting.key"
+
+    assert not is_ced_evidence_issue(issue)
+    assert not is_consistency_issue(issue)
 
 
 def test_requires_major_or_critical_evidence() -> None:

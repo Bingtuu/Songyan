@@ -130,6 +130,41 @@ class TestMergeReviewsPreviousNewIssues:
         assert "rev-fatigue-xyz789" in issue_ids
 
 
+class TestCrossGenreCognitiveExemption:
+    """172d: cognitive exemption should not depend on the sci-fi protagonist name."""
+
+    @pytest.mark.asyncio
+    async def test_cognitive_exemption_works_for_xuanhuan_protagonist(self) -> None:
+        from unittest.mock import AsyncMock
+
+        quote = "陆沉知道这不是巧合。"
+        llm_result = LLMAuditResult(
+            issues=[
+                ReviewIssue(
+                    issue_id="llm-show-1",
+                    category=ReviewCategory.SHOW_DONT_TELL,
+                    severity="major",
+                    evidence_quote=quote,
+                    evidence_location="第1段",
+                    issue_description="直接说明陆沉知道真相，缺少动作支撑。",
+                    fix_type="patch",
+                ),
+            ],
+            summary="",
+        )
+
+        merged = await merge_reviews(
+            version_id="v1",
+            content=f"陆沉握紧剑柄，指节泛白。{quote}他没有后退。",
+            rule_result=RuleAuditResult(has_opening_hook=True, has_ending_hook=True),
+            llm_result=llm_result,
+            db=AsyncMock(),
+            report_id="mr-test",
+        )
+
+        assert merged.issues[0].severity == "minor"
+
+
 # ---------------------------------------------------------------------------
 # 060: Word Count Threshold Tests
 # ---------------------------------------------------------------------------

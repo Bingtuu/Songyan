@@ -1,9 +1,9 @@
 # V8 Task 总索引
 
-> **阶段**: 多体裁可插拔质量 → 多体裁章数爬坡  
+> **阶段**: 多体裁可插拔质量 → 多体裁章数爬坡（P/C/Q/S/V 五维验收完成）
 > **当前口径**: V7 在 sci-fi 单一体裁下达成 Ch200 后收尾。V8 的目标不是再做一轮类似 Task 170 的"文学性提分 prompt 工程"，而是把支撑 sci-fi 长跑的**工程底盘**（Context Diet 2.0、门禁、结算、连续性审计）以及**既有文学护栏**从科幻隐式画像解耦——运行时契约建立 `GenreRuntimeProfile`（层 2），文学护栏 lexicon/主角名参数化到 `GenreProfile`（层 3，Task 172d），让 xuanhuan/wuxia/urban 等体裁达到与 sci-fi **同等的完成度和质量基线**，再向中篇（Ch100/Ch150）爬坡。  
-> **任务编号**: V8 从 Task 172 开始：Task 172 为项目模板化与体裁可插拔（`ProjectTemplate`），172a 为体裁运行时画像（`GenreRuntimeProfile`），172d 为文学护栏跨体裁化。原 Task 172 的 Ch250 目标已取消归档。  
-> **最后整理**: 2026-07-14（V7 收尾，V8 启动，历史报告归档；三轮审计后修正数据模型事实与文学层范围）
+> **任务编号**: V8 从 Task 172 开始；编号是 trace id，不等同于严格执行顺序。原 V7 Task 172（Ch250）已取消并归档，V8 复用 172 作为项目模板化入口。
+> **最后整理**: 2026-07-15（172b xuanhuan Ch100 五门 PASS，V 维度闭合；补充 Task 编号治理规则；172c 作为 V8-pass 后续增强）
 
 本文是 V8 阶段任务文档的事实入口。V7 历史事实入口见 `tasks/V7-README.md`；V6 见 `tasks/V6-README.md`；V5 见 `tasks/V5-README.md`；历史规划稿统一归档到 `archive/`，仅在追溯设计边界时查阅。
 
@@ -27,6 +27,18 @@ V8 通过 = 同时满足以下五项：
 | **S（状态可控）** | xuanhuan end 15/20 中 overdue foreshadowing < 5（基线 13），伏笔回收链不崩；角色/设定状态膨胀受控 |
 | **V（中篇爬坡）** | 至少一个非 sci-fi 体裁稳定推进到 Ch100，且前 100 章质量指标不劣于 sci-fi Ch1-Ch100 基线 |
 
+### 当前验收状态（2026-07-15）
+
+| 维度 | 状态 | 当前证据 |
+|------|:----:|----------|
+| P | ✅ PASS | `GenreRuntimeProfile` 已可插拔；scifi profile 全默认回退旧行为，无 profile 体裁保持旧路径 |
+| C | ✅ PASS | scifi/wuxia/urban `--end 10` 全 accepted；xuanhuan `--end 15` 已通过 isolate 复核 |
+| Q | ✅ PASS | 短窗口 T9=0、budget<1.0；Ch100 consistency CED：xuanhuan 0.4434 ≤ sci-fi 0.3976 ×1.15 |
+| S | ✅ PASS | xuanhuan Ch100 overdue 166 < sci-fi Ch100 168；172b.p 证明 `foreshadowing_horizon_floor=48` 长窗口有效 |
+| V | ✅ PASS | xuanhuan Ch1-Ch100 100/100 accepted，budget / CED / overdue / health / completeness 五门全 PASS |
+
+V8 当前完成判据已满足。172c（wuxia 第二体裁 Ch100）保留为 V8-pass 后续增强，用于扩展多体裁长窗口佐证，不回溯性阻塞本次 V8 完成判定。
+
 ### 外部调研支撑
 
 长调研报告见 `docs/reports/v8-literature-and-landscape-review.md`。核心结论：
@@ -41,6 +53,18 @@ V8 通过 = 同时满足以下五项：
 ## Task 状态
 
 > 状态口径：`◻ 规划中`（有规划稿，未开工）/ `🔄 进行中` / `✅ 完成`（有 `*-DONE.md`）/ `⚠️ 条件完成` / `⚠️ 条件未通过` / `⏳ 占位`（骨架占位，详细文档待前置数据出炉后写）。
+
+### Task 编号治理（2026-07-15 起）
+
+为避免把编号误读成执行顺序，V8 后续按以下规则维护任务事实源：
+
+1. **编号是追踪 ID，不是依赖顺序**：真实执行顺序以本文的依赖图与各任务前置条件为准。例如 `172d` 编号晚于 `172c`，但它是 `172a.7` 的硬前置，必须在 Ch100 爬坡前完成。
+2. **阶段任务与事故修复分层展示**：`172` / `172a` / `172b` / `172c` / `172d` 是阶段或工作包；`172a.p`、`172b.p`、`172b.q` 是父任务下的撞墙定点修复，不与主线阶段并列排序。
+3. **字母后缀只在父任务内有序**：`172b.p`、`172b.q` 表示 172b 中按发现顺序产生的修复项，不表示它们晚于 `172c` 或 `172d`。
+4. **后续增强必须先补任务文档**：启动 `172c` 前必须先补 `tasks/172c-*.md`，明确目标、前置证据、分段验收和撞墙路由；不能直接从占位行开跑。
+5. **不为治理本身新增数字任务号**：文档治理结论内嵌在 `tasks/V8-README.md`，避免再制造新的编号噪音。
+
+以下表格按**事实层级与依赖关系**排列，而不是按编号字母顺序排列。
 
 ### V8.0：项目模板化与体裁可插拔（ProjectTemplate）
 
@@ -64,23 +88,31 @@ V8 通过 = 同时满足以下五项：
 | 172a.7 | 多体裁短窗口验证 | ✅ 完成 | `docs/reports/172a.7-genre-short-window-validation.md` |
 | 172a.p | 伏笔 horizon 下限（S 维度定点修复） | ✅ 完成 | `tasks/172a.p-foreshadowing-horizon-floor.md` |
 
-### V8.2：多体裁章数爬坡
+### V8.3：文学护栏跨体裁化（GenreProfile 层 3，172a.7 硬前置）
+
+> 说明：`172d` 编号保留为历史 trace id；按依赖它应阅读在 `172b/172c` 之前。
 
 | Task | 名称 | 状态 | 事实文档 |
 |------|------|:----:|----------|
-| 172b | 非 sci-fi 体裁 Ch100 爬坡验证（首选：xuanhuan） | 🔄 进行中 | `tasks/172b-xuanhuan-ch100-climb.md` |
-| 172b.p | xuanhuan 伏笔 overdue 长窗口修复 | 🔄 进行中 | `tasks/172b.p-xuanhuan-foreshadowing-long-window.md` |
-| 172b.q | xuanhuan consistency CED 终段修复 | 🔄 进行中 | `tasks/172b.q-consistency-ced-repair.md` |
-| 172c | 第二个非 sci-fi 体裁 Ch100 爬坡验证（候选：wuxia） | ⏳ 占位 | 待 172b 完成后写 |
-| 172c.p | Ch100 撞墙定点修复（占位） | ⏳ 占位 | 待 172c 实跑后确定 |
-
-### V8.3：文学护栏跨体裁化（GenreProfile 层 3）
-
-| Task | 名称 | 状态 | 事实文档 |
-|------|------|:----:|----------|
-| 172d | 文学护栏 lexicon + 主角名跨体裁化 | 🔄 代码完成 | `tasks/172d-cross-genre-literary-guardrails.md` |
+| 172d | 文学护栏 lexicon + 主角名跨体裁化 | ✅ 完成 | `tasks/172d-cross-genre-literary-guardrails-DONE.md` |
 
 > **172d 定位**：把 `literary_guardrail_observe.py` 的科幻硬编码（`protagonist_name="林渊"` + 5 组主动选择/配角/代价 lexicon）参数化——主角名从 `protagonist_profile` 读取，lexicon 迁入 `GenreProfile` 并为 xuanhuan/wuxia/urban 各配一套，无 profile 回退科幻组。**172d 必须先于 172a.7 落地**：172a.7 的多体裁短窗口质量报告正是用文学 observe 路径渲染的，不修 172d 则 xuanhuan 报告会因找不到"林渊/按下"而每章判 MISSING，验收报告失真。
+
+### V8.2：多体裁章数爬坡（主线与后续增强）
+
+| Task | 名称 | 状态 | 事实文档 |
+|------|------|:----:|----------|
+| 172b | 非 sci-fi 体裁 Ch100 爬坡验证（首选：xuanhuan） | ✅ 完成 | `tasks/172b-xuanhuan-ch100-climb.md` |
+| 172c | 第二个非 sci-fi 体裁 Ch100 爬坡验证（候选：wuxia） | ⏳ 占位 | V8-pass 后续增强，启动前补任务文档 |
+
+#### 172b 撞墙定点修复（从属于 172b，不是独立阶段）
+
+| Task | 名称 | 状态 | 事实文档 |
+|------|------|:----:|----------|
+| 172b.p | xuanhuan 伏笔 overdue 长窗口修复 | ✅ 完成 | `tasks/172b.p-xuanhuan-foreshadowing-long-window.md` |
+| 172b.q | xuanhuan consistency CED 终段修复 | ✅ 完成 | `tasks/172b.q-consistency-ced-repair.md` |
+
+> `172c.p` 不再作为当前占位任务展示；若 `172c` 实跑后出现具体 Ch100 撞墙，再按证据新建 `172c.<suffix>-*.md`，并在本子表登记。
 
 ---
 
@@ -219,7 +251,10 @@ project.genre
 - Task 172 完成报告：`tasks/172-project-template-plugin-DONE.md`
 - Task 172 测试计划：`tasks/172-project-template-plugin-TEST-PLAN.md`
 - V8 P0 详细规划：`tasks/172a-v8-genre-runtime-profiles.md`
-- V8 文学护栏跨体裁化：`tasks/172d-cross-genre-literary-guardrails.md`
+- V8 文学护栏跨体裁化：`tasks/172d-cross-genre-literary-guardrails-DONE.md`
+- V8 xuanhuan Ch100 爬坡：`tasks/172b-xuanhuan-ch100-climb.md`
+- V8 xuanhuan Ch100 报告：`docs/reports/172b-xuanhuan-ch100-climb.md`
+- V8 CED 终段修复：`tasks/172b.q-consistency-ced-repair.md`
 - V8 长调研报告：`docs/reports/v8-literature-and-landscape-review.md`
 - 项目状态：`docs/STATUS.md`
 - 文档路由：`docs/INDEX.md`

@@ -50,9 +50,29 @@ def is_evidence_issue(issue: Mapping[str, Any]) -> bool:
     return severity in EVIDENCE_SEVERITIES and bool(issue.get("evidence_quote"))
 
 
+def is_mandatory_reference_aggregate(issue: Mapping[str, Any]) -> bool:
+    """True for RuleAuditor's aggregate mandatory-reference work item.
+
+    `rule-mr-*` issues list missing setting keys so RevisionHandler can patch
+    them.  They are important control-flow issues, but their evidence quote is
+    not a body-text quote and should not inflate Consistency Error Density.
+    """
+    issue_id = str(issue.get("issue_id", ""))
+    return issue_id.startswith("rule-mr-")
+
+
 def is_consistency_issue(issue: Mapping[str, Any]) -> bool:
     """True when an evidence issue belongs to the CED consistency taxonomy."""
-    return is_evidence_issue(issue) and issue_category(issue) in CONSISTENCY_CATEGORIES
+    return (
+        is_evidence_issue(issue)
+        and not is_mandatory_reference_aggregate(issue)
+        and issue_category(issue) in CONSISTENCY_CATEGORIES
+    )
+
+
+def is_ced_evidence_issue(issue: Mapping[str, Any]) -> bool:
+    """True for evidence issues eligible for CED helper totals."""
+    return is_evidence_issue(issue) and not is_mandatory_reference_aggregate(issue)
 
 
 def parse_issues(issues_json: str | None) -> list[dict[str, Any]]:
@@ -95,5 +115,7 @@ def count_evidence_issues(reports: Iterable[ReviewIssueReport]) -> int:
     """Count all critical/major evidence issues from selected CED reports."""
     count = 0
     for report in select_ced_reports(reports):
-        count += sum(1 for issue in parse_issues(report.issues_json) if is_evidence_issue(issue))
+        count += sum(
+            1 for issue in parse_issues(report.issues_json) if is_ced_evidence_issue(issue)
+        )
     return count

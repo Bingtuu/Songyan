@@ -149,7 +149,9 @@ def parse_scenes(
     strict = min_scene_chars is not None
     if strict:
         min_chars: int = max(min_scene_chars or 1, 1)
-        max_chars: int = max_scene_chars if max_scene_chars is not None else _DEFAULT_MAX_SCENE_CHARS
+        max_chars: int = (
+            max_scene_chars if max_scene_chars is not None else _DEFAULT_MAX_SCENE_CHARS
+        )
         if target_scene_chars is not None:
             target_chars: int = target_scene_chars
         else:

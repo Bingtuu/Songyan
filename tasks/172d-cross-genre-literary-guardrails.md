@@ -4,7 +4,7 @@
 > **类型**: 风格实现层（layer 3）解耦——把既有文学护栏从科幻硬编码参数化为按体裁可插拔  
 > **优先级**: P0（是 172a.7 多体裁质量报告的硬前置）  
 > **依赖**: 无强代码依赖（改 `GenreProfile` 层，与 172a 运行时层解耦，可并行）；但**必须先于 172a.7 合入**  
-> **状态**: 🔄 代码完成（commit `ab8551f`，18 单测通过），跨体裁 observe 回归随 172a.7 实跑一并验证
+> **状态**: ✅ 完成（见 `tasks/172d-cross-genre-literary-guardrails-DONE.md`）
 
 ## 背景
 
@@ -84,6 +84,10 @@
 2. 5 组 lexicon 在 `GenreProfile` 可配置，无 profile 回退科幻组；
 3. 主角名无硬编码；
 4. 172a.7 可安全使用 observe 报告做多体裁对标。
+
+## 完成记录
+
+172d 已完成，最终证据见 `tasks/172d-cross-genre-literary-guardrails-DONE.md`。补充收口验证：`python -m pytest tests/test_review_merger.py tests/test_171w_text_guardrail_observe.py tests/test_172d_cross_genre_guardrails.py -q` → **35 passed**；`src/songyan/evals` 与 `src/songyan/workflows` 中仅剩说明性注释包含“林渊”，无运行时代码硬编码主角名。
 
 ## 验证命令
 

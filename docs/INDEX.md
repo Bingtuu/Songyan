@@ -8,7 +8,7 @@
 |------|------|
 | `AGENTS.md` | 开发代理短指令与不可违背规则 |
 | `docs/STATUS.md` | 当前状态、测试口径、下一步 |
-| `tasks/V8-README.md` | **V8 任务事实入口（当前阶段）**：多体裁可插拔质量 + 章数爬坡，Task 172-172c |
+| `tasks/V8-README.md` | **V8 任务事实入口（当前阶段）**：多体裁可插拔质量 + 章数爬坡；含 Task 编号治理规则 |
 | `tasks/172-project-template-plugin-DONE.md` | **Task 172（已完成）**：项目模板化与体裁可插拔 |
 | `tasks/172a-v8-genre-runtime-profiles.md` | **Task 172a（V8 P0）**：体裁运行时画像设计、子任务拆分、验证指标 |
 | `tasks/V7-README.md` | **V7 历史任务事实入口（已收尾）**：sci-fi 单一体裁 Ch200 达成 |
@@ -19,9 +19,11 @@
 
 | 文件 | 用途 |
 |------|------|
-| `tasks/V8-README.md` | V8 任务总索引、阶段验收标准、依赖关系 |
+| `tasks/V8-README.md` | V8 任务总索引、阶段验收标准、依赖关系、Task 编号治理规则 |
 | `tasks/172-project-template-plugin-DONE.md` | Task 172：项目模板化与体裁可插拔（已完成） |
 | `tasks/172a-v8-genre-runtime-profiles.md` | Task 172a：体裁运行时画像（GenreRuntimeProfile） |
+| `tasks/172d-cross-genre-literary-guardrails-DONE.md` | Task 172d：文学护栏跨体裁化（172a.7 硬前置，已完成） |
+| `tasks/172b-xuanhuan-ch100-climb.md` | Task 172b：xuanhuan Ch100 爬坡（V 维度，已完成） |
 
 ## V7 历史产物（保留入口）
 

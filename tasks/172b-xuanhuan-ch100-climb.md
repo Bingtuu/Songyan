@@ -1,6 +1,6 @@
 # Task 172b — 非 sci-fi 体裁 Ch100 爬坡验证
 
-> **状态**: 🔄 进行中（172a.7 + 172a.p 全绿，Ch100 爬坡实跑中）
+> **状态**: ✅ 完成（Ch100 全 accepted，V 维度五门 PASS）
 > **归属**: V8.2 多体裁章数爬坡（V8 验收 **V 维度**）
 > **前置**: 172a.7 短窗口质量同标 + 172a.p S 维度达标（overdue<5）✅
 > **候选体裁**: **xuanhuan**（首选）
@@ -161,11 +161,31 @@ Ch75 正式段边界（172b.p 修复后续跑）：
 
 **路由**：停止继续烧 Ch94-Ch100 token，转 `tasks/172b.q-consistency-ced-repair.md`：先修 CED 量具（consistency-only、去双计数、accepted source 可解释），再决定是否做真实 consistency 修复。不放宽 tolerance，不把文学 craft 当 CED 阻塞门。
 
+### 4.6 Ch100 终判：五门 PASS，V 维度闭合
+
+172b.q 修复后，xuanhuan 已推进到 **Ch100 accepted**。终判命令：
+
+```powershell
+python .tmp/vdim_compare.py 100
+```
+
+| gate | xuanhuan Ch100 | sci-fi Ch100 | verdict |
+|---|---:|---:|:---:|
+| budget_peak | 0.981 | 0.989 | PASS |
+| consistency CED/1k | 0.4434（154 issues / 347,290 words） | 0.3976（157 issues / 394,839 words） | PASS（≤ ×1.15 ceiling 0.4573） |
+| overdue foreshadowing | 166 | 168 | PASS |
+| health | 9.1 | ≥8.0 | PASS |
+| completeness | 100/100 accepted | 100/100 | PASS |
+
+CED 终判使用 `src/songyan/evals/consistency_ced.py` 的 consistency-only 口径：每个 accepted head 追溯 review source version，优先 `merged` report，排除文学 craft issue 与 `rule-mr-*` mandatory-reference 聚合工作项（该项的 `evidence_quote` 是 setting key 列表，不是正文证据句）。真正带正文引用的 `world_consistency` 仍计入。
+
+结论：172b 达成 V8 V 维度验收条件。按 V8-README §“Ch100 爬坡后置”纪律，172c（wuxia 第二体裁 Ch100）是 V8-pass 后续增强，不回溯性阻塞本次 V8 完成判定。
+
 
 ## 5. 依赖
 
 - **硬前置**：172a.7 报告全绿（scifi/wuxia/urban 回归 + CED 基线）+ 172a.p overdue<5 实证。**未达标不开工**（V8-README 纪律："172a.7 证明短窗口质量达标后才启动 172b"）。
-- 若 xuanhuan Ch100 达标 → 172c 选 wuxia 做第二体裁（wuxia --end 10 已证 0 halt、peak 0.958、CED 8.48 优于 scifi）。
+- xuanhuan Ch100 已达标 → 172c 可选 wuxia 做第二体裁增强验证（wuxia --end 10 已证 0 halt、peak 0.958、CED 8.48 优于 scifi）。
 
 ## 172c 预备情报：wuxia 需要 horizon floor
 

@@ -6,12 +6,13 @@
 
 | 项 | 结论 |
 |----|------|
-| 当前阶段 | **V8**：多体裁可插拔质量 + 章数爬坡 |
+| 当前阶段 | **V8 已完成验收**：P/C/Q/S/V 五维全绿；172c 保留为 V8-pass 后续增强 |
 | V7 收尾 | **已完成**。sci-fi/space_opera + webnovel_intense 单一体裁稳定跑到 Ch200，200/200 accepted，D1 hard clean pass；Ch201-Ch220 20/20 accepted |
 | V8.1 运行时画像 | **已完成**（Task 172a + 172a.p）。`GenreRuntimeProfile` 把 Context Diet 2.0 运行时契约从 sci-fi 默认值解耦；xuanhuan Ch8 halt 已消除（base_budget=15000） |
-| V8.3 文学护栏 | **代码完成**（Task 172d）。`literary_guardrail_observe` 去科幻硬编码，lexicon/主角名参数化到 `GenreProfile`，三体裁各配一套 |
-| V8 当前主线 | **Task 172b**：xuanhuan Ch100 中篇爬坡（V 维度），实跑进行中 |
-| V8 验收进度 | P/C/Q/S 四维度已实证达标；V 维度（Ch100 爬坡）进行中 |
+| V8.3 文学护栏 | **已完成**（Task 172d）。`literary_guardrail_observe` 去科幻硬编码，lexicon/主角名参数化到 `GenreProfile`，三体裁各配一套；DONE 文档已补齐 |
+| V8 当前主线 | **Task 172b 已完成**：xuanhuan Ch100 中篇爬坡五门 PASS |
+| V8 验收进度 | **P/C/Q/S/V 五维度已实证达标** |
+| V8 文档治理 | **已完成**：`tasks/V8-README.md` 已明确 Task 编号是 trace id；阶段任务、前置并行、撞墙修复、后续增强已分层展示 |
 
 ## 最新证据
 
@@ -21,7 +22,7 @@
 | C 完成度 | scifi/wuxia/urban `--end 10` 各 **10/10 accepted**；xuanhuan `--end 15` 14–15/15（Ch2 瞬时 LLM JSON 错误，非系统性） |
 | Q 质量同标 | CED：wuxia 8.48 < urban 8.75 < scifi 9.60 < xuanhuan 10.48（同量级）；全体裁 budget<1.0、T9=0、0 halt |
 | S 状态可控 | 172a.p horizon floor=12：floor12 实跑 DB 严证 **overdue@<15 = 2 < 5**（vs floor=0 的 28），44 伏笔 0 floor 违规 + 数学下界证明 |
-| V 中篇爬坡 | 172b xuanhuan Ch100 爬坡进行中（budget 曲线 <1.0、0 halt） |
+| V 中篇爬坡 | 172b xuanhuan Ch1-Ch100 **100/100 accepted**；budget 0.981、consistency CED 0.4434、overdue 166、health 9.1、五门 PASS |
 
 ## 最近验证
 
@@ -31,20 +32,23 @@
 | xuanhuan `--end 15`（floor=12） | overdue@<15=2（DB 严证）；Ch1-13 accepted（Ch11 isolate 瞬时） |
 | `python -m pytest tests/ -q` | 2691 passed, 2 skipped, 1 xfailed（含 172a.p 13 新测试） |
 | `ruff check src/ tests/` | 无新增 error |
-| 172b `--to 100`（进行中） | Ch1-4 accepted、budget 0.5-0.77、0 halt（`scripts/run_172b_ch100_climb.py`） |
+| 172b `--to 100` | Ch1-Ch100 100/100 accepted、0 halt；`python .tmp/vdim_compare.py 100` → 五门 PASS |
+| 172b.q CED 终判 | xuanhuan 154 consistency issues / 347,290 words = 0.4434；sci-fi 157 / 394,839 = 0.3976；≤ ×1.15 ceiling 0.4573 |
+| `python -m pytest tests/ -q` | **2705 passed, 2 skipped, 1 xfailed**（2 warnings） |
+| `ruff check src/ tests/` | **All checks passed** |
 
 ## 项目整理
 
 - V5/V6/V7 历史报告已归档到 `archive/v5/reports/`、`archive/v6/reports/`、`archive/v7/reports/`。
 - Task 170 文学提质中间过程稿已归档到 `archive/v7/tasks/`，入口保留总览与关键 DONE 文档。
 - Task 172（Ch250）已归档到 `archive/v7/tasks/172-ch250-transition-validation-archived.md`。
-- V8 新产物：172a.1 常量审计 + scifi baseline、172a.4 预算解耦、172a.7 多体裁矩阵报告，均在 `docs/reports/`；172a.p/172b/172d 任务书在 `tasks/`。
+- V8 新产物：172a.1 常量审计 + scifi baseline、172a.4 预算解耦、172a.7 多体裁矩阵报告、172b Ch100 报告，均在 `docs/reports/`；172a.p/172b/172b.p/172b.q/172d 任务书在 `tasks/`；Task 编号治理规则已内嵌到 `tasks/V8-README.md`。
 
 ## 下一步
 
-1. **172b Ch100 爬坡**（进行中）：等分段（Ch25/50/75/100）指标，对标 sci-fi Ch1-100 基线；达标即 V 维度收尾、V8 五维度全绿。
-2. 若 172b 中途撞墙 → 按 `172b.p` 定点修复（不放宽口径）。
-3. 172b 达标后 → **172c** 第二体裁（wuxia，已预置 horizon_floor=12）Ch100 爬坡。
+1. **V8 收口**：172b 已达标，V8 五维验收全绿；保持 `tasks/V8-README.md` 为事实入口，并按其中的编号治理规则维护后续任务。
+2. **后续增强**：如需扩大长窗口佐证，再启动 **172c** 第二体裁（wuxia，已预置 horizon_floor=12）Ch100 爬坡；启动前必须先补 `tasks/172c-*.md`，不能直接从占位行开跑。
+3. **守护项**：后续 CED 仍使用 consistency-only、merged/source、正文证据口径；不得把文学 craft 或 `rule-mr-*` 聚合工作项计入 CED。
 
 ## 入口
 
@@ -54,6 +58,8 @@
 - Task 172a.7 短窗口验证报告：`docs/reports/172a.7-genre-short-window-validation.md`
 - Task 172a.p 伏笔 horizon 下限：`tasks/172a.p-foreshadowing-horizon-floor.md`
 - Task 172b Ch100 爬坡：`tasks/172b-xuanhuan-ch100-climb.md`
+- Task 172b Ch100 报告：`docs/reports/172b-xuanhuan-ch100-climb.md`
+- Task 172b.q CED 终段修复：`tasks/172b.q-consistency-ced-repair.md`
 - Task 172d 文学护栏跨体裁化：`tasks/172d-cross-genre-literary-guardrails.md`
 - V7 归档：`archive/v7/INDEX.md`
 - V6 归档：`archive/v6/INDEX.md`
