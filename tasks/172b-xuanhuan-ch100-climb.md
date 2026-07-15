@@ -130,6 +130,25 @@ Ch13 早期读（`up_to≥100` 才是终判）：budget 0.938 / CED 10.12（boun
 
 **修复**：不改 `vdim_compare.py`、不放宽 overdue 门禁、不改 sci-fi 基线；把 xuanhuan Ch100 长窗口运行时 floor 从 12 提升到 **48**（scifi=0、wuxia=12 不变），并对 live DB 未 resolved 伏笔执行一次性 expected 修复：`expected_resolve_chapter = planted_in_chapter + 48`、派生 `status` 重置为 `planted`。修复行数 188；overdue@Ch65 **171→50**，当前已 planted 伏笔的 overdue@Ch100 预估 **188→166**（低于 sci-fi Ch100 基线 168）。验证：`test_172ap_foreshadowing_horizon_floor.py` 12 passed；V8 profile 回归 164 passed；相关 ruff clean；`vdim_compare.py 65` 五门全 PASS；`segment_audit.py 65` 预测 Ch66 continuity audit `critical_orphans=0`、不会触发 halt。
 
+### 4.4 Ch75 边界审计：五门 PASS，前瞻 orphan 风险由正文回收消解
+
+Ch75 正式段边界（172b.p 修复后续跑）：
+
+| gate | Ch75 xuanhuan | sci-fi 同章尺度 | verdict |
+|---|---:|---:|---|
+| budget | 0.981 | 0.989 | PASS |
+| CED/1k | 10.55 | 9.46 × 1.15 | PASS |
+| overdue | 85 | 136 | PASS |
+| health | 9.6 | >=8.0 | PASS |
+| completeness | 75/75 | 75/75 | PASS |
+
+深度审计发现两次前瞻 critical orphan 风险，但均由后续 accepted 正文真实回收消解，而非放宽门禁：
+
+- Ch78 前瞻：Ch75 时预测 5 个 critical orphan；Ch77 accepted 后全部被正文提及，`segment_audit.py` @Ch77 显示 Ch78 `critical_orphans=0`，Ch78 continuity audit 实际落库 health=9.7。
+- Ch84 前瞻：Ch81 时预测 5 个 critical orphan；Ch82 accepted 刷新 4 个，Ch83 accepted 刷新剩余 `《渊海引气诀》第一层`，`segment_audit.py` @Ch83 显示 Ch84 `critical_orphans=0`。
+
+当前判断：172b.p 的 long-window floor 修复稳定，orphan 风险主要来自 accepted 前的 in-flight 版本尚未刷新 tracking；只在 accepted 后仍 `critical_orphans>0` 时再开新定点修复。
+
 
 ## 5. 依赖
 
