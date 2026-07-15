@@ -132,13 +132,14 @@ class GenreRuntimeProfile(BaseModel):
     max_character_states: int = Field(default=4, ge=1)
     max_setting_input: int = Field(default=10, ge=1)
 
-    # --- 伏笔埋设 horizon 下限（172a.p：S 维度定点修复） ---
+    # 伏笔埋设 horizon 下限（172a.p/172b.p：S/V 维度定点修复） ---
     # 实证：xuanhuan 每章埋 3-7 个伏笔，LLM 选定的 expected_resolve_chapter
     # horizon 偏短（峰值 +2/+4/+6），短窗口内即 overdue（Ch15 overdue=28）；
     # scifi horizon 天然偏长（中位 12-13）故 overdue≈1。plant 时把 horizon
     # 夹到 >= floor（只抬高、从不缩短）即可压下 overdue，且 scifi(floor=0)
     # 完全不受影响（保证回退）。0 = 不夹（默认，= 旧行为）。
-    # 模拟（xuanhuan uco3ialu 实跑 DB）：floor=10 -> overdue 6；floor=12 -> overdue 1。
+    # 模拟（xuanhuan uco3ialu 短窗口 DB）：floor=10 -> overdue 6；floor=12 -> overdue 1。
+    # 172b.p Ch65 长窗口实跑证明 xuanhuan plant 密度更高，Ch100 口径需 floor=48。
     foreshadowing_horizon_floor: int = Field(
         default=0,
         ge=0,

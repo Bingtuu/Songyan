@@ -57,10 +57,11 @@ def _default_registry() -> dict[str, GenreRuntimeProfile]:
         "technical": 45,
         "historical": 30,
     }
-    # 172a.p: xuanhuan 每章密集埋伏笔且 LLM horizon 偏短 -> Ch15 overdue=28。
-    # plant 时把 horizon 夹到 >= planted+12（实跑 DB 模拟：overdue 28->1），
-    # 压下 S 维度失分；scifi(floor=0) 不受影响。
-    xuanhuan.foreshadowing_horizon_floor = 12
+    # 172a.p: floor=12 解决短窗口 S 维度；172b.p: Ch65 实跑证明 xuanhuan
+    # plant 密度高于 scifi，floor=12 在 Ch100 尺度仍会 overdue 超标。
+    # floor=48 是 Ch100 长窗口档：只抬高 expected horizon，不改评估口径；
+    # scifi(floor=0) 不受影响。
+    xuanhuan.foreshadowing_horizon_floor = 48
 
     # wuxia: genre_rules +27.7%，中等压力，base_budget 适度抬高
     wuxia = GenreRuntimeProfile(

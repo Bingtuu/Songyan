@@ -69,7 +69,7 @@ V8 通过 = 同时满足以下五项：
 | Task | 名称 | 状态 | 事实文档 |
 |------|------|:----:|----------|
 | 172b | 非 sci-fi 体裁 Ch100 爬坡验证（首选：xuanhuan） | 🔄 进行中 | `tasks/172b-xuanhuan-ch100-climb.md` |
-| 172b.p | Ch100 撞墙定点修复（占位） | ⏳ 占位 | 待 172b 实跑后确定 |
+| 172b.p | xuanhuan 伏笔 overdue 长窗口修复 | 🔄 进行中 | `tasks/172b.p-xuanhuan-foreshadowing-long-window.md` |
 | 172c | 第二个非 sci-fi 体裁 Ch100 爬坡验证（候选：wuxia） | ⏳ 占位 | 待 172b 完成后写 |
 | 172c.p | Ch100 撞墙定点修复（占位） | ⏳ 占位 | 待 172c 实跑后确定 |
 

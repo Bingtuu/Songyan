@@ -51,6 +51,12 @@ def test_clamp_exact_floor_boundary() -> None:
     assert _clamp_foreshadowing_horizon(16, planted_in_chapter=4, horizon_floor=12) == 16
 
 
+def test_clamp_172bp_long_window_floor() -> None:
+    # 172b.p: Ch100 xuanhuan uses a longer floor; still only raises short horizons.
+    assert _clamp_foreshadowing_horizon(16, planted_in_chapter=4, horizon_floor=48) == 52
+    assert _clamp_foreshadowing_horizon(60, planted_in_chapter=4, horizon_floor=48) == 60
+
+
 # --- profile field + registry wiring -------------------------------------
 
 
@@ -60,7 +66,7 @@ def test_scifi_horizon_floor_is_zero() -> None:
 
 
 def test_xuanhuan_registry_has_horizon_floor() -> None:
-    assert load_profile_from_registry("xuanhuan").foreshadowing_horizon_floor == 12
+    assert load_profile_from_registry("xuanhuan").foreshadowing_horizon_floor == 48
 
 
 def test_wuxia_registry_has_horizon_floor() -> None:

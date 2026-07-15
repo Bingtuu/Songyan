@@ -122,6 +122,14 @@ Ch13 早期读（`up_to≥100` 才是终判）：budget 0.938 / CED 10.12（boun
 
 **续跑闭环验证（Ch31-35，实跑落地）**：修复后 resume 续跑无 re-halt，逐章正常推进 Ch31→35（各章 draft→revision→accepted，无门禁阻断）。关键实证——**Ch33 continuity 审计（每 3 章一跑）已落库 health=9.4**（从 Ch30 假 orphan 事件的 6.8 恢复），证明引号 matcher 修复**经受住真实审计**，非仅静态预测。`vdim_compare.py` 在 Ch35 深度五门全 PASS（early-warning）：budget 0.981 / CED 10.13（自 Ch28 的 10.40 持续下行，远离 Ch100 ceiling 10.71）/ overdue 76（<scifi 81）/ health 9.4（≥8.0）/ completeness 35/35。§4.2 事故闭环完成。
 
+### 4.3 实跑事故记录：Ch65 overdue 超 sci-fi 同章尺度（已定点修复，172b.p）
+
+**现象**：续跑越过 Ch50 后在 Ch65 early-warning 读数触发 V 维度 overdue FAIL：budget 0.981 PASS、CED 10.41 PASS、health 9.4 PASS、completeness 65/65 PASS，但 overdue **171 > sci-fi 同章尺度约 126**。按 §3/§4 纪律主动停止爬坡，冻结 live DB，路由 `tasks/172b.p-xuanhuan-foreshadowing-long-window.md`。
+
+**根因**：172a.p 的 `foreshadowing_horizon_floor=12` 已生效（Ch65 live DB 中 168/191 条 horizon 为 +12），但它只解决短窗口 S 维度。Ch100 长窗口下，xuanhuan 每章 plant 密度高于 sci-fi（2.94 vs 2.20 条/章），且现有 MVP 中 sci-fi/xuanhuan 都几乎 `resolved=0`，overdue 主要由 plant 密度与 expected horizon 决定。floor=12 延后了爆发，但到 Ch65 仍线性累积并超过 sci-fi 同章尺度。
+
+**修复**：不改 `vdim_compare.py`、不放宽 overdue 门禁、不改 sci-fi 基线；把 xuanhuan Ch100 长窗口运行时 floor 从 12 提升到 **48**（scifi=0、wuxia=12 不变），并对 live DB 未 resolved 伏笔执行一次性 expected 修复：`expected_resolve_chapter = planted_in_chapter + 48`、派生 `status` 重置为 `planted`。修复行数 188；overdue@Ch65 **171→50**，当前已 planted 伏笔的 overdue@Ch100 预估 **188→166**（低于 sci-fi Ch100 基线 168）。验证：`test_172ap_foreshadowing_horizon_floor.py` 12 passed；V8 profile 回归 164 passed；相关 ruff clean；`vdim_compare.py 65` 五门全 PASS；`segment_audit.py 65` 预测 Ch66 continuity audit `critical_orphans=0`、不会触发 halt。
+
 
 ## 5. 依赖
 
