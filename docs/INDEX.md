@@ -19,11 +19,15 @@
 
 | 文件 | 用途 |
 |------|------|
-| `tasks/V8-README.md` | V8 任务总索引、阶段验收标准、依赖关系、Task 编号治理规则 |
+| `tasks/V8-README.md` | V8 任务总索引、阶段验收标准、依赖关系、Task 编号治理规则（已更新 172c 段 3 发现） |
 | `tasks/172-project-template-plugin-DONE.md` | Task 172：项目模板化与体裁可插拔（已完成） |
 | `tasks/172a-v8-genre-runtime-profiles.md` | Task 172a：体裁运行时画像（GenreRuntimeProfile） |
 | `tasks/172d-cross-genre-literary-guardrails-DONE.md` | Task 172d：文学护栏跨体裁化（172a.7 硬前置，已完成） |
 | `tasks/172b-xuanhuan-ch100-climb.md` | Task 172b：xuanhuan Ch100 爬坡（V 维度，已完成） |
+| `tasks/172c-wuxia-ch100-climb.md` | Task 172c：wuxia Ch100 爬坡（进行中，Ch75 完成） |
+| `tasks/172c.p-wuxia-forgotten-inventory-tracking.md` | Task 172c.p：wuxia 物品追踪粒度修复（已完成） |
+| `tasks/172c.q-wuxia-inventory-identity.md` | Task 172c.q：wuxia 物品追踪语义补强（已完成） |
+| `tasks/172c.r`（待立项） | Task 172c.r：wuxia 伏笔回收与 continuity 健康度修复 |
 
 ## V7 历史产物（保留入口）
 
@@ -90,12 +94,13 @@
 | 场景 | 文件 |
 |------|------|
 | V8 当前阶段入口 | `tasks/V8-README.md` |
+| 当前项目状态 | `docs/STATUS.md` |
 | Task 172 完成报告 | `tasks/172-project-template-plugin-DONE.md` |
 | V8 P0 任务规划 | `tasks/172a-v8-genre-runtime-profiles.md` |
+| 172c 进行中（wuxia Ch100） | `tasks/172c-wuxia-ch100-climb.md` |
 | V7 历史任务入口 | `tasks/V7-README.md` |
 | V6 历史任务入口 | `tasks/V6-README.md` |
 | V5 历史任务入口 | `tasks/V5-README.md` |
-| 当前项目状态 | `docs/STATUS.md` |
 | 开发规范 | `AGENTS.md` |
 | 300 章卡点分析 | `docs/300-chapter-gap-analysis.md` |
 | 架构手册 | `docs/architecture/04-vibe-coding-engineering.md` |

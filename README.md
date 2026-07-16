@@ -13,7 +13,7 @@
 
 Songyan 是一个用多个 AI Agent 协作写中文长篇小说的系统。它不是"调用一次模型生成一章"的简单封装——而是把长篇写作拆成规划、生成、审查、修订、结算和连续性维护六个环节，每个环节由独立的 Agent 负责，共同维护一个长期事实数据库。
 
-当前已在 **sci-fi 单一体裁**下稳定支持 **220 章**连续生成（220/220 accepted）。V8 阶段已把这一能力从科幻的隐式画像解耦，建立了可插拔的**体裁运行时画像（GenreRuntimeProfile）**——玄幻、武侠、都市三体裁在短窗口（10-15 章）已达到与科幻同等的完成度和质量基线；**玄幻（xuanhuan）更已完成 Ch100 中篇爬坡验证**（100/100 accepted，五门质量闸口全绿）。Profile 的全部运行时字段（预算分配、门禁阈值、蒸发曲线、角色衰减窗口、连续性容差）已接线到对应消费者，无 Profile 体裁 100% 回退旧行为。
+当前已在 **sci-fi 单一体裁**下稳定支持 **220 章**连续生成（220/220 accepted）。V8 阶段已把这一能力从科幻的隐式画像解耦，建立了可插拔的**体裁运行时画像（GenreRuntimeProfile）**——玄幻、武侠、都市三体裁在短窗口（10-15 章）已达到与科幻同等的完成度和质量基线；**玄幻（xuanhuan）已完成 Ch100 中篇爬坡验证**（100/100 accepted，五门质量闸口全绿）；**武侠（wuxia）Ch100 爬坡进行中**（Ch75 已完成，但暴露 SettlementExtractor 伏笔 resolve 机制失效与 continuity_auditor health 漏计 archived overdue 两个设计缺陷，待 172c.r 修复）。Profile 的全部运行时字段（预算分配、门禁阈值、蒸发曲线、角色衰减窗口、连续性容差）已接线到对应消费者，无 Profile 体裁 100% 回退旧行为。
 
 ### 它解决什么问题？
 
@@ -163,7 +163,7 @@ Songyan 已经过 **sci-fi 220 章**和 **xuanhuan 100 章**的实战验证，**
 
 | 能力 | 说明 |
 |------|------|
-| 长篇连续生成 | sci-fi 220/220 accepted；xuanhuan 100/100 accepted；0 halt |
+| 长篇连续生成 | sci-fi 220/220 accepted；xuanhuan 100/100 accepted；wuxia 75/75 accepted（Ch100 进行中）；0 halt |
 | 多体裁可插拔 | `GenreRuntimeProfile` 全部运行时字段（预算/门禁/蒸发曲线/角色衰减/连续性容差）已按体裁接线到消费者；新增体裁只需新增 Profile 文件，不修改核心逻辑；无 Profile 体裁 100% 回退旧行为 |
 | 文本洁净 | 零 Markdown 泄漏、零段落重复、零 AI 保护指令进入正文 |
 | 事实一致性 | 角色状态、世界设定、数值读数均可追溯到正文证据 |
@@ -173,7 +173,7 @@ Songyan 已经过 **sci-fi 220 章**和 **xuanhuan 100 章**的实战验证，**
 | 断点续跑 | kill 后 `--resume` 继续，自动跳过已完成章节 |
 | 自适应门禁 | 正常波动不误伤，真实退化自动暂停（AutoHalt） |
 | 叙事骨架 | 全书大纲 → 弧规划 → 章节目标自顶向下派生；xuanhuan 已用 9-arc/3-thread 骨架跑完 Ch100 |
-| 伏笔调度 | 长程伏笔主动兑现，按体裁设 horizon floor（xuanhuan=48）防止长窗口 overdue 失控 |
+| 伏笔调度 | 长程伏笔主动兑现，按体裁设 horizon floor（xuanhuan=48/wuxia=12）；**172c 段 3 发现 resolve 机制完全失效，horizon floor 仅能把逾期推后，不能替代兑现** |
 | 文学护栏 | 配角目标、主动选择、概念预算在 prompt 和审查中双重约束；lexicon 按体裁参数化（xuanhuan/wuxia/urban 各一套） |
 | 项目模板化 | `ProjectTemplate` 为 7 个体裁提供统一初始化入口，一键创建完整项目骨架 |
 
@@ -266,10 +266,11 @@ python scripts/run_172b_ch100_climb.py --to 100
 
 - [`docs/STATUS.md`](docs/STATUS.md) — 当前状态、五维验收证据、下一步
 - [`docs/INDEX.md`](docs/INDEX.md) — 文档索引
-- [`tasks/V8-README.md`](tasks/V8-README.md) — V8 任务事实入口（含编号治理规则）
-- [`tasks/V7-README.md`](tasks/V7-README.md) — V7 历史任务事实（已收尾）
+- [`tasks/V8-README.md`](tasks/V8-README.md) — V8 任务事实入口（含编号治理规则与 172c 进行中状态）
 - [`tasks/172b-xuanhuan-ch100-climb.md`](tasks/172b-xuanhuan-ch100-climb.md) — xuanhuan Ch100 爬坡任务书
 - [`docs/reports/172b-xuanhuan-ch100-climb.md`](docs/reports/172b-xuanhuan-ch100-climb.md) — xuanhuan Ch100 验收报告
+- [`tasks/172c-wuxia-ch100-climb.md`](tasks/172c-wuxia-ch100-climb.md) — wuxia Ch100 爬坡任务书（进行中）
+- [`tasks/172c.q-wuxia-inventory-identity.md`](tasks/172c.q-wuxia-inventory-identity.md) — 172c.q 物品追踪语义补强
 - [`docs/reports/172a.7-genre-short-window-validation.md`](docs/reports/172a.7-genre-short-window-validation.md) — 多体裁短窗口验证报告
 - [`AGENTS.md`](AGENTS.md) — 开发规范与工程纪律
 

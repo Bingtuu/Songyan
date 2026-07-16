@@ -3,7 +3,7 @@
 > **阶段**: 多体裁可插拔质量 → 多体裁章数爬坡（P/C/Q/S/V 五维验收完成）
 > **当前口径**: V7 在 sci-fi 单一体裁下达成 Ch200 后收尾。V8 的目标不是再做一轮类似 Task 170 的"文学性提分 prompt 工程"，而是把支撑 sci-fi 长跑的**工程底盘**（Context Diet 2.0、门禁、结算、连续性审计）以及**既有文学护栏**从科幻隐式画像解耦——运行时契约建立 `GenreRuntimeProfile`（层 2），文学护栏 lexicon/主角名参数化到 `GenreProfile`（层 3，Task 172d），让 xuanhuan/wuxia/urban 等体裁达到与 sci-fi **同等的完成度和质量基线**，再向中篇（Ch100/Ch150）爬坡。  
 > **任务编号**: V8 从 Task 172 开始；编号是 trace id，不等同于严格执行顺序。原 V7 Task 172（Ch250）已取消并归档，V8 复用 172 作为项目模板化入口。
-> **最后整理**: 2026-07-15（172b xuanhuan Ch100 五门 PASS，V 维度闭合；172e-172i 运行时契约补完全部完成，技术债清零；172c 作为 V8-pass 后续增强）
+> **最后整理**: 2026-07-16（172c wuxia 段 3 Ch75 完成，暴露 SettlementExtractor 伏笔 resolve 机制失效 + continuity_auditor health 漏计 archived overdue 两个设计缺陷；172b xuanhuan Ch100 五门 PASS 已达成；172e-172i 运行时契约补完全部完成）
 
 本文是 V8 阶段任务文档的事实入口。V7 历史事实入口见 `tasks/V7-README.md`；V6 见 `tasks/V6-README.md`；V5 见 `tasks/V5-README.md`；历史规划稿统一归档到 `archive/`，仅在追溯设计边界时查阅。
 
@@ -34,8 +34,8 @@ V8 通过 = 同时满足以下五项：
 | P | ✅ PASS | `GenreRuntimeProfile` 已可插拔；scifi profile 全默认回退旧行为，无 profile 体裁保持旧路径 |
 | C | ✅ PASS | scifi/wuxia/urban `--end 10` 全 accepted；xuanhuan `--end 15` 已通过 isolate 复核 |
 | Q | ✅ PASS | 短窗口 T9=0、budget<1.0；Ch100 consistency CED：xuanhuan 0.4434 ≤ sci-fi 0.3976 ×1.15 |
-| S | ✅ PASS | xuanhuan Ch100 overdue 166 < sci-fi Ch100 168；172b.p 证明 `foreshadowing_horizon_floor=48` 长窗口有效 |
-| V | ✅ PASS | xuanhuan Ch1-Ch100 100/100 accepted，budget / CED / overdue / health / completeness 五门全 PASS |
+| S | ✅ PASS（172b 终判） | xuanhuan Ch100 overdue 166 ≤ sci-fi Ch100 168；172b.p 证明 `foreshadowing_horizon_floor=48` 长窗口有效。**172c wuxia 段 3 发现深层缺陷**：Ch75 vdim overdue=203， SettlementExtractor 伏笔 resolve 机制完全失效（wuxia/xuanhuan 均为 0 resolved） |
+| V | ✅ PASS（172b 终判） | xuanhuan Ch1-Ch100 100/100 accepted，budget / CED / overdue / health / completeness 五门全 PASS。172c wuxia 仅到 Ch75，且 CED/overdue/health 三门外，尚未闭合 |
 
 V8 当前完成判据已满足。172c（wuxia 第二体裁 Ch100）保留为 V8-pass 后续增强，用于扩展多体裁长窗口佐证，不回溯性阻塞本次 V8 完成判定。
 
@@ -105,16 +105,17 @@ V8 当前完成判据已满足。172c（wuxia 第二体裁 Ch100）保留为 V8-
 | Task | 名称 | 状态 | 事实文档 |
 |------|------|:----:|----------|
 | 172b | 非 sci-fi 体裁 Ch100 爬坡验证（首选：xuanhuan） | ✅ 完成 | `tasks/172b-xuanhuan-ch100-climb.md` |
-| 172c | 第二个非 sci-fi 体裁 Ch100 爬坡验证（候选：wuxia） | ◻ 规划中 | `tasks/172c-wuxia-ch100-climb.md` |
+| 172c | 第二个非 sci-fi 体裁 Ch100 爬坡验证（候选：wuxia） | 🔄 进行中 | `tasks/172c-wuxia-ch100-climb.md` |
 
-#### 172b 撞墙定点修复（从属于 172b，不是独立阶段）
+#### 172c 撞墙定点修复（从属于 172c，不是独立阶段）
 
 | Task | 名称 | 状态 | 事实文档 |
 |------|------|:----:|----------|
-| 172b.p | xuanhuan 伏笔 overdue 长窗口修复 | ✅ 完成 | `tasks/172b.p-xuanhuan-foreshadowing-long-window.md` |
-| 172b.q | xuanhuan consistency CED 终段修复 | ✅ 完成 | `tasks/172b.q-consistency-ced-repair.md` |
+| 172c.p | wuxia forgotten_items 物品追踪粒度修复 | ✅ 完成 | `tasks/172c.p-wuxia-forgotten-inventory-tracking.md` |
+| 172c.q | wuxia 物品追踪语义补强（变体归一 / 非物品过滤 / 消耗流转） | ✅ 完成 | `tasks/172c.q-wuxia-inventory-identity.md` |
+| 172c.r | wuxia 伏笔回收与 continuity 健康度修复 | ◻ 待立项 | 待写 |
 
-> `172c.p` 不再作为当前占位任务展示；若 `172c` 实跑后出现具体 Ch100 撞墙，再按证据新建 `172c.<suffix>-*.md`，并在本子表登记。
+> 172c 实跑段 3 后暴露两个设计缺陷，已按证据新建 `172c.r`；`172c.p`/`172c.q` 是 172c 内部按发现顺序产生的物品追踪修复，不影响 172c 主线状态。
 
 ---
 
@@ -145,6 +146,23 @@ V8 当前完成判据已满足。172c（wuxia 第二体裁 Ch100）保留为 V8-
 | budget_used 峰值 | <1.3 | **1.4019** |
 | halt 原因 | 无 | `context_emergency_budget_ratio_halt` |
 | Ch8 伏笔状态 | — | 10 planted / 3 due / 13 overdue |
+
+### 172c wuxia 中篇现状（2026-07-16）
+
+| 指标 | 段 1 Ch1-25 | 段 2 Ch26-50 | 段 3 Ch51-75 |
+|---|---|---|---|
+| accepted | 25/25 | 25/25 | 25/25 |
+| 0 halt | ✅ | ✅ | ✅ |
+| budget_used_peak | 0.995 | — | 0.995 |
+| CED/1k (vdim) | 0.49 | — | 0.47 |
+| overdue_foreshadowing (vdim) | 32 | — | **203** |
+| health_latest | 3.0 → 7.2 | 5.6-7.8 | 5.3-6.0 |
+| 五门 verdict @Ch75 | — | — | budget/completeness PASS；CED/overdue/health FAIL |
+
+**关键发现**：
+- wuxia 与 xuanhuan 的 `foreshadowing` 记录中 **`resolved` 数量均为 0**：每章平均埋 3-4 个伏笔，但 SettlementExtractor 从未成功 resolve。
+- `continuity_auditor` health 公式使用 `ForeshadowingRepository.list_active()`，只统计 `lifecycle_status=active` 且 `status IN ('planted','due')` 的伏笔； overdue 被 `archive_overdue()` 归档到 `dormant`/`archived` 后，health 公式不再计入，导致 health 5.6 但 vdim 统计到 203 个 overdue 的割裂。
+- `foreshadowing_horizon_floor`（wuxia=12，xuanhuan=48）只是把逾期推后，不能替代 resolve 机制。
 
 ### sci-fi 对比基线（V8 目标水位）
 
@@ -238,6 +256,8 @@ project.genre
 
 - 门禁服务 `GateConfig` 构建时序：当前 `cli/main.py:521` 在 genre 已知前就构建了全局 `GateConfig`，`phase2_graph.py` 只能在运行时逐个字段覆盖。后续重构候选：genre 已知后统一构造（不阻塞 V9 调参，172e-172i 未动此路径）。
 - ~~角色衰减劈裂~~：已由 172g 统一——`dormant_window` / `archive_window` / `functional_window` 已接入 `CharacterStateRepository`，与 `_resolve_profile_level()` 的 `focal_gaps` 同属 `character_decay` profile。
+- **SettlementExtractor 伏笔 resolve 机制失效（172c 段 3 发现）**：wuxia 75 章、xuanhuan 100 章的 `foreshadowings.status='resolved'` 数量均为 0。`foreshadowing_updates.resolve` 操作要么未被 LLM 生成，要么未被正确应用。是当前 overdue 失控的根因，必须由 172c.r 修复。
+- **continuity_auditor health 漏计 archived overdue（172c 段 3 发现）**：`_find_overdue_foreshadowings()` 使用 `list_active()`，只返回 `lifecycle_status=active` 且 `status IN ('planted','due')` 的伏笔；`archive_overdue()` 把逾期项归档到 `dormant`/`archived` 后，health 公式看不到它们，导致 health 指标与 vdim `overdue_foreshadowing` 门严重割裂。
 
 ### 可插拔与回退
 
@@ -303,7 +323,10 @@ project.genre
 - V8 P0 详细规划：`tasks/172a-v8-genre-runtime-profiles.md`
 - V8 文学护栏跨体裁化：`tasks/172d-cross-genre-literary-guardrails-DONE.md`
 - V8 xuanhuan Ch100 爬坡：`tasks/172b-xuanhuan-ch100-climb.md`
-- V8 wuxia Ch100 爬坡（规划中）：`tasks/172c-wuxia-ch100-climb.md`
+- V8 wuxia Ch100 爬坡（进行中）：`tasks/172c-wuxia-ch100-climb.md`
+- V8 wuxia 物品追踪修复：`tasks/172c.p-wuxia-forgotten-inventory-tracking.md`
+- V8 wuxia 物品身份语义补强：`tasks/172c.q-wuxia-inventory-identity.md`
+- V8 wuxia 伏笔回收与 continuity 健康度修复（待立项）：172c.r
 - V8 xuanhuan Ch100 报告：`docs/reports/172b-xuanhuan-ch100-climb.md`
 - V8 CED 终段修复：`tasks/172b.q-consistency-ced-repair.md`
 - V8 运行时契约补完：
