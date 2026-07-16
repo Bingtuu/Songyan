@@ -484,15 +484,26 @@ class InventoryTrackerRepository:
             rows = await cursor.fetchall()
         return [dict(row) for row in rows]
 
-    async def update_last_used(self, track_id: str, chapter: int) -> None:
-        async with get_db() as conn:
-            await conn.execute(
+    async def update_last_used(
+        self,
+        track_id: str,
+        chapter: int,
+        conn: aiosqlite.Connection | None = None,
+    ) -> None:
+        async def _do(c: aiosqlite.Connection) -> None:
+            await c.execute(
                 """UPDATE inventory_tracker
                    SET last_used_chapter = ?
                    WHERE track_id = ?""",
                 (chapter, track_id),
             )
-            await conn.commit()
+
+        if conn is None:
+            async with get_db() as c:
+                await _do(c)
+                await c.commit()
+        else:
+            await _do(conn)
 
 
 class LocationTrackerRepository:

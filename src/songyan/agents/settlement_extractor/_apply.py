@@ -910,6 +910,68 @@ def _build_protagonist_names(project: ProjectSetting | None) -> set[str]:
     return names
 
 
+# Task 172c.p: inventory 聚合清单拆分 — wuxia 等体裁的结算 LLM 习惯把主角持有物写成
+# 聚合清单（「持有断刀、断刀门刀谱、断刀令（两块铁牌）…」），旧实现整串截 50 字建一条
+# 记录且旧记录 last_used 永久冻结 → 每章一条新聚合串、3 章后 forgotten，是粒度伪影。
+# 按顶层分隔符拆单物品（括号内分隔符不切）、剥除持有/缴获类前缀，再与已有 held 记录
+# 同名匹配：命中刷新 last_used，未命中才建档。
+_INVENTORY_SEPARATOR_CHARS = "、，,；;/"
+_INVENTORY_PREFIX_RE = re.compile(
+    r"^(?:从[^、，,；;/]+?处)?"
+    r"(?:缴获|持有|携带|随身带着|随身|拥有|获得|取得|收起|带着|提着|握着|背着|怀揣)的?"
+)
+_INVENTORY_LOW_INFO_TOKENS = frozenset(
+    {"无", "空手", "暂无", "没有", "随身物品", "物品", "道具"}
+)
+
+
+def _normalize_item_name(name: str) -> str:
+    """物品名归一化（去空白），用于同名匹配."""
+    return re.sub(r"\s+", "", name)
+
+
+def _split_inventory_items(value: str) -> list[str]:
+    """把 inventory 字段的 new_value 拆成单物品名列表.
+
+    - 按 `、` `，` `,` `；` `;` `/` 顶层分隔符切分，括号（`（）()`）内的分隔符不切
+      （「断刀令（两块铁牌）」保持一条）；
+    - 剥除「持有/携带/缴获/从…处缴获」等前缀；
+    - 过滤低信息碎片（len<2、空值、纯无意义词）；
+    - 同一 value 内按归一化名去重（保序）。
+    """
+    items: list[str] = []
+    current: list[str] = []
+    depth = 0
+
+    def _flush() -> None:
+        name = _INVENTORY_PREFIX_RE.sub("", "".join(current).strip()).strip()
+        if len(name) >= 2 and name not in _INVENTORY_LOW_INFO_TOKENS:
+            items.append(name)
+
+    for ch in value:
+        if ch in "（(":
+            depth += 1
+            current.append(ch)
+        elif ch in "）)":
+            depth = max(0, depth - 1)
+            current.append(ch)
+        elif ch in _INVENTORY_SEPARATOR_CHARS and depth == 0:
+            _flush()
+            current = []
+        else:
+            current.append(ch)
+    _flush()
+
+    seen: set[str] = set()
+    unique: list[str] = []
+    for name in items:
+        key = _normalize_item_name(name)
+        if key not in seen:
+            seen.add(key)
+            unique.append(name)
+    return unique
+
+
 async def _update_continuity_tracking(
     settlement: StateSettlement,
     project_id: str,
@@ -956,19 +1018,42 @@ async def _update_continuity_tracking(
             )
 
     # 5.2 Inventory / Location tracking（轻量级：从 character_updates 推断）
+    existing_items = await inventory_repo.list_by_project(project_id)
+    held_by_char: dict[str, dict[str, dict[str, Any]]] = {}
+    for row in existing_items:
+        if row.get("status", "held") == "held":
+            held_by_char.setdefault(row.get("character_id") or "", {})[
+                _normalize_item_name(row["item_name"])
+            ] = row
+
     for update in settlement.character_updates:
         field_lower = update.field.lower()
         if "inventory" in field_lower or "物品" in field_lower or "道具" in field_lower:
-            track_id = f"inv-{project_id}-{uuid.uuid4().hex[:8]}"
-            await inventory_repo.create(
-                track_id=track_id,
-                project_id=project_id,
-                character_id=update.character_id,
-                item_name=update.new_value[:50],
-                item_description=f"From field '{update.field}'",
-                acquired_in_chapter=chapter_number,
-                conn=conn,
-            )
+            # 172c.p: 拆单物品 + 同名 held 记录刷新（不新建），聚合清单不再逐章堆积
+            held = held_by_char.setdefault(update.character_id or "", {})
+            for item_name in _split_inventory_items(update.new_value):
+                norm = _normalize_item_name(item_name)
+                existing = held.get(norm)
+                if existing is not None:
+                    await inventory_repo.update_last_used(
+                        existing["track_id"], chapter_number, conn=conn
+                    )
+                    continue
+                track_id = f"inv-{project_id}-{uuid.uuid4().hex[:8]}"
+                await inventory_repo.create(
+                    track_id=track_id,
+                    project_id=project_id,
+                    character_id=update.character_id,
+                    item_name=item_name[:50],
+                    item_description=f"From field '{update.field}'",
+                    acquired_in_chapter=chapter_number,
+                    conn=conn,
+                )
+                held[norm] = {
+                    "track_id": track_id,
+                    "item_name": item_name,
+                    "status": "held",
+                }
         elif "location" in field_lower or "位置" in field_lower:
             track_id = f"loc-{project_id}-{uuid.uuid4().hex[:8]}"
             await location_repo.create(

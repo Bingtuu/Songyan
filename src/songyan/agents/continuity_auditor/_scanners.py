@@ -2,10 +2,18 @@
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 import structlog
+from aiosqlite import Row
 
+from songyan.agents.settlement_extractor._apply import (
+    _LOW_INFO_REFERENCE_TOKENS,
+    _cjk_runs,
+    _term_in_content,
+)
+from songyan.db.connection import get_db
 from songyan.db.continuity_repo import (
     InventoryTrackerRepository,
     SettingTrackingRepository,
@@ -111,34 +119,151 @@ async def _find_orphaned_settings(
     ]
 
 
+_ITEM_REFERENCE_SPLIT_RE = re.compile(
+    r"[·—\-_/（）()\[\]【】,，、;；:\s'‘’\"“”]+"
+)
+
+
+def _item_reference_terms(item_name: str) -> set[str]:
+    """提取物品核心名，用于正文回查.
+
+    与 172b 引号 matcher 同纪律：同一分隔符集（含中英文引号）切分 +
+    low-info 过滤 + len>=2 约束，避免「系统」「刀」这类泛词/单字误刷新。
+    """
+    terms: set[str] = set()
+    for part in _ITEM_REFERENCE_SPLIT_RE.split(item_name):
+        cleaned = part.strip()
+        if len(cleaned) >= 2 and cleaned not in _LOW_INFO_REFERENCE_TOKENS:
+            terms.add(cleaned)
+    return terms
+
+
+def _item_reference_tokens(item_name: str) -> set[str]:
+    """复合物品名（CJK 片段 len>=4）的 2-4 gram token，用于多 token 共现回查.
+
+    172c.p（B 方案）：wuxia 正文常以短名指代 verbose 登记名（「断刀门刀谱」在正文
+    写作 断刀+刀谱 共现）。复用 172b `_has_multi_token_setting_reference` 的语义：
+    单个短 token 命中不构成使用，>=3 个不同 token 且至少一个 len>=3 同章共现才算。
+    短名（CJK 片段 <4）不生成 token，只走 full-term 路径。
+    """
+    tokens: set[str] = set()
+    for run in _cjk_runs(item_name):
+        if len(run) < 4:
+            continue
+        for n in (2, 3, 4):
+            for i in range(0, len(run) - n + 1):
+                token = run[i : i + n]
+                if token not in _LOW_INFO_REFERENCE_TOKENS:
+                    tokens.add(token)
+    return tokens
+
+
+def _item_mentioned_in_content(item_name: str, terms: set[str], content: str) -> bool:
+    """物品是否在正文中被使用：full-term 边界命中，或多 token 共现."""
+    if any(_term_in_content(term, content) for term in terms):
+        return True
+    tokens = _item_reference_tokens(item_name)
+    if len(tokens) < 3:
+        return False
+    lowered = content.lower()
+    matched = {token for token in tokens if token.lower() in lowered}
+    return len(matched) >= 3 and any(len(token) >= 3 for token in matched)
+
+
+async def _load_recent_accepted_contents(
+    project_id: str, from_chapter: int, to_chapter: int
+) -> list[tuple[int, str]]:
+    """加载 [from_chapter, to_chapter] 范围 accepted 版本的正文（供正文回查）.
+
+    DB 不可用（如纯 mock 单测环境）时退化为空列表——正文回查失效，
+    forgotten 判定回退为纯阈值行为（172c.p 前的旧行为）。
+    """
+    try:
+        async with get_db() as conn:
+            conn.row_factory = Row
+            cursor = await conn.execute(
+                """SELECT h.chapter_number AS chapter_number, cv.content AS content
+                   FROM chapter_heads h
+                   JOIN chapter_versions cv ON cv.version_id = h.current_version_id
+                   WHERE h.project_id = ? AND h.status = 'accepted'
+                     AND h.chapter_number BETWEEN ? AND ?
+                   ORDER BY h.chapter_number""",
+                (project_id, from_chapter, to_chapter),
+            )
+            rows = await cursor.fetchall()
+    except Exception as exc:
+        logger.warning(
+            "continuity.forgotten_text_recheck_unavailable",
+            project_id=project_id,
+            error=str(exc),
+        )
+        return []
+    return [(int(r["chapter_number"]), str(r["content"] or "")) for r in rows]
+
+
 async def _find_forgotten_items(
     project_id: str,
     up_to_chapter: int,
     inventory_repo: InventoryTrackerRepository,
     runtime_profile: GenreRuntimeProfile | None = None,
 ) -> list[ForgottenItem]:
-    """找出 last_used_chapter 距离当前超过阈值的物品."""
+    """找出 last_used_chapter 距离当前超过阈值的物品.
+
+    172c.p 检测兜底：超阈值候选先回查近 ``threshold`` 章 accepted 正文——物品核心名
+    在正文中出现即视为真实使用（刷新 last_used 且不计 forgotten）；正文也不出现的才
+    判 forgotten（真遗忘仍被捕获）。覆盖 settlement 漏记 inventory 更新的失败模式。
+    """
     threshold = (
         runtime_profile.continuity.forgotten_threshold
         if runtime_profile is not None
         else FORGOTTEN_THRESHOLD
     )
     rows = await inventory_repo.list_by_project(project_id)
-    result: list[ForgottenItem] = []
+    candidates: list[tuple[dict[str, Any], int]] = []
     for r in rows:
         if r["status"] != "held":
             continue
         last_used = r["last_used_chapter"] or r["acquired_in_chapter"]
         if up_to_chapter - last_used >= threshold:
-            result.append(
-                ForgottenItem(
-                    track_id=r["track_id"],
-                    character_id=r["character_id"],
-                    item_name=r["item_name"],
-                    acquired_in_chapter=r["acquired_in_chapter"],
-                    last_used_chapter=last_used,
-                )
+            candidates.append((r, last_used))
+    if not candidates:
+        return []
+
+    from_chapter = max(1, up_to_chapter - threshold + 1)
+    recent_contents = await _load_recent_accepted_contents(
+        project_id, from_chapter, up_to_chapter
+    )
+
+    result: list[ForgottenItem] = []
+    for r, last_used in candidates:
+        terms = _item_reference_terms(r["item_name"])
+        if recent_contents:
+            matched_chapters = [
+                chapter_number
+                for chapter_number, content in recent_contents
+                if _item_mentioned_in_content(r["item_name"], terms, content)
+            ]
+            if matched_chapters:
+                latest = max(matched_chapters)
+                if latest > last_used:
+                    await inventory_repo.update_last_used(r["track_id"], latest)
+                    logger.info(
+                        "continuity.forgotten_item_refreshed_by_text",
+                        project_id=project_id,
+                        track_id=r["track_id"],
+                        item_name=r["item_name"],
+                        last_used_chapter=latest,
+                    )
+                continue
+        result.append(
+            ForgottenItem(
+                track_id=r["track_id"],
+                character_id=r["character_id"],
+                item_name=r["item_name"],
+                acquired_in_chapter=r["acquired_in_chapter"],
+                last_used_chapter=last_used,
             )
+        )
     return result
 
 
