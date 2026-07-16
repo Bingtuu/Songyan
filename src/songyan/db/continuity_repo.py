@@ -448,14 +448,16 @@ class InventoryTrackerRepository:
         item_name: str,
         item_description: str,
         acquired_in_chapter: int,
+        status: str = "held",
         conn: aiosqlite.Connection | None = None,
     ) -> None:
         async def _do(c: aiosqlite.Connection) -> None:
             await c.execute(
                 """INSERT INTO inventory_tracker (
                     track_id, project_id, character_id, item_name,
-                    item_description, acquired_in_chapter, last_used_chapter
-                ) VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                    item_description, acquired_in_chapter, last_used_chapter,
+                    status
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
                     track_id,
                     project_id,
@@ -464,7 +466,27 @@ class InventoryTrackerRepository:
                     item_description,
                     acquired_in_chapter,
                     acquired_in_chapter,
+                    status,
                 ),
+            )
+
+        if conn is None:
+            async with get_db() as c:
+                await _do(c)
+                await c.commit()
+        else:
+            await _do(conn)
+
+    async def update_status(
+        self,
+        track_id: str,
+        status: str,
+        conn: aiosqlite.Connection | None = None,
+    ) -> None:
+        async def _do(c: aiosqlite.Connection) -> None:
+            await c.execute(
+                "UPDATE inventory_tracker SET status = ? WHERE track_id = ?",
+                (status, track_id),
             )
 
         if conn is None:

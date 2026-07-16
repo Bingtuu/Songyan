@@ -972,6 +972,29 @@ def _split_inventory_items(value: str) -> list[str]:
     return unique
 
 
+# Task 172c.q: 物品身份 = 基底名（首个括号前的核心名词）。wuxia 结算 LLM 把当章状态
+# 写进物品名（「断刀（濒临碎裂）」「断刀（裂纹上百道）」逐章变体），全名精确匹配
+# 永不命中 → 同一物理物品逐章堆积。基底名相等即同一物品；「断刀」与「断刀门刀谱」
+# 基底名不同，不会被误并。不做前缀匹配（「断刀门刀谱」以「断刀」为前缀，前缀规则
+# 必然误吞）。
+_INVENTORY_CONSUMED_RE = re.compile(r"已服下|已交出|已损毁|已用完|已耗尽|被夺走|被抢|抢走|已赠|已消耗|已捏碎|已碎裂|已折断")
+_INVENTORY_BASE_NAME_MAX = 10
+
+
+def _item_base_name(name: str) -> str:
+    """物品基底名：首个括号（`（`/`(`）前的片段."""
+    return re.split(r"[（(]", name, maxsplit=1)[0].strip()
+
+
+def _is_inventory_fragment(base_name: str) -> bool:
+    """基底名 >10 字视为叙述句碎片.
+
+    172c.q 段 2 实证：正常物品基底名 ≤8 字（「密室三把钥匙之一」为最长样本），
+    >10 字无一例外是「透出一丝不属于这个世界的微光」类叙述句碎片。
+    """
+    return len(base_name) > _INVENTORY_BASE_NAME_MAX
+
+
 async def _update_continuity_tracking(
     settlement: StateSettlement,
     project_id: str,
@@ -1019,27 +1042,65 @@ async def _update_continuity_tracking(
 
     # 5.2 Inventory / Location tracking（轻量级：从 character_updates 推断）
     existing_items = await inventory_repo.list_by_project(project_id)
-    held_by_char: dict[str, dict[str, dict[str, Any]]] = {}
+    # 172c.q: 同时维护全名索引与基底名索引，用于状态变体归一。
+    held_full: dict[str, dict[str, dict[str, Any]]] = {}
+    held_base: dict[str, dict[str, dict[str, Any]]] = {}
     for row in existing_items:
-        if row.get("status", "held") == "held":
-            held_by_char.setdefault(row.get("character_id") or "", {})[
-                _normalize_item_name(row["item_name"])
-            ] = row
+        if row.get("status", "held") != "held":
+            continue
+        char_key = row.get("character_id") or ""
+        held_full.setdefault(char_key, {})[_normalize_item_name(row["item_name"])] = row
+        base_key = _normalize_item_name(_item_base_name(row["item_name"]))
+        if len(base_key) >= 2:
+            held_base.setdefault(char_key, {}).setdefault(base_key, row)
 
     for update in settlement.character_updates:
         field_lower = update.field.lower()
         if "inventory" in field_lower or "物品" in field_lower or "道具" in field_lower:
             # 172c.p: 拆单物品 + 同名 held 记录刷新（不新建），聚合清单不再逐章堆积
-            held = held_by_char.setdefault(update.character_id or "", {})
+            # 172c.q: 基底名变体归一 + 非物品碎片过滤 + 消耗状态流转
+            char_key = update.character_id or ""
+            full_index = held_full.setdefault(char_key, {})
+            base_index = held_base.setdefault(char_key, {})
             for item_name in _split_inventory_items(update.new_value):
+                base_name = _item_base_name(item_name)
+                if _is_inventory_fragment(base_name):
+                    logger.warning(
+                        "settlement.inventory_fragment_rejected",
+                        project_id=project_id,
+                        chapter_number=chapter_number,
+                        item_name=item_name[:50],
+                    )
+                    continue
+                consumed = bool(_INVENTORY_CONSUMED_RE.search(item_name))
                 norm = _normalize_item_name(item_name)
-                existing = held.get(norm)
+                norm_base = _normalize_item_name(base_name)
+
+                existing = full_index.get(norm)
+                if existing is None and len(norm_base) >= 2:
+                    existing = base_index.get(norm_base)
                 if existing is not None:
                     await inventory_repo.update_last_used(
                         existing["track_id"], chapter_number, conn=conn
                     )
+                    if consumed:
+                        await inventory_repo.update_status(
+                            existing["track_id"], "consumed", conn=conn
+                        )
+                        # 消耗后从 held 索引移除；后续再获得同物可重新登记
+                        full_index.pop(
+                            _normalize_item_name(existing["item_name"]), None
+                        )
+                        base_index.pop(
+                            _normalize_item_name(
+                                _item_base_name(existing["item_name"])
+                            ),
+                            None,
+                        )
                     continue
+
                 track_id = f"inv-{project_id}-{uuid.uuid4().hex[:8]}"
+                status = "consumed" if consumed else "held"
                 await inventory_repo.create(
                     track_id=track_id,
                     project_id=project_id,
@@ -1047,13 +1108,18 @@ async def _update_continuity_tracking(
                     item_name=item_name[:50],
                     item_description=f"From field '{update.field}'",
                     acquired_in_chapter=chapter_number,
+                    status=status,
                     conn=conn,
                 )
-                held[norm] = {
+                new_row: dict[str, Any] = {
                     "track_id": track_id,
                     "item_name": item_name,
-                    "status": "held",
+                    "status": status,
                 }
+                if status == "held":
+                    full_index[norm] = new_row
+                    if len(norm_base) >= 2:
+                        base_index.setdefault(norm_base, new_row)
         elif "location" in field_lower or "位置" in field_lower:
             track_id = f"loc-{project_id}-{uuid.uuid4().hex[:8]}"
             await location_repo.create(
