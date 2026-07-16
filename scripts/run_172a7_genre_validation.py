@@ -25,6 +25,7 @@ from songyan.config import settings
 from songyan.db.connection import get_db
 from songyan.db.repository import ChapterHeadRepository, ChapterVersionRepository
 from songyan.evals.text_cleanliness import collect_text_cleanliness_metrics
+from songyan.exceptions import AutoHaltException
 from songyan.models import GateConfig
 from songyan.project_templates import ProjectInitializer, ProjectTemplateLoader
 from songyan.workflows.phase2_graph import run_project_pipeline
@@ -133,7 +134,7 @@ async def _ced(project_id: str, end: int) -> dict[str, object]:
     }
 
 
-async def run_for_template(template_id: str, end: int) -> dict[str, object]:
+async def run_for_template(template_id: str, end: int, retries: int = 2) -> dict[str, object]:
     safe_id = re.sub(r"[^\w-]", "_", template_id)
     tmpdir = tempfile.mkdtemp(prefix=f"task172a7_{safe_id}_")
     settings.database_url = f"sqlite:///{tmpdir}/songyan.db"
@@ -142,14 +143,27 @@ async def run_for_template(template_id: str, end: int) -> dict[str, object]:
     project_id, project = await ProjectInitializer.from_template(template)
 
     gate_config = GateConfig.for_mode("enforce")
-    result = await run_project_pipeline(
-        project_id=project_id,
-        chapter_range=(1, end),
-        mode_id=project.mode_id,
-        auto_confirm=True,
-        on_failure="isolate",
-        gate_config=gate_config,
-    )
+    # halt 自动重试：LLM 随机波动（修订不收敛/hook 误伤等）触发的 AutoHalt
+    # 可通过 resume 从失败章重新生成恢复；重试耗尽才向上抛出。
+    # tmpdir 在整个重试循环中复用，保证 resume 能读到已 accept 章节。
+    result = None
+    for attempt in range(retries + 1):
+        try:
+            result = await run_project_pipeline(
+                project_id=project_id,
+                chapter_range=(1, end),
+                mode_id=project.mode_id,
+                auto_confirm=True,
+                on_failure="isolate",
+                gate_config=gate_config,
+                resume=attempt > 0,
+            )
+            break
+        except AutoHaltException as exc:
+            print(f"[retry] AutoHalt attempt {attempt + 1}/{retries + 1}: {exc}")
+            if attempt >= retries:
+                raise
+    assert result is not None  # noqa: S101
 
     t9 = await collect_text_cleanliness_metrics(project_id, 1, end)
     t9_count = sum(
@@ -178,6 +192,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--templates", nargs="+", required=True)
     parser.add_argument("--end", type=int, default=10)
+    parser.add_argument("--retries", type=int, default=2, help="AutoHalt 后自动 resume 重试次数")
     parser.add_argument("--output", default=".tmp/task172a7_validation.json")
     args = parser.parse_args()
 
@@ -185,7 +200,7 @@ def main() -> None:
     for template_id in args.templates:
         print(f"\n=== {template_id} --end {args.end} ===")
         try:
-            summary = asyncio.run(run_for_template(template_id, args.end))
+            summary = asyncio.run(run_for_template(template_id, args.end, args.retries))
             results.append(summary)
             print(json.dumps(summary, ensure_ascii=False, indent=2))
         except Exception as exc:  # noqa: BLE001

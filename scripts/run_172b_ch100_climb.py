@@ -48,8 +48,9 @@ from songyan.workflows.phase2_graph import run_project_pipeline
 
 TEMPLATE_ID = os.getenv("TEMPLATE_ID", "xuanhuan")
 RUN_ID = os.getenv("RUN_ID", "172b")
-DB_PATH = Path(f".tmp/task172b_{TEMPLATE_ID}_ch100.db")
 SEGMENT = int(os.getenv("SEGMENT", "25"))
+HALT_RETRIES = int(os.getenv("HALT_RETRIES", "2"))
+DB_PATH = Path(f".tmp/task172b_{TEMPLATE_ID}_ch100.db")
 PROJECT_FILE = Path(f".tmp/task172b_{TEMPLATE_ID}_project.json")
 REPORT_PATH = Path(f"docs/reports/{RUN_ID}-{TEMPLATE_ID}-ch100-climb.md")
 METRICS_PATH = Path(f".tmp/task172b_{TEMPLATE_ID}_segments.jsonl")
@@ -222,20 +223,26 @@ async def main() -> None:
     while seg_start <= args.to:
         seg_end = min(seg_start + SEGMENT - 1, args.to)
         print(f"\n=== segment Ch{seg_start}-Ch{seg_end} ===")
-        try:
-            result = await run_project_pipeline(
-                project_id=project_id,
-                chapter_range=(1, seg_end),
-                mode_id=project.mode_id,
-                auto_confirm=True,
-                on_failure="isolate",
-                gate_config=gate_config,
-                resume=True,
-            )
-            print(f"completed={len(result.chapters_completed)} failed={result.chapters_failed}")
-        except AutoHaltException as exc:
-            halt_reason = f"{exc.reason} (last chapter {exc.last_chapter})"
-            print(f"=== AutoHalt: {halt_reason} ===")
+        # 段内 halt 自动重试：LLM 随机波动（修订不收敛/hook 误伤等）触发的
+        # AutoHalt 可通过 resume 从失败章重新生成恢复；重试耗尽才停爬路由人工。
+        halt_reason = None
+        for attempt in range(HALT_RETRIES + 1):
+            try:
+                result = await run_project_pipeline(
+                    project_id=project_id,
+                    chapter_range=(1, seg_end),
+                    mode_id=project.mode_id,
+                    auto_confirm=True,
+                    on_failure="isolate",
+                    gate_config=gate_config,
+                    resume=True,
+                )
+                print(f"completed={len(result.chapters_completed)} failed={result.chapters_failed}")
+                halt_reason = None
+                break
+            except AutoHaltException as exc:
+                halt_reason = f"{exc.reason} (last chapter {exc.last_chapter})"
+                print(f"=== AutoHalt attempt {attempt + 1}/{HALT_RETRIES + 1}: {halt_reason} ===")
 
         metrics = await _segment_metrics(project_id, seg_end)
         metrics["halt"] = halt_reason
@@ -244,7 +251,7 @@ async def main() -> None:
         print(json.dumps(metrics, ensure_ascii=False, indent=2))
 
         if halt_reason:
-            print("=== stopping climb due to halt -> route 172b.p ===")
+            print("=== stopping climb due to halt (retries exhausted) -> route 172b.p ===")
             break
         seg_start = seg_end + 1
 

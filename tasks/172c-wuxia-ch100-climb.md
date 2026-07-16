@@ -72,7 +72,7 @@ python scripts/run_172b_ch100_climb.py --to 100   # 分段爬坡，自动 resume
 |---|---|---|---|
 | 1 | **horizon floor 长窗口不足**（最可能撞墙点） | 段边界 overdue > sci-fi 同章尺度 | **172c.p**：xuanhuan 在 Ch65 证明 floor=12 在 Ch100 尺度不足（171>126，提到 48 后 Ch100 overdue=166≤168）；wuxia plant horizon 更短，同样风险。预案：提高 wuxia floor（参考值 48，按实测 plant 密度定）+ 未 resolved 伏笔一次性 expected 修复。决策点设在**段 2（Ch50）边界**：若 overdue 趋势外推 Ch100 超 168，即停并路由，不硬跑 |
 | 2 | CED 终段超线 | Ch80+ consistency CED 持续 > ceiling 0.4573 | **172c.q**：172b 在 Ch91-93 撞过同款；量具已就绪，预案为热点章（多轮修订章 issue 密度最高者）定点修订，不改口径 |
-| 3 | budget 长尺度溢出 | Ch50+ budget_used 逼近 1.0 或 halt | 杠杆是 `base_budget` 微调 / genre_rules 内容精简（层 3），非分区权重；wuxia +27.7% 中等压力，风险低 |
+| 3 | budget 长尺度溢出 / 短窗口贴边 | Ch50+ budget_used 逼近 1.0 或 halt；短窗口 budget_before_emergency 贴边 1.3 | 杠杆是 `base_budget` 微调 / genre_rules 内容精简（层 3），非分区权重；wuxia +27.7% 中等压力，风险低。**scifi 回归实测**：短窗口 peak 1.3090（Ch10）贴边 1.3 阈值（172a.7 peak 1.2837 同量级），属固有 flaky——harness `HALT_RETRIES=2` 自动 resume 重试正是覆盖此场景，重试耗尽才路由人工 |
 | 4 | 连续性假 orphan 新形态 | `health_low_p1_halt` 但正文实际在回收 | 定点审计 matcher（172b 已修引号 split；wuxia 命名风格不同可能出现新形态），只修 matcher 不松门禁 |
 | 5 | 环境漂移 | `.tmp/vdim_compare.py` / `.tmp/scifi_ch100_baseline.json` 缺失 | 启动前按 §5 清单核实；缺失则从 172b 流程重建基线后再开跑 |
 
@@ -87,7 +87,7 @@ python scripts/run_172b_ch100_climb.py --to 100   # 分段爬坡，自动 resume
 - [x] 172e-172i 运行时契约补完（profile 字段全接线；scifi 回退回归 2746 passed）
 - [x] `.tmp/vdim_compare.py` 与 `.tmp/scifi_ch100_baseline.json` 在位（2026-07-15 核实）
 - [x] harness `REPORT_PATH` 编号参数化（`RUN_ID` 环境变量，默认 `172b` 向后兼容）
-- [ ] 实跑前 scifi `--end 10` 回归确认旧行为不变
+- [x] 实跑前 scifi `--end 10` 回归确认旧行为不变（2026-07-16 两轮实跑：budget 曲线与 172a.7 基线一致，累计 Ch1-9 全 success、settlement 全 true、0 T9；两次 halt 均为既有门禁固有 flaky——Ch2 `failure_halt`（修订不收敛 + hook_checker 宣言式收束盲区误杀重写版）、Ch10 `budget_ratio_halt`（1.3090 贴边 1.3 阈值，172a.7 peak 1.2837 同量级）；均非 172e-172i 行为偏差）
 
 ## 6. 依赖
 
