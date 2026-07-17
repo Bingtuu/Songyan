@@ -1,5 +1,5 @@
 agent: "settlement_extractor"
-default_version: "1.0.3"
+default_version: "1.0.4"
 versions:
   - version: "1.0.0"
     description: "状态结算提取"
@@ -17,3 +17,7 @@ versions:
     description: "Task 170p：新增 new_characters 提取（本章首次出场具名配角/反派入库），修复 seeding gap"
     tags: ["webnovel", "xuanhuan", "urban", "scifi"]
     created_at: "2026-07-10"
+  - version: "1.0.4"
+    description: "Task 172c.r：伏笔 resolve 生成契约——示例补 resolve 形状，规则明确回收必须输出 operation=resolve + foreshadowing_id，resolved_hooks 不替代"
+    tags: ["webnovel", "xuanhuan", "urban", "scifi"]
+    created_at: "2026-07-17"

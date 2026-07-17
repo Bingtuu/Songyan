@@ -347,23 +347,29 @@ async def _find_overdue_foreshadowings(
     project_id: str, up_to_chapter: int,
     foreshadowing_repo: ForeshadowingRepository,
 ) -> list[OverdueForeshadowing]:
-    """找出 expected_resolve_chapter < up_to_chapter 且未 resolved 的伏笔."""
-    active = await foreshadowing_repo.list_active(project_id)
+    """找出 expected_resolve_chapter < up_to_chapter 且未 resolved 的伏笔.
+
+    172c.r: 改用 ``list_overdue_unresolved``（与 vdim 冻结验收口径一致）——
+    旧实现复用 ``list_active()``，同时漏计 archived/dormant overdue 与
+    active 但 status='overdue' 的条目，导致 health 指标与 vdim overdue 门割裂。
+    """
+    overdue_items = await foreshadowing_repo.list_overdue_unresolved(
+        project_id, up_to_chapter
+    )
     result: list[OverdueForeshadowing] = []
-    for fs in active:
+    for fs in overdue_items:
         expected = fs.expected_resolve_chapter
         if expected is None:
             continue
-        if expected < up_to_chapter and fs.status != "resolved":
-            result.append(
-                OverdueForeshadowing(
-                    foreshadowing_id=fs.foreshadowing_id,
-                    description=fs.description,
-                    planted_in_chapter=fs.planted_in_chapter,
-                    expected_resolve_chapter=expected,
-                    overdue_by=up_to_chapter - expected,
-                )
+        result.append(
+            OverdueForeshadowing(
+                foreshadowing_id=fs.foreshadowing_id,
+                description=fs.description,
+                planted_in_chapter=fs.planted_in_chapter,
+                expected_resolve_chapter=expected,
+                overdue_by=up_to_chapter - expected,
             )
+        )
     return result
 
 

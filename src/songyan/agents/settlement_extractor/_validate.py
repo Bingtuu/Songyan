@@ -694,6 +694,7 @@ async def _validate_settlement(
     chapter_number: int = 0,
     project_id: str = "",
     existing_character_names: set[str] | None = None,
+    resolvable_foreshadowing_ids: set[str] | None = None,
 ) -> list[str]:
     """验证结算结果，返回错误列表.
 
@@ -704,6 +705,12 @@ async def _validate_settlement(
     Task 170p:
     - new_characters 证据门禁：source_quote / name 必须在正文中出现，
       过滤代词/泛称，去重已存在角色；不合格条目就地剔除，不阻断整章结算。
+
+    Task 172c.r:
+    - resolve 防幻觉校验：resolve 缺 ``foreshadowing_id`` 或目标 id 不在
+      当前可 resolve 集合（``resolvable_foreshadowing_ids``，含 overdue）时，
+      丢弃该条并记 warning，不阻断整章结算；``None`` 表示调用方未提供
+      可 resolve 集合，只做缺 id 检查（旧行为兼容）。
     """
     errors: list[str] = []
 
@@ -828,11 +835,36 @@ async def _validate_settlement(
     settlement.numerical_updates = validated_numerical_updates
 
     # 5. 验证 foreshadowing_update.source_version_id
+    validated_foreshadowing_updates = []
     for fs in settlement.foreshadowing_updates:
         if not fs.source_version_id:
             errors.append(
                 f"伏笔 '{fs.description[:30]}...' 的 source_version_id 为空"
             )
+        # 172c.r: resolve 防幻觉校验——缺 id 或目标不在可 resolve 集合时
+        # 丢弃该条并记 warning，不阻断整章结算（与 170p new_characters 同级容错）。
+        if fs.operation == "resolve":
+            if not fs.foreshadowing_id:
+                logger.warning(
+                    "settlement.foreshadowing_resolve_missing_id",
+                    description=fs.description[:50],
+                    project_id=project_id,
+                    chapter_number=chapter_number,
+                )
+                continue
+            if (
+                resolvable_foreshadowing_ids is not None
+                and fs.foreshadowing_id not in resolvable_foreshadowing_ids
+            ):
+                logger.warning(
+                    "settlement.foreshadowing_resolve_unknown_id",
+                    foreshadowing_id=fs.foreshadowing_id,
+                    description=fs.description[:50],
+                    project_id=project_id,
+                    chapter_number=chapter_number,
+                )
+                continue
+        validated_foreshadowing_updates.append(fs)
         # Task 094: 验证 expected_resolve_chapter 必须在当前章节之后。
         # Task 121e: LLM 常把“近期回收”写成当前章节号；plant 操作在
         # 当前章只能表示新埋设，等于当前章节时安全回填为下一章，
@@ -853,5 +885,6 @@ async def _validate_settlement(
                     f"伏笔 '{fs.description[:30]}...' 的预计回收章节 "
                     f"({fs.expected_resolve_chapter}) 必须大于当前章节 ({chapter_number})"
                 )
+    settlement.foreshadowing_updates = validated_foreshadowing_updates
 
     return errors

@@ -79,8 +79,14 @@ async def _load_current_foreshadowings(
     foreshadowing_repo: ForeshadowingRepository,
     project_id: str,
 ) -> list[ForeshadowingItem]:
-    """加载项目下活跃的伏笔."""
-    return await foreshadowing_repo.list_active(project_id)
+    """加载项目下活跃的伏笔（含 overdue）.
+
+    172c.r: 改用 ``list_schedulable()``——旧实现用 ``list_active()``
+    （status 白名单仅 planted/due），伏笔一旦翻转 overdue 就从 settlement
+    prompt 事实源中消失，LLM 再也无法 resolve 它，是 resolve 机制失效的
+    根因之一。
+    """
+    return await foreshadowing_repo.list_schedulable(project_id)
 
 
 async def _load_project_characters(
@@ -408,6 +414,13 @@ def _build_foreshadowing_update(data: dict[str, Any]) -> ForeshadowingUpdate | N
         return None
     operation = data.get("operation", "")
     if operation not in ("plant", "resolve", "update_status"):
+        # 172c.r: 原静默丢弃——LLM 输出了无法识别的 operation 时无任何线索，
+        # 导致 resolve 失效长期无法区分「未生成」与「生成后被丢」。
+        logger.warning(
+            "settlement.parse.foreshadowing_unknown_operation",
+            operation=operation,
+            raw_keys=sorted(data.keys()),
+        )
         return None
     return ForeshadowingUpdate(
         foreshadowing_id=data.get("foreshadowing_id"),
@@ -728,6 +741,11 @@ async def extract_settlement(
         chapter_number=chapter_number,
         project_id=project_id,
         existing_character_names={c.name for c in project_characters if c.name},
+        # 172c.r: resolve 防幻觉校验的可 resolve 集合（含 overdue）
+        resolvable_foreshadowing_ids={
+            fs.foreshadowing_id for fs in current_foreshadowings
+            if fs.foreshadowing_id
+        },
     )
 
     if errors:

@@ -678,14 +678,23 @@ async def apply_settlement(
                 )
                 await foreshadowing_repo.create(item, project_id, version_id, conn=c)
                 logger.info("settlement.foreshadowing_planted", foreshadowing_id=fs_id)
-            elif fs.operation == "resolve" and fs.foreshadowing_id:
-                await foreshadowing_repo.update_status(
-                    fs.foreshadowing_id, "resolved", conn=c
-                )
-                logger.info(
-                    "settlement.foreshadowing_resolved",
-                    foreshadowing_id=fs.foreshadowing_id,
-                )
+            elif fs.operation == "resolve":
+                if fs.foreshadowing_id:
+                    await foreshadowing_repo.update_status(
+                        fs.foreshadowing_id, "resolved", conn=c
+                    )
+                    logger.info(
+                        "settlement.foreshadowing_resolved",
+                        foreshadowing_id=fs.foreshadowing_id,
+                    )
+                else:
+                    # 172c.r: 原静默跳过——resolve 缺 id 时无任何线索。
+                    logger.warning(
+                        "settlement.foreshadowing_resolve_missing_id",
+                        description=fs.description[:50],
+                        project_id=project_id,
+                        chapter_number=chapter_number,
+                    )
 
         # 4. 数值变更 — INSERT
         for num in settlement.numerical_updates:
@@ -977,7 +986,9 @@ def _split_inventory_items(value: str) -> list[str]:
 # 永不命中 → 同一物理物品逐章堆积。基底名相等即同一物品；「断刀」与「断刀门刀谱」
 # 基底名不同，不会被误并。不做前缀匹配（「断刀门刀谱」以「断刀」为前缀，前缀规则
 # 必然误吞）。
-_INVENTORY_CONSUMED_RE = re.compile(r"已服下|已交出|已损毁|已用完|已耗尽|被夺走|被抢|抢走|已赠|已消耗|已捏碎|已碎裂|已折断")
+_INVENTORY_CONSUMED_RE = re.compile(
+    r"已服下|已交出|已损毁|已用完|已耗尽|被夺走|被抢|抢走|已赠|已消耗|已捏碎|已碎裂|已折断"
+)
 _INVENTORY_BASE_NAME_MAX = 10
 
 
@@ -1132,8 +1143,18 @@ async def _update_continuity_tracking(
             )
 
     # 5.3 Foreshadowing status auto-update (planted -> due -> overdue)
+    # 172c.r: 跳过本单结算中刚 resolve 的伏笔——list_active() 走独立连接，
+    # 看不到事务连接上尚未提交的 resolve（陈旧读），旧实现会把同章 resolve
+    # 的逾期伏笔当场翻回 overdue，静默抵消回收。
+    resolved_in_this_settlement = {
+        fs.foreshadowing_id
+        for fs in settlement.foreshadowing_updates
+        if fs.operation == "resolve" and fs.foreshadowing_id
+    }
     active = await foreshadowing_repo.list_active(project_id)
     for fs in active:
+        if fs.foreshadowing_id in resolved_in_this_settlement:
+            continue
         expected = fs.expected_resolve_chapter
         if expected is None:
             continue

@@ -152,6 +152,40 @@ class ForeshadowingRepository:
             for row in rows
         ]
 
+    async def list_overdue_unresolved(
+        self, project_id: str, up_to_chapter: int
+    ) -> list[ForeshadowingItem]:
+        """172c.r: 与 vdim 冻结口径一致的 overdue 查询.
+
+        ``expected_resolve_chapter < up_to_chapter`` 且 ``status != 'resolved'``，
+        **不限 lifecycle_status、不限 status 白名单**——archived/dormant/active
+        的 overdue 全部计入。用于 continuity health 统计，与
+        ``.tmp/vdim_compare.py`` 的验收门严格同口径。
+        """
+        async with get_db() as conn:
+            conn.row_factory = Row
+            cursor = await conn.execute(
+                """SELECT * FROM foreshadowings
+                WHERE project_id = ?
+                  AND expected_resolve_chapter IS NOT NULL
+                  AND expected_resolve_chapter < ?
+                  AND status != 'resolved'
+                ORDER BY planted_in_chapter, foreshadowing_id""",
+                (project_id, up_to_chapter),
+            )
+            rows = await cursor.fetchall()
+        return [
+            ForeshadowingItem(
+                foreshadowing_id=row["foreshadowing_id"],
+                description=row["description"],
+                planted_in_chapter=row["planted_in_chapter"],
+                expected_resolve_chapter=row["expected_resolve_chapter"],
+                status=row["status"],
+                source_version_id=row["source_version_id"],
+            )
+            for row in rows
+        ]
+
     async def archive_overdue(
         self, project_id: str, current_chapter: int, window: int = 5,
         conn: aiosqlite.Connection | None = None,
