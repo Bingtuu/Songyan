@@ -75,18 +75,18 @@ V7 通过 = 同时满足以下五项（阈值沿用 v6-plan §1.4 的 T1-T8，V7
 | 169 | 自适应 halt 判定（拆 169a/b） | ✅ 完成 | `tasks/169-adaptive-halt-decision-DONE.md` |
 | 169a | 自适应 halt 判定引擎与决策账本 | ✅ 完成 | `tasks/169a-adaptive-halt-decision-engine-DONE.md` |
 | 169b | 自适应 halt workflow 接入 | ✅ 完成 | `tasks/169b-adaptive-halt-workflow-integration-DONE.md` |
-| 170 | enforce 小窗口验证 + T12 误报率标定 | ✅ 完成 | `tasks/170-enforce-small-window-validation-and-t12-calibration-DONE.md`；报告 `archive/v7/reports/task-170-adaptive-gate-validation-report.md` |
+| 170 | enforce 小窗口验证 + T12 误报率标定 | ✅ 完成 | `archive/v7/tasks/170-enforce-small-window-validation-and-t12-calibration-DONE.md`；报告 `archive/v7/reports/task-170-adaptive-gate-validation-report.md` |
 
 ### 文学提质专项（Task 170）—— 已结束，改判为"改契约 + 并行"框架
 
 > **结束说明（2026-07-10）**: Task 170 系列（170b–170p）已全部完成并留档为历史事实，但其"voice/exposition ≥3.0 作为 Ch200 硬前置门"的**框架被推翻**。框架级复盘（`docs/reports/v7-literary-framework-review.md`）认定旧框架有 5 个结构性错误，路径 B 五步 prompt 工程（170h–170l）在错误框架内必然递减/劣化，**已封存**。文学质量改为三层契约 + 并行 R&D，收进 Task 171 体系（171a/171b/171c）。**下表 170b–170p 保留为历史记录，不再作为 Ch200 闸门；未完成的量具校准/提质工作转 171a/171c。**
-> **原立项依据（保留）**: Task 170b 中段窗口（Ch28–Ch40）真实实读判定 blocker——"治理指标全达标 ≠ prose 好看"实证成立（voice 塌陷、节奏偏慢、真实文本缺陷），且机器文学诊断系统性高估、T9 近似重复漏报。这一实读观察仍成立；被推翻的是"用它作 Ch200 硬前置门 + 单窗口单体裁 prompt 迭代"的解决框架，而非观察本身。总览 `tasks/170-literary-quality-remediation-README.md`。
+> **原立项依据（保留）**: Task 170b 中段窗口（Ch28–Ch40）真实实读判定 blocker——"治理指标全达标 ≠ prose 好看"实证成立（voice 塌陷、节奏偏慢、真实文本缺陷），且机器文学诊断系统性高估、T9 近似重复漏报。这一实读观察仍成立；被推翻的是"用它作 Ch200 硬前置门 + 单窗口单体裁 prompt 迭代"的解决框架，而非观察本身。总览 `archive/v7/tasks/170-literary-quality-remediation-README.md`。
 
 | Task | 名称 | 类型 | 状态 | 事实文档 |
 |------|------|:---:|:----:|----------|
 | 170b | 中段窗口文学性/可读性实读评估 | 评估 | ✅ 完成（判定 blocker） | `archive/v7/tasks/170b-midwindow-literary-readability-assessment-DONE.md`；报告 `archive/v7/reports/task-170b-literary-readability-assessment-report.md` |
-| 170c | T9 近似/改写重复检测补强 | 量具 | ✅ 完成 | `tasks/170c-t9-near-duplicate-detection-DONE.md` |
-| 170d | LiteraryAuditor 校准（character_autonomy 锚点） | 量具 | ✅ 完成 | `tasks/170d-literary-auditor-calibration-DONE.md`；回测 `archive/v7/reports/task-170d-auditor-calibration-backtest.md` |
+| 170c | T9 近似/改写重复检测补强 | 量具 | ✅ 完成 | `archive/v7/tasks/170c-t9-near-duplicate-detection-DONE.md` |
+| 170d | LiteraryAuditor 校准（character_autonomy 锚点） | 量具 | ✅ 完成 | `archive/v7/tasks/170d-literary-auditor-calibration-DONE.md`；回测 `archive/v7/reports/task-170d-auditor-calibration-backtest.md` |
 | 170e | voice 声纹区分提质 | 提质 | ✅ 完成 | `archive/v7/tasks/170e-voice-differentiation-DONE.md` |
 | 170f | pacing 节奏 + exposition 融合 | 提质 | ✅ 完成（部分达标） | `archive/v7/tasks/170f-pacing-exposition.md`（过程文档）、`archive/v7/tasks/170f-pacing-exposition-DONE.md`（DONE 报告）、`archive/v7/reports/task-170f-stage2-reeval-report.md` |
 | 170g | 提质复评出口 | 出口 | ✅ 完成（改判 blocker，Phase2 仍未达标，不放行 Ch200） | `archive/v7/tasks/170g-remediation-rerun-and-reeval-DONE.md`、`archive/v7/tasks/170g-phase2-remediation-DONE.md`、`archive/v7/reports/task-170g-remediation-reeval-report.md`、`archive/v7/reports/task-170g-phase2-remediation-reeval-report.md` |
@@ -99,7 +99,7 @@ V7 通过 = 同时满足以下五项（阈值沿用 v6-plan §1.4 的 T1-T8，V7
 | **170m** | **量具二次校准：RuleAuditor exposition carrier 动态化 + ground truth 闭环** | **量具** | **✅ 完成** | **`archive/v7/tasks/170m-exposition-carrier-recalibration.md`**、**`archive/v7/tasks/170m-exposition-carrier-recalibration-DONE.md`**、**`archive/v7/reports/task-170m-exposition-carrier-recalibration-report.md`** |
 | 170n | 文学提质下一阶段方向评估（路径 B 升级 / AI 腔后处理 / 目标降级） | 评估 | ✅ 完成 | `archive/v7/tasks/170n-literary-next-step-assessment.md`、`archive/v7/tasks/170n-literary-next-step-assessment-DONE.md`、`archive/v7/reports/task-170n-literary-next-step-assessment-report.md` |
 | 170o | voice 量具归因校准：`detect_human_voice_homogeneity` 叙事归因 + 角色注册表 gating（暴露 seeding gap） | 量具 | ✅ 完成 | `archive/v7/tasks/170o-voice-homogeneity-attribution-calibration-DONE.md` |
-| 170p | seeding gap 修复：SettlementExtractor 新配角证据门禁入库（NewCharacter + 工艺卡 1.0.3） | 数据层 | ✅ 完成 | `tasks/170p-settlement-new-character-seeding-DONE.md` |
+| 170p | seeding gap 修复：SettlementExtractor 新配角证据门禁入库（NewCharacter + 工艺卡 1.0.3） | 数据层 | ✅ 完成 | `archive/v7/tasks/170p-settlement-new-character-seeding-DONE.md` |
 
 ### 阶段 Z：sci-fi 单一体裁 Ch200 达成与收口
 
@@ -108,13 +108,13 @@ V7 通过 = 同时满足以下五项（阈值沿用 v6-plan §1.4 的 T1-T8，V7
 | Task | 名称 | 状态 | 事实文档 |
 |------|------|:----:|----------|
 | 171 | Ch200 长跑（V7 第一里程碑，文学=观测已解冻） | ✅ **完成（Ch200 200/200 accepted；D1 hard clean pass）** | run `run-fb39245c` Ch1-Ch200 **200/200 accepted、gaps=[]、Halt=None**；171t/171u 已完成，当前 accepted head T9 meta/artifact=0、duplicate=0，T6b critical orphan peak=0；报告 `docs/reports/task-171-ch200-long-run-report.md`；分析 `docs/reports/task-171-ch200-analysis-and-next-step-report.md` |
-| 171p | Ch200 撞墙定点修复（state_mismatch 构念修正） | ✅ **完成** | `tasks/171p-ch200-wall-fix-DONE.md`；排除演进型 field（emotional_state/knowledge），Ch3 假阳性 11→6，V6 159 基线 post-fix 全程 0、health 9.3–10（不误抑制） |
-| 171q | Ch200 撞墙定点修复（分段修订 T9 重复——去重阈值口径对齐） | ✅ **完成** | `tasks/171q-ch200-wall-fix-duplicate.md`；min_chars 100→40 + 分级阈值 0.95/0.9，实证复验 accepted Ch2 T9 dup 8→0 |
-| 171s | Ch200 撞墙定点修复（critical setting 同义提及刷新） | ✅ **完成** | `tasks/171s-critical-setting-reference-refresh.md`；增强 `_detect_setting_references` 复合中文设定召回，Ch160/161/162/164/165 实证刷新 `protagonist.genetic_identity.reaper_maker_consistency` |
-| 171t | Ch200 D1 文本洁净量具补强 | ✅ **完成** | `tasks/171t-ch200-d1-hard-clean.md`；已扩展 T9 hard issue 检测：Markdown 标题、保护指令、斜杠拼接、纯省略号段、prompt/patch 指令、duplicate final sweep；目标 pytest 104/127 passed，`ruff check src/ tests/` 通过 |
-| 171u | Ch200 D1 清洁应用与报告事实源复算 | ✅ **完成** | `tasks/171u-ch200-d1-clean-application-and-report-refresh.md`；20 个 clean accepted versions，T9 hard issue=0，T6b critical orphan peak=0，报告只取最新事实源 |
-| 171v | Ch200+ 文学性与可读性护栏 | ✅ **完成（hardening 后）** | `tasks/171v-ch200-plus-literary-readability-guardrails.md`；run `run-e27b763f` Ch201-Ch220 **19/20 accepted、failed=[207]、Halt=None**；171w 后 20/20 accepted |
-| 171w | 171v-hardening：文学护栏硬化与 Ch201-Ch220 重验 | ✅ **完成** | `tasks/171w-171v-hardening-and-ch201-ch220-rerun.md`；171w-a 报告收口 / 171w-b 持久化审计 / 171w-c 正文 observe + ReviewMerger 接线 / 171w-d Ch207 settlement 修复与重验全部落地；Ch201-Ch220 20/20 accepted、failed=[]、Halt=None、T9=0 |
+| 171p | Ch200 撞墙定点修复（state_mismatch 构念修正） | ✅ **完成** | `archive/v7/tasks/171p-ch200-wall-fix-DONE.md`；排除演进型 field（emotional_state/knowledge），Ch3 假阳性 11→6，V6 159 基线 post-fix 全程 0、health 9.3–10（不误抑制） |
+| 171q | Ch200 撞墙定点修复（分段修订 T9 重复——去重阈值口径对齐） | ✅ **完成** | `archive/v7/tasks/171q-ch200-wall-fix-duplicate.md`；min_chars 100→40 + 分级阈值 0.95/0.9，实证复验 accepted Ch2 T9 dup 8→0 |
+| 171s | Ch200 撞墙定点修复（critical setting 同义提及刷新） | ✅ **完成** | `archive/v7/tasks/171s-critical-setting-reference-refresh.md`；增强 `_detect_setting_references` 复合中文设定召回，Ch160/161/162/164/165 实证刷新 `protagonist.genetic_identity.reaper_maker_consistency` |
+| 171t | Ch200 D1 文本洁净量具补强 | ✅ **完成** | `archive/v7/tasks/171t-ch200-d1-hard-clean.md`；已扩展 T9 hard issue 检测：Markdown 标题、保护指令、斜杠拼接、纯省略号段、prompt/patch 指令、duplicate final sweep；目标 pytest 104/127 passed，`ruff check src/ tests/` 通过 |
+| 171u | Ch200 D1 清洁应用与报告事实源复算 | ✅ **完成** | `archive/v7/tasks/171u-ch200-d1-clean-application-and-report-refresh.md`；20 个 clean accepted versions，T9 hard issue=0，T6b critical orphan peak=0，报告只取最新事实源 |
+| 171v | Ch200+ 文学性与可读性护栏 | ✅ **完成（hardening 后）** | `archive/v7/tasks/171v-ch200-plus-literary-readability-guardrails.md`；run `run-e27b763f` Ch201-Ch220 **19/20 accepted、failed=[207]、Halt=None**；171w 后 20/20 accepted |
+| 171w | 171v-hardening：文学护栏硬化与 Ch201-Ch220 重验 | ✅ **完成** | `archive/v7/tasks/171w-171v-hardening-and-ch201-ch220-rerun.md`；171w-a 报告收口 / 171w-b 持久化审计 / 171w-c 正文 observe + ReviewMerger 接线 / 171w-d Ch207 settlement 修复与重验全部落地；Ch201-Ch220 20/20 accepted、failed=[]、Halt=None、T9=0 |
 | 171a | 文学量具效度重建（R0：构念重定义 + 体裁解耦通电 + voice 归因召回修复） | ✅ **完成 / 已归档** | `archive/v7/tasks/171a-literary-metric-validity-rebuild-DONE.md`、`archive/v7/reports/task-171a-metric-validity-report.md`；B2/B3 已由 171a-1 达标 |
 | 171a-1 | 量具效度量化（≥2 体裁盲标 GT + voice/exposition P/R/F1，框架 §8 B2/B3） | ✅ **完成 / 已归档** | `archive/v7/tasks/171a-1-metric-validity-quantification-DONE.md`、`archive/v7/reports/task-171a-1-metric-prf-report.md`；scifi/wuxia voice F1=1.0、exposition F1=0.889/1.0 |
 | 171b | 代表性样本集（R1：场景分层采样 + ≥2 体裁交叉 + 2×2 归因） | ✅ **完成 / 已归档** | `archive/v7/tasks/171b-representative-sampling-DONE.md`、`archive/v7/reports/task-171b-representative-sampling-report.md`；两体裁 9 章全 voice 适用，稀疏参照层正确剔除，170 低分归『量具无效』格 |

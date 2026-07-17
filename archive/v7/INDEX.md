@@ -4,11 +4,11 @@
 
 ## 归档原则
 
-- **当前主线不归档**：Task 171 Ch200 主线、171t/171u/171v/171w 仍保留在 `tasks/` 和 `docs/reports/`。
+- **V7 已收尾，全部历史产物归档**：Task 170/171/171w 主线、撞墙修复、报告均已迁移出 `tasks/` 和 `docs/reports/`，只保留 `tasks/V7-README.md` 作为历史事实总索引。
 - **取消的任务归档**：Task 172（Ch250）因阶段战略调整取消，归档至此。
 - **完成的 R&D 线归档**：171a/171a-1/171b/171c/171d 的 spec、DONE、报告、复算脚本和专用实验工具归档至此。
 - **历史审计报告归档**：pass1-pass17 审计报告与相关日志归档至 `archive/v7/audit/`。
-- **文学提质中间任务归档**：Task 170b–170o 的过程稿与 DONE 文档归档至 `archive/v7/tasks/`；入口只保留 `170-literary-quality-remediation-README.md`、`170-enforce-small-window-validation-and-t12-calibration-DONE.md`、`170c-t9-near-duplicate-detection-DONE.md`、`170d-literary-auditor-calibration-DONE.md`、`170p-settlement-new-character-seeding-DONE.md`。
+- **文学提质任务归档**：Task 170/170c/170d/170p 的 DONE 文档与 `170-literary-quality-remediation-README.md` 归档至 `archive/v7/tasks/`。
 - **规划文档归档**：`v7-vision.md`、`v7-plan.md` 归档至 `archive/v7/plans/`。
 - **运行时代码不混入主流程**：171b/171c 的实验工具和对应测试随 R&D 证据归档，避免污染当前产品代码入口。
 - **可追溯**：归档文件保留原文件名，便于从历史文档和报告中追溯。
@@ -18,8 +18,8 @@
 | 路径 | 内容 |
 |---|---|
 | `archive/v7/plans/` | V7 规划文档（v7-vision、v7-plan） |
-| `archive/v7/tasks/` | 170b–170o 过程稿与 DONE；171a/171a-1/171b/171c/171d 的任务规格与 DONE 文档；已取消的 172 |
-| `archive/v7/reports/` | 171a/171a-1/171b/171c/171d 的报告；task-170 系列文学提质中间报告 |
+| `archive/v7/tasks/` | 170/170c/170d/170p DONE 与 170 总览；170b–170o 过程稿与 DONE；171/171p–171w 任务规格与 DONE；171a/171a-1/171b/171c/171d 的任务规格与 DONE 文档；已取消的 172 |
+| `archive/v7/reports/` | Task 171 Ch200 系列报告；171a/171a-1/171b/171c/171d 的报告；task-170 系列文学提质中间报告 |
 | `archive/v7/audit/` | pass1-pass17 V7 审计报告与 `_pytest-pass13.log` |
 | `archive/v7/scripts/` | 171a-1/171b/171c/171d 的离线生成、标注、采样、A/B、标定脚本 |
 | `archive/v7/tests/` | 171b/171c R&D 专用测试 |
@@ -34,12 +34,24 @@
 
 | Task | 归档文档 |
 |---|---|
+| 170 enforce 小窗口验证 + T12 冻结 | `archive/v7/tasks/170-enforce-small-window-validation-and-t12-calibration-DONE.md` |
+| 170c T9 近似重复检测 | `archive/v7/tasks/170c-t9-near-duplicate-detection-DONE.md` |
+| 170d LiteraryAuditor 校准 | `archive/v7/tasks/170d-literary-auditor-calibration-DONE.md` |
+| 170p 新配角证据门禁入库 | `archive/v7/tasks/170p-settlement-new-character-seeding-DONE.md` |
+| 170 文学提质专项总览 | `archive/v7/tasks/170-literary-quality-remediation-README.md`；170b–170o 过程稿与 DONE 见下方「已归档的文学提质任务文档」 |
+| 171 Ch200 长跑 | `archive/v7/tasks/171-ch200-long-run.md` |
+| 171p Ch200 撞墙修复（state_mismatch） | `archive/v7/tasks/171p-ch200-wall-fix.md`、`archive/v7/tasks/171p-ch200-wall-fix-DONE.md` |
+| 171q Ch200 撞墙修复（T9 重复阈值） | `archive/v7/tasks/171q-ch200-wall-fix-duplicate.md` |
+| 171s critical setting 同义刷新 | `archive/v7/tasks/171s-critical-setting-reference-refresh.md` |
+| 171t D1 文本洁净量具补强 | `archive/v7/tasks/171t-ch200-d1-hard-clean.md` |
+| 171u Ch200 清洁应用与报告复算 | `archive/v7/tasks/171u-ch200-d1-clean-application-and-report-refresh.md` |
+| 171v Ch200+ 文学性与可读性护栏 | `archive/v7/tasks/171v-ch200-plus-literary-readability-guardrails.md` |
+| 171w hardening 与 Ch201-Ch220 重验 | `archive/v7/tasks/171w-171v-hardening-and-ch201-ch220-rerun.md` |
 | 171a 文学量具效度重建 | `archive/v7/tasks/171a-literary-metric-validity-rebuild.md`、`archive/v7/tasks/171a-literary-metric-validity-rebuild-DONE.md`、`archive/v7/reports/task-171a-metric-validity-report.md` |
 | 171a-1 量具效度量化 | `archive/v7/tasks/171a-1-metric-validity-quantification.md`、`archive/v7/tasks/171a-1-metric-validity-quantification-DONE.md`、`archive/v7/reports/task-171a-1-metric-prf-report.md` |
 | 171b 代表性样本集 | `archive/v7/tasks/171b-representative-sampling.md`、`archive/v7/tasks/171b-representative-sampling-DONE.md`、`archive/v7/reports/task-171b-representative-sampling-report.md` |
 | 171c 杠杆组合验证 | `archive/v7/tasks/171c-improvement-levers.md`、`archive/v7/tasks/171c-improvement-levers-DONE.md`、`archive/v7/reports/task-171c-improvement-levers-report.md` |
 | 171d 三层契约落地 | `archive/v7/tasks/171d-three-tier-contract.md`、`archive/v7/tasks/171d-three-tier-contract-DONE.md`、`archive/v7/reports/task-171d-three-tier-contract-report.md` |
-| 170b–170o 文学提质专项 | 见下方「已归档的文学提质任务文档」 |
 | 172 Ch250 过渡验证（已取消） | `archive/v7/tasks/172-ch250-transition-validation-archived.md` |
 
 ## 已归档的文学提质任务文档
@@ -68,6 +80,9 @@ Task 170 专项已结束（`docs/reports/v7-literary-framework-review.md`）。�
 
 | 报告 | 归档路径 |
 |---|---|
+| task-171-ch200-long-run-report.md | `archive/v7/reports/task-171-ch200-long-run-report.md` |
+| task-171-ch200-analysis-and-next-step-report.md | `archive/v7/reports/task-171-ch200-analysis-and-next-step-report.md` |
+| task-171w-ch201-ch220-window-report.md | `archive/v7/reports/task-171w-ch201-ch220-window-report.md` |
 | task-170-adaptive-gate-validation-report.md | `archive/v7/reports/task-170-adaptive-gate-validation-report.md` |
 | task-170b-literary-readability-assessment-report.md | `archive/v7/reports/task-170b-literary-readability-assessment-report.md` |
 | task-170d-auditor-calibration-backtest.md | `archive/v7/reports/task-170d-auditor-calibration-backtest.md` |
@@ -88,22 +103,9 @@ Task 170 专项已结束（`docs/reports/v7-literary-framework-review.md`）。�
 
 ## 当前仍在主入口的 V7 文件
 
+V7 历史产物已统一归档。当前只剩以下主入口：
+
 | 路径 | 用途 |
 |---|---|
-| `tasks/170-literary-quality-remediation-README.md` | 文学提质专项总览（已结束，历史入口） |
-| `tasks/170-enforce-small-window-validation-and-t12-calibration-DONE.md` | Task 170：enforce 小窗口验证 + T12 冻结 |
-| `tasks/170c-t9-near-duplicate-detection-DONE.md` | Task 170c：T9 近似重复检测 |
-| `tasks/170d-literary-auditor-calibration-DONE.md` | Task 170d：LiteraryAuditor 校准 |
-| `tasks/170p-settlement-new-character-seeding-DONE.md` | Task 170p：新配角证据门禁入库 |
-| `docs/reports/v7-literary-framework-review.md` | 当前文学质量框架与阶段验收标准，仍是活跃事实入口 |
-| `docs/reports/task-171-ch200-long-run-report.md` | Task 171 Ch200 长跑报告 |
-| `docs/reports/task-171-ch200-analysis-and-next-step-report.md` | Task 171 Ch200 分析与后续规划 |
-| `docs/reports/task-171w-ch201-ch220-window-report.md` | 171w Ch201-Ch220 窗口报告 |
-| `scripts/run_171_ch200.py` | Ch200 长跑 harness（历史脚本，V8 仍可复用） |
-| `tasks/171-ch200-long-run.md` | Task 171 主线文档 |
-| `tasks/171p-ch200-wall-fix*.md`、`tasks/171q-ch200-wall-fix-duplicate.md`、`tasks/171s-critical-setting-reference-refresh.md` | Ch200 撞墙修复事实 |
-| `tasks/171t-ch200-d1-hard-clean.md` | D1 文本洁净量具补强 |
-| `tasks/171u-ch200-d1-clean-application-and-report-refresh.md` | Ch200 清洁应用与报告事实源复算 |
-| `tasks/171v-ch200-plus-literary-readability-guardrails.md` | Ch200+ 文学性与可读性护栏 |
-| `tasks/171w-171v-hardening-and-ch201-ch220-rerun.md` | 171w hardening 与 Ch201-Ch220 重验 |
 | `tasks/V7-README.md` | V7 历史任务总索引（已收尾） |
+| `docs/reports/v7-literary-framework-review.md` | 文学质量框架级复盘，仍作为 V7→V8 框架变更的活跃事实入口 |
