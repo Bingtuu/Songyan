@@ -6,11 +6,11 @@
 
 | 项 | 结论 |
 |----|------|
-| 当前阶段 | **V8 已完成验收**：P/C/Q/S/V 五维全绿；**172c 进行中**（wuxia Ch100 爬坡，段 3 Ch75 完成，发现设计缺陷） |
+| 当前阶段 | **V8 已完成验收**：P/C/Q/S/V 五维全绿；**172c 进行中**（wuxia Ch100 爬坡，段 3 Ch75 完成；172c.r 设计缺陷已修复并回归通过，决策：从 Ch1 重跑） |
 | V7 收尾 | **已完成**。sci-fi/space_opera + webnovel_intense 单一体裁稳定跑到 Ch200，200/200 accepted，D1 hard clean pass；Ch201-Ch220 20/20 accepted |
 | V8.1 运行时画像 | **已完成**（Task 172a + 172a.p）。`GenreRuntimeProfile` 把 Context Diet 2.0 运行时契约从 sci-fi 默认值解耦；xuanhuan Ch8 halt 已消除（base_budget=15000） |
 | V8.3 文学护栏 | **已完成**（Task 172d）。`literary_guardrail_observe` 去科幻硬编码，lexicon/主角名参数化到 `GenreProfile`，三体裁各配一套；DONE 文档已补齐 |
-| V8 当前主线 | **Task 172c 进行中**：wuxia Ch75 已达成，段 3 暴露伏笔 resolve 机制失效 + continuity health 漏计 overdue 两个设计缺陷；**172c.r 代码修复已完成**（含 TDD 新发现的第 4 层根因：5.3 同事务覆写），全量测试绿，**实跑回归中断待重跑** |
+| V8 当前主线 | **Task 172c 进行中**：wuxia Ch75 已达成，段 3 暴露伏笔 resolve 机制失效 + continuity health 漏计 overdue 两个设计缺陷；**172c.r 已完成**（四层根因全修 + health 口径对齐），scifi `--end 10` + wuxia `--end 15` 实跑回归通过，`foreshadowing_resolved` 事件 > 0；按 §5 决策选 **B. 从 Ch1 重跑** wuxia Ch100 |
 | V8 验收进度 | **P/C/Q/S/V 五维度已实证达标** |
 | V8 文档治理 | **已完成**：`tasks/V8-README.md` 已明确 Task 编号是 trace id；阶段任务、前置并行、撞墙修复、后续增强已分层展示 |
 | **V8 技术债** | **172e-172i 已完成**：`GenreRuntimeProfile` 声明后未接线的字段已全部接到消费者；`load_profile()` 已改为注册表基线 + DB 字段级覆盖层 |
@@ -42,7 +42,7 @@
 | `ruff check src/ tests/` | **All checks passed** |
 | 172c.r `python -m pytest tests/ -q` | **2779 passed, 2 skipped, 1 xfailed**（850s；含 172c.r 新增 12 测试） |
 | 172c.r `ruff check src/ tests/` | **All checks passed**（含 172c.q 遗留 E501 顺手修复） |
-| 172c.r 实跑回归（`run_172a7_genre_validation.py --templates scifi --end 10` + `--templates wuxia --end 15`） | **中断待重跑**（2026-07-17 用户暂停关机，scifi 跑到 Ch1 终止，无成果损失） |
+| 172c.r 实跑回归（`run_172a7_genre_validation.py --templates scifi --end 10` + `--templates wuxia --end 15`） | **通过**：scifi 10/10 accepted、8 resolved；wuxia 15/15 accepted、9 resolved、0 failed；结果落盘 `.tmp/172cr_scifi_end10.json` / `.tmp/172cr_wuxia_end15.json` |
 
 ## 项目整理
 
@@ -56,7 +56,7 @@
 
 1. **V8 技术债清理**：✅ 已完成（172e-172i）。`GenreRuntimeProfile` 声明后未接线的字段已全部接到消费者；`load_profile()` 已改为注册表基线 + DB 字段级覆盖层；`arc_summarization_enabled` / `outline_dimming_enabled` / `mismatch_tolerance` 占位字段已移除。
 2. **V8 收口**：172b 已达标，V8 五维验收全绿；保持 `tasks/V8-README.md` 为事实入口，并按其中的编号治理规则维护后续任务。
-3. **172c.r 进行中（代码修复完成，待实跑回归）**：`tasks/172c.r-wuxia-foreshadowing-resolve-and-health-fix.md`。resolve 失效确认为**四层根因**并已全修：A. prompt card 1.0.3 只演示 plant（→ 1.0.4 补 resolve 契约）；B. `resolved_hooks` 自由文本成为不回写 DB 的替代出口（→ 规则 7 澄清）；C. `list_active()` 把 overdue 伏笔从 settlement prompt 事实源滤除（→ 改 `list_schedulable()`）；D. **TDD RED 阶段新发现**——`_update_continuity_tracking` 5.3 自动状态机独立连接陈旧读，把同事务内刚 resolve 的伏笔当场翻回 overdue（→ 跳过本单已 resolve id）。health 口径改 `list_overdue_unresolved()` 对齐 vdim（三层漏计全修）。`get_unresolved_ratio` 决策：**不改**（`foreshadowing_pressure` 全库无下游消费者）。**断点**：scifi `--end 10` + wuxia `--end 15` 实跑回归中断，重跑命令 `.tmp/172cr_*.json/.log` 同名输出；通过后写 DONE → 存量 DB 处置决策（回填 vs 重跑）→ 172c 段 4 走向。floor 调整降级为 172c.r 决策点，禁止用调 floor 掩盖根因。
+3. **172c.r 已完成**：`tasks/172c.r-wuxia-foreshadowing-resolve-and-health-fix-DONE.md`。resolve 失效确认为**四层根因**并已全修：A. prompt card 1.0.3 只演示 plant（→ 1.0.4 补 resolve 契约）；B. `resolved_hooks` 自由文本成为不回写 DB 的替代出口（→ 规则 7 澄清）；C. `list_active()` 把 overdue 伏笔从 settlement prompt 事实源滤除（→ 改 `list_schedulable()`）；D. **TDD RED 阶段新发现**——`_update_continuity_tracking` 5.3 自动状态机独立连接陈旧读，把同事务内刚 resolve 的伏笔当场翻回 overdue（→ 跳过本单已 resolve id）。health 口径改 `list_overdue_unresolved()` 对齐 vdim（三层漏计全修）。`get_unresolved_ratio` 决策：**不改**（`foreshadowing_pressure` 全库无下游消费者）。实跑回归通过：scifi `--end 10` 10/10 + 8 resolved；wuxia `--end 15` 15/15 + 9 resolved。存量 DB 处置决策：**B. 从 Ch1 重跑** wuxia Ch100，以获得修复后机制下的干净终判数据。floor 调整降级为 172c 续跑段 2/段 3 边界观测点，禁止用调 floor 掩盖根因。
 4. **守护项**：后续 CED 仍使用 consistency-only、merged/source、正文证据口径；不得把文学 craft 或 `rule-mr-*` 聚合工作项计入 CED。
 
 ## 入口

@@ -27,32 +27,32 @@
 | `tasks/172c-wuxia-ch100-climb.md` | Task 172c：wuxia Ch100 爬坡（进行中，Ch75 完成） |
 | `tasks/172c.p-wuxia-forgotten-inventory-tracking.md` | Task 172c.p：wuxia 物品追踪粒度修复（已完成） |
 | `tasks/172c.q-wuxia-inventory-identity.md` | Task 172c.q：wuxia 物品追踪语义补强（已完成） |
-| `tasks/172c.r`（待立项） | Task 172c.r：wuxia 伏笔回收与 continuity 健康度修复 |
+| `tasks/172c.r-wuxia-foreshadowing-resolve-and-health-fix-DONE.md` | Task 172c.r：wuxia 伏笔回收与 continuity 健康度修复（已完成） |
 
 ## V7 历史产物（保留入口）
 
 | 文件 | 用途 |
 |------|------|
 | `docs/reports/v7-literary-framework-review.md` | 文学质量框架级复盘 + V7 阶段验收标准 |
-| `docs/reports/task-171-ch200-long-run-report.md` | Task 171 Ch200 长跑报告 |
-| `docs/reports/task-171-ch200-analysis-and-next-step-report.md` | Task 171 Ch200 分析与 V7→V8 过渡 |
-| `docs/reports/task-171w-ch201-ch220-window-report.md` | 171w Ch201-Ch220 窗口报告 |
+| `archive/v7/reports/task-171-ch200-long-run-report.md` | Task 171 Ch200 长跑报告 |
+| `archive/v7/reports/task-171-ch200-analysis-and-next-step-report.md` | Task 171 Ch200 分析与 V7→V8 过渡 |
+| `archive/v7/reports/task-171w-ch201-ch220-window-report.md` | 171w Ch201-Ch220 窗口报告 |
 | `docs/reports/task-165-stage-w-exit-report.md` | V7 阶段 W 出口报告 |
 | `docs/reports/task-165-v7-threshold-calibration.md` | V7 阈值标定 |
-| `tasks/171-ch200-long-run.md` | Task 171 Ch200 长跑 |
-| `tasks/171p-ch200-wall-fix-DONE.md` | 171p state_mismatch 构念修正 |
-| `tasks/171p-ch200-wall-fix.md` | 171p 规划稿 |
-| `tasks/171q-ch200-wall-fix-duplicate.md` | 171q T9 重复阈值对齐 |
-| `tasks/171s-critical-setting-reference-refresh.md` | 171s critical setting 同义刷新 |
-| `tasks/171t-ch200-d1-hard-clean.md` | 171t D1 文本洁净量具补强 |
-| `tasks/171u-ch200-d1-clean-application-and-report-refresh.md` | 171u Ch200 清洁应用与报告复算 |
-| `tasks/171v-ch200-plus-literary-readability-guardrails.md` | 171v Ch200+ 文学护栏 |
-| `tasks/171w-171v-hardening-and-ch201-ch220-rerun.md` | 171w hardening 与 Ch201-Ch220 重验 |
-| `tasks/170-literary-quality-remediation-README.md` | 文学提质专项总览（已结束） |
-| `tasks/170-enforce-small-window-validation-and-t12-calibration-DONE.md` | Task 170：enforce 小窗口验证 + T12 冻结 |
-| `tasks/170c-t9-near-duplicate-detection-DONE.md` | Task 170c：T9 近似重复检测 |
-| `tasks/170d-literary-auditor-calibration-DONE.md` | Task 170d：LiteraryAuditor 校准 |
-| `tasks/170p-settlement-new-character-seeding-DONE.md` | Task 170p：新配角证据门禁入库 |
+| `archive/v7/tasks/171-ch200-long-run.md` | Task 171 Ch200 长跑 |
+| `archive/v7/tasks/171p-ch200-wall-fix-DONE.md` | 171p state_mismatch 构念修正 |
+| `archive/v7/tasks/171p-ch200-wall-fix.md` | 171p 规划稿 |
+| `archive/v7/tasks/171q-ch200-wall-fix-duplicate.md` | 171q T9 重复阈值对齐 |
+| `archive/v7/tasks/171s-critical-setting-reference-refresh.md` | 171s critical setting 同义刷新 |
+| `archive/v7/tasks/171t-ch200-d1-hard-clean.md` | 171t D1 文本洁净量具补强 |
+| `archive/v7/tasks/171u-ch200-d1-clean-application-and-report-refresh.md` | 171u Ch200 清洁应用与报告复算 |
+| `archive/v7/tasks/171v-ch200-plus-literary-readability-guardrails.md` | 171v Ch200+ 文学护栏 |
+| `archive/v7/tasks/171w-171v-hardening-and-ch201-ch220-rerun.md` | 171w hardening 与 Ch201-Ch220 重验 |
+| `archive/v7/tasks/170-literary-quality-remediation-README.md` | 文学提质专项总览（已结束） |
+| `archive/v7/tasks/170-enforce-small-window-validation-and-t12-calibration-DONE.md` | Task 170：enforce 小窗口验证 + T12 冻结 |
+| `archive/v7/tasks/170c-t9-near-duplicate-detection-DONE.md` | Task 170c：T9 近似重复检测 |
+| `archive/v7/tasks/170d-literary-auditor-calibration-DONE.md` | Task 170d：LiteraryAuditor 校准 |
+| `archive/v7/tasks/170p-settlement-new-character-seeding-DONE.md` | Task 170p：新配角证据门禁入库 |
 
 ## V6 历史产物
 

@@ -3,7 +3,7 @@
 > **阶段**: 多体裁可插拔质量 → 多体裁章数爬坡（P/C/Q/S/V 五维验收完成）
 > **当前口径**: V7 在 sci-fi 单一体裁下达成 Ch200 后收尾。V8 的目标不是再做一轮类似 Task 170 的"文学性提分 prompt 工程"，而是把支撑 sci-fi 长跑的**工程底盘**（Context Diet 2.0、门禁、结算、连续性审计）以及**既有文学护栏**从科幻隐式画像解耦——运行时契约建立 `GenreRuntimeProfile`（层 2），文学护栏 lexicon/主角名参数化到 `GenreProfile`（层 3，Task 172d），让 xuanhuan/wuxia/urban 等体裁达到与 sci-fi **同等的完成度和质量基线**，再向中篇（Ch100/Ch150）爬坡。  
 > **任务编号**: V8 从 Task 172 开始；编号是 trace id，不等同于严格执行顺序。原 V7 Task 172（Ch250）已取消并归档，V8 复用 172 作为项目模板化入口。
-> **最后整理**: 2026-07-17（172c.r 代码修复完成：resolve 失效四层根因全修——prompt card 1.0.4 补 resolve 契约、settlement 事实源纳 overdue、resolve 防幻觉校验、5.3 同事务覆写修复；health 口径对齐 vdim 三层漏计全修；12 新测试 + 全量 2779 passed + ruff 全绿；scifi/wuxia 实跑回归中断待重跑，通过后写 DONE 并做存量 DB 处置决策）
+> **最后整理**: 2026-07-17（172c.r 已完成：resolve 失效四层根因全修——prompt card 1.0.4 补 resolve 契约、settlement 事实源纳 overdue、resolve 防幻觉校验、5.3 同事务覆写修复；health 口径对齐 vdim 三层漏计全修；12 新测试 + 全量 2779 passed + ruff 全绿；scifi `--end 10` 10/10 + 8 resolved、wuxia `--end 15` 15/15 + 9 resolved 实跑回归通过；DONE 文档已写，存量 DB 处置决策选 **B. 从 Ch1 重跑** wuxia Ch100）
 
 本文是 V8 阶段任务文档的事实入口。V7 历史事实入口见 `tasks/V7-README.md`；V6 见 `tasks/V6-README.md`；V5 见 `tasks/V5-README.md`；历史规划稿统一归档到 `archive/`，仅在追溯设计边界时查阅。
 
@@ -113,7 +113,7 @@ V8 当前完成判据已满足。172c（wuxia 第二体裁 Ch100）保留为 V8-
 |------|------|:----:|----------|
 | 172c.p | wuxia forgotten_items 物品追踪粒度修复 | ✅ 完成 | `tasks/172c.p-wuxia-forgotten-inventory-tracking.md` |
 | 172c.q | wuxia 物品追踪语义补强（变体归一 / 非物品过滤 / 消耗流转） | ✅ 完成 | `tasks/172c.q-wuxia-inventory-identity.md` |
-| 172c.r | wuxia 伏笔回收与 continuity 健康度修复 | 🔄 进行中 | `tasks/172c.r-wuxia-foreshadowing-resolve-and-health-fix.md` |
+| 172c.r | wuxia 伏笔回收与 continuity 健康度修复 | ✅ 完成 | `tasks/172c.r-wuxia-foreshadowing-resolve-and-health-fix.md` / `tasks/172c.r-wuxia-foreshadowing-resolve-and-health-fix-DONE.md` |
 
 > 172c 实跑段 3 后暴露两个设计缺陷，已按证据新建 `172c.r`；`172c.p`/`172c.q` 是 172c 内部按发现顺序产生的物品追踪修复，不影响 172c 主线状态。
 
@@ -256,8 +256,8 @@ project.genre
 
 - 门禁服务 `GateConfig` 构建时序：当前 `cli/main.py:521` 在 genre 已知前就构建了全局 `GateConfig`，`phase2_graph.py` 只能在运行时逐个字段覆盖。后续重构候选：genre 已知后统一构造（不阻塞 V9 调参，172e-172i 未动此路径）。
 - ~~角色衰减劈裂~~：已由 172g 统一——`dormant_window` / `archive_window` / `functional_window` 已接入 `CharacterStateRepository`，与 `_resolve_profile_level()` 的 `focal_gaps` 同属 `character_decay` profile。
-- **SettlementExtractor 伏笔 resolve 机制失效（172c 段 3 发现；172c.r 修复已落地，待实跑回归）**：wuxia 75 章、xuanhuan 100 章的 `foreshadowings.status='resolved'` 数量均为 0。172c.r 诊断+TDD 确认**四层根因**：A. prompt card 1.0.3 只演示 `plant`；B. `resolved_hooks` 自由文本成为不回写 DB 的替代出口；C. `list_active()` 把 overdue 伏笔从 settlement prompt 事实源滤除；D. `_update_continuity_tracking` 5.3 自动状态机独立连接陈旧读，把同事务内刚 resolve 的伏笔当场翻回 overdue。四层已全部修复（详见 `tasks/172c.r-wuxia-foreshadowing-resolve-and-health-fix.md` §2.1/§3.1）。
-- **continuity_auditor health 漏计 overdue（172c 段 3 发现；172c.r 修复已落地，待实跑回归）**：`_find_overdue_foreshadowings()` 原用 `list_active()`（`lifecycle_status='active' AND status IN ('planted','due')`），漏计三层：archived overdue、dormant overdue、**active 但 status='overdue'** 的条目（wuxia Ch75 实例 153+36+20），与 vdim 冻结口径（`status != 'resolved'` 无 lifecycle 过滤）完全脱节；已改 `list_overdue_unresolved()` 对齐 vdim 口径（172c.r §3.2）。
+- ~~SettlementExtractor 伏笔 resolve 机制失效~~：**172c.r 已完成**。wuxia 75 章、xuanhuan 100 章的 `foreshadowings.status='resolved'` 数量均为 0。172c.r 诊断+TDD 确认**四层根因**：A. prompt card 1.0.3 只演示 `plant`；B. `resolved_hooks` 自由文本成为不回写 DB 的替代出口；C. `list_active()` 把 overdue 伏笔从 settlement prompt 事实源滤除；D. `_update_continuity_tracking` 5.3 自动状态机独立连接陈旧读，把同事务内刚 resolve 的伏笔当场翻回 overdue。四层已全部修复，scifi/wuxia 短窗口回归验证 `foreshadowing_resolved` 事件 > 0（详见 `tasks/172c.r-wuxia-foreshadowing-resolve-and-health-fix-DONE.md`）。
+- ~~continuity_auditor health 漏计 overdue~~：**172c.r 已完成**。`_find_overdue_foreshadowings()` 原用 `list_active()`（`lifecycle_status='active' AND status IN ('planted','due')`），漏计三层：archived overdue、dormant overdue、**active 但 status='overdue'** 的条目（wuxia Ch75 实例 153+36+20），与 vdim 冻结口径（`status != 'resolved'` 无 lifecycle 过滤）完全脱节；已改 `list_overdue_unresolved()` 对齐 vdim 口径。
 
 ### 可插拔与回退
 
