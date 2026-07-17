@@ -5,7 +5,34 @@
 
   <p><strong>多 Agent 中文长篇小说写作系统</strong></p>
   <p><em>松烟入墨，字句成锋。</em></p>
+
+  <p>
+    <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-%3E%3D3.11-blue" alt="Python >= 3.11" /></a>
+    <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-blue" alt="License AGPL-3.0" /></a>
+    <img src="https://img.shields.io/badge/tests-2779%20passed-brightgreen" alt="Tests 2779 passed" />
+    <a href="https://github.com/astral-sh/ruff"><img src="https://img.shields.io/badge/code%20style-ruff-black" alt="Code style: ruff" /></a>
+  </p>
 </div>
+
+---
+
+## 目录
+
+- [这是什么？](#这是什么)
+- [核心设计](#核心设计)
+- [架构概览](#架构概览)
+- [当前能力](#当前能力)
+- [项目结构](#项目结构)
+- [快速开始](#快速开始)
+- [CLI 命令参考](#cli-命令参考)
+- [技术栈](#技术栈)
+- [路线图](#路线图)
+- [定制与接入新体裁](#定制与接入新体裁)
+- [可定制接口一览](#可定制接口一览)
+- [开发与贡献](#开发与贡献)
+- [常见问题](#常见问题)
+- [开发文档](#开发文档)
+- [许可证](#许可证)
 
 ---
 
@@ -13,7 +40,7 @@
 
 Songyan 是一个用多个 AI Agent 协作写中文长篇小说的系统。它不是"调用一次模型生成一章"的简单封装——而是把长篇写作拆成规划、生成、审查、修订、结算和连续性维护六个环节，每个环节由独立的 Agent 负责，共同维护一个长期事实数据库。
 
-当前已在 **sci-fi 单一体裁**下稳定支持 **220 章**连续生成（220/220 accepted）。V8 阶段已把这一能力从科幻的隐式画像解耦，建立了可插拔的**体裁运行时画像（GenreRuntimeProfile）**——玄幻、武侠、都市三体裁在短窗口（10-15 章）已达到与科幻同等的完成度和质量基线；**玄幻（xuanhuan）已完成 Ch100 中篇爬坡验证**（100/100 accepted，五门质量闸口全绿）；**武侠（wuxia）Ch100 爬坡进行中**（Ch75 已完成，但暴露 SettlementExtractor 伏笔 resolve 机制失效与 continuity_auditor health 漏计 archived overdue 两个设计缺陷，待 172c.r 修复）。Profile 的全部运行时字段（预算分配、门禁阈值、蒸发曲线、角色衰减窗口、连续性容差）已接线到对应消费者，无 Profile 体裁 100% 回退旧行为。
+当前已在 **sci-fi 单一体裁**下稳定支持 **220 章**连续生成（220/220 accepted）。V8 阶段已把这一能力从科幻的隐式画像解耦，建立了可插拔的**体裁运行时画像（GenreRuntimeProfile）**——玄幻、武侠、都市三体裁在短窗口（10-15 章）已达到与科幻同等的完成度和质量基线；**玄幻（xuanhuan）已完成 Ch100 中篇爬坡验证**（100/100 accepted，五门质量闸口全绿）；**武侠（wuxia）Ch100 爬坡进行中**（Ch75 已完成；段 3 暴露的伏笔 resolve 机制失效与 continuity health 漏计 overdue 两个设计缺陷已由 172c.r 修复落地，待实跑回归后决定续跑）。Profile 的全部运行时字段（预算分配、门禁阈值、蒸发曲线、角色衰减窗口、连续性容差）已接线到对应消费者，无 Profile 体裁 100% 回退旧行为。
 
 ### 它解决什么问题？
 
@@ -173,7 +200,7 @@ Songyan 已经过 **sci-fi 220 章**和 **xuanhuan 100 章**的实战验证，**
 | 断点续跑 | kill 后 `--resume` 继续，自动跳过已完成章节 |
 | 自适应门禁 | 正常波动不误伤，真实退化自动暂停（AutoHalt） |
 | 叙事骨架 | 全书大纲 → 弧规划 → 章节目标自顶向下派生；xuanhuan 已用 9-arc/3-thread 骨架跑完 Ch100 |
-| 伏笔调度 | 长程伏笔主动兑现，按体裁设 horizon floor（xuanhuan=48/wuxia=12）；**172c 段 3 发现 resolve 机制完全失效，horizon floor 仅能把逾期推后，不能替代兑现** |
+| 伏笔调度 | 长程伏笔主动兑现，按体裁设 horizon floor（xuanhuan=48/wuxia=12）；172c.r 已修复伏笔 resolve 机制（生成契约 + 事实源 + 防幻觉校验 + 同事务覆写），并将 continuity health 口径与验收门对齐 |
 | 文学护栏 | 配角目标、主动选择、概念预算在 prompt 和审查中双重约束；lexicon 按体裁参数化（xuanhuan/wuxia/urban 各一套） |
 | 项目模板化 | `ProjectTemplate` 为 7 个体裁提供统一初始化入口，一键创建完整项目骨架 |
 
@@ -221,6 +248,21 @@ cp .env.example .env
 # 编辑 .env，填入 LLM_API_KEY
 ```
 
+### 配置
+
+`.env` 关键配置项（完整模板见 [`.env.example`](.env.example)）：
+
+| 变量 | 默认 | 说明 |
+|------|------|------|
+| `LLM_API_KEY` | — | **必填**。LLM API Key |
+| `LLM_BASE_URL` | `https://api.deepseek.com` | 兼容 OpenAI 接口的任意端点（经 LiteLLM 接入） |
+| `LLM_MODEL` | `deepseek-chat` | 模型名 |
+| `LLM_TEMPERATURE` | `0.7` | 生成温度 |
+| `CONTEXT_TOTAL_BUDGET` | `32000` | Context Diet 总 token 预算 |
+| `DATABASE_URL` | `sqlite:///songyan.db` | 事实库路径 |
+| `CHECKPOINTER_MODE` | `sqlite` | checkpoint 持久化；Windows 验证环境建议 `memory` |
+| `LOG_LEVEL` | `INFO` | 日志级别（structlog） |
+
 ### 创建项目并生成
 
 ```bash
@@ -237,13 +279,28 @@ songyan run --project-id <id> --chapters 1-100 --auto-confirm --resume
 ### 长跑脚本示例
 
 ```bash
-# 初始化 DB + 从模板创建项目
-$env:DATABASE_URL = "sqlite:///.tmp/myproject.db"
-python scripts/run_172b_ch100_climb.py --init --template xuanhuan
+# 初始化 DB + 从模板创建项目（模板由 TEMPLATE_ID 环境变量指定）
+$env:TEMPLATE_ID = "xuanhuan"
+python scripts/run_172b_ch100_climb.py --init
 
 # 无人值守跑 Ch1-Ch100（分段爬坡，自动 resume）
 python scripts/run_172b_ch100_climb.py --to 100
 ```
+
+---
+
+## CLI 命令参考
+
+| 命令 | 作用 |
+|------|------|
+| `songyan create-project [--template <id>] [--outline-file <path>]` | 交互式或从体裁模板创建项目 |
+| `songyan list-projects` | 列出所有项目 |
+| `songyan run --project-id <id> --chapters 1-10 [--auto-confirm] [--resume]` | 生成指定章节范围；`--resume` 断点续跑 |
+| `songyan report` | 项目进度与质量报告 |
+| `songyan metrics` | 质量度量指标 |
+| `songyan mark add/list/remove/update-priority` | 人工标记（continuity 修复提示）管理 |
+
+完整参数以 `songyan <command> --help` 为准。
 
 ---
 
@@ -258,7 +315,149 @@ python scripts/run_172b_ch100_climb.py --to 100
 | LLM 接入 | LiteLLM |
 | CLI | Click |
 | 日志 | structlog |
-| 测试 | pytest（2746 用例） |
+| 测试 | pytest（2779 用例） |
+
+---
+
+## 路线图
+
+| 阶段 | 状态 | 内容 |
+|------|------|------|
+| V5 | ✅ 完成 | Context Diet 2.0 支撑长篇生成，Ch1-Ch150 150/150 accept |
+| V6 | ✅ 完成 | 叙事骨架（StoryOutline/ArcPlan/PlotThread）、长篇质量度量、无人值守长跑底盘 |
+| V7 | ✅ 完成 | enforce 可生产化，sci-fi 单一体裁 Ch200 达成（200/200 accepted） |
+| V8 | ✅ 验收通过 | 多体裁可插拔（GenreRuntimeProfile）+ xuanhuan Ch100 五门 PASS |
+| 172c | 🔄 进行中 | wuxia 第二体裁 Ch100 爬坡：Ch75 完成，172c.r 修复已落地待实跑回归 |
+| V9 | ⏳ 规划中 | urban 第三体裁 Ch100、跨体裁 Ch200、按体裁深度调参 |
+
+各阶段事实入口见 [`tasks/V8-README.md`](tasks/V8-README.md)（当前阶段）与 `tasks/V5/V6/V7-README.md`（历史阶段）。
+
+---
+
+## 定制与接入新体裁
+
+V8 用三个体裁的实战验证了一条可复制的体裁接入路径。接入新体裁**不需要改核心逻辑**——差异全部收敛到三层配置，未知体裁自动 100% 回退 scifi 已验证行为。
+
+### 三层配置
+
+| 层 | 位置 | 管什么 |
+|----|------|--------|
+| 体裁内容画像 | `genres/<genre>.json` | 节奏规则、写作规则、疲劳词、禁忌、审查关注点、文学护栏 lexicon（主动选择/配角/代价关键词） |
+| 运行时画像 | `GenreRuntimeProfile`：代码注册表 `src/songyan/db/genre_runtime_profile_repo.py` + DB `genre_runtime_profiles` 表 | Context Diet 运行时契约：预算（`base_budget`/`ramp_per_chapter`）、门禁阈值（`hard_enforce_ratio`/`emergency_halt_ratio`）、伏笔 horizon 下限、状态蒸发曲线、角色衰减窗口、连续性容差 |
+| 项目模板 | `project_templates/<genre>/`（template.yaml + seed.json + outline.json） | 项目初始化：主角设定、核心钩子、叙事骨架（arc/thread） |
+
+加载语义：代码注册表是体裁基线（含实证调校），DB 记录是**字段级覆盖层**——调参时可以不改代码，往 DB upsert 一条只含差异字段的记录即可；嵌套子模型（蒸发/衰减/容差）按整体替换。未知体裁回退 scifi baseline。
+
+### 推荐流程（V8 实证路径）
+
+**1. 写配置**。参照 `genres/xuanhuan.json` 与 `project_templates/xuanhuan/` 补齐三层；运行时画像先不写，用 scifi 默认值起跑。
+
+**2. 短窗口验证**（第一次必跑，是对标手段不是终点）：
+
+```bash
+python scripts/run_172a7_genre_validation.py --templates <genre> --end 10
+```
+
+达标线（与 sci-fi 同标，不放宽）：10/10 accepted、0 halt、`budget_used < 1.0`、T9 hard issue = 0、CED 与 sci-fi 同量级。`--end 15` 再跑一轮确认。
+
+**3. 撞墙诊断与调参**（V8 撞过的三面墙，按信号路由）：
+
+| 信号 | 根因（V8 实证） | 正确杠杆 |
+|------|----------------|----------|
+| `context_emergency_budget_ratio_halt` / emergency 连续触发 | 溢出发生在**不可裁核心**（genre_rules 等硬约束），分区权重压不动 | 抬 `base_budget`（xuanhuan 标定到 15000）或精简 genre_rules 内容本身；**不要调 `partition_ratios`** |
+| overdue 伏笔暴涨 | 先确认 resolve 机制生效（172c.r 后 `foreshadowing_resolved` 事件 > 0）；LLM 埋的 horizon 天然偏短 | `foreshadowing_horizon_floor` 按实测 plant 密度定（wuxia=12 / xuanhuan=48），floor 只推后逾期不替代回收 |
+| CED 超 sci-fi ×1.15 | consistency 热点章（多轮修订章密度最高） | 热点章定点修订；xuanhuan 类高状态密度体裁可抬 `max_character_states` 与 `focal_gaps` |
+
+**4. sci-fi 回归**（任何运行时改动必跑）：`--templates scifi --end 10`，确认无 Profile 体裁旧行为逐值不变。
+
+**5. 中篇爬坡**。短窗口全绿后，复用 Ch100 爬坡 harness 分段推进（25 章一段 = arc 边界，段边界五门 early-warning，撞墙即停不硬跑）：
+
+```bash
+$env:TEMPLATE_ID = "<genre>"; $env:RUN_ID = "<run-id>"
+$env:DATABASE_URL = "sqlite:///.tmp/<genre>_ch100.db"
+python scripts/run_172b_ch100_climb.py --init
+python scripts/run_172b_ch100_climb.py --to 100
+```
+
+终判口径（冻结）：Ch1-100 全 accepted、budget 峰值 < 1.0、T9 = 0、critical orphan = 0、consistency CED ≤ sci-fi ×1.15、overdue ≤ sci-fi 同章尺度。对标基线与五门细节见 [`tasks/172b-xuanhuan-ch100-climb.md`](tasks/172b-xuanhuan-ch100-climb.md) §1.1。
+
+---
+
+## 可定制接口一览
+
+体裁之外，系统的这些部分也是为「可替换」设计的。全部通过配置文件扩展，不需要改核心代码：
+
+| 接口 | 位置 | 能定制什么 | 怎么用 |
+|------|------|-----------|--------|
+| **创作模式** | `creative_modes/<mode>.json` | 启用哪些 Agent、审查维度与权重、修订策略、容差阈值（疲劳词/AI 腔等）、RAG 配置、human memory、成功指标 | 新增一个 JSON 文件即注册（目录自动发现）；`songyan run --mode-id <mode>` 选用。现有 webnovel / webnovel_intense / literary / hybrid 四种可参考 |
+| **工艺卡（Agent prompt）** | `prompts/cards/<agent>/<version>.yaml` + `_manifest.yaml` | 任一 Agent 的 system prompt：Writer、两类 Auditor、SettlementExtractor、SummaryWriter 等 | 版本化新增（不改旧版本，可回退），`_manifest.yaml` 切 `default_version` 生效；外部卡目录可用 `get_prompt_loader(cards_dir=...)` 注入 |
+| **文学策略插件** | `prompts/literary_plugins/<strategy>/<agent>.yaml` | 按策略向指定 Agent 的 prompt 注入片段（如声纹锚定、AI 腔黑名单） | 新建 `<strategy>/` 目录放 `<agent>.yaml`，在创作模式 JSON 的 `literary_optimization_plugins` 字段引用策略 id |
+| **LLM 端点** | `.env` | 模型提供方、模型名、温度 | LiteLLM 统一接入，改 `LLM_BASE_URL` / `LLM_MODEL` 即可，无需改代码 |
+| **门禁模式** | `GateConfig.for_mode(...)` | `observe`（只观测不拦截）/ `enforce`（生产拦截） | 脚本入口传入，长跑验证先用 observe 看信号再切 enforce |
+
+### 定制边界（有意不开放）
+
+以下不是遗漏，而是设计上的有意封闭，绕过它们会破坏系统根基：
+
+- **Agent 边界与 workflow 节点结构**——生成与事实分离是系统的根基，不开放新增/改写节点
+- **结算写入与事务路径**——事实库只接受有证据、可验证的数据
+- **冻结验收口径**——sci-fi 基线、CED 口径、五门判定标准；口径可调则跨体裁对标失去意义
+
+### 已知缺口（欢迎贡献）
+
+这些机制已在代码里，但离「开箱即用」还差一层包装，是当前最欢迎的贡献方向：
+
+- `genres/*.json` 与 `creative_modes/*.json` 缺 JSON Schema（`project_templates/_schema.json` 已有参照）
+- `GenreRuntimeProfile` 的 DB 字段级覆盖只有 Python API，缺调参 CLI
+- 文学插件目录缺清单/版本/校验注册机制（工艺卡的 manifest 是现成参照）
+- Ch100 五门判定器还在 `.tmp/` 任务产物里，待收编为正式工具
+
+---
+
+## 开发与贡献
+
+### 工程纪律
+
+本仓库的开发规范与不可违背规则（数据与状态、Agent 边界、审查与修订、状态结算、Context Diet）见 [`AGENTS.md`](AGENTS.md)。提交代码前请确认了解：
+
+- SQLite 是唯一长期事实源；LangGraph state 只存 ID，不存正文
+- 每次生成/修订必须创建 `chapter_versions` 新记录，禁止覆盖
+- 写操作集中在 Service/UnitOfWork，Agent 不直接拿 DB connection
+- 新功能/修复遵循 TDD：先写失败测试，再实现
+
+### 验证命令
+
+```bash
+# 全量测试（约 15 分钟）
+python -m pytest tests/ -q
+
+# 代码检查
+ruff check src/ tests/
+
+# 类型检查
+mypy src/
+```
+
+### 多体裁回归
+
+任何运行时契约改动必须通过 sci-fi 短窗口回归，保证无 Profile 体裁旧行为不变：
+
+```bash
+python scripts/run_172a7_genre_validation.py --templates scifi --end 10
+```
+
+---
+
+## 常见问题
+
+**Q: 支持哪些 LLM？**
+经 LiteLLM 接入，默认 DeepSeek；任何兼容 OpenAI 接口的端点改 `LLM_BASE_URL` / `LLM_MODEL` 即可，无需改代码。
+
+**Q: 单章生成失败会中断长跑吗？**
+不会。isolate 模式下单章失败被隔离记录，后续章节继续；门禁检测到真实退化时才触发 AutoHalt，人工判断后可 `--resume` 继续。
+
+**Q: Windows 下测试/长跑卡住怎么办？**
+`CHECKPOINTER_MODE=memory`；长跑优先用 PowerShell Job + 硬超时，详见 `archive/v5/context-docs/AGENTS-full-20260621.md` 的 Windows 防卡协议。
 
 ---
 
@@ -271,6 +470,7 @@ python scripts/run_172b_ch100_climb.py --to 100
 - [`docs/reports/172b-xuanhuan-ch100-climb.md`](docs/reports/172b-xuanhuan-ch100-climb.md) — xuanhuan Ch100 验收报告
 - [`tasks/172c-wuxia-ch100-climb.md`](tasks/172c-wuxia-ch100-climb.md) — wuxia Ch100 爬坡任务书（进行中）
 - [`tasks/172c.q-wuxia-inventory-identity.md`](tasks/172c.q-wuxia-inventory-identity.md) — 172c.q 物品追踪语义补强
+- [`tasks/172c.r-wuxia-foreshadowing-resolve-and-health-fix.md`](tasks/172c.r-wuxia-foreshadowing-resolve-and-health-fix.md) — 172c.r 伏笔 resolve 机制与 continuity 健康度修复（代码完成，待实跑回归）
 - [`docs/reports/172a.7-genre-short-window-validation.md`](docs/reports/172a.7-genre-short-window-validation.md) — 多体裁短窗口验证报告
 - [`AGENTS.md`](AGENTS.md) — 开发规范与工程纪律
 
