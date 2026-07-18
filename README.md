@@ -9,7 +9,7 @@
   <p>
     <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-%3E%3D3.11-blue" alt="Python >= 3.11" /></a>
     <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-blue" alt="License AGPL-3.0" /></a>
-    <img src="https://img.shields.io/badge/tests-2791%20passed-brightgreen" alt="Tests 2791 passed" />
+    <img src="https://img.shields.io/badge/tests-2814%20passed-brightgreen" alt="Tests 2814 passed" />
     <a href="https://github.com/astral-sh/ruff"><img src="https://img.shields.io/badge/code%20style-ruff-black" alt="Code style: ruff" /></a>
   </p>
 </div>
@@ -263,7 +263,9 @@ cp .env.example .env
 | `CONTEXT_TOTAL_BUDGET` | `32000` | Context Diet 总 token 预算 |
 | `DATABASE_URL` | `sqlite:///songyan.db` | 事实库路径 |
 | `CHECKPOINTER_MODE` | `sqlite` | checkpoint 持久化；Windows 验证环境建议 `memory` |
-| `LOG_LEVEL` | `INFO` | 日志级别（structlog） |
+| `LOG_LEVEL` | `INFO` | console 应用日志级别（structlog） |
+| `LOG_FILE_LEVEL` | `DEBUG` | `logs/app/*.jsonl` 文件日志级别 |
+| `SONGYAN_FORCE_EXIT` | `0` | 结果落盘后的最外层进程退出兜底；CLI 默认关闭，长跑 harness 默认开启 |
 
 ### 创建项目并生成
 
@@ -331,10 +333,10 @@ python scripts/run_172b_ch100_climb.py --to 100
 | V8 | ✅ 完成 | 多体裁可插拔（GenreRuntimeProfile）+ xuanhuan/wuxia Ch100 五门 PASS |
 | 172c | ✅ 完成 | wuxia 第二体裁 Ch100 爬坡：clean rerun 100/100 accepted，五门 PASS |
 | V8.5 | ✅ 完成 | 验收后遗留收口：172j BudgetPruner max_* 修复、172k C 判据三档证据闭环（xuanhuan end10 / urban end15 / wuxia end20 全 accepted）、172l 文档治理 |
-| V9 | 📋 设计定稿 | 生产化地基（长跑可靠性/导出/打包/CI/成本追踪/五门工具收编）+ urban 第三体裁 Ch100；Task 173-188，见 `tasks/V9-README.md` |
+| V9 | 🔄 已开工 | 生产化地基（长跑可靠性/导出/打包/CI/成本追踪/五门工具收编）+ urban 第三体裁 Ch100；Task 173/174 已完成代码级收口，下一步 175 成本追踪与预算熔断，见 `tasks/V9-README.md` |
 | V10 | ⏳ 预登记 | 跨体裁 Ch200、优秀度信号包（同质化/中文 AI 腔/judge 偏差）、结构升级 spike |
 
-各阶段事实入口见 `tasks/V9-README.md`（当前规划，设计定稿）与 `tasks/V5/V6/V7/V8-README.md`（均已收尾）；V8 任务文档与报告归档于 [`archive/v8/`](archive/v8/INDEX.md)。
+各阶段事实入口见 `tasks/V9-README.md`（当前阶段，已开工）与 `tasks/V5/V6/V7/V8-README.md`（均已收尾）；V8 任务文档与报告归档于 [`archive/v8/`](archive/v8/INDEX.md)。
 
 ---
 
@@ -432,7 +434,7 @@ python scripts/run_172b_ch100_climb.py --to 100
 ### 验证命令
 
 ```bash
-# 全量测试（约 15 分钟）
+# 全量测试（默认忽略 tests/evals 与 tests/cli，约 15 分钟）
 python -m pytest tests/ -q
 
 # 代码检查
@@ -469,6 +471,9 @@ python scripts/run_172a7_genre_validation.py --templates scifi --end 10
 
 - [`docs/STATUS.md`](docs/STATUS.md) — 当前状态、五维验收证据、下一步
 - [`docs/INDEX.md`](docs/INDEX.md) — 文档索引
+- [`tasks/V9-README.md`](tasks/V9-README.md) — V9 当前任务事实入口（生产化地基 + urban Ch100）
+- [`tasks/173-interpreter-exit-hang-fix-DONE.md`](tasks/173-interpreter-exit-hang-fix-DONE.md) — V9 Task 173：解释器退出挂死修复
+- [`tasks/174-logging-system-foundation-DONE.md`](tasks/174-logging-system-foundation-DONE.md) — V9 Task 174：日志体系落地
 - [`tasks/V8-README.md`](tasks/V8-README.md) — V8 任务事实入口（已收尾，含编号治理规则与五维验收证据链）
 - [`archive/v8/INDEX.md`](archive/v8/INDEX.md) — V8 任务文档与报告归档索引（172-172l 全部任务书、双体裁 Ch100 验收报告、短窗口矩阵）
 - [`docs/reports/v8-literature-and-landscape-review.md`](docs/reports/v8-literature-and-landscape-review.md) — V8 长调研报告（体裁差异与 GenreRuntimeProfile 设计依据）

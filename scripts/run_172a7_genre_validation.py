@@ -26,8 +26,11 @@ from songyan.db.connection import get_db
 from songyan.db.repository import ChapterHeadRepository, ChapterVersionRepository
 from songyan.evals.text_cleanliness import collect_text_cleanliness_metrics
 from songyan.exceptions import AutoHaltException
+from songyan.llm.client import aclose_llm_clients
 from songyan.models import GateConfig
 from songyan.project_templates import ProjectInitializer, ProjectTemplateLoader
+from songyan.utils.logging_setup import configure_logging
+from songyan.utils.process_exit import force_exit_after_run_if_requested
 from songyan.workflows.phase2_graph import run_project_pipeline
 
 
@@ -189,6 +192,7 @@ async def run_for_template(template_id: str, end: int, retries: int = 2) -> dict
 
 
 def main() -> None:
+    configure_logging(settings.log_level, file_level=settings.log_file_level)
     parser = argparse.ArgumentParser()
     parser.add_argument("--templates", nargs="+", required=True)
     parser.add_argument("--end", type=int, default=10)
@@ -211,6 +215,8 @@ def main() -> None:
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(results, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"\nResults saved to {out}")
+    asyncio.run(aclose_llm_clients())
+    force_exit_after_run_if_requested()
 
 
 if __name__ == "__main__":

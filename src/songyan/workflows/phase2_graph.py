@@ -8,11 +8,12 @@ from sqlite3 import OperationalError, Row
 from typing import Any, cast
 
 import structlog
+from structlog.contextvars import bind_contextvars, reset_contextvars, unbind_contextvars
 
 from songyan.agents.continuity_auditor import ContinuityAuditor
 from songyan.agents.continuity_auditor.continuity_health import classify_report
 from songyan.db.adaptive_halt_repo import AdaptiveHaltDecisionRepository
-from songyan.db.connection import get_db
+from songyan.db.connection import get_db, get_db_path
 from songyan.db.genre_runtime_profile_repo import load_profile as _load_runtime_profile
 from songyan.db.project_run_repo import ProjectRunRepository
 from songyan.db.repository import ChapterHeadRepository
@@ -543,6 +544,47 @@ async def run_project_pipeline(
     resume: bool = False,
     run_id: str | None = None,
 ) -> ProjectRunResult:
+    """Run the project pipeline with lifecycle cleanup and log context binding."""
+    context_tokens = bind_contextvars(
+        project_id=project_id,
+        db_path=str(get_db_path()),
+    )
+    try:
+        return await _run_project_pipeline_impl(
+            project_id=project_id,
+            chapter_range=chapter_range,
+            mode_id=mode_id,
+            auto_confirm=auto_confirm,
+            max_revision_rounds=max_revision_rounds,
+            on_failure=on_failure,
+            continuity_health_threshold=continuity_health_threshold,
+            gate_config=gate_config,
+            resume=resume,
+            run_id=run_id,
+        )
+    finally:
+        try:
+            from songyan.llm.client import aclose_llm_clients
+
+            await aclose_llm_clients()
+        finally:
+            reset_contextvars(**context_tokens)
+            unbind_contextvars("run_id", "chapter_number", "stage", "version_id")
+
+
+async def _run_project_pipeline_impl(
+    project_id: str,
+    chapter_range: tuple[int, int],
+    mode_id: str = "webnovel",
+    *,
+    auto_confirm: bool = False,
+    max_revision_rounds: int = 2,
+    on_failure: str = "isolate",  # "abort" | "retry" | "isolate"
+    continuity_health_threshold: float = 7.0,
+    gate_config: GateConfig | None = None,
+    resume: bool = False,
+    run_id: str | None = None,
+) -> ProjectRunResult:
     """运行多章流水线，逐章调用 Phase1Graph，自动传递上下文.
 
     Args:
@@ -643,6 +685,7 @@ async def run_project_pipeline(
         and existing_run.status == "completed"
         and _compute_resume_start(start, end, accepted_chapters) > end
     ):
+        bind_contextvars(run_id=existing_run.run_id)
         logger.info(
             "project_pipeline.resume_already_completed",
             run_id=existing_run.run_id,
@@ -666,6 +709,7 @@ async def run_project_pipeline(
 
     if existing_run is not None:
         run_id = existing_run.run_id
+        bind_contextvars(run_id=run_id)
         run_state = existing_run
         previous_status = run_state.status
         run_state.status = "running"
@@ -697,6 +741,7 @@ async def run_project_pipeline(
             )
     else:
         run_id = new_id("run")
+        bind_contextvars(run_id=run_id)
         run_state = ProjectRunState(
             run_id=run_id,
             project_id=project_id,
@@ -753,6 +798,8 @@ async def run_project_pipeline(
     _latest_successful_chapter: int | None = None
 
     for chapter_number in range(resume_start, end + 1):
+        unbind_contextvars("version_id")
+        bind_contextvars(chapter_number=chapter_number, stage="project_pipeline")
         if chapter_number in accepted_chapters:
             logger.info(
                 "project_pipeline.skipping_already_accepted",
@@ -802,6 +849,7 @@ async def run_project_pipeline(
                 previous_p1_counts=_previous_p1_counts,
                 min_health_score_so_far=_min_health_score_so_far,
             )
+            bind_contextvars(stage="project_pipeline")
         except LLMBudgetExceededError as exc:
             await _pause_run_for_auto_halt(
                 run_state,
@@ -1066,11 +1114,22 @@ async def _run_single_chapter(
     final_state: dict[str, Any] | None = None
     error_stage: str | None = None
     _stage: str = "init"  # 跟踪当前阶段，用于异常时 error_stage
+    bind_contextvars(
+        project_id=project_id,
+        run_id=run_id,
+        chapter_number=chapter_number,
+        stage=_stage,
+    )
+
+    def _set_stage(stage: str) -> None:
+        nonlocal _stage
+        _stage = stage
+        bind_contextvars(stage=stage)
 
     while attempts < max_attempts:
         attempts += 1
         try:
-            _stage = "pipeline"  # 跟踪当前阶段
+            _set_stage("pipeline")
             state = await run_chapter_pipeline(
                 project_id=project_id,
                 chapter_number=chapter_number,
@@ -1084,7 +1143,7 @@ async def _run_single_chapter(
             # 处理 human_confirm 中断
             if "__interrupt__" in state:
                 if auto_confirm:
-                    _stage = "human_confirm"  # 跟踪当前阶段
+                    _set_stage("human_confirm")
                     state = await resume_human_confirm(thread_id, "accept")
                     final_state = cast(dict[str, Any], state)
                 else:
@@ -1131,12 +1190,13 @@ async def _run_single_chapter(
             # 成功：尝试获取 summary
             # 防御性说明：即使 _skip_settlement=True 且 _convergence_failed=True，
             # 只要 status=="done" 就视为成功路径，不会进入失败分支。
-            _stage = "summary_writer"  # 跟踪当前阶段
+            _set_stage("summary_writer")
             summary_text = await _get_summary_text(project_id, chapter_number)
             duration_sec = time.monotonic() - chapter_start
             final_version_id = state.get("current_version_id")
+            bind_contextvars(version_id=final_version_id)
 
-            _stage = "continuity_audit"
+            _set_stage("continuity_audit")
             # ---- 每 3 章运行 ContinuityAuditor ----
             continuity_health_score: float | None = None
             continuity_health_severity: dict[str, int] | None = None
@@ -1179,7 +1239,7 @@ async def _run_single_chapter(
                         error=str(exc),
                     )
 
-            _stage = "run_logger"  # 跟踪当前阶段
+            _set_stage("run_logger")
             # Task 105: 透传上下文指标供外层熔断检查
             _ctx_metrics = final_state.get("_context_metrics", {}) if final_state else {}
             _qg_passed = final_state.get("_quality_gate_passed") if final_state else None
@@ -1287,6 +1347,10 @@ async def _run_single_chapter(
         final_state.get("error")
         if final_state
         else "Max attempts exceeded"
+    )
+    bind_contextvars(
+        stage="run_logger",
+        version_id=final_state.get("current_version_id") if final_state else None,
     )
     await log_chapter_run(
         run_id=run_id,

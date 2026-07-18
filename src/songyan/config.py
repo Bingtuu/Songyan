@@ -2,6 +2,7 @@
 
 from typing import Literal
 
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -29,6 +30,11 @@ class Settings(BaseSettings):
 
     # 日志
     log_level: str = "INFO"
+    log_file_level: str = "DEBUG"
+    force_exit_after_run: bool = Field(
+        default=False,
+        validation_alias=AliasChoices("SONGYAN_FORCE_EXIT", "FORCE_EXIT_AFTER_RUN"),
+    )
 
     # 数据库
     database_url: str = "sqlite:///songyan.db"

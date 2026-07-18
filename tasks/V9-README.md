@@ -4,7 +4,7 @@
 > **定位**: 自用为主、按开源标准打磨——不追求终端用户产品体验，但地基（打包/CI/日志/导出/成本）按可发布标准补齐
 > **当前口径**: V8（含 V8.5）已全量闭环。V9 不做优秀度信号包与跨体裁 Ch200（捆绑留 V10），只做两件事：① 补齐生产化地基；② urban 第三体裁 Ch100 爬坡作为地基的实战验收
 > **任务编号**: V9 从 Task 173 开始；**扁平编号**——每个可独立执行、独立验收、独立出 DONE 文档的工作项各占一个编号（粒度对标 V6 的 141-159 / V7 的 160-171w）；编号是 trace id，不等同于严格执行顺序；撞墙定点修复按父任务字母后缀登记（如 `187.p`）
-> **状态**: 规划中（2026-07-18 设计定稿，待评审后开工）
+> **状态**: 已开工（2026-07-18：173/174 完成；下一步 175 成本追踪与预算熔断）
 
 本文是 V9 阶段任务文档的事实入口。V8 历史事实入口见 `tasks/V8-README.md`（任务文档与报告在 `archive/v8/`）；更早阶段见 V7/V6/V5-README。
 
@@ -34,7 +34,7 @@
 
 ### 内部生产就绪度审计要点（2026-07-18，十项）
 
-- **P0**：① 解释器退出挂死已复现两次（172k），代码零兜底；② 全仓库无一次 `structlog.configure`，`LOG_LEVEL` 是死配置，应用日志不落盘（已有 `logs/chapter_runs` 逐章 JSONL，但缺统一应用日志与事故关联字段）；③ 写完 100 章拿不到书稿（无 export 命令，8+ 任务脚本各复制一份 `_export_prose()`）；④ `pip install .` 成 wheel 即坏——`prompts/`、`genres/`、`creative_modes/`、`project_templates/` 等运行资源不是 package data
+- **P0**：① 解释器退出挂死已复现两次（172k），173 已补 LLM client 显式关闭与最外层 force-exit 兜底；② 全仓库无一次 `structlog.configure`，174 已落地应用日志与关联字段；③ 写完 100 章拿不到书稿（无 export 命令，8+ 任务脚本各复制一份 `_export_prose()`）；④ `pip install .` 成 wheel 即坏——`prompts/`、`genres/`、`creative_modes/`、`project_templates/` 等运行资源不是 package data
 - **P1**：成本追踪为零（`phase2_graph.py` 躺 `total_cost=0.0 # TODO`）；CLI 三坑（run 不回显 run_id、`--mode-id` 默认不回读项目 mode、README 表漏 `index` 命令）；无 CI 且 `tests/cli/test_cli.py` 4 个既有失败
 - **P2**：Profile 调参只有 Python API 无 CLI；五门判定器在 `.tmp/` 待收编；Windows 防卡协议只是文档未工具化
 
@@ -86,8 +86,8 @@ V9 通过 = A 组（地基）+ B 组（爬坡）同时满足，C 组（守护）
 
 | Task | 名称 | 状态 | 内容要点 | 验收要点 |
 |------|------|:----:|----------|----------|
-| 173 | 解释器退出挂死修复 | ◻ | 最小复现诊断归因（疑 litellm/httpx 非 daemon 线程）→ 真修（pipeline 结束显式关闭 client）→ 兜底（atexit 清理 + 可选 `--force-exit` 在结果落盘后 `os._exit`） | 真修与兜底分开验收；连续两次短窗口实跑进程自然退出 |
-| 174 | 日志体系落地 | ◻ | `logging_setup.py`：CLI/harness 入口 configure 一次；`LOG_LEVEL` 修活；console 人类可读 + `logs/app/*.jsonl` 文件双写；litellm/httpx 等第三方 WARNING 起；所有关键日志带 `run_id/chapter_number/stage/version_id/db_path`，并与既有 `logs/chapter_runs/*.jsonl` 对齐 | 长跑后单章事故现场可从应用日志 + run log + DB 重建 |
+| 173 | 解释器退出挂死修复 | ✅ | LLM client 显式 registry + `aclose_llm_clients()`；pipeline wrapper 收尾关闭；`SONGYAN_FORCE_EXIT` / `FORCE_EXIT_AFTER_RUN` 最外层兜底；长跑 harness 默认启用 | DONE: `tasks/173-interpreter-exit-hang-fix-DONE.md`；自动化验证通过；真实 scifi end10 待 175 后补跑 |
+| 174 | 日志体系落地 | ✅ | `logging_setup.py`：CLI/harness 入口 configure 一次；`LOG_LEVEL` 修活；console 人类可读 + `logs/app/*.jsonl` 文件双写；`LiteLLM`/httpx 等第三方 WARNING 起；关键日志带 `run_id/chapter_number/stage/version_id/db_path`，并与既有 `logs/chapter_runs/*.jsonl` 对齐 | DONE: `tasks/174-logging-system-foundation-DONE.md`；字段约定完成；三边重建实跑演示待 175 后补跑 |
 | 175 | 成本追踪与预算熔断 | ◻ | LLM 层引入 `LLMCallContext`/ContextVar 传递 run/chapter/agent/stage；统一读 response usage 落新表 `llm_call_usage`（run/chapter/agent/stage/model/tokens/cost/latency/retry_count）；usage 缺失时走 `utils/cost_estimator.py` fallback 并标记来源；真实成本接入既有 `LLMBudgetExceededError` 路径；新增 `run_cost_budget` 配置（默认 0=不限），与现有 `llm_run_call_budget` 调用次数预算分开；`songyan report` 成本视图 | 实跑后 report 能按 run/chapter/agent 拆成本；预算耗尽优雅停跑可 resume；重试不重复计费或明确记录重试成本 |
 | 176 | Windows 防卡 wrapper 工具化 | ◻ | V5 文档协议 → `scripts/run_with_timeout.ps1`（PowerShell Job + 硬超时） | 用 wrapper 跑通一次短窗口实跑 |
 
@@ -180,7 +180,7 @@ V9.6  188                                  （收口）
 主链：V9.1 → V9.2 → V9.3 → V9.4 → V9.5 → V9.6；scifi end10 回归贯穿全程
 ```
 
-- **173/174 是一切真实 LLM 实跑的硬前置**：挂死无兜底、应用日志不落盘时跑标定实跑，等于重演 172k 的事故场景；无 LLM 的纯重放/静态工具开发不受此限制
+- **173/174 是一切真实 LLM 实跑的硬前置，当前代码级前置已完成**：挂死无兜底、应用日志不落盘时跑标定实跑，等于重演 172k 的事故场景；无 LLM 的纯重放/静态工具开发不受此限制。真实 scifi end10 / 三边重建演示因成本与耗时控制，顺延到 175 后补跑。
 - **175 是长窗口与高成本标定的前置**：185 的短窗口摸底可在 173/174 后启动，但进入多轮标定或 187 Ch100 前必须具备成本追踪与预算熔断
 - **185 为什么可以并行**：短窗口标定依赖既有 `scripts/run_172a7_genre_validation.py`，不等全部交付发布任务；但调参迭代应走 183 的 CLI，故排在 V9.3 后期
 - **先补任务书再开跑**（沿用 V8 治理规则 4）：186 评审通过前不得启动 187

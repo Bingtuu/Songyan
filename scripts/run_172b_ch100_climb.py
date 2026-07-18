@@ -42,8 +42,11 @@ from songyan.db.repository import (
     ProjectRepository,
 )
 from songyan.exceptions import AutoHaltException
+from songyan.llm.client import aclose_llm_clients
 from songyan.models import GateConfig
 from songyan.project_templates import ProjectInitializer, ProjectTemplateLoader
+from songyan.utils.logging_setup import configure_logging
+from songyan.utils.process_exit import force_exit_after_run_if_requested
 from songyan.workflows.phase2_graph import run_project_pipeline
 
 TEMPLATE_ID = os.getenv("TEMPLATE_ID", "xuanhuan")
@@ -58,6 +61,12 @@ METRICS_PATH = Path(f".tmp/task172b_{TEMPLATE_ID}_segments.jsonl")
 
 def _task_label() -> str:
     return f"Task {RUN_ID}"
+
+
+def _force_exit_enabled_for_harness() -> bool:
+    if "SONGYAN_FORCE_EXIT" in os.environ or "FORCE_EXIT_AFTER_RUN" in os.environ:
+        return settings.force_exit_after_run
+    return True
 
 
 def _halt_route() -> str:
@@ -311,4 +320,7 @@ def _write_report(
 
 
 if __name__ == "__main__":
+    configure_logging(settings.log_level, file_level=settings.log_file_level)
     asyncio.run(main())
+    asyncio.run(aclose_llm_clients())
+    force_exit_after_run_if_requested(enabled=_force_exit_enabled_for_harness())

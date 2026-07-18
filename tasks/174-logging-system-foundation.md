@@ -4,7 +4,7 @@
 > **类型**: 基础设施
 > **优先级**: P0——与 173 并列为**一切真实 LLM 实跑的硬前置**；其关联字段约定（`run_id/chapter_number/stage/version_id/db_path`）是 175 成本追踪 `LLMCallContext` 的直接上游
 > **依赖**: 无；但字段约定必须与 175 保持一致（175 任务书撰写时引用本文档定稿的字段集）
-> **状态**: ◻ 规划中
+> **状态**: ✅ 完成（DONE: `tasks/174-logging-system-foundation-DONE.md`）
 > **来源**: V9 生产就绪度审计（全仓库无一次 `structlog.configure`）；`tasks/V9-README.md` A2 判据与 Task 174 行（2026-07-18 评审定稿版）
 
 ---
@@ -127,6 +127,43 @@ scifi end10 回归期望逐值不变（行为中立基础设施，回归即证�
 2. `logs/app/*.jsonl` 文件 sink + 五字段关联（run_id/chapter_number/stage/version_id/db_path）可用；
 3. 三边重建演示证据落盘（本文档执行记录节）；
 4. 字段命名对照表定稿（供 175 引用）；V9-README Task 174 行状态翻正。
+
+---
+
+## 执行记录（2026-07-18）
+
+### 实现
+
+- `src/songyan/utils/logging_setup.py` 新增 `configure_logging()`：stdlib logging + structlog 桥接，console 人类可读、`logs/app/app-<YYYYMMDD>.jsonl` JSONL 文件落盘，重复调用幂等。
+- `LOG_LEVEL` 控制 console，`LOG_FILE_LEVEL` 控制文件 sink；默认 console INFO、文件 DEBUG。
+- 第三方 logger 压制到 WARNING，包含 `LiteLLM`、`litellm`、`httpx`、`httpcore`、`asyncio`、`langchain`、`langgraph`。
+- `phase2_graph.py` 绑定 `project_id/db_path/run_id/chapter_number/stage/version_id`，并在 `_run_logger.py` 的 `run_logger.chapter_logged` 事件中补 `stage="chapter_run_logged"` 与 `version_id`。
+- CLI `cli()` group callback、`scripts/run_172a7_genre_validation.py`、`scripts/run_172b_ch100_climb.py` 已接入 `configure_logging()`。
+
+### 字段命名对照表
+
+| 应用日志字段 | 来源 / 含义 | 对齐关系 |
+|---|---|---|
+| `project_id` | 项目 ID | DB 全局主键 |
+| `run_id` | project run ID | 与 `logs/chapter_runs/<run_id>.jsonl` 文件名和 JSONL 字段同名 |
+| `chapter_number` | 当前章号 | 与 chapter_runs JSONL 字段同名 |
+| `stage` | 当前执行阶段（如 `project_pipeline` / `pipeline` / `run_logger` / `chapter_run_logged`） | 应用日志专用；供 175 `LLMCallContext.stage` 复用 |
+| `version_id` | 当前章节版本 ID | 与 DB `chapter_versions.version_id`、review/settlement 关联 |
+| `db_path` | 当前 SQLite 文件路径 | 用于事故现场定位 |
+
+### 验证
+
+| 命令 / 证据 | 结果 |
+|---|---|
+| `python -m pytest tests/test_173_llm_client_cleanup.py tests/test_174_logging_setup.py -q` | 13 passed |
+| `python -m pytest tests/ -q` | 2814 passed, 2 skipped, 1 xfailed, 2 warnings |
+| `ruff check src/ tests/ scripts/run_172a7_genre_validation.py scripts/run_172b_ch100_climb.py` | All checks passed |
+| `LOG_LEVEL=WARNING` + `scifi --end 1` smoke 尝试 | console 仅保留 LiteLLM WARNING，无 DEBUG 请求/响应；实跑因生成链路耗时中止，未作为通过证据 |
+
+### 实跑说明
+
+- `scifi --end 1` smoke 证明 console 过滤与 `LiteLLM` DEBUG 压制生效；应用日志记录中包含 `run_id/chapter_number/stage/db_path`。
+- 未完成三边重建完整演示与 scifi end10 回归；原因同 173：真实生成链路耗时和成本不可控。该部分建议在 175 成本追踪/预算熔断后补跑。
 
 ---
 

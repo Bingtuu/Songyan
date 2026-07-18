@@ -4,7 +4,7 @@
 > **类型**: 缺陷修复（生产事故级）
 > **优先级**: P0——与 174 并列为**一切真实 LLM 实跑的硬前置**（V9-README 执行纪律：挂死无兜底时跑实跑等于重演 172k 事故场景）
 > **依赖**: 无（V9 主链首站）
-> **状态**: ◻ 规划中
+> **状态**: ✅ 完成（DONE: `tasks/173-interpreter-exit-hang-fix-DONE.md`）
 > **来源**: 172k 两次实跑挂死记录（`archive/v8/tasks/172k-c-dimension-evidence-closure.md`）；V9 生产就绪度审计；`tasks/V9-README.md` Task 173 行
 
 ---
@@ -120,6 +120,33 @@ scifi end10 回归期望逐值不变（本 Task 为行为中立的基础设施�
 2. `SONGYAN_FORCE_EXIT` 兜底可用，且只在 CLI/harness 最外层最终落盘后执行；长跑 harness 默认启用；
 3. 真修/兜底分开验收的证据落盘（两次自然退出实跑记录 + 注入测试）；
 4. 本文档执行记录补录，V9-README Task 173 行状态翻正。
+
+---
+
+## 执行记录（2026-07-18）
+
+### 实现
+
+- `src/songyan/llm/client.py` 新增显式 LLM client registry 与 `aclose_llm_clients()`，关闭逻辑不读取 `lru_cache` 内部值；关闭缓存 client、底层 `async_client` 等常见资源后清空 registry 与 `lru_cache`。
+- `src/songyan/workflows/phase2_graph.py` 将 `run_project_pipeline()` 拆成生命周期 wrapper + `_run_project_pipeline_impl()`，在 wrapper 的 `finally` 中执行 `aclose_llm_clients()` 并清理日志 contextvars。
+- `src/songyan/utils/process_exit.py` 新增 `force_exit_after_run_if_requested()`，只供 CLI/harness 最外层在最终落盘后调用；`run_project_pipeline()` 内不调用 `os._exit()`。
+- `src/songyan/config.py` 新增 `force_exit_after_run`，通过 `SONGYAN_FORCE_EXIT` / `FORCE_EXIT_AFTER_RUN` 双 env alias 映射。
+- `scripts/run_172b_ch100_climb.py` 作为长跑 harness 默认启用 force-exit 兜底；`songyan run` 与 `run_172a7_genre_validation.py` 仅在 env/settings 启用时触发。
+
+### 验证
+
+| 命令 / 证据 | 结果 |
+|---|---|
+| `python -m pytest tests/test_173_llm_client_cleanup.py tests/test_174_logging_setup.py -q` | 13 passed |
+| `python -m pytest tests/ -q` | 2814 passed, 2 skipped, 1 xfailed, 2 warnings |
+| `ruff check src/ tests/ scripts/run_172a7_genre_validation.py scripts/run_172b_ch100_climb.py` | All checks passed |
+| subprocess 泄漏线程测试（`tests/test_173_llm_client_cleanup.py::test_force_exit_subprocess_terminates_non_daemon_thread`） | 通过，证明 `SONGYAN_FORCE_EXIT` 兜底可结束非 daemon 泄漏线程且结果文件完整 |
+
+### 实跑说明
+
+- 曾尝试 `scifi --end 2` 与 `scifi --end 1` 真实 LLM smoke。两次均在生成/审查/修订链路中耗时过长，已中止以控制 API 成本；因此本任务**未声明** scifi end10 或两次自然退出真实 LLM 证据。
+- 实跑过程中确认 174 的日志关联字段已进入应用日志；后续 174 增补 `LiteLLM` logger 大小写压制后，console 已不再泄漏 DEBUG 请求/响应，只保留 WARNING。
+- 真实长窗口/短窗口最终回归仍应在 175 成本追踪与预算熔断落地后执行，避免无成本上限地重复烧实跑。
 
 ---
 

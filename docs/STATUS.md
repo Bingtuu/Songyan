@@ -1,12 +1,12 @@
 # Songyan 项目状态
 
-> 短状态板。这里只保留当前判断、最新证据和下一步，避免挤占开发上下文。任务细节看 `tasks/V8-README.md`，文档路由看 `docs/INDEX.md`，长历史看 `archive/`。
+> 短状态板。这里只保留当前判断、最新证据和下一步，避免挤占开发上下文。任务细节看 `tasks/V9-README.md`，文档路由看 `docs/INDEX.md`，长历史看 `archive/`。
 
 ## 当前判断
 
 | 项 | 结论 |
 |----|------|
-| 当前阶段 | **V9 规划中（设计定稿，待开工）**：生产化地基 + urban 第三体裁 Ch100，Task 173-188 扁平编号，事实入口 `tasks/V9-README.md`。V8 已全量闭环：P/C/Q/S/V 五维全绿，xuanhuan + wuxia 双体裁 Ch100 五门 PASS，V8.5 遗留清零 |
+| 当前阶段 | **V9 已开工**：生产化地基 + urban 第三体裁 Ch100，Task 173-188 扁平编号，事实入口 `tasks/V9-README.md`。V9.1 的 173/174 已完成代码级收口：LLM client 生命周期关闭、最外层 force-exit 兜底、应用日志落盘与 run/chapter/stage/version/db_path 关联字段已落地；下一步 Task 175 成本追踪与预算熔断 |
 | V7 收尾 | **已完成**。sci-fi/space_opera + webnovel_intense 单一体裁稳定跑到 Ch200，200/200 accepted，D1 hard clean pass；Ch201-Ch220 20/20 accepted |
 | V8.1 运行时画像 | **已完成**（Task 172a + 172a.p）。`GenreRuntimeProfile` 把 Context Diet 2.0 运行时契约从 sci-fi 默认值解耦；xuanhuan Ch8 halt 已消除（base_budget=15000） |
 | V8.3 文学护栏 | **已完成**（Task 172d）。`literary_guardrail_observe` 去科幻硬编码，lexicon/主角名参数化到 `GenreProfile`，三体裁各配一套；DONE 文档已补齐 |
@@ -15,6 +15,7 @@
 | V8 文档治理 | **已完成**：`tasks/V8-README.md` 已明确 Task 编号是 trace id；阶段任务、前置并行、撞墙修复、后续增强已分层展示 |
 | **V8 技术债** | **172e-172i 已完成**：`GenreRuntimeProfile` 声明后未接线的字段已全部接到消费者；`load_profile()` 已改为注册表基线 + DB 字段级覆盖层 |
 | V8 遗留收口 | **172j/172k/172l 全部完成**：172k C 判据三档证据闭环（xuanhuan end10 10/10、urban end15 15/15、wuxia end20 20/20 gap=0，T9=0、overdue=0、budget<1.0；xuanhuan resolved=12 确认 172c.r 生效）；详见 `tasks/V8-README.md` V8.5 节 |
+| V9.1 长跑可靠性 | **173/174 已完成**：`tasks/173-interpreter-exit-hang-fix-DONE.md`、`tasks/174-logging-system-foundation-DONE.md`；真实 scifi end10 与三边重建演示因成本控制顺延至 175 后补跑 |
 
 ## 最新证据
 
@@ -25,6 +26,7 @@
 | Q 质量同标 | CED：wuxia 8.48 < urban 8.75 < scifi 9.60 < xuanhuan 10.48（同量级）；全体裁 budget<1.0、T9=0、0 halt |
 | S 状态可控 | 172a.p horizon floor=12：floor12 实跑 DB 严证 **overdue@<15 = 2 < 5**（vs floor=0 的 28），44 伏笔 0 floor 违规 + 数学下界证明 |
 | V 中篇爬坡 | 172b xuanhuan Ch1-Ch100 **100/100 accepted**；172c wuxia Ch1-Ch100 **100/100 accepted**；两个非 sci-fi 体裁 Ch100 五门 PASS |
+| V9 生产化地基 | 173：显式 LLM client registry + `aclose_llm_clients()`，pipeline 收尾关闭资源，`SONGYAN_FORCE_EXIT` / `FORCE_EXIT_AFTER_RUN` 最外层兜底；174：`configure_logging()` 接入 CLI + harness，`logs/app/*.jsonl` 应用日志落盘，`LiteLLM`/httpx 等第三方 logger WARNING 起，关键字段与 `logs/chapter_runs` 可对齐 |
 | 172c wuxia 段 3 | Ch51-75 完成（75/75 accepted，0 halt）；Ch75 五门：budget PASS、CED FAIL、**overdue 203 vs sci-fi 117 FAIL**、health 5.6 FAIL、completeness PASS |
 | 172c.r 修复落地 | resolve 失效四层根因全修：prompt card 1.0.4 补 resolve 契约、settlement 事实源纳 overdue、resolve 防幻觉校验、5.3 同事务覆写修复；health 口径对齐 vdim（archived/dormant/active-overdue 全计）；12 新测试绿 |
 | 172c.s Ch21 诊断 | clean rerun Ch1-Ch21 accepted 后 `health_low_streak_halt`：health 5.1、overdue 21（报告 25）、CED/1k 8.9173、budget peak 0.9739、before_emerg_peak 1.2847、resolved/archived=3；根因为 floor=12 长窗口过短 + plant 密度高 |
@@ -53,6 +55,10 @@
 | 172c wuxia Ch100 终判 | `$env:TEMPLATE_ID='wuxia'; python .tmp\vdim_compare.py 100` → **PASS**：accepted 100/100，budget 0.965，CED 0.17 vs 0.40，overdue 35 vs 168，health 8.3 |
 | 172c 收口全量验证 | `python -m pytest tests/ -q` → **2791 passed, 2 skipped, 1 xfailed**；`ruff check src/ tests/` → **All checks passed** |
 | 172k 三档实跑（`run_172a7_genre_validation.py`：xuanhuan end10 / urban end15 / wuxia end20） | **全 accepted**：10/10、15/15、20/20 gap=0；T9=0、overdue=0、budget 峰值 ≤0.9893、0 halt；落盘 `.tmp/172k_xuanhuan_end10.json` / `.tmp/172k_urban_end15.json` / `.tmp/172k_wuxia_end20.json` |
+| 173/174 聚焦测试 | `python -m pytest tests/test_173_llm_client_cleanup.py tests/test_174_logging_setup.py -q` → **13 passed** |
+| 173/174 全量默认测试 | `python -m pytest tests/ -q` → **2814 passed, 2 skipped, 1 xfailed**（436s） |
+| 173/174 ruff | `ruff check src/ tests/ scripts/run_172a7_genre_validation.py scripts/run_172b_ch100_climb.py` → **All checks passed** |
+| 173/174 真实 smoke 尝试 | `LOG_LEVEL=WARNING` + scifi end1/end2 曾启动；确认 console 无 LiteLLM DEBUG 请求/响应，仅 WARNING；生成链路耗时过长，为控制成本中止，未作为 end10 通过证据 |
 
 ## 项目整理
 
@@ -64,13 +70,15 @@
 
 ## 下一步
 
-1. **V9 设计定稿，待评审开工**（事实入口 `tasks/V9-README.md`）：范围 = 生产化地基（V9.1 长跑可靠性 173-176 / V9.2 交付发布 177-181 / V9.3 工具链收编 182-184）+ urban 标定（185）与 Ch100 爬坡（186 任务书 → 187 执行）+ 收口（188）；验收 = A 组地基 8 条 + B 组 urban Ch100 六条 + C 组守护项；串行三段时序，scifi end10 回归贯穿全程。
+1. **Task 175 成本追踪与预算熔断**：173/174 已完成代码级前置，下一步接入 `LLMCallContext`、`llm_call_usage`、真实成本预算上限与 report 成本视图；175 完成后补跑 173/174 的真实 scifi end10 / 三边重建演示。
 2. **V10 预登记**：跨体裁 Ch200（基线扩 Ch200 checkpoint + 口径冻结）、优秀度信号包（跨章同质化指数/中文 AI 腔规则包/judge 偏差对策/perplexity gate/style card）、结构升级 spike（KG 图 diff / validity interval / Storyline Tree）。
 3. **守护项**：后续 CED 仍使用 consistency-only、merged/source、正文证据口径；不得把文学 craft 或 `rule-mr-*` 聚合工作项计入 CED。
 
 ## 入口
 
-- **V9 任务事实入口（规划中，设计定稿）：`tasks/V9-README.md`**
+- **V9 任务事实入口（已开工）：`tasks/V9-README.md`**
+- V9 Task 173 DONE：`tasks/173-interpreter-exit-hang-fix-DONE.md`
+- V9 Task 174 DONE：`tasks/174-logging-system-foundation-DONE.md`
 - V8 历史任务事实（已收尾，含 V8.5）：`tasks/V8-README.md`
 - V8 归档索引（全部任务文档与报告）：`archive/v8/INDEX.md`
 - V8 长调研报告（GenreRuntimeProfile 设计依据，活跃参考）：`docs/reports/v8-literature-and-landscape-review.md`

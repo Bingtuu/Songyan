@@ -11,6 +11,7 @@ import click
 
 from songyan.cli.commands.index import register_index_commands
 from songyan.cli.outline_import import load_outline_file
+from songyan.config import settings
 from songyan.creative_modes.registry import (
     list_creative_mode_profiles,
     load_creative_mode_profile,
@@ -27,6 +28,8 @@ from songyan.models.gate_config import GateConfig
 from songyan.models.human_mark import HumanMark
 from songyan.models.project import ProjectSetting, derive_arc_boundaries
 from songyan.project_templates import ProjectInitializer, ProjectTemplateLoader
+from songyan.utils.logging_setup import configure_logging
+from songyan.utils.process_exit import force_exit_after_run_if_requested
 from songyan.workflows.phase2_graph import run_project_pipeline
 
 # CLI 层可捕获的异常类型（排除 KeyboardInterrupt / SystemExit）
@@ -45,7 +48,7 @@ _CLI_CATCHABLE = (
 @click.group()
 def cli() -> None:
     """Songyan（松烟）— 多 Agent 中文小说写作系统."""
-    pass
+    configure_logging(settings.log_level, file_level=settings.log_file_level)
 
 
 def _select_mode() -> str:
@@ -539,6 +542,7 @@ def run(
         if result.chapters_failed:
             click.echo(f"失败: {result.chapters_failed}")  # 列出失败章号清单
         click.echo(f"耗时: {result.total_duration_sec:.1f} 秒")
+        force_exit_after_run_if_requested()
 
     except click.Abort:
         raise

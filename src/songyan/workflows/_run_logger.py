@@ -319,9 +319,10 @@ async def log_chapter_run(
         log_id=log.log_id,
         run_id=log.run_id,
         chapter_number=chapter_number,
+        stage="chapter_run_logged",
+        version_id=final_version_id,
         success=success,
         word_count=log.word_count,
         duration_sec=log.duration_sec,
     )
     return log
-

@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import asyncio
+import inspect
 import os
 from contextvars import ContextVar
 from functools import lru_cache
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import structlog
 
@@ -23,6 +24,18 @@ logger = structlog.get_logger(__name__)
 # per-run LLM 调用计数（非进程级单例，随 async context 生命周期）
 _llm_call_count: ContextVar[int] = ContextVar("llm_call_count", default=0)
 _llm_budget_last_chapter: ContextVar[int] = ContextVar("llm_budget_last_chapter", default=0)
+_llm_client_registry: dict[tuple[str, str, str, float, int, int], Any] = {}
+
+_CLIENT_RESOURCE_ATTRS = (
+    "client",
+    "async_client",
+    "root_client",
+    "aclient",
+    "http_client",
+    "async_http_client",
+    "_client",
+    "_async_client",
+)
 
 
 def reset_llm_call_count() -> None:
@@ -73,6 +86,81 @@ def _is_rate_limit_error(exc: Exception) -> bool:
     return False
 
 
+async def _maybe_close_resource(resource: Any, *, seen: set[int]) -> None:
+    """Close one resource if it exposes close/aclose; best-effort and idempotent."""
+    if resource is None:
+        return
+    resource_id = id(resource)
+    if resource_id in seen:
+        return
+    seen.add(resource_id)
+
+    for method_name in ("aclose", "close"):
+        method = getattr(resource, method_name, None)
+        if not callable(method):
+            continue
+        try:
+            result = method()
+            if inspect.isawaitable(result):
+                await result
+            return
+        except (RuntimeError, OSError, ConnectionError, TypeError, ValueError) as exc:
+            logger.warning(
+                "llm.client_close_failed",
+                resource_type=type(resource).__name__,
+                method=method_name,
+                error=str(exc),
+            )
+            return
+
+
+async def _close_litellm_global_client(seen: set[int]) -> None:
+    try:
+        import litellm  # type: ignore[import-untyped]
+    except ImportError:
+        return
+
+    for method_name in ("aclose", "close"):
+        method = getattr(litellm, method_name, None)
+        if not callable(method):
+            continue
+        method_id = id(method)
+        if method_id in seen:
+            return
+        seen.add(method_id)
+        try:
+            result = method()
+            if inspect.isawaitable(result):
+                await result
+        except (RuntimeError, OSError, ConnectionError, TypeError, ValueError) as exc:
+            logger.warning(
+                "llm.litellm_global_close_failed",
+                method=method_name,
+                error=str(exc),
+            )
+        return
+
+
+async def aclose_llm_clients() -> None:
+    """Close cached LLM client resources before process or run shutdown."""
+    seen: set[int] = set()
+    clients = list(_llm_client_registry.values())
+
+    for client in clients:
+        for attr in _CLIENT_RESOURCE_ATTRS:
+            try:
+                resource = getattr(client, attr, None)
+            except (RuntimeError, AttributeError, TypeError, ValueError):
+                continue
+            if resource is not None and resource is not client:
+                await _maybe_close_resource(resource, seen=seen)
+        await _maybe_close_resource(client, seen=seen)
+
+    await _close_litellm_global_client(seen)
+    _llm_client_registry.clear()
+    _get_llm_cached.cache_clear()
+
+
 @lru_cache(maxsize=16)
 def _get_llm_cached(
     model: str,
@@ -85,7 +173,7 @@ def _get_llm_cached(
     """缓存 LLM 实例，避免每次调用都重新创建."""
     from langchain_litellm import ChatLiteLLM
 
-    return ChatLiteLLM(  # type: ignore[call-arg]  # langchain_litellm stub: base_url/timeout
+    client = ChatLiteLLM(  # type: ignore[call-arg]  # langchain_litellm stub: base_url/timeout
         model=model,
         api_key=api_key,
         base_url=base_url,
@@ -93,6 +181,10 @@ def _get_llm_cached(
         max_tokens=max_tokens,
         timeout=timeout,
     )
+    _llm_client_registry[
+        (model, api_key, base_url, temperature, max_tokens, timeout)
+    ] = client
+    return client
 
 
 def get_llm(
@@ -129,6 +221,14 @@ def get_llm(
         raise LLMError(msg)
 
     try:
+        cache_key = (
+            model,
+            api_key,
+            base_url,
+            temperature,
+            max_tokens,
+            timeout,
+        )
         llm = _get_llm_cached(
             model=model,
             api_key=api_key,
@@ -137,6 +237,7 @@ def get_llm(
             max_tokens=max_tokens,
             timeout=timeout,
         )
+        _llm_client_registry.setdefault(cache_key, llm)
     except (ImportError, ValueError, TypeError, RuntimeError, ConnectionError) as e:
         msg = f"LLM 初始化失败 (model={model}): {e}"
         raise LLMError(msg, cause=e) from e
