@@ -23,6 +23,11 @@ class Settings(BaseSettings):
     llm_max_retries: int = 3
     llm_rate_limit_max_wait: float = 60.0
     llm_run_call_budget: int = 0  # 0 = 不启用单 run 调用预算
+    # 0 = 不启用单 run 成本预算（CNY）；启用后超预算立即熔断暂停 run，可 --resume 续跑
+    run_cost_budget: float = Field(
+        default=0.0,
+        validation_alias=AliasChoices("SONGYAN_RUN_COST_BUDGET", "RUN_COST_BUDGET"),
+    )
 
     # Token 预算
     context_total_budget: int = 32_000

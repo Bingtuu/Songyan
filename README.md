@@ -266,6 +266,7 @@ cp .env.example .env
 | `LOG_LEVEL` | `INFO` | console 应用日志级别（structlog） |
 | `LOG_FILE_LEVEL` | `DEBUG` | `logs/app/*.jsonl` 文件日志级别 |
 | `SONGYAN_FORCE_EXIT` | `0` | 结果落盘后的最外层进程退出兜底；CLI 默认关闭，长跑 harness 默认开启 |
+| `SONGYAN_RUN_COST_BUDGET` | `0` | 单 run LLM 成本预算（¥）；0 = 不启用，超预算熔断暂停 run，可 `--resume` 续跑 |
 
 ### 创建项目并生成
 

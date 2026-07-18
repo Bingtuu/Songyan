@@ -122,6 +122,7 @@ class TestCallLlm:
                 mock_settings.llm_temperature = 0.42
                 mock_settings.llm_max_retries = 3
                 mock_settings.llm_run_call_budget = 0
+                mock_settings.run_cost_budget = 0
                 with patch(
                     "songyan.llm.client.retry_with_backoff", new_callable=AsyncMock
                 ) as mock_retry:
@@ -146,6 +147,7 @@ class TestCallLlm:
                 mock_settings.llm_temperature = 0.42
                 mock_settings.llm_max_retries = 3
                 mock_settings.llm_run_call_budget = 0
+                mock_settings.run_cost_budget = 0
                 with patch(
                     "songyan.llm.client.retry_with_backoff", new_callable=AsyncMock
                 ) as mock_retry:

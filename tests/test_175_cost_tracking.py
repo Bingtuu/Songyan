@@ -1,4 +1,4 @@
-"""Tests for V9 Task 175 阶段 A2 — call_llm usage 拦截落库与 agent 归因."""
+"""Tests for V9 Task 175 — 阶段 A2（usage 落库 + agent 归因）与阶段 B（成本熔断 + total_cost）."""
 
 from __future__ import annotations
 
@@ -14,12 +14,17 @@ from unittest.mock import AsyncMock, patch
 import aiosqlite
 import pytest
 from structlog.contextvars import bind_contextvars, reset_contextvars
+from structlog.testing import capture_logs
 
-from songyan.config import settings
+from songyan.config import Settings, settings
 from songyan.db.llm_call_usage_repo import LlmCallUsageRepository
-from songyan.exceptions import LLMError
+from songyan.db.project_run_repo import ProjectRunRepository
+from songyan.db.repository import ProjectRepository
+from songyan.exceptions import LLMBudgetExceededError, LLMError
 from songyan.llm import client as llm_client
+from songyan.models import ProjectSetting
 from songyan.utils.cost_estimator import count_tokens, estimate_cost_from_tokens
+from songyan.workflows.phase2_graph import run_project_pipeline
 
 
 class _FakeResponse:
@@ -62,10 +67,12 @@ _HANG = object()
 async def _clean_state() -> Any:
     await llm_client.aclose_llm_clients()
     _FakeChatLiteLLM.responses.clear()
+    llm_client._llm_run_cost_cny.set(0.0)
     reset_contextvars()
     yield
     reset_contextvars()
     _FakeChatLiteLLM.responses.clear()
+    llm_client._llm_run_cost_cny.set(0.0)
     await llm_client.aclose_llm_clients()
 
 
@@ -506,3 +513,404 @@ class TestExtractionEdgeCases:
         row = (await _fetch_rows(test_db))[0]
         assert row["success"] == 0
         assert len(row["error"]) == 500
+
+
+# --------------------------------------------------------------------------- #
+# 阶段 B：run 级成本累计器（独立于 telemetry 落库成败）
+# --------------------------------------------------------------------------- #
+class TestRunCostAccumulator:
+    async def test_successful_call_accumulates_cost(
+        self, monkeypatch: pytest.MonkeyPatch, test_db: Path
+    ) -> None:
+        """成功调用计算出成本后立即累加进 _llm_run_cost_cny."""
+        _install_fake_litellm(monkeypatch)
+        _FakeChatLiteLLM.responses.append(
+            _FakeResponse(
+                usage_metadata={"input_tokens": 100, "output_tokens": 50},
+                response_metadata={"response_cost": 0.005},
+            )
+        )
+
+        result = await llm_client.call_llm("prompt")
+
+        assert result == "fake-text"
+        assert llm_client.get_llm_run_cost() == pytest.approx(0.005)
+
+    async def test_record_failure_still_accumulates_cost(
+        self, monkeypatch: pytest.MonkeyPatch, test_db: Path
+    ) -> None:
+        """repo.record 抛异常被吞时 call_llm 正常返回，且累计器已增加（任务书关键语义）."""
+        _install_fake_litellm(monkeypatch)
+        _FakeChatLiteLLM.responses.append(
+            _FakeResponse(response_metadata={"response_cost": 0.007})
+        )
+
+        async def _explode(*args: Any, **kwargs: Any) -> None:
+            raise RuntimeError("db down")
+
+        monkeypatch.setattr(LlmCallUsageRepository, "record", _explode)
+
+        result = await llm_client.call_llm("prompt")
+
+        assert result == "fake-text"
+        assert await _fetch_rows(test_db) == []
+        assert llm_client.get_llm_run_cost() == pytest.approx(0.007)
+
+
+# --------------------------------------------------------------------------- #
+# 阶段 B：成本预算双检查熔断
+# --------------------------------------------------------------------------- #
+class TestRunCostBudgetPreCheck:
+    async def test_accumulated_cost_blocks_next_call(
+        self, monkeypatch: pytest.MonkeyPatch, test_db: Path
+    ) -> None:
+        """累计成本已达预算 → 下一次 call_llm 前置熔断（耗尽），且不产生新调用."""
+        _install_fake_litellm(monkeypatch)
+        monkeypatch.setattr(settings, "run_cost_budget", 0.01)
+        _FakeChatLiteLLM.responses.extend(
+            [
+                _FakeResponse(response_metadata={"response_cost": 0.02}),
+                _FakeResponse(response_metadata={"response_cost": 0.02}),
+            ]
+        )
+
+        # 首次调用：前置 0 < 0.01 通过，单次成本打穿预算 → 后置熔断（详见 PostCheck）
+        with pytest.raises(LLMBudgetExceededError, match="超限"):
+            await llm_client.call_llm("prompt-1")
+
+        # 第二次调用：前置检查 0.02 >= 0.01 → 直接熔断，不再发起 LLM 调用
+        with pytest.raises(LLMBudgetExceededError) as exc_info:
+            await llm_client.call_llm("prompt-2")
+
+        exc = exc_info.value
+        assert "耗尽" in str(exc)
+        assert exc.used_cost == pytest.approx(0.02)
+        assert exc.budget_cost == pytest.approx(0.01)
+        assert exc.used_calls == 0  # llm_run_call_budget 未启用，计数保持 0
+        assert exc.budget == 0
+        # 未产生新调用：第二次响应未被消费，遥测行仍只有首次的 1 行
+        assert len(_FakeChatLiteLLM.responses) == 1
+        rows = await _fetch_rows(test_db)
+        assert len(rows) == 1
+        assert rows[0]["cost_cny"] == pytest.approx(0.02)
+
+
+class TestRunCostBudgetPostCheck:
+    async def test_single_expensive_call_trips_post_check(
+        self, monkeypatch: pytest.MonkeyPatch, test_db: Path
+    ) -> None:
+        """单次调用成本把预算打穿 → 累加后立即熔断，不向调用方返回文本."""
+        _install_fake_litellm(monkeypatch)
+        monkeypatch.setattr(settings, "run_cost_budget", 0.01)
+        _FakeChatLiteLLM.responses.append(
+            _FakeResponse(response_metadata={"response_cost": 0.02})
+        )
+
+        with pytest.raises(LLMBudgetExceededError) as exc_info:
+            await llm_client.call_llm("prompt")
+
+        exc = exc_info.value
+        assert "超限" in str(exc)
+        assert exc.used_cost == pytest.approx(0.02)
+        assert exc.budget_cost == pytest.approx(0.01)
+        # 累计器已含本次成本；打穿预算的调用仍留遥测行（resume 合计与累计器一致）
+        assert llm_client.get_llm_run_cost() == pytest.approx(0.02)
+        rows = await _fetch_rows(test_db)
+        assert len(rows) == 1
+        assert rows[0]["success"] == 1
+        assert rows[0]["cost_cny"] == pytest.approx(0.02)
+
+    async def test_budget_zero_disables_cost_breaker(
+        self, monkeypatch: pytest.MonkeyPatch, test_db: Path
+    ) -> None:
+        """run_cost_budget=0（默认）→ 成本熔断不启用，累计器仍正常累加."""
+        _install_fake_litellm(monkeypatch)
+        monkeypatch.setattr(settings, "run_cost_budget", 0.0)
+        _FakeChatLiteLLM.responses.extend(
+            [_FakeResponse(response_metadata={"response_cost": 9.9}) for _ in range(3)]
+        )
+
+        for _ in range(3):
+            assert await llm_client.call_llm("prompt") == "fake-text"
+
+        assert llm_client.get_llm_run_cost() == pytest.approx(29.7)
+
+
+# --------------------------------------------------------------------------- #
+# 阶段 B：init_run_cost_from_db（resume 安全）
+# --------------------------------------------------------------------------- #
+class TestInitRunCostFromDb:
+    async def test_new_run_initializes_to_zero(self, test_db: Path) -> None:
+        """新 run 无用量行 → 累计器初始化为 0.0."""
+        total = await llm_client.init_run_cost_from_db("run-new")
+
+        assert total == 0.0
+        assert llm_client.get_llm_run_cost() == 0.0
+
+    async def test_resume_run_initializes_from_history(self, test_db: Path) -> None:
+        """resume run → 累计器从 llm_call_usage 历史合计继续."""
+        repo = LlmCallUsageRepository()
+        for cost in (0.01, 0.02, 0.03):
+            await repo.record(
+                run_id="run-hist",
+                model="fake-model",
+                cost_cny=cost,
+                token_source="estimate",
+                cost_source="pricing_estimate",
+            )
+
+        total = await llm_client.init_run_cost_from_db("run-hist")
+
+        assert total == pytest.approx(0.06)
+        assert llm_client.get_llm_run_cost() == pytest.approx(0.06)
+
+    async def test_preflight_uses_history_plus_new_cost(
+        self, monkeypatch: pytest.MonkeyPatch, test_db: Path
+    ) -> None:
+        """resume 初始化后，前置检查按「历史 + 新增」判定."""
+        repo = LlmCallUsageRepository()
+        await repo.record(
+            run_id="run-hist",
+            model="fake-model",
+            cost_cny=0.03,
+            token_source="estimate",
+            cost_source="pricing_estimate",
+        )
+        await llm_client.init_run_cost_from_db("run-hist")
+        _install_fake_litellm(monkeypatch)
+        monkeypatch.setattr(settings, "run_cost_budget", 0.04)
+
+        # 历史 0.03 < 0.04 → 前置通过；累计 0.035 ≤ 0.04 → 后置通过，正常返回
+        _FakeChatLiteLLM.responses.append(
+            _FakeResponse(response_metadata={"response_cost": 0.005})
+        )
+        assert await llm_client.call_llm("prompt-1") == "fake-text"
+        assert llm_client.get_llm_run_cost() == pytest.approx(0.035)
+
+        # 0.035 < 0.04 前置仍通过；累计 0.041 > 0.04 → 后置熔断
+        _FakeChatLiteLLM.responses.append(
+            _FakeResponse(response_metadata={"response_cost": 0.006})
+        )
+        with pytest.raises(LLMBudgetExceededError, match="超限"):
+            await llm_client.call_llm("prompt-2")
+        assert llm_client.get_llm_run_cost() == pytest.approx(0.041)
+
+
+# --------------------------------------------------------------------------- #
+# 阶段 B：LLMBudgetExceededError 向后兼容 + 配置映射
+# --------------------------------------------------------------------------- #
+class TestBudgetExceededErrorCompat:
+    def test_legacy_four_arg_construction(self) -> None:
+        """旧式四参构造仍工作，新成本字段默认 None."""
+        exc = LLMBudgetExceededError(
+            "budget exceeded", used_calls=3, budget=2, last_chapter=5
+        )
+
+        assert exc.used_calls == 3
+        assert exc.budget == 2
+        assert exc.last_chapter == 5
+        assert exc.used_cost is None
+        assert exc.budget_cost is None
+
+    def test_cost_fields_populated(self) -> None:
+        """新式构造携带 used_cost / budget_cost."""
+        exc = LLMBudgetExceededError(
+            "cost budget exceeded",
+            used_calls=3,
+            budget=0,
+            last_chapter=5,
+            used_cost=1.2345,
+            budget_cost=1.0,
+        )
+
+        assert exc.used_cost == pytest.approx(1.2345)
+        assert exc.budget_cost == pytest.approx(1.0)
+
+
+class TestRunCostBudgetConfig:
+    def test_songyan_env_alias(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """SONGYAN_RUN_COST_BUDGET 环境变量映射到 settings.run_cost_budget."""
+        monkeypatch.setenv("SONGYAN_RUN_COST_BUDGET", "12.5")
+
+        assert Settings().run_cost_budget == pytest.approx(12.5)
+
+    def test_plain_env_alias(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """RUN_COST_BUDGET 备选别名同样生效."""
+        monkeypatch.delenv("SONGYAN_RUN_COST_BUDGET", raising=False)
+        monkeypatch.setenv("RUN_COST_BUDGET", "3.5")
+
+        assert Settings().run_cost_budget == pytest.approx(3.5)
+
+    def test_default_disabled(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """未配置时默认 0.0（不启用成本熔断）."""
+        monkeypatch.delenv("SONGYAN_RUN_COST_BUDGET", raising=False)
+        monkeypatch.delenv("RUN_COST_BUDGET", raising=False)
+
+        assert Settings().run_cost_budget == 0.0
+
+
+# --------------------------------------------------------------------------- #
+# 阶段 B：total_cost 接线与 pause 路径（phase2_graph 集成）
+# --------------------------------------------------------------------------- #
+_PID = "proj-175"
+
+
+def _chapter_success(chapter_number: int) -> dict[str, Any]:
+    """仿 test_153/test_154 的 _run_single_chapter 成功返回."""
+    return {
+        "success": True,
+        "summary_text": f"summary-{chapter_number}",
+        "error": None,
+        "final_state": {},
+        "final_version_id": f"v-{chapter_number}",
+        "budget_used": 0.8,
+        "context_emergency": False,
+        "quality_gate_passed": True,
+        "settlement_success": True,
+        "summary_success": True,
+    }
+
+
+async def _record_chapter_cost(run_id: str, chapter_number: int, cost: float) -> None:
+    """_run_single_chapter 被 mock 时不走 call_llm；直写遥测行模拟该章 LLM 成本."""
+    await LlmCallUsageRepository().record(
+        run_id=run_id,
+        project_id=_PID,
+        chapter_number=chapter_number,
+        agent="writer",
+        model="fake-model",
+        prompt_tokens=10,
+        completion_tokens=5,
+        cost_cny=cost,
+        token_source="response",
+        cost_source="provider_cost",
+    )
+
+
+class TestTotalCostWiring:
+    async def test_result_and_persisted_total_cost_equal_db_sum(
+        self, monkeypatch: pytest.MonkeyPatch, test_db: Path
+    ) -> None:
+        """ProjectRunResult.total_cost 与 project_runs.total_cost 均等于 llm_call_usage 合计."""
+        await ProjectRepository().create(
+            ProjectSetting(genre_id="xuanhuan", protagonist_name="英雄"), _PID
+        )
+
+        async def _fake_run(**kwargs: Any) -> dict[str, Any]:
+            await _record_chapter_cost(kwargs["run_id"], kwargs["chapter_number"], 0.01)
+            return _chapter_success(kwargs["chapter_number"])
+
+        with (
+            patch(
+                "songyan.workflows.phase2_graph._run_single_chapter",
+                side_effect=_fake_run,
+            ),
+            patch(
+                "songyan.workflows.phase2_graph.reset_checkpointer",
+                new_callable=AsyncMock,
+            ),
+        ):
+            result = await run_project_pipeline(
+                project_id=_PID,
+                chapter_range=(1, 3),
+                auto_confirm=True,
+            )
+
+        assert result.final_status == "completed"
+        assert result.chapters_completed == [1, 2, 3]
+        assert result.total_cost == pytest.approx(0.03)
+        persisted = await ProjectRunRepository().get(result.run_id)
+        assert persisted is not None
+        assert persisted.total_cost == pytest.approx(0.03)
+
+    async def test_run_without_usage_rows_keeps_zero_cost(
+        self, monkeypatch: pytest.MonkeyPatch, test_db: Path
+    ) -> None:
+        """无用量行的 run（旧 run 语义）：result 与 project_runs.total_cost 保持 0.0."""
+        await ProjectRepository().create(
+            ProjectSetting(genre_id="xuanhuan", protagonist_name="英雄"), _PID
+        )
+
+        async def _fake_run(**kwargs: Any) -> dict[str, Any]:
+            return _chapter_success(kwargs["chapter_number"])
+
+        with (
+            patch(
+                "songyan.workflows.phase2_graph._run_single_chapter",
+                side_effect=_fake_run,
+            ),
+            patch(
+                "songyan.workflows.phase2_graph.reset_checkpointer",
+                new_callable=AsyncMock,
+            ),
+        ):
+            result = await run_project_pipeline(
+                project_id=_PID,
+                chapter_range=(1, 2),
+                auto_confirm=True,
+            )
+
+        assert result.total_cost == 0.0
+        persisted = await ProjectRunRepository().get(result.run_id)
+        assert persisted is not None
+        assert persisted.total_cost == 0.0
+
+
+class TestBudgetPauseCostWiring:
+    async def test_budget_pause_persists_total_cost_and_log_fields(
+        self, monkeypatch: pytest.MonkeyPatch, test_db: Path
+    ) -> None:
+        """LLMBudgetExceededError pause 路径：total_cost 刷新落盘，日志含成本字段."""
+        await ProjectRepository().create(
+            ProjectSetting(genre_id="xuanhuan", protagonist_name="英雄"), _PID
+        )
+
+        async def _fake_run(**kwargs: Any) -> dict[str, Any]:
+            if kwargs["chapter_number"] == 1:
+                await _record_chapter_cost(kwargs["run_id"], 1, 0.01)
+                return _chapter_success(1)
+            raise LLMBudgetExceededError(
+                "单 run 成本预算超限（¥0.01），已用 ¥0.0105",
+                used_calls=5,
+                budget=0,
+                last_chapter=2,
+                used_cost=0.0105,
+                budget_cost=0.01,
+            )
+
+        with (
+            patch(
+                "songyan.workflows.phase2_graph._run_single_chapter",
+                side_effect=_fake_run,
+            ),
+            patch(
+                "songyan.workflows.phase2_graph.reset_checkpointer",
+                new_callable=AsyncMock,
+            ),
+            capture_logs() as logs,
+        ):
+            with pytest.raises(LLMBudgetExceededError):
+                await run_project_pipeline(
+                    project_id=_PID,
+                    chapter_range=(1, 3),
+                    auto_confirm=True,
+                )
+
+        runs = await ProjectRunRepository().list_by_project(_PID)
+        assert len(runs) == 1
+        assert runs[0].status == "paused"
+        assert runs[0].completed_chapters == [1]
+        assert runs[0].total_cost == pytest.approx(0.01)
+
+        budget_logs = [
+            entry
+            for entry in logs
+            if entry.get("event") == "project_pipeline.budget_exceeded"
+        ]
+        assert len(budget_logs) == 1
+        entry = budget_logs[0]
+        assert entry["used_calls"] == 5
+        assert entry["budget"] == 0
+        assert entry["last_chapter"] == 2
+        assert entry["used_cost"] == pytest.approx(0.0105)
+        assert entry["budget_cost"] == pytest.approx(0.01)

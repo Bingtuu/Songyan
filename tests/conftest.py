@@ -43,11 +43,13 @@ def _mute_llm_call_telemetry(monkeypatch: pytest.MonkeyPatch) -> None:
 
     未隔离 DB 的既有测试（如 test_154 / test_llm_client 直调 call_llm）在 A2 后
     会向 settings.database_url 指向的开发库写入 run_id=NULL 的脏遥测行，甚至新建
-    库文件；此处默认拦截。patch 点选 client 侧 helper 而非 repo.record：client 每次
-    调用时按模块属性查找 `_record_llm_call_usage`，拦截后对 repo 直测
+    库文件；此处默认拦截。patch 点选 client 侧名字而非 repo.record：helper 定义在
+    `songyan.llm._usage`（阶段 B 抽离），client import 后按模块属性查找
+    `_record_llm_call_usage`，拦截后对 repo 直测
     （tests/db/test_llm_call_usage_repo.py）零影响。
     豁免：需要真实遥测落库的测试模块（tests/test_175_cost_tracking.py）在模块内
     autouse fixture 显式还原真实 helper。
+    注意：run 级成本累计器（_llm_run_cost_cny）独立于该 helper，mute 不影响累计。
     """
 
     async def _noop(*args: Any, **kwargs: Any) -> None:

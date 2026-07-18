@@ -7,15 +7,20 @@ import inspect
 import os
 import time
 from contextvars import ContextVar
-from dataclasses import dataclass
 from functools import lru_cache
 from typing import TYPE_CHECKING, Any, Literal
 
 import structlog
-from structlog.contextvars import get_contextvars
 
 from songyan.config import settings
 from songyan.exceptions import LLMBudgetExceededError, LLMError, LLMRateLimitError
+from songyan.llm._usage import (
+    _current_call_context,
+    _extract_provider_cost,
+    _extract_usage,
+    _record_llm_call_usage,
+    _UsageExtract,
+)
 from songyan.llm.retry import retry_with_backoff
 from songyan.utils.cost_estimator import count_tokens, estimate_cost_from_tokens
 
@@ -28,6 +33,9 @@ logger = structlog.get_logger(__name__)
 # per-run LLM 调用计数（非进程级单例，随 async context 生命周期）
 _llm_call_count: ContextVar[int] = ContextVar("llm_call_count", default=0)
 _llm_budget_last_chapter: ContextVar[int] = ContextVar("llm_budget_last_chapter", default=0)
+# Task 175: per-run LLM 成本累计（CNY，镜像 _llm_call_count 模式）；
+# 由 init_run_cost_from_db 在 run 确定后初始化（resume 接续历史合计）
+_llm_run_cost_cny: ContextVar[float] = ContextVar("llm_run_cost_cny", default=0.0)
 _llm_client_registry: dict[tuple[str, str, str, float, int, int], Any] = {}
 
 _CLIENT_RESOURCE_ATTRS = (
@@ -55,6 +63,33 @@ def set_llm_budget_last_chapter(chapter_number: int) -> None:
 def get_llm_call_count() -> int:
     """获取当前 run 已用 LLM 调用数."""
     return _llm_call_count.get(0)
+
+
+def get_llm_run_cost() -> float:
+    """获取当前 run 已累计的 LLM 成本（CNY）."""
+    return _llm_run_cost_cny.get(0.0)
+
+
+async def init_run_cost_from_db(run_id: str) -> float:
+    """从 llm_call_usage 历史合计初始化 run 级成本累计器（Task 175，resume 安全）.
+
+    新 run 无用量行时初始化为 0.0；resume run 恢复历史累计，使成本预算熔断
+    跨进程/跨 resume 连续。DB 读取失败（如库未迁移遥测表）时回退 0.0 并记
+    warning——与遥测落库同一哲学：生成不可断；预算熔断退化为仅统计当前进程
+    新增成本。
+
+    Returns:
+        初始化后的累计成本（CNY）
+    """
+    from songyan.db.llm_call_usage_repo import LlmCallUsageRepository
+
+    try:
+        total = await LlmCallUsageRepository().sum_cost_for_run(run_id)
+    except Exception as exc:
+        logger.warning("llm.run_cost_init_failed", run_id=run_id, error=str(exc))
+        total = 0.0
+    _llm_run_cost_cny.set(total)
+    return total
 
 
 def _resolve_model() -> str:
@@ -262,190 +297,9 @@ def get_llm(
 
 
 # --------------------------------------------------------------------------- #
-# Task 175: 调用遥测（usage 提取 + llm_call_usage 落库）
+# Task 175: 调用遥测（usage 提取 + llm_call_usage 落库）已抽离至 _usage.py；
+# 本模块经上方 import 转发 `_record_llm_call_usage` 等名字（测试 patch 点不变）
 # --------------------------------------------------------------------------- #
-@dataclass(frozen=True)
-class LLMCallContext:
-    """单次 LLM 调用的归因上下文（读取 174 的 structlog contextvars 字段链）."""
-
-    run_id: str | None = None
-    project_id: str | None = None
-    chapter_number: int | None = None
-    stage: str | None = None
-    version_id: str | None = None
-    # 仅随 174 字段链读取留痕；写库路由不消费（repo 经 settings.database_url 连接）
-    db_path: str | None = None
-    agent: str = "unknown"
-
-
-def _context_str(value: Any) -> str | None:
-    return value if isinstance(value, str) and value else None
-
-
-def _current_call_context() -> LLMCallContext:
-    """从 structlog contextvars 组装调用上下文；读取失败回退全空（不阻断调用）."""
-    try:
-        ctx = get_contextvars()
-    except Exception:  # 防御：contextvars 读取异常不应影响 LLM 调用
-        return LLMCallContext()
-    chapter_raw = ctx.get("chapter_number")
-    chapter_number: int | None = None
-    if isinstance(chapter_raw, int):
-        chapter_number = chapter_raw
-    elif isinstance(chapter_raw, str):
-        try:
-            chapter_number = int(chapter_raw)
-        except ValueError:
-            chapter_number = None
-    return LLMCallContext(
-        run_id=_context_str(ctx.get("run_id")),
-        project_id=_context_str(ctx.get("project_id")),
-        chapter_number=chapter_number,
-        stage=_context_str(ctx.get("stage")),
-        version_id=_context_str(ctx.get("version_id")),
-        db_path=_context_str(ctx.get("db_path")),
-        agent=_context_str(ctx.get("agent")) or "unknown",
-    )
-
-
-@dataclass(frozen=True)
-class _UsageExtract:
-    """从 response 提取的 token 用量；提取不到时全零 + estimate."""
-
-    prompt_tokens: int = 0
-    completion_tokens: int = 0
-    token_source: Literal["response", "estimate"] = "estimate"
-    cached_tokens: int | None = None
-    cache_miss_tokens: int | None = None
-
-
-def _meta_value(obj: Any, key: str) -> Any:
-    """dict 键或对象属性二选一读取；缺失返回 None（不对 response 形状做假设）."""
-    if obj is None:
-        return None
-    if isinstance(obj, dict):
-        return obj.get(key)
-    return getattr(obj, key, None)
-
-
-def _coerce_int(value: Any) -> int | None:
-    if isinstance(value, bool):
-        return None
-    if isinstance(value, int):
-        return value
-    if isinstance(value, float):
-        return int(value)
-    if isinstance(value, str):
-        try:
-            return int(value)
-        except ValueError:
-            return None
-    return None
-
-
-def _coerce_float(value: Any) -> float | None:
-    if isinstance(value, bool):
-        return None
-    if isinstance(value, (int, float)):
-        return float(value)
-    return None
-
-
-def _extract_usage(response: Any) -> _UsageExtract:
-    """按 langchain-core → litellm 顺序提取 token 用量，缺失回退 estimate.
-
-    DeepSeek cache 信息来源：`prompt_tokens_details.cached_tokens` /
-    `prompt_cache_hit_tokens` / `prompt_cache_miss_tokens`（litellm 风格）或
-    `usage_metadata.input_token_details.cache_read`（langchain-core 风格）。
-    """
-    usage = _meta_value(response, "usage_metadata")
-    prompt_tokens = _coerce_int(_meta_value(usage, "input_tokens"))
-    completion_tokens = _coerce_int(_meta_value(usage, "output_tokens"))
-    if prompt_tokens is not None or completion_tokens is not None:
-        details = _meta_value(usage, "input_token_details")
-        return _UsageExtract(
-            prompt_tokens=prompt_tokens or 0,
-            completion_tokens=completion_tokens or 0,
-            token_source="response",
-            cached_tokens=_coerce_int(_meta_value(details, "cache_read")),
-        )
-    meta = _meta_value(response, "response_metadata")
-    token_usage: dict[str, Any] | None = None
-    if isinstance(meta, dict):
-        for key in ("token_usage", "usage"):
-            candidate = meta.get(key)
-            if isinstance(candidate, dict):
-                token_usage = candidate
-                break
-    if token_usage is not None:
-        prompt_tokens = _coerce_int(token_usage.get("prompt_tokens"))
-        completion_tokens = _coerce_int(token_usage.get("completion_tokens"))
-        if prompt_tokens is not None or completion_tokens is not None:
-            cached = _coerce_int(
-                _meta_value(token_usage.get("prompt_tokens_details"), "cached_tokens")
-            )
-            if cached is None:
-                cached = _coerce_int(token_usage.get("prompt_cache_hit_tokens"))
-            return _UsageExtract(
-                prompt_tokens=prompt_tokens or 0,
-                completion_tokens=completion_tokens or 0,
-                token_source="response",
-                cached_tokens=cached,
-                cache_miss_tokens=_coerce_int(token_usage.get("prompt_cache_miss_tokens")),
-            )
-    return _UsageExtract()
-
-
-def _extract_provider_cost(response: Any) -> float | None:
-    """响应元数据中的 provider 精确成本（如 litellm response_cost）；不存在返回 None."""
-    meta = _meta_value(response, "response_metadata")
-    if not isinstance(meta, dict):
-        return None
-    return _coerce_float(meta.get("response_cost"))
-
-
-async def _record_llm_call_usage(
-    *,
-    context: LLMCallContext,
-    model: str,
-    prompt_tokens: int = 0,
-    completion_tokens: int = 0,
-    cost_cny: float = 0.0,
-    token_source: Literal["response", "estimate"] = "estimate",
-    cost_source: Literal["provider_cost", "pricing_estimate"] = "pricing_estimate",
-    cached_tokens: int | None = None,
-    cache_miss_tokens: int | None = None,
-    latency_ms: int = 0,
-    retry_attempt: int = 0,
-    success: bool = True,
-    error: str | None = None,
-) -> None:
-    """写入一行调用遥测；telemetry 永不阻断生成（repo 已全捕获，这里再兜一层）."""
-    try:
-        from songyan.db.llm_call_usage_repo import LlmCallUsageRepository
-
-        await LlmCallUsageRepository().record(
-            run_id=context.run_id,
-            project_id=context.project_id,
-            chapter_number=context.chapter_number,
-            agent=context.agent,
-            stage=context.stage,
-            version_id=context.version_id,
-            model=model,
-            prompt_tokens=prompt_tokens,
-            completion_tokens=completion_tokens,
-            cost_cny=cost_cny,
-            token_source=token_source,
-            cost_source=cost_source,
-            cached_tokens=cached_tokens,
-            cache_miss_tokens=cache_miss_tokens,
-            latency_ms=latency_ms,
-            retry_attempt=retry_attempt,
-            success=success,
-            error=error,
-        )
-    except Exception as exc:
-        logger.warning("llm.usage_record_failed", error=str(exc))
 
 
 async def call_llm(
@@ -458,7 +312,8 @@ async def call_llm(
 ) -> str:
     """调用 LLM 并返回文本响应.
 
-    自带限流感知退避重试；启用 llm_run_call_budget 时按 run 级计数熔断。
+    自带限流感知退避重试；启用 llm_run_call_budget 时按 run 级计数熔断；
+    启用 run_cost_budget 时按 run 级成本（CNY）做前置 + 后置双检查熔断（Task 175）。
 
     Args:
         prompt: 发送给 LLM 的提示文本
@@ -472,7 +327,7 @@ async def call_llm(
 
     Raises:
         LLMError: 调用失败（重试后仍失败）
-        LLMBudgetExceededError: 单 run 调用预算耗尽
+        LLMBudgetExceededError: 单 run 调用/成本预算耗尽（成本熔断抛出时不返回文本）
     """
     if temperature is None:
         temperature = settings.llm_temperature
@@ -492,11 +347,27 @@ async def call_llm(
             )
         _llm_call_count.set(count)
 
+    # Task 175: 成本预算前置检查——已用成本达预算时不再发起新调用
+    cost_budget = settings.run_cost_budget
+    if cost_budget > 0:
+        used_cost = _llm_run_cost_cny.get(0.0)
+        if used_cost >= cost_budget:
+            raise LLMBudgetExceededError(
+                message=f"单 run 成本预算耗尽（¥{cost_budget:.2f}），已用 ¥{used_cost:.4f}",
+                used_calls=_llm_call_count.get(0),
+                budget=0,
+                last_chapter=_llm_budget_last_chapter.get(0),
+                used_cost=used_cost,
+                budget_cost=cost_budget,
+            )
+
     llm = get_llm(temperature=temperature, max_tokens=max_tokens, timeout=timeout)
     model = _resolve_model()
     call_context = _current_call_context()
-    # attempt 索引由 retry_with_backoff 经 on_attempt 回调透传（Task 175）
-    attempt_state = {"index": 0}
+    # attempt 索引由 retry_with_backoff 经 on_attempt 回调透传（Task 175）；
+    # cost_cny 由成功路径回传——ContextVar 写入不跨 asyncio.wait_for 的 task
+    # 边界回传，故累计在 call_llm 外层 context 进行（与 _llm_call_count 同层）
+    attempt_state: dict[str, Any] = {"index": 0, "cost_cny": 0.0}
 
     def _on_attempt(index: int) -> None:
         attempt_state["index"] = index
@@ -569,6 +440,9 @@ async def call_llm(
             completion_tokens = 0
             cost_cny = 0.0
             cost_source = "pricing_estimate"
+        # Task 175: 成本回传先于遥测落库——即使 record 失败被吞，外层累计器也会
+        # 增加本次成本，telemetry 故障不会绕过预算熔断
+        attempt_state["cost_cny"] = cost_cny
         await _record_llm_call_usage(
             context=call_context,
             model=model,
@@ -588,7 +462,7 @@ async def call_llm(
     try:
         # 总超时 = 单次超时 * 最大重试次数 + 退避延迟缓冲
         total_timeout = timeout * max_retries + 30
-        return await asyncio.wait_for(
+        text = await asyncio.wait_for(
             retry_with_backoff(
                 _invoke,
                 max_retries=max_retries,
@@ -603,3 +477,23 @@ async def call_llm(
         raise LLMError(f"LLM 调用总超时（超过 {total_timeout} 秒）", cause=e) from e
     except LLMError:
         raise
+    # Task 175: 成功调用的成本在外层 context 累加（wait_for 的 task 副本不回传
+    # ContextVar 写入）；累加独立于 record 成败，telemetry 故障不会绕过预算熔断
+    _llm_run_cost_cny.set(_llm_run_cost_cny.get(0.0) + attempt_state["cost_cny"])
+    # Task 175: 成本预算后置二次检查——单次昂贵调用把预算打穿时，本次调用不返回
+    # 文本，立即熔断（由 phase2_graph 章循环接住并 pause）
+    if cost_budget > 0:
+        used_cost_after = _llm_run_cost_cny.get(0.0)
+        if used_cost_after > cost_budget:
+            raise LLMBudgetExceededError(
+                message=(
+                    f"单 run 成本预算超限（¥{cost_budget:.2f}），"
+                    f"已用 ¥{used_cost_after:.4f}"
+                ),
+                used_calls=_llm_call_count.get(0),
+                budget=0,
+                last_chapter=_llm_budget_last_chapter.get(0),
+                used_cost=used_cost_after,
+                budget_cost=cost_budget,
+            )
+    return text

@@ -15,6 +15,7 @@ from songyan.agents.continuity_auditor.continuity_health import classify_report
 from songyan.db.adaptive_halt_repo import AdaptiveHaltDecisionRepository
 from songyan.db.connection import get_db, get_db_path
 from songyan.db.genre_runtime_profile_repo import load_profile as _load_runtime_profile
+from songyan.db.llm_call_usage_repo import LlmCallUsageRepository
 from songyan.db.project_run_repo import ProjectRunRepository
 from songyan.db.repository import ChapterHeadRepository
 from songyan.db.run_db_metrics_repo import RunDbMetricsRepository
@@ -120,7 +121,32 @@ async def _persist_run_progress(
     run_state.accumulated_summary = persisted_summary
     if status is not None:
         run_state.status = status
+    # Task 175: 落盘前刷新 run 级成本，保证 project_runs.total_cost 与
+    # llm_call_usage 合计一致（含 LLMBudgetExceededError pause 路径）
+    await _refresh_run_total_cost(run_state)
     await _save_run_state(run_state)
+
+
+async def _refresh_run_total_cost(run_state: ProjectRunState) -> None:
+    """从 llm_call_usage 合计刷新 run_state.total_cost（Task 175）."""
+    run_state.total_cost = await _sum_run_cost_or_zero(run_state.run_id)
+
+
+async def _sum_run_cost_or_zero(run_id: str) -> float:
+    """llm_call_usage 的 run 级成本合计；读取失败回退 0.0 + warning（Task 175）.
+
+    与遥测落库同一哲学：成本合计失败（如库未迁移遥测表）不阻断 run；
+    旧 run 无用量行时自然为 0.0。
+    """
+    try:
+        return await LlmCallUsageRepository().sum_cost_for_run(run_id)
+    except Exception as exc:  # 成本合计失败不应阻断生成
+        logger.warning(
+            "project_pipeline.total_cost_refresh_failed",
+            run_id=run_id,
+            error=str(exc),
+        )
+        return 0.0
 
 
 async def _upsert_quality_debt(run_id: str, project_id: str) -> None:
@@ -686,6 +712,10 @@ async def _run_project_pipeline_impl(
         and _compute_resume_start(start, end, accepted_chapters) > end
     ):
         bind_contextvars(run_id=existing_run.run_id)
+        # Task 175: run_id 绑定分支统一初始化成本累计器（短路分支亦不例外）
+        from songyan.llm.client import init_run_cost_from_db
+
+        await init_run_cost_from_db(existing_run.run_id)
         logger.info(
             "project_pipeline.resume_already_completed",
             run_id=existing_run.run_id,
@@ -779,9 +809,11 @@ async def _run_project_pipeline_impl(
     await reset_checkpointer()
 
     # Task 154: 每 run 开始时重置 LLM 调用计数，使预算熔断按 run 隔离
-    from songyan.llm.client import reset_llm_call_count
+    from songyan.llm.client import init_run_cost_from_db, reset_llm_call_count
 
     reset_llm_call_count()
+    # Task 175: 成本累计器从 DB 初始化——新 run 为 0.0，resume run 接续历史累计
+    await init_run_cost_from_db(run_id)
 
     # resume 时清理该项目孤儿 checkpoint；in-flight 章会在重算前获得新 thread_id
     if existing_run is not None:
@@ -863,6 +895,8 @@ async def _run_project_pipeline_impl(
                 used_calls=exc.used_calls,
                 budget=exc.budget,
                 last_chapter=exc.last_chapter,
+                used_cost=exc.used_cost,
+                budget_cost=exc.budget_cost,
             )
             raise
 
@@ -1052,12 +1086,15 @@ async def _run_project_pipeline_impl(
     )
 
     accumulated_summary = "\n\n".join(accumulated_summary_parts)
+    # Task 175: run 级成本 = llm_call_usage 合计（与收尾 _persist_run_progress 刷新的
+    # run_state.total_cost 同源；旧 run 无用量行或读取失败时为 0.0）
+    total_cost = await _sum_run_cost_or_zero(run_id) if run_id else 0.0
     result = ProjectRunResult(
         project_id=project_id,
         run_id=run_id,
         chapters_completed=completed,
         chapters_failed=failed,
-        total_cost=0.0,  # TODO: Task 025 中接入精确成本追踪
+        total_cost=total_cost,
         total_duration_sec=duration,
         final_status=final_status,
         accumulated_summary=accumulated_summary,

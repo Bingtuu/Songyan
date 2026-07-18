@@ -48,11 +48,16 @@ class LLMBudgetExceededError(SongyanError):  # noqa: N818
         used_calls: int,
         budget: int,
         last_chapter: int,
+        used_cost: float | None = None,
+        budget_cost: float | None = None,
     ) -> None:
         super().__init__(message)
         self.used_calls = used_calls
         self.budget = budget
         self.last_chapter = last_chapter
+        # Task 175: run 级成本熔断上下文；调用次数熔断路径保持 None（向后兼容）
+        self.used_cost = used_cost
+        self.budget_cost = budget_cost
 
 
 class GoalPlanningError(SongyanError):
