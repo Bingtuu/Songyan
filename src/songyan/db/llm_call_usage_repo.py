@@ -17,6 +17,13 @@ logger = structlog.get_logger(__name__)
 TokenSource = Literal["response", "estimate"]
 CostSource = Literal["provider_cost", "pricing_estimate"]
 
+# _group_by 的运行时列名白名单（Literal 类型守卫之外的运行时守卫，
+# 防止 f-string SQL 拼接被非白名单列名注入）
+_GROUP_BY_COLUMNS: dict[str, str] = {
+    "chapter_number": "chapter_number",
+    "agent": "agent",
+}
+
 
 class LlmCallUsageRepository:
     """读写 llm_call_usage 表：单次 LLM 调用的 token / 成本遥测.
@@ -101,6 +108,10 @@ class LlmCallUsageRepository:
     async def aggregate_for_run(self, run_id: str) -> dict[str, list[dict[str, Any]]]:
         """按 chapter_number / agent 分组聚合（供 report 成本视图）.
 
+        per_chapter 的 NULL 分组语义：chapter_number 可空，run 级调用（未绑定
+        章节）会聚成一章 chapter_number=None 的分组，且在 ORDER BY 下排最前；
+        report 层可自行把 None 映射为「run 级」标签展示。
+
         Returns:
             {"per_chapter": [...], "per_agent": [...]}，每项含
             chapter_number/agent、call_count、prompt_tokens、completion_tokens、
@@ -118,15 +129,16 @@ class LlmCallUsageRepository:
         run_id: str,
         column: Literal["chapter_number", "agent"],
     ) -> list[dict[str, Any]]:
+        group_column = _GROUP_BY_COLUMNS[column]
         cursor = await conn.execute(
-            f"""SELECT {column}, COUNT(*) AS call_count,
+            f"""SELECT {group_column}, COUNT(*) AS call_count,
                        SUM(prompt_tokens) AS prompt_tokens,
                        SUM(completion_tokens) AS completion_tokens,
                        SUM(cost_cny) AS cost_cny
                 FROM llm_call_usage
                 WHERE run_id = ?
-                GROUP BY {column}
-                ORDER BY {column}""",
+                GROUP BY {group_column}
+                ORDER BY {group_column}""",
             (run_id,),
         )
         rows = await cursor.fetchall()

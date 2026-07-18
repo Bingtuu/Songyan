@@ -13,6 +13,15 @@ from songyan.db.migrations import init_schema, run_migrations, verify_schema
 
 pytestmark = pytest.mark.asyncio
 
+_EXPECTED_INDEXES = {"idx_llm_call_usage_run", "idx_llm_call_usage_run_chapter"}
+
+
+async def _index_names(conn: aiosqlite.Connection) -> set[str]:
+    cursor = await conn.execute(
+        "SELECT name FROM sqlite_master WHERE type = 'index'"
+    )
+    return {row[0] for row in await cursor.fetchall()}
+
 
 class TestMigration:
     """schema / migration 层：新库与旧库路径都能得到 llm_call_usage."""
@@ -30,6 +39,7 @@ class TestMigration:
             )
             names = {row[0] for row in await cursor.fetchall()}
             assert "llm_call_usage" in names
+            assert _EXPECTED_INDEXES <= await _index_names(conn)
             assert await verify_schema(conn) == []
 
     async def test_run_migrations_backfills_old_db(self, tmp_path: Path) -> None:
@@ -50,6 +60,7 @@ class TestMigration:
             )
             names = {row[0] for row in await cursor.fetchall()}
             assert "llm_call_usage" in names
+            assert _EXPECTED_INDEXES <= await _index_names(conn)
             assert await verify_schema(conn) == []
 
 
