@@ -4,7 +4,7 @@
 > **类型**: 基础设施
 > **优先级**: P0——与 173 并列为**一切真实 LLM 实跑的硬前置**；其关联字段约定（`run_id/chapter_number/stage/version_id/db_path`）是 175 成本追踪 `LLMCallContext` 的直接上游
 > **依赖**: 无；但字段约定必须与 175 保持一致（175 任务书撰写时引用本文档定稿的字段集）
-> **状态**: ✅ 完成（DONE: `tasks/174-logging-system-foundation-DONE.md`）
+> **状态**: ⚠️ 条件完成（应用日志基础设施 + 字段约定完成；三边重建实跑演示挂起至 175 成本熔断后补跑，见 DONE）
 > **来源**: V9 生产就绪度审计（全仓库无一次 `structlog.configure`）；`tasks/V9-README.md` A2 判据与 Task 174 行（2026-07-18 评审定稿版）
 
 ---
@@ -64,7 +64,7 @@ def configure_logging(
 - **pipeline 入口**（`run_project_pipeline()` 开头）：先绑定 `project_id` / `db_path` 等已知字段；`run_id` 此时未必确定。
 - **run 确定后**（existing run / new run_state 分支完成后）：`bind_contextvars(run_id=...)`，这是 175 `LLMCallContext` 复用的主键字段。
 - **每章开始**（`_run_single_chapter`）：用 context token 或 try/finally 绑定 `chapter_number=n`，章节结束后清理，避免串到下一章。
-- **关键 stage**（writer / rule_audit / llm_audit / revision / settlement / summary 各节点入口）：节点入口从 state 中取 ID 重新 `bind_contextvars(stage=..., run_id=..., chapter_number=...)`；stage 结束后清理或覆盖。
+- **stage（实现定稿口径）**：stage 绑定在**章节编排级**——`init / pipeline / human_confirm / summary_writer / continuity_audit / run_logger`；LangGraph 节点内经 contextvars 沿 await 链继承 `run_id/chapter_number`（节点内 stage 显示 `pipeline`）。节点级 stage 细分（writer/audit/settlement 等）暂缓，事故重建证明需要时再补。
 - **version 创建后**：`bind_contextvars(version_id=...)`；新版本产生时覆盖旧值，章节结束后清理。
 - run 结束：`unbind_contextvars` / `clear_contextvars` 防串 run。
 
@@ -139,6 +139,8 @@ scifi end10 回归期望逐值不变（行为中立基础设施，回归即证�
 - 第三方 logger 压制到 WARNING，包含 `LiteLLM`、`litellm`、`httpx`、`httpcore`、`asyncio`、`langchain`、`langgraph`。
 - `phase2_graph.py` 绑定 `project_id/db_path/run_id/chapter_number/stage/version_id`，并在 `_run_logger.py` 的 `run_logger.chapter_logged` 事件中补 `stage="chapter_run_logged"` 与 `version_id`。
 - CLI `cli()` group callback、`scripts/run_172a7_genre_validation.py`、`scripts/run_172b_ch100_climb.py` 已接入 `configure_logging()`。
+- （review 修复）`tests/test_174_logging_setup.py` 增加 autouse fixture：测试后恢复 root logger level、`structlog.reset_defaults()` 与 contextvars，消除全局状态泄漏。
+- （口径对齐）stage 绑定为实现定稿的**章节编排级**（`init/pipeline/human_confirm/summary_writer/continuity_audit/run_logger`），节点内继承 `run_id/chapter_number`；节点级 stage 细分暂缓，任务书技术方案已同步该口径。
 
 ### 字段命名对照表
 

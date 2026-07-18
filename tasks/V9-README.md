@@ -49,10 +49,10 @@ V9 通过 = A 组（地基）+ B 组（爬坡）同时满足，C 组（守护）
 | # | 判据 | 对应 Task |
 |---|------|-----------|
 | A1 | `pip install .`（非 `-e`）装出的 wheel 在非仓库 cwd 能直接跑通 `create-project --template scifi` + `run --chapters 1-3` | 178 |
-| A2 | `LOG_LEVEL` 生效；应用日志落盘 `logs/app/`，并与既有 `logs/chapter_runs/` 逐章 JSONL 通过 `run_id/chapter/stage/version_id` 关联；单章事故现场可从应用日志 + run log + DB 重建 | 174 |
+| A2 | `LOG_LEVEL` 生效；应用日志落盘 `logs/app/`，并与既有 `logs/chapter_runs/` 逐章 JSONL 通过 `run_id/chapter/stage/version_id` 关联；单章事故现场可从应用日志 + run log + DB 重建（代码级完成；重建演示挂起至 175 后补跑） | 174 |
 | A3 | `songyan export --project-id <id>` 产出按弧/卷组织的纯净书稿（Markdown/txt） | 177 |
 | A4 | LLM 调用 token/成本逐条落库；调用上下文能追溯到 run/chapter/agent；`songyan report` 含成本视图（per run/chapter/agent）；run 级成本预算硬上限，耗尽优雅停跑且可 `--resume` | 175 |
-| A5 | 解释器退出挂死有代码级兜底；连续两次短窗口实跑进程自然退出 | 173 |
+| A5 | 解释器退出挂死有代码级兜底（已落地，附 dry probe 归因证据）；连续两次短窗口实跑进程自然退出（挂起至 175 后补跑） | 173 |
 | A6 | CI 上线（ruff + mypy + pytest 分层）；`tests/cli` 不再被默认跳过或由 CI 单独覆盖，4 个既有失败修复，全量绿 | 181 |
 | A7 | 五门判定器 + 段审计收编为 `scripts/` 正式工具并参数化；五门判定函数口径不改（I/O、路径、参数化可重构），xuanhuan/wuxia 既有 Ch100 DB 重放结果与归档报告一致 | 182 |
 | A8 | `songyan profile show/diff/upsert --genre <g>` 可用；标定迭代全程不改代码 | 183 |
@@ -86,8 +86,8 @@ V9 通过 = A 组（地基）+ B 组（爬坡）同时满足，C 组（守护）
 
 | Task | 名称 | 状态 | 内容要点 | 验收要点 |
 |------|------|:----:|----------|----------|
-| 173 | 解释器退出挂死修复 | ✅ | LLM client 显式 registry + `aclose_llm_clients()`；pipeline wrapper 收尾关闭；`SONGYAN_FORCE_EXIT` / `FORCE_EXIT_AFTER_RUN` 最外层兜底；长跑 harness 默认启用 | DONE: `tasks/173-interpreter-exit-hang-fix-DONE.md`；自动化验证通过；真实 scifi end10 待 175 后补跑 |
-| 174 | 日志体系落地 | ✅ | `logging_setup.py`：CLI/harness 入口 configure 一次；`LOG_LEVEL` 修活；console 人类可读 + `logs/app/*.jsonl` 文件双写；`LiteLLM`/httpx 等第三方 WARNING 起；关键日志带 `run_id/chapter_number/stage/version_id/db_path`，并与既有 `logs/chapter_runs/*.jsonl` 对齐 | DONE: `tasks/174-logging-system-foundation-DONE.md`；字段约定完成；三边重建实跑演示待 175 后补跑 |
+| 173 | 解释器退出挂死修复 | ⚠️ 条件完成 | LLM client 显式 registry + `aclose_llm_clients()`；pipeline wrapper 收尾关闭；`SONGYAN_FORCE_EXIT` / `FORCE_EXIT_AFTER_RUN` 最外层兜底；长跑 harness 默认启用 | DONE: `tasks/173-interpreter-exit-hang-fix-DONE.md`；自动化验证 + dry probe 归因证据完成；scifi end10 与两次自然退出实跑验收挂起至 175 后补跑 |
+| 174 | 日志体系落地 | ⚠️ 条件完成 | `logging_setup.py`：CLI/harness 入口 configure 一次；`LOG_LEVEL` 修活；console 人类可读 + `logs/app/*.jsonl` 文件双写；`LiteLLM`/httpx 等第三方 WARNING 起；关键日志带 `run_id/chapter_number/stage/version_id/db_path`，并与既有 `logs/chapter_runs/*.jsonl` 对齐 | DONE: `tasks/174-logging-system-foundation-DONE.md`；字段约定完成；三边重建实跑演示挂起至 175 后补跑 |
 | 175 | 成本追踪与预算熔断 | ◻ | LLM 层引入 `LLMCallContext`/ContextVar 传递 run/chapter/agent/stage；统一读 response usage 落新表 `llm_call_usage`（run/chapter/agent/stage/model/tokens/cost/latency/retry_count）；usage 缺失时走 `utils/cost_estimator.py` fallback 并标记来源；真实成本接入既有 `LLMBudgetExceededError` 路径；新增 `run_cost_budget` 配置（默认 0=不限），与现有 `llm_run_call_budget` 调用次数预算分开；`songyan report` 成本视图 | 实跑后 report 能按 run/chapter/agent 拆成本；预算耗尽优雅停跑可 resume；重试不重复计费或明确记录重试成本 |
 | 176 | Windows 防卡 wrapper 工具化 | ◻ | V5 文档协议 → `scripts/run_with_timeout.ps1`（PowerShell Job + 硬超时） | 用 wrapper 跑通一次短窗口实跑 |
 

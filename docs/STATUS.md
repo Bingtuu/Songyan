@@ -15,7 +15,7 @@
 | V8 文档治理 | **已完成**：`tasks/V8-README.md` 已明确 Task 编号是 trace id；阶段任务、前置并行、撞墙修复、后续增强已分层展示 |
 | **V8 技术债** | **172e-172i 已完成**：`GenreRuntimeProfile` 声明后未接线的字段已全部接到消费者；`load_profile()` 已改为注册表基线 + DB 字段级覆盖层 |
 | V8 遗留收口 | **172j/172k/172l 全部完成**：172k C 判据三档证据闭环（xuanhuan end10 10/10、urban end15 15/15、wuxia end20 20/20 gap=0，T9=0、overdue=0、budget<1.0；xuanhuan resolved=12 确认 172c.r 生效）；详见 `tasks/V8-README.md` V8.5 节 |
-| V9.1 长跑可靠性 | **173/174 已完成**：`tasks/173-interpreter-exit-hang-fix-DONE.md`、`tasks/174-logging-system-foundation-DONE.md`；真实 scifi end10 与三边重建演示因成本控制顺延至 175 后补跑 |
+| V9.1 长跑可靠性 | **173/174 ⚠️ 条件完成**（代码级完成，实跑验收挂起）：`tasks/173-interpreter-exit-hang-fix-DONE.md`、`tasks/174-logging-system-foundation-DONE.md`；173 已补 dry probe 归因证据；真实 scifi end10 与三边重建演示因成本控制顺延至 175 后补跑 |
 
 ## 最新证据
 
@@ -55,8 +55,8 @@
 | 172c wuxia Ch100 终判 | `$env:TEMPLATE_ID='wuxia'; python .tmp\vdim_compare.py 100` → **PASS**：accepted 100/100，budget 0.965，CED 0.17 vs 0.40，overdue 35 vs 168，health 8.3 |
 | 172c 收口全量验证 | `python -m pytest tests/ -q` → **2791 passed, 2 skipped, 1 xfailed**；`ruff check src/ tests/` → **All checks passed** |
 | 172k 三档实跑（`run_172a7_genre_validation.py`：xuanhuan end10 / urban end15 / wuxia end20） | **全 accepted**：10/10、15/15、20/20 gap=0；T9=0、overdue=0、budget 峰值 ≤0.9893、0 halt；落盘 `.tmp/172k_xuanhuan_end10.json` / `.tmp/172k_urban_end15.json` / `.tmp/172k_wuxia_end20.json` |
-| 173/174 聚焦测试 | `python -m pytest tests/test_173_llm_client_cleanup.py tests/test_174_logging_setup.py -q` → **13 passed** |
-| 173/174 全量默认测试 | `python -m pytest tests/ -q` → **2814 passed, 2 skipped, 1 xfailed**（436s） |
+| 173/174 聚焦测试 | `python -m pytest tests/test_173_llm_client_cleanup.py tests/test_174_logging_setup.py -q` → **14 passed**（含 review 修复新增 1 用例） |
+| 173/174 全量默认测试 | `python -m pytest tests/ -q` → **2815 passed, 2 skipped, 1 xfailed**（471s；review 修复后复验，含新增关闭失败健壮性用例） |
 | 173/174 ruff | `ruff check src/ tests/ scripts/run_172a7_genre_validation.py scripts/run_172b_ch100_climb.py` → **All checks passed** |
 | 173/174 真实 smoke 尝试 | `LOG_LEVEL=WARNING` + scifi end1/end2 曾启动；确认 console 无 LiteLLM DEBUG 请求/响应，仅 WARNING；生成链路耗时过长，为控制成本中止，未作为 end10 通过证据 |
 

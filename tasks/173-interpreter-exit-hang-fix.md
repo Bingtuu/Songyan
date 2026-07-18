@@ -4,7 +4,7 @@
 > **类型**: 缺陷修复（生产事故级）
 > **优先级**: P0——与 174 并列为**一切真实 LLM 实跑的硬前置**（V9-README 执行纪律：挂死无兜底时跑实跑等于重演 172k 事故场景）
 > **依赖**: 无（V9 主链首站）
-> **状态**: ✅ 完成（DONE: `tasks/173-interpreter-exit-hang-fix-DONE.md`）
+> **状态**: ⚠️ 条件完成（代码级修复 + 自动化验证 + dry probe 归因证据完成；scifi end10 回归与两次自然退出实跑验收挂起至 175 成本熔断后补跑，见 DONE）
 > **来源**: 172k 两次实跑挂死记录（`archive/v8/tasks/172k-c-dimension-evidence-closure.md`）；V9 生产就绪度审计；`tasks/V9-README.md` Task 173 行
 
 ---
@@ -132,13 +132,14 @@ scifi end10 回归期望逐值不变（本 Task 为行为中立的基础设施�
 - `src/songyan/utils/process_exit.py` 新增 `force_exit_after_run_if_requested()`，只供 CLI/harness 最外层在最终落盘后调用；`run_project_pipeline()` 内不调用 `os._exit()`。
 - `src/songyan/config.py` 新增 `force_exit_after_run`，通过 `SONGYAN_FORCE_EXIT` / `FORCE_EXIT_AFTER_RUN` 双 env alias 映射。
 - `scripts/run_172b_ch100_climb.py` 作为长跑 harness 默认启用 force-exit 兜底；`songyan run` 与 `run_172a7_genre_validation.py` 仅在 env/settings 启用时触发。
+- （review 修复）`_maybe_close_resource` / `_close_litellm_global_client` 清理路径改为捕获 `Exception`：任何关闭失败不传播，不在 pipeline 收尾 finally 中屏蔽原始异常；新增 `test_aclose_llm_clients_swallows_unexpected_close_errors` 固化。
 
 ### 验证
 
 | 命令 / 证据 | 结果 |
 |---|---|
 | `python -m pytest tests/test_173_llm_client_cleanup.py tests/test_174_logging_setup.py -q` | 13 passed |
-| `python -m pytest tests/ -q` | 2814 passed, 2 skipped, 1 xfailed, 2 warnings |
+| `python -m pytest tests/ -q` | 2814 passed, 2 skipped, 1 xfailed, 2 warnings；review 修复后复验 **2815 passed**（471s，含新增关闭失败健壮性用例） |
 | `ruff check src/ tests/ scripts/run_172a7_genre_validation.py scripts/run_172b_ch100_climb.py` | All checks passed |
 | subprocess 泄漏线程测试（`tests/test_173_llm_client_cleanup.py::test_force_exit_subprocess_terminates_non_daemon_thread`） | 通过，证明 `SONGYAN_FORCE_EXIT` 兜底可结束非 daemon 泄漏线程且结果文件完整 |
 
@@ -147,6 +148,16 @@ scifi end10 回归期望逐值不变（本 Task 为行为中立的基础设施�
 - 曾尝试 `scifi --end 2` 与 `scifi --end 1` 真实 LLM smoke。两次均在生成/审查/修订链路中耗时过长，已中止以控制 API 成本；因此本任务**未声明** scifi end10 或两次自然退出真实 LLM 证据。
 - 实跑过程中确认 174 的日志关联字段已进入应用日志；后续 174 增补 `LiteLLM` logger 大小写压制后，console 已不再泄漏 DEBUG 请求/响应，只保留 WARNING。
 - 真实长窗口/短窗口最终回归仍应在 175 成本追踪与预算熔断落地后执行，避免无成本上限地重复烧实跑。
+
+### 归因探针（2026-07-18 dry probe，`.tmp/probe_173_exit_hang.py`，真实 API 单次调用 max_tokens=8）
+
+| 模式 | 非主线程残留 | 进程退出 |
+|---|---|---|
+| `instantiate`（仅 `get_llm()`） | 0 | 正常（exit=0） |
+| `call`（单次真实调用，不关闭） | 1（`asyncio_0`，非 daemon，alive） | 正常（exit=0） |
+| `call_close`（调用 + `aclose_llm_clients()`） | 1（同上 executor 线程） | 正常（exit=0） |
+
+结论：① 实例化不产生线程；② 真实调用产生**非 daemon** asyncio executor 工作线程——非 daemon 线程特征与 172k 挂死现场一致；③ 该线程属事件循环 default executor（非 client 资源，不应由 `aclose_llm_clients()` 清理），最小路径下 `asyncio.run()` 收尾的 `shutdown_default_executor` 会 join 它，**最小路径无法单独复现 172k 挂死**——172k 的 86 线程挂死发生在完整 pipeline 环境，嫌疑收敛到"default executor 之外的常驻资源"（长生命周期 aiosqlite 连接 / LangGraph checkpointer / litellm 内部 executor 的规模效应）。确证归因需全路径复现（scifi `--end 2` 自然退出观察），与自然退出验收一并挂起至 175 后补跑；在此不确定下，显式关闭 + force-exit 兜底保持正确防御姿态。
 
 ---
 

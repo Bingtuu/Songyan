@@ -3,10 +3,24 @@ from __future__ import annotations
 import json
 import logging
 
+import pytest
 import structlog
 from structlog.contextvars import bind_contextvars, clear_contextvars
 
 from songyan.utils.logging_setup import configure_logging, flush_logging_handlers
+
+
+@pytest.fixture(autouse=True)
+def _restore_logging_state():
+    """configure_logging 修改 root logger/structlog 全局状态，测试后必须恢复."""
+    root_logger = logging.getLogger()
+    old_level = root_logger.level
+    clear_contextvars()
+    yield
+    flush_logging_handlers(close=True)
+    root_logger.setLevel(old_level)
+    structlog.reset_defaults()
+    clear_contextvars()
 
 
 def _read_jsonl(path):

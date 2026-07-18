@@ -104,7 +104,7 @@ async def _maybe_close_resource(resource: Any, *, seen: set[int]) -> None:
             if inspect.isawaitable(result):
                 await result
             return
-        except (RuntimeError, OSError, ConnectionError, TypeError, ValueError) as exc:
+        except Exception as exc:  # 清理路径任何失败都不应传播
             logger.warning(
                 "llm.client_close_failed",
                 resource_type=type(resource).__name__,
@@ -132,7 +132,7 @@ async def _close_litellm_global_client(seen: set[int]) -> None:
             result = method()
             if inspect.isawaitable(result):
                 await result
-        except (RuntimeError, OSError, ConnectionError, TypeError, ValueError) as exc:
+        except Exception as exc:  # 清理路径任何失败都不应传播
             logger.warning(
                 "llm.litellm_global_close_failed",
                 method=method_name,

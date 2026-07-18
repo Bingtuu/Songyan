@@ -90,6 +90,27 @@ async def test_aclose_llm_clients_with_no_clients_is_noop() -> None:
     assert llm_client._get_llm_cached.cache_info().currsize == 0
 
 
+class _FakeBadCloseResource:
+    async def aclose(self) -> None:
+        raise KeyError("unexpected-close-error")
+
+
+@pytest.mark.asyncio
+async def test_aclose_llm_clients_swallows_unexpected_close_errors(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """关闭抛出未预期异常类型时不得传播（清理路径不屏蔽 pipeline 原异常）."""
+    _install_fake_litellm(monkeypatch)
+    llm_client.get_llm(temperature=0.3, max_tokens=64, timeout=5)
+    fake_client = _FakeChatLiteLLM.instances[0]
+    fake_client.async_client = _FakeBadCloseResource()
+
+    await llm_client.aclose_llm_clients()  # KeyError 不得传播
+
+    assert fake_client.closed is True  # client 自身关闭仍执行
+    assert llm_client._get_llm_cached.cache_info().currsize == 0
+
+
 def test_songyan_force_exit_env_alias(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("SONGYAN_FORCE_EXIT", "1")
 
