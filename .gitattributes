@@ -1,0 +1,16 @@
+# 行尾规范收进仓库版本控制，不再依赖各机器本地 core.autocrlf 配置。
+# 默认：文本文件由 git 自动判断，仓库内统一 LF，检出按本地配置转换。
+* text=auto
+
+# Windows 脚本强制 CRLF（PowerShell 对 LF 容忍但 CRLF 是平台惯例）
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Shell 脚本强制 LF（CRLF 会导致 bash 执行失败）
+*.sh text eol=lf
+
+# 二进制文件不做行尾转换
+*.png binary
+*.jpg binary
+*.db binary
