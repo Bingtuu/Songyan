@@ -34,7 +34,7 @@
 
 ### 内部生产就绪度审计要点（2026-07-18，十项）
 
-- **P0**：① 解释器退出挂死已复现两次（172k），代码零兜底；② 全仓库无一次 `structlog.configure`，`LOG_LEVEL` 是死配置，日志不落盘；③ 写完 100 章拿不到书稿（无 export 命令，8+ 任务脚本各复制一份 `_export_prose()`）；④ `pip install .` 成 wheel 即坏——`prompts/`、`genres/`、`creative_modes/`、`project_templates/` 不是 package data
+- **P0**：① 解释器退出挂死已复现两次（172k），代码零兜底；② 全仓库无一次 `structlog.configure`，`LOG_LEVEL` 是死配置，应用日志不落盘（已有 `logs/chapter_runs` 逐章 JSONL，但缺统一应用日志与事故关联字段）；③ 写完 100 章拿不到书稿（无 export 命令，8+ 任务脚本各复制一份 `_export_prose()`）；④ `pip install .` 成 wheel 即坏——`prompts/`、`genres/`、`creative_modes/`、`project_templates/` 等运行资源不是 package data
 - **P1**：成本追踪为零（`phase2_graph.py` 躺 `total_cost=0.0 # TODO`）；CLI 三坑（run 不回显 run_id、`--mode-id` 默认不回读项目 mode、README 表漏 `index` 命令）；无 CI 且 `tests/cli/test_cli.py` 4 个既有失败
 - **P2**：Profile 调参只有 Python API 无 CLI；五门判定器在 `.tmp/` 待收编；Windows 防卡协议只是文档未工具化
 
@@ -48,13 +48,13 @@ V9 通过 = A 组（地基）+ B 组（爬坡）同时满足，C 组（守护）
 
 | # | 判据 | 对应 Task |
 |---|------|-----------|
-| A1 | `pip install .`（非 `-e`）装出的 wheel 能直接跑通 `create-project --template scifi` + `run --chapters 1-3` | 178 |
-| A2 | `LOG_LEVEL` 生效；长跑日志落盘 `logs/`；单章事故现场可从日志 + DB 重建 | 174 |
+| A1 | `pip install .`（非 `-e`）装出的 wheel 在非仓库 cwd 能直接跑通 `create-project --template scifi` + `run --chapters 1-3` | 178 |
+| A2 | `LOG_LEVEL` 生效；应用日志落盘 `logs/app/`，并与既有 `logs/chapter_runs/` 逐章 JSONL 通过 `run_id/chapter/stage/version_id` 关联；单章事故现场可从应用日志 + run log + DB 重建 | 174 |
 | A3 | `songyan export --project-id <id>` 产出按弧/卷组织的纯净书稿（Markdown/txt） | 177 |
-| A4 | LLM 调用 token/成本逐条落库；`songyan report` 含成本视图（per run/chapter/agent）；run 级成本预算硬上限，耗尽优雅停跑且可 `--resume` | 175 |
+| A4 | LLM 调用 token/成本逐条落库；调用上下文能追溯到 run/chapter/agent；`songyan report` 含成本视图（per run/chapter/agent）；run 级成本预算硬上限，耗尽优雅停跑且可 `--resume` | 175 |
 | A5 | 解释器退出挂死有代码级兜底；连续两次短窗口实跑进程自然退出 | 173 |
-| A6 | CI 上线（ruff + mypy + pytest 分层）；`tests/cli` 4 个既有失败修复，全量绿 | 181 |
-| A7 | 五门判定器 + 段审计收编为 `scripts/` 正式工具并参数化；判定逻辑一行不改，xuanhuan/wuxia 既有 Ch100 DB 重放结果与归档报告一致 | 182 |
+| A6 | CI 上线（ruff + mypy + pytest 分层）；`tests/cli` 不再被默认跳过或由 CI 单独覆盖，4 个既有失败修复，全量绿 | 181 |
+| A7 | 五门判定器 + 段审计收编为 `scripts/` 正式工具并参数化；五门判定函数口径不改（I/O、路径、参数化可重构），xuanhuan/wuxia 既有 Ch100 DB 重放结果与归档报告一致 | 182 |
 | A8 | `songyan profile show/diff/upsert --genre <g>` 可用；标定迭代全程不改代码 | 183 |
 
 ### B 组 · urban Ch100 判据（冻结口径沿用 172b §1.1）
@@ -72,8 +72,9 @@ V9 通过 = A 组（地基）+ B 组（爬坡）同时满足，C 组（守护）
 
 - scifi `--end 10` 逐值回归：任何运行时/工具链改动后，无 Profile 体裁旧行为不变
 - CED 口径守护：consistency-only、merged/source、正文证据；不计文学 craft，不计 `rule-mr-*` 聚合项
+- T9 口径守护：诊断报告可记录非系统性原因，但 PASS 样本必须 clean rerun 后 T9=0，不接受“解释性豁免”替代通过
 - 机制修复后诊断 DB 不作终判样本，必须 clean rerun
-- 不改五门冻结判定口径本身；五门工具收编搬运时判定逻辑一行不改
+- 不改五门冻结判定口径本身；五门工具收编时预算/CED/overdue/health/completeness 的判定函数不改，I/O、路径、参数化和报告渲染可以重构，并以双体裁 DB 重放证明无漂移
 
 ---
 
@@ -86,8 +87,8 @@ V9 通过 = A 组（地基）+ B 组（爬坡）同时满足，C 组（守护）
 | Task | 名称 | 状态 | 内容要点 | 验收要点 |
 |------|------|:----:|----------|----------|
 | 173 | 解释器退出挂死修复 | ◻ | 最小复现诊断归因（疑 litellm/httpx 非 daemon 线程）→ 真修（pipeline 结束显式关闭 client）→ 兜底（atexit 清理 + 可选 `--force-exit` 在结果落盘后 `os._exit`） | 真修与兜底分开验收；连续两次短窗口实跑进程自然退出 |
-| 174 | 日志体系落地 | ◻ | `logging_setup.py`：CLI/harness 入口 configure 一次；`LOG_LEVEL` 修活；console 人类可读 + 文件 JSONL 双写；litellm/httpx 等第三方 WARNING 起 | 长跑后单章事故现场可从日志 + DB 重建 |
-| 175 | 成本追踪与预算熔断 | ◻ | LLM 层统一读 response usage 落新表 `llm_call_usage`（run/chapter/agent/model/tokens/cost/latency）；接 `utils/cost_estimator.py`；真实成本接入既有 `LLMBudgetExceededError` 路径；新增 `run_cost_budget` 配置（默认 0=不限）；`songyan report` 成本视图 | 实跑后 report 能按 run/chapter/agent 拆成本；预算耗尽优雅停跑可 resume |
+| 174 | 日志体系落地 | ◻ | `logging_setup.py`：CLI/harness 入口 configure 一次；`LOG_LEVEL` 修活；console 人类可读 + `logs/app/*.jsonl` 文件双写；litellm/httpx 等第三方 WARNING 起；所有关键日志带 `run_id/chapter_number/stage/version_id/db_path`，并与既有 `logs/chapter_runs/*.jsonl` 对齐 | 长跑后单章事故现场可从应用日志 + run log + DB 重建 |
+| 175 | 成本追踪与预算熔断 | ◻ | LLM 层引入 `LLMCallContext`/ContextVar 传递 run/chapter/agent/stage；统一读 response usage 落新表 `llm_call_usage`（run/chapter/agent/stage/model/tokens/cost/latency/retry_count）；usage 缺失时走 `utils/cost_estimator.py` fallback 并标记来源；真实成本接入既有 `LLMBudgetExceededError` 路径；新增 `run_cost_budget` 配置（默认 0=不限），与现有 `llm_run_call_budget` 调用次数预算分开；`songyan report` 成本视图 | 实跑后 report 能按 run/chapter/agent 拆成本；预算耗尽优雅停跑可 resume；重试不重复计费或明确记录重试成本 |
 | 176 | Windows 防卡 wrapper 工具化 | ◻ | V5 文档协议 → `scripts/run_with_timeout.ps1`（PowerShell Job + 硬超时） | 用 wrapper 跑通一次短窗口实跑 |
 
 ### V9.2 交付与发布
@@ -95,16 +96,16 @@ V9 通过 = A 组（地基）+ B 组（爬坡）同时满足，C 组（守护）
 | Task | 名称 | 状态 | 内容要点 | 验收要点 |
 |------|------|:----:|----------|----------|
 | 177 | songyan export 正文导出 | ◻ | accepted head 正文 + 弧/卷元数据；`--format md/txt --by arc/flat`；收编任务脚本里的 `_export_prose()` 复制粘贴为正式 service | 从既有 Ch100 DB 导出完整可读书稿 |
-| 178 | wheel 打包修复 | ◻ | `prompts/`、`genres/`、`creative_modes/`、`project_templates/` 移入 `src/songyan/` 包内（`prompts/loader.py` 已用 `Path(__file__)` 相对定位，移包内后路径自然正确），全量扫描更新引用 | 干净 venv `pip install .` 跑通 scifi 1-3 章；全量测试绿 |
+| 178 | wheel 打包与资源加载修复 | ◻ | 将 `prompts/`、`genres/`、`creative_modes/`、`project_templates/`、`prompts/literary_plugins/` 等运行资源纳入 wheel；优先用 `importlib.resources` 或等价 package-data 方案统一 loader，保留测试可注入外部目录能力；全量扫描并更新所有根目录相对路径引用，不把“移动目录后自然正确”作为前提 | 干净 venv `pip install .` 后，在非仓库 cwd 跑通资源枚举、`create-project --template scifi`、scifi 1-3 章；7 个 genre、4 个 mode、全部模板、prompt cards、literary plugins 可加载；全量测试绿 |
 | 179 | CLI 体验修复 | ◻ | run 成功回显 run_id；`run --mode-id` 默认回读 `project.mode_id`；README CLI 表补 `index` 与全参数 | 三坑各有测试或实跑证据 |
 | 180 | songyan doctor 环境自检 | ◻ | .env / API key 连通性 / DB 可写 / 模板目录完整性；key 错误在首次 LLM 调用前给可读提示 | 构造坏环境逐项验证提示质量 |
-| 181 | CI 上线与测试清零 | ◻ | GitHub Actions（ruff + mypy + pytest 分层：unit 默认、integration 可选）；修 `tests/cli` 4 个既有失败；README tests badge 改生成机制 | CI 全绿；badge 不再手改 |
+| 181 | CI 上线与测试清零 | ◻ | GitHub Actions（ruff + mypy + pytest 分层：unit 默认、integration 可选）；修 `tests/cli` 4 个既有失败；移除 `pyproject.toml` 对 `tests/cli` 的默认忽略或在 CI 中单独强制运行；README tests badge 改生成机制 | CI 全绿；本地 `python -m pytest tests/ -q` 与 CI 覆盖口径一致或差异显式文档化；badge 不再手改 |
 
 ### V9.3 爬坡工具链
 
 | Task | 名称 | 状态 | 内容要点 | 验收要点 |
 |------|------|:----:|----------|----------|
-| 182 | 五门判定器与段审计收编 | ◻ | `.tmp/vdim_compare.py` / `.tmp/segment_audit.py` → `scripts/`，`--genre/--db/--baseline/--up-to` 参数化；sci-fi 基线 JSON 迁出 `.tmp/` 到正式位置；判定逻辑零改动 | xuanhuan/wuxia 既有 Ch100 DB 重放，判定结果与归档报告一致 |
+| 182 | 五门判定器与段审计收编 | ◻ | `.tmp/vdim_compare.py` / `.tmp/segment_audit.py` → `scripts/`，`--genre/--db/--baseline/--up-to` 参数化；sci-fi 基线 JSON 迁出 `.tmp/` 到正式位置；预算/CED/overdue/health/completeness 判定函数零口径改动，I/O、路径解析、报告渲染可重构 | xuanhuan/wuxia 既有 Ch100 DB 重放，判定结果与归档报告一致；参数化版本与 `.tmp` 原脚本同库输出逐项对齐 |
 | 183 | Profile 调参 CLI | ◻ | `songyan profile show/diff/upsert --genre <g>`，`GenreRuntimeProfileRepository` 既有 API 薄封装；三列渲染（注册表基线/DB 覆盖/生效值）；文档化 172j 降回边界 | 一次 DB 覆盖调参全程不改代码完成 |
 | 184 | genres/creative_modes JSON Schema | ◻ | 参照 `project_templates/_schema.json`；加载时校验（可选 strict） | 7+4 个 JSON 全部过校验；坏样本被拦 |
 
@@ -112,9 +113,9 @@ V9 通过 = A 组（地基）+ B 组（爬坡）同时满足，C 组（守护）
 
 | Task | 名称 | 状态 | 内容要点 | 验收要点 |
 |------|------|:----:|----------|----------|
-| 185 | urban 短窗口标定实跑 | ◻ | base_budget 候选 12000 → 13000 →（必要时）15000 实跑标定；先确认 resolve 机制生效（`foreshadowing_resolved` 事件 > 0）再按实测 plant 密度定 floor 初值；T9=6 逐条复核（真问题修写作/规则侧，非系统性记录豁免理由）；标定值落注册表后跑 scifi end10 回归 | end15 emergency 不连触、峰值 <1.0、T9=0；标定值与证据落盘 |
+| 185 | urban 短窗口标定实跑 | ◻ | base_budget 候选 12000 → 13000 →（必要时）15000 实跑标定；先确认 resolve 机制生效（`foreshadowing_resolved` 事件 > 0）再按实测 plant 密度定 floor 初值；T9=6 逐条复核（真问题修写作/规则侧，非系统性原因只进诊断报告，不计 PASS）；标定迭代走 183 CLI，标定值落注册表后跑 scifi end10 回归 | end15 emergency 不连触、峰值 <1.0、clean rerun T9=0；标定值与证据落盘 |
 
-（185 不依赖地基任务，可在 V9.3 后期并行启动；调参迭代走 183 的 CLI，不改代码）
+（185 不依赖全部 A 组完成，但有硬前置：173/174 完成后才允许真实 LLM 实跑；调参迭代走 183 的 CLI，不改代码；长窗口或高成本标定前应先完成 175。）
 
 ### V9.5 urban Ch100 爬坡
 
@@ -173,18 +174,19 @@ V9 通过 = A 组（地基）+ B 组（爬坡）同时满足，C 组（守护）
 V9.1  173 ──► 174 ──► 175 ──► 176          （长跑可靠性，相互弱依赖，按序执行）
 V9.2  177 ──► 178 ──► 179 ──► 180 ──► 181  （交付与发布；178 打包为连锁影响最大单项，独立验收）
 V9.3  182 ──► 183 ──► 184                  （工具链收编；182 重放回归依赖既有 Ch100 DB 在位）
-V9.4  185                                  （urban 标定；不依赖地基，可在 V9.3 后期并行启动）
+V9.4  185                                  （urban 标定；硬前置 173/174，调参前置 183；可在 V9.3 后期并行启动）
 V9.5  186 ──► 187                          （任务书评审准入爬坡；撞墙修复 187.p/q…）
 V9.6  188                                  （收口）
 主链：V9.1 → V9.2 → V9.3 → V9.4 → V9.5 → V9.6；scifi end10 回归贯穿全程
 ```
 
-- **173/174 是一切实跑的前置**：挂死无兜底、日志不落盘时跑标定实跑，等于重演 172k 的事故场景
-- **185 为什么可以并行**：短窗口标定只依赖既有 `scripts/run_172a7_genre_validation.py`，不等任何地基；但调参迭代应走 183 的 CLI，故排在 V9.3 后期
+- **173/174 是一切真实 LLM 实跑的硬前置**：挂死无兜底、应用日志不落盘时跑标定实跑，等于重演 172k 的事故场景；无 LLM 的纯重放/静态工具开发不受此限制
+- **175 是长窗口与高成本标定的前置**：185 的短窗口摸底可在 173/174 后启动，但进入多轮标定或 187 Ch100 前必须具备成本追踪与预算熔断
+- **185 为什么可以并行**：短窗口标定依赖既有 `scripts/run_172a7_genre_validation.py`，不等全部交付发布任务；但调参迭代应走 183 的 CLI，故排在 V9.3 后期
 - **先补任务书再开跑**（沿用 V8 治理规则 4）：186 评审通过前不得启动 187
 - **overdue 墙先查 resolve 再调 floor**：禁止用调 floor 掩盖根因（172c.r 纪律）
 - **机制修复后必须 clean rerun**：诊断 DB 一律不作终判样本（172c 纪律）
-- **五门工具收编零口径改动**：182 搬运只动位置与参数化，判定逻辑一行不改，双体裁 DB 重放回归作证
+- **五门工具收编零口径改动**：182 搬运可重构 I/O、路径解析和报告渲染，但预算/CED/overdue/health/completeness 判定函数不改，双体裁 DB 重放回归作证
 - **质量同标，不放宽口径**：urban 的 T9/health/overdue/CED 与 sci-fi 用同一套冻结口径
 - **段边界早停纪律**：任一段五门不过就不继续烧后续章节，先冻结现场再路由定点修复
 - **任务编号治理沿用 V8 规则**：编号是 trace id 不是执行顺序；撞墙修复字母后缀只在父任务内有序；不为治理本身新增数字任务号
@@ -212,10 +214,10 @@ V9.6  188                                  （收口）
 
 | 风险 | 对策 |
 |------|------|
-| API 成本：标定 + 爬坡约 100+ 章实跑 | 175 成本追踪先落地；沿用低成本窗口纪律；标定分批短窗口 |
+| API 成本：标定 + 爬坡约 100+ 章实跑 | 173/174 后只做低成本短窗口摸底；175 成本追踪落地后再进入多轮标定与 Ch100；沿用分批窗口纪律 |
 | 挂死归因错误：兜底掩盖真因，长跑积累资源泄漏 | 173 诊断先行；真修与兜底分开验收 |
-| 178 目录移动连锁破坏：四个数据目录入包碰大量引用 | 独立任务；全量测试 + scifi 短窗口实跑回归；移动前后逐值对照 |
-| 182 收编口径漂移 | 判定逻辑一行不改；xuanhuan/wuxia 双 DB 重放回归 |
+| 178 资源打包连锁破坏：运行资源入 wheel 碰大量根目录相对路径 | 独立任务；优先统一资源 loader；全量测试 + scifi 短窗口实跑回归；非仓库 cwd 加载矩阵逐项验证 |
+| 182 收编口径漂移 | 判定函数不改；I/O 重构与口径函数分离；xuanhuan/wuxia 双 DB 重放回归 |
 | urban 出现新墙（都市对话密度、现代设定一致性为未知域） | 172c 纪律：段边界早停、定点修复、clean rerun；预期预算压力小于 xuanhuan（genre_rules token −1.5%），主要不确定性在 T9 与伏笔密度 |
 | 实跑进程退出挂死（172k 已复现两次） | 173 修复前不跑长窗口；短窗口实跑后人工核对进程状态 |
 
