@@ -18,9 +18,11 @@ from songyan.creative_modes.registry import (
 )
 from songyan.db.continuity_repo import ContinuityReportRepository
 from songyan.db.human_mark_repo import HumanMarkRepository
+from songyan.db.llm_call_usage_repo import LlmCallUsageRepository
 from songyan.db.migrations import init_schema
 from songyan.db.narrative_repo import NarrativeRepository
 from songyan.db.repository import ProjectRepository
+from songyan.evals.cost_report import render_cost_section
 from songyan.evals.streaming_report import generate_report, read_run_logs, write_report
 from songyan.exceptions import SongyanError
 from songyan.genres.loader import list_genre_profiles, load_genre_profile
@@ -555,6 +557,32 @@ def run(
 # ---------------------------------------------------------------------------
 
 
+def _render_cost_section(run_id: str) -> str:
+    """读取 llm_call_usage 遥测并渲染 report 成本段（Task 175 阶段 C）.
+
+    取数失败（如旧库缺 llm_call_usage 表、DB 不可用）只告警并降级为
+    「无成本数据」提示——成本段是遥测视图，报告主流程不可断。
+    """
+
+    async def _fetch() -> tuple[dict[str, Any], dict[str, int]]:
+        repo = LlmCallUsageRepository()
+        aggregate = await repo.aggregate_for_run(run_id)
+        source_stats = await repo.source_stats_for_run(run_id)
+        return aggregate, source_stats
+
+    try:
+        aggregate, source_stats = asyncio.run(_fetch())
+    except Exception as exc:  # 遥测视图降级：旧库缺表 / DB 不可用，不阻断报告
+        click.echo(f"警告: 成本数据读取失败（{exc}），成本段按无数据渲染")
+        aggregate = {"per_chapter": [], "per_agent": []}
+        source_stats = {
+            "total_calls": 0,
+            "token_estimate_calls": 0,
+            "cost_pricing_estimate_calls": 0,
+        }
+    return "\n" + render_cost_section(aggregate, source_stats)
+
+
 @cli.command(name="report")
 @click.option(
     "--run-id",
@@ -609,6 +637,9 @@ def report_cmd(
             )
 
         report_md = generate_report(logs, chapter_range=chapter_range)
+
+        # Task 175 阶段 C: 追加 LLM 成本视图段（SQLite usage 遥测；取数失败降级，不阻断报告）
+        report_md += _render_cost_section(run_id)
 
         # 一致性检查警告
         missing_budget = [

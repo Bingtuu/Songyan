@@ -143,3 +143,41 @@ class LlmCallUsageRepository:
         )
         rows = await cursor.fetchall()
         return [dict(row) for row in rows]
+
+    async def source_stats_for_run(self, run_id: str) -> dict[str, int]:
+        """token_source / cost_source 分布计数（report 成本段的估算占比分子分母）.
+
+        Returns:
+            {"total_calls": 总行数（分母）,
+             "token_estimate_calls": token_source='estimate' 行数（分子）,
+             "cost_pricing_estimate_calls": cost_source='pricing_estimate' 行数（分子）}
+            无记录的 run 三个值全为 0，不报错（旧 run 无 usage 数据的常态路径）。
+        """
+        async with get_db() as conn:
+            cursor = await conn.execute(
+                """SELECT COUNT(*) AS total_calls,
+                          COALESCE(
+                              SUM(CASE WHEN token_source = 'estimate' THEN 1 ELSE 0 END),
+                              0
+                          ) AS token_estimate_calls,
+                          COALESCE(
+                              SUM(CASE WHEN cost_source = 'pricing_estimate' THEN 1 ELSE 0 END),
+                              0
+                          ) AS cost_pricing_estimate_calls
+                   FROM llm_call_usage
+                   WHERE run_id = ?""",
+                (run_id,),
+            )
+            row = await cursor.fetchone()
+        # 聚合查询无 GROUP BY 必返回一行；row 为 None 只是防御性兜底
+        if row is None:
+            return {
+                "total_calls": 0,
+                "token_estimate_calls": 0,
+                "cost_pricing_estimate_calls": 0,
+            }
+        return {
+            "total_calls": int(row[0]),
+            "token_estimate_calls": int(row[1]),
+            "cost_pricing_estimate_calls": int(row[2]),
+        }

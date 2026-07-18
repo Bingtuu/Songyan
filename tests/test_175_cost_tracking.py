@@ -24,10 +24,15 @@ from songyan.db.repository import (
     ChapterVersionRepository,
     ProjectRepository,
 )
+from songyan.evals.cost_report import render_cost_section
 from songyan.exceptions import LLMBudgetExceededError, LLMError
 from songyan.llm import client as llm_client
 from songyan.models import ChapterHead, ChapterVersion, ProjectRunState, ProjectSetting
-from songyan.utils.cost_estimator import count_tokens, estimate_cost_from_tokens
+from songyan.utils.cost_estimator import (
+    count_tokens,
+    estimate_cost_from_tokens,
+    format_cost_estimate,
+)
 from songyan.workflows.phase2_graph import _refresh_run_total_cost, run_project_pipeline
 
 
@@ -1052,3 +1057,130 @@ class TestRefreshRunTotalCost:
         await _refresh_run_total_cost(run_state)
 
         assert run_state.total_cost == pytest.approx(0.03)
+
+
+# --------------------------------------------------------------------------- #
+# 阶段 C：report 成本段渲染（纯函数 render_cost_section，数据进 → markdown 出）
+# --------------------------------------------------------------------------- #
+def _usage_group(
+    key: str,
+    value: Any,
+    *,
+    call_count: int,
+    cost: float,
+    prompt: int = 0,
+    completion: int = 0,
+) -> dict[str, Any]:
+    """构造 aggregate_for_run 的单行分组结果（per_chapter / per_agent 同构）."""
+    return {
+        key: value,
+        "call_count": call_count,
+        "prompt_tokens": prompt,
+        "completion_tokens": completion,
+        "cost_cny": cost,
+    }
+
+
+def _stats(total: int, token_est: int = 0, cost_est: int = 0) -> dict[str, int]:
+    """构造 source_stats_for_run 的返回（total_calls 为占比分母）."""
+    return {
+        "total_calls": total,
+        "token_estimate_calls": token_est,
+        "cost_pricing_estimate_calls": cost_est,
+    }
+
+
+class TestRenderCostSection:
+    """render_cost_section：aggregate + source_stats → markdown 成本段，不碰 DB."""
+
+    def _aggregate(self) -> dict[str, list[dict[str, Any]]]:
+        return {
+            "per_chapter": [
+                _usage_group(
+                    "chapter_number", None,
+                    call_count=1, cost=0.002, prompt=100, completion=50,
+                ),
+                _usage_group(
+                    "chapter_number", 1,
+                    call_count=2, cost=0.010, prompt=200, completion=100,
+                ),
+                _usage_group(
+                    "chapter_number", 2,
+                    call_count=1, cost=0.006, prompt=150, completion=80,
+                ),
+            ],
+            "per_agent": [
+                _usage_group(
+                    "agent", "writer",
+                    call_count=2, cost=0.014, prompt=300, completion=150,
+                ),
+                _usage_group(
+                    "agent", "llm_auditor",
+                    call_count=2, cost=0.004, prompt=150, completion=80,
+                ),
+            ],
+        }
+
+    def test_renders_all_segments(self) -> None:
+        """有数据：run 总额 / 章节数 / 每章均 / per agent / 两个估算占比全部渲染."""
+        text = render_cost_section(self._aggregate(), _stats(4, token_est=1, cost_est=2))
+
+        assert "## 成本视图" in text
+        # run 总成本 = 0.002 + 0.010 + 0.006 = 0.018（含 run 级分组）
+        assert f"**run 总成本**: {format_cost_estimate(0.018)}" in text
+        # 章节数只计非 NULL 分组，run 级调用次数以注释呈现
+        assert "**章节数**: 2（另有 run 级调用 1 次）" in text
+        # 每章均成本 = run 总成本 / 章节数 = 0.009
+        assert f"**每章均成本**: {format_cost_estimate(0.009)}" in text
+        # 两个估算占比：分子/分母齐全（估算占比高 = usage/成本提取要修的早期信号）
+        assert "25.0% (1/4)" in text
+        assert "50.0% (2/4)" in text
+        # per agent 成本分布表
+        assert "| writer | 2 | 300 | 150 |" in text
+        assert "| llm_auditor | 2 | 150 | 80 |" in text
+
+    def test_no_data_renders_hint_without_tables(self) -> None:
+        """无 usage 数据的旧 run：输出「无成本数据」提示，不渲染表格，不报错."""
+        text = render_cost_section({"per_chapter": [], "per_agent": []}, _stats(0))
+
+        assert "## 成本视图" in text
+        assert "无成本数据" in text
+        assert "|" not in text
+
+    def test_null_chapter_group_rendered_as_run_level(self) -> None:
+        """chapter_number=None 分组（run 级调用）渲染为「run 级」，不出现 None 字样."""
+        text = render_cost_section(self._aggregate(), _stats(4))
+
+        assert "| run 级 | 1 | 100 | 50 |" in text
+        assert "| Ch1 | 2 | 200 | 100 |" in text
+        assert "None" not in text
+
+    def test_per_agent_top_n_merges_rest(self) -> None:
+        """>top_n 个 agent：按成本降序取 Top N，其余合并为一行「其他（k 个 agent）」."""
+        per_agent = [
+            _usage_group(
+                "agent", f"agent-{i}",
+                call_count=1, cost=0.001 * i, prompt=10 * i, completion=5 * i,
+            )
+            for i in range(1, 8)  # 7 个 agent，成本 0.001..0.007
+        ]
+        aggregate = {
+            "per_chapter": [_usage_group("chapter_number", 1, call_count=7, cost=0.028)],
+            "per_agent": per_agent,
+        }
+
+        text = render_cost_section(aggregate, _stats(7), top_n=3)
+
+        assert "（Top 3）" in text
+        # 成本降序前三：agent-7 / agent-6 / agent-5
+        assert "| agent-7 |" in text
+        assert "| agent-6 |" in text
+        assert "| agent-5 |" in text
+        assert "| agent-4 |" not in text
+        # 其余 4 个合并：call_count=4、prompt=100、completion=50、cost=0.010
+        assert f"| 其他（4 个 agent） | 4 | 100 | 50 | {format_cost_estimate(0.010)} |" in text
+
+    def test_per_agent_within_top_n_has_no_others_row(self) -> None:
+        """agent 数 ≤ top_n 时不出现「其他」合并行."""
+        text = render_cost_section(self._aggregate(), _stats(4))
+        assert "其他" not in text

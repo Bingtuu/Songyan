@@ -8,7 +8,11 @@ import aiosqlite
 import pytest
 from structlog.testing import capture_logs
 
-from songyan.db.llm_call_usage_repo import LlmCallUsageRepository
+from songyan.db.llm_call_usage_repo import (
+    CostSource,
+    LlmCallUsageRepository,
+    TokenSource,
+)
 from songyan.db.migrations import init_schema, run_migrations, verify_schema
 
 pytestmark = pytest.mark.asyncio
@@ -251,3 +255,45 @@ class TestAggregateForRun:
         repo = LlmCallUsageRepository()
         result = await repo.aggregate_for_run("no-such-run")
         assert result == {"per_chapter": [], "per_agent": []}
+
+
+class TestSourceStatsForRun:
+    """source_stats_for_run：token_source / cost_source 分布计数（report 估算占比的分子分母）."""
+
+    async def test_mixed_sources_counts_numerators_and_denominator(
+        self, test_db: Path
+    ) -> None:
+        """混合 token_source / cost_source 行：两个占比的分子分母都正确，其他 run 不计入."""
+        repo = LlmCallUsageRepository()
+        rows: list[tuple[str, TokenSource, CostSource]] = [
+            ("run-a", "response", "provider_cost"),
+            ("run-a", "estimate", "pricing_estimate"),
+            ("run-a", "response", "pricing_estimate"),
+            # 两个维度独立计数：estimate 的 token 也可能拿到 provider_cost
+            ("run-a", "estimate", "provider_cost"),
+            # 其他 run 的噪声行，不应计入
+            ("run-b", "estimate", "pricing_estimate"),
+        ]
+        for run_id, token_source, cost_source in rows:
+            await repo.record(
+                run_id=run_id,
+                model="kimi-k2",
+                token_source=token_source,
+                cost_source=cost_source,
+            )
+
+        stats = await repo.source_stats_for_run("run-a")
+
+        assert stats["total_calls"] == 4
+        assert stats["token_estimate_calls"] == 2
+        assert stats["cost_pricing_estimate_calls"] == 2
+
+    async def test_empty_run_returns_zeros(self, test_db: Path) -> None:
+        """无 usage 行的旧 run 返回零值（分子分母均为 0），不报错."""
+        repo = LlmCallUsageRepository()
+        stats = await repo.source_stats_for_run("no-such-run")
+        assert stats == {
+            "total_calls": 0,
+            "token_estimate_calls": 0,
+            "cost_pricing_estimate_calls": 0,
+        }

@@ -301,7 +301,7 @@ python scripts/run_172b_ch100_climb.py --to 100
 | `songyan create-project [--template <id>] [--outline-file <path>]` | 交互式或从体裁模板创建项目 |
 | `songyan list-projects` | 列出所有项目 |
 | `songyan run --project-id <id> --chapters 1-10 [--auto-confirm] [--resume]` | 生成指定章节范围；`--resume` 断点续跑 |
-| `songyan report` | 项目进度与质量报告 |
+| `songyan report --run-id <id>` | 流式验证报告（含 LLM 成本视图：总额/每章均/per agent/估算占比） |
 | `songyan metrics` | 质量度量指标 |
 | `songyan mark add/list/remove/update-priority` | 人工标记（continuity 修复提示）管理 |
 
