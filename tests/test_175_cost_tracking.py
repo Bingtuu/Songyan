@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import asyncio
 import sys
 import types
 from importlib.machinery import ModuleSpec
@@ -16,6 +17,7 @@ from structlog.contextvars import bind_contextvars, reset_contextvars
 
 from songyan.config import settings
 from songyan.db.llm_call_usage_repo import LlmCallUsageRepository
+from songyan.exceptions import LLMError
 from songyan.llm import client as llm_client
 from songyan.utils.cost_estimator import count_tokens, estimate_cost_from_tokens
 
@@ -46,9 +48,14 @@ class _FakeChatLiteLLM:
 
     async def ainvoke(self, messages: list[Any]) -> Any:
         item = self.responses.pop(0)
+        if item is _HANG:
+            await asyncio.Event().wait()  # 永不完成，直到外部取消
         if isinstance(item, Exception):
             raise item
         return item
+
+
+_HANG = object()
 
 
 @pytest.fixture(autouse=True)
@@ -60,6 +67,20 @@ async def _clean_state() -> Any:
     reset_contextvars()
     _FakeChatLiteLLM.responses.clear()
     await llm_client.aclose_llm_clients()
+
+
+# 模块导入时捕获真实 helper（conftest 的 mute 发生在每个测试运行时，此刻未 patch）
+_REAL_RECORD_USAGE = llm_client._record_llm_call_usage
+
+
+@pytest.fixture(autouse=True)
+def _restore_llm_call_telemetry(monkeypatch: pytest.MonkeyPatch) -> None:
+    """豁免 tests/conftest.py 的遥测 mute：本模块验证的就是真实落库路径.
+
+    conftest autouse fixture 先于本 fixture 执行（同 scope 下 conftest 优先），
+    此处重新绑回真实 `_record_llm_call_usage`，teardown 由同一 monkeypatch 统一还原。
+    """
+    monkeypatch.setattr(llm_client, "_record_llm_call_usage", _REAL_RECORD_USAGE)
 
 
 def _install_fake_litellm(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -363,10 +384,125 @@ def _find_unbound_call_sites(path: Path, root: Path) -> list[str]:
 
 
 def test_all_agent_call_llm_sites_bind_agent() -> None:
-    """src/songyan/agents/** 中每个 call_llm( 调用点，所在函数或其外层入口必须绑 agent."""
+    """src/songyan/agents/** 中每个 call_llm( 调用点，所在函数或其外层入口必须绑 agent.
+
+    局限：只静态检查绑定的存在性（调用点任一层外层函数含 bind_contextvars(agent=...)），
+    不校验 agent 绑定值与模块的对应关系，也不做运行时调用顺序/可达性分析。
+    """
     project_root = Path(__file__).resolve().parents[1]
     agents_root = project_root / "src" / "songyan" / "agents"
     violations: list[str] = []
     for path in sorted(agents_root.rglob("*.py")):
         violations.extend(_find_unbound_call_sites(path, agents_root))
     assert violations == [], f"以下 call_llm 调用点缺少 agent 绑定: {violations}"
+
+
+# --------------------------------------------------------------------------- #
+# A2 review 修复回归：取消落行 + 提取路径补盲
+# --------------------------------------------------------------------------- #
+class TestCancelledAttemptRecording:
+    async def test_cancelled_attempt_recorded(
+        self, monkeypatch: pytest.MonkeyPatch, test_db: Path
+    ) -> None:
+        """in-flight 尝试被取消（总超时/外部取消）→ success=0 + cancelled/timeout 落行."""
+        _install_fake_litellm(monkeypatch)
+        _FakeChatLiteLLM.responses.append(_HANG)
+
+        task = asyncio.create_task(llm_client.call_llm("prompt"))
+        await asyncio.sleep(0.05)  # 让调用进入 ainvoke
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+
+        rows = await _fetch_rows(test_db)
+        assert len(rows) == 1
+        row = rows[0]
+        assert row["success"] == 0
+        assert "cancel" in row["error"].lower()
+        assert row["prompt_tokens"] == 0
+        assert row["completion_tokens"] == 0
+        assert row["latency_ms"] >= 0
+
+
+class TestExtractionEdgeCases:
+    async def test_cache_read_from_langchain_usage_metadata(
+        self, monkeypatch: pytest.MonkeyPatch, test_db: Path
+    ) -> None:
+        """langchain input_token_details.cache_read → cached_tokens（miss 无来源为 NULL）."""
+        _install_fake_litellm(monkeypatch)
+        _FakeChatLiteLLM.responses.append(
+            _FakeResponse(
+                usage_metadata={
+                    "input_tokens": 100,
+                    "output_tokens": 50,
+                    "input_token_details": {"cache_read": 60},
+                }
+            )
+        )
+
+        await llm_client.call_llm("prompt")
+
+        row = (await _fetch_rows(test_db))[0]
+        assert row["token_source"] == "response"
+        assert row["cached_tokens"] == 60
+        assert row["cache_miss_tokens"] is None
+
+    async def test_usage_from_response_metadata_usage_key(
+        self, monkeypatch: pytest.MonkeyPatch, test_db: Path
+    ) -> None:
+        """response_metadata 的备选 "usage" 键 → token_source='response'."""
+        _install_fake_litellm(monkeypatch)
+        _FakeChatLiteLLM.responses.append(
+            _FakeResponse(
+                response_metadata={
+                    "usage": {"prompt_tokens": 90, "completion_tokens": 40}
+                }
+            )
+        )
+
+        await llm_client.call_llm("prompt")
+
+        row = (await _fetch_rows(test_db))[0]
+        assert row["token_source"] == "response"
+        assert row["prompt_tokens"] == 90
+        assert row["completion_tokens"] == 40
+
+    async def test_extraction_failure_records_zero_estimate(
+        self, monkeypatch: pytest.MonkeyPatch, test_db: Path
+    ) -> None:
+        """usage 提取抛异常 → 记零值 estimate，call_llm 正常返回."""
+
+        class _ExplodingResponse:
+            content = "explode-text"
+
+            @property
+            def usage_metadata(self) -> Any:
+                raise RuntimeError("boom")
+
+        _install_fake_litellm(monkeypatch)
+        _FakeChatLiteLLM.responses.append(_ExplodingResponse())
+
+        result = await llm_client.call_llm("prompt")
+
+        assert result == "explode-text"
+        row = (await _fetch_rows(test_db))[0]
+        assert row["success"] == 1
+        assert row["token_source"] == "estimate"
+        assert row["cost_source"] == "pricing_estimate"
+        assert row["prompt_tokens"] == 0
+        assert row["completion_tokens"] == 0
+        assert row["cost_cny"] == pytest.approx(0.0)
+
+    async def test_error_truncated_to_500_chars(
+        self, monkeypatch: pytest.MonkeyPatch, test_db: Path
+    ) -> None:
+        """失败尝试的 error 摘要截断到 500 字符."""
+        _install_fake_litellm(monkeypatch)
+        _FakeChatLiteLLM.responses.append(ConnectionError("x" * 600))
+
+        with pytest.raises(LLMError, match="LLM 调用失败"):
+            await llm_client.call_llm("prompt", max_retries=1)
+
+        row = (await _fetch_rows(test_db))[0]
+        assert row["success"] == 0
+        assert len(row["error"]) == 500

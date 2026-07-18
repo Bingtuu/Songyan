@@ -48,6 +48,7 @@ async def retry_with_backoff(
     last_exception: Exception | None = None
 
     for attempt in range(max_retries):
+        # on_attempt 必须轻量且不抛异常：调用处无防护，抛出会打断重试循环
         if on_attempt is not None:
             on_attempt(attempt)
         try:

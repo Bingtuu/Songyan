@@ -57,6 +57,11 @@ def get_llm_call_count() -> int:
     return _llm_call_count.get(0)
 
 
+def _resolve_model() -> str:
+    """解析当前模型名（settings 优先，环境变量兜底）；get_llm 与遥测路径共用."""
+    return settings.llm_model or os.getenv("LLM_MODEL", "deepseek-chat")
+
+
 def _extract_retry_after(exc: Exception) -> float | None:
     """从异常中提取 Retry-After（秒）."""
     headers: dict[str, str] | None = None
@@ -218,7 +223,7 @@ def get_llm(
 
     api_key = settings.llm_api_key or os.getenv("LLM_API_KEY", "")
     base_url = settings.llm_base_url or os.getenv("LLM_BASE_URL", "https://api.deepseek.com")
-    model = settings.llm_model or os.getenv("LLM_MODEL", "deepseek-chat")
+    model = _resolve_model()
 
     if not api_key:
         msg = "LLM API Key 未配置（请设置 LLM_API_KEY 环境变量或在 .env 中配置 llm_api_key）"
@@ -268,6 +273,7 @@ class LLMCallContext:
     chapter_number: int | None = None
     stage: str | None = None
     version_id: str | None = None
+    # 仅随 174 字段链读取留痕；写库路由不消费（repo 经 settings.database_url 连接）
     db_path: str | None = None
     agent: str = "unknown"
 
@@ -487,7 +493,7 @@ async def call_llm(
         _llm_call_count.set(count)
 
     llm = get_llm(temperature=temperature, max_tokens=max_tokens, timeout=timeout)
-    model = settings.llm_model or os.getenv("LLM_MODEL", "deepseek-chat")
+    model = _resolve_model()
     call_context = _current_call_context()
     # attempt 索引由 retry_with_backoff 经 on_attempt 回调透传（Task 175）
     attempt_state = {"index": 0}
@@ -504,6 +510,19 @@ async def call_llm(
             text = str(response.content)
         except (TypeError, ValueError, KeyError, AttributeError):
             # 编程错误（参数类型、配置错误等），直接抛出，不重试
+            raise
+        except asyncio.CancelledError:
+            # 总超时/外部取消：in-flight 尝试也落一行（长跑最需要的遥测场景）；
+            # CancelledError 是 BaseException，不在下方 Exception 路径内
+            latency_ms = int((time.monotonic() - start) * 1000)
+            await _record_llm_call_usage(
+                context=call_context,
+                model=model,
+                latency_ms=latency_ms,
+                retry_attempt=attempt_state["index"],
+                success=False,
+                error="cancelled/timeout",
+            )
             raise
         except Exception as e:
             latency_ms = int((time.monotonic() - start) * 1000)

@@ -205,7 +205,7 @@ class VolumeSummaryGenerator:
         Returns:
             Generated VolumeSummary (already persisted to DB).
         """
-        bind_contextvars(agent="arc_summary_generator")
+        bind_contextvars(agent="volume_summary_generator")
 
         # Sort by start_chapter to ensure narrative order
         arcs = sorted(arc_summaries, key=lambda a: a.start_chapter)
