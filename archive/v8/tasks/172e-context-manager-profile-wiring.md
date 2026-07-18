@@ -276,3 +276,13 @@ python scripts/run_172a7_genre_validation.py --templates xuanhuan --end 15
 | xuanhuan max_character_states=8 生效后 budget 恶化 | `--end 15` budget ≥ 1.0 | 临时把 xuanhuan `max_character_states` 回退到 4，另开 Task 研究该字段特化值 |
 | `_dynamic_max_for_chapter` 与 profile 冲突 | Ch80+ 行为异常 | 明确优先级：传入参数 > profile 值 > 模块常量；最终取较小者 |
 | setting 入站过滤放宽后 budget 上升 | `--end 15` budget ≥ 1.0 | 检查是否 `_dynamic_max_for_chapter` 未正确应用；必要时收紧 profile 默认值 |
+
+
+---
+
+## 执行记录（2026-07-18 补录，数据汇总自 `docs/STATUS.md` 最近验证表）
+
+- 新增测试：`tests/test_172e_context_manager_profile_wiring.py`（12 用例）。172e-172i 五任务合计新增 41 用例，合入时全量 `python -m pytest tests/ -q --ignore=tests/cli/test_cli.py` → **2746 passed, 2 skipped, 1 xfailed**（4 个 cli 失败为既有输出格式问题，与接线无关；172c 收口后全量 2791 passed 含 cli）。
+- `ruff check src/ tests/` → All checks passed。
+- 多体裁回归：`run_172a7_genre_validation.py --templates scifi wuxia urban --end 10` → 三体裁各 10/10 accepted、0 halt；scifi Ch1 budget=8250=legacy 公式，旧行为逐值等价。
+- 已知后续：三个 `max_*` 字段在主 assemble 路径被显式动态参数遮蔽（本 Task 设计时已登记优先级"传入参数 > profile"），生产生效性由 **172j** 收口。

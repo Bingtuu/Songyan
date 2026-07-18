@@ -40,7 +40,7 @@
 
 Songyan 是一个用多个 AI Agent 协作写中文长篇小说的系统。它不是"调用一次模型生成一章"的简单封装，而是把长篇写作拆成规划、生成、审查、修订、结算和连续性维护六个环节，每个环节由独立的 Agent 负责，共同维护一个长期事实数据库。
 
-当前系统已在 **sci-fi 单一体裁**下稳定支持 **220 章**连续生成（220/220 accepted）。V8 阶段进一步把这套长跑能力从科幻的隐式参数中解耦，建立了可插拔的**体裁运行时画像（GenreRuntimeProfile）**：玄幻、武侠、都市三体裁已在短窗口（10-15 章）达到与科幻同等的完成度和质量基线；玄幻（xuanhuan）与武侠（wuxia）均已完成 Ch100 中篇爬坡验证（各 100/100 accepted，五门质量闸口全绿）。
+当前系统已在 **sci-fi 单一体裁**下稳定支持 **220 章**连续生成（220/220 accepted）。V8 阶段进一步把这套长跑能力从科幻的隐式参数中解耦，建立了可插拔的**体裁运行时画像（GenreRuntimeProfile）**：玄幻、武侠、都市短窗口 C 判据三档证据闭环（end10 / end15 / end20 全 accepted、0 halt、T9=0、overdue=0）；玄幻（xuanhuan）与武侠（wuxia）均已完成 Ch100 中篇爬坡验证（各 100/100 accepted，五门质量闸口全绿）。
 
 这里的"五门"指：完成度、上下文预算、Consistency Error Density（CED）、未回收伏笔 overdue、continuity health。Profile 的全部运行时字段（预算分配、门禁阈值、蒸发曲线、角色衰减窗口、连续性容差）已接线到对应消费者；无 Profile 体裁 100% 回退 sci-fi 已验证行为。
 
@@ -330,9 +330,10 @@ python scripts/run_172b_ch100_climb.py --to 100
 | V7 | ✅ 完成 | enforce 可生产化，sci-fi 单一体裁 Ch200 达成（200/200 accepted） |
 | V8 | ✅ 完成 | 多体裁可插拔（GenreRuntimeProfile）+ xuanhuan/wuxia Ch100 五门 PASS |
 | 172c | ✅ 完成 | wuxia 第二体裁 Ch100 爬坡：clean rerun 100/100 accepted，五门 PASS |
-| V9 | ⏳ 规划中 | urban 第三体裁 Ch100、跨体裁 Ch200、按体裁深度调参 |
+| V8.5 | ✅ 完成 | 验收后遗留收口：172j BudgetPruner max_* 修复、172k C 判据三档证据闭环（xuanhuan end10 / urban end15 / wuxia end20 全 accepted）、172l 文档治理 |
+| V9 | ⏳ 规划中 | urban 第三体裁 Ch100、跨体裁 Ch200、按体裁深度调参（172j 已解锁 max_* 调参路径） |
 
-各阶段事实入口见 [`tasks/V8-README.md`](tasks/V8-README.md)（当前阶段）与 `tasks/V5/V6/V7-README.md`（历史阶段）。
+各阶段事实入口见 `tasks/V5/V6/V7/V8-README.md`（均已收尾）；V8 任务文档与报告归档于 [`archive/v8/`](archive/v8/INDEX.md)。
 
 ---
 
@@ -348,7 +349,7 @@ V8 已验证出一条可复制的体裁接入路径：先用短窗口确认新�
 | 运行时画像 | `GenreRuntimeProfile`：代码注册表 `src/songyan/db/genre_runtime_profile_repo.py` + DB `genre_runtime_profiles` 表 | Context Diet 运行时契约：预算（`base_budget`/`ramp_per_chapter`）、门禁阈值（`hard_enforce_ratio`/`emergency_halt_ratio`）、伏笔 horizon 下限、状态蒸发曲线、角色衰减窗口、连续性容差 |
 | 项目模板 | `project_templates/<genre>/`（template.yaml + seed.json + outline.json） | 项目初始化：主角设定、核心钩子、叙事骨架（arc/thread） |
 
-加载语义：代码注册表是体裁基线（含实证调校），DB 记录是**字段级覆盖层**——调参时可以不改代码，往 DB upsert 一条只含差异字段的记录即可；嵌套子模型（蒸发/衰减/容差）按整体替换。未知体裁回退 scifi baseline。
+加载语义：代码注册表是体裁基线（含实证调校），DB 记录是**字段级覆盖层**——调参时可以不改代码，往 DB upsert 一条只含差异字段的记录即可；嵌套子模型（蒸发/衰减/容差）按整体替换。未知体裁回退 scifi baseline。两个边界（172j 固化）：DB 覆盖以代码默认值为 diff 基准，无法把注册表调优值降回代码默认（需降回时改代码注册表）；`max_soft_refs` / `max_foreshadowing` / `max_character_states` 是体裁级**收紧上限**——仅调低到旧常量基线以下时生效，调高由章节动态曲线接管（注册表中 wuxia/xuanhuan 的 `max_character_states=8` 因此当前不生效，待 V9 标定）。
 
 ### 推荐流程（V8 实证路径）
 
@@ -381,7 +382,7 @@ python scripts/run_172b_ch100_climb.py --init
 python scripts/run_172b_ch100_climb.py --to 100
 ```
 
-终判口径（冻结）：Ch1-Ch100 全 accepted、budget 峰值 < 1.0、T9 = 0、critical orphan = 0、consistency CED ≤ sci-fi ×1.15、overdue ≤ sci-fi 同章尺度、health ≥ 8.0。对标基线与五门细节见 [`tasks/172b-xuanhuan-ch100-climb.md`](tasks/172b-xuanhuan-ch100-climb.md) §1.1。
+终判口径（冻结）：Ch1-Ch100 全 accepted、budget 峰值 < 1.0、T9 = 0、critical orphan = 0、consistency CED ≤ sci-fi ×1.15、overdue ≤ sci-fi 同章尺度、health ≥ 8.0。对标基线与五门细节见 [`archive/v8/tasks/172b-xuanhuan-ch100-climb.md`](archive/v8/tasks/172b-xuanhuan-ch100-climb.md) §1.1。
 
 ---
 
@@ -467,17 +468,9 @@ python scripts/run_172a7_genre_validation.py --templates scifi --end 10
 
 - [`docs/STATUS.md`](docs/STATUS.md) — 当前状态、五维验收证据、下一步
 - [`docs/INDEX.md`](docs/INDEX.md) — 文档索引
-- [`tasks/V8-README.md`](tasks/V8-README.md) — V8 任务事实入口（含编号治理规则与 172c 完成状态）
-- [`tasks/172b-xuanhuan-ch100-climb.md`](tasks/172b-xuanhuan-ch100-climb.md) — xuanhuan Ch100 爬坡任务书
-- [`docs/reports/172b-xuanhuan-ch100-climb.md`](docs/reports/172b-xuanhuan-ch100-climb.md) — xuanhuan Ch100 验收报告
-- [`tasks/172c-wuxia-ch100-climb.md`](tasks/172c-wuxia-ch100-climb.md) — wuxia Ch100 爬坡任务书（已完成）
-- [`tasks/172c-wuxia-ch100-clean-rerun.md`](tasks/172c-wuxia-ch100-clean-rerun.md) / [`tasks/172c-wuxia-ch100-clean-rerun-DONE.md`](tasks/172c-wuxia-ch100-clean-rerun-DONE.md) — 172c.r 后 wuxia Ch100 干净重跑执行页与完成报告
-- [`tasks/172c.q-wuxia-inventory-identity.md`](tasks/172c.q-wuxia-inventory-identity.md) — 172c.q 物品追踪语义补强
-- [`tasks/172c.r-wuxia-foreshadowing-resolve-and-health-fix.md`](tasks/172c.r-wuxia-foreshadowing-resolve-and-health-fix.md) / [`tasks/172c.r-wuxia-foreshadowing-resolve-and-health-fix-DONE.md`](tasks/172c.r-wuxia-foreshadowing-resolve-and-health-fix-DONE.md) — 172c.r 伏笔 resolve 机制与 continuity 健康度修复（已完成）
-- [`tasks/172c.s-wuxia-long-window-foreshadowing-and-health-calibration.md`](tasks/172c.s-wuxia-long-window-foreshadowing-and-health-calibration.md) — 172c.s wuxia 长窗口伏笔 horizon 与 health 校准
-- [`tasks/172c.t-wuxia-health-overdue-weight-calibration.md`](tasks/172c.t-wuxia-health-overdue-weight-calibration.md) — 172c.t wuxia health overdue 权重长窗口校准
-- [`docs/reports/172c-wuxia-ch100-climb.md`](docs/reports/172c-wuxia-ch100-climb.md) — wuxia Ch100 验收报告
-- [`docs/reports/172a.7-genre-short-window-validation.md`](docs/reports/172a.7-genre-short-window-validation.md) — 多体裁短窗口验证报告
+- [`tasks/V8-README.md`](tasks/V8-README.md) — V8 任务事实入口（已收尾，含编号治理规则与五维验收证据链）
+- [`archive/v8/INDEX.md`](archive/v8/INDEX.md) — V8 任务文档与报告归档索引（172-172l 全部任务书、双体裁 Ch100 验收报告、短窗口矩阵）
+- [`docs/reports/v8-literature-and-landscape-review.md`](docs/reports/v8-literature-and-landscape-review.md) — V8 长调研报告（体裁差异与 GenreRuntimeProfile 设计依据）
 - [`AGENTS.md`](AGENTS.md) — 开发规范与工程纪律
 
 ---

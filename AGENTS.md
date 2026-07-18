@@ -6,7 +6,7 @@
 
 1. 读取 `AGENTS.md`。
 2. 读取 `docs/STATUS.md`。
-3. 若任务指定 Task，读取对应 `tasks/<id>-*.md` 或相关 `*-DONE.md`；V1-V5.0 早期任务（001-120）已归档到 `archive/tasks/`；V6/V7 任务已收尾，事实入口分别见 `tasks/V6-README.md`、`tasks/V7-README.md`。
+3. 若任务指定 Task，读取对应 `tasks/<id>-*.md` 或相关 `*-DONE.md`；V1-V5.0 早期任务（001-120）已归档到 `archive/tasks/`；V6/V7/V8 任务已收尾，事实入口分别见 `tasks/V6-README.md`、`tasks/V7-README.md`、`tasks/V8-README.md`；V8 任务文档与报告已归档 `archive/v8/`。
 4. 用 5-8 行说明任务边界，再改代码或文档。
 5. 默认按现有架构和文档事实源推进，不重复扫描归档目录。
 
@@ -14,9 +14,8 @@
 
 - 项目状态：`docs/STATUS.md`
 - 文档路由：`docs/INDEX.md`
-- V8 任务事实（当前阶段）：`tasks/V8-README.md`
-- Task 172 完成报告：`tasks/172-project-template-plugin-DONE.md`
-- V8 P0 任务规划：`tasks/172a-v8-genre-runtime-profiles.md`
+- 当前阶段：V8 已全量闭环（含 V8.5），V9 待启动（方向见 `docs/STATUS.md` 下一步）
+- V8 历史任务事实（已收尾）：`tasks/V8-README.md`；任务文档与报告归档 `archive/v8/`（索引 `archive/v8/INDEX.md`）
 - V7 历史任务事实（已收尾）：`tasks/V7-README.md`
 - V6 历史任务事实（已收尾）：`tasks/V6-README.md`
 - V5 历史任务事实：`tasks/V5-README.md`
@@ -31,10 +30,9 @@ V6（Task 141-159）已完成：叙事骨架 MVP（StoryOutline / ArcPlan / Plot
 
 V7（Task 160-171w）已收尾：篇章级质量修复 → 叙事自驱 → enforce 可生产化 → **sci-fi 单一体裁 Ch200 达成**。原 Task 172/173 单一体裁 Ch250/Ch300 目标取消；V8 复用 Task 172 编号作为项目模板化任务。
 
-当前进入 **V8**（Task 172-172c）：**多体裁可插拔质量 + 章数爬坡**。Task 172 已完成 `ProjectTemplate` 项目模板化，为 7 个体裁提供统一初始化入口；当前主线是把 Context Diet 2.0 的运行时契约从 sci-fi 隐式画像解耦，建立 `GenreRuntimeProfile`，让 xuanhuan/wuxia/urban 等体裁在短窗口稳定通过，再逐步爬坡到 Ch100/Ch150。首批优先级：
+V8（Task 172-172l）已全量闭环：**多体裁可插拔质量 + 章数爬坡**目标达成——`GenreRuntimeProfile` 运行时契约与文学护栏从 sci-fi 隐式画像解耦；P/C/Q/S/V 五维验收全绿；xuanhuan + wuxia 双体裁 Ch100 五门 PASS；V8.5 遗留收口（172j/172k/172l）清零，C 判据 end10/end15/end20 三档证据落盘。V8 任务文档与报告见 `archive/v8/`。
 
-1. **Task 172a.1-172a.7**：建立 `GenreRuntimeProfile` 机制（数据模型、加载、预算分配、门禁阈值、状态压缩、多体裁短窗口验证）。
-2. **Task 172b/172c**：选择 1-2 个非 sci-fi 体裁推进到 Ch100/Ch150。
+当前阶段为 **V9（待启动）**：urban 第三体裁 Ch100、跨体裁 Ch200、按体裁深度调参（172j 已修复 max_* 生产路径遮蔽，调参路径已解锁）。
 
 ## 不可违背规则
 
@@ -99,7 +97,7 @@ V7（Task 160-171w）已收尾：篇章级质量修复 → 叙事自驱 → enfo
 - IO 操作优先 async/await。
 - 日志用 structlog，不用 print。
 - 错误处理用自定义异常，不用裸 except。
-- 不新增无用抽象。V8 允许新增 `GenreRuntimeProfile` 相关模型/表与加载逻辑，但仍遵守 MVP 边界：不做自动重规划闭环、不新增 Agent / Workflow 节点（除非规划稿明确要求）；无 Profile 项目必须能回退旧行为。
+- 不新增无用抽象。`GenreRuntimeProfile` 机制已落地；后续按体裁调参优先走 Profile 注册表/DB 覆盖层，不新增 Agent / Workflow 节点（除非规划稿明确要求）；无 Profile 项目必须能回退旧行为。
 
 ## 验证要求
 
@@ -118,4 +116,4 @@ Windows 下长跑或 pytest 卡住时，按 `archive/v5/context-docs/AGENTS-full
 - 不用 `git reset --hard` 或 `git checkout --` 覆盖用户改动。
 - 当前入口保持短；长历史、旧规划、旧报告放入 `archive/`。
 - 归档内容默认不读，除非用户要求追溯历史决策。
-- V8 新增的历史产物（V5/V6/V7 报告、Task 170/172 等）已归档至 `archive/v5/`、`archive/v6/`、`archive/v7/`，入口见各 `INDEX.md`。
+- 历史产物已归档至 `archive/v5/`、`archive/v6/`、`archive/v7/`、`archive/v8/`（V8 任务文档与报告，2026-07-18），入口见各 `INDEX.md`。

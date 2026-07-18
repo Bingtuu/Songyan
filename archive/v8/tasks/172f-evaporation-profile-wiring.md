@@ -419,3 +419,13 @@ python scripts/run_172a7_genre_validation.py --templates xuanhuan --end 15
 - 172g 完成角色衰减窗口接线；
 - 172h 完成连续性审计字段接线；
 - 172i 处理跨字段的 `load_profile()` 覆盖层语义。172i 落地后，172f 的测试应补充「DB 部分覆盖时仍保留注册表默认值」的用例。
+
+
+---
+
+## 执行记录（2026-07-18 补录，数据汇总自 `docs/STATUS.md` 最近验证表）
+
+- 新增测试：`tests/test_172f_evaporation_profile_wiring.py`（14 用例）。172e-172i 五任务合计新增 41 用例，合入时全量 `python -m pytest tests/ -q --ignore=tests/cli/test_cli.py` → **2746 passed, 2 skipped, 1 xfailed**（172c 收口后 2791 passed 含 cli）。
+- `ruff check src/ tests/` → All checks passed。
+- 多体裁回归：`run_172a7_genre_validation.py --templates scifi wuxia urban --end 10` → 三体裁各 10/10 accepted、0 halt；scifi 旧行为逐值等价。
+- 接线落点：`SettingEvaporator._calculate_resolve_confidence`（蒸发曲线 `time_denominators` / `archive_thresholds`）与 `_rank_foreshadowings`（伏笔紧迫性权重），注入点 `_nodes.py` / `context_manager/__init__.py`。

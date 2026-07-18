@@ -8,26 +8,30 @@
 |------|------|
 | `AGENTS.md` | 开发代理短指令与不可违背规则 |
 | `docs/STATUS.md` | 当前状态、测试口径、下一步 |
-| `tasks/V8-README.md` | **V8 任务事实入口（当前阶段）**：多体裁可插拔质量 + 章数爬坡；含 Task 编号治理规则 |
-| `tasks/172-project-template-plugin-DONE.md` | **Task 172（已完成）**：项目模板化与体裁可插拔 |
-| `tasks/172a-v8-genre-runtime-profiles.md` | **Task 172a（V8 P0）**：体裁运行时画像设计、子任务拆分、验证指标 |
+| `tasks/V8-README.md` | **V8 历史任务事实入口（已收尾，含 V8.5）**：多体裁可插拔质量 + 章数爬坡；含 Task 编号治理规则；任务文档与报告归档 `archive/v8/` |
 | `tasks/V7-README.md` | **V7 历史任务事实入口（已收尾）**：sci-fi 单一体裁 Ch200 达成 |
 | `tasks/V6-README.md` | V6 历史任务事实入口：叙事骨架 MVP + 度量 + 长跑底盘，Task 141-159 |
 | `tasks/V5-README.md` | V5.0 历史任务事实入口 |
 
-## V8 当前阶段
+## V8 历史产物（已收尾，保留入口）
+
+V8 已全量闭环（P/C/Q/S/V 五维全绿 + V8.5 遗留清零）。任务文档与报告统一归档至 `archive/v8/`（完整清单见 `archive/v8/INDEX.md`）；`tasks/V8-README.md` 保留为历史事实总索引。
 
 | 文件 | 用途 |
 |------|------|
-| `tasks/V8-README.md` | V8 任务总索引、阶段验收标准、依赖关系、Task 编号治理规则（已更新 172c 段 3 发现） |
-| `tasks/172-project-template-plugin-DONE.md` | Task 172：项目模板化与体裁可插拔（已完成） |
-| `tasks/172a-v8-genre-runtime-profiles.md` | Task 172a：体裁运行时画像（GenreRuntimeProfile） |
-| `tasks/172d-cross-genre-literary-guardrails-DONE.md` | Task 172d：文学护栏跨体裁化（172a.7 硬前置，已完成） |
-| `tasks/172b-xuanhuan-ch100-climb.md` | Task 172b：xuanhuan Ch100 爬坡（V 维度，已完成） |
-| `tasks/172c-wuxia-ch100-climb.md` | Task 172c：wuxia Ch100 爬坡（进行中，Ch75 完成） |
-| `tasks/172c.p-wuxia-forgotten-inventory-tracking.md` | Task 172c.p：wuxia 物品追踪粒度修复（已完成） |
-| `tasks/172c.q-wuxia-inventory-identity.md` | Task 172c.q：wuxia 物品追踪语义补强（已完成） |
-| `tasks/172c.r-wuxia-foreshadowing-resolve-and-health-fix-DONE.md` | Task 172c.r：wuxia 伏笔回收与 continuity 健康度修复（已完成） |
+| `tasks/V8-README.md` | V8 任务总索引、阶段验收标准、依赖关系、Task 编号治理规则（历史事实入口） |
+| `archive/v8/INDEX.md` | V8 归档索引：全部任务文档与报告的归档清单 |
+| `archive/v8/tasks/172-project-template-plugin-DONE.md` | Task 172：项目模板化与体裁可插拔 |
+| `archive/v8/tasks/172a-v8-genre-runtime-profiles.md` | Task 172a：体裁运行时画像（GenreRuntimeProfile） |
+| `archive/v8/tasks/172d-cross-genre-literary-guardrails-DONE.md` | Task 172d：文学护栏跨体裁化 |
+| `archive/v8/tasks/172b-xuanhuan-ch100-climb.md` | Task 172b：xuanhuan Ch100 爬坡（含冻结终判口径，V9 中篇爬坡参照） |
+| `archive/v8/tasks/172c-wuxia-ch100-clean-rerun-DONE.md` | Task 172c：wuxia Ch100 clean rerun 完成报告（100/100 五门 PASS） |
+| `archive/v8/tasks/172j-budget-pruner-max-shadowing-fix.md` | Task 172j：BudgetPruner max_* 修复（V9 调参前置） |
+| `archive/v8/tasks/172k-c-dimension-evidence-closure.md` | Task 172k：C 判据证据补完 xuanhuan end10 / urban end15 / wuxia end20 |
+| `archive/v8/reports/172b-xuanhuan-ch100-climb.md` | xuanhuan Ch100 验收报告 |
+| `archive/v8/reports/172c-wuxia-ch100-climb.md` | wuxia Ch100 验收报告 |
+| `archive/v8/reports/172a.7-genre-short-window-validation.md` | 多体裁短窗口验证报告 |
+| `docs/reports/v8-literature-and-landscape-review.md` | V8 长调研报告（GenreRuntimeProfile 设计依据，保留活跃入口） |
 
 ## V7 历史产物（保留入口）
 
@@ -93,11 +97,10 @@
 
 | 场景 | 文件 |
 |------|------|
-| V8 当前阶段入口 | `tasks/V8-README.md` |
+| V8 历史任务入口（已收尾） | `tasks/V8-README.md` |
 | 当前项目状态 | `docs/STATUS.md` |
-| Task 172 完成报告 | `tasks/172-project-template-plugin-DONE.md` |
-| V8 P0 任务规划 | `tasks/172a-v8-genre-runtime-profiles.md` |
-| 172c 进行中（wuxia Ch100） | `tasks/172c-wuxia-ch100-climb.md` |
+| V8 归档索引（任务文档与报告） | `archive/v8/INDEX.md` |
+| V9 中篇爬坡冻结口径参照 | `archive/v8/tasks/172b-xuanhuan-ch100-climb.md` |
 | V7 历史任务入口 | `tasks/V7-README.md` |
 | V6 历史任务入口 | `tasks/V6-README.md` |
 | V5 历史任务入口 | `tasks/V5-README.md` |
@@ -117,4 +120,5 @@
 - `archive/v5/INDEX.md` — V5 归档索引
 - `archive/v6/INDEX.md` — V6 归档索引
 - `archive/v7/INDEX.md` — V7 历史产物归档
+- `archive/v8/INDEX.md` — V8 历史产物归档（任务文档 + 报告）
 - `archive/tasks/` — 历史任务规划稿与交接报告

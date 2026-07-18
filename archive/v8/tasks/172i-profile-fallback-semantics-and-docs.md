@@ -290,3 +290,13 @@ python scripts/run_172a7_genre_validation.py --templates xuanhuan --end 15
 - 172e-172h 各自完成字段接线；
 - 172i 处理跨字段的加载语义和文档问题，可与 172e-172h 并行；
 - 172i 落地后，172e-172h 的测试应补充「DB 部分覆盖时仍保留注册表默认值」的用例，确保字段默认值不被 scifi baseline 污染。
+
+
+---
+
+## 执行记录（2026-07-18 补录，数据汇总自 `docs/STATUS.md` 最近验证表）
+
+- 新增测试：并入 `tests/test_172a_genre_runtime_profile.py`（现 22 用例，其中本 Task 新增 5；172e-172i 五任务合计 41 = 12+14+5+5+5）。
+- 合入时全量 `python -m pytest tests/ -q --ignore=tests/cli/test_cli.py` → **2746 passed, 2 skipped, 1 xfailed**（172c 收口后 2791 passed 含 cli）；`ruff check src/ tests/` → All checks passed。
+- 落地内容：`load_profile()` 语义定为注册表基线 + DB 字段级覆盖层（未知体裁回退 scifi baseline；嵌套子模型整体替换）；占位字段 `arc_summarization_enabled` / `outline_dimming_enabled` 已从模型删除；V8-README 注入点与回退语义段落同步修复。
+- 已知边界（2026-07-18 review 确认）：DB 存全量 `profile_json`，覆盖以代码默认值为 diff 基准，**无法把注册表调优值降回代码默认**；该边界的文档化收口归 **172j**。

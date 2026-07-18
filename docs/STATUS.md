@@ -6,7 +6,7 @@
 
 | 项 | 结论 |
 |----|------|
-| 当前阶段 | **V8 已完成验收并完成 172c 增强收口**：P/C/Q/S/V 五维全绿；xuanhuan + wuxia 两个非 sci-fi 体裁均已达成 Ch100 五门 PASS |
+| 当前阶段 | **V8 全量闭环**：P/C/Q/S/V 五维全绿，xuanhuan + wuxia 两个非 sci-fi 体裁 Ch100 五门 PASS；V8.5 遗留收口（172j/172k/172l）全部完成，C 判据 end10/end15/end20 三档证据落盘 |
 | V7 收尾 | **已完成**。sci-fi/space_opera + webnovel_intense 单一体裁稳定跑到 Ch200，200/200 accepted，D1 hard clean pass；Ch201-Ch220 20/20 accepted |
 | V8.1 运行时画像 | **已完成**（Task 172a + 172a.p）。`GenreRuntimeProfile` 把 Context Diet 2.0 运行时契约从 sci-fi 默认值解耦；xuanhuan Ch8 halt 已消除（base_budget=15000） |
 | V8.3 文学护栏 | **已完成**（Task 172d）。`literary_guardrail_observe` 去科幻硬编码，lexicon/主角名参数化到 `GenreProfile`，三体裁各配一套；DONE 文档已补齐 |
@@ -14,13 +14,14 @@
 | V8 验收进度 | **P/C/Q/S/V 五维度已实证达标** |
 | V8 文档治理 | **已完成**：`tasks/V8-README.md` 已明确 Task 编号是 trace id；阶段任务、前置并行、撞墙修复、后续增强已分层展示 |
 | **V8 技术债** | **172e-172i 已完成**：`GenreRuntimeProfile` 声明后未接线的字段已全部接到消费者；`load_profile()` 已改为注册表基线 + DB 字段级覆盖层 |
+| V8 遗留收口 | **172j/172k/172l 全部完成**：172k C 判据三档证据闭环（xuanhuan end10 10/10、urban end15 15/15、wuxia end20 20/20 gap=0，T9=0、overdue=0、budget<1.0；xuanhuan resolved=12 确认 172c.r 生效）；详见 `tasks/V8-README.md` V8.5 节 |
 
 ## 最新证据
 
 | 维度 | 事实 |
 |------|------|
 | P 可插拔 | scifi profile 全默认 → 逐值回退旧行为；scifi --end 10 10/10、overdue=0、budget Ch1=8250=legacy 公式 |
-| C 完成度 | scifi/wuxia/urban `--end 10` 各 **10/10 accepted**；xuanhuan `--end 15` 14–15/15（Ch2 瞬时 LLM JSON 错误，非系统性） |
+| C 完成度 | scifi/wuxia/urban `--end 10` 各 **10/10 accepted**；xuanhuan `--end 15` 14–15/15（Ch2 瞬时 LLM JSON 错误，非系统性）；**172k 三档补完**：xuanhuan end10 10/10、urban end15 15/15、wuxia end20 20/20 gap=0 |
 | Q 质量同标 | CED：wuxia 8.48 < urban 8.75 < scifi 9.60 < xuanhuan 10.48（同量级）；全体裁 budget<1.0、T9=0、0 halt |
 | S 状态可控 | 172a.p horizon floor=12：floor12 实跑 DB 严证 **overdue@<15 = 2 < 5**（vs floor=0 的 28），44 伏笔 0 floor 违规 + 数学下界证明 |
 | V 中篇爬坡 | 172b xuanhuan Ch1-Ch100 **100/100 accepted**；172c wuxia Ch1-Ch100 **100/100 accepted**；两个非 sci-fi 体裁 Ch100 五门 PASS |
@@ -34,7 +35,7 @@
 
 | 命令 / 证据 | 结果 |
 |-------------|------|
-| `python scripts/run_172a7_genre_validation.py --templates scifi wuxia urban --end 10` | 三体裁各 10/10、0 halt；CED 见上（`docs/reports/172a.7-regression-end10.json`） |
+| `python scripts/run_172a7_genre_validation.py --templates scifi wuxia urban --end 10` | 三体裁各 10/10、0 halt；CED 见上（`archive/v8/reports/172a.7-regression-end10.json`） |
 | xuanhuan `--end 15`（floor=12） | overdue@<15=2（DB 严证）；Ch1-13 accepted（Ch11 isolate 瞬时） |
 | `python -m pytest tests/ -q` | 2691 passed, 2 skipped, 1 xfailed（含 172a.p 13 新测试） |
 | `ruff check src/ tests/` | 无新增 error |
@@ -51,47 +52,29 @@
 | 172c.t 聚焦测试 | `python -m pytest tests/test_172ct_wuxia_health_overdue_weight.py tests/test_123_gates.py::test_health_low_streak_ignores_recovered_health_score -q` → **5 passed** |
 | 172c wuxia Ch100 终判 | `$env:TEMPLATE_ID='wuxia'; python .tmp\vdim_compare.py 100` → **PASS**：accepted 100/100，budget 0.965，CED 0.17 vs 0.40，overdue 35 vs 168，health 8.3 |
 | 172c 收口全量验证 | `python -m pytest tests/ -q` → **2791 passed, 2 skipped, 1 xfailed**；`ruff check src/ tests/` → **All checks passed** |
+| 172k 三档实跑（`run_172a7_genre_validation.py`：xuanhuan end10 / urban end15 / wuxia end20） | **全 accepted**：10/10、15/15、20/20 gap=0；T9=0、overdue=0、budget 峰值 ≤0.9893、0 halt；落盘 `.tmp/172k_xuanhuan_end10.json` / `.tmp/172k_urban_end15.json` / `.tmp/172k_wuxia_end20.json` |
 
 ## 项目整理
 
 - V5/V6/V7 历史报告已归档到 `archive/v5/reports/`、`archive/v6/reports/`、`archive/v7/reports/`。
 - Task 170 文学提质中间过程稿已归档到 `archive/v7/tasks/`，入口保留总览与关键 DONE 文档。
 - Task 172（Ch250）已归档到 `archive/v7/tasks/172-ch250-transition-validation-archived.md`。
-- V8 新产物：172a.1 常量审计 + scifi baseline、172a.4 预算解耦、172a.7 多体裁矩阵报告、172b Ch100 报告，均在 `docs/reports/`；172a.p/172b/172b.p/172b.q/172d 任务书在 `tasks/`；Task 编号治理规则已内嵌到 `tasks/V8-README.md`。
+- V8 已全量闭环并归档（2026-07-18）：全部任务文档（172-172l）与报告（172a.1/172a.4/172a.7/172b/172c）迁移至 `archive/v8/`（索引 `archive/v8/INDEX.md`）；`tasks/V8-README.md` 保留为历史事实总索引；`docs/reports/v8-literature-and-landscape-review.md` 保留活跃入口。
 - **V8 后续技术债**：172e-172i 已全部完成，覆盖 `GenreRuntimeProfile` 字段接线、回退语义澄清、占位字段移除与文档修复。
 
 ## 下一步
 
-1. **V8 技术债清理**：✅ 已完成（172e-172i）。`GenreRuntimeProfile` 声明后未接线的字段已全部接到消费者；`load_profile()` 已改为注册表基线 + DB 字段级覆盖层；`arc_summarization_enabled` / `outline_dimming_enabled` / `mismatch_tolerance` 占位字段已移除。
-2. **V8 收口**：172b 已达标，V8 五维验收全绿；保持 `tasks/V8-README.md` 为事实入口，并按其中的编号治理规则维护后续任务。
-3. **172c 主线**：✅ 已完成。wuxia clean rerun Ch100 五门 PASS；事实入口见 `tasks/172c-wuxia-ch100-clean-rerun-DONE.md` 与 `docs/reports/172c-wuxia-ch100-climb.md`。
-4. **后续方向**：urban 第三体裁 Ch100、跨体裁 Ch200、按体裁深度调参划归 V9 或后续任务。
-5. **守护项**：后续 CED 仍使用 consistency-only、merged/source、正文证据口径；不得把文学 craft 或 `rule-mr-*` 聚合工作项计入 CED。
+1. **V8（含 V8.5）已全部完成并归档**：P/C/Q/S/V 五维全绿，xuanhuan + wuxia 双体裁 Ch100 五门 PASS，C 判据 end10/end15/end20 三档证据闭环；任务文档与报告见 `archive/v8/`，历史事实入口 `tasks/V8-README.md`。
+2. **V9 待启动**：urban 第三体裁 Ch100、跨体裁 Ch200、按体裁深度调参（172j 已解锁 max_* 调参路径；172k 执行记录含 urban/wuxia emergency 连触观察，供 base_budget 标定参考）。
+3. **守护项**：后续 CED 仍使用 consistency-only、merged/source、正文证据口径；不得把文学 craft 或 `rule-mr-*` 聚合工作项计入 CED。
 
 ## 入口
 
-- V8 任务事实：`tasks/V8-README.md`
-- Task 172 完成报告：`tasks/172-project-template-plugin-DONE.md`
-- Task 172a 规划：`tasks/172a-v8-genre-runtime-profiles.md`
-- Task 172a.7 短窗口验证报告：`docs/reports/172a.7-genre-short-window-validation.md`
-- Task 172a.p 伏笔 horizon 下限：`tasks/172a.p-foreshadowing-horizon-floor.md`
-- Task 172b Ch100 爬坡：`tasks/172b-xuanhuan-ch100-climb.md`
-- Task 172b Ch100 报告：`docs/reports/172b-xuanhuan-ch100-climb.md`
-- Task 172b.q CED 终段修复：`tasks/172b.q-consistency-ced-repair.md`
-- Task 172c wuxia Ch100 爬坡：`tasks/172c-wuxia-ch100-climb.md`
-- Task 172c wuxia Ch100 修复后干净重跑：`tasks/172c-wuxia-ch100-clean-rerun.md` / `tasks/172c-wuxia-ch100-clean-rerun-DONE.md`（已完成）
-- Task 172c.p wuxia 物品追踪修复：`tasks/172c.p-wuxia-forgotten-inventory-tracking.md`
-- Task 172c.q wuxia 物品身份语义补强：`tasks/172c.q-wuxia-inventory-identity.md`
-- Task 172c.r wuxia 伏笔回收与 continuity 健康度修复：`tasks/172c.r-wuxia-foreshadowing-resolve-and-health-fix.md` / `tasks/172c.r-wuxia-foreshadowing-resolve-and-health-fix-DONE.md`（已完成）
-- Task 172c.s wuxia 长窗口伏笔 horizon 与 continuity health 校准：`tasks/172c.s-wuxia-long-window-foreshadowing-and-health-calibration.md`（已完成）
-- Task 172c.t wuxia health overdue 权重长窗口校准：`tasks/172c.t-wuxia-health-overdue-weight-calibration.md`（已完成）
-- Task 172d 文学护栏跨体裁化：`tasks/172d-cross-genre-literary-guardrails.md`
-- V8 运行时契约补完（172e-172i）：
-  - `tasks/172e-context-manager-profile-wiring.md`
-  - `tasks/172f-evaporation-profile-wiring.md`
-  - `tasks/172g-character-decay-profile-wiring.md`
-  - `tasks/172h-continuity-profile-wiring.md`
-  - `tasks/172i-profile-fallback-semantics-and-docs.md`
+- V8 历史任务事实（已收尾，含 V8.5）：`tasks/V8-README.md`
+- V8 归档索引（全部任务文档与报告）：`archive/v8/INDEX.md`
+- V8 长调研报告（GenreRuntimeProfile 设计依据，活跃参考）：`docs/reports/v8-literature-and-landscape-review.md`
+- V9 中篇爬坡冻结口径参照：`archive/v8/tasks/172b-xuanhuan-ch100-climb.md` §1.1
+- 172k C 判据证据补完（含 V9 urban/wuxia base_budget 标定观察）：`archive/v8/tasks/172k-c-dimension-evidence-closure.md`
 - V7 归档：`archive/v7/INDEX.md`
 - V6 归档：`archive/v6/INDEX.md`
 - V5 归档：`archive/v5/INDEX.md`

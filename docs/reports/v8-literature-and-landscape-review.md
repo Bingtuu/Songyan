@@ -134,7 +134,7 @@ Songyan 当前已有 T9/T10/T12、连续性审计、health、orphan 等指标，
 
 ### 5.1 认可当前 V8 方向
 
-当前 `tasks/V8-README.md` 与 `tasks/172a-v8-genre-runtime-profiles.md` 的方向是正确的：
+当前 `tasks/V8-README.md` 与 `archive/v8/tasks/172a-v8-genre-runtime-profiles.md` 的方向是正确的：
 
 - 把 Context Diet 2.0 的运行时契约从 sci-fi 隐式画像解耦；
 - 用短窗口（end 10/15/20）快速验证多体裁质量同标；
