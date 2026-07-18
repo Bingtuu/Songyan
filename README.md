@@ -38,9 +38,11 @@
 
 ## 这是什么？
 
-Songyan 是一个用多个 AI Agent 协作写中文长篇小说的系统。它不是"调用一次模型生成一章"的简单封装——而是把长篇写作拆成规划、生成、审查、修订、结算和连续性维护六个环节，每个环节由独立的 Agent 负责，共同维护一个长期事实数据库。
+Songyan 是一个用多个 AI Agent 协作写中文长篇小说的系统。它不是"调用一次模型生成一章"的简单封装，而是把长篇写作拆成规划、生成、审查、修订、结算和连续性维护六个环节，每个环节由独立的 Agent 负责，共同维护一个长期事实数据库。
 
-当前已在 **sci-fi 单一体裁**下稳定支持 **220 章**连续生成（220/220 accepted）。V8 阶段已把这一能力从科幻的隐式画像解耦，建立了可插拔的**体裁运行时画像（GenreRuntimeProfile）**——玄幻、武侠、都市三体裁在短窗口（10-15 章）已达到与科幻同等的完成度和质量基线；**玄幻（xuanhuan）与武侠（wuxia）均已完成 Ch100 中篇爬坡验证**（各 100/100 accepted，五门质量闸口全绿）。Profile 的全部运行时字段（预算分配、门禁阈值、蒸发曲线、角色衰减窗口、连续性容差）已接线到对应消费者，无 Profile 体裁 100% 回退旧行为。
+当前系统已在 **sci-fi 单一体裁**下稳定支持 **220 章**连续生成（220/220 accepted）。V8 阶段进一步把这套长跑能力从科幻的隐式参数中解耦，建立了可插拔的**体裁运行时画像（GenreRuntimeProfile）**：玄幻、武侠、都市三体裁已在短窗口（10-15 章）达到与科幻同等的完成度和质量基线；玄幻（xuanhuan）与武侠（wuxia）均已完成 Ch100 中篇爬坡验证（各 100/100 accepted，五门质量闸口全绿）。
+
+这里的"五门"指：完成度、上下文预算、Consistency Error Density（CED）、未回收伏笔 overdue、continuity health。Profile 的全部运行时字段（预算分配、门禁阈值、蒸发曲线、角色衰减窗口、连续性容差）已接线到对应消费者；无 Profile 体裁 100% 回退 sci-fi 已验证行为。
 
 ### 它解决什么问题？
 
@@ -186,11 +188,11 @@ flowchart TB
 
 ## 当前能力
 
-Songyan 已经过 **sci-fi 220 章**、**xuanhuan 100 章**和 **wuxia 100 章**的实战验证，**urban 短窗口**质量同标也已达标。以下是已验证的关键能力：
+Songyan 已经过 **sci-fi 220 章**、**xuanhuan 100 章**和 **wuxia 100 章**的长窗口验证，**urban 短窗口**质量同标也已达标。以下是已验证的关键能力：
 
 | 能力 | 说明 |
 |------|------|
-| 长篇连续生成 | sci-fi 220/220 accepted；xuanhuan 100/100 accepted；wuxia 100/100 accepted；0 halt |
+| 长篇连续生成 | sci-fi 220/220 accepted；xuanhuan 100/100 accepted；wuxia clean rerun 100/100 accepted；终判运行 0 halt |
 | 多体裁可插拔 | `GenreRuntimeProfile` 全部运行时字段（预算/门禁/蒸发曲线/角色衰减/连续性容差）已按体裁接线到消费者；新增体裁只需新增 Profile 文件，不修改核心逻辑；无 Profile 体裁 100% 回退旧行为 |
 | 文本洁净 | 零 Markdown 泄漏、零段落重复、零 AI 保护指令进入正文 |
 | 事实一致性 | 角色状态、世界设定、数值读数均可追溯到正文证据 |
@@ -200,7 +202,7 @@ Songyan 已经过 **sci-fi 220 章**、**xuanhuan 100 章**和 **wuxia 100 章**
 | 断点续跑 | kill 后 `--resume` 继续，自动跳过已完成章节 |
 | 自适应门禁 | 正常波动不误伤，真实退化自动暂停（AutoHalt） |
 | 叙事骨架 | 全书大纲 → 弧规划 → 章节目标自顶向下派生；xuanhuan 已用 9-arc/3-thread 骨架跑完 Ch100 |
-| 伏笔调度 | 长程伏笔主动兑现，按体裁设 horizon floor（xuanhuan=48/wuxia=48）；172c.r 已修复伏笔 resolve 机制（生成契约 + 事实源 + 防幻觉校验 + 同事务覆写），172c.s 已将 wuxia 长窗口 floor 校准到 48、base_budget 校准到 10500、角色状态档加宽，并将 state_mismatch mark 降压；172c.t 将 wuxia health overdue 权重校准到 0.15；wuxia Ch100 五门 PASS |
+| 伏笔调度 | 长程伏笔主动兑现，按体裁设 horizon floor（xuanhuan=48 / wuxia=48）；172c.r 修复伏笔 resolve 机制，172c.s 完成 wuxia 长窗口预算/角色状态/horizon 校准，172c.t 将 wuxia health overdue 权重校准到 0.15；wuxia Ch100 overdue 35 ≤ sci-fi 168 |
 | 文学护栏 | 配角目标、主动选择、概念预算在 prompt 和审查中双重约束；lexicon 按体裁参数化（xuanhuan/wuxia/urban 各一套） |
 | 项目模板化 | `ProjectTemplate` 为 7 个体裁提供统一初始化入口，一键创建完整项目骨架 |
 
@@ -326,7 +328,7 @@ python scripts/run_172b_ch100_climb.py --to 100
 | V5 | ✅ 完成 | Context Diet 2.0 支撑长篇生成，Ch1-Ch150 150/150 accept |
 | V6 | ✅ 完成 | 叙事骨架（StoryOutline/ArcPlan/PlotThread）、长篇质量度量、无人值守长跑底盘 |
 | V7 | ✅ 完成 | enforce 可生产化，sci-fi 单一体裁 Ch200 达成（200/200 accepted） |
-| V8 | ✅ 验收通过 | 多体裁可插拔（GenreRuntimeProfile）+ xuanhuan/wuxia Ch100 五门 PASS |
+| V8 | ✅ 完成 | 多体裁可插拔（GenreRuntimeProfile）+ xuanhuan/wuxia Ch100 五门 PASS |
 | 172c | ✅ 完成 | wuxia 第二体裁 Ch100 爬坡：clean rerun 100/100 accepted，五门 PASS |
 | V9 | ⏳ 规划中 | urban 第三体裁 Ch100、跨体裁 Ch200、按体裁深度调参 |
 
@@ -336,7 +338,7 @@ python scripts/run_172b_ch100_climb.py --to 100
 
 ## 定制与接入新体裁
 
-V8 用三个体裁的实战验证了一条可复制的体裁接入路径。接入新体裁**不需要改核心逻辑**——差异全部收敛到三层配置，未知体裁自动 100% 回退 scifi 已验证行为。
+V8 已验证出一条可复制的体裁接入路径：先用短窗口确认新体裁是否达到 sci-fi 同级质量，再选择通过短窗口的体裁推进到 Ch100。接入新体裁**不需要改核心逻辑**，差异全部收敛到三层配置；未知体裁自动 100% 回退 sci-fi 已验证行为。
 
 ### 三层配置
 
@@ -379,7 +381,7 @@ python scripts/run_172b_ch100_climb.py --init
 python scripts/run_172b_ch100_climb.py --to 100
 ```
 
-终判口径（冻结）：Ch1-100 全 accepted、budget 峰值 < 1.0、T9 = 0、critical orphan = 0、consistency CED ≤ sci-fi ×1.15、overdue ≤ sci-fi 同章尺度。对标基线与五门细节见 [`tasks/172b-xuanhuan-ch100-climb.md`](tasks/172b-xuanhuan-ch100-climb.md) §1.1。
+终判口径（冻结）：Ch1-Ch100 全 accepted、budget 峰值 < 1.0、T9 = 0、critical orphan = 0、consistency CED ≤ sci-fi ×1.15、overdue ≤ sci-fi 同章尺度、health ≥ 8.0。对标基线与五门细节见 [`tasks/172b-xuanhuan-ch100-climb.md`](tasks/172b-xuanhuan-ch100-climb.md) §1.1。
 
 ---
 
