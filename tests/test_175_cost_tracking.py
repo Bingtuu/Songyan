@@ -19,12 +19,16 @@ from structlog.testing import capture_logs
 from songyan.config import Settings, settings
 from songyan.db.llm_call_usage_repo import LlmCallUsageRepository
 from songyan.db.project_run_repo import ProjectRunRepository
-from songyan.db.repository import ProjectRepository
+from songyan.db.repository import (
+    ChapterHeadRepository,
+    ChapterVersionRepository,
+    ProjectRepository,
+)
 from songyan.exceptions import LLMBudgetExceededError, LLMError
 from songyan.llm import client as llm_client
-from songyan.models import ProjectSetting
+from songyan.models import ChapterHead, ChapterVersion, ProjectRunState, ProjectSetting
 from songyan.utils.cost_estimator import count_tokens, estimate_cost_from_tokens
-from songyan.workflows.phase2_graph import run_project_pipeline
+from songyan.workflows.phase2_graph import _refresh_run_total_cost, run_project_pipeline
 
 
 class _FakeResponse:
@@ -99,6 +103,7 @@ def _install_fake_litellm(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(settings, "llm_base_url", "https://example.test")
     monkeypatch.setattr(settings, "llm_model", "fake-model")
     monkeypatch.setattr(settings, "llm_run_call_budget", 0)
+    monkeypatch.setattr(settings, "run_cost_budget", 0)
 
 
 async def _fetch_rows(db_file: Path) -> list[dict[str, Any]]:
@@ -265,6 +270,10 @@ class TestRetryAttemptRecording:
         assert second["prompt_tokens"] == 10
         assert second["completion_tokens"] == 5
         assert second["error"] is None
+        # 两行遥测但成本只按成功尝试累计一次（失败尝试成本为零且不回传）
+        assert llm_client.get_llm_run_cost() == pytest.approx(
+            estimate_cost_from_tokens(10, 5, "fake-model")
+        )
 
 
 # --------------------------------------------------------------------------- #
@@ -429,6 +438,8 @@ class TestCancelledAttemptRecording:
         assert row["prompt_tokens"] == 0
         assert row["completion_tokens"] == 0
         assert row["latency_ms"] >= 0
+        # 取消的尝试不产生成本：累计器保持 0.0
+        assert llm_client.get_llm_run_cost() == 0.0
 
 
 class TestExtractionEdgeCases:
@@ -695,6 +706,26 @@ class TestInitRunCostFromDb:
             await llm_client.call_llm("prompt-2")
         assert llm_client.get_llm_run_cost() == pytest.approx(0.041)
 
+    async def test_init_failure_degrades_to_zero_with_warning(
+        self, monkeypatch: pytest.MonkeyPatch, test_db: Path
+    ) -> None:
+        """DB 读取失败 → warning + 回退 0.0（生成不可断；退化为仅统计当前进程新增成本）."""
+
+        async def _explode(*args: Any, **kwargs: Any) -> float:
+            raise RuntimeError("db down")
+
+        monkeypatch.setattr(LlmCallUsageRepository, "sum_cost_for_run", _explode)
+        llm_client._llm_run_cost_cny.set(0.5)  # 预置脏值，验证 init 覆盖语义
+
+        with capture_logs() as logs:
+            total = await llm_client.init_run_cost_from_db("run-x")
+
+        assert total == 0.0
+        assert llm_client.get_llm_run_cost() == 0.0
+        assert any(
+            entry.get("event") == "llm.run_cost_init_failed" for entry in logs
+        )
+
 
 # --------------------------------------------------------------------------- #
 # 阶段 B：LLMBudgetExceededError 向后兼容 + 配置映射
@@ -914,3 +945,110 @@ class TestBudgetPauseCostWiring:
         assert entry["last_chapter"] == 2
         assert entry["used_cost"] == pytest.approx(0.0105)
         assert entry["budget_cost"] == pytest.approx(0.01)
+
+
+# --------------------------------------------------------------------------- #
+# 阶段 B review 修复：短路分支 total_cost 透传 + 刷新失败保留既有值
+# --------------------------------------------------------------------------- #
+class TestResumeShortCircuitTotalCost:
+    async def test_resume_already_completed_returns_persisted_total_cost(
+        self, monkeypatch: pytest.MonkeyPatch, test_db: Path
+    ) -> None:
+        """resume_already_completed 短路：result.total_cost 透传已持久化值（不落默认 0.0）."""
+        await ProjectRepository().create(
+            ProjectSetting(genre_id="xuanhuan", protagonist_name="英雄"), _PID
+        )
+        await ProjectRunRepository().create(
+            ProjectRunState(
+                run_id="run-175-done",
+                project_id=_PID,
+                chapter_range_start=1,
+                chapter_range_end=2,
+                current_chapter=2,
+                completed_chapters=[1, 2],
+                total_cost=0.07,
+                status="completed",
+            )
+        )
+        # 请求范围全部 accepted → 命中短路分支
+        version_repo = ChapterVersionRepository()
+        head_repo = ChapterHeadRepository()
+        for ch in (1, 2):
+            await version_repo.create(
+                ChapterVersion(
+                    version_id=f"accepted-{ch}",
+                    project_id=_PID,
+                    chapter_number=ch,
+                    version_number=1,
+                    version_type="accepted",
+                    content=f"accepted content {ch}",
+                    word_count=10,
+                )
+            )
+            await head_repo.update(
+                ChapterHead(
+                    project_id=_PID,
+                    chapter_number=ch,
+                    current_version_id=f"accepted-{ch}",
+                    accepted_version_id=f"accepted-{ch}",
+                    status="accepted",
+                )
+            )
+
+        result = await run_project_pipeline(
+            project_id=_PID,
+            chapter_range=(1, 2),
+            auto_confirm=True,
+            resume=True,
+        )
+
+        assert result.run_id == "run-175-done"
+        assert result.final_status == "completed"
+        assert result.chapters_completed == [1, 2]
+        assert result.total_cost == pytest.approx(0.07)
+
+
+class TestRefreshRunTotalCost:
+    async def test_refresh_failure_preserves_existing_value(
+        self, monkeypatch: pytest.MonkeyPatch, test_db: Path
+    ) -> None:
+        """sum 瞬时读失败（如 SQLite lock）→ 保留既有值，不把历史合计冲成 0.0."""
+
+        async def _explode(*args: Any, **kwargs: Any) -> float:
+            raise RuntimeError("sqlite locked")
+
+        monkeypatch.setattr(LlmCallUsageRepository, "sum_cost_for_run", _explode)
+        run_state = ProjectRunState(
+            run_id="run-175-hist",
+            project_id=_PID,
+            chapter_range_start=1,
+            chapter_range_end=2,
+            total_cost=0.42,
+        )
+
+        await _refresh_run_total_cost(run_state)
+
+        assert run_state.total_cost == pytest.approx(0.42)
+
+    async def test_refresh_success_overwrites_with_db_sum(
+        self, monkeypatch: pytest.MonkeyPatch, test_db: Path
+    ) -> None:
+        """正常路径：run_state.total_cost 刷新为 llm_call_usage 合计."""
+        await LlmCallUsageRepository().record(
+            run_id="run-175-hist",
+            model="fake-model",
+            cost_cny=0.03,
+            token_source="estimate",
+            cost_source="pricing_estimate",
+        )
+        run_state = ProjectRunState(
+            run_id="run-175-hist",
+            project_id=_PID,
+            chapter_range_start=1,
+            chapter_range_end=2,
+            total_cost=0.99,
+        )
+
+        await _refresh_run_total_cost(run_state)
+
+        assert run_state.total_cost == pytest.approx(0.03)

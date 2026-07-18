@@ -128,15 +128,21 @@ async def _persist_run_progress(
 
 
 async def _refresh_run_total_cost(run_state: ProjectRunState) -> None:
-    """从 llm_call_usage 合计刷新 run_state.total_cost（Task 175）."""
-    run_state.total_cost = await _sum_run_cost_or_zero(run_state.run_id)
+    """从 llm_call_usage 合计刷新 run_state.total_cost（Task 175）.
+
+    读取失败时保留既有值——瞬时读失败（如 SQLite lock）不应把 resume run
+    已持久化的历史合计冲成 0.0 落盘。
+    """
+    total = await _sum_run_cost_or_none(run_state.run_id)
+    if total is not None:
+        run_state.total_cost = total
 
 
-async def _sum_run_cost_or_zero(run_id: str) -> float:
-    """llm_call_usage 的 run 级成本合计；读取失败回退 0.0 + warning（Task 175）.
+async def _sum_run_cost_or_none(run_id: str) -> float | None:
+    """llm_call_usage 的 run 级成本合计；读取失败返回 None + warning（Task 175）.
 
     与遥测落库同一哲学：成本合计失败（如库未迁移遥测表）不阻断 run；
-    旧 run 无用量行时自然为 0.0。
+    旧 run 无用量行时自然为 0.0。失败语义由调用方决定（保留既有值或映射 0.0）。
     """
     try:
         return await LlmCallUsageRepository().sum_cost_for_run(run_id)
@@ -146,7 +152,7 @@ async def _sum_run_cost_or_zero(run_id: str) -> float:
             run_id=run_id,
             error=str(exc),
         )
-        return 0.0
+        return None
 
 
 async def _upsert_quality_debt(run_id: str, project_id: str) -> None:
@@ -712,20 +718,19 @@ async def _run_project_pipeline_impl(
         and _compute_resume_start(start, end, accepted_chapters) > end
     ):
         bind_contextvars(run_id=existing_run.run_id)
-        # Task 175: run_id 绑定分支统一初始化成本累计器（短路分支亦不例外）
-        from songyan.llm.client import init_run_cost_from_db
-
-        await init_run_cost_from_db(existing_run.run_id)
         logger.info(
             "project_pipeline.resume_already_completed",
             run_id=existing_run.run_id,
             project_id=project_id,
         )
+        # Task 175: 短路分支不做任何 LLM 调用，无需初始化成本累计器；
+        # total_cost 必须透传已持久化值（分段 harness 常态命中本分支），不落默认 0.0
         return ProjectRunResult(
             project_id=project_id,
             run_id=existing_run.run_id,
             chapters_completed=existing_run.completed_chapters,
             chapters_failed=existing_run.failed_chapters,
+            total_cost=existing_run.total_cost,
             total_duration_sec=0.0,
             final_status="completed",
             accumulated_summary=existing_run.accumulated_summary,
@@ -1086,15 +1091,15 @@ async def _run_project_pipeline_impl(
     )
 
     accumulated_summary = "\n\n".join(accumulated_summary_parts)
-    # Task 175: run 级成本 = llm_call_usage 合计（与收尾 _persist_run_progress 刷新的
-    # run_state.total_cost 同源；旧 run 无用量行或读取失败时为 0.0）
-    total_cost = await _sum_run_cost_or_zero(run_id) if run_id else 0.0
+    # Task 175: result.total_cost 直接复用收尾 _persist_run_progress 刚刷新的
+    # run_state.total_cost——result 与 project_runs 持久值一致靠构造成立；
+    # 旧 run 无用量行为 0.0，读取失败时保留的是历史真值而非冲零
     result = ProjectRunResult(
         project_id=project_id,
         run_id=run_id,
         chapters_completed=completed,
         chapters_failed=failed,
-        total_cost=total_cost,
+        total_cost=run_state.total_cost,
         total_duration_sec=duration,
         final_status=final_status,
         accumulated_summary=accumulated_summary,
