@@ -58,6 +58,8 @@ def _default_registry() -> dict[str, GenreRuntimeProfile]:
     # dialogue_distinctness；后段预算充足，增加角色状态装载量与 full/compact
     # 保留窗口，给 Writer/Auditor 更多声纹与行为约束。
     xuanhuan.max_character_states = 8
+    # 172j 注：8 高于旧常量 4，按收紧上限语义调高不生效；当前由章节动态曲线
+    # (4/3) 承载，保留此值待 V9 锚定方案标定。
     xuanhuan.character_decay.dormant_window = 20
     xuanhuan.character_decay.focal_gaps = {"full": 8, "compact": 20, "symbol": 60}
     xuanhuan.setting_evaporation.time_denominators = {
@@ -83,6 +85,7 @@ def _default_registry() -> dict[str, GenreRuntimeProfile]:
     # 172c.s: 复用 172b.q 已验证的角色状态长窗口档，避免只给主角
     # 1-2 条状态而让 supporting/antagonist 行为与声纹漂移。
     wuxia.max_character_states = 8
+    # 172j 注：同 xuanhuan，调高不生效，待 V9 标定。
     wuxia.character_decay.dormant_window = 20
     wuxia.character_decay.focal_gaps = {"full": 8, "compact": 20, "symbol": 60}
     # 172c.t: Ch60/Ch99 vdim overdue 远低于 sci-fi 同章尺度，但 health 绝对
@@ -180,6 +183,10 @@ async def load_profile(genre: str | None) -> GenreRuntimeProfile:
     嵌套模型（setting_evaporation / foreshadowing_evaporation / character_decay /
     continuity）按子模型整体替换：DB 提供则整体替换，不提供则保留基线子模型，
     不细粒度合并子模型内部键，避免歧义。
+
+    已知边界（172j 固化）：DB 存全量 profile_json，覆盖判定以"与全新代码默认模型
+    的 diff"为基准，因此无法把注册表调优值降回代码默认——例如往 DB 写 xuanhuan
+    base_budget=8000 会被视为"未覆盖"而保留注册表 15000。如需降回，修改代码注册表。
     """
     key = (genre or "").strip().lower()
     base = load_profile_from_registry(key)

@@ -138,6 +138,47 @@ def _dynamic_max_soft_refs(total_settings: int) -> int:
     """动态软参考硬上限."""
     return max(10, min(16, total_settings // 5 + 2))
 
+
+# ---------------------------------------------------------------------------
+# Task 172j: profile max_* 作为体裁级收紧上限接入生产路径
+# ---------------------------------------------------------------------------
+def _apply_profile_cap(dyn_value: int, profile_value: int | None, legacy_const: int) -> int:
+    """把 profile 的 max_* 字段应用为体裁级收紧上限.
+
+    仅当 profile 值低于旧常量基线时收紧；高于/等于旧常量时由章节动态曲线接管
+    （调高不生效）。这样 scifi 全默认 profile 与旧行为逐值等价——例如 soft_refs
+    动态区间为 10-16，若直接 min(dynamic, profile_default=10) 会把 scifi 静默
+    收紧到 10，破坏"无 Profile 体裁 100% 回退旧行为"。
+    """
+    if profile_value is None or profile_value >= legacy_const:
+        return dyn_value
+    return min(dyn_value, profile_value)
+
+
+def _effective_hard_caps(
+    chapter_number: int,
+    total_settings: int,
+    runtime_profile: GenreRuntimeProfile | None,
+) -> dict[str, int]:
+    """章节动态硬上限 + profile 体裁级收紧上限的合成结果（生产路径唯一来源）.
+
+    返回键：max_setting_input / max_foreshadowing / max_character_states / max_soft_refs。
+    """
+    caps = _dynamic_max_for_chapter(chapter_number)
+    caps["max_soft_refs"] = _dynamic_max_soft_refs(total_settings)
+    if runtime_profile is None:
+        return caps
+    caps["max_character_states"] = _apply_profile_cap(
+        caps["max_character_states"], runtime_profile.max_character_states, MAX_CHARACTER_STATES
+    )
+    caps["max_foreshadowing"] = _apply_profile_cap(
+        caps["max_foreshadowing"], runtime_profile.max_foreshadowing, MAX_FORESHADOWING
+    )
+    caps["max_soft_refs"] = _apply_profile_cap(
+        caps["max_soft_refs"], runtime_profile.max_soft_refs, MAX_SOFT_REFS
+    )
+    return caps
+
 # 分区优先级（数值越小优先级越高，裁剪时从低到高裁）
 PARTITION_PRIORITY: dict[str, int] = {
     "chapter_goal": 0,
@@ -1106,8 +1147,10 @@ def assemble_context_package(
     )
     recent_chapters = [s.chapter_number for s in recent_summaries]
 
-    # Task 110c: 按章节阶段获取动态硬上限
-    _dyn_caps = _dynamic_max_for_chapter(chapter_goal.chapter_number)
+    # Task 110c + 172j: 按章节阶段获取动态硬上限，并叠加 profile 体裁级收紧上限
+    _dyn_caps = _effective_hard_caps(
+        chapter_goal.chapter_number, len(setting_snapshots), runtime_profile
+    )
 
     # 077a + Task 110c: setting_snapshots 去重 + Top-N 入站过滤（动态上限）
     if setting_snapshots:
@@ -1229,9 +1272,9 @@ def assemble_context_package(
         engine = StyleMimicryEngine()
         ctx = engine.inject_multiple(style_samples, ctx)
 
-    # Task 100c + Task 110c: 计算动态硬上限（章节阶段优先）
+    # Task 100c + Task 110c: 计算动态硬上限（章节阶段优先；172j 起含 profile 收紧上限）
     _dyn_max_char = _dyn_caps["max_character_states"]
-    _dyn_max_soft = _dynamic_max_soft_refs(len(setting_snapshots))
+    _dyn_max_soft = _dyn_caps["max_soft_refs"]
 
     # Task 098 + Task 110c: Token 预算裁剪（集成 narrative_fullness + focal_distance）
     pruner = BudgetPruner(runtime_profile=runtime_profile)
