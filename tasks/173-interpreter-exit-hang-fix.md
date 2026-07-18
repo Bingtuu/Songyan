@@ -16,7 +16,7 @@
 代码现状（2026-07-18 审计）：
 
 - `src/` 全库无 `Thread`/`daemon`/`Executor` 使用，无 `atexit` 注册，无 `os._exit` 调用——挂死零代码兜底。
-- LLM client 生命周期无人管理：`src/songyan/llm/client.py:71` 的 `_get_llm_cached` 用 `lru_cache(maxsize=16)` 持有 `ChatLiteLLM`（langchain_litellm）实例至进程结束，全库无任何 close/aclose 调用点。`ChatLiteLLM` 内部经 litellm 持有 httpx.AsyncClient（keep-alive 连接池）。
+- LLM client 生命周期无人管理：`src/songyan/llm/client.py:76` 的 `_get_llm_cached` 用 `lru_cache(maxsize=16)` 持有 `ChatLiteLLM`（langchain_litellm）实例至进程结束，全库无任何 close/aclose 调用点。`functools.lru_cache` 不暴露缓存值，真修不能依赖“遍历 lru_cache 内部实例”；需要新增显式 client registry 或改为自管缓存。`ChatLiteLLM` 内部经 litellm 持有 httpx.AsyncClient（keep-alive 连接池）。
 - 其他嫌疑路径：LangGraph `AsyncSqliteSaver` checkpointer（`workflows/checkpointer.py:21-51`，已有 `reset_checkpointer_instance` 显式关连接，:54-74）、aiosqlite 连接。
 
 当前对策是"结果落盘后人工确认再 kill"——对无人值守长跑不可接受。
@@ -38,6 +38,7 @@
 
 新增临时复现脚本 `.tmp/repro_173_exit_hang.py`（任务产物，验收后可删）：
 
+- **最小复现 A0（无真实 API dry probe）**：仅 `get_llm()` 初始化 / `aclose_llm_clients()` 关闭 / dump 线程，用于排除“仅实例化即泄漏”的路径，避免诊断阶段完全依赖外部服务。
 - **最小复现 A（纯 LLM 路径）**：`get_llm()` + 若干次 `ainvoke`（真实 API，2-3 次调用即可），main 返回前打印 `threading.enumerate()`（name/daemon/alive），并对非 daemon 残留线程用 `faulthandler.dump_traceback()` 定位其栈。
 - **最小复现 B（checkpointer 路径）**：仅初始化 `AsyncSqliteSaver` 连接后退出，同样 dump 线程。
 - **全路径复现 C**：`run_172a7_genre_validation.py --templates scifi --end 2` 实跑复现（172k 场景的最小化），退出前同样 dump。
@@ -53,26 +54,29 @@
 ```python
 async def aclose_llm_clients() -> None:
     """关闭所有缓存的 LLM client 资源（pipeline 结束/进程退出前调用）."""
-    # 1. 遍历 _get_llm_cached 缓存实例，调用其 async client 的 aclose/close
-    # 2. 若当前 litellm 版本提供 litellm.aclose()，一并调用
-    # 3. 清空 lru_cache（_get_llm_cached.cache_clear()），允许 GC
+    # 1. 遍历显式 client registry / 自管缓存，不读取 lru_cache 内部状态
+    # 2. 对每个 ChatLiteLLM 及其已确认的底层 client 属性调用 aclose/close
+    # 3. 若当前 litellm 版本提供 litellm.aclose()，一并调用
+    # 4. 清空 registry 与 _get_llm_cached.cache_clear()，允许 GC
 ```
 
-- 调用点：`run_project_pipeline()` 正常返回路径的 `finally` 段（`workflows/phase2_graph.py` run 收尾处，注意此时 event loop 必须仍存活——在 async 上下文内 await）；harness（`scripts/run_172a7_genre_validation.py`、`run_172b_ch100_climb.py`）主函数收尾同样调用。
+- 实现约束：`functools.lru_cache` 不可枚举缓存值，必须新增 `_llm_client_registry`（或将 `_get_llm_cached` 替换为显式 `dict[LLMClientKey, BaseChatModel]` 自管缓存）。`get_llm()` 创建/命中实例后确保 registry 持有该实例；`aclose_llm_clients()` 遍历 registry，按诊断确认的属性路径关闭资源，最后 `cache_clear()` + registry clear。关闭失败只记录 warning，不阻断 run 收尾。
+- 调用点：`run_project_pipeline()` 正常/异常返回路径的 `finally` 段只做**真修资源关闭**（`workflows/phase2_graph.py` run 收尾处，注意此时 event loop 必须仍存活——在 async 上下文内 await）；harness（`scripts/run_172a7_genre_validation.py`、`run_172b_ch100_climb.py`）主函数收尾同样调用。
 - 若归因在 checkpointer：确认 `reset_checkpointer_instance()` 覆盖所有退出路径（包括异常路径的 finally），缺则补。
 
 **分支 B（归因在其他库）**：按诊断结论在对应资源的创建方补对称关闭；原则相同——创建处有缓存，退出处有清理。
 
 ### 3. 兜底（独立于真修验收）
 
-- 新增 env 开关 `SONGYAN_FORCE_EXIT=1`（`config.py` 加 `force_exit_after_run: bool = False`，env 映射）：run 命令与 harness 在**结果全部落盘、DB 连接关闭、日志 flush 之后**调用 `os._exit(0)`。
+- 新增 env 开关 `SONGYAN_FORCE_EXIT=1`：`config.py` 加 `force_exit_after_run: bool = Field(default=False, validation_alias=AliasChoices("SONGYAN_FORCE_EXIT", "FORCE_EXIT_AFTER_RUN"))`（Pydantic v2），保证文档中的 env 名真实生效；如实现选择不用 alias，则必须把任务书与 README 统一改为实际 env 名。
+- `os._exit(0)` **只能在最外层入口调用**：CLI command / harness `main()` 在**最终结果全部落盘、DB/checkpoint 关闭、日志 flush/close、报告文件写完**之后执行；`run_project_pipeline()` 内部禁止调用 `os._exit`，否则 `run_172b_ch100_climb.py` 这类分段 harness 会在第一段后被直接杀死，后续段、metrics、报告无法落盘。
 - 长跑 harness（`run_172b_ch100_climb.py`）默认启用兜底——无人值守场景宁可跳过解释器清理也不能挂死；CLI 默认关闭（交互场景保留正常清理以便发现泄漏）。
 - `os._exit` 会跳过所有 finally 与 atexit：调用前必须显式完成 ① DB/checkpoint 关闭 ② 日志 handler flush/close ③ 结果文件落盘确认，并在日志中记录 `force_exit.invoked`。
 
 ### 4. 真修与兜底分开验收
 
 - **真修验收**（兜底关闭）：连续两次 `scifi --end 2` 实跑，进程在结果落盘后 ≤ 60 秒自然退出，无人工干预。
-- **兜底验收**：在测试中注入一个非 daemon 泄漏线程（模拟未关闭资源），`SONGYAN_FORCE_EXIT=1` 路径进程正常结束且结果完整。
+- **兜底验收**：用 subprocess 级测试注入一个非 daemon 泄漏线程（模拟未关闭资源），子进程启用 `SONGYAN_FORCE_EXIT=1` 后正常结束且结果完整；父进程检查退出码、落盘文件与超时，避免在 pytest 主进程内创建无法退出的非 daemon 线程。
 
 ---
 
@@ -85,7 +89,8 @@ async def aclose_llm_clients() -> None:
 - `aclose_llm_clients()` 调用后：缓存实例的 close/aclose 被调用（mock `ChatLiteLLM`），`_get_llm_cached` 缓存被清空；
 - 重复调用安全（幂等，无异常）；
 - 无缓存实例时调用为空操作；
-- force-exit 路径：mock `os._exit`，验证其在"DB 关闭 + 日志 flush"之后被调（调用顺序断言）；
+- force-exit 决策函数：单元测试只 mock 轻量 helper，验证 env/settings 映射与"落盘确认后才允许 force-exit"的调用顺序；
+- force-exit 端到端：subprocess 测试创建泄漏线程并启用 `SONGYAN_FORCE_EXIT=1`，父进程断言子进程按时退出且结果文件完整；
 - `SONGYAN_FORCE_EXIT` env → settings 映射测试。
 
 ### 回归命令
@@ -103,7 +108,7 @@ scifi end10 回归期望逐值不变（本 Task 为行为中立的基础设施�
 
 - 归因结论与证据落盘（本文档执行记录节）；
 - 真修验收：兜底关闭下连续两次 scifi `--end 2` 实跑进程 ≤60s 自然退出；
-- 兜底验收：注入泄漏线程场景下 `SONGYAN_FORCE_EXIT=1` 正常结束且结果完整；
+- 兜底验收：subprocess 注入泄漏线程场景下 `SONGYAN_FORCE_EXIT=1` 正常结束且结果完整；
 - pytest 全绿、ruff 无新增 error；
 - scifi `--end 10` 10/10、Ch1 budget=8250（旧行为逐值不变）。
 
@@ -111,8 +116,8 @@ scifi end10 回归期望逐值不变（本 Task 为行为中立的基础设施�
 
 ## 出口标准
 
-1. 归因确证并记录；真修落地，`aclose_llm_clients()`（或归因对应的对称关闭）接入 pipeline 与 harness 收尾；
-2. `SONGYAN_FORCE_EXIT` 兜底可用，长跑 harness 默认启用；
+1. 归因确证并记录；真修落地，`aclose_llm_clients()`（或归因对应的对称关闭）接入 pipeline 与 harness 收尾，且关闭逻辑基于显式 registry / 自管缓存，不依赖读取 `lru_cache` 内部值；
+2. `SONGYAN_FORCE_EXIT` 兜底可用，且只在 CLI/harness 最外层最终落盘后执行；长跑 harness 默认启用；
 3. 真修/兜底分开验收的证据落盘（两次自然退出实跑记录 + 注入测试）；
 4. 本文档执行记录补录，V9-README Task 173 行状态翻正。
 

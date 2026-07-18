@@ -61,17 +61,18 @@ def configure_logging(
 
 与 `llm/client.py:25-28` 既有 ContextVar 模式同构：
 
-- **run 入口**（`run_project_pipeline()` 开头）：`bind_contextvars(run_id=..., db_path=...)`
-- **每章开始**（`_run_single_chapter`）：`bind_contextvars(chapter_number=n)`
-- **关键 stage**（writer / rule_audit / llm_audit / revision / settlement / summary 各节点入口）：`bind_contextvars(stage=...)`
-- **version 创建后**：`bind_contextvars(version_id=...)`
+- **pipeline 入口**（`run_project_pipeline()` 开头）：先绑定 `project_id` / `db_path` 等已知字段；`run_id` 此时未必确定。
+- **run 确定后**（existing run / new run_state 分支完成后）：`bind_contextvars(run_id=...)`，这是 175 `LLMCallContext` 复用的主键字段。
+- **每章开始**（`_run_single_chapter`）：用 context token 或 try/finally 绑定 `chapter_number=n`，章节结束后清理，避免串到下一章。
+- **关键 stage**（writer / rule_audit / llm_audit / revision / settlement / summary 各节点入口）：节点入口从 state 中取 ID 重新 `bind_contextvars(stage=..., run_id=..., chapter_number=...)`；stage 结束后清理或覆盖。
+- **version 创建后**：`bind_contextvars(version_id=...)`；新版本产生时覆盖旧值，章节结束后清理。
 - run 结束：`unbind_contextvars` / `clear_contextvars` 防串 run。
 
 穿透风险：LangGraph 节点若跨线程执行 contextvars 会丢——需在节点入口从 state 取 `run_id` 重新 bind（state 只存 ID 的既有约束天然支持）。**必须有一个穿透单测**验证节点内日志带 `run_id`。
 
 ### 3. 调用点（每进程一次）
 
-- `src/songyan/cli/main.py`：`main()` 入口（全部命令受益，含 report/metrics/mark）；`--log-level` 选项不必新增，读 `settings.log_level` 即可。
+- `src/songyan/cli/main.py`：Click group `cli()` callback 中 configure（全部命令受益，含 report/metrics/mark）；`--log-level` 选项不必新增，读 `settings.log_level` 即可。
 - 长跑 harness：`scripts/run_172a7_genre_validation.py`、`scripts/run_172b_ch100_climb.py` 主函数入口（不经 CLI，必须各自 configure）。
 
 ### 4. 与 chapter_runs 对齐
@@ -92,7 +93,7 @@ def configure_logging(
 
 新建 `tests/test_174_logging_setup.py`：
 
-- `LOG_LEVEL=WARNING` configure 后：INFO 记录不出现在任何 sink；
+- `LOG_LEVEL=WARNING` configure 后：INFO 记录不出现在 console sink；文件 sink 仍按 `file_level`（默认 DEBUG）记录 INFO/DEBUG；
 - 幂等：连续两次 `configure_logging()` 不产生重复 handler、不重复输出；
 - contextvars：`bind_contextvars(run_id="r1", chapter_number=3)` 后 JSONL 记录含这两字段；
 - 穿透：在模拟节点函数内（新 context）重新 bind 后日志带 `run_id`；
@@ -113,7 +114,7 @@ scifi end10 回归期望逐值不变（行为中立基础设施，回归即证�
 
 ### 验收判据
 
-- `LOG_LEVEL=WARNING` 实跑一次短窗口：console 无 INFO 输出，文件仍有 DEBUG——死配置修活的直接证据；
+- `LOG_LEVEL=WARNING` 实跑一次短窗口：console 无 INFO 输出，`logs/app/*.jsonl` 文件仍按 `file_level=DEBUG` 保留 INFO/DEBUG——死配置修活且文件全量落盘的直接证据；
 - scifi `--end 3` 实跑后，任选一章，演示**三边重建现场**：应用日志（按 run_id+chapter_number 过滤）+ chapter_runs JSONL + DB（chapter_versions/settlements）互相对得上（budget、settlement 结果、gate 决策三处交叉一致）；
 - pytest 全绿、ruff 无新增 error；
 - scifi `--end 10` 10/10、Ch1 budget=8250。
