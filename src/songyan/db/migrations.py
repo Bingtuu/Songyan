@@ -72,6 +72,8 @@ _EXPECTED_TABLES: list[str] = [
     "adaptive_halt_decisions",
     # V8 Task 172a.2: 体裁运行时画像
     "genre_runtime_profiles",
+    # V9 Task 175: LLM 调用成本遥测
+    "llm_call_usage",
 ]
 
 
@@ -970,6 +972,7 @@ async def init_schema(db_path: str | Path | None = None) -> None:
         await _migrate_adaptive_gate_signals(conn)
         await _migrate_adaptive_halt_decisions(conn)
         await _migrate_genre_runtime_profiles(conn)
+        await _migrate_llm_call_usage(conn)
         await conn.commit()
 
 
@@ -987,6 +990,46 @@ async def _migrate_genre_runtime_profiles(conn: aiosqlite.Connection) -> None:
             created_at   TEXT DEFAULT (datetime('now')),
             updated_at   TEXT DEFAULT (datetime('now'))
         )"""
+    )
+
+
+async def _migrate_llm_call_usage(conn: aiosqlite.Connection) -> None:
+    """创建 LLM 调用成本遥测表（V9 Task 175）.
+
+    run_id 非 run 上下文（脚本/测试）为 NULL；agent 无绑定上下文时写 'unknown'；
+    token_source ∈ ('response', 'estimate')，cost_source ∈ ('provider_cost',
+    'pricing_estimate')；cached_tokens / cache_miss_tokens 允许 NULL。
+    """
+    await conn.execute(
+        """CREATE TABLE IF NOT EXISTS llm_call_usage (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            run_id            TEXT,
+            project_id        TEXT,
+            chapter_number    INTEGER,
+            agent             TEXT,
+            stage             TEXT,
+            version_id        TEXT,
+            model             TEXT NOT NULL,
+            prompt_tokens     INTEGER NOT NULL DEFAULT 0,
+            completion_tokens INTEGER NOT NULL DEFAULT 0,
+            cost_cny          REAL NOT NULL DEFAULT 0.0,
+            token_source      TEXT NOT NULL,
+            cost_source       TEXT NOT NULL,
+            cached_tokens     INTEGER,
+            cache_miss_tokens INTEGER,
+            latency_ms        INTEGER NOT NULL DEFAULT 0,
+            retry_attempt     INTEGER NOT NULL DEFAULT 0,
+            success           INTEGER NOT NULL DEFAULT 1,
+            error             TEXT,
+            created_at        TEXT NOT NULL DEFAULT (datetime('now'))
+        )"""
+    )
+    await conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_llm_call_usage_run ON llm_call_usage(run_id)"
+    )
+    await conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_llm_call_usage_run_chapter "
+        "ON llm_call_usage(run_id, chapter_number)"
     )
 
 
@@ -1049,4 +1092,5 @@ async def run_migrations(conn: aiosqlite.Connection) -> None:
     await _migrate_adaptive_gate_signals(conn)
     await _migrate_adaptive_halt_decisions(conn)
     await _migrate_genre_runtime_profiles(conn)
+    await _migrate_llm_call_usage(conn)
     logger.info("migrations.run_all", status="complete")

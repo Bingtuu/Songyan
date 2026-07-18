@@ -62,7 +62,7 @@ CREATE INDEX IF NOT EXISTS idx_llm_call_usage_run ON llm_call_usage(run_id);
 CREATE INDEX IF NOT EXISTS idx_llm_call_usage_run_chapter ON llm_call_usage(run_id, chapter_number);
 ```
 
-同步入口必须覆盖：`src/songyan/db/schema.sql`（冷启动完整 schema）、`src/songyan/db/migrations.py` 的 `REQUIRED_TABLES`、`init_schema()`、`run_migrations()`，并补 repository/migration 测试，保证新库和旧库迁移路径都能得到 `llm_call_usage`。
+同步入口必须覆盖：`src/songyan/db/schema.sql`（冷启动完整 schema）、`src/songyan/db/migrations.py` 的 `_EXPECTED_TABLES`（`verify_schema()` 校验注册表）、`init_schema()`、`run_migrations()`，并补 repository/migration 测试，保证新库和旧库迁移路径都能得到 `llm_call_usage`。
 
 **2. 新 repository `db/llm_call_usage_repo.py`**：`record(...)`（单行写入，**失败只 warning 不阻断生成**——telemetry 丢失可接受，生成不可断）、`sum_cost_for_run(run_id)`、`aggregate_for_run(run_id)`（按 chapter/agent 分组聚合）。
 

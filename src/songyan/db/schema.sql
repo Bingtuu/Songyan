@@ -683,3 +683,32 @@ CREATE INDEX IF NOT EXISTS idx_adaptive_halt_decisions_project
     ON adaptive_halt_decisions(project_id, run_id, evaluated_at_chapter);
 CREATE INDEX IF NOT EXISTS idx_adaptive_halt_decisions_status
     ON adaptive_halt_decisions(project_id, status);
+
+
+-- ============================================================
+-- 29. llm_call_usage — LLM 调用成本遥测（V9 Task 175）
+-- ============================================================
+CREATE TABLE IF NOT EXISTS llm_call_usage (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    run_id TEXT,
+    project_id TEXT,
+    chapter_number INTEGER,
+    agent TEXT,
+    stage TEXT,
+    version_id TEXT,
+    model TEXT NOT NULL,
+    prompt_tokens INTEGER NOT NULL DEFAULT 0,
+    completion_tokens INTEGER NOT NULL DEFAULT 0,
+    cost_cny REAL NOT NULL DEFAULT 0.0,
+    token_source TEXT NOT NULL,
+    cost_source TEXT NOT NULL,
+    cached_tokens INTEGER,
+    cache_miss_tokens INTEGER,
+    latency_ms INTEGER NOT NULL DEFAULT 0,
+    retry_attempt INTEGER NOT NULL DEFAULT 0,
+    success INTEGER NOT NULL DEFAULT 1,
+    error TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_llm_call_usage_run ON llm_call_usage(run_id);
+CREATE INDEX IF NOT EXISTS idx_llm_call_usage_run_chapter ON llm_call_usage(run_id, chapter_number);
