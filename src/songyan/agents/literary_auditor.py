@@ -7,6 +7,7 @@ import uuid
 from typing import Any
 
 import structlog
+from structlog.contextvars import bind_contextvars
 
 from songyan.db.review_repo import LiteraryObservationRepository
 from songyan.llm.client import call_llm
@@ -173,6 +174,7 @@ async def run_literary_audit(
     Returns:
         LiteraryAuditResult
     """
+    bind_contextvars(agent="literary_auditor")
     start_time = time.perf_counter()
 
     prompt = _render_prompt(content, context_package)

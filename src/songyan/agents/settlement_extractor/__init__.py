@@ -6,6 +6,7 @@ import time
 from typing import Any, Literal, cast
 
 import structlog
+from structlog.contextvars import bind_contextvars
 
 from songyan.db.context_repo import CharacterStateRepository
 from songyan.db.repository import CharacterRepository
@@ -625,6 +626,7 @@ async def extract_settlement(
     Returns:
         StateSettlement（含 validation_status 和 validation_errors）
     """
+    bind_contextvars(agent="settlement_extractor")
     start_time = time.perf_counter()
 
     # 1. 加载当前状态

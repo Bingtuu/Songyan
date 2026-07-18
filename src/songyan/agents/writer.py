@@ -8,6 +8,7 @@ import uuid
 from typing import Any
 
 import structlog
+from structlog.contextvars import bind_contextvars
 
 from songyan.db.repository import ChapterHeadRepository, ChapterVersionRepository
 from songyan.llm.client import call_llm
@@ -635,6 +636,7 @@ async def write_chapter(
     Returns:
         新创建的 ChapterVersion
     """
+    bind_contextvars(agent="writer")
     goal = context_package.chapter_goal
     chapter_number = goal.chapter_number
 

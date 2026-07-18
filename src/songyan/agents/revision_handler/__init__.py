@@ -8,6 +8,7 @@ import uuid
 from typing import Any
 
 import structlog
+from structlog.contextvars import bind_contextvars
 
 from songyan.db.repository import ChapterHeadRepository, ChapterVersionRepository
 from songyan.llm.client import call_llm
@@ -545,6 +546,7 @@ async def _handle_scene_split(content: str, target_scenes: int = 2) -> str:
     Task 133: 输出使用空行分隔，不再使用 ### Scene N 标记；
     每个新场景至少 600 字（中文），保持原有叙事连贯性。
     """
+    bind_contextvars(agent="revision_handler")
     prompt = (
         f"你是小说编辑。以下章节场景数不足，需要拆分为至少 {target_scenes} 个场景。\n\n"
         "要求：\n"
@@ -568,6 +570,7 @@ _handle_scene_shortage = _handle_scene_split
 
 async def _handle_scene_overflow(content: str, target_words: int) -> str:
     """当字数严重超标且场景过多时，调用 LLM 合并次要场景."""
+    bind_contextvars(agent="revision_handler")
     prompt = f"""你是小说编辑。以下章节场景过多且字数超标，需要合并次要场景。
 
 要求：
@@ -597,6 +600,7 @@ async def _patch_mandatory_reference_missing(
     要求 LLM 输出 JSON patches，通过 patch engine 局部应用，不再整章重写。
     返回修订后正文与已修复 setting_key 列表。
     """
+    bind_contextvars(agent="revision_handler")
     if not missing_refs:
         return content, []
 
@@ -883,6 +887,7 @@ async def run_revision(
     Returns:
         (RevisionOutput, revised_content)
     """
+    bind_contextvars(agent="revision_handler")
     start_time = time.perf_counter()
 
     # Task 128c: 判断是否需要 readability 专精修订

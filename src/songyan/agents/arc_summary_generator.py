@@ -5,6 +5,7 @@ from __future__ import annotations
 import uuid
 
 import structlog
+from structlog.contextvars import bind_contextvars
 
 from songyan.db.context_repo import SummaryRepository
 from songyan.db.layered_context_repo import ArcSummaryRepository, VolumeSummaryRepository
@@ -88,6 +89,8 @@ class ArcSummaryGenerator:
         Returns:
             Generated ArcSummary (already persisted to DB).
         """
+        bind_contextvars(agent="arc_summary_generator")
+
         # Check for existing arc covering this exact range
         existing = None
         arcs = await self.arc_repo.list_by_project(project_id)
@@ -202,6 +205,8 @@ class VolumeSummaryGenerator:
         Returns:
             Generated VolumeSummary (already persisted to DB).
         """
+        bind_contextvars(agent="arc_summary_generator")
+
         # Sort by start_chapter to ensure narrative order
         arcs = sorted(arc_summaries, key=lambda a: a.start_chapter)
         start_chapter = arcs[0].start_chapter if arcs else 0

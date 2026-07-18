@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import structlog
+from structlog.contextvars import bind_contextvars
 
 from songyan.agents.continuity_auditor._scanners import ORPHANED_THRESHOLDS
 from songyan.agents.rule_auditor import detect_fatigue_motifs
@@ -623,6 +624,7 @@ async def generate_creative_brief(
         LLMError: LLM 调用失败
         LLMResponseParseError: 响应解析失败
     """
+    bind_contextvars(agent="creative_director")
     logger.info(
         "creative_director.start",
         chapter_number=chapter_goal.chapter_number,
@@ -784,6 +786,7 @@ async def generate_dialogue_style_cards(
     Returns:
         新生成的对话风格卡列表（已存在风格卡的角色不产生新卡片）
     """
+    bind_contextvars(agent="creative_director")
     # 过滤已存在风格卡的角色
     chars_needing_card = [c for c in characters if c.dialogue_style_card is None]
     if not chars_needing_card:

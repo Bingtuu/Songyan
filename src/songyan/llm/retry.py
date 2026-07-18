@@ -25,6 +25,7 @@ async def retry_with_backoff(
     base_delay: float = 1.0,
     max_delay: float = 10.0,
     retryable_exceptions: tuple[type[Exception], ...] = (LLMError, TimeoutError, ConnectionError),
+    on_attempt: Callable[[int], None] | None = None,
     **kwargs: Any,
 ) -> T:
     """执行异步函数，失败时指数退避重试.
@@ -35,6 +36,8 @@ async def retry_with_backoff(
         base_delay: 基础延迟（秒）
         max_delay: 最大延迟（秒）
         retryable_exceptions: 哪些异常类型会触发重试
+        on_attempt: 可选回调，每次尝试（含首次）执行前以 0 起的 attempt 索引调用；
+            用于调用方按尝试透传遥测序号（Task 175）
 
     Returns:
         函数返回值
@@ -45,6 +48,8 @@ async def retry_with_backoff(
     last_exception: Exception | None = None
 
     for attempt in range(max_retries):
+        if on_attempt is not None:
+            on_attempt(attempt)
         try:
             return await coro(*args, **kwargs)
         except retryable_exceptions as e:

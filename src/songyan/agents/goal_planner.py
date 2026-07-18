@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import structlog
+from structlog.contextvars import bind_contextvars
 
 from songyan.exceptions import LLMError, LLMResponseParseError
 from songyan.llm.client import call_llm
@@ -270,6 +271,7 @@ async def define_chapter_goal(
         LLMError: LLM 调用失败
         LLMResponseParseError: 响应解析失败
     """
+    bind_contextvars(agent="goal_planner")
     logger.info(
         "goal_planner.start",
         chapter_number=chapter_number,

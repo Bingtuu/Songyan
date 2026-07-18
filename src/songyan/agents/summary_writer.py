@@ -5,6 +5,7 @@ from __future__ import annotations
 import uuid
 
 import structlog
+from structlog.contextvars import bind_contextvars
 
 from songyan.db.context_repo import SummaryRepository
 from songyan.llm.client import call_llm
@@ -244,6 +245,7 @@ async def write_chapter_summary(
     Returns:
         真实落库的 summary_id 与 ChapterSummary
     """
+    bind_contextvars(agent="summary_writer")
     prompt = _build_prompt(content, settlement)
 
     # 调用 LLM 生成 plot_summary 和 emotional_tone

@@ -11,6 +11,7 @@ from difflib import SequenceMatcher
 from typing import Any
 
 import structlog
+from structlog.contextvars import bind_contextvars
 
 from songyan.agents.writer import _strip_scene_marker_lines
 from songyan.llm.client import call_llm
@@ -219,6 +220,7 @@ async def _revise_single_scene(
         (revised_scene_content, patches, fallback)
         fallback=True 表示保留率 < MIN_PRESERVATION_RATIO，已回退到原始内容
     """
+    bind_contextvars(agent="revision_handler")
     prompt = _render_scene_prompt(scene["content"], issues, protected_fissures)
     llm_response = await call_llm(prompt, temperature=temperature)
 
