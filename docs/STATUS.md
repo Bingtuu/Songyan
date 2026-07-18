@@ -6,7 +6,7 @@
 
 | 项 | 结论 |
 |----|------|
-| 当前阶段 | **V8 全量闭环**：P/C/Q/S/V 五维全绿，xuanhuan + wuxia 两个非 sci-fi 体裁 Ch100 五门 PASS；V8.5 遗留收口（172j/172k/172l）全部完成，C 判据 end10/end15/end20 三档证据落盘 |
+| 当前阶段 | **V9 规划中（设计定稿，待开工）**：生产化地基 + urban 第三体裁 Ch100，Task 173-188 扁平编号，事实入口 `tasks/V9-README.md`。V8 已全量闭环：P/C/Q/S/V 五维全绿，xuanhuan + wuxia 双体裁 Ch100 五门 PASS，V8.5 遗留清零 |
 | V7 收尾 | **已完成**。sci-fi/space_opera + webnovel_intense 单一体裁稳定跑到 Ch200，200/200 accepted，D1 hard clean pass；Ch201-Ch220 20/20 accepted |
 | V8.1 运行时画像 | **已完成**（Task 172a + 172a.p）。`GenreRuntimeProfile` 把 Context Diet 2.0 运行时契约从 sci-fi 默认值解耦；xuanhuan Ch8 halt 已消除（base_budget=15000） |
 | V8.3 文学护栏 | **已完成**（Task 172d）。`literary_guardrail_observe` 去科幻硬编码，lexicon/主角名参数化到 `GenreProfile`，三体裁各配一套；DONE 文档已补齐 |
@@ -64,12 +64,13 @@
 
 ## 下一步
 
-1. **V8（含 V8.5）已全部完成并归档**：P/C/Q/S/V 五维全绿，xuanhuan + wuxia 双体裁 Ch100 五门 PASS，C 判据 end10/end15/end20 三档证据闭环；任务文档与报告见 `archive/v8/`，历史事实入口 `tasks/V8-README.md`。
-2. **V9 待启动**：urban 第三体裁 Ch100、跨体裁 Ch200、按体裁深度调参（172j 已解锁 max_* 调参路径；172k 执行记录含 urban/wuxia emergency 连触观察，供 base_budget 标定参考）。
+1. **V9 设计定稿，待评审开工**（事实入口 `tasks/V9-README.md`）：范围 = 生产化地基（V9.1 长跑可靠性 173-176 / V9.2 交付发布 177-181 / V9.3 工具链收编 182-184）+ urban 标定（185）与 Ch100 爬坡（186 任务书 → 187 执行）+ 收口（188）；验收 = A 组地基 8 条 + B 组 urban Ch100 六条 + C 组守护项；串行三段时序，scifi end10 回归贯穿全程。
+2. **V10 预登记**：跨体裁 Ch200（基线扩 Ch200 checkpoint + 口径冻结）、优秀度信号包（跨章同质化指数/中文 AI 腔规则包/judge 偏差对策/perplexity gate/style card）、结构升级 spike（KG 图 diff / validity interval / Storyline Tree）。
 3. **守护项**：后续 CED 仍使用 consistency-only、merged/source、正文证据口径；不得把文学 craft 或 `rule-mr-*` 聚合工作项计入 CED。
 
 ## 入口
 
+- **V9 任务事实入口（规划中，设计定稿）：`tasks/V9-README.md`**
 - V8 历史任务事实（已收尾，含 V8.5）：`tasks/V8-README.md`
 - V8 归档索引（全部任务文档与报告）：`archive/v8/INDEX.md`
 - V8 长调研报告（GenreRuntimeProfile 设计依据，活跃参考）：`docs/reports/v8-literature-and-landscape-review.md`
