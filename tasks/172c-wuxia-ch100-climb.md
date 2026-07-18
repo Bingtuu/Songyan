@@ -1,10 +1,12 @@
 # Task 172c — 第二个非 sci-fi 体裁 Ch100 爬坡验证
 
-> **状态**: 🔄 进行中（Ch1-Ch75 已完成；172c.r 伏笔 resolve + health 修复已落地并回归通过；**暂停**，待 API 低价时段启动 Ch1 完整重跑）
+> **状态**: ✅ 完成（clean rerun Ch1-Ch100 100/100 accepted；五门 PASS）
 > **归属**: V8.2 多体裁章数爬坡（V8-pass 后续增强，不回溯性阻塞 V8 完成判定）
 > **前置**: 172b xuanhuan Ch100 五门 PASS ✅；172a.7 短窗口质量同标 ✅；172e-172i 运行时契约补完 ✅
 > **候选体裁**: **wuxia**
 > **对标基线**: sci-fi Ch1-100 冻结基线（同 172b §1.1，`.tmp/scifi_ch100_baseline.json`）
+> **当前执行页**: `tasks/172c-wuxia-ch100-clean-rerun.md`（已完成）
+> **口径提示**: 下文保留 172c 初次爬坡计划与 Ch75 撞墙前的风险路由；终判事实以 `docs/reports/172c-wuxia-ch100-climb.md` 为准。
 
 ---
 
@@ -28,11 +30,25 @@ V8-README V 维度判据已由 172b（xuanhuan）闭合；172c 是**已承诺的
 
 > **质量同标纪律**：不因「武侠状态密度/命名风格特殊」放宽任何硬指标。
 
+## 1.1 终判结果（2026-07-18）
+
+172c clean rerun 已完成：project `273a8408be8e4caf8cbc1e91954da600`，run `run-82968662`，Ch1-Ch100 100/100 accepted，0 failed，0 halt。
+
+| gate | wuxia Ch100 | sci-fi Ch100 | 判定 |
+|---|---:|---:|:---:|
+| completeness | 100/100 | 100/100 | PASS |
+| budget_peak | 0.965 | 0.989 | PASS |
+| consistency CED/1k | 0.17（58 issues） | 0.40（157 issues） | PASS |
+| overdue unresolved | 35 | 168 | PASS |
+| health | 8.3 | ≥8.0 | PASS |
+
+结论：172c 达标，V8 多体裁中篇证据扩展为 xuanhuan + wuxia 两个非 sci-fi 体裁 Ch100。
+
 ## 2. 为什么选 wuxia
 
 1. **短窗口证据已达标**：wuxia `--end 10` 10/10 accepted、0 halt、peak budget 0.958、CED 8.48（优于 scifi 9.60）——具备爬坡资格。
 2. **与 xuanhuan 病理不同，互补性强**：wuxia genre_rules 仅 +27.7%（xuanhuan +79.9%），budget 压力中等；但伏笔 plant-time horizon **比 xuanhuan 更短**（峰值 +2/+3，max +11）——考验的是 S/伏笔维度而非 budget 维度，与 xuanhuan 形成互补证据。
-3. **运行时 profile 已预置**：`genre_runtime_profile_repo.py` wuxia 条目 `base_budget=9500`、`foreshadowing_horizon_floor=12`（172a.p 模拟：floor=12 → overdue@end15 从 25 压到 5）。
+3. **运行时 profile 已预置**：`genre_runtime_profile_repo.py` wuxia 条目 `base_budget=10500`、`max_character_states=8`、`character_decay.focal_gaps={full:8, compact:20, symbol:60}`、`foreshadowing_horizon_floor=48`（172c.s 基于 clean rerun Ch21/Ch25 诊断校准）。
 4. **模板骨架就绪**：`project_templates/wuxia/outline.json` 与 xuanhuan 同构——9 arc（Ch1-250）+ 3 thread，Ch100 落在 arc 3（Ch76-100）边界，全程 `has_skeleton=True`。
 
 ## 3. 实施（复用 172b 基础设施，不新增节点）
@@ -82,7 +98,7 @@ python scripts/run_172b_ch100_climb.py --to 100   # 分段爬坡，自动 resume
 
 - [x] 172a.7 短窗口质量同标（wuxia `--end 10` 10/10、CED 8.48）
 - [x] 172b xuanhuan Ch100 五门 PASS（V 维度方法论与判定器冻结）
-- [x] wuxia profile 已预置 `base_budget=9500` + `foreshadowing_horizon_floor=12`
+- [x] wuxia profile 已预置 `base_budget=10500` + `max_character_states=8` + `focal_gaps=8/20/60` + `foreshadowing_horizon_floor=48`（172c.s）
 - [x] wuxia 模板骨架 9-arc/3-thread 覆盖 Ch1-250（2026-07-15 核实）
 - [x] 172e-172i 运行时契约补完（profile 字段全接线；scifi 回退回归 2746 passed）
 - [x] `.tmp/vdim_compare.py` 与 `.tmp/scifi_ch100_baseline.json` 在位（2026-07-15 核实）
@@ -92,5 +108,5 @@ python scripts/run_172b_ch100_climb.py --to 100   # 分段爬坡，自动 resume
 ## 6. 依赖
 
 - **硬前置**：172b 五门 PASS ✅（判定器、基线、事故修复全部冻结复用）。
-- **不阻塞 V8**：172c 是 V8-pass 后续增强；若 172c.p/172c.q 撞墙，按证据新建对应 `tasks/172c.<suffix>-*.md` 并在 V8-README 撞墙修复子表登记，不回溯推翻 V8-pass。
-- **后续**：172c 达标后，V8 多体裁长窗口证据闭合（2/3 非 sci-fi 体裁 Ch100）；urban 第三体裁与全体裁 Ch200 划归 V9 或更晚。
+- **不阻塞 V8**：172c 是 V8-pass 后续增强；历史撞墙已按 172c.r/172c.s/172c.t 定点修复，不回溯推翻 V8-pass。
+- **后续**：172c 已达标，V8 多体裁长窗口证据闭合（2 个非 sci-fi 体裁 Ch100）；urban 第三体裁与全体裁 Ch200 划归 V9 或更晚。

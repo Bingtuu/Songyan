@@ -70,8 +70,8 @@ def test_xuanhuan_registry_has_horizon_floor() -> None:
 
 
 def test_wuxia_registry_has_horizon_floor() -> None:
-    # 172a.p: wuxia horizon 比 xuanhuan 更短，同机制设 floor=12（172c 准备）
-    assert load_profile_from_registry("wuxia").foreshadowing_horizon_floor == 12
+    # 172c.s: clean rerun Ch21 证明 floor=12 只够短窗口，不足以支撑 Ch100。
+    assert load_profile_from_registry("wuxia").foreshadowing_horizon_floor == 48
 
 
 def test_unknown_genre_floor_falls_back_to_scifi() -> None:

@@ -29,6 +29,22 @@ def _median(values: list[int]) -> float:
     return float(statistics.median(values))
 
 
+def _is_health_low_result(result: dict[str, Any]) -> bool:
+    """Return whether a recent result should count toward health-low streak.
+
+    Older tests/runs did not persist the score in recent_results, so absence of
+    the field preserves legacy severity-only behavior. New runs include the
+    score and only count audit points below the V-gate health floor.
+    """
+    score = result.get("continuity_health_score")
+    if score is None:
+        return result.get("continuity_health_severity") is not None
+    try:
+        return float(score) < 8.0
+    except (TypeError, ValueError):
+        return result.get("continuity_health_severity") is not None
+
+
 def check_health_low_single_gate(
     report: ContinuityReport,
     config: GateConfig | None = None,
@@ -144,7 +160,7 @@ def check_health_low_streak_gate(
     audit_window = config.health_low_streak_audit_window
     if audit_window is not None:
         audit_results = [
-            r for r in recent_results if r.get("continuity_health_severity") is not None
+            r for r in recent_results if _is_health_low_result(r)
         ]
         if len(audit_results) < audit_window:
             return False, reasons
@@ -153,6 +169,9 @@ def check_health_low_streak_gate(
     else:
         window = config.health_low_streak_window
         recent = recent_results[-window:] if len(recent_results) >= window else recent_results
+        recent = [r for r in recent if _is_health_low_result(r)]
+        if not recent:
+            return False, reasons
 
     p1_total = sum(
         (r.get("continuity_health_severity") or {}).get("P1", 0) for r in recent

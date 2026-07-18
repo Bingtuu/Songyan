@@ -95,6 +95,11 @@ class ContinuityToleranceProfile(BaseModel):
         },
         description="按类别的孤立设定回收窗口",
     )
+    health_overdue_weight: float = Field(
+        default=0.3,
+        ge=0.0,
+        description="continuity health 中单个 overdue foreshadowing 的扣分权重",
+    )
 
 
 class GenreRuntimeProfile(BaseModel):

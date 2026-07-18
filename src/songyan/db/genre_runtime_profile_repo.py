@@ -73,15 +73,25 @@ def _default_registry() -> dict[str, GenreRuntimeProfile]:
     # scifi(floor=0) 不受影响。
     xuanhuan.foreshadowing_horizon_floor = 48
 
-    # wuxia: genre_rules +27.7%，中等压力，base_budget 适度抬高
+    # wuxia: genre_rules +27.7%，中等压力；172c.s Ch25 smoke 显示
+    # before_emergency 峰值贴近 1.3，同时 CED 热点集中在人物行为/声纹。
+    # 抬高 base 给角色状态装载留出真实预算，不改 CED/health 口径。
     wuxia = GenreRuntimeProfile(
         genre="wuxia",
-        base_budget=9500,
+        base_budget=10500,
     )
-    # 172a.p: wuxia 埋伏笔 horizon 比 xuanhuan 更短（--end 15 回归实测峰值 +2/+3，
-    # max +11，overdue=25）。实跑 DB 模拟：floor=12 -> overdue@end15 = 5。
-    # 与 xuanhuan 同机制复用，为 172c wuxia Ch100 爬坡做准备。
-    wuxia.foreshadowing_horizon_floor = 12
+    # 172c.s: 复用 172b.q 已验证的角色状态长窗口档，避免只给主角
+    # 1-2 条状态而让 supporting/antagonist 行为与声纹漂移。
+    wuxia.max_character_states = 8
+    wuxia.character_decay.dormant_window = 20
+    wuxia.character_decay.focal_gaps = {"full": 8, "compact": 20, "symbol": 60}
+    # 172c.t: Ch60/Ch99 vdim overdue 远低于 sci-fi 同章尺度，但 health 绝对
+    # 扣分仍触发 halt。降低 health overdue 权重，vdim overdue 门仍独立保留。
+    wuxia.continuity.health_overdue_weight = 0.15
+    # 172a.p: wuxia 短窗口用 floor=12 可压住 end15；172c.s clean rerun
+    # Ch21 证明 floor=12 在 Ch100 长窗口过短，主谜题集中逾期拖低 health。
+    # 复用 xuanhuan 的长窗口 floor=48，仍只抬高 expected horizon，不改评估口径。
+    wuxia.foreshadowing_horizon_floor = 48
 
     # urban: genre_rules ≈ scifi（-1.5%），运行时与 scifi 同级
     urban = GenreRuntimeProfile(genre="urban")

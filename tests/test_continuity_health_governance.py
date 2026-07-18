@@ -328,8 +328,9 @@ class TestHumanMarkSeverityFields:
         assert marks_dict["critical_set"].severity == "P1"
         # background orphaned → P3
         assert marks_dict["background_set"].severity == "P3"
-        # state_mismatch → P1
-        assert marks_dict["c1"].severity == "P1"
+        # state_mismatch → P3 (172c.s: observation, not hard pressure)
+        assert marks_dict["c1"].severity == "P3"
+        assert marks_dict["c1"].priority == 5
         # overdue foreshadowing → P2
         fs_mark = next(m for m in marks if m.mark_type == "foreshadowing")
         assert fs_mark.severity == "P2"

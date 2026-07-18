@@ -235,6 +235,39 @@ def test_health_low_streak_p2_triggers() -> None:
     assert any("P2_total=2" in r for r in reasons)
 
 
+def test_health_low_streak_ignores_recovered_health_score() -> None:
+    """172c.t: P2 backlog should not halt once health is back above V floor."""
+    recent = [
+        {
+            "chapter_number": 63,
+            "continuity_health_score": 8.1,
+            "continuity_health_severity": {"P1": 0, "P2": 17, "P3": 0},
+        },
+        {
+            "chapter_number": 66,
+            "continuity_health_score": 8.1,
+            "continuity_health_severity": {"P1": 0, "P2": 20, "P3": 0},
+        },
+        {
+            "chapter_number": 69,
+            "continuity_health_score": 8.1,
+            "continuity_health_severity": {"P1": 0, "P2": 20, "P3": 0},
+        },
+    ]
+    cfg = GateConfig(
+        health_low_gate_enabled=True,
+        health_low_streak_halt=True,
+        health_low_streak_window=3,
+        health_low_streak_p1_limit=1,
+        health_low_streak_p2_limit=2,
+    )
+
+    triggered, reasons = check_health_low_streak_gate(recent, cfg)
+
+    assert not triggered
+    assert reasons == []
+
+
 def test_health_low_streak_no_trigger_when_disabled() -> None:
     recent = [
         {"chapter_number": 1, "continuity_health_severity": {"P1": 1, "P2": 0, "P3": 0}},

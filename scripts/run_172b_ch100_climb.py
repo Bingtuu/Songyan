@@ -56,6 +56,17 @@ REPORT_PATH = Path(f"docs/reports/{RUN_ID}-{TEMPLATE_ID}-ch100-climb.md")
 METRICS_PATH = Path(f".tmp/task172b_{TEMPLATE_ID}_segments.jsonl")
 
 
+def _task_label() -> str:
+    return f"Task {RUN_ID}"
+
+
+def _halt_route() -> str:
+    explicit = os.getenv("HALT_ROUTE")
+    if explicit:
+        return explicit
+    return {"172b": "172b.p", "172c": "172c.t"}.get(RUN_ID, f"{RUN_ID}.p")
+
+
 def _word_count(content: str) -> int:
     chinese = len(re.findall(r"[\u4e00-\u9fff]", content))
     other = len(re.findall(r"[a-zA-Z0-9]+", content))
@@ -251,7 +262,10 @@ async def main() -> None:
         print(json.dumps(metrics, ensure_ascii=False, indent=2))
 
         if halt_reason:
-            print("=== stopping climb due to halt (retries exhausted) -> route 172b.p ===")
+            print(
+                "=== stopping climb due to halt (retries exhausted) "
+                f"-> route {_halt_route()} ==="
+            )
             break
         seg_start = seg_end + 1
 
@@ -264,7 +278,7 @@ def _write_report(
 ) -> None:
     REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
     lines = [
-        f"# Task 172b: {genre} Ch{target} 爬坡验证报告",
+        f"# {_task_label()}: {genre} Ch{target} 爬坡验证报告",
         "",
         f"- 生成时间: {datetime.now().isoformat()}",
         f"- 项目: `{project_id}`  体裁: `{genre}`  目标: Ch{target}",
@@ -286,7 +300,7 @@ def _write_report(
     if halt_reason:
         lines.append(
             f"爬坡在中途触发 halt：{halt_reason}。"
-            "按纪律路由 172b.p 定点修复，不放宽口径。"
+            f"按纪律路由 {_halt_route()} 定点修复，不放宽口径。"
         )
     elif segments and segments[-1]["up_to"] == target and segments[-1]["accepted"] == target:
         lines.append(f"Ch{target} 全 accepted 达标，无 halt。V 维度证据见上表。")

@@ -17,9 +17,10 @@ def classify_continuity_mark(mark: HumanMark | dict[str, object]) -> Literal["P1
     """将连续性标记分类为 P1/P2/P3 严重等级.
 
     分类规则（Task 118 三档策略）:
-    - P1: 涉及角色生死、设定硬冲突、重大时间线冲突（critical category 或 state_mismatch）
+    - P1: 涉及角色生死、设定硬冲突、重大时间线冲突（critical category）
     - P2: 同章多次 health_low 或涉及主线事实（recurring category 或 overdue foreshadowing）
-    - P3: 低置信或轻微连续性疑点（background/technical/historical category）
+    - P3: 低置信或轻微连续性疑点（background/technical/historical category
+      或 state_mismatch 观测项）
 
     Args:
         mark: HumanMark 实例或包含 mark_type/priority/category 等字段的字典
@@ -32,6 +33,7 @@ def classify_continuity_mark(mark: HumanMark | dict[str, object]) -> Literal["P1
         mark_type = mark.mark_type
         priority = mark.priority
         note = mark.note
+        severity = mark.severity
     else:
         raw = mark
         mark_type = cast(
@@ -40,8 +42,12 @@ def classify_continuity_mark(mark: HumanMark | dict[str, object]) -> Literal["P1
         )
         priority = cast(int, raw.get("priority", 5))
         note = cast(str, raw.get("note", ""))
+        severity = cast(str | None, raw.get("severity"))
 
-    # state_mismatch 类（角色状态矛盾）→ P1
+    if severity in {"P1", "P2", "P3"}:
+        return severity
+
+    # 旧记录兜底：显式 severity 缺失时，沿用旧 character mark 的保守分类。
     if mark_type == "character" or "mismatch" in note.lower() or "矛盾" in note:
         return "P1"
 

@@ -207,7 +207,10 @@ class ContinuityAuditor:
         # 无法语义区分"角色进展"与"真实矛盾"（171p 实证），其信号不可信。
         # 真实矛盾由 LLM 一致性审查（coherence_critical/major）在章级 revision 阻断。
         # state_mismatch 仍入库、仍可查（Tier 2 观测），仅不拖低健康分。
-        score -= _diminishing_count(len(overdue)) * 0.3 * factor
+        overdue_weight = 0.3
+        if self.runtime_profile is not None:
+            overdue_weight = self.runtime_profile.continuity.health_overdue_weight
+        score -= _diminishing_count(len(overdue)) * overdue_weight * factor
 
         floor = 3.0 if chapter_number <= 30 else 2.0
         return max(floor, round(score, 1))

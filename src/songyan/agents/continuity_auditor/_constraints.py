@@ -94,16 +94,16 @@ def _generate_constraints(
                 mark_type="character",
                 target_key=mismatch.character_id,
                 note=(
-                    f"角色 {mismatch.character_id} 的 {mismatch.field} 状态矛盾："
+                    f"角色 {mismatch.character_id} 的 {mismatch.field} 状态变化疑点："
                     f"第{mismatch.chapter_a}章为'{mismatch.value_a}'，"
                     f"第{mismatch.chapter_b}章变为'{mismatch.value_b}'，"
-                    f"本章必须解释或合理化此变化。"
+                    f"可在合适时机解释或合理化此变化。"
                 ),
-                priority=9,
+                priority=5,
                 created_at_chapter=report.checked_up_to_chapter,
                 source="continuity_auditor",
                 version_id=version_id,
-                severity="P1",
+                severity="P3",
             )
         )
 

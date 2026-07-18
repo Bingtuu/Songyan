@@ -160,7 +160,8 @@ class TestGenerateConstraints:
         assert len(marks) == 1
         assert marks[0].mark_type == "character"
         assert marks[0].target_key == "c1"
-        assert marks[0].priority == 9
+        assert marks[0].priority == 5
+        assert marks[0].severity == "P3"
         assert "上海" in marks[0].note
 
     def test_overdue_foreshadowing_becomes_human_mark(self) -> None:
