@@ -4,7 +4,7 @@
 > **定位**: 自用为主、按开源标准打磨——不追求终端用户产品体验，但地基（打包/CI/日志/导出/成本）按可发布标准补齐
 > **当前口径**: V8（含 V8.5）已全量闭环。V9 不做优秀度信号包与跨体裁 Ch200（捆绑留 V10），只做两件事：① 补齐生产化地基；② urban 第三体裁 Ch100 爬坡作为地基的实战验收
 > **任务编号**: V9 从 Task 173 开始；**扁平编号**——每个可独立执行、独立验收、独立出 DONE 文档的工作项各占一个编号（粒度对标 V6 的 141-159 / V7 的 160-171w）；编号是 trace id，不等同于严格执行顺序；撞墙定点修复按父任务字母后缀登记（如 `187.p`）
-> **状态**: 已开工（2026-07-18：173/174 ⚠️ 条件完成；175 阶段 A-C 代码完成、终审通过，阶段 D 实跑验收待 API 预算确认）
+> **状态**: 已开工（173/174 ⚠️ 条件完成；175 阶段 A-C 代码完成并完成 review follow-up `f0c607e`，阶段 D 实跑验收待 API 预算确认）
 
 本文是 V9 阶段任务文档的事实入口。V8 历史事实入口见 `tasks/V8-README.md`（任务文档与报告在 `archive/v8/`）；更早阶段见 V7/V6/V5-README。
 
@@ -88,7 +88,7 @@ V9 通过 = A 组（地基）+ B 组（爬坡）同时满足，C 组（守护）
 |------|------|:----:|----------|----------|
 | 173 | 解释器退出挂死修复 | ⚠️ 条件完成 | LLM client 显式 registry + `aclose_llm_clients()`；pipeline wrapper 收尾关闭；`SONGYAN_FORCE_EXIT` / `FORCE_EXIT_AFTER_RUN` 最外层兜底；长跑 harness 默认启用 | DONE: `tasks/173-interpreter-exit-hang-fix-DONE.md`；自动化验证 + dry probe 归因证据完成；scifi end10 与两次自然退出实跑验收挂起至 175 后补跑 |
 | 174 | 日志体系落地 | ⚠️ 条件完成 | `logging_setup.py`：CLI/harness 入口 configure 一次；`LOG_LEVEL` 修活；console 人类可读 + `logs/app/*.jsonl` 文件双写；`LiteLLM`/httpx 等第三方 WARNING 起；关键日志带 `run_id/chapter_number/stage/version_id/db_path`，并与既有 `logs/chapter_runs/*.jsonl` 对齐 | DONE: `tasks/174-logging-system-foundation-DONE.md`；字段约定完成；三边重建实跑演示挂起至 175 后补跑 |
-| 175 | 成本追踪与预算熔断 | 🔄 进行中 | 阶段 A-C 代码完成：`llm_call_usage` 表+repo（`3d72774`/`407ecbc`）、call_llm 拦截+agent 归因（`9caa1c5`/`6a92fea`）、run_cost_budget 双检查熔断+total_cost 接线（`324c028`/`8a5c799`）、report 成本视图（`f2982f8`/`92e4e81`）；全量 2869 passed、ruff 绿；终审通过 | 阶段 D 实跑验收待 API 预算确认：熔断实证 + scifi end10 + 173/174 挂起项补跑 |
+| 175 | 成本追踪与预算熔断 | 🔄 进行中 | 阶段 A-C 代码完成：`llm_call_usage` 表+repo（`3d72774`/`407ecbc`）、call_llm 拦截+agent 归因（`9caa1c5`/`6a92fea`）、run_cost_budget 双检查熔断+total_cost 接线（`324c028`/`8a5c799`）、report 成本视图（`f2982f8`/`92e4e81`），review follow-up（`f0c607e`：CNY pricing estimate 口径、失败/取消尝试 report、resume total_cost 同步）；全量 2872 passed、ruff 绿 | 阶段 D 实跑验收待 API 预算确认：熔断实证 + scifi end10 + 173/174 挂起项补跑 |
 | 176 | Windows 防卡 wrapper 工具化 | ◻ | V5 文档协议 → `scripts/run_with_timeout.ps1`（PowerShell Job + 硬超时） | 用 wrapper 跑通一次短窗口实跑 |
 
 ### V9.2 交付与发布

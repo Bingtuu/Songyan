@@ -4,7 +4,7 @@
 > **类型**: 基础设施（可观测性 + 失控防护）
 > **优先级**: P0——**长窗口与高成本实跑的前置**（V9-README 执行纪律：进入多轮标定或 187 Ch100 前必须具备成本追踪与预算熔断）；同时是 173/174 挂起实跑验收的解锁条件
 > **依赖**: 174 完成（关联字段 `run_id/chapter_number/stage/version_id/db_path/project_id` 已定稿并经 contextvars 绑定，本 Task 直接消费）
-> **状态**: 🔄 进行中（阶段 A-C 代码完成：落库/拦截/熔断/report 视图全上线，全量 2866 passed；阶段 D 实跑验收待 API 预算确认）
+> **状态**: 🔄 进行中（阶段 A-C 代码完成：落库/拦截/熔断/report 视图全上线，review follow-up `f0c607e` 已修，全量 2872 passed；阶段 D 实跑验收待 API 预算确认）
 > **来源**: V9 生产就绪度审计（成本追踪为零，`phase2_graph.py` 躺 `total_cost=0.0 # TODO`）；外部调研（Sudowrite 第一用户痛点 = 成本黑盒；无人值守失控防护共识清单）；`tasks/V9-README.md` Task 175 行
 
 ---
@@ -192,11 +192,11 @@ python scripts/run_172a7_genre_validation.py --templates scifi --end 10   # 阶�
 | A2 | `9caa1c5` + `6a92fea` | call_llm 拦截（LLMCallContext 读 174 字段链、usage 三级提取、双 source 标记、cached/miss、按尝试落库、retry on_attempt 回调）+ 15 处 agent 绑定 + AST 静态测试；review 2 Important（conftest 遥测 mute 隔离、取消尝试落行）+ 6 Minor 修复 |
 | B | `324c028` + `8a5c799` | `_llm_run_cost_cny` 累计器（独立于 telemetry 成败，attempt_state 回传外层 context——`asyncio.wait_for` Task 副本不回传 ContextVar 写入的实证修正）、`init_run_cost_from_db`、前置`>=`/后置`>` 双检查熔断、`LLMBudgetExceededError` 扩展 used_cost/budget_cost、total_cost 双接线（含 pause 路径）、`_usage.py` 抽离；review 2 Important（短路分支 total_cost 透传、refresh 失败保留持久值）+ 4 顺手项修复 |
 | C | `f2982f8` | `source_stats_for_run` 查询 + `evals/cost_report.py::render_cost_section` 纯函数 + `report_cmd` 接线（宽 except 降级）；测试绕开 tests/cli 既有坑 |
-| Review follow-up | 当前工作区 | 修复代码 review 发现：LiteLLM `response_cost` USD 不再写入 `cost_cny`，当前统一 CNY pricing estimate；report 增 `total_usage_rows`，失败/取消尝试不再伪装成旧 run 无数据；resume 初始化返回值同步到 `run_state.total_cost`，防早期 `_save_run_state` 写旧值 |
+| Review follow-up | `f0c607e` | 修复代码 review 发现：LiteLLM `response_cost` USD 不再写入 `cost_cny`，当前统一 CNY pricing estimate；report 增 `total_usage_rows`，失败/取消尝试不再伪装成旧 run 无数据；resume 初始化返回值同步到 `run_state.total_cost`，防早期 `_save_run_state` 写旧值 |
 
 ### 验证
 
-- 全量 `python -m pytest tests/ -q`：**2869 passed, 2 skipped, 1 xfailed**；`ruff check src/ tests/` 全绿
+- review follow-up 前全量 `python -m pytest tests/ -q`：**2869 passed, 2 skipped, 1 xfailed**；`ruff check src/ tests/` 全绿
 - 评审：A1/A2/B/C 规格符合性 + 代码质量双 review 全通过（A2/C 修复后 Approved；B 修复后免复审）；终审（`agent-19`）结论 Yes——6 条 Minor 中唯一影响阶段 D 判据的"失败行污染 estimate 占比"已修（`source_stats_for_run` 加 `success = 1` 过滤，专测锁定）
 - review follow-up 聚焦验证：`python -m pytest tests/test_175_cost_tracking.py tests/db/test_llm_call_usage_repo.py tests/test_llm_client.py -q` → **65 passed**；`python -m pytest tests/ -q` → **2872 passed, 2 skipped, 1 xfailed**；`ruff check src/ tests/` 全绿；`git diff --check` 仅 LF/CRLF 提示
 

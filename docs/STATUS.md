@@ -6,7 +6,7 @@
 
 | 项 | 结论 |
 |----|------|
-| 当前阶段 | **V9 已开工**：生产化地基 + urban 第三体裁 Ch100，Task 173-188 扁平编号，事实入口 `tasks/V9-README.md`。V9.1：173/174 ⚠️ 条件完成；**175 阶段 A-C 代码完成**（llm_call_usage 落库、call_llm 拦截+agent 归因、run_cost_budget 双检查熔断+total_cost 接线、report 成本视图，四阶段双 review + 终审全通过），阶段 D 实跑验收（含 173/174 挂起项补跑）待 API 预算确认 |
+| 当前阶段 | **V9 已开工**：生产化地基 + urban 第三体裁 Ch100，Task 173-188 扁平编号，事实入口 `tasks/V9-README.md`。V9.1：173/174 ⚠️ 条件完成；**175 阶段 A-C 代码完成**（llm_call_usage 落库、call_llm 拦截+agent 归因、CNY pricing estimate 成本口径、run_cost_budget 双检查熔断+total_cost 接线、report 成本视图，review follow-up `f0c607e` 已修），阶段 D 实跑验收（含 173/174 挂起项补跑）待 API 预算确认 |
 | V7 收尾 | **已完成**。sci-fi/space_opera + webnovel_intense 单一体裁稳定跑到 Ch200，200/200 accepted，D1 hard clean pass；Ch201-Ch220 20/20 accepted |
 | V8.1 运行时画像 | **已完成**（Task 172a + 172a.p）。`GenreRuntimeProfile` 把 Context Diet 2.0 运行时契约从 sci-fi 默认值解耦；xuanhuan Ch8 halt 已消除（base_budget=15000） |
 | V8.3 文学护栏 | **已完成**（Task 172d）。`literary_guardrail_observe` 去科幻硬编码，lexicon/主角名参数化到 `GenreProfile`，三体裁各配一套；DONE 文档已补齐 |
@@ -15,7 +15,7 @@
 | V8 文档治理 | **已完成**：`tasks/V8-README.md` 已明确 Task 编号是 trace id；阶段任务、前置并行、撞墙修复、后续增强已分层展示 |
 | **V8 技术债** | **172e-172i 已完成**：`GenreRuntimeProfile` 声明后未接线的字段已全部接到消费者；`load_profile()` 已改为注册表基线 + DB 字段级覆盖层 |
 | V8 遗留收口 | **172j/172k/172l 全部完成**：172k C 判据三档证据闭环（xuanhuan end10 10/10、urban end15 15/15、wuxia end20 20/20 gap=0，T9=0、overdue=0、budget<1.0；xuanhuan resolved=12 确认 172c.r 生效）；详见 `tasks/V8-README.md` V8.5 节 |
-| V9.1 长跑可靠性 | **173/174 ⚠️ 条件完成**（代码级完成，实跑验收挂起）：`tasks/173-interpreter-exit-hang-fix-DONE.md`、`tasks/174-logging-system-foundation-DONE.md`；173 已补 dry probe 归因证据；真实 scifi end10 与三边重建演示因成本控制顺延至 175 后补跑。**175 阶段 A-C 代码完成**（全量 2866 passed），阶段 D 实跑验收待 API 预算确认 |
+| V9.1 长跑可靠性 | **173/174 ⚠️ 条件完成**（代码级完成，实跑验收挂起）：`tasks/173-interpreter-exit-hang-fix-DONE.md`、`tasks/174-logging-system-foundation-DONE.md`；173 已补 dry probe 归因证据；真实 scifi end10 与三边重建演示因成本控制顺延至 175 后补跑。**175 阶段 A-C 代码完成**（review follow-up 后全量 2872 passed），阶段 D 实跑验收待 API 预算确认 |
 
 ## 最新证据
 
@@ -59,7 +59,7 @@
 | 173/174 全量默认测试 | `python -m pytest tests/ -q` → **2815 passed, 2 skipped, 1 xfailed**（471s；review 修复后复验，含新增关闭失败健壮性用例） |
 | 173/174 ruff | `ruff check src/ tests/ scripts/run_172a7_genre_validation.py scripts/run_172b_ch100_climb.py` → **All checks passed** |
 | 173/174 真实 smoke 尝试 | `LOG_LEVEL=WARNING` + scifi end1/end2 曾启动；确认 console 无 LiteLLM DEBUG 请求/响应，仅 WARNING；生成链路耗时过长，为控制成本中止，未作为 end10 通过证据 |
-| 175 阶段 A-C 全量验证 | `python -m pytest tests/ -q` → **2869 passed, 2 skipped, 1 xfailed**；`ruff check src/ tests/` 全绿；四阶段规格+质量双 review 全通过，终审 Yes（`source_stats_for_run` 已加 `success=1` 过滤防失败行污染 estimate 占比） |
+| 175 阶段 A-C 全量验证 | `python -m pytest tests/ -q` → **2872 passed, 2 skipped, 1 xfailed**；`ruff check src/ tests/` 全绿；`git diff --check` 无 whitespace error（仅 LF/CRLF 提示）；review follow-up `f0c607e` 已修：LiteLLM `response_cost` USD 不写入 `cost_cny`、失败/取消尝试 report 不伪装旧 run、resume 早期保存前同步 `run_state.total_cost` |
 
 ## 项目整理
 
@@ -71,7 +71,7 @@
 
 ## 下一步
 
-1. **Task 175 阶段 D 实跑验收**（待 API 预算确认）：阶段 A-C 代码完成并终审通过（`llm_call_usage` 落库、call_llm 拦截+agent 归因、`run_cost_budget` 双检查熔断+total_cost 接线、report 成本视图，全量 2869 passed）；D = 熔断实证（¥0.05 临时库）+ scifi end10 回归（建议上限 ¥20）+ 173 两次自然退出 + 174 三边重建补跑，完成后 173/174/175 翻 ✅，V9.1 闭环。
+1. **Task 175 阶段 D 实跑验收**（待 API 预算确认）：阶段 A-C 代码完成并完成 review follow-up（`llm_call_usage` 落库、call_llm 拦截+agent 归因、CNY pricing estimate 成本口径、`run_cost_budget` 双检查熔断+total_cost 接线、report 成本视图，全量 2872 passed）；D = 熔断实证（¥0.05 临时库）+ scifi end10 回归（建议上限 ¥20）+ 173 两次自然退出 + 174 三边重建补跑，完成后 173/174/175 翻 ✅，V9.1 闭环。
 2. **V10 预登记**：跨体裁 Ch200（基线扩 Ch200 checkpoint + 口径冻结）、优秀度信号包（跨章同质化指数/中文 AI 腔规则包/judge 偏差对策/perplexity gate/style card）、结构升级 spike（KG 图 diff / validity interval / Storyline Tree）。
 3. **守护项**：后续 CED 仍使用 consistency-only、merged/source、正文证据口径；不得把文学 craft 或 `rule-mr-*` 聚合工作项计入 CED。
 
