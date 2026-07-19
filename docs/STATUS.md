@@ -6,7 +6,7 @@
 
 | 项 | 结论 |
 |----|------|
-| 当前阶段 | **V9 已开工**：生产化地基 + urban 第三体裁 Ch100，Task 173-188 扁平编号，事实入口 `tasks/V9-README.md`。**V9.1 长跑可靠性全部完成**（173/174/175/176 ✅）：挂死根因修复（sqlite checkpointer 泄漏，2.5s 自然退出）、应用日志落盘与三边重建、成本追踪与 DB 权威熔断、防卡 wrapper 工具化（自检 11/11 + 实跑验收）；下一步进入 V9.2（177-181 交付与发布） |
+| 当前阶段 | **V9 已开工**：生产化地基 + urban 第三体裁 Ch100，Task 173-188 扁平编号，事实入口 `tasks/V9-README.md`。**V9.1 长跑可靠性全部完成**（173/174/175/176 ✅）；**V9.2 Task 177 ✅ 完成**：`songyan export` 已能从 accepted head 导出 flat/arc/volume Markdown/txt 纯净书稿；下一步 Task 178 wheel 打包与资源加载修复 |
 | V7 收尾 | **已完成**。sci-fi/space_opera + webnovel_intense 单一体裁稳定跑到 Ch200，200/200 accepted，D1 hard clean pass；Ch201-Ch220 20/20 accepted |
 | V8.1 运行时画像 | **已完成**（Task 172a + 172a.p）。`GenreRuntimeProfile` 把 Context Diet 2.0 运行时契约从 sci-fi 默认值解耦；xuanhuan Ch8 halt 已消除（base_budget=15000） |
 | V8.3 文学护栏 | **已完成**（Task 172d）。`literary_guardrail_observe` 去科幻硬编码，lexicon/主角名参数化到 `GenreProfile`，三体裁各配一套；DONE 文档已补齐 |
@@ -26,7 +26,7 @@
 | Q 质量同标 | CED：wuxia 8.48 < urban 8.75 < scifi 9.60 < xuanhuan 10.48（同量级）；全体裁 budget<1.0、T9=0、0 halt |
 | S 状态可控 | 172a.p horizon floor=12：floor12 实跑 DB 严证 **overdue@<15 = 2 < 5**（vs floor=0 的 28），44 伏笔 0 floor 违规 + 数学下界证明 |
 | V 中篇爬坡 | 172b xuanhuan Ch1-Ch100 **100/100 accepted**；172c wuxia Ch1-Ch100 **100/100 accepted**；两个非 sci-fi 体裁 Ch100 五门 PASS |
-| V9 生产化地基 | 173：显式 LLM client registry + `aclose_llm_clients()`，pipeline 收尾对称关闭 LLM client + sqlite checkpointer，`SONGYAN_FORCE_EXIT` 最外层兜底；174：`configure_logging()` 接入 CLI + harness，`logs/app/*.jsonl` 落盘，第三方 WARNING 起，关键字段与 `logs/chapter_runs` 对齐；175：`llm_call_usage` 逐调用落库（token/cost 双来源标记、按重试尝试计行、agent 归因），`run_cost_budget` 双检查熔断（DB 权威）+ `total_cost` 双接线，`songyan report` 成本视图 |
+| V9 生产化地基 | 173：显式 LLM client registry + `aclose_llm_clients()`，pipeline 收尾对称关闭 LLM client + sqlite checkpointer，`SONGYAN_FORCE_EXIT` 最外层兜底；174：`configure_logging()` 接入 CLI + harness，`logs/app/*.jsonl` 落盘，第三方 WARNING 起，关键字段与 `logs/chapter_runs` 对齐；175：`llm_call_usage` 逐调用落库（token/cost 双来源标记、按重试尝试计行、agent 归因），`run_cost_budget` 双检查熔断（DB 权威）+ `total_cost` 双接线，`songyan report` 成本视图；177：`songyan export` 正式 service + CLI，accepted head 正文导出，支持 `md/txt` 与 `flat/arc/volume`，xuanhuan/wuxia Ch100 实库验收通过 |
 | V9.1 阶段 D 实跑验收（2026-07-19） | 熔断实证：¥0.05 预算 ¥0.0514 停（paused + 成本明细 + 章保留），提额 resume 至 completed，成本跨 3 进程 0.0514→0.3647 连续；scifi end10：10/10、0 halt、overdue=0、budget 峰值 0.8325、usage 151 行 estimate 0%、总成本 ¥0.886（≈¥0.089/章）、report 成本视图正确；173 挂死根因确证（sqlite checkpointer 泄漏）真修后 2.5s 自然退出；T9=1（Ch4 countdown_increase，diagnostic 级内容启发式，非系统性） |
 | 172c wuxia 段 3 | Ch51-75 完成（75/75 accepted，0 halt）；Ch75 五门：budget PASS、CED FAIL、**overdue 203 vs sci-fi 117 FAIL**、health 5.6 FAIL、completeness PASS |
 | 172c.r 修复落地 | resolve 失效四层根因全修：prompt card 1.0.4 补 resolve 契约、settlement 事实源纳 overdue、resolve 防幻觉校验、5.3 同事务覆写修复；health 口径对齐 vdim（archived/dormant/active-overdue 全计）；12 新测试绿 |
@@ -62,6 +62,7 @@
 | 173/174 真实 smoke 尝试 | `LOG_LEVEL=WARNING` + scifi end1/end2 曾启动；确认 console 无 LiteLLM DEBUG 请求/响应，仅 WARNING；生成链路耗时过长，为控制成本中止，未作为 end10 通过证据 |
 | 175 阶段 D 实跑验收（2026-07-19） | 熔断实证：¥0.05 预算 ¥0.0514 停（paused + 明细 + 章保留），提额 resume 至 completed，成本跨 3 进程连续；scifi end10：10/10、0 halt、overdue=0、budget 峰值 0.8325、usage 151 行 estimate 0%、总成本 ¥0.886、report 成本视图正确；173 挂死根因确证（sqlite checkpointer 泄漏）真修后 2.5s 自然退出；T9=1（Ch4 countdown_increase，diagnostic 级，非系统性） |
 | 175 全量验证（阶段 D 收尾） | `python -m pytest tests/ -q` → **2882 passed, 2 skipped, 1 xfailed**；`ruff check src/ tests/` → All checks passed |
+| 177 导出验收（2026-07-19） | `tests/test_177_export_service.py` **13 passed**；全量 pytest（Task 176 wrapper）**2895 passed, 2 skipped, 1 xfailed**，`WRAPPER_RESULT=PASS_NORMAL_EXIT`；`ruff check src/ tests/` 全绿；xuanhuan Ch100 arc 导出 100 章/4 文件，wuxia Ch100 flat 导出 100 章/1 文件，xuanhuan volume 忽略 `(0,0)` 占位并导出 100 章/2 文件；两库 Ch1/50/100 正文段 hash 与 DB 一致 |
 
 ## 项目整理
 
@@ -73,7 +74,7 @@
 
 ## 下一步
 
-1. **V9.2 交付与发布（177-181）**：V9.1 长跑可靠性已全部完成（173/174/175/176 ✅；176 防卡 wrapper 自检 11/11 + 实跑验收通过）；下一批任务书按波次撰写（177 export、178 wheel 打包、179 CLI 三坑、180 doctor、181 CI），详见 `tasks/V9-README.md`。
+1. **V9.2 交付与发布（178-181）**：177 export 已完成；下一步 Task 178 wheel 打包与资源加载修复，然后推进 179 CLI 三坑、180 doctor、181 CI，详见 `tasks/V9-README.md`。
 2. **V10 预登记**：跨体裁 Ch200（基线扩 Ch200 checkpoint + 口径冻结）、优秀度信号包（跨章同质化指数/中文 AI 腔规则包/judge 偏差对策/perplexity gate/style card）、结构升级 spike（KG 图 diff / validity interval / Storyline Tree）。
 3. **守护项**：后续 CED 仍使用 consistency-only、merged/source、正文证据口径；不得把文学 craft 或 `rule-mr-*` 聚合工作项计入 CED。
 
@@ -83,6 +84,8 @@
 - V9 Task 173 DONE：`tasks/173-interpreter-exit-hang-fix-DONE.md`
 - V9 Task 174 DONE：`tasks/174-logging-system-foundation-DONE.md`
 - V9 Task 175 DONE：`tasks/175-cost-tracking-and-budget-circuit-breaker-DONE.md`
+- V9 Task 176 DONE：`tasks/176-windows-anti-hang-wrapper-DONE.md`
+- V9 Task 177 DONE：`tasks/177-export-book-manuscript-DONE.md`
 - V8 历史任务事实（已收尾，含 V8.5）：`tasks/V8-README.md`
 - V8 归档索引（全部任务文档与报告）：`archive/v8/INDEX.md`
 - V8 长调研报告（GenreRuntimeProfile 设计依据，活跃参考）：`docs/reports/v8-literature-and-landscape-review.md`

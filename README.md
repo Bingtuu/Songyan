@@ -9,7 +9,7 @@
   <p>
     <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-%3E%3D3.11-blue" alt="Python >= 3.11" /></a>
     <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-blue" alt="License AGPL-3.0" /></a>
-    <img src="https://img.shields.io/badge/tests-2882%20passed-brightgreen" alt="Tests 2882 passed" />
+    <img src="https://img.shields.io/badge/tests-2895%20passed-brightgreen" alt="Tests 2895 passed" />
     <a href="https://github.com/astral-sh/ruff"><img src="https://img.shields.io/badge/code%20style-ruff-black" alt="Code style: ruff" /></a>
   </p>
 </div>
@@ -200,6 +200,7 @@ Songyan 已经过 **sci-fi 220 章**、**xuanhuan 100 章**和 **wuxia 100 章**
 | 跨章连续性 | 孤立设定和遗忘伏笔自动检测；health 评分全程稳定 |
 | 上下文控制 | Context Diet 2.0 四组件协同（分层摘要 / 角色衰减 / 设定蒸发 / 硬天花板）支撑 220+ 章不溢出 |
 | 断点续跑 | kill 后 `--resume` 继续，自动跳过已完成章节 |
+| 正文导出 | `songyan export` 从 accepted head 导出纯净书稿，支持 Markdown/txt 与 flat/arc/volume 分组 |
 | 自适应门禁 | 正常波动不误伤，真实退化自动暂停（AutoHalt） |
 | 叙事骨架 | 全书大纲 → 弧规划 → 章节目标自顶向下派生；xuanhuan 已用 9-arc/3-thread 骨架跑完 Ch100 |
 | 伏笔调度 | 长程伏笔主动兑现，按体裁设 horizon floor（xuanhuan=48 / wuxia=48）；172c.r 修复伏笔 resolve 机制，172c.s 完成 wuxia 长窗口预算/角色状态/horizon 校准，172c.t 将 wuxia health overdue 权重校准到 0.15；wuxia Ch100 overdue 35 ≤ sci-fi 168 |
@@ -279,6 +280,9 @@ songyan run --project-id <id> --chapters 1-5 --auto-confirm
 
 # 断点续跑
 songyan run --project-id <id> --chapters 1-100 --auto-confirm --resume
+
+# 导出 accepted 正文书稿
+songyan export --project-id <id> --by arc --format md --output exports/
 ```
 
 ### 长跑脚本示例
@@ -301,6 +305,7 @@ python scripts/run_172b_ch100_climb.py --to 100
 | `songyan create-project [--template <id>] [--outline-file <path>]` | 交互式或从体裁模板创建项目 |
 | `songyan list-projects` | 列出所有项目 |
 | `songyan run --project-id <id> --chapters 1-10 [--auto-confirm] [--resume]` | 生成指定章节范围；`--resume` 断点续跑 |
+| `songyan export --project-id <id> [--format md|txt] [--by flat|arc|volume] [--chapters 1-100]` | 从 accepted head 导出纯净书稿 |
 | `songyan report --run-id <id>` | 流式验证报告（含 LLM 成本视图：总额/每章均/per agent/估算占比） |
 | `songyan metrics` | 质量度量指标 |
 | `songyan mark add/list/remove/update-priority` | 人工标记（continuity 修复提示）管理 |
@@ -320,7 +325,7 @@ python scripts/run_172b_ch100_climb.py --to 100
 | LLM 接入 | LiteLLM |
 | CLI | Click |
 | 日志 | structlog |
-| 测试 | pytest（2791 用例） |
+| 测试 | pytest（2895 passed, 2 skipped, 1 xfailed） |
 
 ---
 
@@ -334,7 +339,7 @@ python scripts/run_172b_ch100_climb.py --to 100
 | V8 | ✅ 完成 | 多体裁可插拔（GenreRuntimeProfile）+ xuanhuan/wuxia Ch100 五门 PASS |
 | 172c | ✅ 完成 | wuxia 第二体裁 Ch100 爬坡：clean rerun 100/100 accepted，五门 PASS |
 | V8.5 | ✅ 完成 | 验收后遗留收口：172j BudgetPruner max_* 修复、172k C 判据三档证据闭环（xuanhuan end10 / urban end15 / wuxia end20 全 accepted）、172l 文档治理 |
-| V9 | 🔄 已开工 | 生产化地基（长跑可靠性/导出/打包/CI/成本追踪/五门工具收编）+ urban 第三体裁 Ch100；Task 173/174 已完成代码级收口，下一步 175 成本追踪与预算熔断，见 `tasks/V9-README.md` |
+| V9 | 🔄 已开工 | 生产化地基（长跑可靠性/导出/打包/CI/成本追踪/五门工具收编）+ urban 第三体裁 Ch100；V9.1 173-176 全部完成，Task 177 `songyan export` 已落地，下一步 178 wheel 打包与资源加载修复，见 `tasks/V9-README.md` |
 | V10 | ⏳ 预登记 | 跨体裁 Ch200、优秀度信号包（同质化/中文 AI 腔/judge 偏差）、结构升级 spike |
 
 各阶段事实入口见 `tasks/V9-README.md`（当前阶段，已开工）与 `tasks/V5/V6/V7/V8-README.md`（均已收尾）；V8 任务文档与报告归档于 [`archive/v8/`](archive/v8/INDEX.md)。
@@ -477,6 +482,7 @@ python scripts/run_172a7_genre_validation.py --templates scifi --end 10
 - [`tasks/174-logging-system-foundation-DONE.md`](tasks/174-logging-system-foundation-DONE.md) — V9 Task 174：日志体系落地
 - [`tasks/175-cost-tracking-and-budget-circuit-breaker-DONE.md`](tasks/175-cost-tracking-and-budget-circuit-breaker-DONE.md) — V9 Task 175：成本追踪与预算熔断
 - [`tasks/176-windows-anti-hang-wrapper.md`](tasks/176-windows-anti-hang-wrapper.md) + [`-DONE.md`](tasks/176-windows-anti-hang-wrapper-DONE.md) — V9 Task 176：Windows 防卡 wrapper 工具化
+- [`tasks/177-export-book-manuscript-DONE.md`](tasks/177-export-book-manuscript-DONE.md) — V9 Task 177：`songyan export` 正文导出
 - [`tasks/V8-README.md`](tasks/V8-README.md) — V8 任务事实入口（已收尾，含编号治理规则与五维验收证据链）
 - [`archive/v8/INDEX.md`](archive/v8/INDEX.md) — V8 任务文档与报告归档索引（172-172l 全部任务书、双体裁 Ch100 验收报告、短窗口矩阵）
 - [`docs/reports/v8-literature-and-landscape-review.md`](docs/reports/v8-literature-and-landscape-review.md) — V8 长调研报告（体裁差异与 GenreRuntimeProfile 设计依据）

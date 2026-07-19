@@ -4,7 +4,7 @@
 > **类型**: 功能（交付链最后一公里）
 > **优先级**: P0（V9-README 审计 P0 ③：写完 100 章拿不到书稿——无 export 命令，8+ 任务脚本各复制一份 `_export_prose()`）
 > **依赖**: 无（只读功能；174 日志、175 成本不影响）
-> **状态**: ◻ 规划中
+> **状态**: ✅ 完成
 > **来源**: V9 生产就绪度审计；`tasks/V9-README.md` Task 177 行
 
 ---
@@ -121,14 +121,34 @@ DATABASE_URL=sqlite:///.tmp/task172b_xuanhuan_ch100.db songyan export --project-
 - 导出章数 = 100（与 DB 中 accepted head 数一致）；
 - 抽查至少 3 章内容与 DB `chapter_versions.content` 逐字一致（只 hash 正文段，不含导出标题包装）；
 - 弧分组与 `arc_summaries` 有效范围一致；无效/空分组不生成文件；
-- 当前样本全文 grep 无导出器主动插入的 `version_id`、`---` 分隔线、字数统计；
+- 当前样本全文 grep 无导出器主动插入的 `version_id`、字数统计；若命中 `---`，必须用 DB 正文段 hash 判定来源（本 Task 不改写正文）；
 - 二验：`DATABASE_URL=sqlite:///.tmp/task172b_wuxia_ch100.db` + project `273a8408be8e4caf8cbc1e91954da600` flat 导出同样完整。
+
+## 执行记录（2026-07-19）
+
+### 实现落点
+
+- 新增 `src/songyan/services/export_service.py`：`collect_accepted_chapters()` 只读 accepted head，经 `accepted_version_id` 加载 `chapter_versions.content`；`render_book()` / `render_book_files()` 提供纯函数渲染；`export_project()` 负责落盘并返回本次生成文件与章数。
+- 新增 `songyan export` CLI：支持 `--project-id`、`--format md|txt`、`--by flat|arc|volume`、`--chapters a-b`、`--output <dir>`；输出本次文件清单，不扫描目录推断结果。
+- 分组规则已落地：`(0,0)` 等无效分组 warning 后忽略；重叠分组 first-match + warning；空分组不生成文件；未覆盖章节归入 `arc-00-未分弧` / `volume-00-未分卷`。
+- Windows 文件名脱敏已覆盖非法字符、控制字符、尾随点/空格、空标题 fallback 与保留名前缀保护；重复导出覆盖同名文件但不清理输出目录旧文件。
+
+### 测试与验收
+
+- 聚焦测试：`python -m pytest tests/test_177_export_service.py -q` → **13 passed**。
+- 全量测试：`powershell -NoProfile -File scripts\run_with_timeout.ps1 -TimeoutSec 1200 -DetectPytestSummary -- python -m pytest tests/ -q` → **2895 passed, 2 skipped, 1 xfailed, 7 warnings**；wrapper → `WRAPPER_RESULT=PASS_NORMAL_EXIT`。
+- Ruff：`ruff check src/ tests/` → **All checks passed**。
+- xuanhuan arc 实导出：`.tmp/task172b_xuanhuan_ch100.db` + project `1e7ce6279b224e7f8e476f6f4e963417` → **100 章 / 4 个 arc 文件**，落盘 `.tmp/177_export_check/xuanhuan_arc/`。
+- wuxia flat 二验：`.tmp/task172b_wuxia_ch100.db` + project `273a8408be8e4caf8cbc1e91954da600` → **100 章 / 1 个 flat 文件**，落盘 `.tmp/177_export_check/wuxia_flat/`。
+- volume 模式补验：xuanhuan volume → warning 忽略 `(0,0)` 卷占位，生成 **2 个文件**：`volume-01-第一卷：觉醒.md`（25 章）与 `volume-00-未分卷.md`（75 章）。
+- 抽章 hash：xuanhuan Ch1/50/100 与 wuxia Ch1/50/100 的导出正文段 sha256 前 16 位均与 DB `chapter_versions.content` 一致。
+- 洁净性说明：验收 grep 发现若干 `---`，反查 hash 证明来自 DB 正文原文，非导出器包装主动插入；导出器未插入 `version_id`、评分、字数统计、run metadata 或历史 `_export_prose()` 的分隔线。
 
 ## 出口标准
 
-1. `songyan export` 落地（CLI + service + 纯函数渲染），全量测试绿、ruff 绿；
-2. 既有 Ch100 DB 导出验收证据落盘（章数/抽章 hash/分组/grep 洁净）；
-3. 本 Task 执行记录补录本文档，V9-README 177 行翻正。
+1. ✅ `songyan export` 落地（CLI + service + 纯函数渲染），全量测试绿、ruff 绿；
+2. ✅ 既有 Ch100 DB 导出验收证据落盘（章数/抽章 hash/分组/洁净性来源判定）；
+3. ✅ 本 Task 执行记录补录本文档，V9-README 177 行翻正。
 
 ## 撞墙路由
 

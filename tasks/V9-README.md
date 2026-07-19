@@ -4,7 +4,7 @@
 > **定位**: 自用为主、按开源标准打磨——不追求终端用户产品体验，但地基（打包/CI/日志/导出/成本）按可发布标准补齐
 > **当前口径**: V8（含 V8.5）已全量闭环。V9 不做优秀度信号包与跨体裁 Ch200（捆绑留 V10），只做两件事：① 补齐生产化地基；② urban 第三体裁 Ch100 爬坡作为地基的实战验收
 > **任务编号**: V9 从 Task 173 开始；**扁平编号**——每个可独立执行、独立验收、独立出 DONE 文档的工作项各占一个编号（粒度对标 V6 的 141-159 / V7 的 160-171w）；编号是 trace id，不等同于严格执行顺序；撞墙定点修复按父任务字母后缀登记（如 `187.p`）
-> **状态**: 已开工（2026-07-19：**V9.1 全部完成**（173/174/175/176 ✅）；下一步 V9.2 交付与发布 177-181）
+> **状态**: 已开工（2026-07-19：**V9.1 全部完成**（173/174/175/176 ✅）；V9.2 Task 177 ✅ 完成；下一步 178 wheel 打包与资源加载修复）
 
 本文是 V9 阶段任务文档的事实入口。V8 历史事实入口见 `tasks/V8-README.md`（任务文档与报告在 `archive/v8/`）；更早阶段见 V7/V6/V5-README。
 
@@ -34,7 +34,7 @@
 
 ### 内部生产就绪度审计要点（2026-07-18，十项）
 
-- **P0**：① 解释器退出挂死已复现两次（172k），173 已补 LLM client 显式关闭与最外层 force-exit 兜底；② 全仓库无一次 `structlog.configure`，174 已落地应用日志与关联字段；③ 写完 100 章拿不到书稿（无 export 命令，8+ 任务脚本各复制一份 `_export_prose()`）；④ `pip install .` 成 wheel 即坏——`prompts/`、`genres/`、`creative_modes/`、`project_templates/` 等运行资源不是 package data
+- **P0**：① 解释器退出挂死已复现两次（172k），173 已补 LLM client 显式关闭与最外层 force-exit 兜底；② 全仓库无一次 `structlog.configure`，174 已落地应用日志与关联字段；~~③ 写完 100 章拿不到书稿~~（**177 已落地**：`songyan export` 从 accepted head 导出 flat/arc/volume Markdown/txt）；④ `pip install .` 成 wheel 即坏——`prompts/`、`genres/`、`creative_modes/`、`project_templates/` 等运行资源不是 package data
 - **P1**：~~成本追踪为零~~（**175 已落地**：`llm_call_usage` 逐调用落库 + `total_cost` 双接线 + report 成本视图 + `run_cost_budget` 熔断）；CLI 三坑（run 不回显 run_id、`--mode-id` 默认不回读项目 mode、README 表漏 `index` 命令）；无 CI 且 `tests/cli/test_cli.py` 4 个既有失败
 - **P2**：Profile 调参只有 Python API 无 CLI；五门判定器在 `.tmp/` 待收编；Windows 防卡协议只是文档未工具化
 
@@ -50,7 +50,7 @@ V9 通过 = A 组（地基）+ B 组（爬坡）同时满足，C 组（守护）
 |---|------|-----------|
 | A1 | `pip install .`（非 `-e`）装出的 wheel 在非仓库 cwd 能直接跑通 `create-project --template scifi` + `run --chapters 1-3` | 178 |
 | A2 | `LOG_LEVEL` 生效；应用日志落盘 `logs/app/`，并与既有 `logs/chapter_runs/` 逐章 JSONL 通过 `run_id/chapter/stage/version_id` 关联；单章事故现场可从应用日志 + run log + DB 重建（**已闭环**：scifi end10 Ch4 四维度交叉一致） | 174 |
-| A3 | `songyan export --project-id <id>` 产出按弧/卷组织的纯净书稿（Markdown/txt） | 177 |
+| A3 | `songyan export --project-id <id>` 产出按弧/卷组织的纯净书稿（Markdown/txt）（**已闭环**：xuanhuan arc 100 章、wuxia flat 100 章、volume 占位过滤 + hash 抽查通过） | 177 |
 | A4 | LLM 调用 token/成本逐条落库；调用上下文能追溯到 run/chapter/agent；`songyan report` 含成本视图（per run/chapter/agent）；run 级成本预算硬上限，耗尽优雅停跑且可 `--resume`（**已实跑验收**：pause→提额 resume→completed） | 175 |
 | A5 | 解释器退出挂死有代码级兜底（已落地，py-spy 归因确证：sqlite checkpointer 泄漏）；连续两次短窗口实跑进程自然退出（**已闭环**：sqlite 模式 2.5s + memory 模式四次 1.2-1.9s） | 173 |
 | A6 | CI 上线（ruff + mypy + pytest 分层）；`tests/cli` 不再被默认跳过或由 CI 单独覆盖，4 个既有失败修复，全量绿 | 181 |
@@ -95,7 +95,7 @@ V9 通过 = A 组（地基）+ B 组（爬坡）同时满足，C 组（守护）
 
 | Task | 名称 | 状态 | 内容要点 | 验收要点 |
 |------|------|:----:|----------|----------|
-| 177 | songyan export 正文导出 | ◻ | accepted head 正文 + 弧/卷元数据；`--format md/txt --by arc/flat`；收编任务脚本里的 `_export_prose()` 复制粘贴为正式 service | 从既有 Ch100 DB 导出完整可读书稿 |
+| 177 | songyan export 正文导出 | ✅ | accepted head 正文 + 弧/卷元数据；`--format md/txt --by flat/arc/volume`；正式 service 收编任务脚本里的 `_export_prose()` 模式但不改历史脚本 | DONE: `tasks/177-export-book-manuscript-DONE.md`；xuanhuan Ch100 arc 4 文件、wuxia Ch100 flat 1 文件、xuanhuan volume 忽略 `(0,0)` 占位并完整导出；抽章 hash 与 DB 正文一致 |
 | 178 | wheel 打包与资源加载修复 | ◻ | 将 `prompts/`、`genres/`、`creative_modes/`、`project_templates/`、`prompts/literary_plugins/` 等运行资源纳入 wheel；优先用 `importlib.resources` 或等价 package-data 方案统一 loader，保留测试可注入外部目录能力；全量扫描并更新所有根目录相对路径引用，不把“移动目录后自然正确”作为前提 | 干净 venv `pip install .` 后，在非仓库 cwd 跑通资源枚举、`create-project --template scifi`、scifi 1-3 章；7 个 genre、4 个 mode、全部模板、prompt cards、literary plugins 可加载；全量测试绿 |
 | 179 | CLI 体验修复 | ◻ | run 成功回显 run_id；`run --mode-id` 默认回读 `project.mode_id`；README CLI 表补 `index` 与全参数 | 三坑各有测试或实跑证据 |
 | 180 | songyan doctor 环境自检 | ◻ | .env / API key 连通性 / DB 可写 / 模板目录完整性；key 错误在首次 LLM 调用前给可读提示 | 构造坏环境逐项验证提示质量 |

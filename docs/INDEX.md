@@ -8,7 +8,7 @@
 |------|------|
 | `AGENTS.md` | 开发代理短指令与不可违背规则 |
 | `docs/STATUS.md` | 当前状态、测试口径、下一步 |
-| `tasks/V9-README.md` | **V9 任务事实入口（已开工）**：生产化地基 + urban 第三体裁 Ch100，Task 173-188 扁平编号；**V9.1 全部完成**（173/174/175/176 ✅），下一步 V9.2（177-181） |
+| `tasks/V9-README.md` | **V9 任务事实入口（已开工）**：生产化地基 + urban 第三体裁 Ch100，Task 173-188 扁平编号；**V9.1 全部完成**（173/174/175/176 ✅），**V9.2 Task 177 已完成**，下一步 178 wheel 打包与资源加载修复 |
 | `tasks/V8-README.md` | **V8 历史任务事实入口（已收尾，含 V8.5）**：多体裁可插拔质量 + 章数爬坡；含 Task 编号治理规则；任务文档与报告归档 `archive/v8/` |
 | `tasks/V7-README.md` | **V7 历史任务事实入口（已收尾）**：sci-fi 单一体裁 Ch200 达成 |
 | `tasks/V6-README.md` | V6 历史任务事实入口：叙事骨架 MVP + 度量 + 长跑底盘，Task 141-159 |
@@ -43,6 +43,8 @@ V8 已全量闭环（P/C/Q/S/V 五维全绿 + V8.5 遗留清零）。任务文�
 | `tasks/175-cost-tracking-and-budget-circuit-breaker-DONE.md` | Task 175 完成报告：成本遥测 + DB 权威熔断 + report 成本视图，含阶段 D 实跑证据 |
 | `tasks/176-windows-anti-hang-wrapper.md` | Task 176 任务书：Windows 防卡 wrapper（✅ 完成） |
 | `tasks/176-windows-anti-hang-wrapper-DONE.md` | Task 176 完成报告：通用超时 wrapper + 进程树清理 + 自检矩阵 |
+| `tasks/177-export-book-manuscript.md` | Task 177 任务书：`songyan export` 正文导出（✅ 完成） |
+| `tasks/177-export-book-manuscript-DONE.md` | Task 177 完成报告：accepted head 正文导出 + flat/arc/volume Markdown/txt + Ch100 实库验收 |
 | `tasks/173-interpreter-exit-hang-fix.md` | Task 173 任务书：解释器退出挂死修复 |
 | `tasks/173-interpreter-exit-hang-fix-DONE.md` | Task 173 完成报告：LLM client 生命周期关闭 + force-exit 兜底 |
 | `tasks/174-logging-system-foundation.md` | Task 174 任务书：日志体系落地 |
@@ -113,7 +115,8 @@ V8 已全量闭环（P/C/Q/S/V 五维全绿 + V8.5 遗留清零）。任务文�
 | 场景 | 文件 |
 |------|------|
 | V9 任务入口（已开工） | `tasks/V9-README.md` |
-| V9 长跑可靠性 DONE | `tasks/173-interpreter-exit-hang-fix-DONE.md`、`tasks/174-logging-system-foundation-DONE.md` |
+| V9 长跑可靠性 DONE | `tasks/173-interpreter-exit-hang-fix-DONE.md`、`tasks/174-logging-system-foundation-DONE.md`、`tasks/175-cost-tracking-and-budget-circuit-breaker-DONE.md`、`tasks/176-windows-anti-hang-wrapper-DONE.md` |
+| V9 交付导出 DONE | `tasks/177-export-book-manuscript-DONE.md` |
 | V8 历史任务入口（已收尾） | `tasks/V8-README.md` |
 | 当前项目状态 | `docs/STATUS.md` |
 | V8 归档索引（任务文档与报告） | `archive/v8/INDEX.md` |

@@ -30,6 +30,13 @@ from songyan.models.gate_config import GateConfig
 from songyan.models.human_mark import HumanMark
 from songyan.models.project import ProjectSetting, derive_arc_boundaries
 from songyan.project_templates import ProjectInitializer, ProjectTemplateLoader
+from songyan.services.export_service import (
+    ExportedFile,
+    ExportFormat,
+    GroupBy,
+    export_project,
+    parse_chapter_range,
+)
 from songyan.utils.logging_setup import configure_logging
 from songyan.utils.process_exit import force_exit_after_run_if_requested
 from songyan.workflows.phase2_graph import run_project_pipeline
@@ -453,6 +460,82 @@ def list_projects() -> None:
             f"{row['genre_id']:<10} {row['mode_id']:<10} "
             f"{row['protagonist_name']:<10} {row['created_at']}"
         )
+
+
+async def _run_export_project(
+    project_id: str,
+    *,
+    output_dir: Path,
+    fmt: ExportFormat,
+    by: GroupBy,
+    chapters: tuple[int, int] | None,
+) -> list[ExportedFile]:
+    return await export_project(
+        project_id,
+        output_dir=output_dir,
+        fmt=fmt,
+        by=by,
+        chapters=chapters,
+    )
+
+
+@cli.command(name="export")
+@click.option("--project-id", required=True, help="项目 ID")
+@click.option(
+    "--format",
+    "fmt",
+    default="md",
+    show_default=True,
+    type=click.Choice(["md", "txt"]),
+    help="导出格式",
+)
+@click.option(
+    "--by",
+    "group_by",
+    default="flat",
+    show_default=True,
+    type=click.Choice(["flat", "arc", "volume"]),
+    help="导出分组方式",
+)
+@click.option("--chapters", default=None, help="章节范围，如 1-100；留空导出全部 accepted 章")
+@click.option(
+    "--output",
+    "output_dir",
+    default=Path("exports"),
+    show_default=True,
+    type=click.Path(file_okay=False, dir_okay=True, path_type=Path),
+    help="输出目录",
+)
+def export_cmd(
+    project_id: str,
+    fmt: str,
+    group_by: str,
+    chapters: str | None,
+    output_dir: Path,
+) -> None:
+    """导出 accepted head 正文为纯净书稿."""
+    try:
+        chapter_range = parse_chapter_range(chapters)
+        exported = asyncio.run(
+            _run_export_project(
+                project_id,
+                output_dir=output_dir,
+                fmt=cast(ExportFormat, fmt),
+                by=cast(GroupBy, group_by),
+                chapters=chapter_range,
+            )
+        )
+    except click.Abort:
+        raise
+    except SongyanError as exc:
+        raise click.ClickException(str(exc)) from exc
+    except _CLI_CATCHABLE as exc:
+        raise click.ClickException(str(exc)) from exc
+
+    total_chapters = sum(item.chapter_count for item in exported)
+    click.echo(f"已导出 {total_chapters} 章到 {len(exported)} 个文件:")
+    for item in exported:
+        click.echo(f"  {item.path} ({item.chapter_count} 章)")
 
 
 @cli.command()
