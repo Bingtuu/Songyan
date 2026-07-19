@@ -4,7 +4,7 @@
 > **类型**: 基础设施（可观测性 + 失控防护）
 > **优先级**: P0——**长窗口与高成本实跑的前置**（V9-README 执行纪律：进入多轮标定或 187 Ch100 前必须具备成本追踪与预算熔断）；同时是 173/174 挂起实跑验收的解锁条件
 > **依赖**: 174 完成（关联字段 `run_id/chapter_number/stage/version_id/db_path/project_id` 已定稿并经 contextvars 绑定，本 Task 直接消费）
-> **状态**: ◻ 规划中
+> **状态**: 🔄 进行中（阶段 A-C 代码完成：落库/拦截/熔断/report 视图全上线，全量 2866 passed；阶段 D 实跑验收待 API 预算确认）
 > **来源**: V9 生产就绪度审计（成本追踪为零，`phase2_graph.py` 躺 `total_cost=0.0 # TODO`）；外部调研（Sudowrite 第一用户痛点 = 成本黑盒；无人值守失控防护共识清单）；`tasks/V9-README.md` Task 175 行
 
 ---
@@ -178,6 +178,37 @@ python scripts/run_172a7_genre_validation.py --templates scifi --end 10   # 阶�
 3. `total_cost` 与 report 成本视图可用；
 4. 阶段 D 四项实跑证据全部落盘，173/174 状态翻 ✅；
 5. 本 Task 执行记录补录本文档，V9-README Task 175 行翻正。
+
+---
+
+## 执行记录（2026-07-18，阶段 A-C）
+
+### 提交链
+
+| 阶段 | 提交 | 内容 |
+|---|---|---|
+| A1 | `3d72774` + `407ecbc` | `llm_call_usage` 表（19 列+2 索引，schema.sql/migrations/_EXPECTED_TABLES/init_schema/run_migrations 五处同步）+ repo（record 全捕获容错 / sum / aggregate）；review 3 Minor 修复（NULL 分组语义、运行时白名单、索引断言） |
+| A2 | `9caa1c5` + `6a92fea` | call_llm 拦截（LLMCallContext 读 174 字段链、usage 三级提取、双 source 标记、cached/miss、按尝试落库、retry on_attempt 回调）+ 15 处 agent 绑定 + AST 静态测试；review 2 Important（conftest 遥测 mute 隔离、取消尝试落行）+ 6 Minor 修复 |
+| B | `324c028` + `8a5c799` | `_llm_run_cost_cny` 累计器（独立于 telemetry 成败，attempt_state 回传外层 context——`asyncio.wait_for` Task 副本不回传 ContextVar 写入的实证修正）、`init_run_cost_from_db`、前置`>=`/后置`>` 双检查熔断、`LLMBudgetExceededError` 扩展 used_cost/budget_cost、total_cost 双接线（含 pause 路径）、`_usage.py` 抽离；review 2 Important（短路分支 total_cost 透传、refresh 失败保留持久值）+ 4 顺手项修复 |
+| C | `f2982f8` | `source_stats_for_run` 查询 + `evals/cost_report.py::render_cost_section` 纯函数 + `report_cmd` 接线（宽 except 降级）；测试绕开 tests/cli 既有坑 |
+
+### 验证
+
+- 全量 `python -m pytest tests/ -q`：**2866 passed, 2 skipped, 1 xfailed**；`ruff check src/ tests/` 全绿
+- 评审：A1/A2/B 规格符合性 + 代码质量双 review 全通过（A2 修复后 Approved；B 修复后免复审）；C 规格符合性通过，质量 review 因 subagent 配额暂缺（C 为最小阶段：纯函数 + 单查询 + CLI 接线）
+
+### 关键偏差与决策（已记录）
+
+- `_invoke` 内经 `attempt_state` 回传成本到外层 context 累计（`asyncio.wait_for` Task 副本不回传 ContextVar 写入，红测暴露后修正）
+- pipeline 三处 sum 查询容错回退（`_sum_run_cost_or_none` 失败 None 保留既有值）：陈旧 dev 库无新表时不杀 run，与"telemetry 丢失可接受"哲学一致；独立验证确认该路径在 parent commit 同样失败（环境性，非本任务回归）
+- 「每章均成本」= run 总成本（含 run 级调用）/章节数，run 级调用次数单列注释
+- 既有 quirk 未动：`report_cmd -o` 只用 `output.parent`（文件名始终 `report-<run_id>.md`）
+
+### 待办
+
+- 阶段 D 实跑验收（熔断实证 + scifi end10 + 173/174 挂起项补跑）：待 API 预算确认
+- C 阶段质量 review 补做（subagent 配额恢复后或与终审合并）
+- dev 库 `songyan.db` 需跑一次 `init_schema` 获得遥测表（幂等）
 
 ---
 

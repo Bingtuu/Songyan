@@ -15,7 +15,7 @@
 | V8 文档治理 | **已完成**：`tasks/V8-README.md` 已明确 Task 编号是 trace id；阶段任务、前置并行、撞墙修复、后续增强已分层展示 |
 | **V8 技术债** | **172e-172i 已完成**：`GenreRuntimeProfile` 声明后未接线的字段已全部接到消费者；`load_profile()` 已改为注册表基线 + DB 字段级覆盖层 |
 | V8 遗留收口 | **172j/172k/172l 全部完成**：172k C 判据三档证据闭环（xuanhuan end10 10/10、urban end15 15/15、wuxia end20 20/20 gap=0，T9=0、overdue=0、budget<1.0；xuanhuan resolved=12 确认 172c.r 生效）；详见 `tasks/V8-README.md` V8.5 节 |
-| V9.1 长跑可靠性 | **173/174 ⚠️ 条件完成**（代码级完成，实跑验收挂起）：`tasks/173-interpreter-exit-hang-fix-DONE.md`、`tasks/174-logging-system-foundation-DONE.md`；173 已补 dry probe 归因证据；真实 scifi end10 与三边重建演示因成本控制顺延至 175 后补跑 |
+| V9.1 长跑可靠性 | **173/174 ⚠️ 条件完成**（代码级完成，实跑验收挂起）：`tasks/173-interpreter-exit-hang-fix-DONE.md`、`tasks/174-logging-system-foundation-DONE.md`；173 已补 dry probe 归因证据；真实 scifi end10 与三边重建演示因成本控制顺延至 175 后补跑。**175 阶段 A-C 代码完成**（全量 2866 passed），阶段 D 实跑验收待 API 预算确认 |
 
 ## 最新证据
 

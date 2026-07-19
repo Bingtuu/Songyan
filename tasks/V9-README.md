@@ -88,7 +88,7 @@ V9 通过 = A 组（地基）+ B 组（爬坡）同时满足，C 组（守护）
 |------|------|:----:|----------|----------|
 | 173 | 解释器退出挂死修复 | ⚠️ 条件完成 | LLM client 显式 registry + `aclose_llm_clients()`；pipeline wrapper 收尾关闭；`SONGYAN_FORCE_EXIT` / `FORCE_EXIT_AFTER_RUN` 最外层兜底；长跑 harness 默认启用 | DONE: `tasks/173-interpreter-exit-hang-fix-DONE.md`；自动化验证 + dry probe 归因证据完成；scifi end10 与两次自然退出实跑验收挂起至 175 后补跑 |
 | 174 | 日志体系落地 | ⚠️ 条件完成 | `logging_setup.py`：CLI/harness 入口 configure 一次；`LOG_LEVEL` 修活；console 人类可读 + `logs/app/*.jsonl` 文件双写；`LiteLLM`/httpx 等第三方 WARNING 起；关键日志带 `run_id/chapter_number/stage/version_id/db_path`，并与既有 `logs/chapter_runs/*.jsonl` 对齐 | DONE: `tasks/174-logging-system-foundation-DONE.md`；字段约定完成；三边重建实跑演示挂起至 175 后补跑 |
-| 175 | 成本追踪与预算熔断 | ◻ | LLM 层引入 `LLMCallContext`/ContextVar 传递 run/chapter/agent/stage；统一读 response usage 落新表 `llm_call_usage`（run/chapter/agent/stage/model/tokens/cost/latency/retry_count）；usage 缺失时走 `utils/cost_estimator.py` fallback 并标记来源；真实成本接入既有 `LLMBudgetExceededError` 路径；新增 `run_cost_budget` 配置（默认 0=不限），与现有 `llm_run_call_budget` 调用次数预算分开；`songyan report` 成本视图 | 实跑后 report 能按 run/chapter/agent 拆成本；预算耗尽优雅停跑可 resume；重试不重复计费或明确记录重试成本 |
+| 175 | 成本追踪与预算熔断 | 🔄 进行中 | 阶段 A-C 代码完成：`llm_call_usage` 表+repo（`3d72774`/`407ecbc`）、call_llm 拦截+agent 归因（`9caa1c5`/`6a92fea`）、run_cost_budget 双检查熔断+total_cost 接线（`324c028`/`8a5c799`）、report 成本视图（`f2982f8`）；全量 2866 passed、ruff 绿 | 阶段 D 实跑验收待 API 预算确认：熔断实证 + scifi end10 + 173/174 挂起项补跑 |
 | 176 | Windows 防卡 wrapper 工具化 | ◻ | V5 文档协议 → `scripts/run_with_timeout.ps1`（PowerShell Job + 硬超时） | 用 wrapper 跑通一次短窗口实跑 |
 
 ### V9.2 交付与发布
