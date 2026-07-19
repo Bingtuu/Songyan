@@ -38,12 +38,23 @@ songyan export --project-id <id> [--format md|txt] [--by flat|arc|volume] [--cha
 - `--by volume`：同构（`volume_summaries`）
 - DATABASE_URL 走既有 `settings.database_url`（env 可指向任意库，如 `.tmp` 的 Ch100 库）——与 175 实跑验收同模式
 - 输出：打印生成的文件清单（路径 + 章数）
+- 输出文件命名：
+  - flat：`<safe_project_title>-flat.<ext>`；项目标题为空时 fallback `project-<project_id[:8]>-flat.<ext>`
+  - arc：`arc-<序号两位>-<safe_arc_title>.<ext>`；未覆盖章文件为 `arc-00-未分弧.<ext>`
+  - volume：`volume-<序号两位>-<safe_volume_title>.<ext>`；未覆盖章文件为 `volume-00-未分卷.<ext>`
+  - `safe_*` 必须清理 Windows 非法文件名字符（`<>:"/\|?*`、控制字符、尾随点/空格），空标题 fallback 到 `untitled`
+- 重复导出语义：覆盖同名文件，但**不清理**输出目录中无关旧文件；CLI 的章数/文件清单以本次 `export_project()` 返回路径为准，不通过扫描目录推断。
 
 ### 2. Service：`src/songyan/services/export_service.py`（只读）
 
-- `collect_accepted_chapters(project_id, chapters: tuple[int,int] | None) -> list[ChapterExport]`：经 `ChapterHeadRepository` 取 `status='accepted'` 的 head 按章号排序，经 `accepted_version_id` 取 `chapter_versions.content/word_count`；head 存在但 version 缺失 → 记 warning 并跳过（不中断导出）
+- `collect_accepted_chapters(project_id, chapters: tuple[int,int] | None) -> list[ChapterExport]`：经 `ChapterHeadRepository` 取 `status='accepted'` 的 head 按章号排序，经 `accepted_version_id` 取 `chapter_versions.content/word_count`；head 存在但 version 缺失 → 记 warning 并跳过（不中断导出），同时返回/记录 skipped 统计供 CLI 输出
 - `render_book(project_title, chapters, fmt, by, arcs_or_volumes) -> dict[str, str]`：**纯函数**（文件名 → 文件内容），不落盘
 - `export_project(...) -> list[Path]`：collect + render + 写文件（utf-8），返回生成路径
+- 分组规则：
+  - arc/volume 记录先过滤无效范围：`start_chapter < 1`、`end_chapter < start_chapter` 的分组不生成文件，只 warning（当前 Ch100 库存在 `(0,0)` 卷占位，必须被忽略）
+  - 有效分组按 `(start_chapter, end_chapter, title)` 稳定排序并赋序号；空分组不生成文件
+  - 章节落入多个重叠分组时归入第一个匹配分组并 warning，避免重复导出
+  - 未被任何有效分组覆盖的章节统一进入 `arc-00-未分弧` / `volume-00-未分卷`
 
 ### 3. 书稿格式（纯净）
 
@@ -63,8 +74,9 @@ Markdown（flat）：
 
 - 弧/卷分组时每个文件顶部加 `# <arc_title 或 volume_title>` 与章范围注释行（`<!-- chapters 1-25 -->`）
 - `txt`：无 markdown 符号——标题行 `第 N 章`，章间空两行
-- **禁止进正文**：version_id、分数、字数统计、run 元数据、分隔线 `---`（历史 `_export_prose` 有，正式版去掉）
+- **导出器禁止主动插入**：version_id、分数、字数统计、run 元数据、分隔线 `---`（历史 `_export_prose` 有，正式版去掉）
 - 正文原文不改写、不 trim 内部空行；文件结尾单换行
+- 纯净性口径：正文原文如果本身包含 `version_id` 或 `---`，导出器不得改写；“grep 无 `version_id` / `---`”只作为当前 Ch100 验收样本的辅助证据，不作为通用逻辑不变量。抽章 hash 对照只比较正文段，不比较导出器添加的标题/空行包装。
 
 ### 4. 测试（TDD，全部不进 tests/cli）
 
@@ -74,8 +86,12 @@ Markdown（flat）：
 - render flat md：标题/章标题格式、**正文无 version_id 与字数统计**、无 `---`；
 - render txt：无 `#` 符号、章标题行正确；
 - render by arc：弧分文件命名、章归入正确弧、未覆盖章入"未分弧"、无 arc 记录回退 flat + 警告；
+- render by arc/volume 异常分组：无效 `(0,0)` 占位被忽略、重叠分组 first-match + warning、空分组不生成文件；
 - render by volume 同构一条；
-- CLI 接线函数（模块级，monkeypatch service 层）参数传递正确（参照 175 `_render_cost_section` 的测试模式）。
+- 文件名 sanitizer：Windows 非法字符、空标题、重名标题 fallback/去重行为稳定；
+- CLI 接线函数（模块级，monkeypatch service 层）参数传递正确（参照 175 `_render_cost_section` 的测试模式）；
+- Click 接线测试（不放 `tests/cli/`）：用 `CliRunner` 调 `cli ["export", "--project-id", "p1", "--format", "txt", "--by", "arc"]`，monkeypatch service 层，断言参数透传、输出文件清单、`exit_code == 0`；
+- `--chapters` 非法输入：非数字、`a>b`、超出无 accepted 章时给可读 `ClickException` 或明确 warning（测试锁定）。
 
 ## 验证
 
@@ -89,13 +105,24 @@ ruff check src/ tests/
 
 ### 验收（V9-README 177 要点）
 
-`DATABASE_URL=sqlite:///.tmp/task172b_xuanhuan_ch100.db songyan export --project-id <xuanhuan_pid> --by arc --output .tmp/177_export_check/`：
+PowerShell：
+
+```powershell
+$env:DATABASE_URL='sqlite:///.tmp/task172b_xuanhuan_ch100.db'
+songyan export --project-id 1e7ce6279b224e7f8e476f6f4e963417 --by arc --output .tmp/177_export_check/xuanhuan_arc
+```
+
+Bash/Git Bash：
+
+```bash
+DATABASE_URL=sqlite:///.tmp/task172b_xuanhuan_ch100.db songyan export --project-id 1e7ce6279b224e7f8e476f6f4e963417 --by arc --output .tmp/177_export_check/xuanhuan_arc
+```
 
 - 导出章数 = 100（与 DB 中 accepted head 数一致）；
-- 抽查一章内容与 DB `chapter_versions.content` 逐字一致（hash 对照）；
-- 弧分组与 `arc_summaries` 范围一致；
-- 全文 grep 无 `version_id`、无 `---` 分隔线、无字数统计；
-- （可选二验）wuxia Ch100 库 flat 导出同样完整。
+- 抽查至少 3 章内容与 DB `chapter_versions.content` 逐字一致（只 hash 正文段，不含导出标题包装）；
+- 弧分组与 `arc_summaries` 有效范围一致；无效/空分组不生成文件；
+- 当前样本全文 grep 无导出器主动插入的 `version_id`、`---` 分隔线、字数统计；
+- 二验：`DATABASE_URL=sqlite:///.tmp/task172b_wuxia_ch100.db` + project `273a8408be8e4caf8cbc1e91954da600` flat 导出同样完整。
 
 ## 出口标准
 
