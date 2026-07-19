@@ -194,8 +194,8 @@ python scripts/run_172a7_genre_validation.py --templates scifi --end 10   # 阶�
 
 ### 验证
 
-- 全量 `python -m pytest tests/ -q`：**2866 passed, 2 skipped, 1 xfailed**；`ruff check src/ tests/` 全绿
-- 评审：A1/A2/B 规格符合性 + 代码质量双 review 全通过（A2 修复后 Approved；B 修复后免复审）；C 规格符合性通过，质量 review 因 subagent 配额暂缺（C 为最小阶段：纯函数 + 单查询 + CLI 接线）
+- 全量 `python -m pytest tests/ -q`：**2869 passed, 2 skipped, 1 xfailed**；`ruff check src/ tests/` 全绿
+- 评审：A1/A2/B/C 规格符合性 + 代码质量双 review 全通过（A2/C 修复后 Approved；B 修复后免复审）；终审（`agent-19`）结论 Yes——6 条 Minor 中唯一影响阶段 D 判据的"失败行污染 estimate 占比"已修（`source_stats_for_run` 加 `success = 1` 过滤，专测锁定）
 
 ### 关键偏差与决策（已记录）
 

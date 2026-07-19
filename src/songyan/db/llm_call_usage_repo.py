@@ -147,8 +147,12 @@ class LlmCallUsageRepository:
     async def source_stats_for_run(self, run_id: str) -> dict[str, int]:
         """token_source / cost_source 分布计数（report 成本段的估算占比分子分母）.
 
+        只统计 `success = 1` 的调用：失败/取消尝试以默认 estimate 标记落库，
+        计入会把"瞬态失败率"误读成"usage 提取失败率"（阶段 D 判据 estimate
+        占比 <20% 的口径）。
+
         Returns:
-            {"total_calls": 总行数（分母）,
+            {"total_calls": 成功调用行数（分母）,
              "token_estimate_calls": token_source='estimate' 行数（分子）,
              "cost_pricing_estimate_calls": cost_source='pricing_estimate' 行数（分子）}
             无记录的 run 三个值全为 0，不报错（旧 run 无 usage 数据的常态路径）。
@@ -165,7 +169,7 @@ class LlmCallUsageRepository:
                               0
                           ) AS cost_pricing_estimate_calls
                    FROM llm_call_usage
-                   WHERE run_id = ?""",
+                   WHERE run_id = ? AND success = 1""",
                 (run_id,),
             )
             row = await cursor.fetchone()

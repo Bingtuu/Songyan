@@ -281,6 +281,15 @@ class TestSourceStatsForRun:
                 token_source=token_source,
                 cost_source=cost_source,
             )
+        # 失败尝试（success=0）默认 estimate 标记，但不应计入估算占比（只统计成功调用）
+        await repo.record(
+            run_id="run-a",
+            model="kimi-k2",
+            token_source="estimate",
+            cost_source="pricing_estimate",
+            success=0,
+            error="cancelled/timeout",
+        )
 
         stats = await repo.source_stats_for_run("run-a")
 
