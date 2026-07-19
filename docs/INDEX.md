@@ -8,7 +8,7 @@
 |------|------|
 | `AGENTS.md` | 开发代理短指令与不可违背规则 |
 | `docs/STATUS.md` | 当前状态、测试口径、下一步 |
-| `tasks/V9-README.md` | **V9 任务事实入口（已开工）**：生产化地基 + urban 第三体裁 Ch100，Task 173-188 扁平编号；**V9.1 全部完成**（173/174/175/176 ✅），**V9.2 Task 177/178 已完成**，下一步 179 CLI 三坑 |
+| `tasks/V9-README.md` | **V9 任务事实入口（已开工）**：生产化地基 + urban 第三体裁 Ch100，Task 173-188 扁平编号；**V9.1 全部完成**（173/174/175/176 ✅），**V9.2 Task 177/178/179 已完成**，下一步 180 doctor 环境自检 |
 | `tasks/V8-README.md` | **V8 历史任务事实入口（已收尾，含 V8.5）**：多体裁可插拔质量 + 章数爬坡；含 Task 编号治理规则；任务文档与报告归档 `archive/v8/` |
 | `tasks/V7-README.md` | **V7 历史任务事实入口（已收尾）**：sci-fi 单一体裁 Ch200 达成 |
 | `tasks/V6-README.md` | V6 历史任务事实入口：叙事骨架 MVP + 度量 + 长跑底盘，Task 141-159 |
@@ -47,6 +47,8 @@ V8 已全量闭环（P/C/Q/S/V 五维全绿 + V8.5 遗留清零）。任务文�
 | `tasks/177-export-book-manuscript-DONE.md` | Task 177 完成报告：accepted head 正文导出 + flat/arc/volume Markdown/txt + Ch100 实库验收 |
 | `tasks/178-wheel-packaging-resource-loading.md` | Task 178 任务书：wheel 打包与资源加载修复（✅ 完成） |
 | `tasks/178-wheel-packaging-resource-loading-DONE.md` | Task 178 完成报告：运行资源入包 + importlib.resources + wheel 非仓库 cwd 验收 |
+| `tasks/179-cli-experience-fixes.md` | Task 179 任务书：CLI 三坑修复（✅ 完成） |
+| `tasks/179-cli-experience-fixes-DONE.md` | Task 179 完成报告：run_id 输出 + 项目 mode fallback + README index 表项 |
 | `tasks/173-interpreter-exit-hang-fix.md` | Task 173 任务书：解释器退出挂死修复 |
 | `tasks/173-interpreter-exit-hang-fix-DONE.md` | Task 173 完成报告：LLM client 生命周期关闭 + force-exit 兜底 |
 | `tasks/174-logging-system-foundation.md` | Task 174 任务书：日志体系落地 |
@@ -118,7 +120,7 @@ V8 已全量闭环（P/C/Q/S/V 五维全绿 + V8.5 遗留清零）。任务文�
 |------|------|
 | V9 任务入口（已开工） | `tasks/V9-README.md` |
 | V9 长跑可靠性 DONE | `tasks/173-interpreter-exit-hang-fix-DONE.md`、`tasks/174-logging-system-foundation-DONE.md`、`tasks/175-cost-tracking-and-budget-circuit-breaker-DONE.md`、`tasks/176-windows-anti-hang-wrapper-DONE.md` |
-| V9 交付发布 DONE | `tasks/177-export-book-manuscript-DONE.md`、`tasks/178-wheel-packaging-resource-loading-DONE.md` |
+| V9 交付发布 DONE | `tasks/177-export-book-manuscript-DONE.md`、`tasks/178-wheel-packaging-resource-loading-DONE.md`、`tasks/179-cli-experience-fixes-DONE.md` |
 | V8 历史任务入口（已收尾） | `tasks/V8-README.md` |
 | 当前项目状态 | `docs/STATUS.md` |
 | V8 归档索引（任务文档与报告） | `archive/v8/INDEX.md` |

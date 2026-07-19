@@ -4,11 +4,13 @@ from __future__ import annotations
 
 import sqlite3
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from click.testing import CliRunner
 
 from songyan.cli.main import cli
+from songyan.models.project_run import ProjectRunResult
 
 # ---------------------------------------------------------------------------
 #  fixtures
@@ -52,6 +54,13 @@ class TestCommandRegistration:
         result = runner.invoke(cli, ["list-projects", "--help"])
         assert result.exit_code == 0
         assert "列出" in result.output
+
+    def test_index_help(self, runner: CliRunner) -> None:
+        result = runner.invoke(cli, ["index", "--help"])
+        assert result.exit_code == 0
+        assert "--project-id" in result.output
+        assert "--chapters" in result.output
+        assert "--rebuild" in result.output
 
 
 # ---------------------------------------------------------------------------
@@ -204,6 +213,161 @@ class TestCreateProject:
             if line.startswith("✓ 项目已创建:"):
                 return line.split(":", 1)[1].strip()
         pytest.fail("未在输出中找到 project_id")
+
+
+# ---------------------------------------------------------------------------
+#  Task 179: run 命令体验修复
+# ---------------------------------------------------------------------------
+
+
+def _task179_result(project_id: str = "proj-179") -> ProjectRunResult:
+    return ProjectRunResult(
+        project_id=project_id,
+        run_id="run-179",
+        chapters_completed=[1, 2],
+        chapters_failed=[],
+        total_duration_sec=1.25,
+        final_status="completed",
+    )
+
+
+class TestRunCommandExperience:
+    def test_run_outputs_run_id(
+        self,
+        runner: CliRunner,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        async def fake_resolve_mode(project_id: str, explicit_mode_id: str | None) -> str:
+            assert project_id == "proj-179"
+            assert explicit_mode_id is None
+            return "webnovel_intense"
+
+        async def fake_run_project_pipeline(**kwargs):
+            return _task179_result(project_id=kwargs["project_id"])
+
+        monkeypatch.setattr("songyan.cli.main._resolve_run_mode_id", fake_resolve_mode)
+        monkeypatch.setattr("songyan.cli.main.run_project_pipeline", fake_run_project_pipeline)
+
+        result = runner.invoke(
+            cli,
+            [
+                "run",
+                "--project-id",
+                "proj-179",
+                "--chapters",
+                "1-2",
+                "--auto-confirm",
+            ],
+        )
+
+        assert result.exit_code == 0, result.output
+        assert "run_id: run-179" in result.output
+
+    def test_run_uses_project_mode_when_mode_not_explicit(
+        self,
+        runner: CliRunner,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        calls: dict[str, object] = {}
+
+        class FakeProjectRepository:
+            async def get(self, project_id: str):
+                calls["repo_project_id"] = project_id
+                return SimpleNamespace(mode_id="webnovel_intense")
+
+        async def fake_run_project_pipeline(**kwargs):
+            calls["pipeline"] = kwargs
+            return _task179_result(project_id=kwargs["project_id"])
+
+        monkeypatch.setattr("songyan.cli.main.ProjectRepository", FakeProjectRepository)
+        monkeypatch.setattr("songyan.cli.main.run_project_pipeline", fake_run_project_pipeline)
+
+        result = runner.invoke(
+            cli,
+            [
+                "run",
+                "--project-id",
+                "proj-179",
+                "--chapters",
+                "1-2",
+                "--auto-confirm",
+            ],
+        )
+
+        assert result.exit_code == 0, result.output
+        assert calls["repo_project_id"] == "proj-179"
+        pipeline = calls["pipeline"]
+        assert isinstance(pipeline, dict)
+        assert pipeline["mode_id"] == "webnovel_intense"
+
+    def test_run_explicit_mode_overrides_project_mode(
+        self,
+        runner: CliRunner,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        calls: dict[str, object] = {}
+
+        class FakeProjectRepository:
+            async def get(self, project_id: str):
+                calls["repo_called"] = True
+                return SimpleNamespace(mode_id="webnovel_intense")
+
+        async def fake_run_project_pipeline(**kwargs):
+            calls["pipeline"] = kwargs
+            return _task179_result(project_id=kwargs["project_id"])
+
+        monkeypatch.setattr("songyan.cli.main.ProjectRepository", FakeProjectRepository)
+        monkeypatch.setattr("songyan.cli.main.run_project_pipeline", fake_run_project_pipeline)
+
+        result = runner.invoke(
+            cli,
+            [
+                "run",
+                "--project-id",
+                "proj-179",
+                "--chapters",
+                "1-2",
+                "--mode-id",
+                "hybrid",
+                "--auto-confirm",
+            ],
+        )
+
+        assert result.exit_code == 0, result.output
+        assert "repo_called" not in calls
+        pipeline = calls["pipeline"]
+        assert isinstance(pipeline, dict)
+        assert pipeline["mode_id"] == "hybrid"
+
+    def test_run_fails_when_project_mode_cannot_be_loaded(
+        self,
+        runner: CliRunner,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        class FakeProjectRepository:
+            async def get(self, project_id: str):
+                return None
+
+        async def fake_run_project_pipeline(**kwargs):
+            raise AssertionError("pipeline should not run")
+
+        monkeypatch.setattr("songyan.cli.main.ProjectRepository", FakeProjectRepository)
+        monkeypatch.setattr("songyan.cli.main.run_project_pipeline", fake_run_project_pipeline)
+
+        result = runner.invoke(
+            cli,
+            [
+                "run",
+                "--project-id",
+                "missing",
+                "--chapters",
+                "1",
+                "--auto-confirm",
+            ],
+        )
+
+        assert result.exit_code != 0
+        assert "无法读取项目 mode_id" in result.output
 
 
 # ---------------------------------------------------------------------------

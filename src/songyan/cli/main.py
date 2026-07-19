@@ -542,10 +542,32 @@ def export_cmd(
         click.echo(f"  {item.path} ({item.chapter_count} 章)")
 
 
+async def _resolve_run_mode_id(project_id: str, explicit_mode_id: str | None) -> str:
+    """Resolve the effective mode for ``songyan run``.
+
+    CLI input has priority.  When omitted, the project setting stored in
+    SQLite is authoritative.
+    """
+    if explicit_mode_id:
+        return explicit_mode_id
+
+    project = await ProjectRepository().get(project_id)
+    if project is None or not project.mode_id:
+        raise click.ClickException(
+            f"无法读取项目 mode_id：project_id={project_id}；"
+            "请检查项目 ID，或显式传入 --mode-id。"
+        )
+    return project.mode_id
+
+
 @cli.command()
 @click.option("--project-id", required=True, help="项目 ID")
 @click.option("--chapters", required=True, help="章节范围，如 1-10")
-@click.option("--mode-id", default="webnovel", help="创作模式 ID")
+@click.option(
+    "--mode-id",
+    default=None,
+    help="创作模式 ID；不传则使用项目默认 mode_id",
+)
 @click.option("--human-gates", default="", help="启用的 Human Gate，逗号分隔")
 @click.option("--auto-confirm", is_flag=True, help="全自动化，跳过所有 optional gate")
 @click.option(
@@ -577,7 +599,7 @@ def export_cmd(
 def run(
     project_id: str,
     chapters: str,
-    mode_id: str,
+    mode_id: str | None,
     human_gates: str,
     auto_confirm: bool,
     rag_mode: str | None,
@@ -612,12 +634,13 @@ def run(
 
         gate_config = GateConfig.for_mode(cast(Literal["observe", "enforce"], gate_mode))
         click.echo(f"门禁模式: {gate_mode}")
+        effective_mode_id = asyncio.run(_resolve_run_mode_id(project_id, mode_id))
 
         result = asyncio.run(
             run_project_pipeline(
                 project_id=project_id,
                 chapter_range=chapter_range,
-                mode_id=mode_id,
+                mode_id=effective_mode_id,
                 auto_confirm=auto_confirm,
                 gate_config=gate_config,
                 on_failure=on_failure,
@@ -631,6 +654,7 @@ def run(
         if result.chapters_failed:
             click.echo(f"失败: {result.chapters_failed}")  # 列出失败章号清单
         click.echo(f"耗时: {result.total_duration_sec:.1f} 秒")
+        click.echo(f"run_id: {result.run_id}")
         force_exit_after_run_if_requested()
 
     except click.Abort:
