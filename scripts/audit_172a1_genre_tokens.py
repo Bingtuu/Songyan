@@ -1,6 +1,6 @@
 """172a.1 audit helper: measure REAL token cost of genre_rules per genre.
 
-Loads each genres/*.json, builds a GenreRules-equivalent payload, and reports
+Loads each packaged genre JSON, builds a GenreRules-equivalent payload, and reports
 tiktoken token counts. Used to replace the plan's char-count-based "38%" claim
 with a real token measurement, and to size base_budget per genre.
 """
@@ -17,7 +17,7 @@ sys.path.insert(0, str(ROOT / "src"))
 from songyan.models.genre import GenreProfile  # noqa: E402
 from songyan.utils.token_estimator import TokenEstimator  # noqa: E402
 
-GENRE_DIR = ROOT / "genres"
+GENRE_DIR = ROOT / "src" / "songyan" / "genres" / "data"
 TARGET_GENRES = ["scifi", "xuanhuan", "wuxia", "urban"]
 
 

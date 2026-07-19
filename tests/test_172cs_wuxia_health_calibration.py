@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from pathlib import Path
+from importlib.resources import files
 
 import scripts.run_172b_ch100_climb as climb
 from songyan.agents.continuity_auditor import ContinuityAuditor
@@ -15,8 +15,6 @@ from songyan.models.continuity import (
     OverdueForeshadowing,
     StateMismatch,
 )
-
-ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_wuxia_long_window_horizon_floor_is_48() -> None:
@@ -52,8 +50,9 @@ def test_dialogue_style_generation_avoids_absolute_voice_rules() -> None:
 
 def test_writer_and_auditor_treat_voice_cards_as_anchors() -> None:
     """172c.s: missing a tick is not a major consistency issue by itself."""
-    writer_card = (ROOT / "prompts/cards/writer/1.1.0.yaml").read_text(encoding="utf-8")
-    auditor_card = (ROOT / "prompts/cards/llm_auditor/1.0.2.yaml").read_text(
+    cards_dir = files("songyan.prompts") / "cards"
+    writer_card = (cards_dir / "writer" / "1.1.0.yaml").read_text(encoding="utf-8")
+    auditor_card = (cards_dir / "llm_auditor" / "1.0.2.yaml").read_text(
         encoding="utf-8"
     )
 

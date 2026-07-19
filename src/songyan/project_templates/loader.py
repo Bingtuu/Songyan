@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import json
+from importlib.resources import files
+from importlib.resources.abc import Traversable
 from pathlib import Path
 from typing import Any, cast
 
 import structlog
 import yaml
 
-import songyan
 from songyan.cli.outline_import import load_outline_file
 from songyan.creative_modes.registry import (
     CreativeModeProfileError,
@@ -24,12 +25,8 @@ from songyan.project_templates._compat import seed_to_template
 
 logger = structlog.get_logger(__name__)
 
-_DEFAULT_TEMPLATES_DIR = (
-    Path(songyan.__file__).resolve().parent.parent.parent / "project_templates"
-)
-_DEFAULT_SEEDS_DIR = (
-    Path(songyan.__file__).resolve().parent.parent.parent / "evals" / "seeds"
-)
+_DEFAULT_TEMPLATES_DIR = files("songyan.project_templates") / "data"
+_DEFAULT_SEEDS_DIR = files("evals") / "seeds"
 
 
 class ProjectTemplateError(ValueError):
@@ -45,8 +42,8 @@ class ProjectTemplateLoader:
 
     def __init__(
         self,
-        templates_dir: Path | None = None,
-        seeds_dir: Path | None = None,
+        templates_dir: Traversable | Path | None = None,
+        seeds_dir: Traversable | Path | None = None,
     ) -> None:
         self._templates_dir = templates_dir or _DEFAULT_TEMPLATES_DIR
         self._seeds_dir = seeds_dir or _DEFAULT_SEEDS_DIR
@@ -63,8 +60,8 @@ class ProjectTemplateLoader:
                         if vp.is_dir() and (vp / "template.yaml").exists():
                             ids.add(f"{p.name}/{vp.name}")
         if self._seeds_dir.exists():
-            for p in self._seeds_dir.glob("*.json"):
-                if not p.is_file():
+            for p in self._seeds_dir.iterdir():
+                if not p.is_file() or not p.name.endswith(".json"):
                     continue
                 try:
                     data = json.loads(p.read_text(encoding="utf-8-sig"))
@@ -74,7 +71,7 @@ class ProjectTemplateLoader:
                 if not isinstance(data, dict) or not data.get("genre_id"):
                     logger.warning("Skipping non-seed JSON file", path=str(p))
                     continue
-                ids.add(p.stem)
+                ids.add(p.name.removesuffix(".json"))
         return sorted(ids)
 
     def load(self, template_id: str) -> ProjectTemplate:
@@ -117,13 +114,13 @@ class ProjectTemplateLoader:
     def _load_directory_template(
         self,
         template_id: str,
-        source_dir: Path,
+        source_dir: Traversable | Path,
         parent_id: str | None = None,
         seen: set[str] | None = None,
     ) -> ProjectTemplate:
         seen = seen or set()
         template_file = source_dir / "template.yaml"
-        with open(template_file, encoding="utf-8") as f:
+        with template_file.open(encoding="utf-8") as f:
             raw = yaml.safe_load(f)
 
         extends = raw.get("extends")
@@ -161,7 +158,7 @@ class ProjectTemplateLoader:
         # 加载 seed.json（变体目录优先；overwrite/继承合并已在 _merge_overwrite 中完成）
         seed_file = source_dir / "seed.json"
         if seed_file.exists():
-            with open(seed_file, encoding="utf-8") as f:
+            with seed_file.open(encoding="utf-8") as f:
                 seed_data = json.load(f)
             template.seed = TemplateSeed(**seed_data)
 

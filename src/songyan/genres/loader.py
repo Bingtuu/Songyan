@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
+from importlib.resources import files
+from importlib.resources.abc import Traversable
 
-import songyan
 from songyan.models.genre import GenreProfile
 from songyan.models.review import ReviewCategory
 
@@ -18,21 +18,21 @@ class GenreProfileNotFoundError(GenreProfileError):
     """请求的 genre_id 不存在."""
 
 
-# 默认从仓库根目录的 genres/ 加载
-_DEFAULT_GENRES_DIR = Path(songyan.__file__).resolve().parent.parent.parent / "genres"
+# 默认从包内 genres/data 加载
+_DEFAULT_GENRES_DIR = files("songyan.genres") / "data"
 
 # 运行时可通过 monkeypatch 覆盖
-_GENRES_DIR: Path = _DEFAULT_GENRES_DIR
+_GENRES_DIR: Traversable = _DEFAULT_GENRES_DIR
 
 # 内存缓存: genre_id -> GenreProfile
 _CACHE: dict[str, GenreProfile] = {}
 
 
-def set_genres_dir(path: Path) -> None:
-    """设置 genres 配置目录（测试用途）.
+def set_genres_dir(path: Traversable) -> None:
+    """设置 genre 配置目录（测试用途）.
 
     Args:
-        path: 新的 genres 目录路径.
+        path: 新的 genre JSON 目录路径.
     """
     global _GENRES_DIR
     _GENRES_DIR = path
@@ -40,13 +40,13 @@ def set_genres_dir(path: Path) -> None:
 
 
 def _get_available_genres() -> list[str]:
-    """扫描 genres 目录，返回可用的 genre_id 列表（字母序）."""
+    """扫描当前 genre 目录，返回可用的 genre_id 列表（字母序）."""
     if not _GENRES_DIR.exists():
         return []
     return sorted(
-        p.stem
-        for p in _GENRES_DIR.glob("*.json")
-        if p.is_file()
+        p.name.removesuffix(".json")
+        for p in _GENRES_DIR.iterdir()
+        if p.is_file() and p.name.endswith(".json")
     )
 
 
@@ -62,7 +62,7 @@ def _validate_active_audit_dimensions(profile: GenreProfile) -> None:
 
 
 def load_genre_profile(genre_id: str) -> GenreProfile:
-    """按 genre_id 从 genres/{genre_id}.json 加载题材配置.
+    """按 genre_id 从当前资源目录加载题材配置.
 
     Args:
         genre_id: 题材标识符，例如 "xuanhuan".
@@ -87,7 +87,7 @@ def load_genre_profile(genre_id: str) -> GenreProfile:
         raise GenreProfileNotFoundError(msg)
 
     try:
-        with open(file_path, encoding="utf-8") as f:
+        with file_path.open(encoding="utf-8") as f:
             data = json.load(f)
     except json.JSONDecodeError as exc:
         raise GenreProfileError(
@@ -108,11 +108,10 @@ def load_genre_profile(genre_id: str) -> GenreProfile:
 
 
 def list_genre_profiles() -> list[str]:
-    """列出 genres/ 目录下可用的题材 ID，按字母序返回."""
+    """列出当前资源目录下可用的题材 ID，按字母序返回."""
     return _get_available_genres()
 
 
 def clear_cache() -> None:
     """清空 GenreProfile 内存缓存."""
     _CACHE.clear()
-

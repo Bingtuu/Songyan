@@ -19,18 +19,21 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import atexit
 import json
 import os
 import sys
 import uuid
 from datetime import datetime
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import Any
 
 # 优先使用当前 worktree 的 src/songyan，避免 editable install 指向主仓库
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from songyan.config import settings
+from songyan.creative_modes.registry import _DEFAULT_MODES_DIR, set_modes_dir
 from songyan.db import get_db
 from songyan.db.connection import get_db_path
 from songyan.db.migrations import init_schema
@@ -46,7 +49,7 @@ from songyan.models import (
 )
 from songyan.workflows.phase2_graph import run_project_pipeline
 
-_MODES_DIR = Path(__file__).parent.parent / "creative_modes"
+_TEMP_MODE_DIR: TemporaryDirectory[str] | None = None
 
 DEFAULT_STRATEGY_ID = "minimal_voice_anchor"
 DEFAULT_START_CHAPTER = 29
@@ -65,11 +68,32 @@ def _resolve_metrics_path(strategy_id: str) -> Path:
     return Path(f".tmp/task170j_{strategy_id}_metrics.jsonl")
 
 
-def _temp_mode_profile_path(strategy_id: str) -> Path:
-    return _MODES_DIR / f"webnovel_intense_{strategy_id}.json"
-
-
 DB_PATH = _resolve_db_path(DEFAULT_STRATEGY_ID)
+
+
+def _prepare_temp_modes_dir() -> Path:
+    """Copy packaged mode profiles into a temp directory and activate it."""
+    global _TEMP_MODE_DIR
+    if _TEMP_MODE_DIR is not None:
+        _TEMP_MODE_DIR.cleanup()
+    _TEMP_MODE_DIR = TemporaryDirectory()
+    temp_dir = Path(_TEMP_MODE_DIR.name)
+    for source in _DEFAULT_MODES_DIR.iterdir():
+        if source.name.endswith(".json"):
+            (temp_dir / source.name).write_bytes(source.read_bytes())
+    set_modes_dir(temp_dir)
+    return temp_dir
+
+
+def _cleanup_temp_modes_dir() -> None:
+    global _TEMP_MODE_DIR
+    set_modes_dir(_DEFAULT_MODES_DIR)
+    if _TEMP_MODE_DIR is not None:
+        _TEMP_MODE_DIR.cleanup()
+        _TEMP_MODE_DIR = None
+
+
+atexit.register(_cleanup_temp_modes_dir)
 
 
 def _ensure_temp_mode_profile(strategy_id: str) -> str:
@@ -77,8 +101,9 @@ def _ensure_temp_mode_profile(strategy_id: str) -> str:
 
     返回新的 mode_id（文件名，不含 .json）。
     """
-    source_path = _MODES_DIR / "webnovel_intense.json"
-    target_path = _temp_mode_profile_path(strategy_id)
+    modes_dir = _prepare_temp_modes_dir()
+    source_path = modes_dir / "webnovel_intense.json"
+    target_path = modes_dir / f"webnovel_intense_{strategy_id}.json"
     data = json.loads(source_path.read_text(encoding="utf-8"))
     data["id"] = f"webnovel_intense_{strategy_id}"
     plugins = data.get("literary_optimization_plugins", [])

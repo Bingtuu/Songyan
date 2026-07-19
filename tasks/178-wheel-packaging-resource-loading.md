@@ -4,7 +4,7 @@
 > **类型**: 基础设施（打包正确性，V9.2 连锁影响最大单项）
 > **优先级**: P0（V9-README 审计 P0 ④：`pip install .` 成 wheel 即坏——`prompts/`、`genres/`、`creative_modes/`、`project_templates/` 等运行资源不是 package data）
 > **依赖**: 引用面扫描已完成（2026-07-19，见本文"引用面事实"节）；177 完成（export 命令需在安装后可用）
-> **状态**: ◻ 规划中
+> **状态**: ✅ 完成（DONE: `tasks/178-wheel-packaging-resource-loading-DONE.md`）
 > **来源**: V9 生产就绪度审计；`tasks/V9-README.md` Task 178 行（2026-07-18 用户评审定稿版）
 
 ---
@@ -21,7 +21,7 @@
 
 ## 目标
 
-1. 全部运行资源纳入 wheel：`prompts/cards`、`prompts/literary_plugins`、`genres`、`creative_modes`、`project_templates`、`evals/seeds`。
+1. 全部运行资源纳入 wheel：`prompts/cards`、`prompts/literary_plugins`、`genres`、`creative_modes`、`project_templates`、`evals/seeds`、`songyan/db/schema.sql`。
 2. 干净 venv `pip install .` 后，**非仓库 cwd** 跑通：资源枚举（7 genre + 4 mode + 全部模板 + prompt cards + literary plugins + evals seeds 可加载）、`create-project --template scifi`、scifi 1-3 章实跑生成。
 3. 测试注入口全部保留可用；全量测试绿、ruff 绿；scifi `--end 10` 实跑回归（生成行为逐值不变）。
 
@@ -46,9 +46,11 @@
 
 ```toml
 [tool.setuptools.package-data]
-songyan = ["**/*.yaml", "**/*.json", "**/*.md"]
+songyan = ["**/*.yaml", "**/*.json", "**/*.md", "**/*.sql"]
 evals = ["seeds/**/*.json", "seeds/**/*.md"]
 ```
+
+> 执行中补充：wheel 非仓库 cwd `create-project --template scifi` 首次验收暴露 `songyan/db/schema.sql` 未入包，已纳入 `songyan` package-data，并在 `tests/test_178_resource_loading.py` 中新增资源断言。
 
 **迁移纪律**：用 `git mv` 保历史（`evals/seeds` 不迁目录，只补 package-data 与默认路径 helper）；先改 pyproject + loader 解析点 + 迁移目录，再跑全量测试；测试锚点 4 类按扫描表逐个核对（fixture 回指模块常量的随模块新值自动正确；`test_172cs` 的 ROOT 直读改为包内路径或注入）。
 
@@ -69,6 +71,21 @@ evals = ["seeds/**/*.json", "seeds/**/*.md"]
 - plugin_loader 新注入口可注入临时插件目录；
 - `test_172cs` 直读路径改后仍读真实卡。
 
+## 执行记录（2026-07-19）
+
+- 资源迁移：
+  - `prompts/cards/` → `src/songyan/prompts/cards/`
+  - `prompts/literary_plugins/` → `src/songyan/prompts/literary_plugins/`
+  - `genres/*.json` → `src/songyan/genres/data/*.json`
+  - `creative_modes/*.json` → `src/songyan/creative_modes/data/*.json`
+  - `project_templates/*` → `src/songyan/project_templates/data/`
+  - `evals/seeds/` 保持原位，作为 `evals` 包资源打包。
+- Loader 接线：`PromptLoader`、`plugin_loader`、`genres.loader`、`creative_modes.registry`、`ProjectTemplateLoader`、`evals.runner.resolve_seed_resource()` 均改为默认读取包资源；外部目录注入口保持可用。
+- 脚本改造：170j/k/l 实验脚本改为复制默认 mode 到 `TemporaryDirectory()` 后调用 `set_modes_dir(tempdir)`；`inject_172d_genre_lexicons.py` / `audit_172a1_genre_tokens.py` 路径改到包内 data。
+- 死代码清理：删除 `goal_planner.py` 与 `creative_director/__init__.py` 中未使用的 `PROMPT_PATH`。
+- package-data：`songyan = ["**/*.yaml", "**/*.json", "**/*.md", "**/*.sql"]`，`evals = ["seeds/**/*.json", "seeds/**/*.md"]`。
+- wheel 验收补充：由于非仓库 cwd `create-project` 会读取 `songyan/db/schema.sql`，本任务把 schema SQL 也纳入运行资源范围。
+
 ## 验证
 
 ### 回归命令
@@ -80,6 +97,20 @@ ruff check src/ tests/
 $env:SONGYAN_RUN_COST_BUDGET='2'
 powershell -NoProfile -File scripts\run_with_timeout.ps1 -TimeoutSec 3600 -- python scripts/run_172a7_genre_validation.py --templates scifi --end 10   # 生成行为回归
 ```
+
+### 验证结果（2026-07-19）
+
+| 项 | 结果 |
+|---|---|
+| Task 178 资源测试 | `python -m pytest tests/test_178_resource_loading.py -q` → **6 passed** |
+| 资源相关测试组 | `tests/test_178_resource_loading.py tests/test_prompt_loader.py tests/genres/test_loader.py tests/creative_modes/test_registry.py tests/test_project_template_loader.py tests/test_project_template_initializer.py tests/test_172cs_wuxia_health_calibration.py tests/test_eval_runner.py -q` → **137 passed, 1 warning** |
+| 全量 pytest | `powershell -NoProfile -File scripts\run_with_timeout.ps1 -TimeoutSec 1800 -DetectPytestSummary -- python -m pytest tests/ -q` → **2903 passed, 2 skipped, 1 xfailed, 7 warnings**；`WRAPPER_RESULT=PASS_NORMAL_EXIT` |
+| Ruff | `ruff check src/ tests/` → **All checks passed** |
+| wheel 构建 | `pip wheel --no-deps . -w .tmp\178_wheelhouse` → `songyan-2.0.0-py3-none-any.whl`（870433 bytes） |
+| wheel 资源枚举（非仓库 cwd） | venv site-packages 下 7 genre、4 mode、12 template id、writer card、literary plugin、`evals/seeds`、`songyan/db/schema.sql` 全部可读 |
+| wheel `create-project` | 非仓库 cwd + wheel install：`songyan create-project --template scifi` → project `0202ebd879304d52891bd09fb207b934` 创建成功 |
+| wheel Ch1-3 | 非仓库 cwd + wheel install：`songyan run --project-id 0202ebd879304d52891bd09fb207b934 --chapters 1-3 --auto-confirm` → **3/3 章成功**，run `run-1d5fbe93`，`WRAPPER_RESULT=PASS_NORMAL_EXIT` |
+| scifi end10 回归 | `run_172a7_genre_validation.py --templates scifi --end 10` + `SONGYAN_RUN_COST_BUDGET=2` + wrapper → **10/10 accepted**，status `completed`，failed `[]`，budget 峰值 **0.9693**，before-emergency 峰值 **1.2841**，ContextEmergency 11 次，总成本约 **¥0.8744**，`WRAPPER_RESULT=PASS_NORMAL_EXIT`；`t9_issue_count=1`，按诊断残留如实记录，不写成 T9=0 |
 
 ### wheel 验收（干净环境，分两步）
 

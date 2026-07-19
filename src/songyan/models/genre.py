@@ -81,7 +81,7 @@ class StyleBaseline(BaseModel):
 
 
 class GenreProfile(BaseModel):
-    """题材配置文件 — 从 genres/*.json 加载."""
+    """题材配置文件 — 从 ``songyan.genres`` 包资源加载."""
 
     model_config = {"extra": "ignore"}
 

@@ -1,4 +1,4 @@
-"""172d: inject genre-specific literary guardrail lexicons into genres/*.json.
+"""172d: inject genre-specific literary guardrail lexicons into packaged genre JSON.
 
 Idempotent: only sets the 5 lexicon fields, preserves all other content.
 """
@@ -9,7 +9,7 @@ import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-GENRE_DIR = ROOT / "genres"
+GENRE_DIR = ROOT / "src" / "songyan" / "genres" / "data"
 
 LEXICONS: dict[str, dict[str, list[str]]] = {
     "xuanhuan": {

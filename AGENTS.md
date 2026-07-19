@@ -14,7 +14,7 @@
 
 - 项目状态：`docs/STATUS.md`
 - 文档路由：`docs/INDEX.md`
-- 当前阶段：V8 已全量闭环（含 V8.5）；V9 设计定稿（Task 173-188，173/174 任务书已落盘）
+- 当前阶段：V8 已全量闭环（含 V8.5）；V9 已开工（Task 173-188，173-178 已完成）
 - V9 任务事实（当前阶段）：`tasks/V9-README.md`
 - V8 历史任务事实（已收尾）：`tasks/V8-README.md`；任务文档与报告归档 `archive/v8/`（索引 `archive/v8/INDEX.md`）
 - V7 历史任务事实（已收尾）：`tasks/V7-README.md`
@@ -94,7 +94,7 @@ V8（Task 172-172l）已全量闭环：**多体裁可插拔质量 + 章数爬坡
 - Python 3.11+；所有函数带类型标注。
 - Pydantic v2 模型字段定义完整。
 - 数据访问集中在 repository / service / UnitOfWork。
-- Prompt 放在 `prompts/`，代码中不写长 prompt。
+- Prompt 工艺卡放在包内 `src/songyan/prompts/cards/`，代码中不写长 prompt；外部实验卡目录通过 `get_prompt_loader(cards_dir=...)` 注入。
 - IO 操作优先 async/await。
 - 日志用 structlog，不用 print。
 - 错误处理用自定义异常，不用裸 except。

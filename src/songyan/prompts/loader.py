@@ -5,6 +5,8 @@ from __future__ import annotations
 import hashlib
 import json
 import time
+from importlib.resources import files
+from importlib.resources.abc import Traversable
 from pathlib import Path
 from typing import Any
 
@@ -39,7 +41,7 @@ def _escape_jinja2(value: Any) -> Any:
     return value
 
 
-_CARDS_DIR = Path(__file__).parent.parent.parent.parent / "prompts" / "cards"
+_CARDS_DIR = files("songyan.prompts") / "cards"
 
 
 class PromptLoader:
@@ -48,7 +50,7 @@ class PromptLoader:
     Use :func:`get_prompt_loader` to obtain the singleton instance.
     """
 
-    def __init__(self, cards_dir: Path | None = None) -> None:
+    def __init__(self, cards_dir: Traversable | Path | None = None) -> None:
         self._cards_dir = cards_dir or _CARDS_DIR
         self._manifests: dict[str, Manifest] = {}
         self._cache: dict[str, CraftCard] = {}
@@ -67,7 +69,7 @@ class PromptLoader:
             manifest_path = agent_dir / "_manifest.yaml"
             if manifest_path.exists():
                 try:
-                    with open(manifest_path, encoding="utf-8") as f:
+                    with manifest_path.open(encoding="utf-8") as f:
                         data = yaml.safe_load(f)
                     manifest = Manifest(**data)
                     self._manifests[manifest.agent] = manifest
@@ -75,13 +77,13 @@ class PromptLoader:
                 except (OSError, ValueError, TypeError):
                     logger.warning("manifest_load_failed", path=str(manifest_path), exc_info=True)
 
-    def _card_path(self, agent: str, version: str) -> Path:
+    def _card_path(self, agent: str, version: str) -> Traversable:
         return self._cards_dir / agent / f"{version}.yaml"
 
     def _load_card_file(self, agent: str, version: str) -> CraftCard:
         path = self._card_path(agent, version)
         try:
-            with open(path, encoding="utf-8") as f:
+            with path.open(encoding="utf-8") as f:
                 data = yaml.safe_load(f)
         except FileNotFoundError as e:
             raise KeyError(f"Card file not found: {path}") from e
@@ -248,10 +250,10 @@ class PromptLoader:
 _loader_instance: PromptLoader | None = None
 
 
-def get_prompt_loader(cards_dir: Path | None = None) -> PromptLoader:
+def get_prompt_loader(cards_dir: Traversable | Path | None = None) -> PromptLoader:
     """Return the module-level singleton :class:`PromptLoader`.
 
-    The first call scans the ``prompts/cards/`` directory and caches
+    The first call scans the packaged cards directory and caches
     manifests.  Subsequent calls return the same instance.
     """
     global _loader_instance

@@ -5,6 +5,8 @@ from __future__ import annotations
 import json
 import time
 import uuid
+from importlib.resources import files
+from importlib.resources.abc import Traversable
 from pathlib import Path
 from typing import Any
 
@@ -43,6 +45,18 @@ from songyan.workflows.phase1_graph import (
 logger = structlog.get_logger(__name__)
 
 
+def resolve_seed_resource(path: str | Path) -> Path | Traversable:
+    """Resolve eval seed paths from cwd or packaged ``evals/seeds`` resources."""
+    candidate = Path(path)
+    if candidate.exists():
+        return candidate
+
+    parts = candidate.parts
+    if len(parts) >= 3 and parts[0] == "evals" and parts[1] == "seeds":
+        return files("evals").joinpath("seeds", *parts[2:])
+    return candidate
+
+
 # =============================================================================
 # Seed project import
 # =============================================================================
@@ -55,7 +69,9 @@ async def import_seed_project(config_path: str) -> str:
     因为 source_version_id 必须关联到 chapter_versions 表中的真实版本。
     请在 import_seed_chapter 之后调用 _import_seed_character_states().
     """
-    config = SeedProjectConfig.model_validate_json(Path(config_path).read_text(encoding="utf-8"))
+    config = SeedProjectConfig.model_validate_json(
+        resolve_seed_resource(config_path).read_text(encoding="utf-8")
+    )
     project_id = new_id("proj")
 
     # 1. 创建项目
@@ -172,7 +188,7 @@ async def import_seed_chapter(
     chapter_number: int = 1,
 ) -> str:
     """导入种子章节，返回 version_id."""
-    content = Path(chapter_path).read_text(encoding="utf-8")
+    content = resolve_seed_resource(chapter_path).read_text(encoding="utf-8")
     word_count = len(content)
 
     version_id = new_id("v")
@@ -277,7 +293,7 @@ async def run_seed_project(
     output_path.mkdir(parents=True, exist_ok=True)
 
     config = SeedProjectConfig.model_validate_json(
-        Path(project_config_path).read_text(encoding="utf-8")
+        resolve_seed_resource(project_config_path).read_text(encoding="utf-8")
     )
 
     start_time = time.perf_counter()

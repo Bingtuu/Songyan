@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import sqlite3
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import structlog
@@ -56,7 +55,6 @@ from ._brief_builder import (
 
 logger = structlog.get_logger(__name__)
 
-PROMPT_PATH = Path(__file__).parent.parent.parent.parent / "prompts" / "creative_director.md"
 _MOTIF_LOOKBACK_CHAPTERS = 8
 _MOTIF_LOOKBACK_THRESHOLD = 4
 

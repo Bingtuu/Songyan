@@ -9,7 +9,7 @@
   <p>
     <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-%3E%3D3.11-blue" alt="Python >= 3.11" /></a>
     <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-blue" alt="License AGPL-3.0" /></a>
-    <img src="https://img.shields.io/badge/tests-2897%20passed-brightgreen" alt="Tests 2897 passed" />
+    <img src="https://img.shields.io/badge/tests-2903%20passed-brightgreen" alt="Tests 2903 passed" />
     <a href="https://github.com/astral-sh/ruff"><img src="https://img.shields.io/badge/code%20style-ruff-black" alt="Code style: ruff" /></a>
   </p>
 </div>
@@ -225,9 +225,13 @@ songyan/
 │   ├── db/                  # SQLite schema、repository、迁移
 │   ├── models/              # Pydantic v2 数据模型
 │   ├── evals/               # 质量度量、文学诊断、护栏审计、CED 量具
+│   ├── genres/data/         # 体裁 Profile JSON（scifi/xuanhuan/wuxia/urban 等 7 种）
+│   ├── creative_modes/data/ # 创作模式 Profile JSON（4 种）
+│   ├── prompts/cards/       # Agent 工艺卡（YAML 版本化）
+│   ├── prompts/literary_plugins/ # 文学策略插件
+│   ├── project_templates/data/   # 项目模板、seed、outline 与 schema
 │   └── llm/                 # LLM 调用、重试、结构化输出
-├── genres/                  # 体裁 Profile JSON（scifi/xuanhuan/wuxia/urban 等 7 种）
-├── prompts/cards/           # Agent 工艺卡（YAML 版本化）
+├── evals/seeds/             # 评测 seed 与种子章节（作为 evals 包资源打包）
 ├── tests/                   # 单元 / 集成 / E2E / 长序列测试
 ├── docs/                    # 状态、架构文档、报告
 └── archive/                 # 历史资料
@@ -325,7 +329,7 @@ python scripts/run_172b_ch100_climb.py --to 100
 | LLM 接入 | LiteLLM |
 | CLI | Click |
 | 日志 | structlog |
-| 测试 | pytest（2897 passed, 2 skipped, 1 xfailed） |
+| 测试 | pytest（2903 passed, 2 skipped, 1 xfailed） |
 
 ---
 
@@ -339,7 +343,7 @@ python scripts/run_172b_ch100_climb.py --to 100
 | V8 | ✅ 完成 | 多体裁可插拔（GenreRuntimeProfile）+ xuanhuan/wuxia Ch100 五门 PASS |
 | 172c | ✅ 完成 | wuxia 第二体裁 Ch100 爬坡：clean rerun 100/100 accepted，五门 PASS |
 | V8.5 | ✅ 完成 | 验收后遗留收口：172j BudgetPruner max_* 修复、172k C 判据三档证据闭环（xuanhuan end10 / urban end15 / wuxia end20 全 accepted）、172l 文档治理 |
-| V9 | 🔄 已开工 | 生产化地基（长跑可靠性/导出/打包/CI/成本追踪/五门工具收编）+ urban 第三体裁 Ch100；V9.1 173-176 全部完成，Task 177 `songyan export` 已落地，下一步 178 wheel 打包与资源加载修复，见 `tasks/V9-README.md` |
+| V9 | 🔄 已开工 | 生产化地基（长跑可靠性/导出/打包/CI/成本追踪/五门工具收编）+ urban 第三体裁 Ch100；V9.1 173-176 全部完成，Task 177 `songyan export` 与 Task 178 wheel 打包/资源加载已落地，下一步 179 CLI 三坑，见 `tasks/V9-README.md` |
 | V10 | ⏳ 预登记 | 跨体裁 Ch200、优秀度信号包（同质化/中文 AI 腔/judge 偏差）、结构升级 spike |
 
 各阶段事实入口见 `tasks/V9-README.md`（当前阶段，已开工）与 `tasks/V5/V6/V7/V8-README.md`（均已收尾）；V8 任务文档与报告归档于 [`archive/v8/`](archive/v8/INDEX.md)。
@@ -354,15 +358,15 @@ V8 已验证出一条可复制的体裁接入路径：先用短窗口确认新�
 
 | 层 | 位置 | 管什么 |
 |----|------|--------|
-| 体裁内容画像 | `genres/<genre>.json` | 节奏规则、写作规则、疲劳词、禁忌、审查关注点、文学护栏 lexicon（主动选择/配角/代价关键词） |
+| 体裁内容画像 | `src/songyan/genres/data/<genre>.json` | 节奏规则、写作规则、疲劳词、禁忌、审查关注点、文学护栏 lexicon（主动选择/配角/代价关键词）；默认从 wheel 包资源加载，外部目录可用 `set_genres_dir(...)` 注入 |
 | 运行时画像 | `GenreRuntimeProfile`：代码注册表 `src/songyan/db/genre_runtime_profile_repo.py` + DB `genre_runtime_profiles` 表 | Context Diet 运行时契约：预算（`base_budget`/`ramp_per_chapter`）、门禁阈值（`hard_enforce_ratio`/`emergency_halt_ratio`）、伏笔 horizon 下限、状态蒸发曲线、角色衰减窗口、连续性容差 |
-| 项目模板 | `project_templates/<genre>/`（template.yaml + seed.json + outline.json） | 项目初始化：主角设定、核心钩子、叙事骨架（arc/thread） |
+| 项目模板 | `src/songyan/project_templates/data/<genre>/`（template.yaml + seed.json + outline.json） | 项目初始化：主角设定、核心钩子、叙事骨架（arc/thread）；默认从 wheel 包资源加载，外部模板目录可用 `ProjectTemplateLoader(templates_dir=...)` 注入 |
 
 加载语义：代码注册表是体裁基线（含实证调校），DB 记录是**字段级覆盖层**——调参时可以不改代码，往 DB upsert 一条只含差异字段的记录即可；嵌套子模型（蒸发/衰减/容差）按整体替换。未知体裁回退 scifi baseline。两个边界（172j 固化）：DB 覆盖以代码默认值为 diff 基准，无法把注册表调优值降回代码默认（需降回时改代码注册表）；`max_soft_refs` / `max_foreshadowing` / `max_character_states` 是体裁级**收紧上限**——仅调低到旧常量基线以下时生效，调高由章节动态曲线接管（注册表中 wuxia/xuanhuan 的 `max_character_states=8` 因此当前不生效，待 V9 标定）。
 
 ### 推荐流程（V8 实证路径）
 
-**1. 写配置**。参照 `genres/xuanhuan.json` 与 `project_templates/xuanhuan/` 补齐三层；运行时画像先不写，用 scifi 默认值起跑。
+**1. 写配置**。参照 `src/songyan/genres/data/xuanhuan.json` 与 `src/songyan/project_templates/data/xuanhuan/` 补齐三层；运行时画像先不写，用 scifi 默认值起跑。
 
 **2. 短窗口验证**（第一次必跑，是对标手段不是终点）：
 
@@ -401,9 +405,9 @@ python scripts/run_172b_ch100_climb.py --to 100
 
 | 接口 | 位置 | 能定制什么 | 怎么用 |
 |------|------|-----------|--------|
-| **创作模式** | `creative_modes/<mode>.json` | 启用哪些 Agent、审查维度与权重、修订策略、容差阈值（疲劳词/AI 腔等）、RAG 配置、human memory、成功指标 | 新增一个 JSON 文件即注册（目录自动发现）；`songyan run --mode-id <mode>` 选用。现有 webnovel / webnovel_intense / literary / hybrid 四种可参考 |
-| **工艺卡（Agent prompt）** | `prompts/cards/<agent>/<version>.yaml` + `_manifest.yaml` | 任一 Agent 的 system prompt：Writer、两类 Auditor、SettlementExtractor、SummaryWriter 等 | 版本化新增（不改旧版本，可回退），`_manifest.yaml` 切 `default_version` 生效；外部卡目录可用 `get_prompt_loader(cards_dir=...)` 注入 |
-| **文学策略插件** | `prompts/literary_plugins/<strategy>/<agent>.yaml` | 按策略向指定 Agent 的 prompt 注入片段（如声纹锚定、AI 腔黑名单） | 新建 `<strategy>/` 目录放 `<agent>.yaml`，在创作模式 JSON 的 `literary_optimization_plugins` 字段引用策略 id |
+| **创作模式** | `src/songyan/creative_modes/data/<mode>.json` | 启用哪些 Agent、审查维度与权重、修订策略、容差阈值（疲劳词/AI 腔等）、RAG 配置、human memory、成功指标 | 新增一个 JSON 文件即注册（目录自动发现）；`songyan run --mode-id <mode>` 选用。现有 webnovel / webnovel_intense / literary / hybrid 四种可参考；外部目录可用 `set_modes_dir(...)` 注入 |
+| **工艺卡（Agent prompt）** | `src/songyan/prompts/cards/<agent>/<version>.yaml` + `_manifest.yaml` | 任一 Agent 的 system prompt：Writer、两类 Auditor、SettlementExtractor、SummaryWriter 等 | 版本化新增（不改旧版本，可回退），`_manifest.yaml` 切 `default_version` 生效；外部卡目录可用 `get_prompt_loader(cards_dir=...)` 注入 |
+| **文学策略插件** | `src/songyan/prompts/literary_plugins/<strategy>/<agent>.yaml` | 按策略向指定 Agent 的 prompt 注入片段（如声纹锚定、AI 腔黑名单） | 新建 `<strategy>/` 目录放 `<agent>.yaml`，在创作模式 JSON 的 `literary_optimization_plugins` 字段引用策略 id；外部插件目录可用 `load_strategy_plugins(..., plugins_dir=...)` 注入 |
 | **LLM 端点** | `.env` | 模型提供方、模型名、温度 | LiteLLM 统一接入，改 `LLM_BASE_URL` / `LLM_MODEL` 即可，无需改代码 |
 | **门禁模式** | `GateConfig.for_mode(...)` | `observe`（只观测不拦截）/ `enforce`（生产拦截） | 脚本入口传入，长跑验证先用 observe 看信号再切 enforce |
 
@@ -419,7 +423,7 @@ python scripts/run_172b_ch100_climb.py --to 100
 
 这些机制已在代码里，但离「开箱即用」还差一层包装，是当前最欢迎的贡献方向：
 
-- `genres/*.json` 与 `creative_modes/*.json` 缺 JSON Schema（`project_templates/_schema.json` 已有参照）
+- `src/songyan/genres/data/*.json` 与 `src/songyan/creative_modes/data/*.json` 缺 JSON Schema（`src/songyan/project_templates/data/_schema.json` 已有参照）
 - `GenreRuntimeProfile` 的 DB 字段级覆盖只有 Python API，缺调参 CLI
 - 文学插件目录缺清单/版本/校验注册机制（工艺卡的 manifest 是现成参照）
 - Ch100 五门判定器还在 `.tmp/` 任务产物里，待收编为正式工具
@@ -483,6 +487,7 @@ python scripts/run_172a7_genre_validation.py --templates scifi --end 10
 - [`tasks/175-cost-tracking-and-budget-circuit-breaker-DONE.md`](tasks/175-cost-tracking-and-budget-circuit-breaker-DONE.md) — V9 Task 175：成本追踪与预算熔断
 - [`tasks/176-windows-anti-hang-wrapper.md`](tasks/176-windows-anti-hang-wrapper.md) + [`-DONE.md`](tasks/176-windows-anti-hang-wrapper-DONE.md) — V9 Task 176：Windows 防卡 wrapper 工具化
 - [`tasks/177-export-book-manuscript-DONE.md`](tasks/177-export-book-manuscript-DONE.md) — V9 Task 177：`songyan export` 正文导出
+- [`tasks/178-wheel-packaging-resource-loading-DONE.md`](tasks/178-wheel-packaging-resource-loading-DONE.md) — V9 Task 178：wheel 打包与资源加载修复
 - [`tasks/V8-README.md`](tasks/V8-README.md) — V8 任务事实入口（已收尾，含编号治理规则与五维验收证据链）
 - [`archive/v8/INDEX.md`](archive/v8/INDEX.md) — V8 任务文档与报告归档索引（172-172l 全部任务书、双体裁 Ch100 验收报告、短窗口矩阵）
 - [`docs/reports/v8-literature-and-landscape-review.md`](docs/reports/v8-literature-and-landscape-review.md) — V8 长调研报告（体裁差异与 GenreRuntimeProfile 设计依据）

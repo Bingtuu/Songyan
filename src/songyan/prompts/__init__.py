@@ -24,7 +24,7 @@ def render_agent_prompt(
     """加载并渲染指定 Agent 的工艺卡，返回完整 prompt 字符串.
 
     Args:
-        agent: Agent 名称（对应 prompts/cards/ 下的子目录）.
+        agent: Agent 名称（对应包内 ``songyan.prompts/cards`` 子目录）.
         variables: Jinja2 模板变量字典.
         version: 指定版本号，None 时使用最新版本.
         tags: 用于过滤 sections 的标签列表.

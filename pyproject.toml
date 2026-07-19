@@ -54,6 +54,10 @@ songyan = "songyan.cli.main:cli"
 where = ["src", "."]
 include = ["songyan*", "evals*"]
 
+[tool.setuptools.package-data]
+songyan = ["**/*.yaml", "**/*.json", "**/*.md", "**/*.sql"]
+evals = ["seeds/**/*.json", "seeds/**/*.md"]
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 addopts = "--ignore=tests/evals --ignore=tests/cli"

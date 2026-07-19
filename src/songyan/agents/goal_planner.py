@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import structlog
@@ -20,8 +19,6 @@ if TYPE_CHECKING:
     from songyan.workflows._narrative_context import NarrativeGoalContext
 
 logger = structlog.get_logger(__name__)
-
-PROMPT_PATH = Path(__file__).parent.parent.parent.parent / "prompts" / "goal_planner.md"
 
 # 默认值常量
 MIN_WORD_COUNT = 2000

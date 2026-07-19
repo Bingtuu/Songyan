@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
+from importlib.resources import files
+from importlib.resources.abc import Traversable
 
-import songyan
 from songyan.models.creative_mode import CreativeModeProfile
 from songyan.models.review import ReviewCategory
 
@@ -18,23 +18,21 @@ class CreativeModeProfileNotFoundError(CreativeModeProfileError):
     """请求的 mode_id 不存在."""
 
 
-# 默认从仓库根目录的 creative_modes/ 加载
-_DEFAULT_MODES_DIR = (
-    Path(songyan.__file__).resolve().parent.parent.parent / "creative_modes"
-)
+# 默认从包内 creative_modes/data 加载
+_DEFAULT_MODES_DIR = files("songyan.creative_modes") / "data"
 
 # 运行时可通过 monkeypatch 覆盖
-_MODES_DIR: Path = _DEFAULT_MODES_DIR
+_MODES_DIR: Traversable = _DEFAULT_MODES_DIR
 
 # 内存缓存: mode_id -> CreativeModeProfile
 _CACHE: dict[str, CreativeModeProfile] = {}
 
 
-def set_modes_dir(path: Path) -> None:
-    """设置 creative_modes 配置目录（测试用途）.
+def set_modes_dir(path: Traversable) -> None:
+    """设置 creative mode 配置目录（测试用途）.
 
     Args:
-        path: 新的 creative_modes 目录路径.
+        path: 新的 mode JSON 目录路径.
     """
     global _MODES_DIR
     _MODES_DIR = path
@@ -42,13 +40,13 @@ def set_modes_dir(path: Path) -> None:
 
 
 def _get_available_modes() -> list[str]:
-    """扫描 creative_modes 目录，返回可用的 mode_id 列表（字母序）."""
+    """扫描当前 mode 目录，返回可用的 mode_id 列表（字母序）."""
     if not _MODES_DIR.exists():
         return []
     return sorted(
-        p.stem
-        for p in _MODES_DIR.glob("*.json")
-        if p.is_file()
+        p.name.removesuffix(".json")
+        for p in _MODES_DIR.iterdir()
+        if p.is_file() and p.name.endswith(".json")
     )
 
 
@@ -64,7 +62,7 @@ def _validate_active_audit_dimensions(profile: CreativeModeProfile) -> None:
 
 
 def load_creative_mode_profile(mode_id: str) -> CreativeModeProfile:
-    """按 mode_id 从 creative_modes/{mode_id}.json 加载创作模式配置.
+    """按 mode_id 从当前资源目录加载创作模式配置.
 
     Args:
         mode_id: 创作模式标识符，例如 "webnovel".
@@ -89,7 +87,7 @@ def load_creative_mode_profile(mode_id: str) -> CreativeModeProfile:
         raise CreativeModeProfileNotFoundError(msg)
 
     try:
-        with open(file_path, encoding="utf-8") as f:
+        with file_path.open(encoding="utf-8") as f:
             data = json.load(f)
     except json.JSONDecodeError as exc:
         raise CreativeModeProfileError(
@@ -110,7 +108,7 @@ def load_creative_mode_profile(mode_id: str) -> CreativeModeProfile:
 
 
 def list_creative_mode_profiles() -> list[str]:
-    """列出 creative_modes/ 目录下可用的模式 ID，按字母序返回."""
+    """列出当前资源目录下可用的模式 ID，按字母序返回."""
     return _get_available_modes()
 
 
