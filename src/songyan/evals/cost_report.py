@@ -71,25 +71,29 @@ def render_cost_section(
     Args:
         aggregate: ``aggregate_for_run`` 的返回，含 per_chapter / per_agent 两个分组列表；
             per_chapter 中 chapter_number=None 的分组为 run 级调用，渲染为「run 级」。
-        source_stats: ``source_stats_for_run`` 的返回，含 total_calls（分母）与
-            token_estimate_calls / cost_pricing_estimate_calls（两个占比的分子）。
+        source_stats: ``source_stats_for_run`` 的返回，含 total_usage_rows（全部尝试行）、
+            total_calls（成功调用分母）与 token_estimate_calls /
+            cost_pricing_estimate_calls（两个占比的分子）。
         top_n: per agent 成本分布展示的条数，超出部分合并为「其他（k 个 agent）」一行。
         error: 取数失败的错误摘要。非 None 时渲染可区分的「成本数据读取失败」行，
             与「无成本数据」（良性旧 run）明确区分开。
 
     Returns:
-        markdown 文本；无 usage 数据（total_calls == 0）时输出「无成本数据」提示。
+        markdown 文本；完全无 usage 行时输出「无成本数据」提示。只有失败/取消尝试
+        时仍渲染明细，避免把事故 run 误判成旧 run。
     """
     per_chapter = aggregate.get("per_chapter", [])
     per_agent = aggregate.get("per_agent", [])
+    total_usage_rows = _int(source_stats.get("total_usage_rows"))
     total_calls = _int(source_stats.get("total_calls"))
+    has_usage_rows = total_usage_rows > 0 or bool(per_chapter) or bool(per_agent)
 
     lines = ["## 成本视图", ""]
     if error is not None:
         lines.append(f"成本数据读取失败：{error}")
         lines.append("")
         return "\n".join(lines)
-    if total_calls == 0:
+    if not has_usage_rows:
         lines.append(NO_DATA_TEXT)
         lines.append("")
         return "\n".join(lines)
@@ -113,6 +117,7 @@ def render_cost_section(
             f"- **run 总成本**: {format_cost_estimate(total_cost)}",
             f"- **章节数**: {chapter_count_text}",
             f"- **每章均成本**: {avg_cost_text}",
+            f"- **成功调用数**: {total_calls}/{total_usage_rows}",
             "- **token_source='estimate' 占比**: "
             + _format_ratio(_int(source_stats.get("token_estimate_calls")), total_calls),
             "- **cost_source='pricing_estimate' 占比**: "

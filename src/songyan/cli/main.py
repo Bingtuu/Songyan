@@ -578,6 +578,7 @@ def _render_cost_section(run_id: str) -> str:
         return "\n" + render_cost_section(
             {"per_chapter": [], "per_agent": []},
             {
+                "total_usage_rows": 0,
                 "total_calls": 0,
                 "token_estimate_calls": 0,
                 "cost_pricing_estimate_calls": 0,

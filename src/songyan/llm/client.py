@@ -8,7 +8,7 @@ import os
 import time
 from contextvars import ContextVar
 from functools import lru_cache
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any
 
 import structlog
 
@@ -16,7 +16,6 @@ from songyan.config import settings
 from songyan.exceptions import LLMBudgetExceededError, LLMError, LLMRateLimitError
 from songyan.llm._usage import (
     _current_call_context,
-    _extract_provider_cost,
     _extract_usage,
     _record_llm_call_usage,
     _UsageExtract,
@@ -70,13 +69,14 @@ def get_llm_run_cost() -> float:
     return _llm_run_cost_cny.get(0.0)
 
 
-async def init_run_cost_from_db(run_id: str) -> float:
+async def init_run_cost_from_db(run_id: str, *, fallback: float | None = None) -> float:
     """从 llm_call_usage 历史合计初始化 run 级成本累计器（Task 175，resume 安全）.
 
     新 run 无用量行时初始化为 0.0；resume run 恢复历史累计，使成本预算熔断
     跨进程/跨 resume 连续。DB 读取失败（如库未迁移遥测表）时回退 0.0 并记
-    warning——与遥测落库同一哲学：生成不可断；预算熔断退化为仅统计当前进程
-    新增成本。
+    warning；调用方可传入 fallback 保留已持久化 total_cost，避免 resume 早期保存
+    把历史值冲为 0.0。与遥测落库同一哲学：生成不可断；预算熔断退化为仅统计
+    当前进程新增成本。
 
     Returns:
         初始化后的累计成本（CNY）
@@ -87,7 +87,7 @@ async def init_run_cost_from_db(run_id: str) -> float:
         total = await LlmCallUsageRepository().sum_cost_for_run(run_id)
     except Exception as exc:
         logger.warning("llm.run_cost_init_failed", run_id=run_id, error=str(exc))
-        total = 0.0
+        total = fallback if fallback is not None else 0.0
     _llm_run_cost_cny.set(total)
     return total
 
@@ -418,21 +418,17 @@ async def call_llm(
         latency_ms = int((time.monotonic() - start) * 1000)
         try:
             usage = _extract_usage(response)
-            provider_cost = _extract_provider_cost(response)
             if usage.token_source == "response":
                 prompt_tokens = usage.prompt_tokens
                 completion_tokens = usage.completion_tokens
             else:
                 prompt_tokens = count_tokens(prompt, model)
                 completion_tokens = count_tokens(text, model)
-            cost_source: Literal["provider_cost", "pricing_estimate"]
-            if provider_cost is not None:
-                cost_cny = provider_cost
-                cost_source = "provider_cost"
-            else:
-                # 保守定价估算：response token ≠ 精确金额，标 pricing_estimate
-                cost_cny = estimate_cost_from_tokens(prompt_tokens, completion_tokens, model)
-                cost_source = "pricing_estimate"
+            # 成本字段与预算均为 CNY。LiteLLM 的 response_cost 语义是 USD，且当前
+            # ChatLiteLLM 默认不透传该字段；在接入明确币种转换前，一律使用本地
+            # CNY pricing estimate，避免把 USD 当 CNY 累计导致预算漏停。
+            cost_cny = estimate_cost_from_tokens(prompt_tokens, completion_tokens, model)
+            cost_source = "pricing_estimate"
         except Exception as exc:  # 提取失败不阻断：记零值 estimate
             logger.warning("llm.usage_extract_failed", error=str(exc))
             usage = _UsageExtract()

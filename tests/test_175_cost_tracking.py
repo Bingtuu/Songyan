@@ -151,10 +151,10 @@ class TestUsageRecording:
         assert row["error"] is None
         assert row["latency_ms"] >= 0
 
-    async def test_provider_cost_recorded(
+    async def test_response_metadata_response_cost_ignored_for_cny_budget(
         self, monkeypatch: pytest.MonkeyPatch, test_db: Path
     ) -> None:
-        """响应元数据带 provider cost（litellm response_cost）→ cost_source='provider_cost'."""
+        """LiteLLM response_cost 是 USD；CNY 预算口径下不直接消费该字段."""
         _install_fake_litellm(monkeypatch)
         _FakeChatLiteLLM.responses.append(
             _FakeResponse(
@@ -167,8 +167,11 @@ class TestUsageRecording:
 
         row = (await _fetch_rows(test_db))[0]
         assert row["token_source"] == "response"
-        assert row["cost_source"] == "provider_cost"
-        assert row["cost_cny"] == pytest.approx(0.005)
+        assert row["cost_source"] == "pricing_estimate"
+        assert row["cost_cny"] == pytest.approx(
+            estimate_cost_from_tokens(100, 50, "fake-model")
+        )
+        assert row["cost_cny"] != pytest.approx(0.005)
 
     async def test_cache_tokens_from_deepseek_native_fields(
         self, monkeypatch: pytest.MonkeyPatch, test_db: Path
@@ -542,16 +545,15 @@ class TestRunCostAccumulator:
         """成功调用计算出成本后立即累加进 _llm_run_cost_cny."""
         _install_fake_litellm(monkeypatch)
         _FakeChatLiteLLM.responses.append(
-            _FakeResponse(
-                usage_metadata={"input_tokens": 100, "output_tokens": 50},
-                response_metadata={"response_cost": 0.005},
-            )
+            _FakeResponse(usage_metadata={"input_tokens": 100, "output_tokens": 50})
         )
 
         result = await llm_client.call_llm("prompt")
 
         assert result == "fake-text"
-        assert llm_client.get_llm_run_cost() == pytest.approx(0.005)
+        assert llm_client.get_llm_run_cost() == pytest.approx(
+            estimate_cost_from_tokens(100, 50, "fake-model")
+        )
 
     async def test_record_failure_still_accumulates_cost(
         self, monkeypatch: pytest.MonkeyPatch, test_db: Path
@@ -559,7 +561,7 @@ class TestRunCostAccumulator:
         """repo.record 抛异常被吞时 call_llm 正常返回，且累计器已增加（任务书关键语义）."""
         _install_fake_litellm(monkeypatch)
         _FakeChatLiteLLM.responses.append(
-            _FakeResponse(response_metadata={"response_cost": 0.007})
+            _FakeResponse(usage_metadata={"input_tokens": 200, "output_tokens": 100})
         )
 
         async def _explode(*args: Any, **kwargs: Any) -> None:
@@ -571,7 +573,9 @@ class TestRunCostAccumulator:
 
         assert result == "fake-text"
         assert await _fetch_rows(test_db) == []
-        assert llm_client.get_llm_run_cost() == pytest.approx(0.007)
+        assert llm_client.get_llm_run_cost() == pytest.approx(
+            estimate_cost_from_tokens(200, 100, "fake-model")
+        )
 
 
 # --------------------------------------------------------------------------- #
@@ -584,10 +588,11 @@ class TestRunCostBudgetPreCheck:
         """累计成本已达预算 → 下一次 call_llm 前置熔断（耗尽），且不产生新调用."""
         _install_fake_litellm(monkeypatch)
         monkeypatch.setattr(settings, "run_cost_budget", 0.01)
+        monkeypatch.setattr(llm_client, "estimate_cost_from_tokens", lambda *args: 0.02)
         _FakeChatLiteLLM.responses.extend(
             [
-                _FakeResponse(response_metadata={"response_cost": 0.02}),
-                _FakeResponse(response_metadata={"response_cost": 0.02}),
+                _FakeResponse(usage_metadata={"input_tokens": 1, "output_tokens": 1}),
+                _FakeResponse(usage_metadata={"input_tokens": 1, "output_tokens": 1}),
             ]
         )
 
@@ -619,8 +624,9 @@ class TestRunCostBudgetPostCheck:
         """单次调用成本把预算打穿 → 累加后立即熔断，不向调用方返回文本."""
         _install_fake_litellm(monkeypatch)
         monkeypatch.setattr(settings, "run_cost_budget", 0.01)
+        monkeypatch.setattr(llm_client, "estimate_cost_from_tokens", lambda *args: 0.02)
         _FakeChatLiteLLM.responses.append(
-            _FakeResponse(response_metadata={"response_cost": 0.02})
+            _FakeResponse(usage_metadata={"input_tokens": 1, "output_tokens": 1})
         )
 
         with pytest.raises(LLMBudgetExceededError) as exc_info:
@@ -643,8 +649,12 @@ class TestRunCostBudgetPostCheck:
         """run_cost_budget=0（默认）→ 成本熔断不启用，累计器仍正常累加."""
         _install_fake_litellm(monkeypatch)
         monkeypatch.setattr(settings, "run_cost_budget", 0.0)
+        monkeypatch.setattr(llm_client, "estimate_cost_from_tokens", lambda *args: 9.9)
         _FakeChatLiteLLM.responses.extend(
-            [_FakeResponse(response_metadata={"response_cost": 9.9}) for _ in range(3)]
+            [
+                _FakeResponse(usage_metadata={"input_tokens": 1, "output_tokens": 1})
+                for _ in range(3)
+            ]
         )
 
         for _ in range(3):
@@ -696,17 +706,23 @@ class TestInitRunCostFromDb:
         await llm_client.init_run_cost_from_db("run-hist")
         _install_fake_litellm(monkeypatch)
         monkeypatch.setattr(settings, "run_cost_budget", 0.04)
+        costs = iter([0.005, 0.006])
+        monkeypatch.setattr(
+            llm_client,
+            "estimate_cost_from_tokens",
+            lambda *args: next(costs),
+        )
 
         # 历史 0.03 < 0.04 → 前置通过；累计 0.035 ≤ 0.04 → 后置通过，正常返回
         _FakeChatLiteLLM.responses.append(
-            _FakeResponse(response_metadata={"response_cost": 0.005})
+            _FakeResponse(usage_metadata={"input_tokens": 1, "output_tokens": 1})
         )
         assert await llm_client.call_llm("prompt-1") == "fake-text"
         assert llm_client.get_llm_run_cost() == pytest.approx(0.035)
 
         # 0.035 < 0.04 前置仍通过；累计 0.041 > 0.04 → 后置熔断
         _FakeChatLiteLLM.responses.append(
-            _FakeResponse(response_metadata={"response_cost": 0.006})
+            _FakeResponse(usage_metadata={"input_tokens": 1, "output_tokens": 1})
         )
         with pytest.raises(LLMBudgetExceededError, match="超限"):
             await llm_client.call_llm("prompt-2")
@@ -731,6 +747,21 @@ class TestInitRunCostFromDb:
         assert any(
             entry.get("event") == "llm.run_cost_init_failed" for entry in logs
         )
+
+    async def test_init_failure_uses_fallback_when_given(
+        self, monkeypatch: pytest.MonkeyPatch, test_db: Path
+    ) -> None:
+        """DB 读取失败但调用方传 fallback → 保留已持久化 total_cost，不冲零."""
+
+        async def _explode(*args: Any, **kwargs: Any) -> float:
+            raise RuntimeError("db down")
+
+        monkeypatch.setattr(LlmCallUsageRepository, "sum_cost_for_run", _explode)
+
+        total = await llm_client.init_run_cost_from_db("run-x", fallback=0.42)
+
+        assert total == pytest.approx(0.42)
+        assert llm_client.get_llm_run_cost() == pytest.approx(0.42)
 
 
 # --------------------------------------------------------------------------- #
@@ -1013,6 +1044,59 @@ class TestResumeShortCircuitTotalCost:
         assert result.chapters_completed == [1, 2]
         assert result.total_cost == pytest.approx(0.07)
 
+    async def test_resume_initializes_run_state_total_cost_before_early_save(
+        self, monkeypatch: pytest.MonkeyPatch, test_db: Path
+    ) -> None:
+        """resume 后首个 current_chapter 保存前，run_state.total_cost 已同步 usage 合计."""
+        await ProjectRepository().create(
+            ProjectSetting(genre_id="xuanhuan", protagonist_name="英雄"), _PID
+        )
+        run_id = "run-175-stale"
+        await ProjectRunRepository().create(
+            ProjectRunState(
+                run_id=run_id,
+                project_id=_PID,
+                chapter_range_start=1,
+                chapter_range_end=1,
+                current_chapter=1,
+                completed_chapters=[],
+                total_cost=0.0,  # 模拟上次崩溃：usage 已写，project_runs.total_cost 尚未刷新
+                status="paused",
+            )
+        )
+        await LlmCallUsageRepository().record(
+            run_id=run_id,
+            model="fake-model",
+            cost_cny=0.05,
+            token_source="estimate",
+            cost_source="pricing_estimate",
+        )
+
+        async def _explode(**kwargs: Any) -> dict[str, Any]:
+            raise RuntimeError("stop after early save")
+
+        with (
+            patch(
+                "songyan.workflows.phase2_graph._run_single_chapter",
+                side_effect=_explode,
+            ),
+            patch(
+                "songyan.workflows.phase2_graph.reset_checkpointer",
+                new_callable=AsyncMock,
+            ),
+        ):
+            with pytest.raises(RuntimeError, match="stop after early save"):
+                await run_project_pipeline(
+                    project_id=_PID,
+                    chapter_range=(1, 1),
+                    auto_confirm=True,
+                    resume=True,
+                )
+
+        persisted = await ProjectRunRepository().get(run_id)
+        assert persisted is not None
+        assert persisted.total_cost == pytest.approx(0.05)
+
 
 class TestRefreshRunTotalCost:
     async def test_refresh_failure_preserves_existing_value(
@@ -1082,9 +1166,15 @@ def _usage_group(
     }
 
 
-def _stats(total: int, token_est: int = 0, cost_est: int = 0) -> dict[str, int]:
+def _stats(
+    total: int,
+    token_est: int = 0,
+    cost_est: int = 0,
+    total_rows: int | None = None,
+) -> dict[str, int]:
     """构造 source_stats_for_run 的返回（total_calls 为占比分母）."""
     return {
+        "total_usage_rows": total if total_rows is None else total_rows,
         "total_calls": total,
         "token_estimate_calls": token_est,
         "cost_pricing_estimate_calls": cost_est,
@@ -1147,6 +1237,23 @@ class TestRenderCostSection:
         assert "## 成本视图" in text
         assert "无成本数据" in text
         assert "|" not in text
+
+    def test_failure_only_usage_rows_are_not_reported_as_no_data(self) -> None:
+        """只有失败/取消尝试时仍渲染遥测明细，不伪装成旧 run 无成本数据."""
+        aggregate = {
+            "per_chapter": [
+                _usage_group("chapter_number", None, call_count=1, cost=0.0)
+            ],
+            "per_agent": [_usage_group("agent", "writer", call_count=1, cost=0.0)],
+        }
+
+        text = render_cost_section(aggregate, _stats(0, total_rows=1))
+
+        assert "无成本数据" not in text
+        assert "**成功调用数**: 0/1" in text
+        assert "token_source='estimate' 占比**: -" in text
+        assert "| writer | 1 | 0 | 0 |" in text
+        assert "| run 级 | 1 | 0 | 0 |" in text
 
     def test_null_chapter_group_rendered_as_run_level(self) -> None:
         """chapter_number=None 分组（run 级调用）渲染为「run 级」，不出现 None 字样."""

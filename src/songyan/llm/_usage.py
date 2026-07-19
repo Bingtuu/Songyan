@@ -97,14 +97,6 @@ def _coerce_int(value: Any) -> int | None:
     return None
 
 
-def _coerce_float(value: Any) -> float | None:
-    if isinstance(value, bool):
-        return None
-    if isinstance(value, (int, float)):
-        return float(value)
-    return None
-
-
 def _extract_usage(response: Any) -> _UsageExtract:
     """按 langchain-core → litellm 顺序提取 token 用量，缺失回退 estimate.
 
@@ -148,14 +140,6 @@ def _extract_usage(response: Any) -> _UsageExtract:
                 cache_miss_tokens=_coerce_int(token_usage.get("prompt_cache_miss_tokens")),
             )
     return _UsageExtract()
-
-
-def _extract_provider_cost(response: Any) -> float | None:
-    """响应元数据中的 provider 精确成本（如 litellm response_cost）；不存在返回 None."""
-    meta = _meta_value(response, "response_metadata")
-    if not isinstance(meta, dict):
-        return None
-    return _coerce_float(meta.get("response_cost"))
 
 
 async def _record_llm_call_usage(

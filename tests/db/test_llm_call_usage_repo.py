@@ -293,6 +293,7 @@ class TestSourceStatsForRun:
 
         stats = await repo.source_stats_for_run("run-a")
 
+        assert stats["total_usage_rows"] == 5
         assert stats["total_calls"] == 4
         assert stats["token_estimate_calls"] == 2
         assert stats["cost_pricing_estimate_calls"] == 2
@@ -302,6 +303,7 @@ class TestSourceStatsForRun:
         repo = LlmCallUsageRepository()
         stats = await repo.source_stats_for_run("no-such-run")
         assert stats == {
+            "total_usage_rows": 0,
             "total_calls": 0,
             "token_estimate_calls": 0,
             "cost_pricing_estimate_calls": 0,

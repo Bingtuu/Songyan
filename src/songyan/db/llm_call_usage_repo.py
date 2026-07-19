@@ -152,36 +152,51 @@ class LlmCallUsageRepository:
         占比 <20% 的口径）。
 
         Returns:
-            {"total_calls": 成功调用行数（分母）,
+            {"total_usage_rows": 全部尝试行数（含失败/取消）,
+             "total_calls": 成功调用行数（分母）,
              "token_estimate_calls": token_source='estimate' 行数（分子）,
              "cost_pricing_estimate_calls": cost_source='pricing_estimate' 行数（分子）}
-            无记录的 run 三个值全为 0，不报错（旧 run 无 usage 数据的常态路径）。
+            无记录的 run 四个值全为 0，不报错（旧 run 无 usage 数据的常态路径）。
         """
         async with get_db() as conn:
             cursor = await conn.execute(
-                """SELECT COUNT(*) AS total_calls,
+                """SELECT COUNT(*) AS total_usage_rows,
+                          COALESCE(SUM(CASE WHEN success = 1 THEN 1 ELSE 0 END), 0)
+                              AS total_calls,
                           COALESCE(
-                              SUM(CASE WHEN token_source = 'estimate' THEN 1 ELSE 0 END),
+                              SUM(
+                                  CASE
+                                      WHEN success = 1 AND token_source = 'estimate'
+                                      THEN 1 ELSE 0
+                                  END
+                              ),
                               0
                           ) AS token_estimate_calls,
                           COALESCE(
-                              SUM(CASE WHEN cost_source = 'pricing_estimate' THEN 1 ELSE 0 END),
+                              SUM(
+                                  CASE
+                                      WHEN success = 1 AND cost_source = 'pricing_estimate'
+                                      THEN 1 ELSE 0
+                                  END
+                              ),
                               0
                           ) AS cost_pricing_estimate_calls
                    FROM llm_call_usage
-                   WHERE run_id = ? AND success = 1""",
+                   WHERE run_id = ?""",
                 (run_id,),
             )
             row = await cursor.fetchone()
         # 聚合查询无 GROUP BY 必返回一行；row 为 None 只是防御性兜底
         if row is None:
             return {
+                "total_usage_rows": 0,
                 "total_calls": 0,
                 "token_estimate_calls": 0,
                 "cost_pricing_estimate_calls": 0,
             }
         return {
-            "total_calls": int(row[0]),
-            "token_estimate_calls": int(row[1]),
-            "cost_pricing_estimate_calls": int(row[2]),
+            "total_usage_rows": int(row[0]),
+            "total_calls": int(row[1]),
+            "token_estimate_calls": int(row[2]),
+            "cost_pricing_estimate_calls": int(row[3]),
         }

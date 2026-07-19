@@ -817,8 +817,12 @@ async def _run_project_pipeline_impl(
     from songyan.llm.client import init_run_cost_from_db, reset_llm_call_count
 
     reset_llm_call_count()
-    # Task 175: 成本累计器从 DB 初始化——新 run 为 0.0，resume run 接续历史累计
-    await init_run_cost_from_db(run_id)
+    # Task 175: 成本累计器从 DB 初始化——新 run 为 0.0，resume run 接续历史累计。
+    # 返回值同步到 run_state，避免 resume 早期直接 _save_run_state 时继续写旧 total_cost。
+    run_state.total_cost = await init_run_cost_from_db(
+        run_id,
+        fallback=run_state.total_cost,
+    )
 
     # resume 时清理该项目孤儿 checkpoint；in-flight 章会在重算前获得新 thread_id
     if existing_run is not None:

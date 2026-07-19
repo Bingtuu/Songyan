@@ -22,7 +22,7 @@
 
 ## 目标
 
-1. 每次 LLM 调用（含每次重试尝试）落一行 `llm_call_usage`：run/chapter/agent/stage/model/tokens/cost/latency/retry_attempt/success/error，token 来源标记（response 精确 token / estimate 估算 token）与 cost 来源标记（provider cost / pricing estimate）。
+1. 每次 LLM 调用（含每次重试尝试）落一行 `llm_call_usage`：run/chapter/agent/stage/model/tokens/cost/latency/retry_attempt/success/error，token 来源标记（response 精确 token / estimate 估算 token）与 cost 来源标记（当前 CNY pricing estimate；provider cost 字段保留给未来明确币种来源）。
 2. run 级成本预算 `run_cost_budget`（默认 0=不限）：调用前检查历史累计，调用成功后累加并立即二次检查；累计超限抛 `LLMBudgetExceededError`，走既有优雅停跑路径（pause + 保留已生成章 + 可 resume）；与 `llm_run_call_budget` 调用次数预算相互独立。
 3. `ProjectRunResult.total_cost` 与 `project_runs.total_cost` 均接真实累计值；`songyan report` 含成本视图（per run / per chapter / per agent）。
 4. **实跑验收（本 Task 的 D 阶段同时解锁 173/174 挂起项）**：带成本上限的 scifi `--end 10` 回归 + 173 两次自然退出 + 174 三边重建演示。
@@ -69,7 +69,7 @@ CREATE INDEX IF NOT EXISTS idx_llm_call_usage_run_chapter ON llm_call_usage(run_
 **3. `llm/client.py` 拦截**：
 
 - 新增 `LLMCallContext` dataclass + `_current_call_context()`：从 `structlog.contextvars.get_contextvars()` 读 `run_id/project_id/chapter_number/stage/version_id/db_path/agent` 组装——**复用 174 字段链，不建双轨 ContextVar**（V9-README 的"LLMCallContext/ContextVar 传递"意图是调用上下文可追溯，读取侧实现即可；写入侧只有 `agent` 需新增绑定）。
-- `_invoke()` 内（`client.py:200-218`）按尝试记录：成功时先取 `response.usage_metadata`（langchain-core 标准：`input_tokens/output_tokens`），缺失取 `response.response_metadata` 的 token_usage（litellm 风格），仍缺失回退文本估算并标 `token_source='estimate'`；若响应元数据存在 provider cost（如 litellm response_cost）则 `cost_source='provider_cost'`，否则用 `cost_estimator.estimate_cost_from_tokens(...)` / `estimate_cost(...)` 标 `cost_source='pricing_estimate'`。DeepSeek cache hit/miss 可从 `prompt_tokens_details.cached_tokens` / `prompt_cache_hit_tokens` / `prompt_cache_miss_tokens` 提取到 `cached_tokens/cache_miss_tokens`，但当前定价仍按保守 pricing estimate 计算；不得把 response token 误写成“精确金额”。
+- `_invoke()` 内（`client.py:200-218`）按尝试记录：成功时先取 `response.usage_metadata`（langchain-core 标准：`input_tokens/output_tokens`），缺失取 `response.response_metadata` 的 token_usage（litellm 风格），仍缺失回退文本估算并标 `token_source='estimate'`；成本统一用 `cost_estimator.estimate_cost_from_tokens(...)` / `estimate_cost(...)` 计算 CNY，并标 `cost_source='pricing_estimate'`。`llm_call_usage.cost_source='provider_cost'` 作为未来扩展保留，但当前 `ChatLiteLLM` 默认不透传 LiteLLM `response_cost`，且 LiteLLM `response_cost` 为 USD，未接明确币种转换前禁止写入 `cost_cny`。DeepSeek cache hit/miss 可从 `prompt_tokens_details.cached_tokens` / `prompt_cache_hit_tokens` / `prompt_cache_miss_tokens` 提取到 `cached_tokens/cache_miss_tokens`；不得把 response token 或 USD cost 误写成“精确人民币金额”。
 - 失败尝试记 `success=0` + `error` + 零 usage。`latency_ms` 用 `time.monotonic()` 夹取。`retry_attempt` 优先通过给 `retry_with_backoff()` 增加可选 `on_attempt` / `attempt_index` 回调透传，避免闭包计数在失败/最终失败语义上漂移；退而求其次才使用 `_invoke` 内部闭包计数。
 - **agent 归因**：所有 `call_llm()` 调用点所在 Agent 函数入口各加一行 `bind_contextvars(agent="<name>")`（覆盖语义，下一个 Agent 入口自然覆盖前值，无泄漏窗口）。同时新增静态测试扫描 `src/songyan/agents/**` 中所有 `call_llm(`，确认调用前所在函数或其入口具备 agent 绑定，防止后续新增调用漏归因。
 
@@ -77,7 +77,7 @@ CREATE INDEX IF NOT EXISTS idx_llm_call_usage_run_chapter ON llm_call_usage(run_
 
 **1. 累计器**：`client.py` 新增 `_llm_run_cost_cny: ContextVar[float]`（镜像既有 `_llm_call_count` 模式）；每次成功调用计算出成本后立即累加。**成本累计必须独立于 telemetry 写库是否成功**：即使 `repo.record(...)` 抛异常被 warning 吞掉，`_llm_run_cost_cny` 也必须已增加，避免 telemetry 故障绕过预算熔断。
 
-**2. resume 安全**：run 确定后（`phase2_graph.py` 三个 run_id 绑定分支，174 已落点）调用 `init_run_cost_from_db(run_id)`——从 `sum_cost_for_run` 初始化累计器，新 run 为 0，resume run 为历史累计。
+**2. resume 安全**：run 确定后（`phase2_graph.py` 三个 run_id 绑定分支，174 已落点）调用 `init_run_cost_from_db(run_id, fallback=run_state.total_cost)`——从 `sum_cost_for_run` 初始化累计器，新 run 为 0，resume run 为历史累计；返回值必须同步写入 `run_state.total_cost`，保证章节循环最早的 `_save_run_state(current_chapter)` 不会继续持久化旧值。DB 读取失败时使用 fallback 保留已持久化值。
 
 **3. 配置**：`config.py` 新增 `run_cost_budget: float = Field(default=0.0, validation_alias=AliasChoices("SONGYAN_RUN_COST_BUDGET", "RUN_COST_BUDGET"))`，保证文档命令中的 `SONGYAN_RUN_COST_BUDGET` 真实生效；README/.env.example 同步该变量。
 
@@ -123,7 +123,7 @@ if budget > 0 and _llm_run_cost_cny.get() > budget:
 
 ### 阶段 C：report 成本视图
 
-`cli/main.py:583` `report_cmd` 增加成本段（数据源 `aggregate_for_run`）：run 总成本（¥）、章节数与每章均成本、per agent 成本分布（top N）、`token_source='estimate'` 占比与 `cost_source='pricing_estimate'` 占比（估算占比高 = usage/成本提取需要修的早期信号）。无 usage 数据的旧 run 显示"无成本数据"不报错。
+`cli/main.py:583` `report_cmd` 增加成本段（数据源 `aggregate_for_run` + `source_stats_for_run`）：run 总成本（¥）、章节数与每章均成本、per agent 成本分布（top N）、成功调用数 / 全部尝试行、`token_source='estimate'` 占比与 `cost_source='pricing_estimate'` 占比（估算占比高 = usage/成本提取需要修的早期信号）。完全无 usage 行的旧 run 显示"无成本数据"不报错；只有失败/取消尝试时仍必须渲染失败遥测明细，不得伪装成旧 run。
 
 ### 阶段 D：实跑验收（与 173/174 挂起项合并执行）
 
@@ -140,7 +140,8 @@ if budget > 0 and _llm_run_cost_cny.get() > budget:
 
 新建 `tests/test_175_cost_tracking.py`：
 
-- response 带 `usage_metadata` → 落库 `token_source='response'`、tokens 来自 response、`cost_source='pricing_estimate'`（除非 provider cost 存在）；
+- response 带 `usage_metadata` → 落库 `token_source='response'`、tokens 来自 response、`cost_source='pricing_estimate'`；
+- response_metadata 带 LiteLLM `response_cost` → 当前 CNY 口径下忽略该 USD 字段，仍按本地 CNY pricing estimate 计算；
 - response 带 cache hit/miss details → `cached_tokens/cache_miss_tokens` 正确落库；
 - response 无 usage → estimate fallback，`token_source='estimate'`、`cost_source='pricing_estimate'`；
 - 重试语义：首次失败 + 二次成功 → 两行（attempt 0 `success=0`+error / attempt 1 `success=1`）；
@@ -148,10 +149,10 @@ if budget > 0 and _llm_run_cost_cny.get() > budget:
 - agent 静态覆盖：扫描所有 `src/songyan/agents/**` 的 `call_llm(` 调用点，确认具备 agent 绑定；
 - 熔断前置：预算 ¥0.01 + 预置累计 → `LLMBudgetExceededError`，`used_cost/budget_cost` 字段正确；
 - 熔断后置：单次调用成本把预算打穿 → `call_llm` 在累加后抛 `LLMBudgetExceededError`，且不返回文本给 Agent；
-- resume 初始化：DB 预置历史行 → `init_run_cost_from_db` 后累计器从历史值继续；
+- resume 初始化：DB 预置历史行 → `init_run_cost_from_db` 后累计器从历史值继续，且 `run_state.total_cost` 在最早 `_save_run_state` 前同步；
 - **repo.record 抛异常时 `call_llm` 正常返回**（telemetry 不阻断生成），但 `_llm_run_cost_cny` 已累计本次成本；
 - `total_cost` 接线：构造 run 用量行后 `ProjectRunResult.total_cost` 与 `project_runs.total_cost` 均等于 DB 合计（或拆为 sum 查询单测 + 接线点断言）；
-- `aggregate_for_run` 分组聚合正确性。
+- `aggregate_for_run` 分组聚合正确性；只有失败/取消尝试时 report 仍渲染遥测，不显示"无成本数据"。
 
 ### 回归命令
 
@@ -191,15 +192,18 @@ python scripts/run_172a7_genre_validation.py --templates scifi --end 10   # 阶�
 | A2 | `9caa1c5` + `6a92fea` | call_llm 拦截（LLMCallContext 读 174 字段链、usage 三级提取、双 source 标记、cached/miss、按尝试落库、retry on_attempt 回调）+ 15 处 agent 绑定 + AST 静态测试；review 2 Important（conftest 遥测 mute 隔离、取消尝试落行）+ 6 Minor 修复 |
 | B | `324c028` + `8a5c799` | `_llm_run_cost_cny` 累计器（独立于 telemetry 成败，attempt_state 回传外层 context——`asyncio.wait_for` Task 副本不回传 ContextVar 写入的实证修正）、`init_run_cost_from_db`、前置`>=`/后置`>` 双检查熔断、`LLMBudgetExceededError` 扩展 used_cost/budget_cost、total_cost 双接线（含 pause 路径）、`_usage.py` 抽离；review 2 Important（短路分支 total_cost 透传、refresh 失败保留持久值）+ 4 顺手项修复 |
 | C | `f2982f8` | `source_stats_for_run` 查询 + `evals/cost_report.py::render_cost_section` 纯函数 + `report_cmd` 接线（宽 except 降级）；测试绕开 tests/cli 既有坑 |
+| Review follow-up | 当前工作区 | 修复代码 review 发现：LiteLLM `response_cost` USD 不再写入 `cost_cny`，当前统一 CNY pricing estimate；report 增 `total_usage_rows`，失败/取消尝试不再伪装成旧 run 无数据；resume 初始化返回值同步到 `run_state.total_cost`，防早期 `_save_run_state` 写旧值 |
 
 ### 验证
 
 - 全量 `python -m pytest tests/ -q`：**2869 passed, 2 skipped, 1 xfailed**；`ruff check src/ tests/` 全绿
 - 评审：A1/A2/B/C 规格符合性 + 代码质量双 review 全通过（A2/C 修复后 Approved；B 修复后免复审）；终审（`agent-19`）结论 Yes——6 条 Minor 中唯一影响阶段 D 判据的"失败行污染 estimate 占比"已修（`source_stats_for_run` 加 `success = 1` 过滤，专测锁定）
+- review follow-up 聚焦验证：`python -m pytest tests/test_175_cost_tracking.py tests/db/test_llm_call_usage_repo.py tests/test_llm_client.py -q` → **65 passed**；`python -m pytest tests/ -q` → **2872 passed, 2 skipped, 1 xfailed**；`ruff check src/ tests/` 全绿；`git diff --check` 仅 LF/CRLF 提示
 
 ### 关键偏差与决策（已记录）
 
 - `_invoke` 内经 `attempt_state` 回传成本到外层 context 累计（`asyncio.wait_for` Task 副本不回传 ContextVar 写入，红测暴露后修正）
+- 当前成本金额口径统一为 CNY pricing estimate；LiteLLM `response_cost` 是 USD 且当前 `ChatLiteLLM` 默认不透传该字段，未接币种转换前不得写入 `cost_cny`
 - pipeline 三处 sum 查询容错回退（`_sum_run_cost_or_none` 失败 None 保留既有值）：陈旧 dev 库无新表时不杀 run，与"telemetry 丢失可接受"哲学一致；独立验证确认该路径在 parent commit 同样失败（环境性，非本任务回归）
 - 「每章均成本」= run 总成本（含 run 级调用）/章节数，run 级调用次数单列注释
 - 既有 quirk 未动：`report_cmd -o` 只用 `output.parent`（文件名始终 `report-<run_id>.md`）
@@ -207,7 +211,6 @@ python scripts/run_172a7_genre_validation.py --templates scifi --end 10   # 阶�
 ### 待办
 
 - 阶段 D 实跑验收（熔断实证 + scifi end10 + 173/174 挂起项补跑）：待 API 预算确认
-- C 阶段质量 review 补做（subagent 配额恢复后或与终审合并）
 - dev 库 `songyan.db` 需跑一次 `init_schema` 获得遥测表（幂等）
 
 ---
