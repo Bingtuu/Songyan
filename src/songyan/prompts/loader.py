@@ -60,14 +60,14 @@ class PromptLoader:
 
     def _scan(self) -> None:
         """Scan cards/ directory and load all manifests."""
-        if not self._cards_dir.exists():
+        if not self._cards_dir.is_dir():
             logger.warning("cards_dir_not_found", path=str(self._cards_dir))
             return
         for agent_dir in self._cards_dir.iterdir():
             if not agent_dir.is_dir():
                 continue
             manifest_path = agent_dir / "_manifest.yaml"
-            if manifest_path.exists():
+            if manifest_path.is_file():
                 try:
                     with manifest_path.open(encoding="utf-8") as f:
                         data = yaml.safe_load(f)

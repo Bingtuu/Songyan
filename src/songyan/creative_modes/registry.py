@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from importlib.resources import files
 from importlib.resources.abc import Traversable
+from pathlib import Path
 
 from songyan.models.creative_mode import CreativeModeProfile
 from songyan.models.review import ReviewCategory
@@ -22,13 +23,13 @@ class CreativeModeProfileNotFoundError(CreativeModeProfileError):
 _DEFAULT_MODES_DIR = files("songyan.creative_modes") / "data"
 
 # 运行时可通过 monkeypatch 覆盖
-_MODES_DIR: Traversable = _DEFAULT_MODES_DIR
+_MODES_DIR: Traversable | Path = _DEFAULT_MODES_DIR
 
 # 内存缓存: mode_id -> CreativeModeProfile
 _CACHE: dict[str, CreativeModeProfile] = {}
 
 
-def set_modes_dir(path: Traversable) -> None:
+def set_modes_dir(path: Traversable | Path) -> None:
     """设置 creative mode 配置目录（测试用途）.
 
     Args:
@@ -41,7 +42,7 @@ def set_modes_dir(path: Traversable) -> None:
 
 def _get_available_modes() -> list[str]:
     """扫描当前 mode 目录，返回可用的 mode_id 列表（字母序）."""
-    if not _MODES_DIR.exists():
+    if not _MODES_DIR.is_dir():
         return []
     return sorted(
         p.name.removesuffix(".json")
@@ -78,7 +79,7 @@ def load_creative_mode_profile(mode_id: str) -> CreativeModeProfile:
         return _CACHE[mode_id]
 
     file_path = _MODES_DIR / f"{mode_id}.json"
-    if not file_path.exists():
+    if not file_path.is_file():
         available = _get_available_modes()
         msg = (
             f"CreativeMode profile '{mode_id}' not found in {_MODES_DIR}. "

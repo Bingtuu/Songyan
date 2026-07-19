@@ -35,7 +35,7 @@ def load_strategy_plugins(
     fragments: list[str] = []
     for sid in strategy_ids:
         plugin_file = base_dir / sid / f"{agent}.yaml"
-        if not plugin_file.exists():
+        if not plugin_file.is_file():
             logger.warning(
                 "literary_plugin.missing",
                 strategy_id=sid,

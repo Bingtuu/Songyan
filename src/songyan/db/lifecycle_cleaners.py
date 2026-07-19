@@ -13,16 +13,17 @@ if TYPE_CHECKING:
     import aiosqlite
 
     from songyan.db.lifecycle_scheduler import LifecycleScheduler
+    from songyan.models import GenreRuntimeProfile, ProjectSetting
 
 
-async def _load_project_for_cleaner(project_id: str):
+async def _load_project_for_cleaner(project_id: str) -> ProjectSetting | None:
     """加载 project 以便 cleaner 获取 genre_id."""
     from songyan.workflows._helpers import load_project
 
     return await load_project(project_id)
 
 
-async def _load_runtime_profile_for_cleaner(genre_id: str | None):
+async def _load_runtime_profile_for_cleaner(genre_id: str | None) -> GenreRuntimeProfile:
     """按 genre_id 加载 runtime profile."""
     from songyan.db.genre_runtime_profile_repo import load_profile
 

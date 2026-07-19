@@ -6,7 +6,7 @@ import logging
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Final
+from typing import Any, Final, cast
 
 import structlog
 
@@ -76,7 +76,7 @@ def configure_logging(
         structlog.processors.format_exc_info,
     ]
 
-    formatter_pre_chain = list(shared_processors)
+    formatter_pre_chain = cast(Any, list(shared_processors))
     handlers: list[logging.Handler] = []
 
     if console:
@@ -110,10 +110,10 @@ def configure_logging(
         logging.getLogger(logger_name).setLevel(logging.WARNING)
 
     structlog.configure(
-        processors=[
+        processors=cast(Any, [
             *shared_processors,
             structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
-        ],
+        ]),
         logger_factory=structlog.stdlib.LoggerFactory(),
         wrapper_class=structlog.stdlib.BoundLogger,
         cache_logger_on_first_use=False,

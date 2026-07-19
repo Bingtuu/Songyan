@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import sqlite3
 from pathlib import Path
 from types import SimpleNamespace
@@ -209,9 +210,9 @@ class TestCreateProject:
 
     @staticmethod
     def _extract_project_id(output: str) -> str:
-        for line in output.splitlines():
-            if line.startswith("✓ 项目已创建:"):
-                return line.split(":", 1)[1].strip()
+        match = re.search(r"项目已创建:\s*([0-9a-f]{32})", output)
+        if match:
+            return match.group(1)
         pytest.fail("未在输出中找到 project_id")
 
 

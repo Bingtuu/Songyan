@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from importlib.resources import files
 from importlib.resources.abc import Traversable
+from pathlib import Path
 
 from songyan.models.genre import GenreProfile
 from songyan.models.review import ReviewCategory
@@ -22,13 +23,13 @@ class GenreProfileNotFoundError(GenreProfileError):
 _DEFAULT_GENRES_DIR = files("songyan.genres") / "data"
 
 # 运行时可通过 monkeypatch 覆盖
-_GENRES_DIR: Traversable = _DEFAULT_GENRES_DIR
+_GENRES_DIR: Traversable | Path = _DEFAULT_GENRES_DIR
 
 # 内存缓存: genre_id -> GenreProfile
 _CACHE: dict[str, GenreProfile] = {}
 
 
-def set_genres_dir(path: Traversable) -> None:
+def set_genres_dir(path: Traversable | Path) -> None:
     """设置 genre 配置目录（测试用途）.
 
     Args:
@@ -41,7 +42,7 @@ def set_genres_dir(path: Traversable) -> None:
 
 def _get_available_genres() -> list[str]:
     """扫描当前 genre 目录，返回可用的 genre_id 列表（字母序）."""
-    if not _GENRES_DIR.exists():
+    if not _GENRES_DIR.is_dir():
         return []
     return sorted(
         p.name.removesuffix(".json")
@@ -78,7 +79,7 @@ def load_genre_profile(genre_id: str) -> GenreProfile:
         return _CACHE[genre_id]
 
     file_path = _GENRES_DIR / f"{genre_id}.json"
-    if not file_path.exists():
+    if not file_path.is_file():
         available = _get_available_genres()
         msg = (
             f"Genre profile '{genre_id}' not found in {_GENRES_DIR}. "

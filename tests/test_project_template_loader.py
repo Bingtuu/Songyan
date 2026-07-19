@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import zipfile
 from pathlib import Path
 
 import pytest
@@ -97,6 +98,40 @@ def test_load_directory_template(tmp_templates: Path) -> None:
     assert template.id == "scifi"
     assert template.has_outline
     assert len(template.seed.characters) == 1
+
+
+def test_load_zip_backed_directory_template_outline(tmp_path: Path) -> None:
+    zip_path = tmp_path / "templates.zip"
+    with zipfile.ZipFile(zip_path, "w") as zf:
+        zf.writestr(
+            "templates/scifi/template.yaml",
+            (
+                "id: scifi\n"
+                "name: Sci-Fi\n"
+                "project_setting:\n"
+                "  title: Ark\n"
+                "  genre_id: scifi\n"
+                "  mode_id: webnovel\n"
+                "  protagonist_name: Lin\n"
+            ),
+        )
+        zf.writestr(
+            "templates/scifi/outline.json",
+            json.dumps({
+                "outline": {"core_conflict": "ark", "mainline_synopsis": "..."},
+                "arc_plans": [],
+                "plot_threads": [],
+            }),
+        )
+
+    with zipfile.ZipFile(zip_path) as zf:
+        loader = ProjectTemplateLoader(
+            templates_dir=zipfile.Path(zf) / "templates",
+            seeds_dir=tmp_path / "evals" / "seeds",
+        )
+        template = loader.load("scifi")
+
+    assert template.has_outline
 
 
 def test_load_seed_compatible(tmp_templates: Path, tmp_seeds: Path) -> None:

@@ -8,7 +8,7 @@ import os
 import time
 from contextvars import ContextVar
 from functools import lru_cache
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 import structlog
 
@@ -167,7 +167,7 @@ async def _maybe_close_resource(resource: Any, *, seen: set[int]) -> None:
 
 async def _close_litellm_global_client(seen: set[int]) -> None:
     try:
-        import litellm  # type: ignore[import-untyped]
+        import litellm
     except ImportError:
         return
 
@@ -460,7 +460,7 @@ async def call_llm(
             # ChatLiteLLM 默认不透传该字段；在接入明确币种转换前，一律使用本地
             # CNY pricing estimate，避免把 USD 当 CNY 累计导致预算漏停。
             cost_cny = estimate_cost_from_tokens(prompt_tokens, completion_tokens, model)
-            cost_source = "pricing_estimate"
+            cost_source: Literal["provider_cost", "pricing_estimate"] = "pricing_estimate"
         except Exception as exc:  # 提取失败不阻断：记零值 estimate
             logger.warning("llm.usage_extract_failed", error=str(exc))
             usage = _UsageExtract()

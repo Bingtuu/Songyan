@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from importlib.resources import files
+from importlib.resources import as_file, files
 from importlib.resources.abc import Traversable
 from pathlib import Path
 from typing import Any, cast
@@ -51,15 +51,15 @@ class ProjectTemplateLoader:
     def list_templates(self) -> list[str]:
         """列出可用模板 ID（目录式 + 种子兼容）."""
         ids: set[str] = set()
-        if self._templates_dir.exists():
+        if self._templates_dir.is_dir():
             for p in self._templates_dir.iterdir():
-                if p.is_dir() and (p / "template.yaml").exists():
+                if p.is_dir() and (p / "template.yaml").is_file():
                     ids.add(p.name)
                     # variants
                     for vp in p.iterdir():
-                        if vp.is_dir() and (vp / "template.yaml").exists():
+                        if vp.is_dir() and (vp / "template.yaml").is_file():
                             ids.add(f"{p.name}/{vp.name}")
-        if self._seeds_dir.exists():
+        if self._seeds_dir.is_dir():
             for p in self._seeds_dir.iterdir():
                 if not p.is_file() or not p.name.endswith(".json"):
                     continue
@@ -86,23 +86,29 @@ class ProjectTemplateLoader:
         seen = seen | {template_id}
 
         # 1. 目录式模板
-        template_path = self._templates_dir / template_id / "template.yaml"
-        if template_path.exists():
-            return self._load_directory_template(template_id, template_path.parent, seen=seen)
+        template_dir = self._templates_dir / template_id
+        template_path = template_dir / "template.yaml"
+        if template_path.is_file():
+            return self._load_directory_template(template_id, template_dir, seen=seen)
 
         # 2. variants
         if "/" in template_id:
             parent, variant = template_id.split("/", 1)
-            variant_path = self._templates_dir / parent / variant / "template.yaml"
-            if variant_path.exists():
+            variant_dir = self._templates_dir / parent / variant
+            variant_path = variant_dir / "template.yaml"
+            if variant_path.is_file():
                 return self._load_directory_template(
-                    template_id, variant_path.parent, parent_id=parent, seen=seen
+                    template_id, variant_dir, parent_id=parent, seen=seen
                 )
 
         # 3. evals/seeds 兼容
         seed_path = self._seeds_dir / f"{template_id}.json"
-        if seed_path.exists():
-            template = seed_to_template(seed_path)
+        if seed_path.is_file():
+            if isinstance(seed_path, Path):
+                template = seed_to_template(seed_path)
+            else:
+                with as_file(seed_path) as seed_file:
+                    template = seed_to_template(seed_file)
             self._validate_genre_mode(template, template_id)
             return template
 
@@ -133,7 +139,7 @@ class ProjectTemplateLoader:
             base_template = self._load(extends, seen)
             raw = self._merge_overwrite(base_template, raw)
 
-        raw["source_dir"] = source_dir
+        raw["source_dir"] = source_dir if isinstance(source_dir, Path) else None
         template = ProjectTemplate(**raw)
 
         # 校验 genre / mode 存在
@@ -141,9 +147,13 @@ class ProjectTemplateLoader:
 
         # 加载 outline.json
         outline_file = source_dir / "outline.json"
-        if outline_file.exists():
+        if outline_file.is_file():
             # "dummy" 为占位 project_id；初始化时大纲会重新绑定到真实 project_id
-            outline, arcs, threads = load_outline_file(str(outline_file), "dummy")
+            if isinstance(outline_file, Path):
+                outline, arcs, threads = load_outline_file(str(outline_file), "dummy")
+            else:
+                with as_file(outline_file) as outline_path:
+                    outline, arcs, threads = load_outline_file(str(outline_path), "dummy")
             template.set_outline(outline, arcs, threads)
         elif base_template and base_template.has_outline:
             outline_tuple = base_template.outline_tuple
@@ -157,7 +167,7 @@ class ProjectTemplateLoader:
 
         # 加载 seed.json（变体目录优先；overwrite/继承合并已在 _merge_overwrite 中完成）
         seed_file = source_dir / "seed.json"
-        if seed_file.exists():
+        if seed_file.is_file():
             with seed_file.open(encoding="utf-8") as f:
                 seed_data = json.load(f)
             template.seed = TemplateSeed(**seed_data)

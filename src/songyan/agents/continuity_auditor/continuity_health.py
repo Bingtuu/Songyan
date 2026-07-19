@@ -33,7 +33,7 @@ def classify_continuity_mark(mark: HumanMark | dict[str, object]) -> Literal["P1
         mark_type = mark.mark_type
         priority = mark.priority
         note = mark.note
-        severity = mark.severity
+        severity: str | None = mark.severity
     else:
         raw = mark
         mark_type = cast(
@@ -45,7 +45,7 @@ def classify_continuity_mark(mark: HumanMark | dict[str, object]) -> Literal["P1
         severity = cast(str | None, raw.get("severity"))
 
     if severity in {"P1", "P2", "P3"}:
-        return severity
+        return cast(Literal["P1", "P2", "P3"], severity)
 
     # 旧记录兜底：显式 severity 缺失时，沿用旧 character mark 的保守分类。
     if mark_type == "character" or "mismatch" in note.lower() or "矛盾" in note:
