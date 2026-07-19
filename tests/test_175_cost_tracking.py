@@ -16,6 +16,7 @@ import pytest
 from structlog.contextvars import bind_contextvars, reset_contextvars
 from structlog.testing import capture_logs
 
+from songyan.cli.main import _render_cost_section
 from songyan.config import Settings, settings
 from songyan.db.llm_call_usage_repo import LlmCallUsageRepository
 from songyan.db.project_run_repo import ProjectRunRepository
@@ -1181,6 +1182,63 @@ class TestRenderCostSection:
         assert f"| 其他（4 个 agent） | 4 | 100 | 50 | {format_cost_estimate(0.010)} |" in text
 
     def test_per_agent_within_top_n_has_no_others_row(self) -> None:
-        """agent 数 ≤ top_n 时不出现「其他」合并行."""
+        """agent 数 ≤ top_n 时不出现「其他」合并行，标题也不带「Top N」后缀."""
         text = render_cost_section(self._aggregate(), _stats(4))
         assert "其他" not in text
+        assert "（Top" not in text
+
+    def test_error_param_renders_distinct_failure_line(self) -> None:
+        """error 参数（取数失败降级）：渲染可区分的错误行，不伪装成「无成本数据」."""
+        text = render_cost_section(
+            {"per_chapter": [], "per_agent": []},
+            _stats(0),
+            error="no such table: llm_call_usage",
+        )
+
+        assert "## 成本视图" in text
+        assert "成本数据读取失败：no such table: llm_call_usage" in text
+        assert "无成本数据" not in text
+        assert "|" not in text
+
+    def test_run_level_only_renders_dash_avg_cost(self) -> None:
+        """全部调用都是 run 级（chapter_count=0）：章节数 0，每章均成本渲染为 -."""
+        aggregate = {
+            "per_chapter": [
+                _usage_group(
+                    "chapter_number", None,
+                    call_count=2, cost=0.004, prompt=100, completion=50,
+                ),
+            ],
+            "per_agent": [
+                _usage_group("agent", "summary_writer", call_count=2, cost=0.004),
+            ],
+        }
+
+        text = render_cost_section(aggregate, _stats(2))
+
+        assert f"**run 总成本**: {format_cost_estimate(0.004)}" in text
+        assert "**章节数**: 0（另有 run 级调用 2 次）" in text
+        assert "**每章均成本**: -" in text
+
+
+class TestRenderCostSectionFetchFallback:
+    """_render_cost_section（cli.main）：取数失败的降级形状（不触碰 tests/cli）."""
+
+    def test_fetch_failure_renders_distinct_error_line(
+        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """SQL 错/schema 漂移/DB 锁死 → 报告中是可区分错误行 + console 警告，不伪装成旧 run."""
+
+        async def _explode(*args: Any, **kwargs: Any) -> Any:
+            raise RuntimeError("no such table: llm_call_usage")
+
+        monkeypatch.setattr(LlmCallUsageRepository, "aggregate_for_run", _explode)
+
+        text = _render_cost_section("run-x")
+
+        assert "## 成本视图" in text
+        assert "成本数据读取失败" in text
+        assert "no such table" in text
+        assert "无成本数据" not in text
+        # console 警告保留（report_cmd 既有警告均为 click.echo 风格）
+        assert "成本数据读取失败" in capsys.readouterr().out

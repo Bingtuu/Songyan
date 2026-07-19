@@ -64,6 +64,7 @@ def render_cost_section(
     source_stats: dict[str, int],
     *,
     top_n: int = DEFAULT_TOP_N,
+    error: str | None = None,
 ) -> str:
     """渲染 report 的成本视图段（markdown）.
 
@@ -73,6 +74,8 @@ def render_cost_section(
         source_stats: ``source_stats_for_run`` 的返回，含 total_calls（分母）与
             token_estimate_calls / cost_pricing_estimate_calls（两个占比的分子）。
         top_n: per agent 成本分布展示的条数，超出部分合并为「其他（k 个 agent）」一行。
+        error: 取数失败的错误摘要。非 None 时渲染可区分的「成本数据读取失败」行，
+            与「无成本数据」（良性旧 run）明确区分开。
 
     Returns:
         markdown 文本；无 usage 数据（total_calls == 0）时输出「无成本数据」提示。
@@ -82,6 +85,10 @@ def render_cost_section(
     total_calls = _int(source_stats.get("total_calls"))
 
     lines = ["## 成本视图", ""]
+    if error is not None:
+        lines.append(f"成本数据读取失败：{error}")
+        lines.append("")
+        return "\n".join(lines)
     if total_calls == 0:
         lines.append(NO_DATA_TEXT)
         lines.append("")
@@ -116,7 +123,7 @@ def render_cost_section(
         ]
     )
 
-    # ---- per agent 成本分布（成本降序 Top N，其余合并「其他」） ----
+    # ---- per agent 成本分布（成本降序；agent 数 > top_n 时截断 Top N，其余合并「其他」） ----
     sorted_agents = sorted(
         per_agent,
         key=lambda row: (-_float(row.get("cost_cny")), str(row.get("agent") or "")),
@@ -124,9 +131,13 @@ def render_cost_section(
     top_rows = sorted_agents[:top_n]
     rest_rows = sorted_agents[top_n:]
 
+    agent_title = "### per agent 成本分布"
+    if rest_rows:
+        agent_title += f"（Top {top_n}）"
+
     lines.extend(
         [
-            f"### per agent 成本分布（Top {top_n}）",
+            agent_title,
             "",
             "| Agent | 调用次数 | prompt tokens | completion tokens | 成本 |",
             "|-------|---------:|--------------:|------------------:|-----:|",
