@@ -4,7 +4,7 @@
 > **定位**: 自用为主、按开源标准打磨——不追求终端用户产品体验，但地基（打包/CI/日志/导出/成本）按可发布标准补齐
 > **当前口径**: V8（含 V8.5）已全量闭环。V9 不做优秀度信号包与跨体裁 Ch200（捆绑留 V10），只做两件事：① 补齐生产化地基；② urban 第三体裁 Ch100 爬坡作为地基的实战验收
 > **任务编号**: V9 从 Task 173 开始；**扁平编号**——每个可独立执行、独立验收、独立出 DONE 文档的工作项各占一个编号（粒度对标 V6 的 141-159 / V7 的 160-171w）；编号是 trace id，不等同于严格执行顺序；撞墙定点修复按父任务字母后缀登记（如 `187.p`）
-> **状态**: 已开工（2026-07-19：**V9.1 全部完成**（173/174/175/176 ✅）；V9.2 Task 177/178/179 ✅ 完成；下一步 180 doctor 环境自检）
+> **状态**: 已开工（2026-07-20：**V9.1 全部完成**（173/174/175/176 ✅）；V9.2 Task 177/178/179/180 ✅ 完成；下一步 181 CI 上线与测试清零）
 
 本文是 V9 阶段任务文档的事实入口。V8 历史事实入口见 `tasks/V8-README.md`（任务文档与报告在 `archive/v8/`）；更早阶段见 V7/V6/V5-README。
 
@@ -98,7 +98,7 @@ V9 通过 = A 组（地基）+ B 组（爬坡）同时满足，C 组（守护）
 | 177 | songyan export 正文导出 | ✅ | accepted head 正文 + 弧/卷元数据；`--format md/txt --by flat/arc/volume`；正式 service 收编任务脚本里的 `_export_prose()` 模式但不改历史脚本 | DONE: `tasks/177-export-book-manuscript-DONE.md`；xuanhuan Ch100 arc 4 文件、wuxia Ch100 flat 1 文件、xuanhuan volume 忽略 `(0,0)` 占位并完整导出；抽章 hash 与 DB 正文一致 |
 | 178 | wheel 打包与资源加载修复 | ✅ | `prompts/cards`、`prompts/literary_plugins`、`genres`、`creative_modes`、`project_templates` 迁入 `songyan` 包内；`evals/seeds` 保留为 `evals` 包资源；`schema.sql` 纳入 package-data；loader 统一使用 `importlib.resources`，测试注入口保留；170j/k/l 临时 mode 写入改为 TemporaryDirectory | DONE: `tasks/178-wheel-packaging-resource-loading-DONE.md`；资源测试 6 passed，资源相关测试组 137 passed；全量 pytest **2903 passed, 2 skipped, 1 xfailed**，ruff 全绿；wheel 非仓库 cwd 资源枚举 + `create-project --template scifi` + Ch1-3 3/3 accepted；scifi end10 10/10 accepted、budget 峰值 0.9693、成本 ¥0.8744、T9=1（诊断级残留，未记作 T9=0） |
 | 179 | CLI 体验修复 | ✅ | `songyan run` 成功输出 `run_id: <id>`；`--mode-id` 未显式传入时从 `projects.mode_id` 回读，显式传入仍覆盖；README CLI 表补 `songyan index` 与 `run` 关键参数 | DONE: `tasks/179-cli-experience-fixes-DONE.md`；聚焦 CLI 测试 **12 passed**；默认全量 pytest **2903 passed, 2 skipped, 1 xfailed**；ruff 全绿；code review 0 P0/P1/P2 |
-| 180 | songyan doctor 环境自检 | ◻ | .env / API key 连通性 / DB 可写 / 模板目录完整性；key 错误在首次 LLM 调用前给可读提示 | 构造坏环境逐项验证提示质量 |
+| 180 | songyan doctor 环境自检 | ✅ | `songyan doctor [--json] [--check-llm] [--init-db]`；默认无成本只读检查 `.env`、LLM key/config、SQLite URL/path/schema、checkpointer mode、runtime package resources；`--init-db` 才写 schema；schema drift 检测覆盖关键迁移列/索引 | DONE: `tasks/180-doctor-environment-check-DONE.md`；doctor 聚焦测试 **12 passed**；默认全量 pytest **2903 passed, 2 skipped, 1 xfailed**；ruff 全绿；code review 1 P2 已修复 |
 | 181 | CI 上线与测试清零 | ◻ | GitHub Actions（ruff + mypy + pytest 分层：unit 默认、integration 可选）；修 `tests/cli` 4 个既有失败；移除 `pyproject.toml` 对 `tests/cli` 的默认忽略或在 CI 中单独强制运行；README tests badge 改生成机制 | CI 全绿；本地 `python -m pytest tests/ -q` 与 CI 覆盖口径一致或差异显式文档化；badge 不再手改 |
 
 ### V9.3 爬坡工具链

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import uuid
 from pathlib import Path
 from typing import Any, Literal, cast
@@ -30,6 +31,7 @@ from songyan.models.gate_config import GateConfig
 from songyan.models.human_mark import HumanMark
 from songyan.models.project import ProjectSetting, derive_arc_boundaries
 from songyan.project_templates import ProjectInitializer, ProjectTemplateLoader
+from songyan.services.doctor_service import DoctorReport, run_doctor
 from songyan.services.export_service import (
     ExportFormat,
     ExportResult,
@@ -126,6 +128,36 @@ def _select_sub_genre(genre_id: str) -> str | None:
     if 1 <= choice <= len(profile.sub_genres):
         return profile.sub_genres[choice - 1].sub_genre_id
     return None
+
+
+def _render_doctor_report(report: DoctorReport) -> str:
+    """Render doctor report as human-readable text."""
+    lines = ["Songyan doctor", ""]
+    for check in report.checks:
+        lines.append(f"[{check.status.upper()}] {check.id}: {check.message}")
+        if check.hint:
+            lines.append(f"  hint: {check.hint}")
+    summary = report.summary
+    lines.append("")
+    lines.append(
+        f"Summary: {summary['pass']} PASS, {summary['warn']} WARN, {summary['fail']} FAIL"
+    )
+    return "\n".join(lines)
+
+
+@cli.command(name="doctor")
+@click.option("--json", "json_output", is_flag=True, help="输出机器可读 JSON")
+@click.option("--check-llm", is_flag=True, help="显式执行 LLM 客户端初始化探针")
+@click.option("--init-db", is_flag=True, help="初始化/迁移当前 DATABASE_URL 指向的 SQLite DB")
+def doctor(json_output: bool, check_llm: bool, init_db: bool) -> None:
+    """检查 Songyan 本地运行环境."""
+    report = asyncio.run(run_doctor(check_llm=check_llm, init_db=init_db))
+    if json_output:
+        click.echo(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
+    else:
+        click.echo(_render_doctor_report(report))
+    if report.status == "fail":
+        raise click.exceptions.Exit(1)
 
 
 async def _create_project_async(outline_file: str | None = None) -> tuple[str, ProjectSetting]:
