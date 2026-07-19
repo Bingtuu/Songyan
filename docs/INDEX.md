@@ -40,6 +40,7 @@ V8 已全量闭环（P/C/Q/S/V 五维全绿 + V8.5 遗留清零）。任务文�
 |------|------|
 | `tasks/V9-README.md` | V9 总索引、A/B/C 验收判据、依赖关系与执行纪律 |
 | `tasks/175-cost-tracking-and-budget-circuit-breaker.md` | Task 175 任务书：成本追踪与预算熔断（✅ 完成：阶段 A-D 全闭环，实跑验收通过） |
+| `tasks/175-cost-tracking-and-budget-circuit-breaker-DONE.md` | Task 175 完成报告：成本遥测 + DB 权威熔断 + report 成本视图，含阶段 D 实跑证据 |
 | `tasks/173-interpreter-exit-hang-fix.md` | Task 173 任务书：解释器退出挂死修复 |
 | `tasks/173-interpreter-exit-hang-fix-DONE.md` | Task 173 完成报告：LLM client 生命周期关闭 + force-exit 兜底 |
 | `tasks/174-logging-system-foundation.md` | Task 174 任务书：日志体系落地 |

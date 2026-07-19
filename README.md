@@ -475,6 +475,7 @@ python scripts/run_172a7_genre_validation.py --templates scifi --end 10
 - [`tasks/V9-README.md`](tasks/V9-README.md) — V9 当前任务事实入口（生产化地基 + urban Ch100）
 - [`tasks/173-interpreter-exit-hang-fix-DONE.md`](tasks/173-interpreter-exit-hang-fix-DONE.md) — V9 Task 173：解释器退出挂死修复
 - [`tasks/174-logging-system-foundation-DONE.md`](tasks/174-logging-system-foundation-DONE.md) — V9 Task 174：日志体系落地
+- [`tasks/175-cost-tracking-and-budget-circuit-breaker-DONE.md`](tasks/175-cost-tracking-and-budget-circuit-breaker-DONE.md) — V9 Task 175：成本追踪与预算熔断
 - [`tasks/V8-README.md`](tasks/V8-README.md) — V8 任务事实入口（已收尾，含编号治理规则与五维验收证据链）
 - [`archive/v8/INDEX.md`](archive/v8/INDEX.md) — V8 任务文档与报告归档索引（172-172l 全部任务书、双体裁 Ch100 验收报告、短窗口矩阵）
 - [`docs/reports/v8-literature-and-landscape-review.md`](docs/reports/v8-literature-and-landscape-review.md) — V8 长调研报告（体裁差异与 GenreRuntimeProfile 设计依据）

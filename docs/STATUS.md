@@ -82,6 +82,7 @@
 - **V9 任务事实入口（已开工）：`tasks/V9-README.md`**
 - V9 Task 173 DONE：`tasks/173-interpreter-exit-hang-fix-DONE.md`
 - V9 Task 174 DONE：`tasks/174-logging-system-foundation-DONE.md`
+- V9 Task 175 DONE：`tasks/175-cost-tracking-and-budget-circuit-breaker-DONE.md`
 - V8 历史任务事实（已收尾，含 V8.5）：`tasks/V8-README.md`
 - V8 归档索引（全部任务文档与报告）：`archive/v8/INDEX.md`
 - V8 长调研报告（GenreRuntimeProfile 设计依据，活跃参考）：`docs/reports/v8-literature-and-landscape-review.md`
