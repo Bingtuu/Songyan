@@ -14,7 +14,7 @@
 
 - 项目状态：`docs/STATUS.md`
 - 文档路由：`docs/INDEX.md`
-- 当前阶段：V8 已全量闭环（含 V8.5）；V9 已开工（Task 173-188，173-181 已完成）
+- 当前阶段：V8 已全量闭环（含 V8.5）；V9 已开工（Task 173-188，173-182 已完成）
 - V9 任务事实（当前阶段）：`tasks/V9-README.md`
 - V8 历史任务事实（已收尾）：`tasks/V8-README.md`；任务文档与报告归档 `archive/v8/`（索引 `archive/v8/INDEX.md`）
 - V7 历史任务事实（已收尾）：`tasks/V7-README.md`

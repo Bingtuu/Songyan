@@ -1,0 +1,64 @@
+{
+  "baseline_id": "scifi_ch100_v8_freeze",
+  "source_db": ".tmp/task171_ch1_ch200.db",
+  "source_project_id": "835afdf11a294b5eac74a5d8998bd9a2",
+  "ced_scope": "consistency-only, merged/source, body-evidence, excludes craft and rule-mr aggregates",
+  "points": [
+    {
+      "up_to": 25,
+      "accepted": 25,
+      "budget_used_peak": 0.9888,
+      "budget_used_before_emergency_peak": 1.2671,
+      "context_emergency_count": 28,
+      "overdue_foreshadowing": 61,
+      "health_latest": 9.2,
+      "ced_per_1k_words": 0.3309,
+      "ced_issue_count": 32,
+      "ced_word_count": 96718,
+      "legacy_ced_per_1k_words": 9.3261,
+      "legacy_evidence_issue_count": 902
+    },
+    {
+      "up_to": 50,
+      "accepted": 50,
+      "budget_used_peak": 0.9888,
+      "budget_used_before_emergency_peak": 1.2671,
+      "context_emergency_count": 32,
+      "overdue_foreshadowing": 110,
+      "health_latest": 9.4,
+      "ced_per_1k_words": 0.357,
+      "ced_issue_count": 70,
+      "ced_word_count": 196100,
+      "legacy_ced_per_1k_words": 9.281,
+      "legacy_evidence_issue_count": 1820
+    },
+    {
+      "up_to": 75,
+      "accepted": 75,
+      "budget_used_peak": 0.9888,
+      "budget_used_before_emergency_peak": 1.2671,
+      "context_emergency_count": 32,
+      "overdue_foreshadowing": 136,
+      "health_latest": 9.9,
+      "ced_per_1k_words": 0.3878,
+      "ced_issue_count": 114,
+      "ced_word_count": 293966,
+      "legacy_ced_per_1k_words": 9.4569,
+      "legacy_evidence_issue_count": 2780
+    },
+    {
+      "up_to": 100,
+      "accepted": 100,
+      "budget_used_peak": 0.9888,
+      "budget_used_before_emergency_peak": 1.2671,
+      "context_emergency_count": 32,
+      "overdue_foreshadowing": 168,
+      "health_latest": 10.0,
+      "ced_per_1k_words": 0.3976,
+      "ced_issue_count": 157,
+      "ced_word_count": 394839,
+      "legacy_ced_per_1k_words": 9.1328,
+      "legacy_evidence_issue_count": 3606
+    }
+  ]
+}

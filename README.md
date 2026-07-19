@@ -345,7 +345,7 @@ python scripts/run_172b_ch100_climb.py --to 100
 | V8 | ✅ 完成 | 多体裁可插拔（GenreRuntimeProfile）+ xuanhuan/wuxia Ch100 五门 PASS |
 | 172c | ✅ 完成 | wuxia 第二体裁 Ch100 爬坡：clean rerun 100/100 accepted，五门 PASS |
 | V8.5 | ✅ 完成 | 验收后遗留收口：172j BudgetPruner max_* 修复、172k C 判据三档证据闭环（xuanhuan end10 / urban end15 / wuxia end20 全 accepted）、172l 文档治理 |
-| V9 | 🔄 已开工 | 生产化地基（长跑可靠性/导出/打包/CI/成本追踪/五门工具收编）+ urban 第三体裁 Ch100；V9.1 173-176 与 V9.2 177-181 全部完成，下一步 182 五门判定器与段审计收编，见 `tasks/V9-README.md` |
+| V9 | 🔄 已开工 | 生产化地基（长跑可靠性/导出/打包/CI/成本追踪/五门工具收编）+ urban 第三体裁 Ch100；V9.1 173-176、V9.2 177-181 与 V9.3 Task 182 已完成，下一步 183 Profile 调参 CLI，见 `tasks/V9-README.md` |
 | V10 | ⏳ 预登记 | 跨体裁 Ch200、优秀度信号包（同质化/中文 AI 腔/judge 偏差）、结构升级 spike |
 
 各阶段事实入口见 `tasks/V9-README.md`（当前阶段，已开工）与 `tasks/V5/V6/V7/V8-README.md`（均已收尾）；V8 任务文档与报告归档于 [`archive/v8/`](archive/v8/INDEX.md)。
@@ -426,9 +426,8 @@ python scripts/run_172b_ch100_climb.py --to 100
 这些机制已在代码里，但离「开箱即用」还差一层包装，是当前最欢迎的贡献方向：
 
 - `src/songyan/genres/data/*.json` 与 `src/songyan/creative_modes/data/*.json` 缺 JSON Schema（`src/songyan/project_templates/data/_schema.json` 已有参照）
-- `GenreRuntimeProfile` 的 DB 字段级覆盖只有 Python API，缺调参 CLI
 - 文学插件目录缺清单/版本/校验注册机制（工艺卡的 manifest 是现成参照）
-- Ch100 五门判定器还在 `.tmp/` 任务产物里，待收编为正式工具
+- `GenreRuntimeProfile` 的 DB 字段级覆盖只有 Python API，缺调参 CLI（V9 Task 183）
 
 ---
 
@@ -496,6 +495,7 @@ python scripts/run_172a7_genre_validation.py --templates scifi --end 10
 - [`tasks/179-cli-experience-fixes-DONE.md`](tasks/179-cli-experience-fixes-DONE.md) — V9 Task 179：CLI 三坑修复
 - [`tasks/180-doctor-environment-check-DONE.md`](tasks/180-doctor-environment-check-DONE.md) — V9 Task 180：`songyan doctor` 环境自检
 - [`tasks/181-ci-and-test-cleanup-DONE.md`](tasks/181-ci-and-test-cleanup-DONE.md) — V9 Task 181：CI 上线与测试清零
+- [`tasks/182-five-gate-and-segment-audit-tools-DONE.md`](tasks/182-five-gate-and-segment-audit-tools-DONE.md) — V9 Task 182：五门判定器与段审计收编
 - [`tasks/V8-README.md`](tasks/V8-README.md) — V8 任务事实入口（已收尾，含编号治理规则与五维验收证据链）
 - [`archive/v8/INDEX.md`](archive/v8/INDEX.md) — V8 任务文档与报告归档索引（172-172l 全部任务书、双体裁 Ch100 验收报告、短窗口矩阵）
 - [`docs/reports/v8-literature-and-landscape-review.md`](docs/reports/v8-literature-and-landscape-review.md) — V8 长调研报告（体裁差异与 GenreRuntimeProfile 设计依据）

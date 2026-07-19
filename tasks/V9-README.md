@@ -4,7 +4,7 @@
 > **定位**: 自用为主、按开源标准打磨——不追求终端用户产品体验，但地基（打包/CI/日志/导出/成本）按可发布标准补齐
 > **当前口径**: V8（含 V8.5）已全量闭环。V9 不做优秀度信号包与跨体裁 Ch200（捆绑留 V10），只做两件事：① 补齐生产化地基；② urban 第三体裁 Ch100 爬坡作为地基的实战验收
 > **任务编号**: V9 从 Task 173 开始；**扁平编号**——每个可独立执行、独立验收、独立出 DONE 文档的工作项各占一个编号（粒度对标 V6 的 141-159 / V7 的 160-171w）；编号是 trace id，不等同于严格执行顺序；撞墙定点修复按父任务字母后缀登记（如 `187.p`）
-> **状态**: 已开工（2026-07-20：**V9.1 全部完成**（173/174/175/176 ✅）；**V9.2 全部完成**（177/178/179/180/181 ✅）；下一步 182 五门判定器与段审计收编）
+> **状态**: 已开工（2026-07-20：**V9.1 全部完成**（173/174/175/176 ✅）；**V9.2 全部完成**（177/178/179/180/181 ✅）；**V9.3 Task 182 已完成**；下一步 183 Profile 调参 CLI）
 
 本文是 V9 阶段任务文档的事实入口。V8 历史事实入口见 `tasks/V8-README.md`（任务文档与报告在 `archive/v8/`）；更早阶段见 V7/V6/V5-README。
 
@@ -36,7 +36,7 @@
 
 - **P0**：① 解释器退出挂死已复现两次（172k），173 已补 LLM client 显式关闭与最外层 force-exit 兜底；② 全仓库无一次 `structlog.configure`，174 已落地应用日志与关联字段；~~③ 写完 100 章拿不到书稿~~（**177 已落地**：`songyan export` 从 accepted head 导出 flat/arc/volume Markdown/txt）；~~④ `pip install .` 成 wheel 即坏~~（**178 已落地**：运行资源、`evals/seeds` 与 `schema.sql` 入包，loader 统一走 `importlib.resources`，wheel 非仓库 cwd 验收通过）
 - **P1**：~~成本追踪为零~~（**175 已落地**：`llm_call_usage` 逐调用落库 + `total_cost` 双接线 + report 成本视图 + `run_cost_budget` 熔断）；~~CLI 三坑~~（**179 已落地**：run 成功回显 `run_id`，`--mode-id` 默认回读项目 mode，README 表补 `index`）；无 CI 且 `tests/cli/test_cli.py` 4 个既有失败
-- **P2**：Profile 调参只有 Python API 无 CLI；五门判定器在 `.tmp/` 待收编；Windows 防卡协议只是文档未工具化
+- **P2**：~~五门判定器在 `.tmp/` 待收编~~（**182 已落地**：正式五门/段审计脚本 + 包内 sci-fi baseline）；Profile 调参只有 Python API 无 CLI；genres/creative_modes JSON Schema 待补
 
 ---
 
@@ -54,7 +54,7 @@ V9 通过 = A 组（地基）+ B 组（爬坡）同时满足，C 组（守护）
 | A4 | LLM 调用 token/成本逐条落库；调用上下文能追溯到 run/chapter/agent；`songyan report` 含成本视图（per run/chapter/agent）；run 级成本预算硬上限，耗尽优雅停跑且可 `--resume`（**已实跑验收**：pause→提额 resume→completed） | 175 |
 | A5 | 解释器退出挂死有代码级兜底（已落地，py-spy 归因确证：sqlite checkpointer 泄漏）；连续两次短窗口实跑进程自然退出（**已闭环**：sqlite 模式 2.5s + memory 模式四次 1.2-1.9s） | 173 |
 | A6 | CI 上线（ruff + mypy + pytest 分层）；`tests/cli` 不再被默认跳过或由 CI 单独覆盖，4 个既有失败修复，全量绿（**已闭环**：GitHub Actions 覆盖 ruff/mypy/default pytest/CLI pytest；CLI 35 passed；mypy 0 errors） | 181 |
-| A7 | 五门判定器 + 段审计收编为 `scripts/` 正式工具并参数化；五门判定函数口径不改（I/O、路径、参数化可重构），xuanhuan/wuxia 既有 Ch100 DB 重放结果与归档报告一致 | 182 |
+| A7 | 五门判定器 + 段审计收编为 `scripts/` 正式工具并参数化；五门判定函数口径不改（I/O、路径、参数化可重构），xuanhuan/wuxia 既有 Ch100 DB 重放结果与归档报告一致（**已闭环**：`scripts/five_gate_check.py` + `scripts/segment_audit.py`，包内 sci-fi baseline；双体裁 Ch100 重放 PASS） | 182 |
 | A8 | `songyan profile show/diff/upsert --genre <g>` 可用；标定迭代全程不改代码 | 183 |
 
 ### B 组 · urban Ch100 判据（冻结口径沿用 172b §1.1）
@@ -105,7 +105,7 @@ V9 通过 = A 组（地基）+ B 组（爬坡）同时满足，C 组（守护）
 
 | Task | 名称 | 状态 | 内容要点 | 验收要点 |
 |------|------|:----:|----------|----------|
-| 182 | 五门判定器与段审计收编 | ◻ | `.tmp/vdim_compare.py` / `.tmp/segment_audit.py` → `scripts/`，`--genre/--db/--baseline/--up-to` 参数化；sci-fi 基线 JSON 迁出 `.tmp/` 到正式位置；预算/CED/overdue/health/completeness 判定函数零口径改动，I/O、路径解析、报告渲染可重构 | xuanhuan/wuxia 既有 Ch100 DB 重放，判定结果与归档报告一致；参数化版本与 `.tmp` 原脚本同库输出逐项对齐 |
+| 182 | 五门判定器与段审计收编 | ✅ | `.tmp/vdim_compare.py` / `.tmp/segment_audit.py` 已收编为 `scripts/five_gate_check.py` / `scripts/segment_audit.py`；`--genre/--db/--baseline/--up-to` 参数化；sci-fi corrected CED baseline 迁入 `src/songyan/evals/baselines/`；只读 DB 防副作用 | DONE: `tasks/182-five-gate-and-segment-audit-tools-DONE.md`；xuanhuan/wuxia Ch100 重放 PASS；`.tmp/vdim_compare.py` 对照逐门一致；默认全量 pytest **2914 passed, 2 skipped, 1 xfailed**；CLI **35 passed**；mypy/ruff 全绿；code review P2 已修复 |
 | 183 | Profile 调参 CLI | ◻ | `songyan profile show/diff/upsert --genre <g>`，`GenreRuntimeProfileRepository` 既有 API 薄封装；三列渲染（注册表基线/DB 覆盖/生效值）；文档化 172j 降回边界 | 一次 DB 覆盖调参全程不改代码完成 |
 | 184 | genres/creative_modes JSON Schema | ◻ | 参照 `src/songyan/project_templates/data/_schema.json`；加载时校验（可选 strict） | 7+4 个 JSON 全部过校验；坏样本被拦 |
 
