@@ -11,7 +11,7 @@ from langgraph.types import (
     Command,  # 仅用于 resume_human_confirm，conditional_edges 路由函数不支持 Command
 )
 
-from songyan.exceptions import LLMError, LLMResponseParseError
+from songyan.exceptions import LLMBudgetExceededError, LLMError, LLMResponseParseError
 from songyan.workflows._nodes import (
     context_manager_node,
     creative_director_node,
@@ -425,6 +425,10 @@ async def run_chapter_pipeline(
         result = cast(Phase1State, await graph.ainvoke(initial_state, config=config))
         result["thread_id"] = thread_id
         return result
+    except LLMBudgetExceededError:
+        # 预算熔断必须原样传播到 phase2 的 pause 路径（_pause_run_for_auto_halt），
+        # 不得包装为章节失败——否则 run 变 failed 而非 paused，丧失提额 resume 语义。
+        raise
     except (LLMError, LLMResponseParseError) as exc:
         logger.error(
             "run_chapter_pipeline.llm_failed",
