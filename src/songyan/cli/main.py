@@ -39,6 +39,14 @@ from songyan.services.export_service import (
     export_project,
     parse_chapter_range,
 )
+from songyan.services.profile_service import (
+    get_profile_view,
+    load_override_json,
+    merge_override_inputs,
+    parse_set_expression,
+    render_profile_view,
+    upsert_profile_overrides,
+)
 from songyan.utils.logging_setup import configure_logging
 from songyan.utils.process_exit import force_exit_after_run_if_requested
 from songyan.workflows.phase2_graph import run_project_pipeline
@@ -158,6 +166,105 @@ def doctor(json_output: bool, check_llm: bool, init_db: bool) -> None:
         click.echo(_render_doctor_report(report))
     if report.status == "fail":
         raise click.exceptions.Exit(1)
+
+
+@cli.group(name="profile")
+def profile_cli() -> None:
+    """GenreRuntimeProfile 调参工具."""
+    pass
+
+
+@profile_cli.command(name="show")
+@click.option("--genre", required=True, help="体裁 ID")
+@click.option("--json", "json_output", is_flag=True, help="输出机器可读 JSON")
+def profile_show(genre: str, json_output: bool) -> None:
+    """展示 registry / DB override / effective 三列 Profile."""
+    try:
+        view = asyncio.run(get_profile_view(genre))
+    except click.Abort:
+        raise
+    except SongyanError as exc:
+        raise click.ClickException(str(exc)) from exc
+    except _CLI_CATCHABLE as exc:
+        raise click.ClickException(str(exc)) from exc
+
+    if json_output:
+        click.echo(json.dumps(view.to_dict(), ensure_ascii=False, indent=2))
+    else:
+        click.echo(render_profile_view(view))
+
+
+@profile_cli.command(name="diff")
+@click.option("--genre", required=True, help="体裁 ID")
+@click.option("--json", "json_output", is_flag=True, help="输出机器可读 JSON")
+def profile_diff(genre: str, json_output: bool) -> None:
+    """展示 DB override 对 effective Profile 造成的差异."""
+    try:
+        view = asyncio.run(get_profile_view(genre))
+    except click.Abort:
+        raise
+    except SongyanError as exc:
+        raise click.ClickException(str(exc)) from exc
+    except _CLI_CATCHABLE as exc:
+        raise click.ClickException(str(exc)) from exc
+
+    if json_output:
+        click.echo(json.dumps(view.to_dict(diff_only=True), ensure_ascii=False, indent=2))
+    else:
+        click.echo(render_profile_view(view, diff_only=True))
+
+
+@profile_cli.command(name="upsert")
+@click.option("--genre", required=True, help="体裁 ID（必须是注册表已知体裁）")
+@click.option(
+    "--set",
+    "set_values",
+    multiple=True,
+    help="覆盖字段，格式 key=value；支持 dot path，如 continuity.health_overdue_weight=0.2",
+)
+@click.option(
+    "--from-json",
+    "json_path",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    default=None,
+    help="覆盖意图 JSON 文件（不是 effective profile 全量 JSON）",
+)
+@click.option("--reset", is_flag=True, help="清空 DB override 意图，effective 回到 registry")
+@click.option("--json", "json_output", is_flag=True, help="输出机器可读 JSON")
+def profile_upsert(
+    genre: str,
+    set_values: tuple[str, ...],
+    json_path: Path | None,
+    reset: bool,
+    json_output: bool,
+) -> None:
+    """写入 GenreRuntimeProfile DB override."""
+    try:
+        if reset and (set_values or json_path):
+            raise click.ClickException("--reset 不能与 --set / --from-json 同时使用")
+        json_overrides = load_override_json(json_path) if json_path else None
+        set_items = [parse_set_expression(item) for item in set_values]
+        overrides = merge_override_inputs(json_overrides, set_items)
+        asyncio.run(init_schema())
+        view = asyncio.run(
+            upsert_profile_overrides(
+                genre,
+                overrides,
+                reset=reset,
+            )
+        )
+    except click.Abort:
+        raise
+    except SongyanError as exc:
+        raise click.ClickException(str(exc)) from exc
+    except _CLI_CATCHABLE as exc:
+        raise click.ClickException(str(exc)) from exc
+
+    if json_output:
+        click.echo(json.dumps(view.to_dict(diff_only=True), ensure_ascii=False, indent=2))
+    else:
+        click.echo(f"profile override updated: {genre}")
+        click.echo(render_profile_view(view, diff_only=True))
 
 
 async def _create_project_async(outline_file: str | None = None) -> tuple[str, ProjectSetting]:
