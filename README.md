@@ -9,7 +9,7 @@
   <p>
     <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-%3E%3D3.11-blue" alt="Python >= 3.11" /></a>
     <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-blue" alt="License AGPL-3.0" /></a>
-    <img src="https://img.shields.io/badge/tests-2895%20passed-brightgreen" alt="Tests 2895 passed" />
+    <img src="https://img.shields.io/badge/tests-2897%20passed-brightgreen" alt="Tests 2897 passed" />
     <a href="https://github.com/astral-sh/ruff"><img src="https://img.shields.io/badge/code%20style-ruff-black" alt="Code style: ruff" /></a>
   </p>
 </div>
@@ -325,7 +325,7 @@ python scripts/run_172b_ch100_climb.py --to 100
 | LLM 接入 | LiteLLM |
 | CLI | Click |
 | 日志 | structlog |
-| 测试 | pytest（2895 passed, 2 skipped, 1 xfailed） |
+| 测试 | pytest（2897 passed, 2 skipped, 1 xfailed） |
 
 ---
 

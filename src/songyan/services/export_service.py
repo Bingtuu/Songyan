@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+import sqlite3
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -11,7 +12,6 @@ from typing import Literal, TypeAlias
 import structlog
 
 from songyan.db.layered_context_repo import ArcSummaryRepository, VolumeSummaryRepository
-from songyan.db.migrations import init_schema
 from songyan.db.repository import (
     ChapterHeadRepository,
     ChapterVersionRepository,
@@ -76,6 +76,20 @@ class ExportedFile:
     chapter_count: int
 
 
+@dataclass(frozen=True)
+class ExportResult:
+    """Result returned by ``export_project``."""
+
+    files: tuple[ExportedFile, ...]
+    skipped_count: int = 0
+
+
+@dataclass(frozen=True)
+class _ChapterCollection:
+    chapters: tuple[ChapterExport, ...]
+    skipped_count: int = 0
+
+
 def parse_chapter_range(value: str | None) -> tuple[int, int] | None:
     """Parse CLI chapter range syntax.
 
@@ -122,23 +136,38 @@ async def collect_accepted_chapters(
     chapters: tuple[int, int] | None = None,
 ) -> list[ChapterExport]:
     """Load accepted head chapter content from SQLite, sorted by chapter number."""
+    collection = await _collect_accepted_chapters_with_stats(project_id, chapters)
+    return list(collection.chapters)
+
+
+async def _collect_accepted_chapters_with_stats(
+    project_id: str,
+    chapters: tuple[int, int] | None = None,
+) -> _ChapterCollection:
     if chapters is not None:
         _validate_chapter_range(chapters)
 
-    await init_schema()
     head_repo = ChapterHeadRepository()
     version_repo = ChapterVersionRepository()
-    heads = await head_repo.list_by_project(project_id)
+    try:
+        heads = await head_repo.list_by_project(project_id)
+    except sqlite3.Error as exc:
+        raise _to_export_db_error(exc) from exc
 
     results: list[ChapterExport] = []
+    skipped_count = 0
     for head in heads:
         if head.status != "accepted" or not head.accepted_version_id:
             continue
         if chapters is not None and not (chapters[0] <= head.chapter_number <= chapters[1]):
             continue
 
-        version = await version_repo.get(head.accepted_version_id)
+        try:
+            version = await version_repo.get(head.accepted_version_id)
+        except sqlite3.Error as exc:
+            raise _to_export_db_error(exc) from exc
         if version is None:
+            skipped_count += 1
             logger.warning(
                 "export.chapter_version_missing",
                 project_id=project_id,
@@ -147,6 +176,7 @@ async def collect_accepted_chapters(
             )
             continue
         if version.project_id != project_id or version.chapter_number != head.chapter_number:
+            skipped_count += 1
             logger.warning(
                 "export.chapter_version_mismatch",
                 project_id=project_id,
@@ -170,7 +200,7 @@ async def collect_accepted_chapters(
         range_text = "" if chapters is None else f"（范围 {chapters[0]}-{chapters[1]}）"
         msg = f"项目 {project_id} 没有可导出的 accepted 章节{range_text}"
         raise ExportServiceError(msg)
-    return results
+    return _ChapterCollection(chapters=tuple(results), skipped_count=skipped_count)
 
 
 def render_book(
@@ -182,7 +212,11 @@ def render_book(
     *,
     project_id: str | None = None,
 ) -> dict[str, str]:
-    """Render manuscript files as a pure filename-to-content mapping."""
+    """Render files as ``filename -> content`` for pure-render consumers.
+
+    ``render_book_files`` is the primary render API for export because it keeps
+    per-file chapter membership. This wrapper intentionally drops that metadata.
+    """
     return {
         rendered.filename: rendered.content
         for rendered in render_book_files(
@@ -245,24 +279,30 @@ async def export_project(
     fmt: ExportFormat = "md",
     by: GroupBy = "flat",
     chapters: tuple[int, int] | None = None,
-) -> list[ExportedFile]:
-    """Export a project's accepted manuscript files to disk."""
+) -> ExportResult:
+    """Export a project's accepted manuscript files to disk.
+
+    This is a read-only DB operation. It does not call ``init_schema()`` or run
+    migrations, so exporting a historical DB will not mutate its schema.
+    """
     _validate_export_format(fmt)
     _validate_group_by(by)
     if chapters is not None:
         _validate_chapter_range(chapters)
 
-    await init_schema()
-    project = await ProjectRepository().get(project_id)
+    try:
+        project = await ProjectRepository().get(project_id)
+    except sqlite3.Error as exc:
+        raise _to_export_db_error(exc) from exc
     if project is None:
         msg = f"项目不存在: {project_id}"
         raise ExportServiceError(msg)
 
-    accepted_chapters = await collect_accepted_chapters(project_id, chapters)
+    collection = await _collect_accepted_chapters_with_stats(project_id, chapters)
     groups = await _load_export_groups(project_id, by)
     rendered_files = render_book_files(
         project.title,
-        accepted_chapters,
+        collection.chapters,
         fmt=fmt,
         by=by,
         groups=groups,
@@ -276,6 +316,7 @@ async def export_project(
         path.write_text(rendered.content, encoding="utf-8")
         written.append(ExportedFile(path=path, chapter_count=len(rendered.chapters)))
 
+    result = ExportResult(files=tuple(written), skipped_count=collection.skipped_count)
     logger.info(
         "export.project_complete",
         project_id=project_id,
@@ -284,19 +325,23 @@ async def export_project(
         group_by=by,
         file_count=len(written),
         chapter_count=sum(item.chapter_count for item in written),
+        skipped_count=result.skipped_count,
     )
-    return written
+    return result
 
 
 async def _load_export_groups(project_id: str, by: GroupBy) -> list[ExportGroup]:
-    if by == "flat":
-        return []
-    if by == "arc":
-        arcs = await ArcSummaryRepository().list_by_project(project_id)
-        return [_group_from_arc(arc) for arc in arcs]
+    try:
+        if by == "flat":
+            return []
+        if by == "arc":
+            arcs = await ArcSummaryRepository().list_by_project(project_id)
+            return [_group_from_arc(arc) for arc in arcs]
 
-    volumes = await VolumeSummaryRepository().list_by_project(project_id)
-    return [_group_from_volume(volume) for volume in volumes]
+        volumes = await VolumeSummaryRepository().list_by_project(project_id)
+        return [_group_from_volume(volume) for volume in volumes]
+    except sqlite3.Error as exc:
+        raise _to_export_db_error(exc) from exc
 
 
 def _group_from_arc(arc: ArcSummary) -> ExportGroup:
@@ -535,3 +580,13 @@ def _validate_group_by(by: str) -> None:
     if by not in {"flat", "arc", "volume"}:
         msg = f"不支持的导出分组: {by}"
         raise ExportServiceError(msg)
+
+
+def _to_export_db_error(exc: sqlite3.Error) -> ExportServiceError:
+    detail = str(exc)
+    if "no such table" in detail.lower():
+        return ExportServiceError(
+            "导出失败：数据库 schema 不完整；export 是只读命令，不会自动迁移源库，"
+            "请先初始化或迁移该 Songyan 数据库。"
+        )
+    return ExportServiceError(f"导出失败：读取数据库失败（{detail}）")

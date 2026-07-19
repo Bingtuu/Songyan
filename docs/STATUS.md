@@ -62,7 +62,7 @@
 | 173/174 真实 smoke 尝试 | `LOG_LEVEL=WARNING` + scifi end1/end2 曾启动；确认 console 无 LiteLLM DEBUG 请求/响应，仅 WARNING；生成链路耗时过长，为控制成本中止，未作为 end10 通过证据 |
 | 175 阶段 D 实跑验收（2026-07-19） | 熔断实证：¥0.05 预算 ¥0.0514 停（paused + 明细 + 章保留），提额 resume 至 completed，成本跨 3 进程连续；scifi end10：10/10、0 halt、overdue=0、budget 峰值 0.8325、usage 151 行 estimate 0%、总成本 ¥0.886、report 成本视图正确；173 挂死根因确证（sqlite checkpointer 泄漏）真修后 2.5s 自然退出；T9=1（Ch4 countdown_increase，diagnostic 级，非系统性） |
 | 175 全量验证（阶段 D 收尾） | `python -m pytest tests/ -q` → **2882 passed, 2 skipped, 1 xfailed**；`ruff check src/ tests/` → All checks passed |
-| 177 导出验收（2026-07-19） | `tests/test_177_export_service.py` **13 passed**；全量 pytest（Task 176 wrapper）**2895 passed, 2 skipped, 1 xfailed**，`WRAPPER_RESULT=PASS_NORMAL_EXIT`；`ruff check src/ tests/` 全绿；xuanhuan Ch100 arc 导出 100 章/4 文件，wuxia Ch100 flat 导出 100 章/1 文件，xuanhuan volume 忽略 `(0,0)` 占位并导出 100 章/2 文件；两库 Ch1/50/100 正文段 hash 与 DB 一致 |
+| 177 导出验收（2026-07-19） | `tests/test_177_export_service.py` **15 passed**（含 review follow-up：不自动迁移源库 + skipped CLI 输出）；全量 pytest（Task 176 wrapper）**2897 passed, 2 skipped, 1 xfailed**，`WRAPPER_RESULT=PASS_NORMAL_EXIT`；`ruff check src/ tests/` 全绿；xuanhuan Ch100 arc 导出 100 章/4 文件，wuxia Ch100 flat 导出 100 章/1 文件，xuanhuan volume 忽略 `(0,0)` 占位并导出 100 章/2 文件；两库 Ch1/50/100 正文段 hash 与 DB 一致 |
 
 ## 项目整理
 

@@ -31,8 +31,8 @@ from songyan.models.human_mark import HumanMark
 from songyan.models.project import ProjectSetting, derive_arc_boundaries
 from songyan.project_templates import ProjectInitializer, ProjectTemplateLoader
 from songyan.services.export_service import (
-    ExportedFile,
     ExportFormat,
+    ExportResult,
     GroupBy,
     export_project,
     parse_chapter_range,
@@ -469,7 +469,7 @@ async def _run_export_project(
     fmt: ExportFormat,
     by: GroupBy,
     chapters: tuple[int, int] | None,
-) -> list[ExportedFile]:
+) -> ExportResult:
     return await export_project(
         project_id,
         output_dir=output_dir,
@@ -532,9 +532,13 @@ def export_cmd(
     except _CLI_CATCHABLE as exc:
         raise click.ClickException(str(exc)) from exc
 
-    total_chapters = sum(item.chapter_count for item in exported)
-    click.echo(f"已导出 {total_chapters} 章到 {len(exported)} 个文件:")
-    for item in exported:
+    total_chapters = sum(item.chapter_count for item in exported.files)
+    click.echo(f"已导出 {total_chapters} 章到 {len(exported.files)} 个文件:")
+    if exported.skipped_count:
+        click.echo(
+            f"已跳过 {exported.skipped_count} 章（accepted head 指向的版本缺失或不匹配）"
+        )
+    for item in exported.files:
         click.echo(f"  {item.path} ({item.chapter_count} 章)")
 
 

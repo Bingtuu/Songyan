@@ -37,7 +37,7 @@ songyan export --project-id <id> [--format md|txt] [--by flat|arc|volume] [--cha
 - `--by arc`：按 `arc_summaries` 的章范围分文件（`arc-01-<arc_title>.md`）；无 `arc_summaries` 记录时**警告并回退 flat**；未被任何弧覆盖的章归入 `arc-00-未分弧.md`（保持完整性，不丢章）
 - `--by volume`：同构（`volume_summaries`）
 - DATABASE_URL 走既有 `settings.database_url`（env 可指向任意库，如 `.tmp` 的 Ch100 库）——与 175 实跑验收同模式
-- 输出：打印生成的文件清单（路径 + 章数）
+- 输出：打印生成的文件清单（路径 + 章数）；若 accepted head 指向的版本缺失或不匹配，额外输出 skipped 章数
 - 输出文件命名：
   - flat：`<safe_project_title>-flat.<ext>`；项目标题为空时 fallback `project-<project_id[:8]>-flat.<ext>`
   - arc：`arc-<序号两位>-<safe_arc_title>.<ext>`；未覆盖章文件为 `arc-00-未分弧.<ext>`
@@ -49,7 +49,8 @@ songyan export --project-id <id> [--format md|txt] [--by flat|arc|volume] [--cha
 
 - `collect_accepted_chapters(project_id, chapters: tuple[int,int] | None) -> list[ChapterExport]`：经 `ChapterHeadRepository` 取 `status='accepted'` 的 head 按章号排序，经 `accepted_version_id` 取 `chapter_versions.content/word_count`；head 存在但 version 缺失 → 记 warning 并跳过（不中断导出），同时返回/记录 skipped 统计供 CLI 输出
 - `render_book(project_title, chapters, fmt, by, arcs_or_volumes) -> dict[str, str]`：**纯函数**（文件名 → 文件内容），不落盘
-- `export_project(...) -> list[Path]`：collect + render + 写文件（utf-8），返回生成路径
+- `export_project(...) -> ExportResult`：collect + render + 写文件（utf-8），返回本次生成文件与 skipped 统计
+- export 是只读命令：不主动 `init_schema()`、不自动迁移 `DATABASE_URL` 指向的源库；schema 缺失时返回清晰错误，由调用方决定是否初始化/迁移
 - 分组规则：
   - arc/volume 记录先过滤无效范围：`start_chapter < 1`、`end_chapter < start_chapter` 的分组不生成文件，只 warning（当前 Ch100 库存在 `(0,0)` 卷占位，必须被忽略）
   - 有效分组按 `(start_chapter, end_chapter, title)` 稳定排序并赋序号；空分组不生成文件
@@ -143,6 +144,13 @@ DATABASE_URL=sqlite:///.tmp/task172b_xuanhuan_ch100.db songyan export --project-
 - volume 模式补验：xuanhuan volume → warning 忽略 `(0,0)` 卷占位，生成 **2 个文件**：`volume-01-第一卷：觉醒.md`（25 章）与 `volume-00-未分卷.md`（75 章）。
 - 抽章 hash：xuanhuan Ch1/50/100 与 wuxia Ch1/50/100 的导出正文段 sha256 前 16 位均与 DB `chapter_versions.content` 一致。
 - 洁净性说明：验收 grep 发现若干 `---`，反查 hash 证明来自 DB 正文原文，非导出器包装主动插入；导出器未插入 `version_id`、评分、字数统计、run metadata 或历史 `_export_prose()` 的分隔线。
+
+### Review follow-up（2026-07-19）
+
+- `export_project()` / `collect_accepted_chapters()` 不再调用 `init_schema()`；导出历史库不会顺手迁移 schema，缺表时返回“不会自动迁移源库”的清晰错误。
+- `export_project()` 返回 `ExportResult(files, skipped_count)`；CLI 在 skipped 非零时输出“已跳过 N 章（accepted head 指向的版本缺失或不匹配）”。
+- `render_book()` 与 `render_book_files()` 的 docstring 已明确分工：前者是纯 `filename -> content` 便捷包装，后者是导出主 API，保留每文件章节归属。
+- 复验：`tests/test_177_export_service.py` **15 passed**；全量 pytest（Task 176 wrapper）**2897 passed, 2 skipped, 1 xfailed**，`WRAPPER_RESULT=PASS_NORMAL_EXIT`；`ruff check src/ tests/` 全绿。
 
 ## 出口标准
 

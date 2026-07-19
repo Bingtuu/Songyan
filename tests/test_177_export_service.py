@@ -11,6 +11,7 @@ from click.testing import CliRunner
 from structlog.testing import capture_logs
 
 from songyan.cli import main as cli_main
+from songyan.config import settings
 from songyan.db.layered_context_repo import ArcSummaryRepository, VolumeSummaryRepository
 from songyan.db.repository import ChapterHeadRepository, ChapterVersionRepository, ProjectRepository
 from songyan.models import ArcSummary, ChapterHead, ChapterVersion, ProjectSetting, VolumeSummary
@@ -18,6 +19,7 @@ from songyan.services.export_service import (
     ChapterExport,
     ExportedFile,
     ExportGroup,
+    ExportResult,
     ExportServiceError,
     collect_accepted_chapters,
     export_project,
@@ -254,7 +256,10 @@ async def test_export_project_writes_current_files_without_cleaning_old_output(
 
     written = await export_project(PID, output_dir=output_dir)
 
-    assert written == [ExportedFile(path=output_dir / "净书-flat.md", chapter_count=2)]
+    assert written == ExportResult(
+        files=(ExportedFile(path=output_dir / "净书-flat.md", chapter_count=2),),
+        skipped_count=0,
+    )
     assert stale_file.exists()
     content = (output_dir / "净书-flat.md").read_text(encoding="utf-8")
     assert "第一章正文" in content
@@ -276,8 +281,46 @@ async def test_export_project_uses_arc_metadata(test_db: Path, tmp_path: Path) -
 
     written = await export_project(PID, output_dir=tmp_path, by="arc")
 
-    assert written == [ExportedFile(path=tmp_path / "arc-01-第一弧.md", chapter_count=2)]
+    assert written == ExportResult(
+        files=(ExportedFile(path=tmp_path / "arc-01-第一弧.md", chapter_count=2),),
+        skipped_count=0,
+    )
     assert (tmp_path / "arc-01-第一弧.md").exists()
+
+
+async def test_export_project_reports_skipped_missing_versions(
+    test_db: Path,
+    tmp_path: Path,
+) -> None:
+    await _seed_project(title="缺章书")
+    await _seed_chapter(1, "第一章正文")
+    await _seed_chapter(2, "第二章正文")
+    await _seed_missing_accepted_head(test_db, 3)
+
+    written = await export_project(PID, output_dir=tmp_path)
+
+    assert written.skipped_count == 1
+    assert written.files == (
+        ExportedFile(path=tmp_path / "缺章书-flat.md", chapter_count=2),
+    )
+
+
+async def test_export_project_does_not_auto_migrate_empty_db(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    db_file = tmp_path / "empty.db"
+    monkeypatch.setattr(settings, "database_url", f"sqlite:///{db_file}")
+
+    with pytest.raises(ExportServiceError, match="不会自动迁移"):
+        await export_project(PID, output_dir=tmp_path / "out")
+
+    async with aiosqlite.connect(db_file) as conn:
+        cursor = await conn.execute(
+            "SELECT name FROM sqlite_master WHERE type = 'table'"
+        )
+        tables = await cursor.fetchall()
+    assert tables == []
 
 
 def test_export_cli_transmits_parameters(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
@@ -290,7 +333,7 @@ def test_export_cli_transmits_parameters(monkeypatch: pytest.MonkeyPatch, tmp_pa
         fmt: str,
         by: str,
         chapters: tuple[int, int] | None,
-    ) -> list[ExportedFile]:
+    ) -> ExportResult:
         calls.append(
             {
                 "project_id": project_id,
@@ -300,7 +343,10 @@ def test_export_cli_transmits_parameters(monkeypatch: pytest.MonkeyPatch, tmp_pa
                 "chapters": chapters,
             }
         )
-        return [ExportedFile(path=output_dir / "book.txt", chapter_count=2)]
+        return ExportResult(
+            files=(ExportedFile(path=output_dir / "book.txt", chapter_count=2),),
+            skipped_count=1,
+        )
 
     monkeypatch.setattr(cli_main, "_run_export_project", fake_run_export_project)
 
@@ -332,6 +378,7 @@ def test_export_cli_transmits_parameters(monkeypatch: pytest.MonkeyPatch, tmp_pa
         }
     ]
     assert "已导出 2 章到 1 个文件" in result.output
+    assert "已跳过 1 章" in result.output
     assert "book.txt (2 章)" in result.output
 
 
