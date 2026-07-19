@@ -1349,3 +1349,186 @@ class TestRenderCostSectionFetchFallback:
         assert "无成本数据" not in text
         # console 警告保留（report_cmd 既有警告均为 click.echo 风格）
         assert "成本数据读取失败" in capsys.readouterr().out
+
+
+# --------------------------------------------------------------------------- #
+# 阶段 D 修复回归：run 上下文下成本预算以 DB 为权威
+# （LangGraph 节点 task 的 context 副本不回传 ContextVar 写入，_llm_run_cost_cny
+# 按节点重置 → 生产上 run_cost_budget 熔断失效；阶段 D 实跑 budget=0.05 跑出
+# ¥0.217 未停。修复：run 上下文下前置检查读 llm_call_usage 合计并镜像进累计器）
+# --------------------------------------------------------------------------- #
+class TestRunCostBudgetDbAuthoritative:
+    async def test_precheck_trips_on_db_sum_despite_reset_accumulator(
+        self, monkeypatch: pytest.MonkeyPatch, test_db: Path
+    ) -> None:
+        """核心回归（复现生产 bug）：DB 历史合计已超预算，但节点 task 隔离使
+        累计器归零 → 前置检查必须按 DB 合计熔断（修复前累计器 0 不熔断）."""
+        repo = LlmCallUsageRepository()
+        for cost in (0.02, 0.02, 0.02):
+            await repo.record(
+                run_id="run-iso",
+                model="fake-model",
+                cost_cny=cost,
+                token_source="estimate",
+                cost_source="pricing_estimate",
+            )
+        bind_contextvars(run_id="run-iso")
+        llm_client._llm_run_cost_cny.set(0.0)  # 模拟节点 task 隔离：历史写入不回传
+        _install_fake_litellm(monkeypatch)
+        monkeypatch.setattr(settings, "run_cost_budget", 0.05)
+        _FakeChatLiteLLM.responses.append(
+            _FakeResponse(usage_metadata={"input_tokens": 1, "output_tokens": 1})
+        )
+
+        with pytest.raises(LLMBudgetExceededError) as exc_info:
+            await llm_client.call_llm("prompt")
+
+        exc = exc_info.value
+        assert "耗尽" in str(exc)
+        assert exc.used_cost == pytest.approx(0.06)
+        assert exc.budget_cost == pytest.approx(0.05)
+        # 未发起 LLM 调用：response 未被消费，也无新遥测行
+        assert len(_FakeChatLiteLLM.responses) == 1
+        assert len(await _fetch_rows(test_db)) == 3
+
+    async def test_postcheck_uses_db_presum_plus_current_cost(
+        self, monkeypatch: pytest.MonkeyPatch, test_db: Path
+    ) -> None:
+        """后置判定 = DB 前置合计 + 本次成本（不二次查库）：跨线即熔，不返回文本."""
+        await LlmCallUsageRepository().record(
+            run_id="run-iso",
+            model="fake-model",
+            cost_cny=0.04,
+            token_source="estimate",
+            cost_source="pricing_estimate",
+        )
+        bind_contextvars(run_id="run-iso")
+        llm_client._llm_run_cost_cny.set(0.0)  # 节点 task 隔离
+        _install_fake_litellm(monkeypatch)
+        monkeypatch.setattr(settings, "run_cost_budget", 0.05)
+        monkeypatch.setattr(llm_client, "estimate_cost_from_tokens", lambda *args: 0.02)
+        _FakeChatLiteLLM.responses.append(
+            _FakeResponse(usage_metadata={"input_tokens": 1, "output_tokens": 1})
+        )
+        real_sum = LlmCallUsageRepository.sum_cost_for_run
+        sum_calls = {"count": 0}
+
+        async def _spy(self: Any, run_id: str) -> float:
+            sum_calls["count"] += 1
+            return await real_sum(self, run_id)
+
+        monkeypatch.setattr(LlmCallUsageRepository, "sum_cost_for_run", _spy)
+
+        with pytest.raises(LLMBudgetExceededError) as exc_info:
+            await llm_client.call_llm("prompt")
+
+        exc = exc_info.value
+        assert "超限" in str(exc)
+        # DB 0.04 + 本次 0.02 = 0.06（修复前为累计器 0.02，不熔断）
+        assert exc.used_cost == pytest.approx(0.06)
+        assert sum_calls["count"] == 1  # 仅前置查一次库，后置不再查
+        # 镜像 + 累加后累计器 = DB 合计 + 本次成本（与 resume 后 DB 读到的值一致，
+        # 因本次调用的 record 已在 _invoke 内先于返回落库）
+        assert llm_client.get_llm_run_cost() == pytest.approx(0.06)
+        rows = await _fetch_rows(test_db)
+        assert len(rows) == 2
+        assert rows[-1]["cost_cny"] == pytest.approx(0.02)
+
+    async def test_precheck_db_failure_falls_back_to_accumulator_with_warning(
+        self, monkeypatch: pytest.MonkeyPatch, test_db: Path
+    ) -> None:
+        """前置 DB 读失败（库未迁移等）→ 回退累计器当前值 + structlog warning，不阻断."""
+        bind_contextvars(run_id="run-iso")
+        _install_fake_litellm(monkeypatch)
+        monkeypatch.setattr(settings, "run_cost_budget", 0.05)
+        monkeypatch.setattr(llm_client, "estimate_cost_from_tokens", lambda *args: 0.01)
+        _FakeChatLiteLLM.responses.append(
+            _FakeResponse(usage_metadata={"input_tokens": 1, "output_tokens": 1})
+        )
+
+        async def _explode(*args: Any, **kwargs: Any) -> float:
+            raise RuntimeError("db down")
+
+        monkeypatch.setattr(LlmCallUsageRepository, "sum_cost_for_run", _explode)
+
+        with capture_logs() as logs:
+            result = await llm_client.call_llm("prompt")
+
+        assert result == "fake-text"
+        assert any(
+            entry.get("event") == "llm.run_cost_precheck_db_failed" for entry in logs
+        )
+        # 回退路径仍按本次成本累加（累计器语义不变）
+        assert llm_client.get_llm_run_cost() == pytest.approx(0.01)
+
+    async def test_precheck_db_failure_with_accumulator_above_budget_still_trips(
+        self, monkeypatch: pytest.MonkeyPatch, test_db: Path
+    ) -> None:
+        """DB 读失败且累计器已超预算 → 按累计器熔断（回退不削弱熔断语义）."""
+        bind_contextvars(run_id="run-iso")
+        monkeypatch.setattr(settings, "run_cost_budget", 0.05)
+        llm_client._llm_run_cost_cny.set(0.06)
+
+        async def _explode(*args: Any, **kwargs: Any) -> float:
+            raise RuntimeError("db down")
+
+        monkeypatch.setattr(LlmCallUsageRepository, "sum_cost_for_run", _explode)
+
+        with capture_logs() as logs, pytest.raises(LLMBudgetExceededError) as exc_info:
+            await llm_client.call_llm("prompt")
+
+        assert exc_info.value.used_cost == pytest.approx(0.06)
+        assert any(
+            entry.get("event") == "llm.run_cost_precheck_db_failed" for entry in logs
+        )
+
+    async def test_run_context_mirrors_db_sum_into_accumulator(
+        self, monkeypatch: pytest.MonkeyPatch, test_db: Path
+    ) -> None:
+        """run 上下文下前置检查把 DB 合计 set 进累计器（非 add）：get_llm_run_cost()
+        返回「历史 + 本次」，不丢节点隔离前的历史."""
+        await LlmCallUsageRepository().record(
+            run_id="run-iso",
+            model="fake-model",
+            cost_cny=0.03,
+            token_source="estimate",
+            cost_source="pricing_estimate",
+        )
+        bind_contextvars(run_id="run-iso")
+        llm_client._llm_run_cost_cny.set(0.0)  # 节点 task 隔离
+        _install_fake_litellm(monkeypatch)
+        monkeypatch.setattr(settings, "run_cost_budget", 1.0)  # 启用但打不到
+        monkeypatch.setattr(llm_client, "estimate_cost_from_tokens", lambda *args: 0.02)
+        _FakeChatLiteLLM.responses.append(
+            _FakeResponse(usage_metadata={"input_tokens": 1, "output_tokens": 1})
+        )
+
+        assert await llm_client.call_llm("prompt") == "fake-text"
+
+        # 修复前为 0.02（累计器从节点隔离的 0 起算，丢历史）
+        assert llm_client.get_llm_run_cost() == pytest.approx(0.05)
+
+    async def test_non_run_context_keeps_accumulator_path_without_db(
+        self, monkeypatch: pytest.MonkeyPatch, test_db: Path
+    ) -> None:
+        """非 run 上下文（不绑 run_id，脚本/测试语义）→ 不查库，累计器路径不变."""
+        _install_fake_litellm(monkeypatch)
+        monkeypatch.setattr(settings, "run_cost_budget", 0.01)
+        monkeypatch.setattr(llm_client, "estimate_cost_from_tokens", lambda *args: 0.02)
+        _FakeChatLiteLLM.responses.append(
+            _FakeResponse(usage_metadata={"input_tokens": 1, "output_tokens": 1})
+        )
+        real_sum = LlmCallUsageRepository.sum_cost_for_run
+        sum_calls = {"count": 0}
+
+        async def _spy(self: Any, run_id: str) -> float:
+            sum_calls["count"] += 1
+            return await real_sum(self, run_id)
+
+        monkeypatch.setattr(LlmCallUsageRepository, "sum_cost_for_run", _spy)
+
+        with pytest.raises(LLMBudgetExceededError, match="超限"):
+            await llm_client.call_llm("prompt")
+
+        assert sum_calls["count"] == 0
+        assert llm_client.get_llm_run_cost() == pytest.approx(0.02)

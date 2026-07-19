@@ -30,10 +30,17 @@ if TYPE_CHECKING:
 logger = structlog.get_logger(__name__)
 
 # per-run LLM 调用计数（非进程级单例，随 async context 生命周期）
+# 已知同病（Task 175 阶段 D 确诊，不在该次修复范围）：与 _llm_run_cost_cny 一样，
+# LangGraph 节点 task 的 context 副本不回传 ContextVar 写入，计数按节点重置；
+# 默认 llm_run_call_budget=0 不启用，启用前需同样改为 DB 权威。
 _llm_call_count: ContextVar[int] = ContextVar("llm_call_count", default=0)
 _llm_budget_last_chapter: ContextVar[int] = ContextVar("llm_budget_last_chapter", default=0)
 # Task 175: per-run LLM 成本累计（CNY，镜像 _llm_call_count 模式）；
-# 由 init_run_cost_from_db 在 run 确定后初始化（resume 接续历史合计）
+# 由 init_run_cost_from_db 在 run 确定后初始化（resume 接续历史合计）。
+# 阶段 D 修复后：run 上下文下本变量只是 DB 权威值的镜像（call_llm 前置检查把
+# llm_call_usage 合计 set 进来）——LangGraph 节点 task 的 context 副本不回传
+# ContextVar 写入，本变量在 run 语义下不可作权威；非 run 上下文（脚本/测试）
+# 仍是权威累计路径。
 _llm_run_cost_cny: ContextVar[float] = ContextVar("llm_run_cost_cny", default=0.0)
 _llm_client_registry: dict[tuple[str, str, str, float, int, int], Any] = {}
 
@@ -313,7 +320,8 @@ async def call_llm(
     """调用 LLM 并返回文本响应.
 
     自带限流感知退避重试；启用 llm_run_call_budget 时按 run 级计数熔断；
-    启用 run_cost_budget 时按 run 级成本（CNY）做前置 + 后置双检查熔断（Task 175）。
+    启用 run_cost_budget 时按 run 级成本（CNY）做前置 + 后置双检查熔断（Task 175；
+    run 上下文下以 llm_call_usage 的 DB 合计为权威，见前置检查注释）。
 
     Args:
         prompt: 发送给 LLM 的提示文本
@@ -347,10 +355,35 @@ async def call_llm(
             )
         _llm_call_count.set(count)
 
-    # Task 175: 成本预算前置检查——已用成本达预算时不再发起新调用
+    # Task 175: 成本预算前置检查——已用成本达预算时不再发起新调用。
+    # 阶段 D 修复：run 上下文（174 字段链绑定 run_id）下以 DB 为权威——
+    # LangGraph 节点在 task 的 context 副本中执行，_llm_run_cost_cny 的 set()
+    # 不回传 graph runner，累计器按节点重置，导致 run_cost_budget 熔断在生产
+    # 失效（阶段 D 实跑 budget=0.05 跑出 ¥0.217 未停）。DB 合计覆盖所有节点已
+    # 落库的调用（record 在 _invoke 成功路径内 await 且自带 commit，跨节点立即
+    # 可见）。读到的 DB 值 set 进累计器作镜像（非 add），使 get_llm_run_cost()
+    # 在 run 语义下仍返回真实累计；后置检查 used_after = 该镜像值 + 本次成本，
+    # 不再二次查库。DB 读失败（库未迁移等）回退累计器当前值 + warning，不阻断
+    # 生成（与遥测同一哲学）；非 run 上下文（脚本/测试）保持 ContextVar 累计器
+    # 路径不变。
     cost_budget = settings.run_cost_budget
+    call_context = _current_call_context()
     if cost_budget > 0:
         used_cost = _llm_run_cost_cny.get(0.0)
+        if call_context.run_id:
+            try:
+                from songyan.db.llm_call_usage_repo import LlmCallUsageRepository
+
+                used_cost = await LlmCallUsageRepository().sum_cost_for_run(
+                    call_context.run_id
+                )
+                _llm_run_cost_cny.set(used_cost)
+            except Exception as exc:
+                logger.warning(
+                    "llm.run_cost_precheck_db_failed",
+                    run_id=call_context.run_id,
+                    error=str(exc),
+                )
         if used_cost >= cost_budget:
             raise LLMBudgetExceededError(
                 message=f"单 run 成本预算耗尽（¥{cost_budget:.2f}），已用 ¥{used_cost:.4f}",
@@ -363,7 +396,6 @@ async def call_llm(
 
     llm = get_llm(temperature=temperature, max_tokens=max_tokens, timeout=timeout)
     model = _resolve_model()
-    call_context = _current_call_context()
     # attempt 索引由 retry_with_backoff 经 on_attempt 回调透传（Task 175）；
     # cost_cny 由成功路径回传——ContextVar 写入不跨 asyncio.wait_for 的 task
     # 边界回传，故累计在 call_llm 外层 context 进行（与 _llm_call_count 同层）
@@ -474,10 +506,13 @@ async def call_llm(
     except LLMError:
         raise
     # Task 175: 成功调用的成本在外层 context 累加（wait_for 的 task 副本不回传
-    # ContextVar 写入）；累加独立于 record 成败，telemetry 故障不会绕过预算熔断
+    # ContextVar 写入）；累加独立于 record 成败，telemetry 故障不会绕过预算熔断。
+    # run 上下文下前置检查已把 DB 合计镜像进累计器，累加后即为「DB 前置合计 +
+    # 本次成本」；本次调用的 record 已在 _invoke 内先于返回落库，故 resume/下一次
+    # 前置检查从 DB 读到的值与此处一致
     _llm_run_cost_cny.set(_llm_run_cost_cny.get(0.0) + attempt_state["cost_cny"])
     # Task 175: 成本预算后置二次检查——单次昂贵调用把预算打穿时，本次调用不返回
-    # 文本，立即熔断（由 phase2_graph 章循环接住并 pause）
+    # 文本，立即熔断（由 phase2_graph 章循环接住并 pause）；不二次查库
     if cost_budget > 0:
         used_cost_after = _llm_run_cost_cny.get(0.0)
         if used_cost_after > cost_budget:
