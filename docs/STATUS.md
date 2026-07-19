@@ -6,7 +6,7 @@
 
 | 项 | 结论 |
 |----|------|
-| 当前阶段 | **V9 已开工**：生产化地基 + urban 第三体裁 Ch100，Task 173-188 扁平编号，事实入口 `tasks/V9-README.md`。V9.1：**173/174/175 ✅ 完成**——成本追踪与预算熔断上生产线（scifi end10 实跑：10/10、usage 151 行 estimate 0%、总成本 ¥0.886、熔断 pause→提额 resume→completed 实证），173 挂死根因确证（sqlite checkpointer 泄漏，py-spy 线程栈）并真修（2.5s 自然退出），174 三边重建闭环；下一步 Task 176 |
+| 当前阶段 | **V9 已开工**：生产化地基 + urban 第三体裁 Ch100，Task 173-188 扁平编号，事实入口 `tasks/V9-README.md`。**V9.1 长跑可靠性全部完成**（173/174/175/176 ✅）：挂死根因修复（sqlite checkpointer 泄漏，2.5s 自然退出）、应用日志落盘与三边重建、成本追踪与 DB 权威熔断、防卡 wrapper 工具化（自检 9/9 + 实跑验收）；下一步进入 V9.2（177-181 交付与发布） |
 | V7 收尾 | **已完成**。sci-fi/space_opera + webnovel_intense 单一体裁稳定跑到 Ch200，200/200 accepted，D1 hard clean pass；Ch201-Ch220 20/20 accepted |
 | V8.1 运行时画像 | **已完成**（Task 172a + 172a.p）。`GenreRuntimeProfile` 把 Context Diet 2.0 运行时契约从 sci-fi 默认值解耦；xuanhuan Ch8 halt 已消除（base_budget=15000） |
 | V8.3 文学护栏 | **已完成**（Task 172d）。`literary_guardrail_observe` 去科幻硬编码，lexicon/主角名参数化到 `GenreProfile`，三体裁各配一套；DONE 文档已补齐 |
@@ -15,7 +15,7 @@
 | V8 文档治理 | **已完成**：`tasks/V8-README.md` 已明确 Task 编号是 trace id；阶段任务、前置并行、撞墙修复、后续增强已分层展示 |
 | **V8 技术债** | **172e-172i 已完成**：`GenreRuntimeProfile` 声明后未接线的字段已全部接到消费者；`load_profile()` 已改为注册表基线 + DB 字段级覆盖层 |
 | V8 遗留收口 | **172j/172k/172l 全部完成**：172k C 判据三档证据闭环（xuanhuan end10 10/10、urban end15 15/15、wuxia end20 20/20 gap=0，T9=0、overdue=0、budget<1.0；xuanhuan resolved=12 确认 172c.r 生效）；详见 `tasks/V8-README.md` V8.5 节 |
-| V9.1 长跑可靠性 | **173/174/175 ✅ 完成**：173 挂死根因确证（sqlite checkpointer 泄漏，py-spy 线程栈）并真修（sqlite 模式 2.5s 自然退出）；174 三边重建演示闭环；175 成本追踪/熔断/report 视图上生产线，阶段 D 实跑验收全通过（含两个生产缺陷修复 `22c1052`/`0b07e9d`） |
+| V9.1 长跑可靠性 | **173/174/175/176 全部 ✅ 完成**：173 挂死根因确证（sqlite checkpointer 泄漏）并真修（2.5s 自然退出）；174 三边重建闭环；175 成本追踪/熔断/report 视图上生产线（阶段 D 实跑验收全通过，含两个生产缺陷修复）；176 防卡 wrapper 工具化（`-SelfTest` 9/9、实跑验收 PASS_NORMAL_EXIT、旧脚本已弃用） |
 
 ## 最新证据
 
@@ -73,7 +73,7 @@
 
 ## 下一步
 
-1. **Task 176（Windows 防卡 wrapper 工具化）**：V9.1 的 173/174/175 已 ✅ 完成（175 阶段 D 实跑验收全通过：熔断实证 + scifi end10 + 173/174 挂起项补跑；两个生产缺陷 `22c1052`/`0b07e9d` 随 D 修复；全量 2882 passed）；V9.1 剩 176，完成后进入 V9.2（177-181 交付与发布）。
+1. **V9.2 交付与发布（177-181）**：V9.1 长跑可靠性已全部完成（173/174/175/176 ✅；176 防卡 wrapper 自检 9/9 + 实跑验收通过）；下一批任务书按波次撰写（177 export、178 wheel 打包、179 CLI 三坑、180 doctor、181 CI），详见 `tasks/V9-README.md`。
 2. **V10 预登记**：跨体裁 Ch200（基线扩 Ch200 checkpoint + 口径冻结）、优秀度信号包（跨章同质化指数/中文 AI 腔规则包/judge 偏差对策/perplexity gate/style card）、结构升级 spike（KG 图 diff / validity interval / Storyline Tree）。
 3. **守护项**：后续 CED 仍使用 consistency-only、merged/source、正文证据口径；不得把文学 craft 或 `rule-mr-*` 聚合工作项计入 CED。
 

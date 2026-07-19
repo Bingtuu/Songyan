@@ -109,7 +109,7 @@ python -m pytest tests/ -q
 ruff check src/ tests/
 ```
 
-Windows 下长跑或 pytest 卡住时，按 `archive/v5/context-docs/AGENTS-full-20260621.md` 的 Windows 测试进程防卡协议处理；优先使用 PowerShell Job + 硬超时 wrapper。
+Windows 下长跑或 pytest 卡住时，使用防卡 wrapper（Task 176 已工具化）：`powershell -File scripts/run_with_timeout.ps1 -TimeoutSec <秒> -- <命令>`；历史协议背景见 `archive/v5/context-docs/AGENTS-full-20260621.md`。
 
 ## Git 与归档
 

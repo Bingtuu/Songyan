@@ -4,7 +4,7 @@
 > **类型**: 基础设施（工具化既有协议）
 > **优先级**: P1——V9.1 收尾项；173/175 已修复并实跑验证已知挂死/失控成本路径，本 Task 是兜底安全网与协议工具化，不是挂死修复或成本熔断的替代品
 > **依赖**: 173/174/175 已完成（挂死根因、应用日志、成本熔断均已闭环；wrapper 语义从"前置救火"降级为"无人值守保险丝"）
-> **状态**: ◻ 规划中
+> **状态**: ✅ 完成（wrapper 落地 + 自检 9/9 + 双 review 修复 + 实跑验收通过；旧脚本已标注弃用；DONE: `tasks/176-windows-anti-hang-wrapper-DONE.md`）
 > **来源**: V5 Windows 测试进程防卡协议（`archive/v5/context-docs/AGENTS-full-20260621.md` §160-221，文档协议未工具化）；历史 wrapper `archive/v5/scripts/run_task117.ps1`（单任务硬编码）；2026-07-19 D2 实跑挂死 50+ 分钟才被人为发现（`tasks/173-interpreter-exit-hang-fix.md` 执行记录）；`tasks/V9-README.md` Task 176 行
 
 ---
@@ -108,6 +108,35 @@ meta/result 必填字段：`wrapper_version`、`command_line`、`child_pid`、`s
 4. `scripts/run_songyan_chapter.ps1` 改为 thin wrapper 调用 `run_with_timeout.ps1`，或在 README/脚本头明确弃用并指向新工具，避免双语义长期并存；
 5. README FAQ 与 AGENTS.md 防卡条目更新指向本工具；V9-README 176 行翻正；
 6. 本 Task 执行记录补录本文档。
+
+## 执行记录（2026-07-19）
+
+### 实现
+
+- `scripts/run_with_timeout.ps1`（wrapper_version 1.1.0，PS 5.1 兼容，纯 ASCII）：四档标记 + meta 13 字段（review 后扩展为 `root_killed`/`tree_kill_status`/`deadline_hit` 等诚实语义）+ 硬超时先 `taskkill /T /F` 后 `Stop-Process` fallback + child sweep + `Get-CimInstance` 复核 + PID 复用守卫（CreationDate 校验）+ `-DetectPytestSummary`（pytest 形态宽匹配自动启用）+ `-SuccessMarkerRegex` 业务标记 + `-SelfTest` 自检模式 + offset 增量 tee + P/Invoke 退出码获取（PS 5.1 重定向下 `ExitCode` 为 null 的实证坑）。
+- **参数接收偏离**（review 实证成立）：不用 `[Parameter(ValueFromRemainingArguments=$true)]`，改手工解析 `$args`——PS 5.1 绑定器在 `-File` 模式拒绝 `--`、参数名前缀匹配偷子命令参数（`-c`→`-Command`、`-v`→`-Verbose`、`--to`→`-TimeoutSec`）。脚本头注释已写明。
+- `scripts/run_songyan_chapter.ps1` 头部标注 **DEPRECATED**（含三档 WARN 语义 delta 与迁移指引），指向新工具；历史任务（121b）引用保留可用。
+
+### Review 与修复
+
+- 规格符合性 review：✅ 通过（手工 `$args` 偏离由 reviewer 独立复现三个绑定器问题后判定成立）。
+- 代码质量 review：With fixes——修复 4 项 Important（`killed_process_tree` 在 fallback 撒谎 → 拆 `root_killed`/`tree_kill_status` + child sweep；business marker 与 auto-enable 自检盲区 → 自检 7→9 项；grace/hard deadline 判定失真 → `deadline_hit` + 分支文案；PID 复用窗口 → CreationDate 守卫）+ 4 项 Minor（meta 去 BOM 改 ascii、主循环 try/catch/finally 保 meta、超时参数正整数校验、`-Tag` 路径净化）。
+
+### 验证
+
+| 项 | 结果 |
+|---|---|
+| `-SelfTest` 自检矩阵 | **9/9 ALL_PASS**（PS 5.1.26100；含真实杀树复核、误判防护、参数转义、business marker、auto-enable 端到端）证据 `.tmp/176_selftest/` |
+| 无误杀 | 多轮真实杀树期间，用户 2 个无关 python 长跑进程全程存活 |
+| 实跑验收（`SONGYAN_RUN_COST_BUDGET=2`，wrapper 跑 scifi `--end 1`） | **PASS_NORMAL_EXIT**，exit 0；1/1 accepted、T9=0、overdue=0、budget 0.9575；usage 遥测 12 行全部 `token_source='response'`（175 兼容）；meta 字段正确（`root_killed=false`、`tree_kill_status=not_attempted`） |
+| 全量 `python -m pytest tests/ -q` | 2882 passed, 2 skipped, 1 xfailed（本 Task 零 src 改动） |
+| 文档 | README FAQ、AGENTS.md 防卡条目已指向本工具 |
+
+### 已知限制（不阻塞）
+
+- `case3_tree_evidence.txt` 为自检产物仍带 BOM（meta 契约文件已去 BOM）；非 UTF-8 子进程输出的 tee 可读性（ASCII marker 不受影响）；wrap `.bat/.cmd` 时 cmd 元字符复活（头部已声明）；`--` 作为命令首参的极端情况不可表达（注释已注明）。
+
+---
 
 ## 撞墙路由
 

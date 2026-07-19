@@ -464,7 +464,7 @@ python scripts/run_172a7_genre_validation.py --templates scifi --end 10
 不会。isolate 模式下单章失败被隔离记录，后续章节继续；门禁检测到真实退化时才触发 AutoHalt，人工判断后可 `--resume` 继续。
 
 **Q: Windows 下测试/长跑卡住怎么办？**
-`CHECKPOINTER_MODE=memory`；长跑优先用 PowerShell Job + 硬超时，详见 `archive/v5/context-docs/AGENTS-full-20260621.md` 的 Windows 防卡协议。
+用防卡 wrapper（V9 Task 176）：`powershell -File scripts/run_with_timeout.ps1 -TimeoutSec 3600 -- <你的命令>`——硬超时 + 进程树清理 + 标准判定标记（`WRAPPER_RESULT=PASS_NORMAL_EXIT` 等四档），pytest 通过摘要自动识别；`CHECKPOINTER_MODE=memory` 用于测试环境。历史协议见 `archive/v5/context-docs/AGENTS-full-20260621.md`。
 
 ---
 
