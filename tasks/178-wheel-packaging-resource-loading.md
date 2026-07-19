@@ -22,7 +22,7 @@
 ## 目标
 
 1. 全部运行资源纳入 wheel：`prompts/cards`、`prompts/literary_plugins`、`genres`、`creative_modes`、`project_templates`、`evals/seeds`。
-2. 干净 venv `pip install .` 后，**非仓库 cwd** 跑通：资源枚举（7 genre + 4 mode + 全部模板 + prompt cards + literary plugins 可加载）、`create-project --template scifi`、scifi 1-3 章实跑生成。
+2. 干净 venv `pip install .` 后，**非仓库 cwd** 跑通：资源枚举（7 genre + 4 mode + 全部模板 + prompt cards + literary plugins + evals seeds 可加载）、`create-project --template scifi`、scifi 1-3 章实跑生成。
 3. 测试注入口全部保留可用；全量测试绿、ruff 绿；scifi `--end 10` 实跑回归（生成行为逐值不变）。
 
 ---
@@ -77,7 +77,8 @@ evals = ["seeds/**/*.json", "seeds/**/*.md"]
 python -m pytest tests/test_178_resource_loading.py -q
 python -m pytest tests/ -q
 ruff check src/ tests/
-python scripts/run_172a7_genre_validation.py --templates scifi --end 10   # 生成行为回归
+$env:SONGYAN_RUN_COST_BUDGET='2'
+powershell -NoProfile -File scripts\run_with_timeout.ps1 -TimeoutSec 3600 -- python scripts/run_172a7_genre_validation.py --templates scifi --end 10   # 生成行为回归
 ```
 
 ### wheel 验收（干净环境，分两步）
