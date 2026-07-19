@@ -10,7 +10,7 @@ Purpose
 Usage
     powershell -File scripts\run_with_timeout.ps1 -TimeoutSec 3600 python -m pytest tests/ -q
     powershell -File scripts\run_with_timeout.ps1 -TimeoutSec 7200 -Tag 172b-urban `
-        -SuccessMarkerRegex "project_pipeline\.end" python scripts\run_172b_ch100_climb.py --to 100
+        -SuccessMarkerRegex "project_pipeline\.end.*final_status=completed" python scripts\run_172b_ch100_climb.py --to 100
     powershell -File scripts\run_with_timeout.ps1 -SelfTest
     # A `--` separator between options and command is accepted (stripped by
     # this script) and works both via -File and inside a PowerShell session:
@@ -31,7 +31,7 @@ Options (space-separated values, case-insensitive names)
                              command printing "73 passed" is never misjudged.
     -SuccessMarkerRegex <s>  Extra business completion marker (default empty =
                              disabled), matched per output line.
-    -SelfTest                Run the built-in 9-case local self-test matrix and
+    -SelfTest                Run the built-in 11-case local self-test matrix and
                              write evidence to .tmp\176_selftest\ .
     [--] <command> [args...] The wrapped command: everything after the first
                              non-option token (or after the optional `--`
@@ -170,9 +170,28 @@ function Test-PytestCommandShape {
     return ($CmdLine[1] -eq '-m' -and $CmdLine[2] -eq 'pytest')
 }
 
+function Test-PytestPassSummaryLine {
+    # Match the final pytest summary, not arbitrary live/log output.
+    # Examples accepted:
+    #   "2 passed in 8.00s"
+    #   "2872 passed, 2 skipped, 1 xfailed, 2 warnings in 701.10s (0:11:41)"
+    #   "==== 2 passed in 0.01s ===="
+    # Examples rejected:
+    #   "73 passed"                      (plain user output, not final summary)
+    #   "1 failed, 73 passed in 1.00s"   (real failure)
+    param([string]$Line)
+    $trimmed = $Line.Trim()
+    if ($trimmed -notmatch '^=*\s*(?<body>.+?)\s+in\s+\d+(\.\d+)?s(\s+\([^)]+\))?\s*=*\s*$') {
+        return $false
+    }
+    $body = $Matches['body']
+    if ($body -match '\b\d+\s+(failed|errors?)\b') { return $false }
+    return ($body -match '\b\d+\s+(passed|skipped|xfailed|xpassed|deselected)\b')
+}
+
 function Test-PassMarkerLine {
     param([string]$Line, [bool]$PytestEnabled, [string]$BusinessRegex)
-    if ($PytestEnabled -and $Line -match '\d+ passed' -and $Line -notmatch 'failed|error|errors') {
+    if ($PytestEnabled -and (Test-PytestPassSummaryLine $Line)) {
         return 'pytest'
     }
     if (-not [string]::IsNullOrEmpty($BusinessRegex) -and $Line -match $BusinessRegex) {
@@ -564,7 +583,8 @@ function Invoke-WrappedCommand {
 function Invoke-SelfTest {
     $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
     $root = Join-Path $repoRoot ".tmp\176_selftest"
-    if (-not (Test-Path $root)) { New-Item -ItemType Directory -Path $root -Force | Out-Null }
+    if (Test-Path $root) { Remove-Item -Path $root -Recurse -Force }
+    New-Item -ItemType Directory -Path $root -Force | Out-Null
 
     $caseLines = New-Object System.Collections.Generic.List[string]
     $allPass = $true
@@ -621,7 +641,8 @@ function Invoke-SelfTest {
         if (-not $p4) { $allPass = $false }
 
         # CASE 5: pass summary seen, then hang -> PASS_WITH_TEARDOWN_TIMEOUT
-        $r5 = Invoke-WrappedCommand -Cmd @('python', '-c', $inner4) `
+        $inner5 = "print('73 passed in 0.01s', flush=True); import time; time.sleep(300)"
+        $r5 = Invoke-WrappedCommand -Cmd @('python', '-c', $inner5) `
             -TimeoutSec 10 -TeardownGraceSec 3 -Tag 'case5' -LogDir (Join-Path $root 'case5') `
             -PytestSummaryEnabled $true
         $metaText5 = if (Test-Path $r5.MetaFile) { Get-Content $r5.MetaFile -Raw } else { "" }
@@ -669,6 +690,7 @@ function Invoke-SelfTest {
         # powershell process so the true main path (arg parsing + auto-enable +
         # exit code) is exercised end to end.
         $case9Dir = Join-Path $root 'case9'
+        if (Test-Path $case9Dir) { Remove-Item -Path $case9Dir -Recurse -Force }
         $scriptPath = Join-Path $PSScriptRoot 'run_with_timeout.ps1'
         $out9 = & powershell.exe -NoProfile -File $scriptPath -Tag case9 -LogDir $case9Dir python -m pytest tests/test_173_pipeline_cleanup.py -q 2>&1 | Out-String
         $rc9 = $LASTEXITCODE
@@ -679,6 +701,42 @@ function Invoke-SelfTest {
                 -and $meta9 -match 'pass_marker_type=pytest' -and $meta9 -match 'pass_marker_seen_at=\S+')
         $caseLines.Add("CASE 9 pytest_auto_enable_main_path: $(if ($p9) {'PASS'} else {'FAIL'}) | exit=$rc9 marker_auto=$(if ($meta9 -match 'pass_marker_type=pytest') {'pytest'} else {'missing'}) meta=$meta9Path")
         if (-not $p9) { $allPass = $false }
+
+        # CASE 10: pytest command live output that says "73 passed" must NOT be
+        # treated as a final summary. This exercises the real pytest main path.
+        $case10Dir = Join-Path $root 'case10'
+        if (Test-Path $case10Dir) { Remove-Item -Path $case10Dir -Recurse -Force }
+        New-Item -ItemType Directory -Path $case10Dir -Force | Out-Null
+        $case10Test = Join-Path $case10Dir 'test_fake_summary_live_output.py'
+        @"
+import time
+
+def test_hang_after_live_output():
+    print("73 passed", flush=True)
+    time.sleep(300)
+"@ | Out-File -FilePath $case10Test -Encoding ascii
+        $out10 = & powershell.exe -NoProfile -File $scriptPath -TimeoutSec 6 -TeardownGraceSec 2 -Tag case10 -LogDir $case10Dir python -m pytest -s $case10Test -q 2>&1 | Out-String
+        $rc10 = $LASTEXITCODE
+        $meta10File = Get-ChildItem $case10Dir -Filter 'case10-*.meta.txt' -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+        $meta10 = if ($meta10File) { Get-Content $meta10File.FullName -Raw } else { "" }
+        $p10 = ($rc10 -eq 124 -and $out10 -match 'WRAPPER_RESULT=TIMEOUT_WITHOUT_PASS_SUMMARY' `
+                -and $meta10 -match 'pass_marker_type=pytest' -and $meta10 -notmatch 'pass_marker_seen_at=\S')
+        $caseLines.Add("CASE 10 pytest_live_output_no_misjudge: $(if ($p10) {'PASS'} else {'FAIL'}) | exit=$rc10 meta=$(if ($meta10File) {$meta10File.FullName} else {''})")
+        if (-not $p10) { $allPass = $false }
+
+        # CASE 11: pytest pass summary with xfailed is still a successful
+        # summary for teardown-hang purposes.
+        $inner11 = "print('2 passed, 1 xfailed in 0.01s', flush=True); import time; time.sleep(300)"
+        $r11 = Invoke-WrappedCommand -Cmd @('python', '-c', $inner11) `
+            -TimeoutSec 10 -TeardownGraceSec 3 -Tag 'case11' -LogDir (Join-Path $root 'case11') `
+            -PytestSummaryEnabled $true
+        $metaText11 = if (Test-Path $r11.MetaFile) { Get-Content $r11.MetaFile -Raw } else { "" }
+        $p11 = ($r11.Result -eq 'PASS_WITH_TEARDOWN_TIMEOUT' -and $r11.ExitCode -eq 0 `
+                -and $r11.PassMarkerType -eq 'pytest' -and $null -ne $r11.PassMarkerSeenAt `
+                -and $metaText11 -match 'ACTION_REQUIRED=investigate_teardown_hang' `
+                -and (-not (Test-ProcessAlive $r11.ChildPid)))
+        $caseLines.Add("CASE 11 pytest_xfailed_summary: $(if ($p11) {'PASS'} else {'FAIL'}) | result=$($r11.Result) exit=$($r11.ExitCode) marker_seen_at=$($r11.PassMarkerSeenAt) meta=$($r11.MetaFile)")
+        if (-not $p11) { $allPass = $false }
     } finally {
         Pop-Location
     }
@@ -713,7 +771,7 @@ Options (space-separated values; names are case-insensitive):
   -LogDir <string>          log directory (default logs\wrapper)
   -DetectPytestSummary      force pytest summary detection (auto for python -m pytest)
   -SuccessMarkerRegex <s>   business completion marker regex (default disabled)
-  -SelfTest                 run the built-in 9-case self-test matrix
+  -SelfTest                 run the built-in 11-case self-test matrix
 Everything after the first non-option token (or after `--`) is the wrapped
 command, passed through verbatim: -c, -q, -m, --to, ... all stay intact.
 "@

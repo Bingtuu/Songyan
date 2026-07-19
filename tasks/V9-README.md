@@ -89,7 +89,7 @@ V9 通过 = A 组（地基）+ B 组（爬坡）同时满足，C 组（守护）
 | 173 | 解释器退出挂死修复 | ✅ | LLM client 显式 registry + `aclose_llm_clients()`；pipeline wrapper 收尾对称关闭 LLM client + sqlite checkpointer（D2 实跑确证挂死根因为 checkpointer 连接泄漏，py-spy 线程栈实证）；`SONGYAN_FORCE_EXIT` 最外层兜底 | DONE: `tasks/173-interpreter-exit-hang-fix-DONE.md`；sqlite 模式 2.5s 自然退出（修复前同环境挂死 50+ 分钟） |
 | 174 | 日志体系落地 | ✅ | `logging_setup.py`：CLI/harness 入口 configure 一次；`LOG_LEVEL` 修活；console 人类可读 + `logs/app/*.jsonl` 文件双写；`LiteLLM`/httpx 等第三方 WARNING 起；关键日志带 `run_id/chapter_number/stage/version_id/db_path`，并与既有 `logs/chapter_runs/*.jsonl` 对齐 | DONE: `tasks/174-logging-system-foundation-DONE.md`；三边重建演示闭环（scifi end10 Ch4 四维度交叉一致） |
 | 175 | 成本追踪与预算熔断 | ✅ | `llm_call_usage` 落库 + call_llm 拦截 + agent 归因；`run_cost_budget` 双检查熔断（**DB 权威**：D1 实跑发现 ContextVar 跨节点失效并修复 `22c1052`；熔断异常传播修复 `0b07e9d`）+ total_cost 双接线；report 成本视图；阶段 D 实跑验收全通过 | DONE: `tasks/175-cost-tracking-and-budget-circuit-breaker-DONE.md`；scifi end10：10/10、usage 151 行 estimate 0%、总成本 ¥0.886、熔断 pause→提额 resume→completed 全链路实证 |
-| 176 | Windows 防卡 wrapper 工具化 | ✅ | `scripts/run_with_timeout.ps1`：任意命令 + 硬超时 + 四档标记 + 进程树清理（先 taskkill /T 后 fallback + child sweep + PID 复用守卫）+ meta 诊断字段；`-DetectPytestSummary` 防误判门控 + `-SuccessMarkerRegex` 业务标记；`-SelfTest` 9 项自检 | DONE: `tasks/176-windows-anti-hang-wrapper-DONE.md`；自检 9/9；实跑验收 scifi `--end 1` PASS_NORMAL_EXIT |
+| 176 | Windows 防卡 wrapper 工具化 | ✅ | `scripts/run_with_timeout.ps1`：任意命令 + 硬超时 + 四档标记 + 进程树清理（先 taskkill /T 后 fallback + child sweep + PID 复用守卫）+ meta 诊断字段；`-DetectPytestSummary` 防误判门控 + `-SuccessMarkerRegex` 业务标记；`-SelfTest` 11 项自检 | DONE: `tasks/176-windows-anti-hang-wrapper-DONE.md`；自检 11/11；实跑验收 scifi `--end 1` PASS_NORMAL_EXIT |
 
 ### V9.2 交付与发布
 

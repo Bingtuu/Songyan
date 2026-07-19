@@ -3,7 +3,7 @@
 # *** DEPRECATED (2026-07-19, V9 Task 176) ***
 # 本脚本已由通用工具 scripts/run_with_timeout.ps1 替代（任意命令 + 硬超时 +
 # 进程树清理 + meta 诊断字段）。新工作请使用：
-#   powershell -File scripts/run_with_timeout.ps1 -TimeoutSec 7200 -SuccessMarkerRegex "project_pipeline\.end" -- python scripts/run_172b_ch100_climb.py --to 100
+#   powershell -File scripts/run_with_timeout.ps1 -TimeoutSec 7200 -SuccessMarkerRegex "project_pipeline\.end.*final_status=completed" -- python scripts/run_172b_ch100_climb.py --to 100
 # 保留本文件仅为历史任务（如 tasks/121b）复现引用，不再维护。
 #
 # 迁移语义差异（新工具不覆盖本脚本的三档 WARN 语义，改用前请知悉）：
@@ -11,7 +11,8 @@
 #   WARN_NO_PIPELINE_END 三档 WARN；新工具只有四档 WRAPPER_RESULT，无 WARN 中间态。
 # - 本脚本"exit 0 但无业务完成标记"判 WARN（exit 0 但告警）；新工具同场景判
 #   PASS_NORMAL_EXIT（纯退出码语义）或 TIMEOUT（未见 marker）——严格度方向不同，
-#   需要业务标记判定时必须显式传 -SuccessMarkerRegex。
+#   需要业务标记判定时必须显式传带 completed 语义的 -SuccessMarkerRegex；
+#   禁止只匹配裸 project_pipeline.end，因为 partial/failed 也可能输出该事件。
 #
 # Features:
 # - Checks business completion marker project_pipeline.end, not only exit code.
