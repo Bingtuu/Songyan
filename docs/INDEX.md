@@ -8,7 +8,7 @@
 |------|------|
 | `AGENTS.md` | 开发代理短指令与不可违背规则 |
 | `docs/STATUS.md` | 当前状态、测试口径、下一步 |
-| `tasks/V9-README.md` | **V9 任务事实入口（已开工）**：生产化地基 + urban 第三体裁 Ch100，Task 173-188 扁平编号；173/174 ⚠️ 条件完成，175 阶段 A-C 完成、终审通过，D 待实跑 |
+| `tasks/V9-README.md` | **V9 任务事实入口（已开工）**：生产化地基 + urban 第三体裁 Ch100，Task 173-188 扁平编号；V9.1 的 173/174/175 ✅ 完成（175 阶段 D 实跑验收通过），下一步 176 |
 | `tasks/V8-README.md` | **V8 历史任务事实入口（已收尾，含 V8.5）**：多体裁可插拔质量 + 章数爬坡；含 Task 编号治理规则；任务文档与报告归档 `archive/v8/` |
 | `tasks/V7-README.md` | **V7 历史任务事实入口（已收尾）**：sci-fi 单一体裁 Ch200 达成 |
 | `tasks/V6-README.md` | V6 历史任务事实入口：叙事骨架 MVP + 度量 + 长跑底盘，Task 141-159 |
@@ -39,7 +39,7 @@ V8 已全量闭环（P/C/Q/S/V 五维全绿 + V8.5 遗留清零）。任务文�
 | 文件 | 用途 |
 |------|------|
 | `tasks/V9-README.md` | V9 总索引、A/B/C 验收判据、依赖关系与执行纪律 |
-| `tasks/175-cost-tracking-and-budget-circuit-breaker.md` | Task 175 任务书：成本追踪与预算熔断（阶段 A-C 完成、终审通过，D 待实跑） |
+| `tasks/175-cost-tracking-and-budget-circuit-breaker.md` | Task 175 任务书：成本追踪与预算熔断（✅ 完成：阶段 A-D 全闭环，实跑验收通过） |
 | `tasks/173-interpreter-exit-hang-fix.md` | Task 173 任务书：解释器退出挂死修复 |
 | `tasks/173-interpreter-exit-hang-fix-DONE.md` | Task 173 完成报告：LLM client 生命周期关闭 + force-exit 兜底 |
 | `tasks/174-logging-system-foundation.md` | Task 174 任务书：日志体系落地 |

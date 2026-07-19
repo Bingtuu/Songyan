@@ -4,7 +4,7 @@
 > **类型**: 缺陷修复（生产事故级）
 > **优先级**: P0——与 174 并列为**一切真实 LLM 实跑的硬前置**（V9-README 执行纪律：挂死无兜底时跑实跑等于重演 172k 事故场景）
 > **依赖**: 无（V9 主链首站）
-> **状态**: ⚠️ 条件完成（代码级修复 + 自动化验证 + dry probe 归因证据完成；scifi end10 回归与两次自然退出实跑验收挂起至 175 成本熔断后补跑，见 DONE）
+> **状态**: ✅ 完成（真修落地：pipeline finally 对称关闭 LLM client + sqlite checkpointer；归因确证（py-spy 线程栈）；sqlite 模式进程 2.5s 自然退出；自动化全绿）
 > **来源**: 172k 两次实跑挂死记录（`archive/v8/tasks/172k-c-dimension-evidence-closure.md`）；V9 生产就绪度审计；`tasks/V9-README.md` Task 173 行
 
 ---
@@ -158,6 +158,32 @@ scifi end10 回归期望逐值不变（本 Task 为行为中立的基础设施�
 | `call_close`（调用 + `aclose_llm_clients()`） | 1（同上 executor 线程） | 正常（exit=0） |
 
 结论：① 实例化不产生线程；② 真实调用产生**非 daemon** asyncio executor 工作线程——非 daemon 线程特征与 172k 挂死现场一致；③ 该线程属事件循环 default executor（非 client 资源，不应由 `aclose_llm_clients()` 清理），最小路径下 `asyncio.run()` 收尾的 `shutdown_default_executor` 会 join 它，**最小路径无法单独复现 172k 挂死**——172k 的 86 线程挂死发生在完整 pipeline 环境，嫌疑收敛到"default executor 之外的常驻资源"（长生命周期 aiosqlite 连接 / LangGraph checkpointer / litellm 内部 executor 的规模效应）。确证归因需全路径复现（scifi `--end 2` 自然退出观察），与自然退出验收一并挂起至 175 后补跑；在此不确定下，显式关闭 + force-exit 兜底保持正确防御姿态。
+
+### 归因确证与真修闭环（2026-07-19，175 阶段 D 实跑）
+
+**挂死复现**：scifi `--end 10`（harness，`checkpointer_mode=sqlite` 默认）在 pipeline 完成、结果落盘后**挂死 50+ 分钟**（人工终止）——172k 场景完整复现。
+
+**py-spy 线程栈**（`.tmp/pyspy-venv`，dump 挂死进程）：
+
+| 线程 | 状态 | 判定 |
+|---|---|---|
+| MainThread | `threading._shutdown`（join 非 daemon 线程） | 解释器退出被阻塞的**直接现场** |
+| Thread-17 `_connection_worker_thread` | aiosqlite 连接 worker（`aiosqlite/core.py:59`） | **根因**：aiosqlite 源码无 `daemon` 设置 → 非 daemon |
+| Thread-188/189 `tqdm._monitor` | `self.daemon = True`（`tqdm/_monitor.py:32`） | 排除 |
+
+**根因链**：`checkpointer_mode=sqlite`（生产默认）→ `AsyncSqliteSaver` 持有 aiosqlite 连接 → `build_phase1_graph()` 模块级缓存持有 checkpointer → `reset_checkpointer()`（关连接 + 清编译图缓存）此前**只有测试路径调用**（`phase1_graph.py:245` 标注"测试用"）→ 连接永不关闭 → 非 daemon worker 线程使 `threading._shutdown` 永久 join。dry probe 未复现的原因：探针显式 `checkpointer_mode=memory`（MemorySaver 无连接线程）；D2 harness 用 sqlite 默认值故挂死。
+
+**真修**：`run_project_pipeline()` wrapper 的 finally 在 `aclose_llm_clients()` 后追加 `reset_checkpointer()`（`phase2_graph.py:607-618`），两个清理各自 broad-except 守卫不屏蔽原异常；TDD 红→绿（`tests/test_173_pipeline_cleanup.py` 正常/异常两路径）。
+
+**实跑验收**：
+
+| 项 | 结果 |
+|---|---|
+| sqlite 模式 scifi `--end 1`（修复后） | pipeline.end 14:14:47.774 → 进程退出 14:14:50.294，**2.5s 自然退出**（修复前同环境挂死 50+ 分钟） |
+| memory 模式自然退出（探针批次） | 1.9s / 1.2s / 1.9s / 1.2s，四次均 ≤60s |
+| `tests/test_173_pipeline_cleanup.py` | 2 passed（TDD：修复前红） |
+| 全量 `python -m pytest tests/ -q` | **2882 passed, 2 skipped, 1 xfailed** |
+| `ruff check src/ tests/` | All checks passed |
 
 ---
 

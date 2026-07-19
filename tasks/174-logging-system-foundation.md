@@ -4,7 +4,7 @@
 > **类型**: 基础设施
 > **优先级**: P0——与 173 并列为**一切真实 LLM 实跑的硬前置**；其关联字段约定（`run_id/chapter_number/stage/version_id/db_path`）是 175 成本追踪 `LLMCallContext` 的直接上游
 > **依赖**: 无；但字段约定必须与 175 保持一致（175 任务书撰写时引用本文档定稿的字段集）
-> **状态**: ⚠️ 条件完成（应用日志基础设施 + 字段约定完成；三边重建实跑演示挂起至 175 成本熔断后补跑，见 DONE）
+> **状态**: ✅ 完成（应用日志基础设施 + 字段约定 + 三边重建实跑演示全部闭环）
 > **来源**: V9 生产就绪度审计（全仓库无一次 `structlog.configure`）；`tasks/V9-README.md` A2 判据与 Task 174 行（2026-07-18 评审定稿版）
 
 ---
@@ -162,10 +162,19 @@ scifi end10 回归期望逐值不变（行为中立基础设施，回归即证�
 | `ruff check src/ tests/ scripts/run_172a7_genre_validation.py scripts/run_172b_ch100_climb.py` | All checks passed |
 | `LOG_LEVEL=WARNING` + `scifi --end 1` smoke 尝试 | console 仅保留 LiteLLM WARNING，无 DEBUG 请求/响应；实跑因生成链路耗时中止，未作为通过证据 |
 
-### 实跑说明
+### 实跑说明（最终结论 2026-07-19）
 
 - `scifi --end 1` smoke 证明 console 过滤与 `LiteLLM` DEBUG 压制生效；应用日志记录中包含 `run_id/chapter_number/stage/db_path`。
-- 未完成三边重建完整演示与 scifi end10 回归；原因同 173：真实生成链路耗时和成本不可控。该部分建议在 175 成本追踪/预算熔断后补跑。
+- **三边重建演示已完成**（175 阶段 D 的 scifi `--end 10` 实跑，run `run-948c136b`，取 Ch4）：
+
+| 维度 | 边1 应用日志（`run_id`+`chapter_number` 过滤） | 边2 run log（`logs/chapter_runs/run-948c136b.jsonl`） | 边3 DB |
+|---|---|---|---|
+| budget | context snapshot 事件链 | `budget_used=0.5204444444444445` | `context_snapshots.budget_used=0.5204444444444445` ✓ |
+| settlement | `settlement.applied` + `validation_passed` | `settlement_success=true` | `character_states` 6 行（`source_version_id` 关联）+ head accepted ✓ |
+| gate 决策 | `human_gate.decision`(accept, qg=true) | `quality_gate_passed=true, gate_triggered=false` | `chapter_heads` accepted `v-5e73c4af` ✓ |
+| 版本链 | `writer.done v-4-4-a6445e93` → decision 同版本 | — | accepted wrapper `v-5e73c4af`（word_count 3329 = run log 一致）✓ |
+
+- 关联字段全程在线：`run_id/chapter_number/stage/version_id/db_path` 每条应用日志齐备；`stage` 随生命周期推进（`pipeline` → `human_confirm` → `chapter_run_logged`）。
 
 ---
 

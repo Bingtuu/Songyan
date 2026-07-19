@@ -599,9 +599,18 @@ async def run_project_pipeline(
             from songyan.llm.client import aclose_llm_clients
 
             await aclose_llm_clients()
-        finally:
-            reset_contextvars(**context_tokens)
-            unbind_contextvars("run_id", "chapter_number", "stage", "version_id")
+        except Exception:
+            logger.warning("project_pipeline.cleanup_llm_clients_failed")
+        try:
+            from songyan.workflows.phase1_graph import reset_checkpointer
+
+            # 关闭 sqlite checkpointer 的 aiosqlite 连接并清编译图缓存：
+            # 非 daemon _connection_worker_thread 不关闭会挂死解释器退出（173/D2 实证）
+            await reset_checkpointer()
+        except Exception:
+            logger.warning("project_pipeline.cleanup_checkpointer_failed")
+        reset_contextvars(**context_tokens)
+        unbind_contextvars("run_id", "chapter_number", "stage", "version_id")
 
 
 async def _run_project_pipeline_impl(

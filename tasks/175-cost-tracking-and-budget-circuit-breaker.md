@@ -4,7 +4,7 @@
 > **类型**: 基础设施（可观测性 + 失控防护）
 > **优先级**: P0——**长窗口与高成本实跑的前置**（V9-README 执行纪律：进入多轮标定或 187 Ch100 前必须具备成本追踪与预算熔断）；同时是 173/174 挂起实跑验收的解锁条件
 > **依赖**: 174 完成（关联字段 `run_id/chapter_number/stage/version_id/db_path/project_id` 已定稿并经 contextvars 绑定，本 Task 直接消费）
-> **状态**: 🔄 进行中（阶段 A-C 代码完成：落库/拦截/熔断/report 视图全上线，review follow-up `f0c607e` 已修，全量 2872 passed；阶段 D 实跑验收待 API 预算确认）
+> **状态**: ✅ 完成（阶段 A-D 全部闭环：成本追踪/熔断/report 视图上生产线；阶段 D 实跑验收通过，并顺带修复两个生产缺陷、确证 173 挂死根因）
 > **来源**: V9 生产就绪度审计（成本追踪为零，`phase2_graph.py` 躺 `total_cost=0.0 # TODO`）；外部调研（Sudowrite 第一用户痛点 = 成本黑盒；无人值守失控防护共识清单）；`tasks/V9-README.md` Task 175 行
 
 ---
@@ -210,8 +210,53 @@ python scripts/run_172a7_genre_validation.py --templates scifi --end 10   # 阶�
 
 ### 待办
 
-- 阶段 D 实跑验收（熔断实证 + scifi end10 + 173/174 挂起项补跑）：待 API 预算确认
-- dev 库 `songyan.db` 需跑一次 `init_schema` 获得遥测表（幂等）
+- ~~阶段 D 实跑验收~~（2026-07-19 已完成，见下节）
+- ~~dev 库 `songyan.db` 需跑一次 `init_schema` 获得遥测表（幂等）~~（2026-07-19 已完成，`verify_schema` 无 missing）
+
+---
+
+## 执行记录（2026-07-19，阶段 D 实跑验收）
+
+### D1 预算熔断实证（`.tmp/probe_175_budget.py`，临时库，scifi `--end 2`）
+
+| 阶段 | 结果 |
+|---|---|
+| pause（¥0.05） | 成本 ¥0.0514 处熔断：run=**paused**、`budget_exceeded` 日志含 `used_cost=0.051398/budget_cost=0.05/last_chapter=1`、Ch1 under_review 保留、`project_runs.total_cost` = usage 合计一致 |
+| resume（¥2 提额） | Ch1 accepted；Ch2 遇瞬时质量门（修订不收敛→degraded accept 跳结算→`context_emergency_failure_halt`，按设计的 AutoHalt，非缺陷）；再 resume → Ch2 accepted，run=**completed** |
+| 成本连续性 | 跨 3 进程：0.0514 → 0.2519 → 0.3647 = usage 合计逐分吻合（`init_run_cost_from_db` resume 安全实证） |
+
+### D 阶段发现并修复的两个生产缺陷（单测全绿、生产失效）
+
+1. **成本累计器跨 LangGraph 节点失效**（`22c1052`）：`_llm_run_cost_cny` ContextVar 写入发生在节点 task 的 context 副本，按节点重置——首跑熔断完全未触发（¥0.217 > ¥0.05 仍 completed）。修复：run 上下文下预算检查改为 **DB 权威**（前置 `sum_cost_for_run`，后置 = 前置合计 + 本次成本），非 run 上下文保持累计器路径；TDD 复现红→绿。
+2. **熔断异常被 phase1 宽捕获包装**（`0b07e9d`）：`run_chapter_pipeline` 的 `except Exception` 把 `LLMBudgetExceededError` 包装成章节失败，run 变 failed 而非 paused。修复：phase1 原样 re-raise，传播到 phase2 的 pause 路径；TDD 红→绿。
+
+### D2 scifi `--end 10` 回归（`SONGYAN_RUN_COST_BUDGET=20`，`.tmp/175_scifi_end10.json`）
+
+| 判据 | 结果 |
+|---|---|
+| accepted / halt | **10/10、0 halt**（harness 内 AutoHalt 重试 0 次触发） |
+| budget | 峰值 0.8325 < 1.0；before_emergency 峰值 1.159；emergency 12 次（V8 基线 13 同量级）；Ch1 total_budget=8250（公式路径未动） |
+| overdue / CED | overdue=0；CED 3.14（110 issues / 35,011 词，V8 同标） |
+| usage 落库 | **151 行、全部 `token_source='response'`（estimate 占比 0% < 20%）**、失败行 0、agent 归因 8/8 无 unknown |
+| 成本 | run 总成本 **¥0.886**（≈¥0.089/章），`project_runs.total_cost` 与 usage 合计逐分一致 |
+| report 成本视图 | 总额/每章均/per agent Top5+其他合并/双占比/每章成本表全部渲染正确（`logs/reports/report-run-948c136b.md`） |
+| T9 | **1**（Ch4 `countdown_increase` 20 分钟→37 天，diagnostic 级）——分析：Ch1"二十分钟后交汇"与 Ch4"三十七天倒计时"是两个不同倒计时，启发式规则的内容级误报倾向，与 173/174/175 改动无关（三者均不触碰写作/规则/内容路径）；非系统性，记录在案 |
+
+### D2 意外收获：173 挂死根因确证与真修
+
+D2 进程在结果落盘后**挂死 50+ 分钟**（人工终止）——172k 场景复现。py-spy 线程栈确证：MainThread 阻塞于 `threading._shutdown`，残留非 daemon aiosqlite `_connection_worker_thread`；根因为 sqlite `AsyncSqliteSaver` 连接经模块级缓存编译图持有、`reset_checkpointer()` 此前仅测试路径调用。真修（pipeline finally 对称关闭 checkpointer + LLM client）后 sqlite 模式 `--end 1` **2.5s 自然退出**。详见 173 任务书执行记录——**173 全部验收判据闭环、状态翻 ✅**。
+
+### 174 挂起项补跑
+
+用 D2 实跑完成三边重建演示（run `run-948c136b` Ch4）：应用日志（`run_id`+`chapter_number` 过滤）↔ `logs/chapter_runs/*.jsonl` ↔ DB 三边在 budget（0.5204444444444445 逐分一致）/ settlement / gate 决策 / 版本链四个维度交叉一致。**174 验收判据闭环、状态翻 ✅**。
+
+### 自然退出计时样本（173 验收）
+
+sqlite 模式 2.5s（修复后真修验收）+ memory 模式探针批次 1.9s / 1.2s / 1.9s / 1.2s —— 五次均 ≤60s。
+
+### 全量验证
+
+`python -m pytest tests/ -q` → **2882 passed, 2 skipped, 1 xfailed**；`ruff check src/ tests/` → All checks passed。
 
 ---
 

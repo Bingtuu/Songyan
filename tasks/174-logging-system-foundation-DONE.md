@@ -2,7 +2,7 @@
 
 > **完成时间**: 2026-07-18  
 > **阶段**: V9.1 长跑可靠性  
-> **状态**: ⚠️ 条件完成（应用日志基础设施 + 字段约定完成；三边重建实跑演示挂起至 175 成本熔断后补跑）  
+> **状态**: ✅ 完成（应用日志基础设施 + 字段约定 + 三边重建实跑演示全部闭环）  
 > **任务书**: `tasks/174-logging-system-foundation.md`
 
 ---
@@ -38,4 +38,4 @@
 
 ## 说明
 
-真实 LLM smoke 未完整自然结束，三边重建演示未形成终判证据；原因是生成链路耗时和 API 成本不可控。Task 175 落地后应补跑带成本上限的短窗口实证。
+真实 LLM smoke（`LOG_LEVEL=WARNING` + `scifi --end 1`）确认 console 仅保留 LiteLLM WARNING，无 DEBUG 请求/响应。三边重建演示已于 175 阶段 D 的 scifi `--end 10` 实跑完成（run `run-948c136b` Ch4：应用日志 ↔ chapter_runs JSONL ↔ DB 三边在 budget / settlement / gate 决策 / 版本链四个维度逐项一致），证据表见 `tasks/174-logging-system-foundation.md` 执行记录。

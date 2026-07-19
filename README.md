@@ -9,7 +9,7 @@
   <p>
     <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-%3E%3D3.11-blue" alt="Python >= 3.11" /></a>
     <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-blue" alt="License AGPL-3.0" /></a>
-    <img src="https://img.shields.io/badge/tests-2815%20passed-brightgreen" alt="Tests 2815 passed" />
+    <img src="https://img.shields.io/badge/tests-2882%20passed-brightgreen" alt="Tests 2882 passed" />
     <a href="https://github.com/astral-sh/ruff"><img src="https://img.shields.io/badge/code%20style-ruff-black" alt="Code style: ruff" /></a>
   </p>
 </div>

@@ -2,7 +2,7 @@
 
 > **完成时间**: 2026-07-18  
 > **阶段**: V9.1 长跑可靠性  
-> **状态**: ⚠️ 条件完成（代码级修复 + 自动化验证 + dry probe 归因证据完成；scifi end10 回归与两次自然退出实跑验收挂起至 175 成本熔断后补跑）  
+> **状态**: ✅ 完成（真修 + 兜底 + 归因确证 + 实跑验收全部闭环：sqlite checkpointer 泄漏为挂死根因，pipeline finally 对称关闭后 sqlite 模式 2.5s 自然退出）  
 > **任务书**: `tasks/173-interpreter-exit-hang-fix.md`
 
 ---
@@ -28,6 +28,21 @@
 
 真实 LLM `scifi --end 1/2` smoke 曾尝试，但生成链路进入较长修订/等待，已中止以控制成本。因此本 DONE 不声明 scifi end10 或两次自然退出真实 LLM 证据；该实跑建议在 Task 175 成本追踪与预算熔断落地后补跑。
 
-## 归因探针证据（2026-07-18）
+## 归因确证与真修闭环（2026-07-19，最终验收）
 
-dry probe（`.tmp/probe_173_exit_hang.py`，单次真实 API 调用）：实例化 0 线程；真实调用后残留 1 个非 daemon `asyncio_0` executor 线程（与 172k 挂死的非 daemon 线程特征一致）；最小路径下 `asyncio.run()` 收尾自动 join，不单独复现挂死——172k 挂死嫌疑收敛到完整 pipeline 环境中 default executor 之外的常驻资源，确证归因与自然退出验收一并挂起至 175 后补跑。详见 `tasks/173-interpreter-exit-hang-fix.md` 执行记录。
+**挂死复现与归因**：scifi `--end 10`（harness，sqlite checkpointer 默认）结果落盘后挂死 50+ 分钟；py-spy dump：MainThread 阻塞在 `threading._shutdown`，残留非 daemon `Thread-17 _connection_worker_thread`（aiosqlite worker，源码无 daemon 设置）。根因：`AsyncSqliteSaver` 的 aiosqlite 连接经模块级缓存的编译图持有，`reset_checkpointer()` 此前仅测试路径调用，生产从不关闭。
+
+**真修**：`phase2_graph.py` pipeline wrapper finally 追加 `reset_checkpointer()`（与 `aclose_llm_clients()` 并列、各自容错守卫）。
+
+**最终验收**：
+
+| 项 | 结果 |
+|---|---|
+| sqlite 模式 scifi `--end 1` | 2.5s 自然退出（修复前同环境挂死 50+ 分钟被人工终止） |
+| memory 模式探针批次 | 四次 1.2-1.9s 自然退出 |
+| `tests/test_173_pipeline_cleanup.py` | 2 passed（TDD 红→绿） |
+| 全量 pytest | 2882 passed, 2 skipped, 1 xfailed |
+| ruff | All checks passed |
+| force-exit 兜底 | subprocess 注入泄漏线程测试通过（既有） |
+
+173 全部验收判据闭环：归因确证 ✅、真修 ✅（分开验收：无兜底时自然退出）、兜底 ✅（注入测试）、行为中立 ✅（全量绿 + scifi end10 实跑 10/10）。
