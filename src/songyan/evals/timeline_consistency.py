@@ -47,6 +47,34 @@ _FLASHBACK_MARKERS = (
     "录音",
     "录像",
     "历史记录",
+    # 185 补充：档案/文档日期语境（urban end15 run1/run2 实证假阳性）
+    "年前",  # “三年前4月2日” 等相对过去引用
+    "时间戳",
+    "签署",
+    "发起时间",
+    "timestamp",
+    # 185 第二轮（run3 实证）
+    "去年",
+    "前年",
+    "距今",
+    "修改时间",
+)
+
+# 同一倒计时计时器的量级容差：相邻倒计时信号的规范化小时数比值超过该值，
+# 视为两个独立计时器（185：run1 “还有四分钟” vs “还有五天” 实证假阳性）。
+_COUNTDOWN_SAME_TIMER_MAX_RATIO = 4.0
+
+# 作息/日程类计时语境：交通时刻表与日常作息不是剧情倒计时弧，
+# 不参与跨章 countdown 回跳判定（185：run2 “列车还有两分钟到站” 实证）。
+_SCHEDULE_MARKERS = (
+    "到站",
+    "发车",
+    "班次",
+    "末班",
+    "检票",
+    "午休",
+    "下班",
+    "打卡",
 )
 
 
@@ -62,6 +90,9 @@ class TimeSignal(BaseModel):
     normalized_value: float | int | None = None
     ignored_for_conflict: bool = False
     ignore_reason: str = ""
+    # 倒计时语义锚点（仅 countdown）：匹配点邻近窗口的 CJK bigram 集合，
+    # 用于判断两个倒计时信号是否指向同一截止期限（185 第二轮）。
+    anchors: frozenset[str] = frozenset()
 
 
 class TimelineConflict(BaseModel):
@@ -78,6 +109,23 @@ class TimelineConflict(BaseModel):
     current_location: str
     severity: str = "diagnostic"
     message: str
+
+
+_ANCHOR_TRIGGER_RE = re.compile(r"倒计时|还剩|剩余|还有|大约|距离")
+_ANCHOR_STRIP_CHARS = frozenset("零〇一二两三四五六七八九十百千万亿天日小时分钟秒钟秒")
+
+
+def _countdown_anchor(text: str, start: int, end: int, radius: int = 12) -> frozenset[str]:
+    """提取倒计时匹配点邻近窗口的 CJK bigram 集合，作为“同一截止期限”证据。
+
+    剔除触发词（还剩/还有/倒计时等）、中文数字与时间单位后，对剩余 CJK 字符
+    取 bigram。两个倒计时信号锚点均非空且不相交时，视为不同的截止期限
+    （185 第二轮：run3 “房租还有五天到期” vs “项目总结会还有7天” 实证）。
+    """
+    window = text[max(0, start - radius): min(len(text), end + radius)]
+    window = _ANCHOR_TRIGGER_RE.sub("", window)
+    chars = [c for c in window if "\u4e00" <= c <= "\u9fff" and c not in _ANCHOR_STRIP_CHARS]
+    return frozenset("".join(chars[i:i + 2]) for i in range(len(chars) - 1))
 
 
 def _chinese_to_int(text: str) -> int | None:
@@ -119,11 +167,24 @@ def _context_window(text: str, start: int, end: int, radius: int = 30) -> str:
     return text[max(0, start - radius): min(len(text), end + radius)]
 
 
+_LOG_LINE_RE = re.compile(r"\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(?::\d{2})?\s*[|｜]")
+
+
 def _ignored_by_flashback_context(text: str, start: int, end: int) -> tuple[bool, str]:
     context = _context_window(text, start, end)
     marker = next((m for m in _FLASHBACK_MARKERS if m in context), "")
     if marker:
         return True, f"flashback_context:{marker}"
+    marker = next((m for m in _SCHEDULE_MARKERS if m in context), "")
+    if marker:
+        return True, f"schedule_context:{marker}"
+    # 管道分隔的机器日志行（如 "2024-10-15 03:47:14 | INFO | ..."）不是叙事时间
+    line_start = text.rfind("\n", 0, start) + 1
+    line_end = text.find("\n", end)
+    if line_end < 0:
+        line_end = len(text)
+    if _LOG_LINE_RE.search(text[line_start:line_end]):
+        return True, "log_line_context"
     return False, ""
 
 
@@ -160,6 +221,7 @@ def _append_signal(
     value: float | int | str,
     unit: str = "",
     normalized_value: float | int | None = None,
+    anchors: frozenset[str] = frozenset(),
 ) -> None:
     ignored, reason = _ignored_by_flashback_context(text, start, end)
     signals.append(
@@ -173,6 +235,7 @@ def _append_signal(
             normalized_value=normalized_value,
             ignored_for_conflict=ignored,
             ignore_reason=reason,
+            anchors=anchors,
         )
     )
 
@@ -224,6 +287,7 @@ def extract_time_signals(chapter_no: int, content: str) -> list[TimeSignal]:
                 value=value,
                 unit=unit,
                 normalized_value=_countdown_to_hours(value, unit),
+                anchors=_countdown_anchor(content, match.start(), match.end()),
             )
 
     for pattern in (_ISO_DATE_PATTERN, _CN_DATE_PATTERN):
@@ -322,7 +386,18 @@ def detect_timeline_conflicts(
     for previous, current in zip(countdowns, countdowns[1:]):
         if current.chapter_no <= previous.chapter_no:
             continue
-        if float(current.normalized_value or 0) > float(previous.normalized_value or 0):
+        previous_hours = float(previous.normalized_value or 0)
+        current_hours = float(current.normalized_value or 0)
+        if previous_hours > 0 and current_hours / previous_hours > _COUNTDOWN_SAME_TIMER_MAX_RATIO:
+            # 量级差异过大视为两个独立计时器（如 "还有四分钟" vs "还有五天"），
+            # 不参与同一倒计时回跳判定（185：run1/Ch5、run1/Ch10 实证假阳性）。
+            continue
+        if previous.anchors and current.anchors and previous.anchors.isdisjoint(current.anchors):
+            # 锚点无语义重叠视为两个独立截止期限（如 "房租还有五天到期" vs
+            # "项目总结会还有7天"），不参与同一倒计时回跳判定（185 第二轮：
+            # run3/Ch2 实证）。任一侧锚点为空时保守回退到仅量级约束。
+            continue
+        if current_hours > previous_hours:
             conflicts.append(
                 _conflict_from_signals(
                     "countdown_increase",
@@ -339,6 +414,11 @@ def detect_timeline_conflicts(
     ]
     for previous, current in zip(dates, dates[1:]):
         if current.chapter_no <= previous.chapter_no:
+            continue
+        # 无年份日期（"MM-DD"）与完整日期（"YYYY-MM-DD"）的归一化值不可比：
+        # 前者为 month*31+day，后者为 date ordinal，混合配对必然误判回跳
+        # （185 第二轮：run3/Ch15 "10月16日" vs "2024-06-15" 实证）。
+        if str(previous.value).count("-") != str(current.value).count("-"):
             continue
         if int(current.normalized_value or 0) < int(previous.normalized_value or 0):
             conflicts.append(

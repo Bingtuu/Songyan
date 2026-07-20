@@ -345,7 +345,7 @@ python scripts/run_172b_ch100_climb.py --to 100
 | V8 | ✅ 完成 | 多体裁可插拔（GenreRuntimeProfile）+ xuanhuan/wuxia Ch100 五门 PASS |
 | 172c | ✅ 完成 | wuxia 第二体裁 Ch100 爬坡：clean rerun 100/100 accepted，五门 PASS |
 | V8.5 | ✅ 完成 | 验收后遗留收口：172j BudgetPruner max_* 修复、172k C 判据三档证据闭环（xuanhuan end10 / urban end15 / wuxia end20 全 accepted）、172l 文档治理 |
-| V9 | 🔄 已开工 | 生产化地基（长跑可靠性/导出/打包/CI/成本追踪/五门工具收编）+ urban 第三体裁 Ch100；V9.1 173-176、V9.2 177-181 与 V9.3 182-184 已完成；V9.4 Task 185 已开工并暂停，下一步 clean rerun urban base12000 end15 候选，见 `tasks/V9-README.md` |
+| V9 | 🔄 已开工 | 生产化地基（长跑可靠性/导出/打包/CI/成本追踪/五门工具收编）+ urban 第三体裁 Ch100；V9.1 173-176、V9.2 177-181、V9.3 182-184、**V9.4 185 已完成**：urban `base_budget=12000` 标定落 registry，registry 默认值 end15 15/15 accepted、T9=0、scifi end10 回归无漂移；下一步 V9.5 Task 186→187 urban Ch100 任务书与爬坡，见 `tasks/V9-README.md` |
 | V10 | ⏳ 预登记 | 跨体裁 Ch200、优秀度信号包（同质化/中文 AI 腔/judge 偏差）、结构升级 spike |
 
 各阶段事实入口见 `tasks/V9-README.md`（当前阶段，已开工）与 `tasks/V5/V6/V7/V8-README.md`（均已收尾）；V8 任务文档与报告归档于 [`archive/v8/`](archive/v8/INDEX.md)。
@@ -496,7 +496,7 @@ python scripts/run_172a7_genre_validation.py --templates scifi --end 10
 - [`tasks/182-five-gate-and-segment-audit-tools-DONE.md`](tasks/182-five-gate-and-segment-audit-tools-DONE.md) — V9 Task 182：五门判定器与段审计收编
 - [`tasks/183-profile-tuning-cli-DONE.md`](tasks/183-profile-tuning-cli-DONE.md) — V9 Task 183：Profile 调参 CLI
 - [`tasks/184-genres-creative-modes-json-schema-DONE.md`](tasks/184-genres-creative-modes-json-schema-DONE.md) — V9 Task 184：genres/creative_modes JSON Schema
-- [`tasks/185-urban-short-window-calibration.md`](tasks/185-urban-short-window-calibration.md) — V9 Task 185：urban 短窗口标定（进行中）
+- [`tasks/185-urban-short-window-calibration.md`](tasks/185-urban-short-window-calibration.md) — V9 Task 185：urban 短窗口标定（已完成，base_budget=12000 落入 registry）
 - [`tasks/V8-README.md`](tasks/V8-README.md) — V8 任务事实入口（已收尾，含编号治理规则与五维验收证据链）
 - [`archive/v8/INDEX.md`](archive/v8/INDEX.md) — V8 任务文档与报告归档索引（172-172l 全部任务书、双体裁 Ch100 验收报告、短窗口矩阵）
 - [`docs/reports/v8-literature-and-landscape-review.md`](docs/reports/v8-literature-and-landscape-review.md) — V8 长调研报告（体裁差异与 GenreRuntimeProfile 设计依据）

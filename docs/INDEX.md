@@ -8,7 +8,7 @@
 |------|------|
 | `AGENTS.md` | 开发代理短指令与不可违背规则 |
 | `docs/STATUS.md` | 当前状态、测试口径、下一步 |
-| `tasks/V9-README.md` | **V9 任务事实入口（已开工）**：生产化地基 + urban 第三体裁 Ch100，Task 173-188 扁平编号；**V9.1 全部完成**（173/174/175/176 ✅），**V9.2 全部完成**（177/178/179/180/181 ✅），**V9.3 全部完成**（182/183/184 ✅）；**Task 185 已开工并暂停**，下一步 clean rerun urban base12000 end15 候选 |
+| `tasks/V9-README.md` | **V9 任务事实入口（已开工）**：生产化地基 + urban 第三体裁 Ch100，Task 173-188 扁平编号；**V9.1 全部完成**（173/174/175/176 ✅），**V9.2 全部完成**（177/178/179/180/181 ✅），**V9.3 全部完成**（182/183/184 ✅）；**Task 185 已完成**：urban `base_budget=12000` 标定落 registry，run3 15/15、T9=0、scifi end10 回归无漂移；下一步 V9.5 Task 186→187 urban Ch100 任务书与爬坡 |
 | `tasks/V8-README.md` | **V8 历史任务事实入口（已收尾，含 V8.5）**：多体裁可插拔质量 + 章数爬坡；含 Task 编号治理规则；任务文档与报告归档 `archive/v8/` |
 | `tasks/V7-README.md` | **V7 历史任务事实入口（已收尾）**：sci-fi 单一体裁 Ch200 达成 |
 | `tasks/V6-README.md` | V6 历史任务事实入口：叙事骨架 MVP + 度量 + 长跑底盘，Task 141-159 |
@@ -59,7 +59,7 @@ V8 已全量闭环（P/C/Q/S/V 五维全绿 + V8.5 遗留清零）。任务文�
 | `tasks/183-profile-tuning-cli-DONE.md` | Task 183 完成报告：`songyan profile show/diff/upsert` + DB override 调参 |
 | `tasks/184-genres-creative-modes-json-schema.md` | Task 184 任务书：genres/creative_modes JSON Schema（✅ 完成） |
 | `tasks/184-genres-creative-modes-json-schema-DONE.md` | Task 184 完成报告：包内 `_schema.json` + loader 预校验 |
-| `tasks/185-urban-short-window-calibration.md` | Task 185 任务书：urban 短窗口标定（🔄 进行中/暂停点已记录） |
+| `tasks/185-urban-short-window-calibration.md` | Task 185 任务书与执行记录：urban 短窗口标定（✅ 已完成，base_budget=12000 落入 registry） |
 | `tasks/173-interpreter-exit-hang-fix.md` | Task 173 任务书：解释器退出挂死修复 |
 | `tasks/173-interpreter-exit-hang-fix-DONE.md` | Task 173 完成报告：LLM client 生命周期关闭 + force-exit 兜底 |
 | `tasks/174-logging-system-foundation.md` | Task 174 任务书：日志体系落地 |
@@ -133,7 +133,7 @@ V8 已全量闭环（P/C/Q/S/V 五维全绿 + V8.5 遗留清零）。任务文�
 | V9 长跑可靠性 DONE | `tasks/173-interpreter-exit-hang-fix-DONE.md`、`tasks/174-logging-system-foundation-DONE.md`、`tasks/175-cost-tracking-and-budget-circuit-breaker-DONE.md`、`tasks/176-windows-anti-hang-wrapper-DONE.md` |
 | V9 交付发布 DONE | `tasks/177-export-book-manuscript-DONE.md`、`tasks/178-wheel-packaging-resource-loading-DONE.md`、`tasks/179-cli-experience-fixes-DONE.md`、`tasks/180-doctor-environment-check-DONE.md`、`tasks/181-ci-and-test-cleanup-DONE.md` |
 | V9 工具链收编 DONE | `tasks/182-five-gate-and-segment-audit-tools-DONE.md`、`tasks/183-profile-tuning-cli-DONE.md`、`tasks/184-genres-creative-modes-json-schema-DONE.md` |
-| V9 urban 标定进行中 | `tasks/185-urban-short-window-calibration.md` |
+| V9 urban 标定 DONE | `tasks/185-urban-short-window-calibration.md` |
 | V8 历史任务入口（已收尾） | `tasks/V8-README.md` |
 | 当前项目状态 | `docs/STATUS.md` |
 | V8 归档索引（任务文档与报告） | `archive/v8/INDEX.md` |

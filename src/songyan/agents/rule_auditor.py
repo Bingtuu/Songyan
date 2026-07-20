@@ -242,8 +242,13 @@ def _is_safe_slash_context(text: str, slash_pos: int) -> bool:
         return True
     if re.search(r"\d+(?:\.\d+)?\s*/\s*\d+(?:\.\d+)?", window):
         return True
-    # 常见速度/频率/比例单位，如 km/s、m/s、次/秒。
-    if re.search(r"(?:km|m|cm|mm|次|米|公里)\s*/\s*(?:s|秒|min|h|小时)", window, re.I):
+    # 常见速度/频率/比例单位，如 km/s、m/s、次/秒、次/分钟。
+    # 185: 右侧单位补齐中文时间单位，避免 "47次/分钟" 这类频率被误判为拼接痕。
+    if re.search(
+        r"(?:km|m|cm|mm|次|米|公里)\s*/\s*(?:s|秒|min|h|小时|分钟|分|天|日|周|月|年)",
+        window,
+        re.I,
+    ):
         return True
     return False
 

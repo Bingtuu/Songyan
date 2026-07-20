@@ -96,8 +96,15 @@ def _default_registry() -> dict[str, GenreRuntimeProfile]:
     # 复用 xuanhuan 的长窗口 floor=48，仍只抬高 expected horizon，不改评估口径。
     wuxia.foreshadowing_horizon_floor = 48
 
-    # urban: genre_rules ≈ scifi（-1.5%），运行时与 scifi 同级
-    urban = GenreRuntimeProfile(genre="urban")
+    # urban: genre_rules ≈ scifi（-1.5%），但默认 base_budget=8000 的爬坡起点
+    # 过低——172k end15（base8000）连续 17 次 ContextEmergency、before_emergency
+    # 峰值 1.2792 贴 1.3 halt 线，溢出发生在不可裁核心（与 xuanhuan Ch8 同根因）。
+    # 185 标定（2026-07-20）：base12000 两轮 end15 实跑 budget 峰值 0.8917/0.9396、
+    # emergency=0、before_emergency=0，无须继续抬 13000/15000。
+    urban = GenreRuntimeProfile(
+        genre="urban",
+        base_budget=12000,
+    )
 
     return {p.genre: p for p in (scifi, xuanhuan, wuxia, urban)}
 

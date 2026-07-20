@@ -213,3 +213,50 @@ Remove-Item Env:\SONGYAN_RUN_COST_BUDGET
 - V10 优秀度信号包。
 - 稀疏覆盖存储迁移。
 - GateConfig 构建时序重构。
+
+---
+
+## 执行记录（2026-07-20）
+
+### 阶段 A：工具接线（含 code review）
+
+- `run_172a7_genre_validation.py` 新增 `--db`、summary `db_path`、模板失败非零退出（checkpoint `9bc831e`）。
+- 恢复后先完成 code review（结论 Ready to merge，0 Critical），并按 review 意见补 2 条测试：override 经 `--db` 端到端可读（走 CLI 同款 `upsert_profile_overrides` 路径）、混合结果退出码。聚焦测试 4 passed。
+
+### 阶段 B：候选标定（base_budget=12000，三轮实跑）
+
+| 指标 | run1（override） | run2（override clean rerun） | run3（registry 默认值） |
+|---|---:|---:|---:|
+| accepted | 14/15（Ch13 结算瞬时失败 isolate） | 15/15 | **15/15** |
+| status | partial | completed | completed |
+| budget 峰值 | 0.8917 | 0.9396 | 0.9643 |
+| before_emergency 峰值 | 0.0 | 0.0 | 0.0 |
+| emergency 次数 | 0 | 0 | 0 |
+| T9（harness 原值） | 12 | 3 | 3 |
+| **T9（修复后检测器复测）** | — | **0** | **0** |
+| overdue | 4 | 4 | 3 |
+| CED/1k | 6.13 | 3.31 | 5.46 |
+| 成本（¥） | 1.594 | 1.489 | 1.733 |
+
+- 预算结论：base12000 两轮 budget 峰值 ≤0.9643、emergency=0、before_emergency=0，172k 的 17 次连续 emergency 完全消除。按"最低足够值"口径定为 **12000**，不再烧 13000/15000。
+- 落盘：`.tmp/185_urban_base12000_end15.json`（run1）、`.tmp/185_urban_base12000_end15_r2.json`（run2）、`.tmp/185_urban_registry_end15.json`（run3，含复测标注）、`.tmp/185_t9_recompute_note.json`（复测证据）。
+
+### 阶段 C：T9 定点修（检测器精度 8 项 + 写作侧 1 项）
+
+T9 命中逐条核对后定性：无一条真时间线矛盾；slash_splice 真阳性仅 run1 的 `//` 注释体（写作侧）。修复均有守护测试（真拼接/真回跳/换措辞真回跳仍命中）：
+
+- R1（run1/run2 证据）：slash 安全上下文补中文时间单位（`47次/分钟`）；闪回/档案标记 +年前/时间戳/签署/发起时间/timestamp；新增作息日程标记（到站/发车/班次/末班/检票/午休/下班/打卡）；倒计时配对加同计时器量级约束（>4× 视为独立计时器）。
+- R2（run3 证据）：倒计时配对加语义锚点（匹配点 ±12 字符 CJK bigram，两侧非空且不相交判独立截止期限）；标记 +去年/前年/距今/修改时间；管道分隔日志行排除；**无年份日期与完整日期不可比**（归一化缺陷：`MM-DD`=month*31+day vs ordinal）。
+- 写作侧：urban `writer_rules` +1（电子设备/系统消息用引号或【】，禁 `//` 代码注释体）；run3 正文 `//` 零出现。
+- 复测口径说明：T9 为离线推导指标，检测器修复不重生成正文；对 run3（最终 prompt 下生成的 clean 样本）accepted 正文以终态检测器复测，T9=0，替代 run4（省 ¥1.7）。测试 `tests/test_185_t9_precision_fixes.py` 18 条。
+
+### 阶段 D：registry 落值与回归
+
+- registry：urban `base_budget` 8000→**12000**（`genre_runtime_profile_repo.py`，注释含 172k/185 证据链）；`foreshadowing_horizon_floor` 保持 0（end15 overdue=3，无长窗口压力，留待 Ch100 观察）。
+- run3 即 registry 默认值 clean rerun（fresh DB、无 override，`profile show` 证实 source=registry）：15/15 + T9=0 + budget 0.9643，PASS 候选成立。
+- scifi end10 回归（`.tmp/185_scifi_end10_regression.json`）：**10/10 accepted、0 halt、T9=0**、overdue=0、budget 峰值 0.7662、before_emergency 1.2352 未贴 halt 线。T9 由 175 运行的诊断残留 1（countdown_increase，同类假阳性）归 0，为检测器精度修复的预期后果；scifi 的 profile 与上下文路径本次未改动，Ch1 预算 legacy 公式不变。
+- 验证：默认全量 pytest **2952 passed, 2 skipped, 1 xfailed**；CLI **35 passed**；mypy 176 files 0 errors；ruff 全绿。
+
+### 验收结论（2026-07-20）
+
+**PASS**：base_budget=**12000** 落入 registry；run3（registry 默认值、无 DB override）urban end15 clean rerun 达成 15/15 accepted、0 halt、budget 0.9643、emergency 0、T9=0（修复后检测器复测 accepted 正文）；overdue 3、CED 5.46 与 sci-fi 同量级；`foreshadowing_horizon_floor` 维持 0（短窗口无压力，留 Ch100 观察）；scifi end10 回归无漂移。总实跑成本约 ¥4.8（复测替代 run4 省 ¥1.7）。

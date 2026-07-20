@@ -4,7 +4,7 @@
 > **定位**: 自用为主、按开源标准打磨——不追求终端用户产品体验，但地基（打包/CI/日志/导出/成本）按可发布标准补齐
 > **当前口径**: V8（含 V8.5）已全量闭环。V9 不做优秀度信号包与跨体裁 Ch200（捆绑留 V10），只做两件事：① 补齐生产化地基；② urban 第三体裁 Ch100 爬坡作为地基的实战验收
 > **任务编号**: V9 从 Task 173 开始；**扁平编号**——每个可独立执行、独立验收、独立出 DONE 文档的工作项各占一个编号（粒度对标 V6 的 141-159 / V7 的 160-171w）；编号是 trace id，不等同于严格执行顺序；撞墙定点修复按父任务字母后缀登记（如 `187.p`）
-> **状态**: 已开工（2026-07-20：**V9.1 全部完成**（173/174/175/176 ✅）；**V9.2 全部完成**（177/178/179/180/181 ✅）；**V9.3 全部完成**（182/183/184 ✅）；**V9.4 Task 185 已开工并暂停**：harness 固定 DB/失败非零接线已实现并通过聚焦测试，urban base12000 候选实跑未完成）
+> **状态**: 已开工（2026-07-20：**V9.1 全部完成**（173/174/175/176 ✅）；**V9.2 全部完成**（177/178/179/180/181 ✅）；**V9.3 全部完成**（182/183/184 ✅）；**V9.4 Task 185 已完成**：urban `base_budget=12000` 经 run1/run2/run3 三轮 end15 实跑标定并落入 registry，run3（registry 默认值）15/15 accepted、T9=0、emergency=0，scifi end10 回归无漂移）
 
 本文是 V9 阶段任务文档的事实入口。V8 历史事实入口见 `tasks/V8-README.md`（任务文档与报告在 `archive/v8/`）；更早阶段见 V7/V6/V5-README。
 
@@ -113,7 +113,7 @@ V9 通过 = A 组（地基）+ B 组（爬坡）同时满足，C 组（守护）
 
 | Task | 名称 | 状态 | 内容要点 | 验收要点 |
 |------|------|:----:|----------|----------|
-| 185 | urban 短窗口标定实跑 | 🔄 | 任务书已写；`run_172a7_genre_validation.py` 已补 `--db` 固定 SQLite 路径、summary `db_path`、失败非零退出；base_budget=12000 DB override 已验证被同 DB harness 读取；候选 end15 实跑已启动但暂停，未生成结果 JSON | 暂停点：聚焦测试 **3 passed**、ruff/mypy 全绿；urban base12000 end15 未完成，不能作为标定证据；恢复后先 code review harness，再 clean rerun 候选 |
+| 185 | urban 短窗口标定实跑 | ✅ | 任务书与执行记录已写；`run_172a7_genre_validation.py` 补 `--db`/summary `db_path`/失败非零退出；base_budget=12000 经 run1/run2（DB override）/run3（registry 默认值）三轮 end15 实跑标定；T9 全部命中逐条定性与定点修（检测器精度 8 项 + urban writer_rules 禁 `//` 注释体）；终态检测器复测 accepted 正文 **T9=0**；scifi end10 回归 **10/10、T9=0、无漂移** | 终判：run3 registry 默认值 15/15、budget 0.9643、emergency 0、T9=0、overdue 3、CED 5.46；scifi end10 10/10、T9 诊断残留 1→0（精度修复预期后果）、budget 0.7662；落盘 `.tmp/185_urban_registry_end15.json`、`.tmp/185_t9_recompute_note.json`、`.tmp/185_scifi_end10_regression.json`；聚焦/精度测试 22 passed；全量 2952 passed；mypy/ruff 全绿 |
 
 （185 不依赖全部 A 组完成，但有硬前置：173/174 完成后才允许真实 LLM 实跑；调参迭代走 183 的 CLI，不改代码；长窗口或高成本标定前应先完成 175。）
 
@@ -161,8 +161,8 @@ V9 通过 = A 组（地基）+ B 组（爬坡）同时满足，C 组（守护）
 
 | 字段 | scifi | xuanhuan | wuxia | urban |
 |---|---|---|---|---|
-| base_budget / ramp | 8000 / 250 | 15000 / 250 | 10500 / 250 | **8000 / 250（未标定）** |
-| foreshadowing_horizon_floor | 0 | 48 | 48 | **0（待 185 标定）** |
+| base_budget / ramp | 8000 / 250 | 15000 / 250 | 10500 / 250 | **12000 / 250（185 已标定）** |
+| foreshadowing_horizon_floor | 0 | 48 | 48 | **0（185 确认短窗口无压力；Ch100 再观察）** |
 | character_decay.focal_gaps | 3/10/30 | 8/20/60 | 8/20/60 | 3/10/30 |
 | continuity.health_overdue_weight | 0.3 | 0.3 | 0.15 | 0.3 |
 
