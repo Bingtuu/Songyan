@@ -230,7 +230,8 @@ V9.6  188                                  （收口）
 - V8 历史事实：`tasks/V8-README.md`；归档 `archive/v8/INDEX.md`
 - V9 中篇爬坡冻结口径参照：`archive/v8/tasks/172b-xuanhuan-ch100-climb.md` §1.1
 - urban 标定输入详情：`archive/v8/tasks/172k-c-dimension-evidence-closure.md`
-- Task 185 urban 标定任务书：`tasks/185-urban-short-window-calibration.md`
+- Task 185 urban 标定完成报告：`tasks/185-urban-short-window-calibration-DONE.md`
+- Task 186 urban Ch100 任务书：`tasks/186-urban-ch100-climb.md`
 - GenreRuntimeProfile 机制与调参语义：`archive/v8/tasks/172a-v8-genre-runtime-profiles.md`、`archive/v8/tasks/172j-budget-pruner-max-shadowing-fix.md`
 - 长调研报告（V10 储备）：`docs/reports/v8-literature-and-landscape-review.md`
 - 项目状态：`docs/STATUS.md`；文档路由：`docs/INDEX.md`

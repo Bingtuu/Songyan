@@ -59,7 +59,8 @@ V8 已全量闭环（P/C/Q/S/V 五维全绿 + V8.5 遗留清零）。任务文�
 | `tasks/183-profile-tuning-cli-DONE.md` | Task 183 完成报告：`songyan profile show/diff/upsert` + DB override 调参 |
 | `tasks/184-genres-creative-modes-json-schema.md` | Task 184 任务书：genres/creative_modes JSON Schema（✅ 完成） |
 | `tasks/184-genres-creative-modes-json-schema-DONE.md` | Task 184 完成报告：包内 `_schema.json` + loader 预校验 |
-| `tasks/185-urban-short-window-calibration.md` | Task 185 任务书与执行记录：urban 短窗口标定（✅ 已完成，base_budget=12000 落入 registry） |
+| `tasks/185-urban-short-window-calibration-DONE.md` | Task 185 任务书与执行记录：urban 短距验证（✅ 已完成，base_budget=12000 落入 registry） |
+| `tasks/186-urban-ch100-climb.md` | Task 186 任务书：urban Ch100 爬坡（🔄 进行中，待评审） |
 | `tasks/173-interpreter-exit-hang-fix.md` | Task 173 任务书：解释器退出挂死修复 |
 | `tasks/173-interpreter-exit-hang-fix-DONE.md` | Task 173 完成报告：LLM client 生命周期关闭 + force-exit 兜底 |
 | `tasks/174-logging-system-foundation.md` | Task 174 任务书：日志体系落地 |
@@ -133,7 +134,8 @@ V8 已全量闭环（P/C/Q/S/V 五维全绿 + V8.5 遗留清零）。任务文�
 | V9 长跑可靠性 DONE | `tasks/173-interpreter-exit-hang-fix-DONE.md`、`tasks/174-logging-system-foundation-DONE.md`、`tasks/175-cost-tracking-and-budget-circuit-breaker-DONE.md`、`tasks/176-windows-anti-hang-wrapper-DONE.md` |
 | V9 交付发布 DONE | `tasks/177-export-book-manuscript-DONE.md`、`tasks/178-wheel-packaging-resource-loading-DONE.md`、`tasks/179-cli-experience-fixes-DONE.md`、`tasks/180-doctor-environment-check-DONE.md`、`tasks/181-ci-and-test-cleanup-DONE.md` |
 | V9 工具链收编 DONE | `tasks/182-five-gate-and-segment-audit-tools-DONE.md`、`tasks/183-profile-tuning-cli-DONE.md`、`tasks/184-genres-creative-modes-json-schema-DONE.md` |
-| V9 urban 标定 DONE | `tasks/185-urban-short-window-calibration.md` |
+| V9 urban 标定 DONE | `tasks/185-urban-short-window-calibration-DONE.md` |
+| V9 urban Ch100 任务书 | `tasks/186-urban-ch100-climb.md` |
 | V8 历史任务入口（已收尾） | `tasks/V8-README.md` |
 | 当前项目状态 | `docs/STATUS.md` |
 | V8 归档索引（任务文档与报告） | `archive/v8/INDEX.md` |
