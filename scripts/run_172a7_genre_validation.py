@@ -137,10 +137,31 @@ async def _ced(project_id: str, end: int) -> dict[str, object]:
     }
 
 
-async def run_for_template(template_id: str, end: int, retries: int = 2) -> dict[str, object]:
-    safe_id = re.sub(r"[^\w-]", "_", template_id)
-    tmpdir = tempfile.mkdtemp(prefix=f"task172a7_{safe_id}_")
-    settings.database_url = f"sqlite:///{tmpdir}/songyan.db"
+def _configure_database_url(template_id: str, db_path: Path | None) -> Path:
+    """Point the harness at an explicit DB path or a fresh temp DB."""
+    if db_path is None:
+        safe_id = re.sub(r"[^\w-]", "_", template_id)
+        tmpdir = tempfile.mkdtemp(prefix=f"task172a7_{safe_id}_")
+        resolved = Path(tmpdir) / "songyan.db"
+    else:
+        resolved = db_path
+        resolved.parent.mkdir(parents=True, exist_ok=True)
+    settings.database_url = f"sqlite:///{resolved}"
+    return resolved
+
+
+def _exit_code_for_results(results: list[dict[str, object]]) -> int:
+    """Return non-zero when any template failed inside the harness."""
+    return 1 if any("error" in result for result in results) else 0
+
+
+async def run_for_template(
+    template_id: str,
+    end: int,
+    retries: int = 2,
+    db_path: Path | None = None,
+) -> dict[str, object]:
+    database_path = _configure_database_url(template_id, db_path)
 
     template = ProjectTemplateLoader().load(template_id)
     project_id, project = await ProjectInitializer.from_template(template)
@@ -180,6 +201,7 @@ async def run_for_template(template_id: str, end: int, retries: int = 2) -> dict
     return {
         "template_id": template_id,
         "end": end,
+        "db_path": str(database_path),
         "completed": result.chapters_completed,
         "failed": result.chapters_failed,
         "status": result.final_status,
@@ -198,13 +220,21 @@ def main() -> None:
     parser.add_argument("--end", type=int, default=10)
     parser.add_argument("--retries", type=int, default=2, help="AutoHalt 后自动 resume 重试次数")
     parser.add_argument("--output", default=".tmp/task172a7_validation.json")
+    parser.add_argument(
+        "--db",
+        type=Path,
+        default=None,
+        help="Use an explicit SQLite DB path instead of a fresh temporary DB.",
+    )
     args = parser.parse_args()
 
     results = []
     for template_id in args.templates:
         print(f"\n=== {template_id} --end {args.end} ===")
         try:
-            summary = asyncio.run(run_for_template(template_id, args.end, args.retries))
+            summary = asyncio.run(
+                run_for_template(template_id, args.end, args.retries, args.db)
+            )
             results.append(summary)
             print(json.dumps(summary, ensure_ascii=False, indent=2))
         except Exception as exc:  # noqa: BLE001
@@ -216,7 +246,10 @@ def main() -> None:
     out.write_text(json.dumps(results, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"\nResults saved to {out}")
     asyncio.run(aclose_llm_clients())
-    force_exit_after_run_if_requested()
+    exit_code = _exit_code_for_results(results)
+    force_exit_after_run_if_requested(exit_code=exit_code)
+    if exit_code:
+        sys.exit(exit_code)
 
 
 if __name__ == "__main__":

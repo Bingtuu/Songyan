@@ -4,7 +4,7 @@
 > **定位**: 自用为主、按开源标准打磨——不追求终端用户产品体验，但地基（打包/CI/日志/导出/成本）按可发布标准补齐
 > **当前口径**: V8（含 V8.5）已全量闭环。V9 不做优秀度信号包与跨体裁 Ch200（捆绑留 V10），只做两件事：① 补齐生产化地基；② urban 第三体裁 Ch100 爬坡作为地基的实战验收
 > **任务编号**: V9 从 Task 173 开始；**扁平编号**——每个可独立执行、独立验收、独立出 DONE 文档的工作项各占一个编号（粒度对标 V6 的 141-159 / V7 的 160-171w）；编号是 trace id，不等同于严格执行顺序；撞墙定点修复按父任务字母后缀登记（如 `187.p`）
-> **状态**: 已开工（2026-07-20：**V9.1 全部完成**（173/174/175/176 ✅）；**V9.2 全部完成**（177/178/179/180/181 ✅）；**V9.3 全部完成**（182/183/184 ✅）；下一步 185 urban 短窗口标定）
+> **状态**: 已开工（2026-07-20：**V9.1 全部完成**（173/174/175/176 ✅）；**V9.2 全部完成**（177/178/179/180/181 ✅）；**V9.3 全部完成**（182/183/184 ✅）；**V9.4 Task 185 已开工并暂停**：harness 固定 DB/失败非零接线已实现并通过聚焦测试，urban base12000 候选实跑未完成）
 
 本文是 V9 阶段任务文档的事实入口。V8 历史事实入口见 `tasks/V8-README.md`（任务文档与报告在 `archive/v8/`）；更早阶段见 V7/V6/V5-README。
 
@@ -113,7 +113,7 @@ V9 通过 = A 组（地基）+ B 组（爬坡）同时满足，C 组（守护）
 
 | Task | 名称 | 状态 | 内容要点 | 验收要点 |
 |------|------|:----:|----------|----------|
-| 185 | urban 短窗口标定实跑 | ◻ | base_budget 候选 12000 → 13000 →（必要时）15000 实跑标定；先确认 resolve 机制生效（`foreshadowing_resolved` 事件 > 0）再按实测 plant 密度定 floor 初值；T9=6 逐条复核（真问题修写作/规则侧，非系统性原因只进诊断报告，不计 PASS）；标定迭代走 183 CLI，标定值落注册表后跑 scifi end10 回归 | end15 emergency 不连触、峰值 <1.0、clean rerun T9=0；标定值与证据落盘 |
+| 185 | urban 短窗口标定实跑 | 🔄 | 任务书已写；`run_172a7_genre_validation.py` 已补 `--db` 固定 SQLite 路径、summary `db_path`、失败非零退出；base_budget=12000 DB override 已验证被同 DB harness 读取；候选 end15 实跑已启动但暂停，未生成结果 JSON | 暂停点：聚焦测试 **3 passed**、ruff/mypy 全绿；urban base12000 end15 未完成，不能作为标定证据；恢复后先 code review harness，再 clean rerun 候选 |
 
 （185 不依赖全部 A 组完成，但有硬前置：173/174 完成后才允许真实 LLM 实跑；调参迭代走 183 的 CLI，不改代码；长窗口或高成本标定前应先完成 175。）
 
@@ -230,6 +230,7 @@ V9.6  188                                  （收口）
 - V8 历史事实：`tasks/V8-README.md`；归档 `archive/v8/INDEX.md`
 - V9 中篇爬坡冻结口径参照：`archive/v8/tasks/172b-xuanhuan-ch100-climb.md` §1.1
 - urban 标定输入详情：`archive/v8/tasks/172k-c-dimension-evidence-closure.md`
+- Task 185 urban 标定任务书：`tasks/185-urban-short-window-calibration.md`
 - GenreRuntimeProfile 机制与调参语义：`archive/v8/tasks/172a-v8-genre-runtime-profiles.md`、`archive/v8/tasks/172j-budget-pruner-max-shadowing-fix.md`
 - 长调研报告（V10 储备）：`docs/reports/v8-literature-and-landscape-review.md`
 - 项目状态：`docs/STATUS.md`；文档路由：`docs/INDEX.md`
