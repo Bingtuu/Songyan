@@ -4,7 +4,7 @@
 > **定位**: 自用为主、按开源标准打磨——不追求终端用户产品体验，但地基（打包/CI/日志/导出/成本）按可发布标准补齐
 > **当前口径**: V8（含 V8.5）已全量闭环。V9 不做优秀度信号包与跨体裁 Ch200（捆绑留 V10），只做两件事：① 补齐生产化地基；② urban 第三体裁 Ch100 爬坡作为地基的实战验收
 > **任务编号**: V9 从 Task 173 开始；**扁平编号**——每个可独立执行、独立验收、独立出 DONE 文档的工作项各占一个编号（粒度对标 V6 的 141-159 / V7 的 160-171w）；编号是 trace id，不等同于严格执行顺序；撞墙定点修复按父任务字母后缀登记（如 `187.p`）
-> **状态**: 已开工（2026-07-20：**V9.1 全部完成**（173/174/175/176 ✅）；**V9.2 全部完成**（177/178/179/180/181 ✅）；**V9.3 Task 182/183 已完成**；下一步 184 genres/creative_modes JSON Schema）
+> **状态**: 已开工（2026-07-20：**V9.1 全部完成**（173/174/175/176 ✅）；**V9.2 全部完成**（177/178/179/180/181 ✅）；**V9.3 全部完成**（182/183/184 ✅）；下一步 185 urban 短窗口标定）
 
 本文是 V9 阶段任务文档的事实入口。V8 历史事实入口见 `tasks/V8-README.md`（任务文档与报告在 `archive/v8/`）；更早阶段见 V7/V6/V5-README。
 
@@ -36,7 +36,7 @@
 
 - **P0**：① 解释器退出挂死已复现两次（172k），173 已补 LLM client 显式关闭与最外层 force-exit 兜底；② 全仓库无一次 `structlog.configure`，174 已落地应用日志与关联字段；~~③ 写完 100 章拿不到书稿~~（**177 已落地**：`songyan export` 从 accepted head 导出 flat/arc/volume Markdown/txt）；~~④ `pip install .` 成 wheel 即坏~~（**178 已落地**：运行资源、`evals/seeds` 与 `schema.sql` 入包，loader 统一走 `importlib.resources`，wheel 非仓库 cwd 验收通过）
 - **P1**：~~成本追踪为零~~（**175 已落地**：`llm_call_usage` 逐调用落库 + `total_cost` 双接线 + report 成本视图 + `run_cost_budget` 熔断）；~~CLI 三坑~~（**179 已落地**：run 成功回显 `run_id`，`--mode-id` 默认回读项目 mode，README 表补 `index`）；无 CI 且 `tests/cli/test_cli.py` 4 个既有失败
-- **P2**：~~五门判定器在 `.tmp/` 待收编~~（**182 已落地**：正式五门/段审计脚本 + 包内 sci-fi baseline）；~~Profile 调参只有 Python API 无 CLI~~（**183 已落地**：`songyan profile show/diff/upsert`）；genres/creative_modes JSON Schema 待补
+- **P2**：~~五门判定器在 `.tmp/` 待收编~~（**182 已落地**：正式五门/段审计脚本 + 包内 sci-fi baseline）；~~Profile 调参只有 Python API 无 CLI~~（**183 已落地**：`songyan profile show/diff/upsert`）；~~genres/creative_modes JSON Schema 待补~~（**184 已落地**：加载前 schema 校验 + `_schema` 元文件过滤）
 
 ---
 
@@ -107,7 +107,7 @@ V9 通过 = A 组（地基）+ B 组（爬坡）同时满足，C 组（守护）
 |------|------|:----:|----------|----------|
 | 182 | 五门判定器与段审计收编 | ✅ | `.tmp/vdim_compare.py` / `.tmp/segment_audit.py` 已收编为 `scripts/five_gate_check.py` / `scripts/segment_audit.py`；`--genre/--db/--baseline/--up-to` 参数化；sci-fi corrected CED baseline 迁入 `src/songyan/evals/baselines/`；只读 DB 防副作用 | DONE: `tasks/182-five-gate-and-segment-audit-tools-DONE.md`；xuanhuan/wuxia Ch100 重放 PASS；`.tmp/vdim_compare.py` 对照逐门一致；默认全量 pytest **2914 passed, 2 skipped, 1 xfailed**；CLI **35 passed**；mypy/ruff 全绿；code review P2 已修复 |
 | 183 | Profile 调参 CLI | ✅ | `songyan profile show/diff/upsert --genre <g>`；registry / DB override / effective 三列渲染；upsert 写入“代码默认模型 + 用户显式字段”的伪稀疏 DB profile；`--reset` 清空 override 意图；文档化 172j 降回边界 | DONE: `tasks/183-profile-tuning-cli-DONE.md`；聚焦测试 **7 passed**；CLI **35 passed**；默认全量 pytest **2921 passed, 2 skipped, 1 xfailed**；mypy/ruff 全绿；code review P2 已修复 |
-| 184 | genres/creative_modes JSON Schema | ◻ | 参照 `src/songyan/project_templates/data/_schema.json`；加载时校验（可选 strict） | 7+4 个 JSON 全部过校验；坏样本被拦 |
+| 184 | genres/creative_modes JSON Schema | ✅ | `src/songyan/genres/data/_schema.json` + `src/songyan/creative_modes/data/_schema.json`；loader 在 Pydantic 前执行 JSON Schema 校验；`_schema` 元文件不进入 profile/mode 列表 | DONE: `tasks/184-genres-creative-modes-json-schema-DONE.md`；资源/schema 聚焦 **86 passed**；默认全量 pytest **2930 passed, 2 skipped, 1 xfailed**；CLI **35 passed**；mypy/ruff 全绿；code review P2 已修复 |
 
 ### V9.4 urban 标定
 

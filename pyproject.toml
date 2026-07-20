@@ -30,6 +30,7 @@ dependencies = [
     "langchain-litellm",
     "click",
     "structlog",
+    "jsonschema>=4.0",
     "tiktoken",
     "aiosqlite",
     "pyyaml>=6.0",

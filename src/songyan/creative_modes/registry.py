@@ -9,6 +9,7 @@ from pathlib import Path
 
 from songyan.models.creative_mode import CreativeModeProfile
 from songyan.models.review import ReviewCategory
+from songyan.utils.json_schema import JsonSchemaResourceError, load_schema, validate_json_data
 
 
 class CreativeModeProfileError(ValueError):
@@ -21,6 +22,7 @@ class CreativeModeProfileNotFoundError(CreativeModeProfileError):
 
 # 默认从包内 creative_modes/data 加载
 _DEFAULT_MODES_DIR = files("songyan.creative_modes") / "data"
+_SCHEMA_PATH = _DEFAULT_MODES_DIR / "_schema.json"
 
 # 运行时可通过 monkeypatch 覆盖
 _MODES_DIR: Traversable | Path = _DEFAULT_MODES_DIR
@@ -47,7 +49,7 @@ def _get_available_modes() -> list[str]:
     return sorted(
         p.name.removesuffix(".json")
         for p in _MODES_DIR.iterdir()
-        if p.is_file() and p.name.endswith(".json")
+        if p.is_file() and p.name.endswith(".json") and not p.name.startswith("_")
     )
 
 
@@ -93,6 +95,17 @@ def load_creative_mode_profile(mode_id: str) -> CreativeModeProfile:
     except json.JSONDecodeError as exc:
         raise CreativeModeProfileError(
             f"Failed to parse JSON for mode '{mode_id}': {exc}"
+        ) from exc
+
+    try:
+        validate_json_data(
+            data,
+            load_schema(_SCHEMA_PATH),
+            resource_name=f"mode '{mode_id}' ({file_path.name})",
+        )
+    except JsonSchemaResourceError as exc:
+        raise CreativeModeProfileError(
+            f"Failed to validate mode '{mode_id}': {exc}"
         ) from exc
 
     try:

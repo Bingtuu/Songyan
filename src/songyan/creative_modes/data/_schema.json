@@ -1,0 +1,115 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Songyan CreativeModeProfile",
+  "type": "object",
+  "required": ["id", "name"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "name": { "type": "string", "minLength": 1 },
+    "enabled_agents": {
+      "type": "object",
+      "additionalProperties": { "type": "array", "items": { "type": "string" } },
+      "default": {}
+    },
+    "audit_weights": {
+      "type": "object",
+      "additionalProperties": { "type": "number" },
+      "default": {}
+    },
+    "active_audit_dimensions": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/review_category" },
+      "default": []
+    },
+    "revision_policy": {
+      "type": "string",
+      "enum": ["standard", "selective", "minimal"],
+      "default": "standard"
+    },
+    "tolerance": {
+      "type": "object",
+      "additionalProperties": { "type": "number" },
+      "default": {}
+    },
+    "context_pruning_strategy": {
+      "type": "string",
+      "enum": ["default", "character_focused", "theme_focused"],
+      "default": "default"
+    },
+    "success_metrics": {
+      "type": "object",
+      "additionalProperties": { "type": "number" },
+      "default": {}
+    },
+    "human_memory": {
+      "$ref": "#/definitions/human_memory"
+    },
+    "rag_config": {
+      "$ref": "#/definitions/rag_config"
+    },
+    "quality_ramp_chapters": { "type": "integer", "minimum": 0, "default": 10 },
+    "literary_optimization_plugins": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": []
+    },
+    "punch_engine": {
+      "$ref": "#/definitions/punch_engine"
+    }
+  },
+  "definitions": {
+    "review_category": {
+      "type": "string",
+      "enum": [
+        "world_consistency",
+        "character_behavior",
+        "timeline",
+        "new_setting_unregistered",
+        "narrative_pacing",
+        "narrative_hook",
+        "info_dump",
+        "dialogue_distinctness",
+        "dialogue_subtext",
+        "description_sensory",
+        "show_dont_tell",
+        "voice",
+        "exposition",
+        "genre_numerical"
+      ]
+    },
+    "human_memory": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "priority_threshold": { "type": "integer", "minimum": 0, "default": 8 },
+        "max_marks_in_context": { "type": "integer", "minimum": 0, "default": 10 },
+        "chapter_window": { "type": "integer", "minimum": 0, "default": 3 }
+      }
+    },
+    "rag_config": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "string", "enum": ["auto", "always", "never"], "default": "auto" },
+        "threshold_chapters": { "type": ["integer", "null"], "minimum": 0, "default": null },
+        "max_results": { "type": "integer", "minimum": 0, "default": 5 },
+        "chunk_size": { "type": "integer", "minimum": 1, "default": 500 },
+        "chunk_overlap": { "type": "integer", "minimum": 0, "default": 100 },
+        "min_similarity": { "type": "number", "minimum": 0.0, "maximum": 1.0, "default": 0.3 },
+        "embedding_model": { "type": "string", "default": "shibing624/text2vec-base-chinese" },
+        "vector_store": { "type": "string", "default": "sqlite_numpy" }
+      }
+    },
+    "punch_engine": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sensory_intensity_scale": { "type": "number", "minimum": 0.0 },
+        "required_punches_per_chapter": { "type": "integer", "minimum": 0 },
+        "emotion_switch_required_per_scene": { "type": "integer", "minimum": 0 },
+        "forbidden_flat_zones": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

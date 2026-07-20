@@ -1,0 +1,177 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Songyan GenreProfile",
+  "type": "object",
+  "required": ["id", "name"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "name": { "type": "string", "minLength": 1 },
+    "language": { "type": "string", "default": "zh" },
+    "chapter_types": { "type": "array", "items": { "type": "string" }, "default": [] },
+    "fatigue_words": { "type": "array", "items": { "type": "string" }, "default": [] },
+    "satisfaction_types": { "type": "array", "items": { "type": "string" }, "default": [] },
+    "has_numerical_system": { "type": "boolean", "default": false },
+    "has_power_scaling": { "type": "boolean", "default": false },
+    "pacing_rule": { "type": "string", "default": "" },
+    "writer_rules": { "type": "array", "items": { "type": "string" }, "default": [] },
+    "writer_rules_by_type": {
+      "type": "object",
+      "additionalProperties": { "type": "array", "items": { "type": "string" } },
+      "default": {}
+    },
+    "reviewer_focus": { "type": "array", "items": { "type": "string" }, "default": [] },
+    "active_audit_dimensions": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/review_category" },
+      "default": []
+    },
+    "taboos": { "type": "array", "items": { "type": "string" }, "default": [] },
+    "pacing_templates": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/pacing_template" },
+      "default": []
+    },
+    "sub_genres": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/sub_genre" },
+      "default": []
+    },
+    "punch_type_defs": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/punch_type_def" },
+      "default": []
+    },
+    "sensory_templates": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/sensory_template" },
+      "default": []
+    },
+    "emotion_arc_library": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/emotion_arc" },
+      "default": []
+    },
+    "style_baseline": { "$ref": "#/definitions/style_baseline", "default": null },
+    "reference_works": { "type": "array", "items": { "type": "string" }, "default": [] },
+    "active_verbs": { "type": "array", "items": { "type": "string" }, "default": [] },
+    "passive_only_patterns": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": []
+    },
+    "cost_keywords": { "type": "array", "items": { "type": "string" }, "default": [] },
+    "supporting_action_keywords": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": []
+    },
+    "consequence_keywords": { "type": "array", "items": { "type": "string" }, "default": [] }
+  },
+  "definitions": {
+    "review_category": {
+      "type": "string",
+      "enum": [
+        "world_consistency",
+        "character_behavior",
+        "timeline",
+        "new_setting_unregistered",
+        "narrative_pacing",
+        "narrative_hook",
+        "info_dump",
+        "dialogue_distinctness",
+        "dialogue_subtext",
+        "description_sensory",
+        "show_dont_tell",
+        "voice",
+        "exposition",
+        "genre_numerical"
+      ]
+    },
+    "pacing_template": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "chapter_types": { "type": "array", "items": { "type": "string" } },
+        "emotion_arc": { "type": "string", "default": "" },
+        "punch_density": { "type": "number", "minimum": 0.0, "maximum": 5.0 },
+        "info_release_strategy": { "type": "string", "default": "" }
+      }
+    },
+    "sub_genre": {
+      "type": "object",
+      "required": ["sub_genre_id", "name"],
+      "additionalProperties": false,
+      "properties": {
+        "sub_genre_id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "parent_genre_id": { "type": "string", "default": "" },
+        "differentiation_rules": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "punch_type_def": {
+      "type": "object",
+      "required": ["punch_type_id"],
+      "additionalProperties": false,
+      "properties": {
+        "punch_type_id": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "default": "" },
+        "genre_suitability": {
+          "type": "object",
+          "additionalProperties": { "type": "number", "minimum": 0.0, "maximum": 1.0 }
+        },
+        "sensory_requirements": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "sensory_template": {
+      "type": "object",
+      "required": ["sense"],
+      "additionalProperties": false,
+      "properties": {
+        "sense": {
+          "type": "string",
+          "enum": [
+            "visual",
+            "auditory",
+            "tactile",
+            "pain",
+            "proprioception",
+            "olfactory",
+            "gustatory"
+          ]
+        },
+        "intensity_target": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+        "description_density": { "type": "number", "minimum": 0.0 },
+        "example_phrases": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "emotion_arc": {
+      "type": "object",
+      "required": ["arc_name"],
+      "additionalProperties": false,
+      "properties": {
+        "arc_name": { "type": "string", "minLength": 1 },
+        "phases": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": { "type": "string" }
+          }
+        },
+        "typical_length_words": { "type": "integer", "minimum": 0 },
+        "suitable_chapter_types": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "style_baseline": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {
+        "sentence_rhythm": { "type": "string", "default": "" },
+        "description_density": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+        "dialogue_ratio": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+        "inner_monologue": { "type": "string", "default": "" },
+        "pov_depth": { "type": "string", "default": "" }
+      }
+    }
+  }
+}

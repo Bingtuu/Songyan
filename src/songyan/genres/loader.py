@@ -9,6 +9,7 @@ from pathlib import Path
 
 from songyan.models.genre import GenreProfile
 from songyan.models.review import ReviewCategory
+from songyan.utils.json_schema import JsonSchemaResourceError, load_schema, validate_json_data
 
 
 class GenreProfileError(ValueError):
@@ -21,6 +22,7 @@ class GenreProfileNotFoundError(GenreProfileError):
 
 # 默认从包内 genres/data 加载
 _DEFAULT_GENRES_DIR = files("songyan.genres") / "data"
+_SCHEMA_PATH = _DEFAULT_GENRES_DIR / "_schema.json"
 
 # 运行时可通过 monkeypatch 覆盖
 _GENRES_DIR: Traversable | Path = _DEFAULT_GENRES_DIR
@@ -47,7 +49,7 @@ def _get_available_genres() -> list[str]:
     return sorted(
         p.name.removesuffix(".json")
         for p in _GENRES_DIR.iterdir()
-        if p.is_file() and p.name.endswith(".json")
+        if p.is_file() and p.name.endswith(".json") and not p.name.startswith("_")
     )
 
 
@@ -94,6 +96,15 @@ def load_genre_profile(genre_id: str) -> GenreProfile:
         raise GenreProfileError(
             f"Failed to parse JSON for genre '{genre_id}': {exc}"
         ) from exc
+
+    try:
+        validate_json_data(
+            data,
+            load_schema(_SCHEMA_PATH),
+            resource_name=f"genre '{genre_id}' ({file_path.name})",
+        )
+    except JsonSchemaResourceError as exc:
+        raise GenreProfileError(f"Failed to validate genre '{genre_id}': {exc}") from exc
 
     try:
         profile = GenreProfile.from_dict(data)

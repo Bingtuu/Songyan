@@ -44,7 +44,12 @@ def test_package_resource_directories_are_present() -> None:
     seeds_dir = files("evals") / "seeds"
     schema_file = files("songyan.db") / "schema.sql"
 
-    assert [path.name for path in genre_files if path.name.endswith(".json")] == [
+    genre_json_files = [
+        path.name
+        for path in genre_files
+        if path.name.endswith(".json") and not path.name.startswith("_")
+    ]
+    assert genre_json_files == [
         "mystery_noir.json",
         "post_apocalyptic.json",
         "scifi.json",
@@ -53,12 +58,19 @@ def test_package_resource_directories_are_present() -> None:
         "wuxia.json",
         "xuanhuan.json",
     ]
-    assert [path.name for path in mode_files if path.name.endswith(".json")] == [
+    assert (files("songyan.genres") / "data" / "_schema.json").is_file()
+    mode_json_files = [
+        path.name
+        for path in mode_files
+        if path.name.endswith(".json") and not path.name.startswith("_")
+    ]
+    assert mode_json_files == [
         "hybrid.json",
         "literary.json",
         "webnovel.json",
         "webnovel_intense.json",
     ]
+    assert (files("songyan.creative_modes") / "data" / "_schema.json").is_file()
     assert (template_dir / "_schema.json").is_file()
     assert (template_dir / "scifi" / "template.yaml").is_file()
     assert (cards_dir / "writer" / "_manifest.yaml").is_file()

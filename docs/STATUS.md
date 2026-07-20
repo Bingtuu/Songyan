@@ -6,7 +6,7 @@
 
 | 项 | 结论 |
 |----|------|
-| 当前阶段 | **V9 已开工**：生产化地基 + urban 第三体裁 Ch100，Task 173-188 扁平编号，事实入口 `tasks/V9-README.md`。**V9.1 长跑可靠性全部完成**（173/174/175/176 ✅）；**V9.2 全部完成**（177/178/179/180/181 ✅）；**V9.3 Task 182/183 已完成**：正式五门判定器与段审计脚本已收编，Profile 调参 CLI 已上线；下一步 Task 184 genres/creative_modes JSON Schema |
+| 当前阶段 | **V9 已开工**：生产化地基 + urban 第三体裁 Ch100，Task 173-188 扁平编号，事实入口 `tasks/V9-README.md`。**V9.1 长跑可靠性全部完成**（173/174/175/176 ✅）；**V9.2 全部完成**（177/178/179/180/181 ✅）；**V9.3 全部完成**（182/183/184 ✅）：正式五门判定器、段审计脚本、Profile 调参 CLI 与 genres/creative_modes JSON Schema 已上线；下一步 Task 185 urban 短窗口标定 |
 | V7 收尾 | **已完成**。sci-fi/space_opera + webnovel_intense 单一体裁稳定跑到 Ch200，200/200 accepted，D1 hard clean pass；Ch201-Ch220 20/20 accepted |
 | V8.1 运行时画像 | **已完成**（Task 172a + 172a.p）。`GenreRuntimeProfile` 把 Context Diet 2.0 运行时契约从 sci-fi 默认值解耦；xuanhuan Ch8 halt 已消除（base_budget=15000） |
 | V8.3 文学护栏 | **已完成**（Task 172d）。`literary_guardrail_observe` 去科幻硬编码，lexicon/主角名参数化到 `GenreProfile`，三体裁各配一套；DONE 文档已补齐 |
@@ -26,7 +26,7 @@
 | Q 质量同标 | CED：wuxia 8.48 < urban 8.75 < scifi 9.60 < xuanhuan 10.48（同量级）；全体裁 budget<1.0、T9=0、0 halt |
 | S 状态可控 | 172a.p horizon floor=12：floor12 实跑 DB 严证 **overdue@<15 = 2 < 5**（vs floor=0 的 28），44 伏笔 0 floor 违规 + 数学下界证明 |
 | V 中篇爬坡 | 172b xuanhuan Ch1-Ch100 **100/100 accepted**；172c wuxia Ch1-Ch100 **100/100 accepted**；两个非 sci-fi 体裁 Ch100 五门 PASS |
-| V9 生产化地基 | 173：显式 LLM client registry + `aclose_llm_clients()`，pipeline 收尾对称关闭 LLM client + sqlite checkpointer，`SONGYAN_FORCE_EXIT` 最外层兜底；174：`configure_logging()` 接入 CLI + harness，`logs/app/*.jsonl` 落盘，第三方 WARNING 起，关键字段与 `logs/chapter_runs` 对齐；175：`llm_call_usage` 逐调用落库（token/cost 双来源标记、按重试尝试计行、agent 归因），`run_cost_budget` 双检查熔断（DB 权威）+ `total_cost` 双接线，`songyan report` 成本视图；177：`songyan export` 正式 service + CLI，accepted head 正文导出，支持 `md/txt` 与 `flat/arc/volume`，xuanhuan/wuxia Ch100 实库验收通过；178：运行资源迁入包内并用 `importlib.resources` 加载，`evals/seeds` 与 `schema.sql` 入 wheel，非仓库 cwd 资源枚举 + `create-project` + Ch1-3 生成通过；179：`songyan run` 输出 `run_id`，`--mode-id` 默认回读项目 mode，README CLI 表补 `index`；180：`songyan doctor` 默认无成本只读自检，支持 JSON、显式 DB 初始化与 LLM client 探针；181：GitHub Actions 覆盖 ruff/mypy/default pytest/CLI pytest，CLI 测试与 mypy 清零；182：`scripts/five_gate_check.py` 与 `scripts/segment_audit.py` 正式收编，包内 sci-fi baseline，双体裁 Ch100 重放 PASS；183：`songyan profile show/diff/upsert` 上线，支持 DB override 调参不改代码 |
+| V9 生产化地基 | 173：显式 LLM client registry + `aclose_llm_clients()`，pipeline 收尾对称关闭 LLM client + sqlite checkpointer，`SONGYAN_FORCE_EXIT` 最外层兜底；174：`configure_logging()` 接入 CLI + harness，`logs/app/*.jsonl` 落盘，第三方 WARNING 起，关键字段与 `logs/chapter_runs` 对齐；175：`llm_call_usage` 逐调用落库（token/cost 双来源标记、按重试尝试计行、agent 归因），`run_cost_budget` 双检查熔断（DB 权威）+ `total_cost` 双接线，`songyan report` 成本视图；177：`songyan export` 正式 service + CLI，accepted head 正文导出，支持 `md/txt` 与 `flat/arc/volume`，xuanhuan/wuxia Ch100 实库验收通过；178：运行资源迁入包内并用 `importlib.resources` 加载，`evals/seeds` 与 `schema.sql` 入 wheel，非仓库 cwd 资源枚举 + `create-project` + Ch1-3 生成通过；179：`songyan run` 输出 `run_id`，`--mode-id` 默认回读项目 mode，README CLI 表补 `index`；180：`songyan doctor` 默认无成本只读自检，支持 JSON、显式 DB 初始化与 LLM client 探针；181：GitHub Actions 覆盖 ruff/mypy/default pytest/CLI pytest，CLI 测试与 mypy 清零；182：`scripts/five_gate_check.py` 与 `scripts/segment_audit.py` 正式收编，包内 sci-fi baseline，双体裁 Ch100 重放 PASS；183：`songyan profile show/diff/upsert` 上线，支持 DB override 调参不改代码；184：genres/creative_modes 包内 `_schema.json` + loader 预校验上线，坏资源 fail fast，`_schema` 元文件不污染资源列表 |
 | V9.1 阶段 D 实跑验收（2026-07-19） | 熔断实证：¥0.05 预算 ¥0.0514 停（paused + 成本明细 + 章保留），提额 resume 至 completed，成本跨 3 进程 0.0514→0.3647 连续；scifi end10：10/10、0 halt、overdue=0、budget 峰值 0.8325、usage 151 行 estimate 0%、总成本 ¥0.886（≈¥0.089/章）、report 成本视图正确；173 挂死根因确证（sqlite checkpointer 泄漏）真修后 2.5s 自然退出；T9=1（Ch4 countdown_increase，diagnostic 级内容启发式，非系统性） |
 | 172c wuxia 段 3 | Ch51-75 完成（75/75 accepted，0 halt）；Ch75 五门：budget PASS、CED FAIL、**overdue 203 vs sci-fi 117 FAIL**、health 5.6 FAIL、completeness PASS |
 | 172c.r 修复落地 | resolve 失效四层根因全修：prompt card 1.0.4 补 resolve 契约、settlement 事实源纳 overdue、resolve 防幻觉校验、5.3 同事务覆写修复；health 口径对齐 vdim（archived/dormant/active-overdue 全计）；12 新测试绿 |
@@ -69,6 +69,7 @@
 | 181 CI/测试清零验收（2026-07-20） | `python -m pytest tests/cli -q` → **35 passed**；`mypy src/` → **Success: no issues found in 172 source files**；`ruff check src/ tests/` 全绿；默认全量 pytest（Task 176 wrapper）**2904 passed, 2 skipped, 1 xfailed, 7 warnings**，`WRAPPER_RESULT=PASS_NORMAL_EXIT`；`bits-code-guard` 分组 review 发现 1 个 P2（zip-backed `outline.json` 未 `as_file()`），已修复并补回归测试；`.github/workflows/ci.yml` 覆盖 ruff/mypy/default pytest/CLI pytest |
 | 182 五门工具收编验收（2026-07-20） | `python scripts/five_gate_check.py --genre xuanhuan ... --up-to 100 --format json` → **PASS**（100/100、budget 0.9811、CED 0.4434、overdue 166、health 9.1）；wuxia Ch100 → **PASS**（100/100、budget 0.9646、CED 0.1662、overdue 35、health 8.3）；`.tmp/vdim_compare.py` 对照逐门一致；`scripts/segment_audit.py` 输出 hotspot / next-audit / health trajectory；`tests/test_182_five_gate_tools.py` **10 passed**；默认全量 pytest（Task 176 wrapper）**2914 passed, 2 skipped, 1 xfailed, 7 warnings**，`WRAPPER_RESULT=PASS_NORMAL_EXIT`；CLI **35 passed**；mypy **174 source files 0 errors**；ruff 全绿；code review P2 已修复 |
 | 183 Profile CLI 验收（2026-07-20） | `tests/test_183_profile_cli.py` **7 passed**；`songyan profile show/diff/upsert --genre <g>` 接入；show/diff 只读不创建缺失 DB；upsert 写入“代码默认模型 + 用户显式字段”的 DB profile，避免 registry 调优值误写为 override；`--reset` 清空 override 意图；默认全量 pytest（Task 176 wrapper）**2921 passed, 2 skipped, 1 xfailed, 7 warnings**，`WRAPPER_RESULT=PASS_NORMAL_EXIT`；CLI **35 passed**；mypy **175 source files 0 errors**；ruff 全绿；code review P2 已修复 |
+| 184 JSON Schema 验收（2026-07-20） | `src/songyan/genres/data/_schema.json` + `src/songyan/creative_modes/data/_schema.json` 接入；loader 在 Pydantic 前执行 JSON Schema 校验；7+4 生产资源通过，unknown field / wrong type / invalid enum 被拒；`_schema` 不进入 profile/mode 列表；资源/schema 聚焦测试 **86 passed**；默认全量 pytest（Task 176 wrapper）**2930 passed, 2 skipped, 1 xfailed, 7 warnings**，`WRAPPER_RESULT=PASS_NORMAL_EXIT`；CLI **35 passed**；mypy **176 source files 0 errors**；ruff 全绿；code review P2 已修复 |
 
 ## 项目整理
 
@@ -80,7 +81,7 @@
 
 ## 下一步
 
-1. **V9.3 工具链收编（184）**：Task 182/183 已完成；下一步 Task 184 genres/creative_modes JSON Schema，详见 `tasks/V9-README.md`。
+1. **V9.4 urban 标定（185）**：V9.3 工具链收编已完成；下一步 Task 185 urban 短窗口标定，详见 `tasks/V9-README.md`。
 2. **V10 预登记**：跨体裁 Ch200（基线扩 Ch200 checkpoint + 口径冻结）、优秀度信号包（跨章同质化指数/中文 AI 腔规则包/judge 偏差对策/perplexity gate/style card）、结构升级 spike（KG 图 diff / validity interval / Storyline Tree）。
 3. **守护项**：后续 CED 仍使用 consistency-only、merged/source、正文证据口径；不得把文学 craft 或 `rule-mr-*` 聚合工作项计入 CED。
 
@@ -98,6 +99,7 @@
 - V9 Task 181 DONE：`tasks/181-ci-and-test-cleanup-DONE.md`
 - V9 Task 182 DONE：`tasks/182-five-gate-and-segment-audit-tools-DONE.md`
 - V9 Task 183 DONE：`tasks/183-profile-tuning-cli-DONE.md`
+- V9 Task 184 DONE：`tasks/184-genres-creative-modes-json-schema-DONE.md`
 - V8 历史任务事实（已收尾，含 V8.5）：`tasks/V8-README.md`
 - V8 归档索引（全部任务文档与报告）：`archive/v8/INDEX.md`
 - V8 长调研报告（GenreRuntimeProfile 设计依据，活跃参考）：`docs/reports/v8-literature-and-landscape-review.md`

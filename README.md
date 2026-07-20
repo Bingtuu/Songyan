@@ -345,7 +345,7 @@ python scripts/run_172b_ch100_climb.py --to 100
 | V8 | ✅ 完成 | 多体裁可插拔（GenreRuntimeProfile）+ xuanhuan/wuxia Ch100 五门 PASS |
 | 172c | ✅ 完成 | wuxia 第二体裁 Ch100 爬坡：clean rerun 100/100 accepted，五门 PASS |
 | V8.5 | ✅ 完成 | 验收后遗留收口：172j BudgetPruner max_* 修复、172k C 判据三档证据闭环（xuanhuan end10 / urban end15 / wuxia end20 全 accepted）、172l 文档治理 |
-| V9 | 🔄 已开工 | 生产化地基（长跑可靠性/导出/打包/CI/成本追踪/五门工具收编）+ urban 第三体裁 Ch100；V9.1 173-176、V9.2 177-181 与 V9.3 Task 182/183 已完成，下一步 184 genres/creative_modes JSON Schema，见 `tasks/V9-README.md` |
+| V9 | 🔄 已开工 | 生产化地基（长跑可靠性/导出/打包/CI/成本追踪/五门工具收编）+ urban 第三体裁 Ch100；V9.1 173-176、V9.2 177-181 与 V9.3 182-184 已完成，下一步 185 urban 短窗口标定，见 `tasks/V9-README.md` |
 | V10 | ⏳ 预登记 | 跨体裁 Ch200、优秀度信号包（同质化/中文 AI 腔/judge 偏差）、结构升级 spike |
 
 各阶段事实入口见 `tasks/V9-README.md`（当前阶段，已开工）与 `tasks/V5/V6/V7/V8-README.md`（均已收尾）；V8 任务文档与报告归档于 [`archive/v8/`](archive/v8/INDEX.md)。
@@ -360,7 +360,7 @@ V8 已验证出一条可复制的体裁接入路径：先用短窗口确认新�
 
 | 层 | 位置 | 管什么 |
 |----|------|--------|
-| 体裁内容画像 | `src/songyan/genres/data/<genre>.json` | 节奏规则、写作规则、疲劳词、禁忌、审查关注点、文学护栏 lexicon（主动选择/配角/代价关键词）；默认从 wheel 包资源加载，外部目录可用 `set_genres_dir(...)` 注入 |
+| 体裁内容画像 | `src/songyan/genres/data/<genre>.json` | 节奏规则、写作规则、疲劳词、禁忌、审查关注点、文学护栏 lexicon（主动选择/配角/代价关键词）；默认从 wheel 包资源加载，加载前按 `_schema.json` 校验，外部目录可用 `set_genres_dir(...)` 注入 |
 | 运行时画像 | `GenreRuntimeProfile`：代码注册表 `src/songyan/db/genre_runtime_profile_repo.py` + DB `genre_runtime_profiles` 表 | Context Diet 运行时契约：预算（`base_budget`/`ramp_per_chapter`）、门禁阈值（`hard_enforce_ratio`/`emergency_halt_ratio`）、伏笔 horizon 下限、状态蒸发曲线、角色衰减窗口、连续性容差 |
 | 项目模板 | `src/songyan/project_templates/data/<genre>/`（template.yaml + seed.json + outline.json） | 项目初始化：主角设定、核心钩子、叙事骨架（arc/thread）；默认从 wheel 包资源加载，外部模板目录可用 `ProjectTemplateLoader(templates_dir=...)` 注入 |
 
@@ -407,7 +407,7 @@ python scripts/run_172b_ch100_climb.py --to 100
 
 | 接口 | 位置 | 能定制什么 | 怎么用 |
 |------|------|-----------|--------|
-| **创作模式** | `src/songyan/creative_modes/data/<mode>.json` | 启用哪些 Agent、审查维度与权重、修订策略、容差阈值（疲劳词/AI 腔等）、RAG 配置、human memory、成功指标 | 新增一个 JSON 文件即注册（目录自动发现）；`songyan run --mode-id <mode>` 选用。现有 webnovel / webnovel_intense / literary / hybrid 四种可参考；外部目录可用 `set_modes_dir(...)` 注入 |
+| **创作模式** | `src/songyan/creative_modes/data/<mode>.json` | 启用哪些 Agent、审查维度与权重、修订策略、容差阈值（疲劳词/AI 腔等）、RAG 配置、human memory、成功指标；加载前按 `_schema.json` 校验 | 新增一个 JSON 文件即注册（目录自动发现）；`songyan run --mode-id <mode>` 选用。现有 webnovel / webnovel_intense / literary / hybrid 四种可参考；外部目录可用 `set_modes_dir(...)` 注入 |
 | **工艺卡（Agent prompt）** | `src/songyan/prompts/cards/<agent>/<version>.yaml` + `_manifest.yaml` | 任一 Agent 的 system prompt：Writer、两类 Auditor、SettlementExtractor、SummaryWriter 等 | 版本化新增（不改旧版本，可回退），`_manifest.yaml` 切 `default_version` 生效；外部卡目录可用 `get_prompt_loader(cards_dir=...)` 注入 |
 | **文学策略插件** | `src/songyan/prompts/literary_plugins/<strategy>/<agent>.yaml` | 按策略向指定 Agent 的 prompt 注入片段（如声纹锚定、AI 腔黑名单） | 新建 `<strategy>/` 目录放 `<agent>.yaml`，在创作模式 JSON 的 `literary_optimization_plugins` 字段引用策略 id；外部插件目录可用 `load_strategy_plugins(..., plugins_dir=...)` 注入 |
 | **LLM 端点** | `.env` | 模型提供方、模型名、温度 | LiteLLM 统一接入，改 `LLM_BASE_URL` / `LLM_MODEL` 即可，无需改代码 |
@@ -426,7 +426,6 @@ python scripts/run_172b_ch100_climb.py --to 100
 这些机制已在代码里，但离「开箱即用」还差一层包装，是当前最欢迎的贡献方向：
 
 - 文学插件目录缺清单/版本/校验注册机制（工艺卡的 manifest 是现成参照）
-- `src/songyan/genres/data/*.json` 与 `src/songyan/creative_modes/data/*.json` 还缺加载前 JSON Schema 校验（V9 Task 184）
 
 ---
 
@@ -496,6 +495,7 @@ python scripts/run_172a7_genre_validation.py --templates scifi --end 10
 - [`tasks/181-ci-and-test-cleanup-DONE.md`](tasks/181-ci-and-test-cleanup-DONE.md) — V9 Task 181：CI 上线与测试清零
 - [`tasks/182-five-gate-and-segment-audit-tools-DONE.md`](tasks/182-five-gate-and-segment-audit-tools-DONE.md) — V9 Task 182：五门判定器与段审计收编
 - [`tasks/183-profile-tuning-cli-DONE.md`](tasks/183-profile-tuning-cli-DONE.md) — V9 Task 183：Profile 调参 CLI
+- [`tasks/184-genres-creative-modes-json-schema-DONE.md`](tasks/184-genres-creative-modes-json-schema-DONE.md) — V9 Task 184：genres/creative_modes JSON Schema
 - [`tasks/V8-README.md`](tasks/V8-README.md) — V8 任务事实入口（已收尾，含编号治理规则与五维验收证据链）
 - [`archive/v8/INDEX.md`](archive/v8/INDEX.md) — V8 任务文档与报告归档索引（172-172l 全部任务书、双体裁 Ch100 验收报告、短窗口矩阵）
 - [`docs/reports/v8-literature-and-landscape-review.md`](docs/reports/v8-literature-and-landscape-review.md) — V8 长调研报告（体裁差异与 GenreRuntimeProfile 设计依据）
