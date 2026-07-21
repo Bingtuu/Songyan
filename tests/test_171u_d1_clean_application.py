@@ -114,6 +114,41 @@ class TestTextCleaner:
         assert result.changed is False
         assert result.cleaned_content == text
 
+    def test_clean_chapter_text_replaces_double_slash_log_separators(self) -> None:
+        """187.t: protocol/system log field separators must not leave T9 artifacts."""
+        text = "\n".join(
+            [
+                "`[PROTOCOL_INIT] 自检通过 // 上次运行: 47h23m11s前`",
+                "`[PACKET_DECODE] 解析成功 // 数据包数量: 347`",
+                "`[自主响应] 1. 暗网通信协议栈（7种）// 已拦截数据包: 892个`",
+                "安全路径 http://example.com/a//b 与 C:/tmp/songyan/report.txt 保持原样。",
+            ]
+        )
+
+        result = clean_chapter_text(text, chapter_number=23, version_id="v23")
+
+        assert result.remaining_issues == []
+        assert " // " not in result.cleaned_content
+        assert "）//" not in result.cleaned_content
+        assert "；上次运行" in result.cleaned_content
+        assert "暗网通信协议栈（7种）；已拦截数据包" in result.cleaned_content
+        assert "http://example.com/a//b" in result.cleaned_content
+        assert "C:/tmp/songyan/report.txt" in result.cleaned_content
+
+    def test_clean_chapter_text_removes_c_style_comment_markers(self) -> None:
+        """187.w: C-style comment markers in prose must not leave slash artifacts."""
+        text = (
+            "屏幕上的文字自行滚动，锁定在一行隐藏注释上："
+            "/* 密钥持有者已死亡。备份密钥位于—— */ 然后消息覆盖了屏幕。"
+        )
+
+        result = clean_chapter_text(text, chapter_number=43, version_id="v43")
+
+        assert result.remaining_issues == []
+        assert "/*" not in result.cleaned_content
+        assert "*/" not in result.cleaned_content
+        assert "密钥持有者已死亡。备份密钥位于——" in result.cleaned_content
+
     def test_clean_chapter_text_removes_quote_splice_slash(self) -> None:
         text = "“十八秒。”雷哲说，“马上撤离。” / “我在撤离。”林渊冲回控制台。"
 

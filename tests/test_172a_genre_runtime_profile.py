@@ -60,6 +60,13 @@ def test_xuanhuan_registry_has_higher_base_budget() -> None:
     assert xuanhuan.base_budget > scifi.base_budget
 
 
+def test_urban_registry_base_budget_is_ch25_calibrated() -> None:
+    """187.p: urban Ch19 ContextEmergency requires a higher registry baseline."""
+    urban = load_profile_from_registry("urban")
+
+    assert urban.base_budget == 14000
+
+
 def test_xuanhuan_registry_loads_more_character_state_for_consistency() -> None:
     xuanhuan = load_profile_from_registry("xuanhuan")
     scifi = load_profile_from_registry("scifi")

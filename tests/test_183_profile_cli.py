@@ -148,7 +148,7 @@ def test_profile_reset_clears_override_intent(
 
     assert reset.exit_code == 0, reset.output
     assert json.loads(reset.output)["rows"] == []
-    assert asyncio.run(load_profile("urban")).base_budget == 12000
+    assert asyncio.run(load_profile("urban")).base_budget == 14000
 
 
 def test_profile_upsert_rejects_unknown_genre(

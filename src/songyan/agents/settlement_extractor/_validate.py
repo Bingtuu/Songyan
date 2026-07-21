@@ -841,6 +841,7 @@ async def _validate_settlement(
             errors.append(
                 f"伏笔 '{fs.description[:30]}...' 的 source_version_id 为空"
             )
+            continue
         # 172c.r: resolve 防幻觉校验——缺 id 或目标不在可 resolve 集合时
         # 丢弃该条并记 warning，不阻断整章结算（与 170p new_characters 同级容错）。
         if fs.operation == "resolve":
@@ -864,11 +865,11 @@ async def _validate_settlement(
                     chapter_number=chapter_number,
                 )
                 continue
-        validated_foreshadowing_updates.append(fs)
         # Task 094: 验证 expected_resolve_chapter 必须在当前章节之后。
         # Task 121e: LLM 常把“近期回收”写成当前章节号；plant 操作在
         # 当前章只能表示新埋设，等于当前章节时安全回填为下一章，
-        # 小于当前章节仍保留为硬错误。
+        # Task 187.u: 小于当前章节说明 LLM 把已发生/过期线索误分类为
+        # 新 plant。该条不写库并记录 warning，但不阻断整章结算。
         if fs.operation == "plant" and fs.expected_resolve_chapter is not None:
             if fs.expected_resolve_chapter == chapter_number:
                 fs.expected_resolve_chapter = chapter_number + 1
@@ -881,10 +882,15 @@ async def _validate_settlement(
                     chapter_number=chapter_number,
                 )
             elif fs.expected_resolve_chapter < chapter_number:
-                errors.append(
-                    f"伏笔 '{fs.description[:30]}...' 的预计回收章节 "
-                    f"({fs.expected_resolve_chapter}) 必须大于当前章节 ({chapter_number})"
+                logger.warning(
+                    "settlement.foreshadowing_past_expected_filtered",
+                    description=fs.description[:50],
+                    expected_resolve_chapter=fs.expected_resolve_chapter,
+                    project_id=project_id,
+                    chapter_number=chapter_number,
                 )
+                continue
+        validated_foreshadowing_updates.append(fs)
     settlement.foreshadowing_updates = validated_foreshadowing_updates
 
     return errors

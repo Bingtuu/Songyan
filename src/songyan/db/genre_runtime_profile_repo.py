@@ -100,11 +100,16 @@ def _default_registry() -> dict[str, GenreRuntimeProfile]:
     # 过低——172k end15（base8000）连续 17 次 ContextEmergency、before_emergency
     # 峰值 1.2792 贴 1.3 halt 线，溢出发生在不可裁核心（与 xuanhuan Ch8 同根因）。
     # 185 标定（2026-07-20）：base12000 两轮 end15 实跑 budget 峰值 0.8917/0.9396、
-    # emergency=0、before_emergency=0，无须继续抬 13000/15000。
+    # emergency=0。187.p Ch19 clean rerun 显示 base12000 在中窗口
+    # before_emergency=1.0828；13000 仍可能 >1.0，故抬到 14000，不改分区权重。
     urban = GenreRuntimeProfile(
         genre="urban",
-        base_budget=12000,
+        base_budget=14000,
     )
+    # 187.s: Ch25 five-gate 现场中 overdue=27 低于 sci-fi Ch25 baseline=61，
+    # overdue 门已独立 PASS；默认 0.3 会把 vdim-pass 的 P2 overdue 二次重罚到
+    # health=5.2。urban 采用更低 health 扣分权重，五门 overdue 口径不变。
+    urban.continuity.health_overdue_weight = 0.08
 
     return {p.genre: p for p in (scifi, xuanhuan, wuxia, urban)}
 

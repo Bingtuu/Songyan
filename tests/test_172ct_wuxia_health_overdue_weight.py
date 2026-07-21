@@ -64,6 +64,13 @@ def test_wuxia_health_overdue_weight_is_long_window_calibrated() -> None:
     assert profile.continuity.health_overdue_weight == 0.15
 
 
+def test_urban_health_overdue_weight_is_ch25_calibrated() -> None:
+    """187.s: urban Ch25 overdue 已过五门，不应被 health 二次重罚."""
+    profile = load_profile_from_registry("urban")
+
+    assert profile.continuity.health_overdue_weight == 0.08
+
+
 def test_wuxia_ch60_health_case_stays_above_gate_after_calibration() -> None:
     """Ch60现场: overdue 15 + background/technical orphan 11 should not halt."""
     orphaned = [*_background_orphans(10), *_technical_orphans(1)]
@@ -106,3 +113,55 @@ def test_wuxia_ch99_tail_health_case_stays_above_gate_after_calibration() -> Non
     )
 
     assert wuxia_score >= 8.0
+
+
+def test_urban_ch21_health_case_stays_above_gate_after_calibration() -> None:
+    """187.s Ch21: 19 overdue + 8 background orphans should stay healthy."""
+    orphaned = _background_orphans(8)
+    overdue = _overdue(19)
+
+    legacy_score = ContinuityAuditor()._compute_health_score(
+        orphaned=orphaned,
+        forgotten=[],
+        mismatches=[],
+        overdue=overdue,
+        chapter_number=21,
+    )
+    urban_score = ContinuityAuditor(
+        runtime_profile=load_profile_from_registry("urban")
+    )._compute_health_score(
+        orphaned=orphaned,
+        forgotten=[],
+        mismatches=[],
+        overdue=overdue,
+        chapter_number=21,
+    )
+
+    assert legacy_score == 5.3
+    assert urban_score >= 8.0
+
+
+def test_urban_ch24_health_case_stays_above_gate_after_calibration() -> None:
+    """187.s Ch24: latest health should pass when overdue gate already passes."""
+    orphaned = _background_orphans(6)
+    overdue = _overdue(27)
+
+    legacy_score = ContinuityAuditor()._compute_health_score(
+        orphaned=orphaned,
+        forgotten=[],
+        mismatches=[],
+        overdue=overdue,
+        chapter_number=24,
+    )
+    urban_score = ContinuityAuditor(
+        runtime_profile=load_profile_from_registry("urban")
+    )._compute_health_score(
+        orphaned=orphaned,
+        forgotten=[],
+        mismatches=[],
+        overdue=overdue,
+        chapter_number=24,
+    )
+
+    assert legacy_score == 5.2
+    assert urban_score >= 8.0

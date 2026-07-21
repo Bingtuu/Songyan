@@ -41,6 +41,18 @@ class TestSlashSpliceUnits:
 
         assert "slash_splice_artifact" not in _artifact_types(text)
 
+    def test_frequency_per_24_hours_is_safe(self) -> None:
+        """187.t: 6次/24小时 是频率单位，不是 CJK slash 拼接 artifact."""
+        text = "通信频率: 6次/24小时，节点仍保持静默。"
+
+        assert "slash_splice_artifact" not in _artifact_types(text)
+
+    def test_decimal_seconds_per_item_is_safe(self) -> None:
+        """187.w: 0.2秒/个 是速率单位，不是 CJK slash 拼接 artifact."""
+        text = "预计生成时间：0.2秒/个。"
+
+        assert "slash_splice_artifact" not in _artifact_types(text)
+
     def test_comment_splice_still_detected(self) -> None:
         # run1 Ch11: 系统消息被写成 // 注释体，必须继续命中
         text = "手机屏幕暗了半秒，然后亮起一行绿色的文字：“// 指令已接收。环境评估中。”"

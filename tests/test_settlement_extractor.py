@@ -8,6 +8,7 @@ import sqlite3
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from structlog.testing import capture_logs
 
 from songyan.agents.settlement_extractor import (
     MAX_PROMPT_CHARACTER_STATES,
@@ -1628,8 +1629,8 @@ class TestValidateSettlement:
         assert errors == []
         assert settlement.foreshadowing_updates[0].expected_resolve_chapter == 9
 
-    async def test_foreshadowing_past_expected_still_fails(self) -> None:
-        """Task 121e: 早于当前章节的预计回收仍是硬错误."""
+    async def test_foreshadowing_past_expected_is_filtered(self) -> None:
+        """Task 187.u: past-horizon plant 是抽取噪声，过滤但不写库/不阻断."""
         content = "正文"
         settlement = StateSettlement(
             foreshadowing_updates=[
@@ -1642,9 +1643,71 @@ class TestValidateSettlement:
             ]
         )
 
+        with capture_logs() as logs:
+            errors = await _validate_settlement(
+                settlement,
+                content,
+                [],
+                [],
+                chapter_number=8,
+                project_id="proj-test",
+            )
+
+        assert errors == []
+        assert settlement.foreshadowing_updates == []
+        assert any(
+            log.get("event") == "settlement.foreshadowing_past_expected_filtered"
+            and log.get("log_level") == "warning"
+            for log in logs
+        )
+
+    async def test_foreshadowing_past_expected_filter_keeps_future_plant(self) -> None:
+        """Task 187.u: mixed case 中只过滤 past-horizon plant，future plant 保留."""
+        settlement = StateSettlement(
+            foreshadowing_updates=[
+                ForeshadowingUpdate(
+                    operation="plant",
+                    description="已过期误抽取",
+                    expected_resolve_chapter=7,
+                    source_version_id="v8",
+                ),
+                ForeshadowingUpdate(
+                    operation="plant",
+                    description="真实新伏笔",
+                    expected_resolve_chapter=12,
+                    source_version_id="v8",
+                ),
+            ]
+        )
+
         errors = await _validate_settlement(
             settlement,
-            content,
+            "正文",
+            [],
+            [],
+            chapter_number=8,
+            project_id="proj-test",
+        )
+
+        assert errors == []
+        assert [fs.description for fs in settlement.foreshadowing_updates] == ["真实新伏笔"]
+        assert settlement.foreshadowing_updates[0].expected_resolve_chapter == 12
+
+    async def test_foreshadowing_past_expected_without_source_still_errors(self) -> None:
+        """Task 187.u: 缺 source_version_id 仍是硬错误，不能被 past 过滤绕过."""
+        settlement = StateSettlement(
+            foreshadowing_updates=[
+                ForeshadowingUpdate(
+                    operation="plant",
+                    description="缺来源的过期伏笔",
+                    expected_resolve_chapter=7,
+                )
+            ]
+        )
+
+        errors = await _validate_settlement(
+            settlement,
+            "正文",
             [],
             [],
             chapter_number=8,
@@ -1652,7 +1715,7 @@ class TestValidateSettlement:
         )
 
         assert len(errors) == 1
-        assert "必须大于当前章节" in errors[0]
+        assert "source_version_id" in errors[0]
 
     async def test_no_current_state_no_error(self) -> None:
         """当角色在 DB 中没有状态时，old_value 验证跳过."""

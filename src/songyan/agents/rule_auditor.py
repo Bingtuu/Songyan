@@ -250,6 +250,23 @@ def _is_safe_slash_context(text: str, slash_pos: int) -> bool:
         re.I,
     ):
         return True
+    if re.search(
+        r"(?:次|米|公里)\s*/\s*\d+(?:\.\d+)?\s*"
+        r"(?:s|秒|min|h|小时|分钟|分|天|日|周|月|年)",
+        window,
+        re.I,
+    ):
+        return True
+    # 187.w: numeric rate units such as "0.2秒/个" are telemetry units,
+    # not narrative slash splices.
+    if re.search(
+        r"\d+(?:\.\d+)?\s*"
+        r"(?:毫秒|秒|分钟|分|小时|天|日|周|月|年|次|个|条|份)\s*/\s*"
+        r"(?:毫秒|秒|分钟|分|小时|天|日|周|月|年|次|个|条|份)",
+        window,
+        re.I,
+    ):
+        return True
     return False
 
 

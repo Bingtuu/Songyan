@@ -123,6 +123,19 @@ def _remove_ellipsis_placeholder_paragraphs(content: str) -> str:
 def _clean_slash_splices(content: str) -> str:
     cleaned_lines: list[str] = []
     for line in content.splitlines():
+        line = re.sub(
+            r"/\*\s*([^*]*?[\u4e00-\u9fff][^*]*?)\s*\*/",
+            r"“\1”",
+            line,
+        )
+        # Task 187.t: urban tech/log snippets often used "//" as a field separator.
+        # Treat it as punctuation, while leaving URLs/paths without surrounding spaces intact.
+        line = re.sub(r"\s+//\s+", "；", line)
+        line = re.sub(
+            r"(?<=[\u4e00-\u9fff）】\]])\s*//\s*(?=[\u4e00-\u9fffA-Za-z0-9_])",
+            "；",
+            line,
+        )
         # Only clean narrative splice separators. Units, paths, URLs and ratios are left intact.
         line = re.sub(
             r"(?<=[\u4e00-\u9fff。！？；：，、”）】])\s*/\s*"

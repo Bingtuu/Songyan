@@ -46,7 +46,7 @@ Songyan 是一套把 AI 写长篇中文小说这件事变得**可持续、可验
 
 - **科幻**：稳定跑到 220 章；
 - **玄幻、武侠**：各完成 100 章中篇爬坡；
-- **都市**：短距验证完成，参数已落入默认配置。
+- **都市**：短距验证完成，Ch100 爬坡已推进到 Ch50；当前停在 T9 timeline 诊断项收口前。
 
 系统内置科幻、玄幻、武侠、都市等 7 种体裁模板，新增体裁只需要写配置文件，不必改核心逻辑。
 
@@ -192,11 +192,11 @@ flowchart TB
 
 ## 当前能力
 
-Songyan 已经过科幻 220 章、玄幻 100 章、武侠 100 章的长窗口验证，都市短距验证也已达标。以下是已验证的关键能力：
+Songyan 已经过科幻 220 章、玄幻 100 章、武侠 100 章的长窗口验证；都市体裁已完成短距标定，并在 Ch100 爬坡中推进到 Ch50。以下是已验证或正在实证中的关键能力：
 
 | 能力 | 说明 |
 |------|------|
-| 长篇连续生成 | 科幻 220/220 章、玄幻 100/100 章、武侠 100/100 章连续跑通，无异常中断 |
+| 长篇连续生成 | 科幻 220/220 章、玄幻 100/100 章、武侠 100/100 章连续跑通；都市已跑到 Ch50，50/50 accepted |
 | 多体裁可插拔 | 科幻、玄幻、武侠、都市等 7 种体裁共用同一套流程；新增体裁只需写配置文件，不改核心逻辑 |
 | 文本洁净 | 无 Markdown 泄漏、无段落重复、无 AI 保护指令混入正文 |
 | 事实一致性 | 角色状态、世界设定、关键数值都可追溯到正文证据 |
@@ -210,7 +210,7 @@ Songyan 已经过科幻 220 章、玄幻 100 章、武侠 100 章的长窗口验
 | 伏笔调度 | 长程伏笔主动兑现，不同体裁可设不同回收窗口 |
 | 文学护栏 | 配角目标、主动选择、概念预算等在创作和审查中双重约束 |
 | 项目模板化 | 一键从体裁模板创建完整项目骨架 |
-| 都市体裁短距验证 | 15 章短距验证 15/15 通过，上下文预算无告警，关键洁净指标归零 |
+| 都市体裁爬坡 | 短距验证 15/15 通过；Ch50 已 50/50 accepted，five-gate 与 segment audit PASS；T9 的 meta/duplicate 已清零，timeline 诊断项仍在收口 |
 
 > 最新验证数据和进展见 [`docs/STATUS.md`](docs/STATUS.md)。
 
@@ -299,11 +299,16 @@ songyan export --project-id <id> --by arc --format md --output exports/
 ```bash
 # 初始化 DB + 从模板创建项目（模板由 TEMPLATE_ID 环境变量指定）
 $env:TEMPLATE_ID = "xuanhuan"
+$env:RUN_ID = "demo"
+$env:CHECKPOINTER_MODE = "sqlite"
+$env:SONGYAN_RUN_COST_BUDGET = "25.0"
 python scripts/run_172b_ch100_climb.py --init
 
 # 无人值守跑 Ch1-Ch100（分段爬坡，自动 resume）
 python scripts/run_172b_ch100_climb.py --to 100
 ```
+
+脚本会按模板写入固定路径：数据库 `.tmp/task172b_<template>_ch100.db`，项目信息 `.tmp/task172b_<template>_project.json`。Windows 长跑建议通过 `scripts/run_with_timeout.ps1` 包一层硬超时，避免终端或第三方库挂住。
 
 ---
 
@@ -350,10 +355,10 @@ python scripts/run_172b_ch100_climb.py --to 100
 | V8 | ✅ 完成 | 多体裁可插拔 + xuanhuan/wuxia Ch100 通过 |
 | 172c | ✅ 完成 | wuxia 第二体裁 Ch100 爬坡：100/100 通过 |
 | V8.5 | ✅ 完成 | 验收后遗留收口：预算上限修复、C 判据三档证据闭环、文档治理 |
-| V9 | 🔄 已开工 | 生产化地基（长跑可靠性/导出/打包/CI/成本追踪/质量门工具收编）+ urban 第三体裁 Ch100；V9.1 长跑可靠性、V9.2 交付发布、V9.3 工具链收编、**V9.4 urban 短距验证已完成**，下一步 V9.5 urban Ch100 任务书与爬坡 |
+| V9 | 🔄 已开工 | 生产化地基（长跑可靠性/导出/打包/CI/成本追踪/质量门工具收编）+ urban 第三体裁 Ch100；V9.1 长跑可靠性、V9.2 交付发布、V9.3 工具链收编、**V9.4 urban 短距验证已完成**；V9.5 已推进到 Ch50，50/50 accepted，five-gate 与 segment audit PASS，187.w 已清零 T9 meta/duplicate，timeline 诊断项收口后进入 Ch75 |
 | V10 | ⏳ 预登记 | 跨体裁 Ch200、优秀度信号包、结构升级 spike |
 
-各阶段事实入口见 `tasks/V9-README.md`（当前阶段）与 `tasks/V5/V6/V7/V8-README.md`（均已收尾）；V8 任务文档与报告归档于 [`archive/v8/`](archive/v8/INDEX.md)。
+各阶段事实入口见 [`tasks/V9-README.md`](tasks/V9-README.md)（当前阶段）以及 `tasks/V5-README.md`、`tasks/V6-README.md`、`tasks/V7-README.md`、`tasks/V8-README.md`（均已收尾）；V8 任务文档与报告归档于 [`archive/v8/`](archive/v8/INDEX.md)。
 
 ---
 
@@ -397,10 +402,13 @@ python scripts/run_172a7_genre_validation.py --templates <genre> --end 10
 
 ```bash
 $env:TEMPLATE_ID = "<genre>"; $env:RUN_ID = "<run-id>"
-$env:DATABASE_URL = "sqlite:///.tmp/<genre>_ch100.db"
+$env:CHECKPOINTER_MODE = "sqlite"
+$env:SONGYAN_RUN_COST_BUDGET = "25.0"
 python scripts/run_172b_ch100_climb.py --init
 python scripts/run_172b_ch100_climb.py --to 100
 ```
+
+该 harness 使用固定路径 `.tmp/task172b_<genre>_ch100.db`，不会因为外部 `DATABASE_URL` 改变爬坡库；`DATABASE_URL` 仅在后续手动审计、metrics 或 profile 检查时临时指向目标库。
 
 终判口径（冻结）：Ch1-Ch100 全通过、上下文预算峰值 < 1.0、文本洁净无硬问题、关键/严重一致性问题有正文证据、未回收伏笔不超过科幻同章尺度、连续性评分 ≥ 8.0。对标基线与质量门细节见 [`archive/v8/tasks/172b-xuanhuan-ch100-climb.md`](archive/v8/tasks/172b-xuanhuan-ch100-climb.md) §1.1。
 
@@ -501,7 +509,10 @@ python scripts/run_172a7_genre_validation.py --templates scifi --end 10
 - [`tasks/182-five-gate-and-segment-audit-tools-DONE.md`](tasks/182-five-gate-and-segment-audit-tools-DONE.md) — V9 Task 182：质量门判定器与段审计收编
 - [`tasks/183-profile-tuning-cli-DONE.md`](tasks/183-profile-tuning-cli-DONE.md) — V9 Task 183：Profile 调参 CLI
 - [`tasks/184-genres-creative-modes-json-schema-DONE.md`](tasks/184-genres-creative-modes-json-schema-DONE.md) — V9 Task 184：genres/creative_modes JSON Schema
-- [`tasks/185-urban-short-window-calibration-DONE.md`](tasks/185-urban-short-window-calibration-DONE.md) — V9 Task 185：urban 短距验证（已完成，base_budget=12000 落入 registry）
+- [`tasks/185-urban-short-window-calibration-DONE.md`](tasks/185-urban-short-window-calibration-DONE.md) — V9 Task 185：urban 短距验证（已完成，base_budget=12000 初值落入 registry）
+- [`tasks/186-urban-ch100-climb.md`](tasks/186-urban-ch100-climb.md) — V9 Task 186：urban Ch100 任务书（已评审并准入 187）
+- [`tasks/187-urban-ch100-climb-execution.md`](tasks/187-urban-ch100-climb-execution.md) — V9 Task 187：urban Ch100 分段爬坡执行（进行中，已推进到 Ch50）
+- [`tasks/187.w-urban-ch50-t9-clean.md`](tasks/187.w-urban-ch50-t9-clean.md) — V9 Task 187.w：Ch50 T9 收口（meta/duplicate 已清零，timeline 诊断项待处理）
 - [`tasks/V8-README.md`](tasks/V8-README.md) — V8 任务事实入口（已收尾）
 - [`archive/v8/INDEX.md`](archive/v8/INDEX.md) — V8 任务文档与报告归档索引
 - [`docs/reports/v8-literature-and-landscape-review.md`](docs/reports/v8-literature-and-landscape-review.md) — V8 长调研报告（体裁差异与运行时画像设计依据）
