@@ -4,7 +4,7 @@
 > **定位**: 自用为主、按开源标准打磨——不追求终端用户产品体验，但地基（打包/CI/日志/导出/成本）按可发布标准补齐
 > **当前口径**: V8（含 V8.5）已全量闭环。V9 不做优秀度信号包与跨体裁 Ch200（捆绑留 V10），只做两件事：① 补齐生产化地基；② urban 第三体裁 Ch100 爬坡作为地基的实战验收
 > **任务编号**: V9 从 Task 173 开始；**扁平编号**——每个可独立执行、独立验收、独立出 DONE 文档的工作项各占一个编号（粒度对标 V6 的 141-159 / V7 的 160-171w）；编号是 trace id，不等同于严格执行顺序；撞墙定点修复按父任务字母后缀登记（如 `187.p`）
-> **状态**: 已开工（2026-07-20：**V9.1 全部完成**（173/174/175/176 ✅）；**V9.2 全部完成**（177/178/179/180/181 ✅）；**V9.3 全部完成**（182/183/184 ✅）；**V9.4 Task 185 已完成**：urban `base_budget=12000` 经 run1/run2/run3 三轮 end15 实跑标定为短窗口初值，run3（registry 默认值）15/15 accepted、T9=0、emergency=0，scifi end10 回归无漂移；**V9.5 Task 186 已完成并准入 Task 187**；Task 187 已推进到 Ch50：Ch50 five-gate/segment audit PASS，187.w 已清零 meta/duplicate，timeline diagnostic 3 项待明日收口后再进 Ch75）
+> **状态**: 已开工（2026-07-22：**V9.1 全部完成**（173/174/175/176 ✅）；**V9.2 全部完成**（177/178/179/180/181 ✅）；**V9.3 全部完成**（182/183/184 ✅）；**V9.4 Task 185 已完成**：urban `base_budget=12000` 经 run1/run2/run3 三轮 end15 实跑标定为短窗口初值，run3（registry 默认值）15/15 accepted、T9=0、emergency=0，scifi end10 回归无漂移；**V9.5 Task 187 已完成**：urban Ch1-Ch100 **100/100 accepted**，five-gate PASS、T9=0、segment audit PASS；**进入 V9.6 Task 188 收口**）
 
 本文是 V9 阶段任务文档的事实入口。V8 历史事实入口见 `tasks/V8-README.md`（任务文档与报告在 `archive/v8/`）；更早阶段见 V7/V6/V5-README。
 
@@ -122,16 +122,16 @@ V9 通过 = A 组（地基）+ B 组（爬坡）同时满足，C 组（守护）
 | Task | 名称 | 状态 | 内容要点 | 验收要点 |
 |------|------|:----:|----------|----------|
 | 186 | urban Ch100 任务书 | ✅ | 目标 / 前置证据（185 数据）/ 分段验收 / 撞墙路由表（预算墙→base_budget；overdue 墙→先查 resolve 再调 floor；CED 墙→热点章+角色密度；health 墙→weight 校准）；冻结口径引用 172b §1.1；review 后修正 harness 固定路径、`--project-id` 与 wrapper marker | 任务书已评审并准入 187：`tasks/186-urban-ch100-climb.md` |
-| 187 | urban Ch100 爬坡执行 | 🔄 | `TEMPLATE_ID=urban RUN_ID=187` 复用 `scripts/run_172b_ch100_climb.py`，25 章一段（arc 边界）；Ch25 已通过；Ch50 已完成生成与五门/段审计，期间完成 187.u/s/v/p/t/w 定点修复；段边界正式五门 + 段审计，任一 FAIL 冻结现场 → 定点修复 → 机制修复后 clean rerun | Ch25：25/25 accepted、five-gate PASS、T9=0、critical_orphans=0、emergency=0；Ch50：50/50 accepted、five-gate PASS、critical_orphans=0、meta/duplicate=0，timeline diagnostic=3 待收口；最终仍要求 Ch100 五门 PASS（B 组判据）+ T9=0 + 终判报告落盘 |
+| 187 | urban Ch100 爬坡执行 | ✅ | `TEMPLATE_ID=urban RUN_ID=187` 复用 `scripts/run_172b_ch100_climb.py`；Ch1-Ch100 100/100 accepted，期间完成 187.u/s/v/p/t/w/x/y/z 定点修复；机制修复后均 clean rerun | DONE：`tasks/187-urban-ch100-climb-execution-DONE.md`；终判 100/100 accepted、budget 0.9595、CED 0.11、overdue 100、health 8.6、T9=0、critical_orphans=0 |
 
 #### Task 187 当前分段事实（2026-07-21）
 
 | checkpoint | 状态 | 证据 | 下一步 |
 |---:|---|---|---|
 | Ch25 | ✅ PASS | 25/25 accepted；five-gate PASS；T9=0；critical_orphans=0；emergency=0；已完成 187.u/s/v/p/t | 已进入 Ch50 |
-| Ch50 | ⚠️ 生成与五门通过，T9 timeline 待收口 | 50/50 accepted；five-gate PASS（budget 0.9595、CED 0.0977、overdue 51≤110、health 8.9、gap 0）；segment audit PASS（critical_orphans=0、halt_would_fire=false）；187.w 清理后 meta=0、duplicate=0、timeline=3 diagnostic（Ch29/30/43） | 明天先修 timeline precision 并复跑 Ch50 metrics/five-gate/audit；不得直接进入 Ch75 |
-| Ch75 | ◻ 未跑 | - | Ch50 全口径 clean 后再跑 |
-| Ch100 | ◻ 未跑 | - | Ch75 PASS 后再跑 |
+| Ch50 | ✅ PASS | 50/50 accepted；five-gate PASS（budget 0.9595、CED 0.0977、overdue 51≤110、health 8.9、gap 0）；segment audit PASS（critical_orphans=0、halt_would_fire=false）；187.w 清理后 meta=0、duplicate=0、timeline=0 | 进入 Ch75 |
+| Ch75 | ✅ PASS | 75/75 accepted；five-gate PASS（budget 0.9595、CED 0.0891、overdue 73、health 8.4、gap 0）；segment audit PASS（critical_orphans=0、halt_would_fire=false）；187.x precision 修复后 T9=0 | 进入 Ch100 |
+| Ch100 | ✅ PASS | 100/100 accepted；five-gate PASS（budget 0.9595、CED 0.11、overdue 100、health 8.6、gap 0）；segment audit PASS（critical_orphans=0、halt_would_fire=false）；187.y/z deterministic clean + precision 修复后 T9=0 | 终判完成 |
 
 ### V9.6 收口
 

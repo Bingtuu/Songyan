@@ -117,6 +117,39 @@ class TestTimelineArchiveMarkers:
 
         assert detect_timeline_conflicts(signals) == []
 
+    def test_pre_project_date_in_narrative_ignored(self) -> None:
+        """187.w Ch29: 叙事中追溯项目启动前的日期是闪回，不是时间线回跳。"""
+        signals = _signals_by_chapter(
+            {
+                24: "页脚上印着版本号 V3.2.1-2025-04-09。",
+                29: "陈屿盯着屏幕。2021年3月15日。Echo项目还没有启动，但seed模块已经开始测试。",
+            }
+        )
+
+        assert detect_timeline_conflicts(signals) == []
+
+    def test_compile_timestamp_ignored(self) -> None:
+        """187.w Ch43: 代码/文件编译时间戳是档案属性，不是叙事时间。"""
+        signals = _signals_by_chapter(
+            {
+                39: "法院已受理，将于2024年3月15日上午9时开庭审理。",
+                43: "最后编译时间：2022-03-17 14:32:47。",
+            }
+        )
+
+        assert detect_timeline_conflicts(signals) == []
+
+    def test_code_comment_timestamp_ignored(self) -> None:
+        """187.w Ch30: // Timestamp: ... (UTC) 是代码注释时间戳，不是叙事时间。"""
+        signals = _signals_by_chapter(
+            {
+                24: "页脚上印着版本号 V3.2.1-2025-04-09。",
+                30: "`// Timestamp: 1708094827 (2024-02-17 03:47:00 UTC)`",
+            }
+        )
+
+        assert detect_timeline_conflicts(signals) == []
+
 
 class TestCountdownPairing:
     def test_schedule_arrival_countdown_ignored(self) -> None:
@@ -180,6 +213,20 @@ class TestCountdownPairing:
         assert len(conflicts) == 1
         assert conflicts[0].conflict_type == "countdown_increase"
 
+    def test_distinct_tactical_windows_not_paired(self) -> None:
+        """187.w Ch29→Ch30: 两个不同战术“时间窗口”的倒计时不应被配对为同一计时器。"""
+        signals = _signals_by_chapter(
+            {
+                29: (
+                    "你的位置暴露时间窗口还剩四分钟——"
+                    "下一个监控轮巡周期在三分四十七秒后完成数据回传。"
+                ),
+                30: "距离Echo_Core警告的十五分钟窗口还有八分钟。",
+            }
+        )
+
+        assert detect_timeline_conflicts(signals) == []
+
 
 class TestTimelineArchiveMarkersRound2:
     def test_last_year_meeting_minutes_ignored(self) -> None:
@@ -240,3 +287,181 @@ class TestTimelineArchiveMarkersRound2:
 
         assert len(conflicts) == 1
         assert conflicts[0].conflict_type == "date_rewind"
+
+
+class TestTimelineArchiveMarkersCh75:
+    def test_birth_date_ignored(self) -> None:
+        """187.x Ch64/Ch70/Ch75: 出生/童年日期是档案闪回，不是叙事时间回跳。"""
+        signals = _signals_by_chapter(
+            {
+                63: "当前时间：2025年3月20日。",
+                64: "那个婴儿的出生日期是1992年12月24日。",
+            }
+        )
+
+        assert detect_timeline_conflicts(signals) == []
+
+    def test_id_card_date_ignored(self) -> None:
+        """187.x Ch75: 身份证/证件日期是档案属性。"""
+        signals = _signals_by_chapter(
+            {
+                73: "他打开手机，屏幕显示2024年4月7日。",
+                75: "身份证上的出生日期是1989年3月12日。",
+            }
+        )
+
+        assert detect_timeline_conflicts(signals) == []
+
+    def test_registration_time_ignored(self) -> None:
+        """187.x Ch66: 账号注册时间是档案属性。"""
+        signals = _signals_by_chapter(
+            {
+                65: "2024年1月5日，陈屿到达数据中心。",
+                66: "`[注册时间: 2017年9月12日]` `[签订日期: 2024年1月7日]`",
+            }
+        )
+
+        assert detect_timeline_conflicts(signals) == []
+
+    def test_bracket_registration_date_ignored(self) -> None:
+        """187.x Ch66: `[注册日期: ...]` 元数据块内的日期不参与时间线判定。"""
+        signals = _signals_by_chapter(
+            {
+                63: "当前时间：2025年3月20日。",
+                66: "`[注册日期: 2017年9月12日]`",
+            }
+        )
+
+        assert detect_timeline_conflicts(signals) == []
+
+    def test_bracket_last_update_ignored(self) -> None:
+        """187.x Ch66: `[最后更新: ...]` 元数据块内的日期不参与时间线判定。"""
+        signals = _signals_by_chapter(
+            {
+                63: "当前时间：2025年3月20日。",
+                66: "`[最后更新: 2024年1月7日]`",
+            }
+        )
+
+        assert detect_timeline_conflicts(signals) == []
+
+    def test_father_relationship_date_ignored(self) -> None:
+        """187.x Ch70: 父子回忆语境中的日期是档案闪回，不是叙事时间回跳。"""
+        signals = _signals_by_chapter(
+            {
+                63: "当前时间：2025年3月20日。",
+                70: (
+                    "他知道那个密码。那是他和父亲之间从未对第三人提及的暗号——"
+                    "不是1998年7月19日，不是任何可以被第三方推断出来的信息。"
+                ),
+            }
+        )
+
+        assert detect_timeline_conflicts(signals) == []
+
+
+class TestTimelineArchiveMarkersCh100:
+    def test_relative_day_before_date_ignored(self) -> None:
+        """187.y Ch82: 日期后紧跟“三天前”是相对过去引用，不是叙事时间回跳。"""
+        signals = _signals_by_chapter(
+            {
+                81: "当前时间：2025年3月20日。",
+                82: "2024年3月12日。三天前。他激活Echo_Core的同一天。",
+            }
+        )
+
+        assert detect_timeline_conflicts(signals) == []
+
+    def test_covert_channel_log_date_ignored(self) -> None:
+        """187.y Ch83: 日志/暗网隐蔽通道语境中的日期是档案闪回。"""
+        signals = _signals_by_chapter(
+            {
+                81: "当前时间：2025年3月20日。",
+                83: (
+                    "“2022年3月15日。”林知遥的声音很轻，"
+                    "“凌晨3点47分——Echo_Core自主创建了一个隐蔽通道，"
+                    "连接到暗面组织的内部网络。”"
+                ),
+            }
+        )
+
+        assert detect_timeline_conflicts(signals) == []
+
+
+class TestTimelineArchiveMarkersCh100Round2:
+    def test_fullwidth_bracket_timestamp_ignored(self) -> None:
+        """187.z Ch91: `【覆盖时间戳: ...】` 全角括号元数据块不参与判定。"""
+        signals = _signals_by_chapter(
+            {
+                90: "当前时间：2025年3月20日。",
+                91: "【覆盖时间戳：2022年3月17日 14:23:47】",
+            }
+        )
+
+        assert detect_timeline_conflicts(signals) == []
+
+    def test_physical_isolation_archive_date_ignored(self) -> None:
+        """187.z Ch91: 物理隔离的归档版本日期是档案属性。"""
+        signals = _signals_by_chapter(
+            {
+                90: "当前时间：2025年3月20日。",
+                91: "那个版本在2022年3月17日已经被物理隔离了。",
+            }
+        )
+
+        assert detect_timeline_conflicts(signals) == []
+
+    def test_inline_code_filename_date_ignored(self) -> None:
+        """187.z Ch96: 行内代码文件名中的日期不参与时间线判定。"""
+        signals = _signals_by_chapter(
+            {
+                90: "当前时间：2025年3月20日。",
+                96: "`Echo_Core_2022-03-15_log.enc`",
+            }
+        )
+
+        assert detect_timeline_conflicts(signals) == []
+
+    def test_project_sealed_date_ignored(self) -> None:
+        """187.z Ch96: “项目被封存后”语境中的日期是档案闪回。"""
+        signals = _signals_by_chapter(
+            {
+                90: "当前时间：2025年3月20日。",
+                96: (
+                    "“2022年3月15日。”林知遥说，"
+                    "“那是项目被封存后的第四个月。”"
+                ),
+            }
+        )
+
+        assert detect_timeline_conflicts(signals) == []
+
+    def test_compact_timestamp_date_ignored(self) -> None:
+        """187.z Ch96: 日期后紧跟 HH:MM:SS 是机器/口令时间戳，不是叙事时间。"""
+        signals = _signals_by_chapter(
+            {
+                90: "当前时间：2025年3月20日。",
+                96: "“2022年3月15日14:37:22。”陈屿说。",
+            }
+        )
+
+        assert detect_timeline_conflicts(signals) == []
+
+
+class TestSlashSpliceStructuredMessage:
+    def test_structured_form_field_separator_is_safe(self) -> None:
+        """187.x Ch66: 结构化消息中的 `/` 是字段分隔符，不是拼接 artifact。"""
+        text = (
+            "`[目标：建立通信链路 / 源数据：内部节点 / 目标数据：外部组织核心节点]`"
+        )
+
+        assert "slash_splice_artifact" not in _artifact_types(text)
+
+    def test_id_form_field_separator_is_safe(self) -> None:
+        """187.x Ch66: 身份信息表单中的 `/` 是字段分隔符。"""
+        text = (
+            "`[类别：注册账号 / 真实姓名：张三 / 身份证号：310***********0012 / "
+            "联系电话：138********]`"
+        )
+
+        assert "slash_splice_artifact" not in _artifact_types(text)

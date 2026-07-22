@@ -58,6 +58,47 @@ _FLASHBACK_MARKERS = (
     "前年",
     "距今",
     "修改时间",
+    # 187.w 补充：urban Ch50 闪回/档案日期语境
+    "还没有启动",
+    "项目启动",
+    "启动日期",
+    "视频文件",
+    "原型",
+    "测试",
+    "编译时间",
+    "创建时间",
+    "时间戳是",
+    "最后编译",
+    "Timestamp",
+    "UTC",
+    # 187.x 补充：urban Ch75 出生/身份/注册档案日期语境
+    "出生",
+    "出生日期",
+    "胚胎",
+    "移植",
+    "实验体",
+    "实验体编号",
+    "注册时间",
+    "注册日期",
+    "签订",
+    "签字",
+    "签名",
+    "同意书",
+    "知情同意",
+    "身份证",
+    "小时候",
+    "父亲",
+    "我父亲",
+    "你父亲",
+    "我爸",
+    "第一次",
+    # 187.y Ch100：相对过去引用与日志/暗网语境
+    "天前",
+    "隐蔽通道",
+    # 187.z Ch100：归档版本/封存项目/身份验证语境
+    "物理隔离",
+    "项目被封存",
+    "身份验证",
 )
 
 # 同一倒计时计时器的量级容差：相邻倒计时信号的规范化小时数比值超过该值，
@@ -76,6 +117,11 @@ _SCHEDULE_MARKERS = (
     "下班",
     "打卡",
 )
+
+# 结构化元数据块：方括号/全角括号/行内代码内的键值对日期
+# （如 `[注册日期: ...]`、`【覆盖时间戳: ...】`、`Echo_Core_2022-03-15_log.enc`）
+# 是档案/文件属性，不参与叙事时间线判定（187.x Ch66 / 187.z Ch91/Ch96）。
+_METADATA_BLOCK_RE = re.compile(r"\[[^\]]*\]|【[^】]*】|`[^`]*`")
 
 
 class TimeSignal(BaseModel):
@@ -112,7 +158,8 @@ class TimelineConflict(BaseModel):
 
 
 _ANCHOR_TRIGGER_RE = re.compile(r"倒计时|还剩|剩余|还有|大约|距离")
-_ANCHOR_STRIP_CHARS = frozenset("零〇一二两三四五六七八九十百千万亿天日小时分钟秒钟秒")
+# 187.w: “窗口”是通用容器词，出现在不同战术/调度语境中时不提供可配对的截止期限证据。
+_ANCHOR_STRIP_CHARS = frozenset("零〇一二两三四五六七八九十百千万亿天日小时分钟秒钟秒窗口")
 
 
 def _countdown_anchor(text: str, start: int, end: int, radius: int = 12) -> frozenset[str]:
@@ -163,7 +210,7 @@ def _countdown_to_hours(value: int, unit: str) -> float:
     return float(value)
 
 
-def _context_window(text: str, start: int, end: int, radius: int = 30) -> str:
+def _context_window(text: str, start: int, end: int, radius: int = 80) -> str:
     return text[max(0, start - radius): min(len(text), end + radius)]
 
 
@@ -178,6 +225,15 @@ def _ignored_by_flashback_context(text: str, start: int, end: int) -> tuple[bool
     marker = next((m for m in _SCHEDULE_MARKERS if m in context), "")
     if marker:
         return True, f"schedule_context:{marker}"
+    # 结构化元数据块（方括号/全角括号/行内代码）不是叙事时间
+    for block_match in _METADATA_BLOCK_RE.finditer(text):
+        if block_match.start() <= start and block_match.end() >= end:
+            return True, "metadata_block"
+    # 日期后紧跟 HH:MM(:SS) 是机器/日志/口令时间戳（如 2022年3月15日14:37:22）
+    if text[end:end + 1].isdigit():
+        tail = text[end:end + 10].lstrip()
+        if re.match(r"\d{1,2}:\d{2}(?::\d{2})?", tail):
+            return True, "compact_timestamp"
     # 管道分隔的机器日志行（如 "2024-10-15 03:47:14 | INFO | ..."）不是叙事时间
     line_start = text.rfind("\n", 0, start) + 1
     line_end = text.find("\n", end)

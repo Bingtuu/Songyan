@@ -267,6 +267,11 @@ def _is_safe_slash_context(text: str, slash_pos: int) -> bool:
         re.I,
     ):
         return True
+    # 187.x: structured system/form messages like `[目标：... / 源数据：...]`
+    # use slashes as field separators, not narrative splice artifacts.
+    wide_window = text[max(0, slash_pos - 40):slash_pos + 40]
+    if re.search(r"\[[^\]]*?[：:][^\]]*?/\s*[^\]]*?[：:]", wide_window):
+        return True
     return False
 
 

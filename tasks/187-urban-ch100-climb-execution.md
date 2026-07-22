@@ -174,9 +174,9 @@ Remove-Item Env:\DATABASE_URL
 | checkpoint | wrapper | five-gate | T9 | segment audit | 决策 |
 |---:|---|---|---|---|---|
 | Ch25 | PASS：25/25 accepted，run `run-d22b1a44` | PASS：budget 0.9595、CED 0.1127、overdue 19、health 8.5、gap 0 | PASS：meta/artifact 0、duplicate 0、timeline 0 | PASS：critical_orphans 0，halt_would_fire=false | 进入 Ch50 |
-| Ch50 | 待跑 | 待跑 | 待跑 | 待跑 | 待定 |
-| Ch75 | 待跑 | 待跑 | 待跑 | 待跑 | 待定 |
-| Ch100 | 待跑 | 待跑 | 待跑 | 待跑 | 待定 |
+| Ch50 | PASS：50/50 accepted，wrapper `PASS_NORMAL_EXIT` | PASS：budget 0.9595、CED 0.0977、overdue 51、health 8.9、gap 0 | **PASS**：meta/artifact 0、duplicate 0、timeline 0（187.w precision 修复后复跑） | PASS：critical_orphans 0，halt_would_fire=false | 进入 Ch75 |
+| Ch75 | PASS：75/75 accepted，wrapper `PASS_NORMAL_EXIT` | PASS：budget 0.9595、CED 0.0891、overdue 73、health 8.4、gap 0 | **PASS**：meta/artifact 0、duplicate 0、timeline 0（187.x precision 修复后复跑） | PASS：critical_orphans 0，halt_would_fire=false | 进入 Ch100 |
+| Ch100 | PASS：100/100 accepted，wrapper `PASS_NORMAL_EXIT` | PASS：budget 0.9595、CED 0.11、overdue 100、health 8.6、gap 0 | **PASS**：meta/artifact 0、duplicate 0、timeline 0（187.y/z deterministic clean + precision 修复后复跑） | PASS：critical_orphans 0，halt_would_fire=false | 终判完成 |
 
 ---
 
@@ -243,3 +243,81 @@ Ch25 中途诊断 DB 不作为通过样本：
 - `.tmp/187t_diagnostic_ch23_t9_fail.db`
 
 结论：Ch25 段边界已满足进入 Ch50 的准入条件。
+
+### Ch75（2026-07-21）
+
+正式通过样本：
+
+- DB：`.tmp/task172b_urban_ch100.db`
+- project_id：`81e345042b124ee2a73094b82e4be555`
+- run_id：`run-d22b1a44`
+- accepted：75/75
+- failed_chapters：`[]`
+- halt：`None`
+- budget_used_peak：0.9595
+- context_emergency_count：0
+- five-gate：PASS（`.tmp/187_seg75_five_gate.json`）
+  - budget 0.9595、CED 0.0891、overdue 73、health 8.4、gap 0
+- segment audit：critical_orphans=0、halt_would_fire=false（`.tmp/187_seg75_audit.json`）
+- metrics/T9：meta/artifact=0、duplicate=0、timeline=0（`.tmp/187_seg75_metrics.md`）
+
+187.x T9 precision 收口（Ch75 段边界前必须归零）：
+
+- 现象：Ch75 metrics 复跑后仍剩 2 条 timeline diagnostic
+  - Ch63→Ch66：`2025-03-20` → `2017-09-12`，对应 `[注册日期: 2017年9月12日]`
+  - Ch66→Ch70：`2024-01-07` → `1998-07-19`，对应 `[最后更新: 2024年1月7日]` 与父子回忆语境
+- 根因：`_ignored_by_flashback_context` 未识别方括号元数据块；`父亲` 不在闪回标记列表内
+- 修复：
+  - `src/songyan/evals/timeline_consistency.py`
+    - 新增 `_BRACKET_METADATA_RE`，方括号内的键值对日期（`[注册日期: ...]`、`[最后更新: ...]` 等）视为档案属性并忽略
+    - `_FLASHBACK_MARKERS` 补充 `注册日期`、`父亲`
+  - `tests/test_185_t9_precision_fixes.py`：新增 3 个回归测试覆盖 bracket metadata 与父子回忆语境
+- 验证：`tests/test_185_t9_precision_fixes.py` + `tests/test_162_timeline_consistency.py` 41 passed；ruff 全绿
+
+结论：Ch75 段边界已满足进入 Ch100 的冻结口径。
+
+### Ch100（2026-07-22）
+
+正式通过样本：
+
+- DB：`.tmp/task172b_urban_ch100.db`
+- project_id：`81e345042b124ee2a73094b82e4be555`
+- run_id：`run-d22b1a44`
+- accepted：100/100
+- failed_chapters：`[]`
+- halt：`None`
+- budget_used_peak：0.9595
+- context_emergency_count：0
+- total_cost：约 ¥13.26（1766 次 LLM 调用）
+- five-gate：PASS（`.tmp/187_urban_ch100_final.json`）
+  - budget 0.9595、CED 0.11、overdue 100、health 8.6、gap 0
+  - 对照 sci-fi Ch100 baseline：budget 0.9888、CED 0.3976、overdue 168、health 10.0
+- segment audit：critical_orphans=0、halt_would_fire=false（`.tmp/187_seg100_audit.json`）
+- metrics/T9：meta/artifact=0、duplicate=0、timeline=0（`.tmp/187_seg100_metrics.md`）
+
+187.y T9 / 文本洁净度收口（Ch100 终判前必须归零）：
+
+- 现象：Ch100 首次 metrics 显示 duplicate=2（Ch81、Ch88），timeline=2（Ch82、Ch83）
+- Ch81/Ch88 duplicate：
+  - Ch81 第 30/31 段高度重复（路径 A/B）
+  - Ch88 第 8/26 段完全重复
+  - 走 `apply_project_text_cleaning(1, 100)` deterministic clean，生成 `clean-81-6-5dc1dff6`、`clean-88-6-010cfb72`
+- Ch82/Ch83 timeline：
+  - Ch82 `2024年3月12日。三天前。` 是相对过去引用
+  - Ch83 `2022年3月15日` 位于隐蔽通道/日志语境
+- 修复：
+  - `_FLASHBACK_MARKERS` 补充 `天前`、`隐蔽通道`
+  - `_context_window` 半径由 30 扩展到 80，让日志/暗网语境标记能被日期匹配到
+- 验证：新增 2 个回归测试；聚焦 pytest 43 passed；ruff 全绿
+
+187.z T9 precision 收口（第二次复跑后仍剩 1 条 timeline）：
+
+- 现象：duplicate 归零后，timeline 剩 1 条：Ch63→Ch96 `2025-03-20` → `2022-03-15`
+- 根因：Ch91 `【覆盖时间戳: ...】` 全角括号、Ch96 行内代码文件名、物理隔离归档版本、项目封存语境、`2022年3月15日14:37:22` 紧凑时间戳未被识别为档案/口令时间
+- 修复：
+  - 将 `_BRACKET_METADATA_RE` 扩展为 `_METADATA_BLOCK_RE`，覆盖 `【...】` 与 `` `...` ``
+  - `_FLASHBACK_MARKERS` 补充 `物理隔离`、`项目被封存`、`身份验证`
+  - 新增紧凑时间戳启发式：日期后紧跟 `HH:MM(:SS)` 视为机器/口令时间戳并忽略
+- 验证：新增 4 个回归测试；聚焦 pytest 47 passed；ruff 全绿
+
+结论：Ch100 终判满足 V9 B 组六条，Task 187 完成。
