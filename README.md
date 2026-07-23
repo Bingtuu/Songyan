@@ -355,9 +355,9 @@ python scripts/run_172b_ch100_climb.py --to 100
 | V8 | ✅ 完成 | 多体裁可插拔 + xuanhuan/wuxia Ch100 通过 |
 | V8.5 | ✅ 完成 | 验收后遗留收口：预算上限修复、C 判据三档证据闭环、文档治理 |
 | V9 | ✅ 完成 | 生产化地基（长跑可靠性/导出/打包/CI/成本追踪/质量门工具收编）+ urban 第三体裁 Ch100；urban Ch1-Ch100 100/100 accepted，five-gate PASS，segment audit PASS，T9=0；任务文档已归档 `archive/v9/` |
-| V10 | ⏳ 预登记 | 跨体裁 Ch200、优秀度信号包、结构升级 spike |
+| V10 | ◻ 规划中 | 跨体裁 Ch200、优秀度信号包、结构升级 spike；规划入口 `tasks/V10-README.md`，尚未开工 |
 
-各阶段事实入口见 [`tasks/V9-README.md`](tasks/V9-README.md) 以及 `tasks/V5-README.md`、`tasks/V6-README.md`、`tasks/V7-README.md`、`tasks/V8-README.md`（均已收尾）；V5-V9 单项任务文档与报告分别归档在 [`archive/v5/`](archive/v5/INDEX.md)、[`archive/v6/`](archive/v6/INDEX.md)、[`archive/v7/`](archive/v7/INDEX.md)、[`archive/v8/`](archive/v8/INDEX.md)、[`archive/v9/`](archive/v9/INDEX.md)。
+各阶段事实入口见 [`tasks/V10-README.md`](tasks/V10-README.md)（当前规划入口）以及 `tasks/V5-README.md`、`tasks/V6-README.md`、`tasks/V7-README.md`、`tasks/V8-README.md`、`tasks/V9-README.md`（均已收尾）；V5-V9 单项任务文档与报告分别归档在 [`archive/v5/`](archive/v5/INDEX.md)、[`archive/v6/`](archive/v6/INDEX.md)、[`archive/v7/`](archive/v7/INDEX.md)、[`archive/v8/`](archive/v8/INDEX.md)、[`archive/v9/`](archive/v9/INDEX.md)。
 
 ---
 
@@ -495,6 +495,7 @@ python scripts/run_172a7_genre_validation.py --templates scifi --end 10
 
 - [`docs/STATUS.md`](docs/STATUS.md) — 当前状态、验收证据、下一步
 - [`docs/INDEX.md`](docs/INDEX.md) — 文档索引
+- [`tasks/V10-README.md`](tasks/V10-README.md) — V10 规划入口（跨体裁 Ch200 + 优秀度信号包 + 结构升级 spike）
 - [`tasks/V9-README.md`](tasks/V9-README.md) — V9 任务事实入口（已收尾，生产化地基 + urban Ch100）
 - [`archive/v5/INDEX.md`](archive/v5/INDEX.md) — V5 任务文档与报告归档索引
 - [`archive/v6/INDEX.md`](archive/v6/INDEX.md) — V6 任务文档与报告归档索引

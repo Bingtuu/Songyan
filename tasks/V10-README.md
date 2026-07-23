@@ -1,0 +1,182 @@
+# V10 Task 总索引
+
+> **阶段**: 跨体裁 Ch200 + 优秀度信号包 + 结构升级 spike
+> **定位**: V10 不是开源交付体验阶段，而是工程版 1.0 前的质量与长度再验证阶段：证明多体裁长窗口仍稳定，并把“好不好看/是否有 AI 腔/是否同质化”从主观讨论推进到可复核信号。
+> **当前口径**: V9 已全量闭环；V10 规划入口已建立，尚未启动实跑或代码实现。V10 不再补 V9 生产化地基，也不做 V11 的外部用户可用化收尾。
+> **任务编号**: V10 预计从 Task 189 开始；本文不占任务号。只有可独立执行、独立验收、独立出 DONE 文档的工作项才编号；撞墙修复继续按父任务字母后缀登记（如 `192.p`）。
+> **状态**: ◻ 规划中（等待 V10 任务书评审与首个可执行任务开工）
+
+本文是 V10 阶段任务规划入口。V9 历史事实入口见 `tasks/V9-README.md`，V9 单项任务归档见 `archive/v9/INDEX.md`。
+
+---
+
+## 一句话目标
+
+> **V10 要回答两个问题：多体裁从 Ch100 拉到 Ch200 后是否仍然稳定；生成结果是否不只“一致”，还开始具备可度量的优秀度。**
+
+---
+
+## 背景判断
+
+V9 已经完成三件关键前置：
+
+- 生产化地基补齐：日志、导出、wheel、CI、doctor、成本追踪、预算熔断、五门/段审计工具、Profile CLI、schema 校验均已闭环。
+- 三个非 sci-fi 体裁 Ch100 已验证：xuanhuan、wuxia、urban 均达到 100/100 accepted，五门 PASS。
+- urban Ch100 作为第三体裁实战验收通过，证明 V9 地基可承受长窗口真实 LLM 运行。
+
+V10 因此不应继续做“地基补洞”。它的主线应转向：
+
+1. **长度再验证**：从 Ch100 扩到 Ch200，验证多体裁长窗口稳定性。
+2. **质量再定义**：在 CED/T9/health/overdue 之外，补一组 report/observe 级优秀度信号。
+3. **结构升级判断**：对 KG diff、validity interval、Storyline Tree 做 spike，判断是否值得进入后续主线。
+
+V10 有一条额外纪律：**Ch200 终判样本必须先保持生成链路稳定**。优秀度信号包在校准完成前只能基于既有 accepted 正文离线分析或 report/observe 输出，不得提前改变 Writer / CreativeDirector 的生成策略，避免把 Ch200 稳定性验证和质量信号实验混在一起。
+
+---
+
+## 阶段验收判定
+
+V10 通过 = A 组（Ch200 口径与工具）+ B 组（跨体裁 Ch200）+ C 组（优秀度信号包）+ D 组（结构升级 spike）同时满足，E 组守护项全程不破。
+
+### A 组 · Ch200 口径与工具
+
+| # | 判据 |
+|---|------|
+| A1 | sci-fi Ch200 baseline 以正式工具重放，形成 Ch125 / Ch150 / Ch175 / Ch200 checkpoint 基线。 |
+| A2 | five-gate 与 segment audit 支持 Ch200 checkpoint，不改变预算/CED/overdue/health/completeness 判定函数。 |
+| A3 | Ch100 → Ch200 的 continuation 策略明确：每个体裁先确认 clean Ch100 事实源；若不可复用，必须重建 clean Ch100 起点。 |
+| A4 | Ch200 harness 固定 DB 路径、run_id、成本预算、wrapper marker、报告落盘路径，避免外部 `DATABASE_URL` 污染终判样本。 |
+| A5 | V10 证据目录与归档口径明确：活动任务仍在 `tasks/`，完成后归档到 `archive/v10/`；实跑证据路径、报告路径、DB 路径在任务书中固定。 |
+
+### B 组 · 跨体裁 Ch200
+
+V10 的硬目标建议是 xuanhuan / wuxia / urban 三个非 sci-fi 体裁均完成 Ch200。若成本或外部条件要求降级，必须在 V10 开工前明确最小通过集，不能在实跑失败后临时缩口。
+
+每个体裁 Ch200 终判沿用冻结五门：
+
+| # | 判据 |
+|---|------|
+| B1 | Ch1-Ch200 全 accepted；gap≤1 必须 documented-isolate 复核。 |
+| B2 | `budget_used` 峰值 < 1.0；无 `context_emergency_budget_ratio_halt`。 |
+| B3 | consistency CED ≤ sci-fi 同章尺度 × 1.15。 |
+| B4 | overdue ≤ sci-fi 同章尺度。 |
+| B5 | health ≥ 8.0（latest 非 None）。 |
+| B6 | T9=0；不接受解释性豁免，机制修复后必须 clean rerun。 |
+
+### C 组 · 优秀度信号包
+
+优秀度信号包初始只做 report/observe，不作为自动 accept/reject 的硬门。V10 通过要求：
+
+| # | 判据 |
+|---|------|
+| C1 | 优秀度信号与一致性 CED 明确分层，不把文学 craft、同质化或 AI 腔计入 CED。 |
+| C2 | 至少覆盖：跨章同质化/多样性、叙事张力/节奏、中文 AI 腔、style extraction → style card、角色声纹锚点、perplexity/可读性可行性评估。 |
+| C3 | 每个信号都有样本校准与误报记录；报告能解释命中证据，而不是只给分数。 |
+| C4 | `songyan metrics` 或 `songyan report` 可展示优秀度视图，并能按章节/窗口定位问题。 |
+| C5 | 优秀度信号包在 V10 内默认不改变生成链路；若任何任务要把信号注入 prompt 或 gate，必须单独立项并先完成 scifi/短窗口回归。 |
+
+### D 组 · 结构升级 spike
+
+V10 不把结构升级强行并入主流程。spike 的目标是形成取舍结论：
+
+| 方向 | 目标 |
+|------|------|
+| KG 图 diff | 验证章级事实图 diff 是否能比现有 CED 更早发现结构性矛盾。 |
+| FactTrack validity interval | 验证设定/状态有效期是否能降低“过期事实仍被引用”的误报/漏报。 |
+| Storyline Tree | 验证主线/支线树是否能改善长程伏笔调度与弧级收束判断。 |
+
+### E 组 · 守护项
+
+- SQLite 仍是唯一长期事实源；LangGraph state 只存 ID。
+- CED 继续使用 consistency-only、merged/source、正文证据口径。
+- T9 仍是硬红线；PASS 样本必须 clean rerun 后 T9=0。
+- 优秀度信号不覆盖、不替代、不污染五门判定。
+- 任何运行时画像、上下文组装、prompt 注入、harness 或质量工具改动后，必须执行 scifi 短窗口回归；影响 Ch200 口径的改动还必须重放 sci-fi Ch200 baseline。
+- 不新增核心 Agent / Workflow 节点，除非 V10 任务书明确批准并给出回归证据。
+- 不做 UI、账号、后台服务、模板市场；这些不属于 V10。
+
+---
+
+## Task 拆解草案
+
+> 编号是初稿。正式开工前应先评审本 README，再为第一个可执行任务补独立任务书。
+
+### V10.1 Ch200 口径与工具
+
+| Task | 名称 | 状态 | 内容要点 | 验收要点 |
+|------|------|:----:|----------|----------|
+| 189 | Ch200 baseline 与 checkpoint 冻结 | ◻ | sci-fi Ch200 baseline 重放；形成 Ch125/150/175/200 对标表；明确 CED/overdue/health/T9 口径 | baseline 文件入包或归档；工具重放与 V7 报告一致 |
+| 190 | Ch100 终点事实源盘点 | ◻ | 盘点 xuanhuan/wuxia/urban clean Ch100 DB、project_id、run_id、accepted head、T9 状态 | 每个体裁有可复用或需重建的明确结论 |
+| 191 | Ch200 harness 准备 | ◻ | 参数化 `run_172b_ch100_climb.py` 或新增 Ch200 harness；固定 DB 路径、预算、wrapper、报告路径 | dry-run / help / 路径测试通过；不改五门判定函数 |
+
+### V10.2 跨体裁 Ch200 爬坡
+
+| Task | 名称 | 状态 | 内容要点 | 验收要点 |
+|------|------|:----:|----------|----------|
+| 192 | xuanhuan Ch200 爬坡 | ◻ | 从 clean Ch100 起点推进 Ch101-Ch200；按 Ch125/150/175/200 审计 | Ch200 五门 PASS，T9=0，segment audit PASS |
+| 193 | wuxia Ch200 爬坡 | ◻ | 重点关注状态密度、overdue、health；撞墙按父任务后缀修复 | Ch200 五门 PASS，T9=0，segment audit PASS |
+| 194 | urban Ch200 爬坡 | ◻ | 重点关注现代设定一致性、T9、长线伏笔回收 | Ch200 五门 PASS，T9=0，segment audit PASS |
+| 195 | 跨体裁 Ch200 总验收 | ◻ | 汇总三体裁 Ch200 与 sci-fi baseline；形成 V10 长窗口结论 | 总报告落盘；STATUS/README/INDEX 更新 |
+
+### V10.3 优秀度信号包
+
+| Task | 名称 | 状态 | 内容要点 | 验收要点 |
+|------|------|:----:|----------|----------|
+| 196 | 优秀度样本集与校准协议 | ◻ | 定义信号边界、样本抽样、人工/自动标注协议；区分 report-only 与候选 gate | 样本清单 + 校准口径 + 误报记录；不是纯文档任务 |
+| 197 | 跨章同质化/多样性/叙事张力指数 | ◻ | 检测重复冲突结构、重复场景功能、重复桥段节奏、张力曲线塌陷 | report-only 输出；有章节证据与误报记录 |
+| 198 | 中文 AI 腔规则包 | ◻ | 从词表升级到规则包：套话、保护性表达、说明文腔、抽象空转 | `songyan metrics/report` 可定位命中段落 |
+| 199 | style extraction → style card | ◻ | 从 accepted 正文抽取项目风格卡；V10 内先生成与报告，不默认注入 Writer/CreativeDirector | style card 生成可复现；不改变历史样本判定 |
+| 200 | 角色声纹锚点 | ◻ | 为主要角色建立声纹特征与偏离检测；先 observe，不自动改写 | 声纹报告可按角色/章节定位 |
+| 201 | judge 偏差对策 | ◻ | 多样本、多 judge、盲评/对照协议；避免单一 judge Goodhart | 校准报告说明偏差与适用范围 |
+| 202 | perplexity / 可读性可行性 spike | ◻ | 评估 perplexity、可读性统计、句段节奏等信号在中文长篇上的稳定性 | 给出采用/放弃/后置结论；不作为硬 gate |
+| 203 | 优秀度报告整合 | ◻ | 将 197-202 输出整合到 metrics/report；分层展示不混入五门 | V10 总报告可引用统一优秀度视图 |
+
+### V10.4 结构升级 spike
+
+| Task | 名称 | 状态 | 内容要点 | 验收要点 |
+|------|------|:----:|----------|----------|
+| 204 | KG 图 diff spike | ◻ | 用少量已知热点章验证事实图 diff 的发现能力 | 给出继续/放弃/后置结论 |
+| 205 | FactTrack validity interval spike | ◻ | 验证事实有效期建模是否降低过期事实误用 | 给出数据模型影响与迁移成本 |
+| 206 | Storyline Tree spike | ◻ | 验证主线/支线树对长程伏笔和弧级收束的价值 | 给出是否进入 V11/V12 的决策 |
+
+### V10.5 收口
+
+| Task | 名称 | 状态 | 内容要点 | 验收要点 |
+|------|------|:----:|----------|----------|
+| 207 | V10 收口与归档 | ◻ | STATUS / README / INDEX / AGENTS / 本文更新；任务归档到 `archive/v10/`；V11 前置确认 | V10 全量闭环；V11 可按 `tasks/V11-Plan.md` 进入开源可用化收尾 |
+
+---
+
+## 执行纪律
+
+1. **先口径，后实跑**：189-191 完成前，不启动任何 Ch200 长跑。
+2. **段边界早停**：Ch125 / Ch150 / Ch175 / Ch200 任一段五门不过，先冻结现场并路由定点修复。
+3. **优秀度先离线/observe**：优秀度信号未校准前不得进入自动门禁，也不得默认注入生成 prompt。
+4. **诊断 DB 不作终判样本**：机制修复后必须 clean rerun。
+5. **不把 spike 伪装成主线**：204-206 只给技术决策，不阻塞 Ch200，除非明确证明现有结构无法继续。
+6. **成本纪律**：Ch200 长跑必须启用 `SONGYAN_RUN_COST_BUDGET` 和 wrapper；分段预算耗尽优雅暂停，可提额 resume。
+
+---
+
+## 明确不做
+
+| 项 | 归属 |
+|----|------|
+| 开源用户安装/初始化/备份/恢复/发布 checklist | V11 |
+| Web/UI/桌面端/账号系统/后台服务 | 不属于当前项目主线 |
+| 小说特化微调、多 agent 仿真生成、Temporal durable execution 迁移 | 调研反面清单，不做 |
+| 将优秀度信号直接变成硬 gate | V10 后再评估，必须先有校准证据 |
+| 将 style card / 声纹锚点默认注入生成链路 | V10 先 report/observe；注入需另立任务并回归 |
+| 新增核心 Agent / Workflow 节点 | 默认不做，除非任务书单独批准 |
+
+---
+
+## 文档入口
+
+- V10 规划入口：`tasks/V10-README.md`（本文）
+- V9 历史事实：`tasks/V9-README.md`
+- V9 归档索引：`archive/v9/INDEX.md`
+- V10 未来归档位置：`archive/v10/`
+- V8 长调研报告（优秀度/结构升级储备）：`docs/reports/v8-literature-and-landscape-review.md`
+- V9 中篇爬坡冻结口径参照：`archive/v8/tasks/172b-xuanhuan-ch100-climb.md` §1.1
+- V11 预登记备忘：`tasks/V11-Plan.md`

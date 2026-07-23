@@ -1,12 +1,12 @@
 # Songyan 项目状态
 
-> 短状态板。这里只保留当前判断、最新证据和下一步，避免挤占开发上下文。任务细节看 `tasks/V9-README.md`，文档路由看 `docs/INDEX.md`，长历史看 `archive/`。
+> 短状态板。这里只保留当前判断、最新证据和下一步，避免挤占开发上下文。任务细节看 `tasks/V10-README.md`，文档路由看 `docs/INDEX.md`，长历史看 `archive/`。
 
 ## 当前判断
 
 | 项 | 结论 |
 |----|------|
-| 当前阶段 | **V9 已全量闭环（2026-07-23）**：生产化地基 + urban 第三体裁 Ch100，Task 173-188 扁平编号，事实入口 `tasks/V9-README.md`，归档入口 `archive/v9/INDEX.md`。V9.1 长跑可靠性、V9.2 交付发布、V9.3 工具链、V9.4 urban 标定、V9.5 urban Ch100、V9.6 收口全部完成；urban Ch1-Ch100 **100/100 accepted**，five-gate PASS，segment audit PASS，T9=0 |
+| 当前阶段 | **V10 规划入口已建立，尚未开工**：V9 已全量闭环（2026-07-23），事实入口 `tasks/V9-README.md`，归档入口 `archive/v9/INDEX.md`。V10 规划入口为 `tasks/V10-README.md`；V10 目标是跨体裁 Ch200 + 优秀度信号包 + 结构升级 spike，任务编号从真正可执行工作项开始 |
 | V7 收尾 | **已完成**。sci-fi/space_opera + webnovel_intense 单一体裁稳定跑到 Ch200，200/200 accepted，D1 hard clean pass；Ch201-Ch220 20/20 accepted |
 | V8.1 运行时画像 | **已完成**（Task 172a + 172a.p）。`GenreRuntimeProfile` 把 Context Diet 2.0 运行时契约从 sci-fi 默认值解耦；xuanhuan Ch8 halt 已消除（base_budget=15000） |
 | V8.3 文学护栏 | **已完成**（Task 172d）。`literary_guardrail_observe` 去科幻硬编码，lexicon/主角名参数化到 `GenreProfile`，三体裁各配一套；DONE 文档已补齐 |
@@ -90,13 +90,14 @@
 
 ## 下一步
 
-1. **V10 规划（未开工）**：跨体裁 Ch200（基线扩 Ch200 checkpoint + 口径冻结）、优秀度信号包（跨章同质化指数/中文 AI 腔规则包/judge 偏差对策/perplexity gate/style card）、结构升级 spike（KG 图 diff / validity interval / Storyline Tree）。
-2. **V10 开工前置**：先写 V10 总任务书与验收口径，不直接启动 Ch200 或优秀度实现。
+1. **V10.1 口径与工具（未开工）**：按 `tasks/V10-README.md`，先做 Ch200 baseline/checkpoint 冻结、Ch100 终点事实源盘点、Ch200 harness 准备。
+2. **V10 开工纪律**：189-191 完成前，不直接启动 Ch200 或优秀度实现；优秀度信号先 report/observe，不进入自动硬门。
 3. **守护项**：后续 CED 仍使用 consistency-only、merged/source、正文证据口径；不得把文学 craft 或 `rule-mr-*` 聚合工作项计入 CED；T9 仍不接受解释性豁免。
 
 ## 入口
 
-- **V9 任务事实入口（已完成）：`tasks/V9-README.md`**
+- **V10 规划入口（未开工）：`tasks/V10-README.md`**
+- V9 任务事实入口（已完成）：`tasks/V9-README.md`
 - V9 归档索引：`archive/v9/INDEX.md`
 - V9 Task 173-188 单项任务文档：`archive/v9/`
 - V9 Task 185 完成报告：`archive/v9/185-urban-short-window-calibration-DONE.md`

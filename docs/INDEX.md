@@ -8,6 +8,7 @@
 |------|------|
 | `AGENTS.md` | 开发代理短指令与不可违背规则 |
 | `docs/STATUS.md` | 当前状态、测试口径、下一步 |
+| `tasks/V10-README.md` | **V10 规划入口（尚未开工）**：跨体裁 Ch200 + 优秀度信号包 + 结构升级 spike；本文不占任务号，任务编号从真正可执行工作项开始 |
 | `tasks/V9-README.md` | **V9 历史事实入口（已收尾）**：生产化地基 + urban 第三体裁 Ch100，Task 173-188 扁平编号；V9.1/V9.2/V9.3/V9.4/V9.5/V9.6 全部完成；urban Ch1-Ch100 100/100 accepted，five-gate PASS，segment audit PASS，T9=0；单项任务文档归档 `archive/v9/` |
 | `tasks/V8-README.md` | **V8 历史任务事实入口（已收尾，含 V8.5）**：多体裁可插拔质量 + 章数爬坡；含 Task 编号治理规则；任务文档与报告归档 `archive/v8/` |
 | `tasks/V7-README.md` | **V7 历史任务事实入口（已收尾）**：sci-fi 单一体裁 Ch200 达成 |
@@ -113,6 +114,7 @@ V8 已全量闭环（P/C/Q/S/V 五维全绿 + V8.5 遗留清零）。任务文�
 | 场景 | 文件 |
 |------|------|
 | V9 任务入口（已收尾） | `tasks/V9-README.md` |
+| V10 规划入口（尚未开工） | `tasks/V10-README.md` |
 | V9 归档索引 | `archive/v9/INDEX.md` |
 | V9 长跑可靠性 DONE | `archive/v9/173-interpreter-exit-hang-fix-DONE.md`、`archive/v9/174-logging-system-foundation-DONE.md`、`archive/v9/175-cost-tracking-and-budget-circuit-breaker-DONE.md`、`archive/v9/176-windows-anti-hang-wrapper-DONE.md` |
 | V9 交付发布 DONE | `archive/v9/177-export-book-manuscript-DONE.md`、`archive/v9/178-wheel-packaging-resource-loading-DONE.md`、`archive/v9/179-cli-experience-fixes-DONE.md`、`archive/v9/180-doctor-environment-check-DONE.md`、`archive/v9/181-ci-and-test-cleanup-DONE.md` |

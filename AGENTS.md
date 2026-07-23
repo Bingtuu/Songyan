@@ -6,7 +6,7 @@
 
 1. 读取 `AGENTS.md`。
 2. 读取 `docs/STATUS.md`。
-3. 若任务指定 Task，读取对应 `tasks/<id>-*.md` 或相关 `*-DONE.md`；V1-V5.0 早期任务（001-120）已归档到 `archive/tasks/`；V6/V7/V8 任务已收尾，事实入口分别见 `tasks/V6-README.md`、`tasks/V7-README.md`、`tasks/V8-README.md`；V8 任务文档与报告已归档 `archive/v8/`。
+3. 若任务指定 Task，读取对应 `tasks/<id>-*.md` 或相关 `*-DONE.md`；若是 V10 任务，先读 `tasks/V10-README.md` 再读单项任务书。V1-V5.0 早期任务（001-120）已归档到 `archive/tasks/`；V5/V6/V7/V8/V9 均已收尾，事实入口分别见 `tasks/V5-README.md` 至 `tasks/V9-README.md`，单项任务文档归档到对应 `archive/v*/`。
 4. 用 5-8 行说明任务边界，再改代码或文档。
 5. 默认按现有架构和文档事实源推进，不重复扫描归档目录。
 
@@ -14,7 +14,8 @@
 
 - 项目状态：`docs/STATUS.md`
 - 文档路由：`docs/INDEX.md`
-- 当前阶段：V9 已全量闭环（Task 173-188）；V10 预登记，尚未开工
+- 当前阶段：V10 规划入口已建立，尚未开工；V9 已全量闭环（Task 173-188）
+- V10 规划入口：`tasks/V10-README.md`；预计从 Task 189 开始，README 本身不占任务号
 - V9 任务事实（已收尾）：`tasks/V9-README.md`；单项任务文档归档 `archive/v9/`（索引 `archive/v9/INDEX.md`）
 - V8 历史任务事实（已收尾）：`tasks/V8-README.md`；任务文档与报告归档 `archive/v8/`（索引 `archive/v8/INDEX.md`）
 - V7 历史任务事实（已收尾）：`tasks/V7-README.md`
@@ -33,7 +34,9 @@ V7（Task 160-171w）已收尾：篇章级质量修复 → 叙事自驱 → enfo
 
 V8（Task 172-172l）已全量闭环：**多体裁可插拔质量 + 章数爬坡**目标达成——`GenreRuntimeProfile` 运行时契约与文学护栏从 sci-fi 隐式画像解耦；P/C/Q/S/V 五维验收全绿；xuanhuan + wuxia 双体裁 Ch100 五门 PASS；V8.5 遗留收口（172j/172k/172l）清零，C 判据 end10/end15/end20 三档证据落盘。V8 任务文档与报告见 `archive/v8/`。
 
-V9（Task 173-188）已全量闭环：生产化地基（V9.1 长跑可靠性 173-176 / V9.2 交付发布 177-181 / V9.3 工具链收编 182-184）+ urban 标定（185）与 Ch100 爬坡（186 任务书 → 187 执行）+ 收口（188）全部完成；A 组地基 8 条、B 组 urban Ch100 六条、C 组守护项均 PASS。跨体裁 Ch200 与优秀度信号包归 V10，V10 尚未开工。V9 事实入口 `tasks/V9-README.md`，归档入口 `archive/v9/INDEX.md`。
+V9（Task 173-188）已全量闭环：生产化地基（V9.1 长跑可靠性 173-176 / V9.2 交付发布 177-181 / V9.3 工具链收编 182-184）+ urban 标定（185）与 Ch100 爬坡（186 任务书 → 187 执行）+ 收口（188）全部完成；A 组地基 8 条、B 组 urban Ch100 六条、C 组守护项均 PASS。V9 事实入口 `tasks/V9-README.md`，归档入口 `archive/v9/INDEX.md`。
+
+V10 规划入口已建立（`tasks/V10-README.md`），目标为**跨体裁 Ch200 + 优秀度信号包 + 结构升级 spike**，尚未启动实跑或代码实现。V10 不补 V9 地基，也不做 V11 的开源用户可用化收尾。V10 前置顺序是：先完成 Ch200 baseline/checkpoint、Ch100 终点事实源盘点、Ch200 harness 准备（预计 189-191），再启动任何 Ch200 长跑或优秀度实现。
 
 ## 不可违背规则
 
@@ -89,6 +92,15 @@ V9（Task 173-188）已全量闭环：生产化地基（V9.1 长跑可靠性 173
 - **V8 新增**：Context Diet 2.0 的运行时契约（预算分配、门禁阈值、状态压缩、伏笔蒸发）必须能按体裁通过 `GenreRuntimeProfile` 定制；无 Profile 体裁必须 100% 回退旧行为。
 - **172i 新增**：`load_profile()` 以代码注册表为体裁默认值基线，DB 记录作为字段级覆盖层；DB 未命中/不可用时回退代码注册表；未知体裁回退 scifi baseline。嵌套子模型按整体替换，不细粒度合并内部键。
 
+### V10 守护项
+
+- Ch200 终判样本必须先保持生成链路稳定；189-191 完成前不得启动 Ch200 长跑。
+- 优秀度信号包初期只做离线分析或 `report/observe` 输出，不得默认注入 Writer / CreativeDirector prompt，不得进入自动硬门。
+- CED 仍只统计 consistency-only、merged/source、正文证据；优秀度、文学 craft、同质化、AI 腔不得混入 CED。
+- T9 仍是硬红线；PASS 样本必须 clean rerun 后 T9=0，不接受解释性豁免。
+- 任何运行时画像、上下文组装、prompt 注入、harness 或质量工具改动后，必须执行 scifi 短窗口回归；影响 Ch200 口径的改动还必须重放 sci-fi Ch200 baseline。
+- KG diff / FactTrack validity interval / Storyline Tree 只作为 spike 给出取舍结论，不得伪装成 Ch200 主线阻塞项。
+
 ## 代码规范
 
 - Python 3.11+；所有函数带类型标注。
@@ -98,7 +110,7 @@ V9（Task 173-188）已全量闭环：生产化地基（V9.1 长跑可靠性 173
 - IO 操作优先 async/await。
 - 日志用 structlog，不用 print。
 - 错误处理用自定义异常，不用裸 except。
-- 不新增无用抽象。`GenreRuntimeProfile` 机制已落地；后续按体裁调参优先走 Profile 注册表/DB 覆盖层，不新增 Agent / Workflow 节点（除非规划稿明确要求）；无 Profile 项目必须能回退旧行为。
+- 不新增无用抽象。`GenreRuntimeProfile` 机制已落地；后续按体裁调参优先走 Profile 注册表/DB 覆盖层，不新增 Agent / Workflow 节点（除非 V10+ 任务书明确批准并给出回归证据）；无 Profile 项目必须能回退旧行为。
 
 ## 验证要求
 
@@ -117,4 +129,4 @@ Windows 下长跑或 pytest 卡住时，使用防卡 wrapper（Task 176 已工�
 - 不用 `git reset --hard` 或 `git checkout --` 覆盖用户改动。
 - 当前入口保持短；长历史、旧规划、旧报告放入 `archive/`。
 - 归档内容默认不读，除非用户要求追溯历史决策。
-- 历史产物已归档至 `archive/v5/`、`archive/v6/`、`archive/v7/`、`archive/v8/`、`archive/v9/` 与 `archive/superpowers/`，入口见各 `INDEX.md`。
+- 历史产物已归档至 `archive/v5/`、`archive/v6/`、`archive/v7/`、`archive/v8/`、`archive/v9/` 与 `archive/superpowers/`，入口见各 `INDEX.md`；V10 完成后归档到 `archive/v10/`。
