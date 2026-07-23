@@ -496,6 +496,9 @@ python scripts/run_172a7_genre_validation.py --templates scifi --end 10
 - [`docs/STATUS.md`](docs/STATUS.md) — 当前状态、验收证据、下一步
 - [`docs/INDEX.md`](docs/INDEX.md) — 文档索引
 - [`tasks/V10-README.md`](tasks/V10-README.md) — V10 规划入口（跨体裁 Ch200 + 优秀度信号包 + 结构升级 spike）
+- [`tasks/189-ch200-baseline-and-checkpoints.md`](tasks/189-ch200-baseline-and-checkpoints.md) — V10 Task 189：Ch200 baseline 与 checkpoint 冻结任务书
+- [`tasks/190-ch100-terminal-source-inventory.md`](tasks/190-ch100-terminal-source-inventory.md) — V10 Task 190：Ch100 终点事实源盘点任务书
+- [`tasks/191-ch200-harness-preparation.md`](tasks/191-ch200-harness-preparation.md) — V10 Task 191：Ch200 harness 准备任务书
 - [`tasks/V9-README.md`](tasks/V9-README.md) — V9 任务事实入口（已收尾，生产化地基 + urban Ch100）
 - [`archive/v5/INDEX.md`](archive/v5/INDEX.md) — V5 任务文档与报告归档索引
 - [`archive/v6/INDEX.md`](archive/v6/INDEX.md) — V6 任务文档与报告归档索引

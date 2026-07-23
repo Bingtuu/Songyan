@@ -6,7 +6,7 @@
 
 | 项 | 结论 |
 |----|------|
-| 当前阶段 | **V10 规划入口已建立，尚未开工**：V9 已全量闭环（2026-07-23），事实入口 `tasks/V9-README.md`，归档入口 `archive/v9/INDEX.md`。V10 规划入口为 `tasks/V10-README.md`；V10 目标是跨体裁 Ch200 + 优秀度信号包 + 结构升级 spike，任务编号从真正可执行工作项开始 |
+| 当前阶段 | **V10 规划入口与 V10.1 任务书已建立，尚未开工**：V9 已全量闭环（2026-07-23），事实入口 `tasks/V9-README.md`，归档入口 `archive/v9/INDEX.md`。V10 规划入口为 `tasks/V10-README.md`；Task 189/190/191 任务书已写好，分别覆盖 Ch200 baseline/checkpoint 冻结、Ch100 终点事实源盘点、Ch200 harness 准备；尚未启动实跑或代码实现 |
 | V7 收尾 | **已完成**。sci-fi/space_opera + webnovel_intense 单一体裁稳定跑到 Ch200，200/200 accepted，D1 hard clean pass；Ch201-Ch220 20/20 accepted |
 | V8.1 运行时画像 | **已完成**（Task 172a + 172a.p）。`GenreRuntimeProfile` 把 Context Diet 2.0 运行时契约从 sci-fi 默认值解耦；xuanhuan Ch8 halt 已消除（base_budget=15000） |
 | V8.3 文学护栏 | **已完成**（Task 172d）。`literary_guardrail_observe` 去科幻硬编码，lexicon/主角名参数化到 `GenreProfile`，三体裁各配一套；DONE 文档已补齐 |
@@ -90,13 +90,17 @@
 
 ## 下一步
 
-1. **V10.1 口径与工具（未开工）**：按 `tasks/V10-README.md`，先做 Ch200 baseline/checkpoint 冻结、Ch100 终点事实源盘点、Ch200 harness 准备。
-2. **V10 开工纪律**：189-191 完成前，不直接启动 Ch200 或优秀度实现；优秀度信号先 report/observe，不进入自动硬门。
+1. **Task 189（未开工）**：先执行 Ch200 baseline 与 checkpoint 冻结，确认 sci-fi Ch200 DB / project_id / run_id，并生成显式 Ch200 baseline。
+2. **Task 190/191（未开工）**：189 完成后盘点三体裁 Ch100 终点事实源，再准备 Ch200 harness；191 准入前不启动 192-194。
+3. **V10 开工纪律**：189-191 完成前，不直接启动 Ch200 或优秀度实现；优秀度信号先 report/observe，不进入自动硬门。
 3. **守护项**：后续 CED 仍使用 consistency-only、merged/source、正文证据口径；不得把文学 craft 或 `rule-mr-*` 聚合工作项计入 CED；T9 仍不接受解释性豁免。
 
 ## 入口
 
 - **V10 规划入口（未开工）：`tasks/V10-README.md`**
+- V10 Task 189 任务书：`tasks/189-ch200-baseline-and-checkpoints.md`
+- V10 Task 190 任务书：`tasks/190-ch100-terminal-source-inventory.md`
+- V10 Task 191 任务书：`tasks/191-ch200-harness-preparation.md`
 - V9 任务事实入口（已完成）：`tasks/V9-README.md`
 - V9 归档索引：`archive/v9/INDEX.md`
 - V9 Task 173-188 单项任务文档：`archive/v9/`

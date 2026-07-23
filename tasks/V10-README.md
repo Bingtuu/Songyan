@@ -105,11 +105,13 @@ V10 不把结构升级强行并入主流程。spike 的目标是形成取舍结�
 
 | Task | 名称 | 状态 | 内容要点 | 验收要点 |
 |------|------|:----:|----------|----------|
-| 189 | Ch200 baseline 与 checkpoint 冻结 | ◻ | sci-fi Ch200 baseline 重放；形成 Ch125/150/175/200 对标表；明确 CED/overdue/health/T9 口径 | baseline 文件入包或归档；工具重放与 V7 报告一致 |
-| 190 | Ch100 终点事实源盘点 | ◻ | 盘点 xuanhuan/wuxia/urban clean Ch100 DB、project_id、run_id、accepted head、T9 状态 | 每个体裁有可复用或需重建的明确结论 |
-| 191 | Ch200 harness 准备 | ◻ | 参数化 `run_172b_ch100_climb.py` 或新增 Ch200 harness；固定 DB 路径、预算、wrapper、报告路径 | dry-run / help / 路径测试通过；不改五门判定函数 |
+| 189 | Ch200 baseline 与 checkpoint 冻结 | ◻ | sci-fi Ch200 baseline 重放；形成 Ch125/150/175/200 对标表；明确 CED/overdue/health/T9 口径 | 任务书：`tasks/189-ch200-baseline-and-checkpoints.md`；baseline 文件入包或归档；工具重放与 V7 报告一致 |
+| 190 | Ch100 终点事实源盘点 | ◻ | 盘点 xuanhuan/wuxia/urban clean Ch100 DB、project_id、run_id、accepted head、T9 状态 | 任务书：`tasks/190-ch100-terminal-source-inventory.md`；每个体裁有可复用或需重建的明确结论 |
+| 191 | Ch200 harness 准备 | ◻ | 参数化 `run_172b_ch100_climb.py` 或新增 Ch200 harness；固定 DB 路径、预算、wrapper、报告路径 | 任务书：`tasks/191-ch200-harness-preparation.md`；dry-run / help / 路径测试通过；不改五门判定函数 |
 
 ### V10.2 跨体裁 Ch200 爬坡
+
+> 192-194 的正式任务书应在 189-191 完成后再写，避免在 baseline、Ch100 起点和 harness 未冻结前写入假设性命令。
 
 | Task | 名称 | 状态 | 内容要点 | 验收要点 |
 |------|------|:----:|----------|----------|
