@@ -1,6 +1,6 @@
 # V7 代码审查与架构审计 — 最终汇总报告
 
-> **审计计划**: `docs/superpowers/plans/2026-07-06-v7-code-review-and-architecture-audit-plan.md`  
+> **审计计划**: `archive/superpowers/plans/2026-07-06-v7-code-review-and-architecture-audit-plan.md`
 > **审计日期**: 2026-07-06  
 > **项目基线**: V7 Task 169 完成后，`2397 passed, 2 skipped, 1 xfailed, 2 warnings`  
 > **审计目标**: 在 Ch200 爬坡前确认 V5/V6/V7 核心工程纪律与架构无地基裂缝。

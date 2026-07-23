@@ -1,12 +1,12 @@
 # Task 170l: 路径 B 第五步 — 声纹工程升级接口化（few_shot_voice_anchor + AI 腔禁用表）— DONE（维持 blocker）
 
-> **专项**: 文学提质专项（`tasks/170-literary-quality-remediation-README.md`）
+> **专项**: 文学提质专项（`archive/v7/tasks/170-literary-quality-remediation-README.md`）
 > **类型**: 路径 B 第五步 / 升级方案轻量入口
 > **优先级**: P0
 > **依赖**: Task 170k 已完成（结论：未达标，维持 blocker）
 > **状态**: ✅ **已完成（维持 blocker）。Ch29–Ch32 小样本复评未达 Ch200 放行标准（voice 2.00 / exposition 2.00 / 窗口均值 2.40；exposition_carrier 72 处）。170l 不放行 Task 171 Ch200，阶段 Z 入口继续冻结。**
 > **负责人**: songyan-agent
-> **复评报告**: `docs/reports/task-170l-few-shot-voice-anchor-reeval-report.md`
+> **复评报告**: `archive/v7/reports/task-170l-few-shot-voice-anchor-reeval-report.md`
 > **生成日志**: `logs/chapter_runs/run-fa235fb4.jsonl`
 > **隔离 DB**: `.tmp/task170l_few_shot_voice_anchor.db`
 > **Run ID**: `run-fa235fb4`（Ch29–Ch32，4/4 success；Ch29 settlement/summary 失败，Ch30–Ch32 accept）
@@ -130,7 +130,7 @@ Task 170l 在 170k `opposing_goal_anchor` 失败后升级到**声纹工程接口
 **要点：**
 - 临时 mode profile 启用 `["minimal_voice_anchor", "opposing_goal_anchor", "few_shot_voice_anchor", "ai_tone_blocklist"]`。
 - 隔离 DB `.tmp/task170l_few_shot_voice_anchor.db`。
-- 复评报告 `docs/reports/task-170l-few-shot-voice-anchor-reeval-report.md`。
+- 复评报告 `archive/v7/reports/task-170l-few-shot-voice-anchor-reeval-report.md`。
 
 ### 6. 关键量具修复：RuleAuditor 引号匹配 bug（170l 执行中发现）
 
@@ -155,10 +155,10 @@ Task 170l 在 170k `opposing_goal_anchor` 失败后升级到**声纹工程接口
 - [x] 无大纲项目行为不变（策略只在 mode profile 显式启用时生效）。
 - [x] RuleAuditor 引号匹配 bug 已修复并新增弯引号覆盖测试。
 - [x] Ch29–Ch32 隔离 DB 重生成完成（`run-fa235fb4`）。
-- [x] `python scripts/run_170l_reeval.py` 复评报告产出：`docs/reports/task-170l-few-shot-voice-anchor-reeval-report.md`。
+- [x] `python scripts/run_170l_reeval.py` 复评报告产出：`archive/v7/reports/task-170l-few-shot-voice-anchor-reeval-report.md`。
 - [x] T9 硬红线：元标记泄漏 0、整段落重复 0。
 - [x] 机器/LLM 偏差：0 / 3 章，量具可信。
-- [x] 回填本 DONE 文档判定并更新 `docs/STATUS.md` / `tasks/V7-README.md` / `README.md` / `tasks/170-literary-quality-remediation-README.md`。
+- [x] 回填本 DONE 文档判定并更新 `docs/STATUS.md` / `tasks/V7-README.md` / `README.md` / `archive/v7/tasks/170-literary-quality-remediation-README.md`。
 - [x] 清理临时 mode profile：`creative_modes/webnovel_intense_few_shot_voice_anchor.json` 已删除。
 
 ---
@@ -196,9 +196,9 @@ Task 170l 在 170k `opposing_goal_anchor` 失败后升级到**声纹工程接口
   - `tests/literary_optimization/test_base.py`
   - `tests/test_creative_director.py`
 - 复评报告：
-  - `docs/reports/task-170l-few-shot-voice-anchor-reeval-report.md`
+  - `archive/v7/reports/task-170l-few-shot-voice-anchor-reeval-report.md`
 - DONE 文档：
-  - `tasks/170l-few-shot-voice-anchor-DONE.md`
+  - `archive/v7/tasks/170l-few-shot-voice-anchor-DONE.md`
 
 ---
 
@@ -221,4 +221,4 @@ Task 170l 在 170k `opposing_goal_anchor` 失败后升级到**声纹工程接口
    - **选项 B：引入 AI 腔后处理 / 反模板化 rewrite 规则**：在 RevisionHandler 中针对 `info_delivery_dialogue` / `direct_revelation_monologue` 做硬性拆分/改写，把说明性对白压缩或转化为动作/代价/冲突。先做量具验证再小样本验证。
    - **选项 C：诚实降级目标**：判定当前 deepseek-chat 在当前 prompt 工程深度下难以在 V7 内让 voice/exposition 同时 ≥3.0，将文学质量目标调整为“保持 pacing/concept/T9 不劣化”，先放行 Ch200 并在长跑中持续人工抽读修复。
 4. **若继续迭代**：任何新方案必须先确认量具能可靠检测其目标问题，然后在 Ch29–Ch32 独立跑小样本，voice ≥3.0 / exposition ≥3.0 / 窗口均值 ≥3.0 / T9 0/0 / carrier ≤1 方可考虑扩展窗口。
-5. **状态文档更新**：已更新 `docs/STATUS.md`、`tasks/V7-README.md`、`README.md`、`tasks/170-literary-quality-remediation-README.md`。
+5. **状态文档更新**：已更新 `docs/STATUS.md`、`tasks/V7-README.md`、`README.md`、`archive/v7/tasks/170-literary-quality-remediation-README.md`。

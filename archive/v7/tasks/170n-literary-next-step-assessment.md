@@ -1,6 +1,6 @@
 # Task 170n：文学提质下一阶段方向评估（路径 B 升级 / AI 腔后处理 / 目标降级）
 
-> **专项**: 文学提质专项（`tasks/170-literary-quality-remediation-README.md`）
+> **专项**: 文学提质专项（`archive/v7/tasks/170-literary-quality-remediation-README.md`）
 > **类型**: 方向评估 / 决策前置
 > **优先级**: P0
 > **依赖**: Task 170m 已完成（量具二次校准确认：170l 原 exposition_carrier=72 校准为 6，但 voice/exposition 仍未达 Ch200 放行线）
@@ -102,8 +102,8 @@ Task 170m 完成后，已经确认：
 - [ ] 完成三向评估文档（本文件）。
 - [ ] 对每条方向输出：核心假设、子策略、预期收益、风险、回退点、大致改动文件清单。
 - [ ] 给出推荐方向及理由（由用户最终决策）。
-- [ ] 更新 `docs/STATUS.md`、`tasks/V7-README.md`、`tasks/170-literary-quality-remediation-README.md`、`README.md`。
-- [ ] 回填 `tasks/170n-literary-next-step-assessment-DONE.md`。
+- [ ] 更新 `docs/STATUS.md`、`tasks/V7-README.md`、`archive/v7/tasks/170-literary-quality-remediation-README.md`、`README.md`。
+- [ ] 回填 `archive/v7/tasks/170n-literary-next-step-assessment-DONE.md`。
 
 ---
 
@@ -138,9 +138,9 @@ Task 170m 完成后，已经确认：
 
 ## 交付物
 
-- `tasks/170n-literary-next-step-assessment.md`（本文件）
-- `tasks/170n-literary-next-step-assessment-DONE.md`
-- `docs/reports/task-170n-literary-next-step-assessment-report.md`（评估报告）
+- `archive/v7/tasks/170n-literary-next-step-assessment.md`（本文件）
+- `archive/v7/tasks/170n-literary-next-step-assessment-DONE.md`
+- `archive/v7/reports/task-170n-literary-next-step-assessment-report.md`（评估报告）
 - 可能的小范围验证脚本（`scripts/run_170n_*_probe.py`）
 
 ---

@@ -70,5 +70,5 @@
 ## 6. 相关文档
 
 - V5.1 规划：[121a-v50-goal-assessment-and-v51-plan.md](121a-v50-goal-assessment-and-v51-plan.md)
-- Pass 14-18 修复汇总：[docs/reports/pass14-final-fix-summary.md](../docs/reports/pass14-final-fix-summary.md)
+- Pass 14-18 修复汇总：[archive/v5/reports/pass14-final-fix-summary.md](../archive/v5/reports/pass14-final-fix-summary.md)
 - STATUS：[docs/STATUS.md](../docs/STATUS.md)

@@ -127,7 +127,7 @@ Task 127 score halt ┤──► Task 128 严格模式容错与质量爬坡 ─�
 
 ## 8. 交付物
 
-- `tasks/129-enforce-mode-ch1-ch50-validation-DONE.md`
+- `archive/v5/tasks/129-enforce-mode-ch1-ch50-validation-DONE.md`
 - 实跑日志：`logs/chapter_runs/run-<id>.jsonl`
 - `songyan report` 输出
 - 新增 Mock 压力测试

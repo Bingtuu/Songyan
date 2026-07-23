@@ -89,18 +89,18 @@ Y（enforce 可生产化 168-170）──┴────────────
 
 | Task | 名称 | 交付要点（方向性占位） |
 |------|------|----------|
-| **166** | plan→generate→re-plan 闭环总览 | 已完成：`tasks/166-plan-generate-replan-loop-DONE.md`；166a/166b 已分别完成提案生成与人工确认后的事务化应用 |
+| **166** | plan→generate→re-plan 闭环总览 | 已完成：`archive/v7/tasks/166-plan-generate-replan-loop-DONE.md`；166a/166b 已分别完成提案生成与人工确认后的事务化应用 |
 | **166a** | 弧后评估与 ReplanProposal 生成 | 已完成：从 SQLite 读取 ArcPlan / PlotThread / summaries / T9/T10/T6/T7，生成 draft proposal，不修改规划表 |
 | **166b** | 人工确认后的 re-plan 应用 | 已完成：approved proposal 事务化应用到未来 ArcPlan / PlotThread / planning constraints，保留 diff 并支持 rollback |
-| **167** | 长程伏笔主动兑现调度（拆 167a 调度计划 / 167b 注入与生命周期） | 已完成：`tasks/167-long-range-foreshadowing-active-scheduling-DONE.md`；active 调度项已注入 GoalPlanner / CreativeDirector，accept 后推进 `satisfied/missed` 生命周期；不自动改正文，不启动 Ch200 |
+| **167** | 长程伏笔主动兑现调度（拆 167a 调度计划 / 167b 注入与生命周期） | 已完成：`archive/v7/tasks/167-long-range-foreshadowing-active-scheduling-DONE.md`；active 调度项已注入 GoalPlanner / CreativeDirector，accept 后推进 `satisfied/missed` 生命周期；不自动改正文，不启动 Ch200 |
 
 ### 阶段 Y：enforce 门禁可生产化（方向三）— 占位，对标 V6 enforce 8-Task 先例拆 3 个
 
 | Task | 名称 | 交付要点（方向性占位） |
 |------|------|----------|
-| **168** | 自适应门禁数据面（拆 168a 信号快照 / 168b 窗口聚合） | 已完成：`tasks/168-adaptive-gate-data-plane-DONE.md`；已建立 SQLite 快照事实源，并在 `songyan metrics` 展示窗口级数据面；只供 169 判定使用，不改变 halt 行为 |
-| **169** | 自适应 halt 判定（拆 169a 判定引擎 / 169b workflow 接入） | 已完成：`tasks/169-adaptive-halt-decision-DONE.md`；已建立 decision ledger 并接入 phase2 observe/enforce 行为；良性波动不停、真退化才停 |
-| **170** | enforce 小窗口验证 + T12 误报率标定 | ✅ 完成：`tasks/170-...-DONE.md`；报告 `docs/reports/task-170-adaptive-gate-validation-report.md`；四类小窗口（良性/真实退化/单点毛刺/单域）验证 168/169，良性 FP rate=0、真实退化 halt_candidate/halt=100%，**T12 已冻结**，可读性/文学性抽检无 blocker，未启动 Ch200 |
+| **168** | 自适应门禁数据面（拆 168a 信号快照 / 168b 窗口聚合） | 已完成：`archive/v7/tasks/168-adaptive-gate-data-plane-DONE.md`；已建立 SQLite 快照事实源，并在 `songyan metrics` 展示窗口级数据面；只供 169 判定使用，不改变 halt 行为 |
+| **169** | 自适应 halt 判定（拆 169a 判定引擎 / 169b workflow 接入） | 已完成：`archive/v7/tasks/169-adaptive-halt-decision-DONE.md`；已建立 decision ledger 并接入 phase2 observe/enforce 行为；良性波动不停、真退化才停 |
+| **170** | enforce 小窗口验证 + T12 误报率标定 | ✅ 完成：`tasks/170-...-DONE.md`；报告 `archive/v7/reports/task-170-adaptive-gate-validation-report.md`；四类小窗口（良性/真实退化/单点毛刺/单域）验证 168/169，良性 FP rate=0、真实退化 halt_candidate/halt=100%，**T12 已冻结**，可读性/文学性抽检无 blocker，未启动 Ch200 |
 
 > **借鉴 159 督跑经验**：`scripts/supervise_159.py` 的"保守策略自动 resume / 停下上报"已实证自适应门禁可行——把它的决策逻辑（良性暂停自动续、真退化才停）沉淀为**门禁本身的能力**，而非外挂脚本，是阶段 Y 的主线。
 
@@ -117,7 +117,7 @@ Y（enforce 可生产化 168-170）──┴────────────
 | **171t** | Ch200 D1 文本洁净量具补强 | 已完成；补齐 Markdown 标题、保护指令、斜杠拼接、纯省略号段、prompt/patch 指令与 duplicate final sweep 检测 |
 | **171u** | Ch200 D1 清洁应用与报告事实源复算 | 已完成；20 个 clean accepted versions，T9 hard issue=0，T6b critical orphan peak=0，报告只取最新事实源 |
 | **171v** | Ch200+ 文学性与可读性护栏 | 条件未通过；run `run-e27b763f` Ch201-Ch220 19/20 accepted、failed=[207]、T9=0，但配角目标/主动性/概念密度未达出口，需 hardening 后重验 |
-| **171w** | 171v-hardening：文学护栏硬化与 Ch201-Ch220 重验 | 已完成；spec `tasks/171w-171v-hardening-and-ch201-ch220-rerun.md`，171w-a 报告收口 / 171w-b 持久化审计 / 171w-c 正文 observe + ReviewMerger 接线 / 171w-d Ch207 settlement 修复与重验全部落地；Ch201-Ch220 20/20 accepted |
+| **171w** | 171v-hardening：文学护栏硬化与 Ch201-Ch220 重验 | 已完成；spec `archive/v7/tasks/171w-171v-hardening-and-ch201-ch220-rerun.md`，171w-a 报告收口 / 171w-b 持久化审计 / 171w-c 正文 observe + ReviewMerger 接线 / 171w-d Ch207 settlement 修复与重验全部落地；Ch201-Ch220 20/20 accepted |
 | **172** | Ch250 过渡验证 | 前置 171w 已完成，可启动；≥1 条主线伏笔跨度 ≥50 章并兑现的真实案例；概念落地/文学趋势不衰减 |
 | **172p** | Ch250 撞墙定点修复（占位） | 内容待 Ch250 实跑反馈确定 |
 | **173** | Ch300 终态验收 + V7 阶段验收报告 | 逐条核对 P/L/T/G/V；事实源质量 + 文学质量不随长度衰减；产出 V7 验收报告并给总结论 |

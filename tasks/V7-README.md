@@ -46,35 +46,35 @@ V7 通过 = 同时满足以下五项（阈值沿用 v6-plan §1.4 的 T1-T8，V7
 
 | Task | 名称 | 状态 | 事实文档 |
 |------|------|:----:|----------|
-| 160 | 元标记泄漏根治（正则补全 + Writer/RevisionHandler 强制清洗 + ReviewMerger 阻塞） | ✅ 完成 | `tasks/160-meta-tag-leak-eradication-DONE.md` |
-| 161 | 段落级去重（整段复制根治 + 重复长段落检测） | ✅ 完成 | `tasks/161-paragraph-dedup-DONE.md` |
-| 162 | 跨章时间线一致性检测（倒计时/时间戳矛盾，先诊断） | ✅ 完成 | `tasks/162-cross-chapter-timeline-consistency-DONE.md` |
-| 163 | 概念预算约束（治概念通胀） | ✅ 完成 | `tasks/163-concept-budget-constraint-DONE.md` |
-| 164 | 文本洁净度度量入库 + `songyan report` 展示（T9 harness） | ✅ 完成 | `tasks/164-text-cleanliness-metrics-DONE.md` |
-| 165 | 阶段 W 出口：Ch150 复跑验证 + T9/T10 标定冻结 | ✅ 完成 | `tasks/165-stage-w-ch150-rerun-and-threshold-freeze-DONE.md`；报告 `docs/reports/task-165-stage-w-exit-report.md` |
-| 165p | 阶段 W 出口阻断项：T5/T6 harness 口径校准 + 165 报告复算 | ✅ 完成 | `tasks/165p-stage-w-harness-calibration-DONE.md` |
+| 160 | 元标记泄漏根治（正则补全 + Writer/RevisionHandler 强制清洗 + ReviewMerger 阻塞） | ✅ 完成 | `archive/v7/tasks/160-meta-tag-leak-eradication-DONE.md` |
+| 161 | 段落级去重（整段复制根治 + 重复长段落检测） | ✅ 完成 | `archive/v7/tasks/161-paragraph-dedup-DONE.md` |
+| 162 | 跨章时间线一致性检测（倒计时/时间戳矛盾，先诊断） | ✅ 完成 | `archive/v7/tasks/162-cross-chapter-timeline-consistency-DONE.md` |
+| 163 | 概念预算约束（治概念通胀） | ✅ 完成 | `archive/v7/tasks/163-concept-budget-constraint-DONE.md` |
+| 164 | 文本洁净度度量入库 + `songyan report` 展示（T9 harness） | ✅ 完成 | `archive/v7/tasks/164-text-cleanliness-metrics-DONE.md` |
+| 165 | 阶段 W 出口：Ch150 复跑验证 + T9/T10 标定冻结 | ✅ 完成 | `archive/v7/tasks/165-stage-w-ch150-rerun-and-threshold-freeze-DONE.md`；报告 `archive/v7/reports\task-165-stage-w-exit-report.md` |
+| 165p | 阶段 W 出口阻断项：T5/T6 harness 口径校准 + 165 报告复算 | ✅ 完成 | `archive/v7/tasks/165p-stage-w-harness-calibration-DONE.md` |
 
 ### 阶段 X：叙事自驱（骨架动态闭环 + 伏笔主动调度）
 
 | Task | 名称 | 状态 | 事实文档 |
 |------|------|:----:|----------|
-| 166 | plan→generate→re-plan 闭环总览 | ✅ 完成 | `tasks/166-plan-generate-replan-loop-DONE.md` |
-| 166a | 弧后评估与 ReplanProposal 生成 | ✅ 完成 | `tasks/166a-arc-outcome-evaluation-and-replan-proposal-DONE.md` |
-| 166b | 人工确认后的 re-plan 应用 | ✅ 完成 | `tasks/166b-approved-replan-application-DONE.md` |
-| 167 | 长程伏笔主动兑现调度（拆 167a/b） | ✅ 完成 | `tasks/167-long-range-foreshadowing-active-scheduling-DONE.md` |
-| 167a | 主动伏笔调度计划生成 | ✅ 完成 | `tasks/167a-foreshadowing-schedule-plan-DONE.md` |
-| 167b | 调度计划注入与生命周期推进 | ✅ 完成 | `tasks/167b-schedule-injection-and-lifecycle-DONE.md` |
+| 166 | plan→generate→re-plan 闭环总览 | ✅ 完成 | `archive/v7/tasks/166-plan-generate-replan-loop-DONE.md` |
+| 166a | 弧后评估与 ReplanProposal 生成 | ✅ 完成 | `archive/v7/tasks/166a-arc-outcome-evaluation-and-replan-proposal-DONE.md` |
+| 166b | 人工确认后的 re-plan 应用 | ✅ 完成 | `archive/v7/tasks/166b-approved-replan-application-DONE.md` |
+| 167 | 长程伏笔主动兑现调度（拆 167a/b） | ✅ 完成 | `archive/v7/tasks/167-long-range-foreshadowing-active-scheduling-DONE.md` |
+| 167a | 主动伏笔调度计划生成 | ✅ 完成 | `archive/v7/tasks/167a-foreshadowing-schedule-plan-DONE.md` |
+| 167b | 调度计划注入与生命周期推进 | ✅ 完成 | `archive/v7/tasks/167b-schedule-injection-and-lifecycle-DONE.md` |
 
 ### 阶段 Y：enforce 门禁可生产化
 
 | Task | 名称 | 状态 | 事实文档 |
 |------|------|:----:|----------|
-| 168 | 自适应门禁数据面（拆 168a/b） | ✅ 完成 | `tasks/168-adaptive-gate-data-plane-DONE.md` |
-| 168a | 自适应门禁信号快照模型 | ✅ 完成 | `tasks/168a-adaptive-gate-signal-snapshot-DONE.md` |
-| 168b | 自适应门禁窗口聚合与报告出口 | ✅ 完成 | `tasks/168b-adaptive-gate-window-reporting-DONE.md` |
-| 169 | 自适应 halt 判定（拆 169a/b） | ✅ 完成 | `tasks/169-adaptive-halt-decision-DONE.md` |
-| 169a | 自适应 halt 判定引擎与决策账本 | ✅ 完成 | `tasks/169a-adaptive-halt-decision-engine-DONE.md` |
-| 169b | 自适应 halt workflow 接入 | ✅ 完成 | `tasks/169b-adaptive-halt-workflow-integration-DONE.md` |
+| 168 | 自适应门禁数据面（拆 168a/b） | ✅ 完成 | `archive/v7/tasks/168-adaptive-gate-data-plane-DONE.md` |
+| 168a | 自适应门禁信号快照模型 | ✅ 完成 | `archive/v7/tasks/168a-adaptive-gate-signal-snapshot-DONE.md` |
+| 168b | 自适应门禁窗口聚合与报告出口 | ✅ 完成 | `archive/v7/tasks/168b-adaptive-gate-window-reporting-DONE.md` |
+| 169 | 自适应 halt 判定（拆 169a/b） | ✅ 完成 | `archive/v7/tasks/169-adaptive-halt-decision-DONE.md` |
+| 169a | 自适应 halt 判定引擎与决策账本 | ✅ 完成 | `archive/v7/tasks/169a-adaptive-halt-decision-engine-DONE.md` |
+| 169b | 自适应 halt workflow 接入 | ✅ 完成 | `archive/v7/tasks/169b-adaptive-halt-workflow-integration-DONE.md` |
 | 170 | enforce 小窗口验证 + T12 误报率标定 | ✅ 完成 | `archive/v7/tasks/170-enforce-small-window-validation-and-t12-calibration-DONE.md`；报告 `archive/v7/reports/task-170-adaptive-gate-validation-report.md` |
 
 ### 文学提质专项（Task 170）—— 已结束，改判为"改契约 + 并行"框架
@@ -107,7 +107,7 @@ V7 通过 = 同时满足以下五项（阈值沿用 v6-plan §1.4 的 T1-T8，V7
 
 | Task | 名称 | 状态 | 事实文档 |
 |------|------|:----:|----------|
-| 171 | Ch200 长跑（V7 第一里程碑，文学=观测已解冻） | ✅ **完成（Ch200 200/200 accepted；D1 hard clean pass）** | run `run-fb39245c` Ch1-Ch200 **200/200 accepted、gaps=[]、Halt=None**；171t/171u 已完成，当前 accepted head T9 meta/artifact=0、duplicate=0，T6b critical orphan peak=0；报告 `docs/reports/task-171-ch200-long-run-report.md`；分析 `docs/reports/task-171-ch200-analysis-and-next-step-report.md` |
+| 171 | Ch200 长跑（V7 第一里程碑，文学=观测已解冻） | ✅ **完成（Ch200 200/200 accepted；D1 hard clean pass）** | run `run-fb39245c` Ch1-Ch200 **200/200 accepted、gaps=[]、Halt=None**；171t/171u 已完成，当前 accepted head T9 meta/artifact=0、duplicate=0，T6b critical orphan peak=0；报告 `archive/v7/reports\task-171-ch200-long-run-report.md`；分析 `archive/v7/reports\task-171-ch200-analysis-and-next-step-report.md` |
 | 171p | Ch200 撞墙定点修复（state_mismatch 构念修正） | ✅ **完成** | `archive/v7/tasks/171p-ch200-wall-fix-DONE.md`；排除演进型 field（emotional_state/knowledge），Ch3 假阳性 11→6，V6 159 基线 post-fix 全程 0、health 9.3–10（不误抑制） |
 | 171q | Ch200 撞墙定点修复（分段修订 T9 重复——去重阈值口径对齐） | ✅ **完成** | `archive/v7/tasks/171q-ch200-wall-fix-duplicate.md`；min_chars 100→40 + 分级阈值 0.95/0.9，实证复验 accepted Ch2 T9 dup 8→0 |
 | 171s | Ch200 撞墙定点修复（critical setting 同义提及刷新） | ✅ **完成** | `archive/v7/tasks/171s-critical-setting-reference-refresh.md`；增强 `_detect_setting_references` 复合中文设定召回，Ch160/161/162/164/165 实证刷新 `protagonist.genetic_identity.reaper_maker_consistency` |

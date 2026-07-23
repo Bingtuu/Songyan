@@ -82,7 +82,7 @@ Task 133/134/135 已分别针对上述问题完成代码与测试修复。本任
 - [ ] 进程至少成功到达 Ch20，或若提前 pause，则 pause 原因不得是上述三个已修复缺陷的回退。
 - [ ] 与 `run-89d7a2d4` 同窗口（Ch1–Ch15）对比，QG 失败章节数下降 ≥ 50%。
 - [ ] `ruff check src/ tests/` 通过。
-- [ ] 输出 `docs/reports/task-136-v52-enforce-ch1-ch20-validation-report.md`。
+- [ ] 输出 `archive/v5/reports/task-136-v52-enforce-ch1-ch20-validation-report.md`。
 
 ---
 
@@ -124,6 +124,6 @@ Task 135 设定回收治理 ────────┘
 ## 7. 交付物
 
 - `scripts/run_136_v52_enforce_ch1_ch20_validation.py`
-- `docs/reports/task-136-v52-enforce-ch1-ch20-validation-report.md`
+- `archive/v5/reports/task-136-v52-enforce-ch1-ch20-validation-report.md`
 - 更新后的 `docs/STATUS.md` 与 `tasks/V5-README.md`
 - 本任务 `-DONE.md` 文档

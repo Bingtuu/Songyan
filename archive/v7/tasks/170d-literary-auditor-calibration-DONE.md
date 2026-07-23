@@ -1,6 +1,6 @@
 # Task 170d: LiteraryAuditor 校准（量具可信化）— DONE
 
-> **专项**: 文学提质专项（`tasks/170-literary-quality-remediation-README.md`）
+> **专项**: 文学提质专项（`archive/v7/tasks/170-literary-quality-remediation-README.md`）
 > **类型**: 量具修复（先行、独立、低风险）
 > **状态**: ✅ 完成（2026-07-06）
 > **依赖**: 170b DONE（机器/人工偏差数据 + 隔离 DB + 人工 voice 终评分）
@@ -53,7 +53,7 @@
 | 触发 polyphony_weakness 章数 | — | **12/13** |
 
 典型：Ch31 从 7.8 → 2.0（人工 voice×2=2，偏差 0.0 完全命中）；Ch29 从 8.5 → 3.0。
-详见 `docs/reports/task-170d-auditor-calibration-backtest.md`。
+详见 `archive/v7/reports/task-170d-auditor-calibration-backtest.md`。
 
 > Ch33 未触发 polyphony_weakness 但分数仍降到 2.5——因该章是单人独角戏（无对白可比），
 > 校准通过"单人独白为主落低档"规则压分，与 170b 判断（Ch33 concept 强但 voice 无）一致。
@@ -63,7 +63,7 @@
 - 工艺卡：`prompts/cards/literary_auditor/1.0.2.yaml`（新）
 - 清单：`prompts/cards/literary_auditor/_manifest.yaml`（default_version → 1.0.2）
 - 回测脚本：`scripts/backtest_170d_auditor_calibration.py`
-- 回测报告：`docs/reports/task-170d-auditor-calibration-backtest.md`
+- 回测报告：`archive/v7/reports/task-170d-auditor-calibration-backtest.md`
 - 单测：`tests/test_170d_auditor_calibration.py`（7 用例：工艺卡锚点契约 5 + 解析透传 2）
 
 ## 验证结果

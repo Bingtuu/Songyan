@@ -4,7 +4,7 @@
 
 ## 归档原则
 
-- **V7 已收尾，全部历史产物归档**：Task 170/171/171w 主线、撞墙修复、报告均已迁移出 `tasks/` 和 `docs/reports/`，只保留 `tasks/V7-README.md` 作为历史事实总索引。
+- **V7 已收尾，全部历史产物归档**：Task 160-171w 主线、撞墙修复、报告均已迁移出 `tasks/` 和 `docs/reports/`，只保留 `tasks/V7-README.md` 作为历史事实总索引。
 - **取消的任务归档**：Task 172（Ch250）因阶段战略调整取消，归档至此。
 - **完成的 R&D 线归档**：171a/171a-1/171b/171c/171d 的 spec、DONE、报告、复算脚本和专用实验工具归档至此。
 - **历史审计报告归档**：pass1-pass17 审计报告与相关日志归档至 `archive/v7/audit/`。
@@ -18,8 +18,8 @@
 | 路径 | 内容 |
 |---|---|
 | `archive/v7/plans/` | V7 规划文档（v7-vision、v7-plan） |
-| `archive/v7/tasks/` | 170/170c/170d/170p DONE 与 170 总览；170b–170o 过程稿与 DONE；171/171p–171w 任务规格与 DONE；171a/171a-1/171b/171c/171d 的任务规格与 DONE 文档；已取消的 172 |
-| `archive/v7/reports/` | Task 171 Ch200 系列报告；171a/171a-1/171b/171c/171d 的报告；task-170 系列文学提质中间报告 |
+| `archive/v7/tasks/` | 160-169 阶段 W/X/Y 单项任务文档；170/170c/170d/170p DONE 与 170 总览；170b–170o 过程稿与 DONE；171/171p–171w 任务规格与 DONE；171a/171a-1/171b/171c/171d 的任务规格与 DONE 文档；已取消的 172 |
+| `archive/v7/reports/` | Task 165 阶段 W 报告；Task 171 Ch200 系列报告；171a/171a-1/171b/171c/171d 的报告；task-170 系列文学提质中间报告 |
 | `archive/v7/audit/` | pass1-pass17 V7 审计报告与 `_pytest-pass13.log` |
 | `archive/v7/scripts/` | 171a-1/171b/171c/171d 的离线生成、标注、采样、A/B、标定脚本 |
 | `archive/v7/tests/` | 171b/171c R&D 专用测试 |
@@ -34,6 +34,17 @@
 
 | Task | 归档文档 |
 |---|---|
+| 160 元标记泄漏根治 | `archive/v7/tasks/160-meta-tag-leak-eradication-DONE.md` |
+| 161 段落级去重 | `archive/v7/tasks/161-paragraph-dedup-DONE.md` |
+| 162 跨章时间线一致性检测 | `archive/v7/tasks/162-cross-chapter-timeline-consistency-DONE.md` |
+| 163 概念预算约束 | `archive/v7/tasks/163-concept-budget-constraint-DONE.md` |
+| 164 文本洁净度度量入库 | `archive/v7/tasks/164-text-cleanliness-metrics-DONE.md` |
+| 165 阶段 W 出口 | `archive/v7/tasks/165-stage-w-ch150-rerun-and-threshold-freeze-DONE.md`、`archive/v7/reports/task-165-stage-w-exit-report.md` |
+| 165p 阶段 W harness 校准 | `archive/v7/tasks/165p-stage-w-harness-calibration-DONE.md` |
+| 166 plan→generate→re-plan 闭环 | `archive/v7/tasks/166-plan-generate-replan-loop-DONE.md` |
+| 167 长程伏笔主动兑现调度 | `archive/v7/tasks/167-long-range-foreshadowing-active-scheduling-DONE.md` |
+| 168 自适应门禁数据面 | `archive/v7/tasks/168-adaptive-gate-data-plane-DONE.md` |
+| 169 自适应 halt 判定 | `archive/v7/tasks/169-adaptive-halt-decision-DONE.md` |
 | 170 enforce 小窗口验证 + T12 冻结 | `archive/v7/tasks/170-enforce-small-window-validation-and-t12-calibration-DONE.md` |
 | 170c T9 近似重复检测 | `archive/v7/tasks/170c-t9-near-duplicate-detection-DONE.md` |
 | 170d LiteraryAuditor 校准 | `archive/v7/tasks/170d-literary-auditor-calibration-DONE.md` |

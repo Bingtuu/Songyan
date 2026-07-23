@@ -2,7 +2,7 @@
 
 > **框架**: `docs/reports/v7-literary-framework-review.md` §8 C 组（C1/C2/C3）+ §7.1 R1
 > **状态**: ✅ **完成**
-> **报告**: `docs/reports/task-171b-representative-sampling-report.md`
+> **报告**: `archive/v7/reports/task-171b-representative-sampling-report.md`
 > **完成时间**: 2026-07-10
 
 ---
@@ -61,5 +61,5 @@ Task 171b 解决旧框架的**样本不代表性**错误（框架 E-样本环）
 
 ## 出口与下一步
 - **C1/C2/C3 达标**：样本方法论落地，量具+样本"双环"已修，2×2 归因表证明 170 低分是假象。
-- **下一步 Task 171c**（spec `tasks/171c-improvement-levers.md`）：在本样本集的**对话承载层**上做杠杆组合验证（后处理/few-shot/解码参数/换模型/人工抽读，带退出判据）——现在"提质有没有效"可被可信量具 + 代表样本客观判读。
+- **下一步 Task 171c**（spec `archive/v7/tasks/171c-improvement-levers.md`）：在本样本集的**对话承载层**上做杠杆组合验证（后处理/few-shot/解码参数/换模型/人工抽读，带退出判据）——现在"提质有没有效"可被可信量具 + 代表样本客观判读。
 - 171b 不阻塞 Ch200；提质结论只在达标格子（量具有效 × 样本代表）内下。

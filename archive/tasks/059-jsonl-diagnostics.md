@@ -1,4 +1,4 @@
-﻿# Task 059: JSONL 监控诊断补全
+# Task 059: JSONL 监控诊断补全
 
 > **Phase**: V3.0 Layer 2 — 核心验证层（收尾）
 > **优先级**: P0

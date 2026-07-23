@@ -27,7 +27,7 @@
 ## 1.5 实际执行结果摘要
 
 - **分析脚本**: `scripts/analyze_124_gate_impact.py`
-- **输出报告**: `docs/reports/124-gate-impact-analysis-run-a2bed648.md`
+- **输出报告**: `archive/v5/reports/124-gate-impact-analysis-run-a2bed648.md`
 - **分析范围**: Ch31 - Ch150（共 120 章）
 - **关键发现**:
   - `health_low_p1_halt` / `health_low_absolute_score_halt` 各触发 **40 次**（每 3 章审计点均触发）。
@@ -163,7 +163,7 @@ GateConfig(
 - [x] 实现离线仿真脚本 `scripts/analyze_124_gate_impact.py`。
 - [x] 脚本能够读取 `logs/chapter_runs/run-a2bed648.jsonl` 和 SQLite 数据。
 - [x] 脚本复用 `src/songyan/workflows/_gates.py` 的判断函数，不自行重写规则。
-- [x] 输出报告文件 `docs/reports/124-gate-impact-analysis-run-a2bed648.md`。
+- [x] 输出报告文件 `archive/v5/reports/124-gate-impact-analysis-run-a2bed648.md`。
 - [x] 报告中包含汇总表、逐章明细表、结论与建议。
 - [x] 新增 `tests/test_124_gate_impact.py` 单测（16 个）。
 - [x] `ruff check src/ tests/ scripts/analyze_124_gate_impact.py` 通过。

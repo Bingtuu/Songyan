@@ -1,6 +1,6 @@
 # Task 170f: pacing 节奏 + exposition 融合提质
 
-> **专项**: 文学提质专项（`tasks/170-literary-quality-remediation-README.md`）
+> **专项**: 文学提质专项（`archive/v7/tasks/170-literary-quality-remediation-README.md`）
 > **类型**: 检测补强 + 生成侧提质（中风险——碰 RuleAuditor + 生成链）
 > **优先级**: P0（pacing 用户通读确认偏慢；exposition 硬灌）
 > **依赖**: 170d DONE（可信量具）、170e DONE（seeding 修复，声纹机制已激活）

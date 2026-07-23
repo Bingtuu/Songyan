@@ -15,7 +15,7 @@
 | **N 骨架** | 大纲/弧携带 + GoalPlanner 弧上下文 + Ch1-Ch50 ≥1 主线 T1 跃迁 | ✅ pass | 大纲携带=是；T1=pass(2.0) | NarrativeRepository / context_snapshots / check_t1 |
 | **D 度量** | 五类指标入库且 songyan metrics 1-150 可查、无断档 | ✅ pass | 五类曲线渲染=有数据 | render_stage_a_metrics 输出 |
 | **S 收敛** | T6a 斜率 ≤138n×0.5 + T6b P1=0 + T6c 归因成立 | 🔴 fail | T6a=pass(0.0897)；T6b=未判定(None)；T6c=fail(orphan_slope=0.0897, t7=0.0067) | evaluate_v6_acceptance T6* |
-| **R 可靠** | 单命令无人值守 Ch100（Task 158）+ kill→resume 命令级证据（Task 158r） | ✅ pass | kill→resume 引用 run-82bd2e07（docs/reports/task-158r-kill-resume-drill-report.md） | Task 158 / 158r 报告 |
+| **R 可靠** | 单命令无人值守 Ch100（Task 158）+ kill→resume 命令级证据（Task 158r） | ✅ pass | kill→resume 引用 run-82bd2e07（archive/v6/reports/task-158r-kill-resume-drill-report.md） | Task 158 / 158r 报告 |
 | **V 验证** | 新管线 Ch1-Ch150 连续证据 + 全程 T3/T4 不破 + T5 复核冻结口径不破 | 🔴 fail | T2=pass(150/150)；T3/T8=pass(none)；T4=pass(degraded=0.0%, convergence=1.9%)；T5=fail(max_db=112.32MB, max_latency_ratio=5.91x) | 本 Task 长跑 + evaluate_v6_acceptance |
 
 ### 与 a2bed648/138n 基线逐项对比（不劣于）

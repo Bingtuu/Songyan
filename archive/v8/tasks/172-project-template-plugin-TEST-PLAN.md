@@ -3,7 +3,7 @@
 > 本文件记录 `task/173-project-templates` 分支（已重新编号为 Task 172）在合并回 `main` 之前需要完成的验证项与判定门槛。
 >
 > - 实施报告：`tasks/172-project-template-plugin-DONE.md`
-> - 设计计划：`docs/superpowers/plans/2026-07-13-project-template-plugin-plan.md`
+> - 设计计划：`archive/superpowers/plans/2026-07-13-project-template-plugin-plan.md`
 
 ---
 

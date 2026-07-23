@@ -278,8 +278,8 @@ print("Summary written")
 ### Task 6: 评估候选策略并撰写决策报告
 
 **Files:**
-- Create: `docs/reports/task-138m-critical-orphan-root-cause-report.md`
-- Modify: `tasks/138m-critical-orphan-root-cause-and-v52-boundary.md`（更新状态/进度）
+- Create: `archive/v5/reports/task-138m-critical-orphan-root-cause-report.md`
+- Modify: `archive/v5/tasks/138m-critical-orphan-root-cause-and-v52-boundary.md`（更新状态/进度）
 
 - [ ] **Step 1: 填写评估矩阵**
 

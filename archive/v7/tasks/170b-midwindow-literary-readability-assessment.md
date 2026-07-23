@@ -75,7 +75,7 @@
   - 拉 run_log 关键字段（quality_gate_passed / continuity health / degraded_accept）。
   - LLM 初评 + 标可疑段落 + 机器/人工偏差候选。
   - 汇总成结构化评估表。
-- [ ] 评估报告 `docs/reports/task-170b-literary-readability-assessment-report.md`。
+- [ ] 评估报告 `archive/v7/reports/task-170b-literary-readability-assessment-report.md`。
 - [ ] 人工复核记录（用户终评分写入报告）。
 
 ## Out of Scope

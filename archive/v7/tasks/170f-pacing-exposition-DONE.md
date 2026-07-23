@@ -3,7 +3,7 @@
 > **状态**: Stage 1 ✅ / Stage 2 部分达标（pacing ✅，exposition ❌）
 > **完成时间**: 2026-07-07
 > **负责人**: songyan-agent
-> **报告**: `docs/reports/task-170f-stage2-reeval-report.md`
+> **报告**: `archive/v7/reports/task-170f-stage2-reeval-report.md`
 > **复评衔接**: 170g
 
 ---
@@ -200,7 +200,7 @@ Ch32 建造者碎片与林渊的对话：
 - [x] 小样本重生成（Ch29-32）完成：pacing 3.25 ✅，exposition 2.0 ❌。
 - [x] 实际通读 Ch29–Ch32，确认 pacing 改善真实、exposition 问题顽固。
 - [x] 全量测试 + ruff：Stage 1 仅改 Writer prompt 卡，未改代码；相关回归测试在 121r/135 已覆盖。
-- [x] 产出 `tasks/170f-pacing-exposition-DONE.md`。
+- [x] 产出 `archive/v7/tasks/170f-pacing-exposition-DONE.md`。
 
 ---
 

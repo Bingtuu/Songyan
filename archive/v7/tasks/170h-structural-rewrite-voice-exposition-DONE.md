@@ -1,6 +1,6 @@
 # Task 170h: 结构性改写支持 — 场景模板约束 + 非人实体戏份分配 + 声纹工程升级 — DONE（复评结果待回填）
 
-> **专项**: 文学提质专项（`tasks/170-literary-quality-remediation-README.md`）
+> **专项**: 文学提质专项（`archive/v7/tasks/170-literary-quality-remediation-README.md`）
 > **类型**: 结构性改写 / 声源工程（路径 B 第一步）
 > **优先级**: P0（决定 170g 能否从 blocker 改判并重新评估 Ch200 入口）
 > **依赖**: Task 170g Phase2 已完成（结论：未达标，保持 blocker）
@@ -142,7 +142,7 @@ python -m pytest tests/test_*.py -q                                             
 - 后台生成任务：`bash-6ew98bpt`（`GATE_MODE=observe ON_FAILURE=isolate`，从 Ch18 续跑）
 - 完成章节：Ch18、Ch20–Ch32 accepted；Ch17、Ch19 失败（均为 `contamination_index` settlement 校验失败）。
 - 复评窗口：Ch29–Ch32（`scripts/run_170h_reeval.py`）
-- 复评报告：`docs/reports/task-170h-remediation-reeval-report.md`
+- 复评报告：`archive/v7/reports/task-170h-remediation-reeval-report.md`
 
 **LLM rubric 初评（1–5 分）**
 
@@ -210,7 +210,7 @@ python -m pytest tests/test_*.py -q                                             
   - `tests/test_revision_handler_literary.py`
   - `tests/models/test_batch2_context_review.py`
 - 报告：
-  - `docs/reports/task-170h-remediation-reeval-report.md`
+  - `archive/v7/reports/task-170h-remediation-reeval-report.md`
 
 ---
 

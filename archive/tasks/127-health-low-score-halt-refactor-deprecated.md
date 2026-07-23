@@ -132,7 +132,7 @@ Task 126 小窗口验证 ┤──► Task 127 重构 score halt ──┬──
 
 ## 7. 交付物
 
-- `tasks/127-health-low-score-halt-refactor-DONE.md`
+- `archive/v5/tasks/127-health-low-score-halt-refactor-DONE.md`
 - 代码改动：`src/songyan/models/gate_config.py`、`src/songyan/workflows/_gates.py`、相关 logger/repository
 - 新增测试：`tests/test_127_gate_score_halt.py`
 - 更新测试：`tests/test_125_gate_thresholds.py`（如需）

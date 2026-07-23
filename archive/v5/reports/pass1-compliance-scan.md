@@ -1,4 +1,4 @@
-﻿# Pass 1 — 合规性审查报告
+# Pass 1 — 合规性审查报告
 
 > **范围**: AGENTS.md §3「不可违背规则」代码合规扫描
 > **日期**: 2026-06-10
@@ -225,7 +225,7 @@ P2-3 (Rule 42)    ██████████▁  纳入 Phase C 范围
 
 ## 后续步骤
 
-1. **Pass 1 已完成** — 本报告已保存到 `docs/reports/pass1-compliance-scan.md`
+1. **Pass 1 已完成** — 本报告已保存到 `archive/v5/reports/pass1-compliance-scan.md`
 2. **推荐 Pass 2（架构审计）**: V4.0 ContextService 过渡完整性、数据流、Agent 职责边界域
 3. **推荐 Pass 3（测试质量审计）**: 测试覆盖缺口、边界情况、E2E runner 健壮性
 4. P0 违规建议在 Task 096（Ch2-Ch50 回归验证）之前修复

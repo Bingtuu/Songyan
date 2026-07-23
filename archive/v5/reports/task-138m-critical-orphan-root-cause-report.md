@@ -4,7 +4,7 @@
 > **Project ID**: `3bef1af8d54d4d0e887658516e1ed350`  
 > **Rehearsal DB**: `.tmp/task138k_ch1_ch30_rehearsal_20260629.db`  
 > **分析日期**: 2026-06-29  
-> **前置报告**: `docs/reports/task-138k-long-window-rehearsal-report.md`
+> **前置报告**: `archive/v5/reports/task-138k-long-window-rehearsal-report.md`
 
 ## 执行摘要
 

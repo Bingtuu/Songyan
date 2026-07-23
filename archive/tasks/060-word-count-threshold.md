@@ -1,4 +1,4 @@
-﻿# Task 060: RuleAuditor 字数阈值验证与收紧
+# Task 060: RuleAuditor 字数阈值验证与收紧
 
 > **Phase**: V3.x Layer 3 — 系统化质量守卫
 > **优先级**: P2

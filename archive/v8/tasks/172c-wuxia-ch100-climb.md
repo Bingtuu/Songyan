@@ -6,7 +6,7 @@
 > **候选体裁**: **wuxia**
 > **对标基线**: sci-fi Ch1-100 冻结基线（同 172b §1.1，`.tmp/scifi_ch100_baseline.json`）
 > **当前执行页**: `tasks/172c-wuxia-ch100-clean-rerun.md`（已完成）
-> **口径提示**: 下文保留 172c 初次爬坡计划与 Ch75 撞墙前的风险路由；终判事实以 `docs/reports/172c-wuxia-ch100-climb.md` 为准。
+> **口径提示**: 下文保留 172c 初次爬坡计划与 Ch75 撞墙前的风险路由；终判事实以 `archive/v8/reports/172c-wuxia-ch100-climb.md` 为准。
 
 ---
 
@@ -65,7 +65,7 @@ python scripts/run_172b_ch100_climb.py --init     # ProjectInitializer.from_temp
 python scripts/run_172b_ch100_climb.py --to 100   # 分段爬坡，自动 resume
 ```
 
-报告编号已参数化：harness `REPORT_PATH` 前缀由 `RUN_ID` 环境变量控制（默认 `172b`），wuxia 报告落盘 `docs/reports/172c-wuxia-ch100-climb.md`。
+报告编号已参数化：harness `REPORT_PATH` 前缀由 `RUN_ID` 环境变量控制（默认 `172b`），wuxia 报告落盘 `archive/v8/reports/172c-wuxia-ch100-climb.md`。
 
 ### 分段爬坡计划（沿用 172b，25 章一段 = arc 边界）
 
@@ -80,7 +80,7 @@ python scripts/run_172b_ch100_climb.py --to 100   # 分段爬坡，自动 resume
 
 - 逐段 early-warning：`.tmp/vdim_compare.py`（chapter-bounded CED，与冻结基线严格同口径），按当前深度线性插值 sci-fi 基线。
 - Ch100 终判 CED：`src/songyan/evals/consistency_ced.py` consistency-only 口径（172b.q 冻结：merged 优先、排除文学 craft 与 `rule-mr-*` 聚合项、accepted source 追溯）。
-- 产出报告：`docs/reports/172c-wuxia-ch100-climb.md`（逐段 budget 曲线、emergency 频率、overdue 轨迹、CED vs sci-fi 基线、health 趋势、失败清单）。
+- 产出报告：`archive/v8/reports/172c-wuxia-ch100-climb.md`（逐段 budget 曲线、emergency 频率、overdue 轨迹、CED vs sci-fi 基线、health 趋势、失败清单）。
 
 ## 4. 风险与撞墙路由
 

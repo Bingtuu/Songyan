@@ -17,7 +17,7 @@
 交付物：
 - 生成脚本 `scripts/run_170b_midwindow_generation.py`
 - 抽读评估脚本 `scripts/run_170b_readability_assessment.py`
-- 评估报告 `docs/reports/task-170b-literary-readability-assessment-report.md`
+- 评估报告 `archive/v7/reports/task-170b-literary-readability-assessment-report.md`
 - 正文导出 `.tmp/task170b_prose_ch28_ch40.md`（177KB，供人工实读）
 
 ## 三个问题的答案

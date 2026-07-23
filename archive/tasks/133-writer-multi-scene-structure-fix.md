@@ -51,7 +51,7 @@ readability 专精路径可能为了修正段落节奏而合并场景，导致�
 - [ ] enforce 模式 Ch1–Ch20 验证中，`scenes_count >= 2` 的章节占比 ≥ 90%。
 - [ ] 不破坏 observe 模式下 `run-a2bed648` 已验证的 150/150 成功路径。
 - [ ] `ruff check src/ tests/` 通过。
-- [ ] 输出 `tasks/133-writer-multi-scene-structure-fix-DONE.md`。
+- [ ] 输出 `archive/v5/tasks/133-writer-multi-scene-structure-fix-DONE.md`。
 
 ---
 
@@ -77,7 +77,7 @@ Task 130 模式决策 ───────┘   （为 V5.2 enforce 默认启�
 
 ## 7. 交付物
 
-- `tasks/133-writer-multi-scene-structure-fix-DONE.md`
+- `archive/v5/tasks/133-writer-multi-scene-structure-fix-DONE.md`
 - Writer / RuleAuditor / RevisionHandler 相关代码改动
 - 新增测试文件
 - enforce 模式 Ch1–Ch20 验证报告

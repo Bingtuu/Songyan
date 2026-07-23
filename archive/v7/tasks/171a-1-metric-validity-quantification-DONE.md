@@ -2,7 +2,7 @@
 
 > **框架**: `docs/reports/v7-literary-framework-review.md` §8 B 组（B2/B3）
 > **状态**: ✅ **完成**（voice/exposition 两体裁 F1 均 ≥ 0.8）
-> **报告**: `docs/reports/task-171a-1-metric-prf-report.md`
+> **报告**: `archive/v7/reports/task-171a-1-metric-prf-report.md`
 > **完成时间**: 2026-07-10
 
 ---
@@ -69,12 +69,12 @@ Task 171a-1 补齐了框架 §8 的 **B2/B3**——在 **scifi + wuxia 两个对
 - [x] `ruff check src/ tests/ scripts/run_171a1_*.py` 全通过。
 - [x] `tests/test_rule_auditor.py` + `test_rule_auditor_dynamic_keywords.py` + `test_171a_literary_keyword_wiring.py`：94 passed。
 - [x] wuxia live 生成 run-416227cc：completed=[1,2,3,4]，failed=[]。
-- [x] 两体裁盲标 GT 落地；报告 `docs/reports/task-171a-1-metric-prf-report.md` 产出（含 P/R/F1 + 误报归因 + 局限）。
+- [x] 两体裁盲标 GT 落地；报告 `archive/v7/reports/task-171a-1-metric-prf-report.md` 产出（含 P/R/F1 + 误报归因 + 局限）。
 - [x] 清理临时诊断脚本 `.tmp/inspect_wuxia_fp.py`。
 
 ---
 
 ## 出口与下一步
 - **B2/B3 达标**：voice、exposition 两维度在 scifi + wuxia 均 F1 ≥ 0.8，量具效度"可信"。171a（R0）代码侧 + 量化侧全部落地。
-- **下一步 Task 171b**（spec `tasks/171b-representative-sampling.md`）：把小样本效度升级为**代表性样本**——扩大盲标窗口 + 对话密集/稀疏分层，覆盖框架 §8 C 组，为 171c 提质与"全量精度"结论奠基。
+- **下一步 Task 171b**（spec `archive/v7/tasks/171b-representative-sampling.md`）：把小样本效度升级为**代表性样本**——扩大盲标窗口 + 对话密集/稀疏分层，覆盖框架 §8 C 组，为 171c 提质与"全量精度"结论奠基。
 - 171a-1 不阻塞 Ch200；171c 提质在已达标维度（voice/exposition）上启动。

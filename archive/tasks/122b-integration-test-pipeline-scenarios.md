@@ -128,4 +128,4 @@ ruff check src/ tests/
 - 主文档：[122-v51-systematic-test-matrix.md](122-v51-systematic-test-matrix.md)
 - Pipeline 路由实现：`src/songyan/workflows/_nodes.py`
 - Quality Gate 实现：`src/songyan/workflows/quality_gate_router.py`
-- Pass 14-18 修复汇总：[docs/reports/pass14-final-fix-summary.md](../docs/reports/pass14-final-fix-summary.md)
+- Pass 14-18 修复汇总：[archive/v5/reports/pass14-final-fix-summary.md](../archive/v5/reports/pass14-final-fix-summary.md)

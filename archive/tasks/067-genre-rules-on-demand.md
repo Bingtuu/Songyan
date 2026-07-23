@@ -1,4 +1,4 @@
-﻿# Task 067: genre_rules 按需加载
+# Task 067: genre_rules 按需加载
 
 > **Phase**: V3.1 — 质量跃迁
 > **优先级**: P1

@@ -1,13 +1,13 @@
-# 138m ¸ùÒò·ÖÀàÕªÒª
+# 138m ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÕªÒª
 
 Total P1 critical orphans (Ch30): 35
 
 - injected_without_prior_hint: 26
 - hinted_and_injected_but_not_used: 9
 
-## »úÖÆ¸²¸ÇÍ³¼Æ
-- ÖÁÉÙ±» hint »ò mandatory_reference ¸²¸Ç¹ý: 35/35
-- ÍêÈ«ÎÞ»úÖÆ¸²¸Ç: 0/35
-- ±» mandatory_reference ×¢Èë¹ý: 35/35
-- ±» continuity human_mark ÌáÊ¾¹ý: 9/35
-- Ôø¾­±» resolved£¨»ØÊÕ¹ý£©: 0/35
+## ï¿½ï¿½ï¿½Æ¸ï¿½ï¿½ï¿½Í³ï¿½ï¿½
+- ï¿½ï¿½ï¿½Ù±ï¿½ hint ï¿½ï¿½ mandatory_reference ï¿½ï¿½ï¿½Ç¹ï¿½: 35/35
+- ï¿½ï¿½È«ï¿½Þ»ï¿½ï¿½Æ¸ï¿½ï¿½ï¿½: 0/35
+- ï¿½ï¿½ mandatory_reference ×¢ï¿½ï¿½ï¿½: 35/35
+- ï¿½ï¿½ continuity human_mark ï¿½ï¿½Ê¾ï¿½ï¿½: 9/35
+- ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ resolvedï¿½ï¿½ï¿½ï¿½ï¿½Õ¹ï¿½ï¿½ï¿½: 0/35

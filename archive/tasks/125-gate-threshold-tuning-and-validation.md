@@ -139,7 +139,7 @@ P1_count > rolling_median_P1 * health_low_p1_anomaly_factor
 - 判断函数：`src/songyan/workflows/_gates.py`
 - 调用点：`src/songyan/workflows/phase2_graph.py`
 - 离线仿真：`scripts/analyze_124_gate_impact.py`
-- 影响面报告：`docs/reports/124-gate-impact-analysis-run-a2bed648.md`
+- 影响面报告：`archive/v5/reports/124-gate-impact-analysis-run-a2bed648.md`
 
 ---
 

@@ -39,29 +39,29 @@ V6 通过 = 同时满足以下五项（阈值与术语见 `docs/v6-plan.md` §1.
 
 | Task | 名称 | 状态 | 事实文档 |
 |------|------|:----:|----------|
-| 141 | 叙事骨架数据模型（StoryOutline / ArcPlan / PlotThread；拆 141a/b/c） | ✅ 完成 | `tasks/141-narrative-skeleton-data-model-DONE.md` |
-| 142 | 项目创建可携带大纲 | ✅ 完成 | `tasks/142-project-outline-import-DONE.md` |
-| 143 | GoalPlanner 自顶向下派生（拆 143a/b） | ✅ 完成 | `tasks/143-goal-planner-topdown-derivation-DONE.md` |
-| 144 | 线索经济约束（MVP） | ✅ 完成 | `tasks/144-thread-economy-mvp-DONE.md` |
+| 141 | 叙事骨架数据模型（StoryOutline / ArcPlan / PlotThread；拆 141a/b/c） | ✅ 完成 | `archive/v6/tasks/141-narrative-skeleton-data-model-DONE.md` |
+| 142 | 项目创建可携带大纲 | ✅ 完成 | `archive/v6/tasks/142-project-outline-import-DONE.md` |
+| 143 | GoalPlanner 自顶向下派生（拆 143a/b） | ✅ 完成 | `archive/v6/tasks/143-goal-planner-topdown-derivation-DONE.md` |
+| 144 | 线索经济约束（MVP） | ✅ 完成 | `archive/v6/tasks/144-thread-economy-mvp-DONE.md` |
 
 ### 阶段 A：度量同步（让指标说真话 + 让骨架可判定）
 
 | Task | 名称 | 状态 | 事实文档 |
 |------|------|:----:|----------|
-| 145 | orphan 绝对量 + 新 critical 产生速率监控 | ✅ 完成 | `tasks/145-orphan-and-critical-rate-metrics-DONE.md` |
-| 146 | 质量债账本 | ✅ 完成 | `tasks/146-quality-debt-ledger-DONE.md` |
-| 147 | 文学质量趋势化 | ✅ 完成 | `tasks/147-literary-quality-trend-DONE.md` |
-| 148 | 弧级伏笔兑现率 + 长程伏笔台账 | ✅ 完成 | `tasks/148-arc-foreshadowing-fulfillment-DONE.md` |
-| 148z | 阶段 A 出口：阈值标定报告（T3/T4/T5/T6/T8 冻结） | ✅ 完成 | `tasks/148z-stage-a-threshold-calibration-DONE.md` |
+| 145 | orphan 绝对量 + 新 critical 产生速率监控 | ✅ 完成 | `archive/v6/tasks/145-orphan-and-critical-rate-metrics-DONE.md` |
+| 146 | 质量债账本 | ✅ 完成 | `archive/v6/tasks/146-quality-debt-ledger-DONE.md` |
+| 147 | 文学质量趋势化 | ✅ 完成 | `archive/v6/tasks/147-literary-quality-trend-DONE.md` |
+| 148 | 弧级伏笔兑现率 + 长程伏笔台账 | ✅ 完成 | `archive/v6/tasks/148-arc-foreshadowing-fulfillment-DONE.md` |
+| 148z | 阶段 A 出口：阈值标定报告（T3/T4/T5/T6/T8 冻结） | ✅ 完成 | `archive/v6/tasks/148z-stage-a-threshold-calibration-DONE.md` |
 
 ### 阶段 B：末端治理（缓解症状）
 
 | Task | 名称 | 状态 | 事实文档 |
 |------|------|:----:|----------|
-| 149 | 录入侧降级（超额 critical 转候选，非硬丢弃；拆 149a/b） | ✅ 完成 | `tasks/149-input-side-demotion-DONE.md` |
-| 150 | `_infer_setting_category` 收紧（双命中 + 去硬编码主角名） | ✅ 完成 | `tasks/150-infer-category-tightening-DONE.md` |
-| 151 | MR 上限自适应 + 相关性排序（拆 151a/b） | ✅ 完成 | `tasks/151-mr-adaptive-cap-and-relevance-DONE.md` |
-| 152 | critical 显式 resolve/作废出口（拆 152a/b） | ✅ 完成 | `tasks/152-critical-explicit-resolve-abandon-DONE.md` |
+| 149 | 录入侧降级（超额 critical 转候选，非硬丢弃；拆 149a/b） | ✅ 完成 | `archive/v6/tasks/149-input-side-demotion-DONE.md` |
+| 150 | `_infer_setting_category` 收紧（双命中 + 去硬编码主角名） | ✅ 完成 | `archive/v6/tasks/150-infer-category-tightening-DONE.md` |
+| 151 | MR 上限自适应 + 相关性排序（拆 151a/b） | ✅ 完成 | `archive/v6/tasks/151-mr-adaptive-cap-and-relevance-DONE.md` |
+| 152 | critical 显式 resolve/作废出口（拆 152a/b） | ✅ 完成 | `archive/v6/tasks/152-critical-explicit-resolve-abandon-DONE.md` |
 
 > **阶段 B 工程实现已收口**：Task 149-152 全部合入主干，`resolved`/`abandoned` 为 critical 设定提供显式回收出口，与逾期归档在 metrics 中可区分。Ch1-Ch50 Layer 3 复跑验证（T6b P1=0）待 Task 157 执行。
 
@@ -70,18 +70,18 @@ V6 通过 = 同时满足以下五项（阈值与术语见 `docs/v6-plan.md` §1.
 
 | Task | 名称 | 状态 | 事实文档 |
 |------|------|:----:|----------|
-| 153 | run 级断点续跑（拆 153a/b） | ✅ 完成 | `tasks/153-run-level-resume-DONE.md` |
-| 154 | LLM 限流感知与全局预算（拆 154a/b） | ✅ 完成 | `tasks/154-llm-rate-limit-and-budget-DONE.md` |
-| 155 | 失败隔离策略（拆 155a/b；on_failure 默认改 isolate） | ✅ 完成 | `tasks/155-failure-isolation-DONE.md` |
-| 156 | 运行中 DB 维护（拆 156a/b） | ✅ 完成 | `tasks/156-in-run-db-maintenance-DONE.md` |
+| 153 | run 级断点续跑（拆 153a/b） | ✅ 完成 | `archive/v6/tasks/153-run-level-resume-DONE.md` |
+| 154 | LLM 限流感知与全局预算（拆 154a/b） | ✅ 完成 | `archive/v6/tasks/154-llm-rate-limit-and-budget-DONE.md` |
+| 155 | 失败隔离策略（拆 155a/b；on_failure 默认改 isolate） | ✅ 完成 | `archive/v6/tasks/155-failure-isolation-DONE.md` |
+| 156 | 运行中 DB 维护（拆 156a/b） | ✅ 完成 | `archive/v6/tasks/156-in-run-db-maintenance-DONE.md` |
 
 ### 阶段 D：长窗口验证
 
 | Task | 名称 | 状态 | 事实文档 |
 |------|------|:----:|----------|
-| 157 | Ch1-Ch50 集成验证 + V6 验收判据 harness（拆 157a/b） | ✅ 完成 | `tasks/157-ch1-ch50-integration-validation-DONE.md`、`docs/reports/task-157-ch1-ch50-integration-validation-report.md` |
-| 158 | Ch1-Ch100 长跑验证 + kill→resume + T5 冻结（拆 158a/b） | ✅ 完成 | `tasks/158-ch1-ch100-long-run-validation-DONE.md`、`docs/reports/task-158-ch1-ch100-long-run-validation-report.md`；kill→resume 真实命令级证据（158r）：`docs/reports/task-158r-kill-resume-drill-report.md` |
-| 159 | Ch1-Ch150 治理管线复现 + V6 阶段验收（拆 159a/b） | ✅ 完成 | `tasks/159-ch1-ch150-governance-pipeline-replication-DONE.md`、`docs/reports/task-159-v6-final-acceptance-report.md` |
+| 157 | Ch1-Ch50 集成验证 + V6 验收判据 harness（拆 157a/b） | ✅ 完成 | `archive/v6/tasks/157-ch1-ch50-integration-validation-DONE.md`、`archive/v6/reports\task-157-ch1-ch50-integration-validation-report.md` |
+| 158 | Ch1-Ch100 长跑验证 + kill→resume + T5 冻结（拆 158a/b） | ✅ 完成 | `archive/v6/tasks/158-ch1-ch100-long-run-validation-DONE.md`、`archive/v6/reports\task-158-ch1-ch100-long-run-validation-report.md`；kill→resume 真实命令级证据（158r）：`archive/v6/reports\task-158r-kill-resume-drill-report.md` |
+| 159 | Ch1-Ch150 治理管线复现 + V6 阶段验收（拆 159a/b） | ✅ 完成 | `archive/v6/tasks/159-ch1-ch150-governance-pipeline-replication-DONE.md`、`archive/v6/reports\task-159-v6-final-acceptance-report.md` |
 
 ---
 

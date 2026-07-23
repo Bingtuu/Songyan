@@ -10,13 +10,13 @@
 ### 12-1 `docs/code-review-plan.md` 仍为 V4.0 旧版，未指向 V7 审计计划
 - **级别**: P2
 - **文件**: `docs/code-review-plan.md`
-- **问题描述**: 该文件标题为“Songyan V4.0 全域代码审查计划”，日期 2026-06-11，基线为 V4.0-Phase B，状态为“审查完成，修复进行中”。当前项目已进入 V7，V7 审计计划位于 `docs/superpowers/plans/2026-07-06-v7-code-review-and-architecture-audit-plan.md`，但旧文档未更新指向，也无“已归档/已替代”说明。新开发者容易误入旧计划。
+- **问题描述**: 该文件标题为“Songyan V4.0 全域代码审查计划”，日期 2026-06-11，基线为 V4.0-Phase B，状态为“审查完成，修复进行中”。当前项目已进入 V7，V7 审计计划位于 `archive/superpowers/plans/2026-07-06-v7-code-review-and-architecture-audit-plan.md`，但旧文档未更新指向，也无“已归档/已替代”说明。新开发者容易误入旧计划。
 - **证据**:
   > `# Songyan V4.0 全域代码审查计划`
   > `> **日期**: 2026-06-11`
   > `> **状态**: 审查完成，修复进行中`
 - **潜在影响**: 文档入口混淆；V4.0 的修复清单（如 P0-1 chapter_versions 版本覆盖）可能被视为未完成，造成误判。
-- **修复建议**: 在 `docs/code-review-plan.md` 顶部添加归档声明，说明“本文件为 V4.0 历史审查计划，已归档；当前代码审查/架构审计见 `docs/superpowers/plans/2026-07-06-v7-code-review-and-architecture-audit-plan.md` 与 `docs/reports/v7-audit/`”。
+- **修复建议**: 在 `docs/code-review-plan.md` 顶部添加归档声明，说明“本文件为 V4.0 历史审查计划，已归档；当前代码审查/架构审计见 `archive/superpowers/plans/2026-07-06-v7-code-review-and-architecture-audit-plan.md` 与 `docs/reports/v7-audit/`”。
 - **验证方式**: 阅读 `docs/code-review-plan.md` 顶部应看到 V7 指向链接。
 
 ### 12-2 8 个源文件/测试文件存在 CRLF 行尾污染

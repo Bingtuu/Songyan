@@ -1,12 +1,12 @@
 # Task 170j: 文学塌陷根因诊断与保守修复 — DONE（维持 blocker）
 
-> **专项**: 文学提质专项（`tasks/170-literary-quality-remediation-README.md`）
+> **专项**: 文学提质专项（`archive/v7/tasks/170-literary-quality-remediation-README.md`）
 > **类型**: 根因诊断 / 保守修复 / 路径可行性评估（路径 B 第三步）
 > **优先级**: P0（决定路径 B 是否能在 V7 内达标，或需升级/降级方案）
 > **依赖**: Task 170i 已完成（结论：未达标，维持 blocker）
 > **状态**: ✅ **已完成（维持 blocker）。Ch29–Ch32 小样本复评未达 Ch200 放行标准（voice 2.25 / exposition 2.25 / 窗口均值 2.60）。170j 不放行 Task 171 Ch200，阶段 Z 入口继续冻结。**
 > **负责人**: songyan-agent
-> **复评报告**: `docs/reports/task-170j-minimal-voice-anchor-reeval-report.md`
+> **复评报告**: `archive/v7/reports/task-170j-minimal-voice-anchor-reeval-report.md`
 > **生成日志**: `.tmp/run-fcda885f`（后台任务 `bash-g982u13t`）
 > **隔离 DB**: `.tmp/task170j_minimal_voice_anchor.db`
 > **Run ID**: `run-fcda885f`（Ch29–Ch32，4/4 success）
@@ -122,7 +122,7 @@ Task 170j 在 170i 失败后尝试了一条更保守、可扩展的修复路径�
 **要点：**
 - `run_170j_experiment.py --init` 创建隔离 DB、导入大纲/弧/线索、生成临时 mode profile（启用 `minimal_voice_anchor`）。
 - `run_170j_experiment.py --start 29 --end 32` 在 `GATE_MODE=observe` 下跑 Ch29–Ch32。
-- `run_170j_reeval.py` 导出 accepted 正文并调用 LLM rubric + 机器分对照，输出 `docs/reports/task-170j-minimal-voice-anchor-reeval-report.md`。
+- `run_170j_reeval.py` 导出 accepted 正文并调用 LLM rubric + 机器分对照，输出 `archive/v7/reports/task-170j-minimal-voice-anchor-reeval-report.md`。
 - 修复了 harness 因 editable install 指向主仓库而无法加载 worktree mode profile 的 bug（commit `571156f`）。
 
 ---
@@ -131,11 +131,11 @@ Task 170j 在 170i 失败后尝试了一条更保守、可扩展的修复路径�
 
 - [x] `ruff check src/ tests/` 通过。
 - [x] Ch29–Ch32 隔离 DB 重生成完成（`run-fcda885f`，4/4 success，failed=[]）。
-- [x] `python scripts/run_170j_reeval.py` 复评报告产出：`docs/reports/task-170j-minimal-voice-anchor-reeval-report.md`。
+- [x] `python scripts/run_170j_reeval.py` 复评报告产出：`archive/v7/reports/task-170j-minimal-voice-anchor-reeval-report.md`。
 - [x] CreativeDirector 输出并保存 `voice_anchors`（实测每章 2–3 个核心人类角色）。
 - [x] T9 硬红线：元标记泄漏 0、整段落重复 0。
 - [x] 机器/LLM 偏差：0 / 4 章，量具可信。
-- [x] 回填本 DONE 文档并更新 `docs/STATUS.md` / `tasks/V7-README.md` / `README.md` / `tasks/170-literary-quality-remediation-README.md`。
+- [x] 回填本 DONE 文档并更新 `docs/STATUS.md` / `tasks/V7-README.md` / `README.md` / `archive/v7/tasks/170-literary-quality-remediation-README.md`。
 
 > **注意**：`run_170j_reeval.py` 中的 `detect_exposition_carriers` 当前有 try/except fallback，缺失 detector 时返回 `[]`，因此报告中 `exposition_carrier_count` 恒为 0。这与 170i/170h 的 carrier=0 口径一致，不影响 voice/exposition rubric 判定；后续如需精确计数，应补齐 detector 依赖后再跑一次复评。
 
@@ -169,9 +169,9 @@ Task 170j 在 170i 失败后尝试了一条更保守、可扩展的修复路径�
 - 临时 mode profile：
   - `creative_modes/webnovel_intense_minimal_voice_anchor.json`
 - 复评报告：
-  - `docs/reports/task-170j-minimal-voice-anchor-reeval-report.md`
+  - `archive/v7/reports/task-170j-minimal-voice-anchor-reeval-report.md`
 - DONE 文档：
-  - `tasks/170j-ai-tone-voice-feasibility-assessment-DONE.md`
+  - `archive/v7/tasks/170j-ai-tone-voice-feasibility-assessment-DONE.md`
 
 ---
 

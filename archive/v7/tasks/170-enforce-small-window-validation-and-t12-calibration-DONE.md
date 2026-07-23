@@ -16,9 +16,9 @@
   - 旧 `_gates.py` `evaluate_all_gates` 用同批信号构造 `ContinuityReport` 逐章对照。
   - T12 误报/漏拦统计 + 冻结判定。
   - 输出机器可读 `.tmp/task170_adaptive_gate_validation_metrics.jsonl`。
-  - 输出人类可读 `docs/reports/task-170-adaptive-gate-validation-report.md`（10 小节）。
+  - 输出人类可读 `archive/v7/reports/task-170-adaptive-gate-validation-report.md`（10 小节）。
 - 自动化测试 `tests/test_170_adaptive_gate_validation.py`（17 tests）。
-- 验证报告 `docs/reports/task-170-adaptive-gate-validation-report.md`。
+- 验证报告 `archive/v7/reports/task-170-adaptive-gate-validation-report.md`。
 
 ## 验证场景与结果
 

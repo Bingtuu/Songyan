@@ -1,4 +1,4 @@
-﻿# 备忘：VectorStore 全量加载问题
+# 备忘：VectorStore 全量加载问题
 
 > **ID**: MEMO-001
 > **创建**: 2026-06-10

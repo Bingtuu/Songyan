@@ -1,10 +1,14 @@
 # V6 归档索引
 
-> 本目录收纳 V6 阶段的历史报告。当前事实入口见 `tasks/V6-README.md`、`docs/STATUS.md` 和 `docs/INDEX.md`。
+> 本目录收纳 V6 阶段的历史任务文档、规划和报告。当前事实入口见 `tasks/V6-README.md`、`docs/STATUS.md` 和 `docs/INDEX.md`。
 
 ## plans/
 
 - `v6-plan.md` — V6 阶段规划：叙事骨架 MVP + 长篇质量度量 + 可靠长跑底盘 + Task 141-159 路线图
+
+## tasks/
+
+- `141-*.md` 至 `159-*.md` — V6 单项任务文档与 DONE 记录；`tasks/V6-README.md` 保留为历史事实总入口。
 
 ## reports/
 

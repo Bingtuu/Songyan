@@ -59,7 +59,7 @@ Ch3/Ch11/Ch14/Ch15 因 QG 失败触发 `degraded_accept`，按设计跳过 settl
 - [ ] `closing_value` 与公式计算值一致率 100%。
 - [ ] 不破坏 observe 模式下 `run-a2bed648` 的 settlement 路径。
 - [ ] `ruff check src/ tests/` 通过。
-- [ ] 输出 `tasks/134-settlement-character-numerical-extraction-fix-DONE.md`。
+- [ ] 输出 `archive/v5/tasks/134-settlement-character-numerical-extraction-fix-DONE.md`。
 
 ---
 
@@ -85,7 +85,7 @@ Task 130 模式决策 ──────────────────┘ 
 
 ## 7. 交付物
 
-- `tasks/134-settlement-character-numerical-extraction-fix-DONE.md`
+- `archive/v5/tasks/134-settlement-character-numerical-extraction-fix-DONE.md`
 - SettlementExtractor / parser / schema 相关代码改动
 - 新增测试文件
 - enforce 模式 Ch1–Ch20 验证报告

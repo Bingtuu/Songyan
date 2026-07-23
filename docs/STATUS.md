@@ -6,7 +6,7 @@
 
 | 项 | 结论 |
 |----|------|
-| 当前阶段 | **V9 已开工**：生产化地基 + urban 第三体裁 Ch100，Task 173-188 扁平编号，事实入口 `tasks/V9-README.md`。**V9.1 长跑可靠性全部完成**（173/174/175/176 ✅）；**V9.2 全部完成**（177/178/179/180/181 ✅）；**V9.3 全部完成**（182/183/184 ✅）；**V9.4 Task 185 已完成**；**V9.5 Task 186 已完成并准入 187**；Task 187 已推进到 Ch50：Ch1-Ch50 已 accepted，Ch50 five-gate 与 segment audit 已 PASS；187.w 已清零 meta/duplicate，仍剩 timeline 诊断 3 项待按 B6 口径收口，未进入 Ch75 |
+| 当前阶段 | **V9 已全量闭环（2026-07-23）**：生产化地基 + urban 第三体裁 Ch100，Task 173-188 扁平编号，事实入口 `tasks/V9-README.md`，归档入口 `archive/v9/INDEX.md`。V9.1 长跑可靠性、V9.2 交付发布、V9.3 工具链、V9.4 urban 标定、V9.5 urban Ch100、V9.6 收口全部完成；urban Ch1-Ch100 **100/100 accepted**，five-gate PASS，segment audit PASS，T9=0 |
 | V7 收尾 | **已完成**。sci-fi/space_opera + webnovel_intense 单一体裁稳定跑到 Ch200，200/200 accepted，D1 hard clean pass；Ch201-Ch220 20/20 accepted |
 | V8.1 运行时画像 | **已完成**（Task 172a + 172a.p）。`GenreRuntimeProfile` 把 Context Diet 2.0 运行时契约从 sci-fi 默认值解耦；xuanhuan Ch8 halt 已消除（base_budget=15000） |
 | V8.3 文学护栏 | **已完成**（Task 172d）。`literary_guardrail_observe` 去科幻硬编码，lexicon/主角名参数化到 `GenreProfile`，三体裁各配一套；DONE 文档已补齐 |
@@ -27,7 +27,7 @@
 | S 状态可控 | 172a.p horizon floor=12：floor12 实跑 DB 严证 **overdue@<15 = 2 < 5**（vs floor=0 的 28），44 伏笔 0 floor 违规 + 数学下界证明 |
 | V 中篇爬坡 | 172b xuanhuan Ch1-Ch100 **100/100 accepted**；172c wuxia Ch1-Ch100 **100/100 accepted**；两个非 sci-fi 体裁 Ch100 五门 PASS |
 | V9 生产化地基 | 173：显式 LLM client registry + `aclose_llm_clients()`，pipeline 收尾对称关闭 LLM client + sqlite checkpointer，`SONGYAN_FORCE_EXIT` 最外层兜底；174：`configure_logging()` 接入 CLI + harness，`logs/app/*.jsonl` 落盘，第三方 WARNING 起，关键字段与 `logs/chapter_runs` 对齐；175：`llm_call_usage` 逐调用落库（token/cost 双来源标记、按重试尝试计行、agent 归因），`run_cost_budget` 双检查熔断（DB 权威）+ `total_cost` 双接线，`songyan report` 成本视图；177：`songyan export` 正式 service + CLI，accepted head 正文导出，支持 `md/txt` 与 `flat/arc/volume`，xuanhuan/wuxia Ch100 实库验收通过；178：运行资源迁入包内并用 `importlib.resources` 加载，`evals/seeds` 与 `schema.sql` 入 wheel，非仓库 cwd 资源枚举 + `create-project` + Ch1-3 生成通过；179：`songyan run` 输出 `run_id`，`--mode-id` 默认回读项目 mode，README CLI 表补 `index`；180：`songyan doctor` 默认无成本只读自检，支持 JSON、显式 DB 初始化与 LLM client 探针；181：GitHub Actions 覆盖 ruff/mypy/default pytest/CLI pytest，CLI 测试与 mypy 清零；182：`scripts/five_gate_check.py` 与 `scripts/segment_audit.py` 正式收编，包内 sci-fi baseline，双体裁 Ch100 重放 PASS；183：`songyan profile show/diff/upsert` 上线，支持 DB override 调参不改代码；184：genres/creative_modes 包内 `_schema.json` + loader 预校验上线，坏资源 fail fast，`_schema` 元文件不污染资源列表 |
-| V9.4 urban 标定 | **Task 185 已完成（2026-07-20）**：base_budget=12000 经 run1/run2（DB override）/run3（registry 默认值）三轮 end15 实跑标定，budget 峰值 ≤0.9643、emergency=0（172k 的 17 次连续 emergency 消除）；T9 全部命中逐条定性与定点修（检测器精度 8 项 + urban writer_rules 禁 `//` 注释体），终态检测器复测 run3/run2 accepted 正文 **T9=0**；run3 15/15、overdue 3、CED 5.46；185 终态初值为 12000（187.p 后当前 Ch100 爬坡 registry 为 14000）；scifi end10 回归 10/10、T9 1→0（精度修复预期后果）、无漂移；执行记录见 `tasks/185-urban-short-window-calibration-DONE.md` |
+| V9.4 urban 标定 | **Task 185 已完成（2026-07-20）**：base_budget=12000 经 run1/run2（DB override）/run3（registry 默认值）三轮 end15 实跑标定，budget 峰值 ≤0.9643、emergency=0（172k 的 17 次连续 emergency 消除）；T9 全部命中逐条定性与定点修（检测器精度 8 项 + urban writer_rules 禁 `//` 注释体），终态检测器复测 run3/run2 accepted 正文 **T9=0**；run3 15/15、overdue 3、CED 5.46；185 终态初值为 12000（187.p 后 Ch100 爬坡 registry 为 14000）；scifi end10 回归 10/10、T9 1→0（精度修复预期后果）、无漂移；执行记录见 `archive/v9/185-urban-short-window-calibration-DONE.md` |
 | V9.5 urban Ch100 | **Task 187 已完成（2026-07-22）**：正式样本 DB `.tmp/task172b_urban_ch100.db`、project `81e345042b124ee2a73094b82e4be555`、run `run-d22b1a44`；Ch1-Ch100 **100/100 accepted**，five-gate PASS（budget 0.9595、CED 0.11、overdue 100、health 8.6、gap 0），segment audit PASS（critical_orphans=0、halt_would_fire=false），T9=0（187.x/y/z precision 修复 + deterministic clean 后复跑）。终判证据落盘 `.tmp/187_urban_ch100_final.json` / `.tmp/187_seg100_audit.json` / `.tmp/187_seg100_metrics.md` |
 | V9.1 阶段 D 实跑验收（2026-07-19） | 熔断实证：¥0.05 预算 ¥0.0514 停（paused + 成本明细 + 章保留），提额 resume 至 completed，成本跨 3 进程 0.0514→0.3647 连续；scifi end10：10/10、0 halt、overdue=0、budget 峰值 0.8325、usage 151 行 estimate 0%、总成本 ¥0.886（≈¥0.089/章）、report 成本视图正确；173 挂死根因确证（sqlite checkpointer 泄漏）真修后 2.5s 自然退出；T9=1（Ch4 countdown_increase，diagnostic 级内容启发式，非系统性） |
 | 172c wuxia 段 3 | Ch51-75 完成（75/75 accepted，0 halt）；Ch75 五门：budget PASS、CED FAIL、**overdue 203 vs sci-fi 117 FAIL**、health 5.6 FAIL、completeness PASS |
@@ -75,8 +75,8 @@
 | 185 标定实跑（2026-07-20） | run1（base12000 override）：14/15（Ch13 结算瞬时失败 isolate）、budget 0.8917、emergency 0、T9 原值 12、成本 ¥1.594；run2（同候选 clean rerun）：15/15、budget 0.9396、T9 原值 3、¥1.489；run3（registry 12000、无 override）：**15/15、budget 0.9643、emergency 0、overdue 3、CED 5.46**、¥1.733；终态检测器复测 run3/run2 accepted 正文 **T9=0**（`.tmp/185_t9_recompute_note.json`） |
 | 185 scifi end10 回归（2026-07-20） | **10/10 accepted、0 halt、T9=0**、overdue=0、budget 峰值 0.7662、before_emergency 1.2352 未贴 halt 线；T9 诊断残留 1→0 为精度修复预期后果；落盘 `.tmp/185_scifi_end10_regression.json` |
 | 185 验证（2026-07-20） | `tests/test_185_t9_precision_fixes.py` **18 passed**（含真拼接/真回跳/换措辞回跳守护）+ harness **4 passed**；默认全量 pytest（Task 176 wrapper）**2952 passed, 2 skipped, 1 xfailed**，`WRAPPER_RESULT=PASS_NORMAL_EXIT`；CLI **35 passed**；mypy **176 source files 0 errors**；ruff 全绿 |
-| 187 Ch50 现场（2026-07-21） | `run_172b_ch100_climb.py --to 50` wrapper **PASS_NORMAL_EXIT**；Ch1-Ch50 **50/50 accepted**；five-gate **PASS**（budget 0.9595、CED 0.0977、overdue 51≤110、health 8.9、gap 0）；segment audit **PASS**（critical_orphans=0、halt_would_fire=false）；metrics：meta=0、duplicate=0、timeline=3（diagnostic，Ch29/30/43，待收口） |
-| 187.w 聚焦验证（2026-07-21） | Ch50 T9 hard 修复：Ch41 `0.2秒/个` safe slash、Ch43 C-style comment clean、Ch46/47 duplicate deterministic clean；DB append-only clean versions：Ch43 `clean-43-5-8c547182`、Ch46 `clean-46-6-f312a515`、Ch47 `clean-47-6-fffd5a4a`；`python -m pytest tests/test_171u_d1_clean_application.py tests/test_171t_text_cleanliness_final_sweep.py tests/test_185_t9_precision_fixes.py tests/test_170c_near_duplicate.py -q` → **46 passed**；ruff 相关文件全绿 |
+| 187 Ch100 终判（2026-07-22） | `scripts/five_gate_check.py --genre urban --up-to 100` → **PASS**：100/100 accepted，budget 0.9595，CED 0.11，overdue 100，health 8.6，gap 0；`scripts/segment_audit.py --up-to 100` → **PASS**：critical_orphans=0、halt_would_fire=false；`songyan metrics --chapters 1-100` → **T9=0**（meta/artifact=0、duplicate=0、timeline=0） |
+| 187 收口验证（2026-07-22） | 聚焦测试 `tests/test_185_t9_precision_fixes.py` + `tests/test_162_timeline_consistency.py` → **47 passed**；默认全量 pytest（Task 176 wrapper）**2981 passed, 2 skipped, 1 xfailed, 7 warnings**，`WRAPPER_RESULT=PASS_NORMAL_EXIT`；`ruff check src/ tests/` 全绿 |
 
 ## 项目整理
 
@@ -85,32 +85,25 @@
 - Task 172（Ch250）已归档到 `archive/v7/tasks/172-ch250-transition-validation-archived.md`。
 - V8 已全量闭环并归档（2026-07-18）：全部任务文档（172-172l）与报告（172a.1/172a.4/172a.7/172b/172c）迁移至 `archive/v8/`（索引 `archive/v8/INDEX.md`）；`tasks/V8-README.md` 保留为历史事实总索引；`docs/reports/v8-literature-and-landscape-review.md` 保留活跃入口。
 - **V8 后续技术债**：172e-172i 已全部完成，覆盖 `GenreRuntimeProfile` 字段接线、回退语义澄清、占位字段移除与文档修复。
+- V9 已全量闭环并归档（2026-07-23）：单项任务文档 173-188 迁移至 `archive/v9/`（索引 `archive/v9/INDEX.md`）；`tasks/V9-README.md` 保留为 V9 历史事实总索引。
+- 工作区目录已整理（2026-07-23）：`tasks/` 仅保留阶段 README、`TEMPLATE.md` 与未来规划；V5/V6/V7/V9 单项任务文档分别归档到 `archive/v5/tasks/`、`archive/v6/tasks/`、`archive/v7/tasks/`、`archive/v9/`；早期 Superpowers 计划/规格归档到 `archive/superpowers/`。
 
 ## 下一步
 
-1. **V9.6 收口（188）**：Task 187 已完成。下一步执行 V9 收口与归档：更新 STATUS / AGENTS / README / `tasks/V9-README.md`，将 187 任务文档归档 `archive/v9/`，登记 V10 方向。
-2. **V10 预登记**：跨体裁 Ch200（基线扩 Ch200 checkpoint + 口径冻结）、优秀度信号包（跨章同质化指数/中文 AI 腔规则包/judge 偏差对策/perplexity gate/style card）、结构升级 spike（KG 图 diff / validity interval / Storyline Tree）。
-3. **守护项**：后续 CED 仍使用 consistency-only、merged/source、正文证据口径；不得把文学 craft 或 `rule-mr-*` 聚合工作项计入 CED。
+1. **V10 规划（未开工）**：跨体裁 Ch200（基线扩 Ch200 checkpoint + 口径冻结）、优秀度信号包（跨章同质化指数/中文 AI 腔规则包/judge 偏差对策/perplexity gate/style card）、结构升级 spike（KG 图 diff / validity interval / Storyline Tree）。
+2. **V10 开工前置**：先写 V10 总任务书与验收口径，不直接启动 Ch200 或优秀度实现。
+3. **守护项**：后续 CED 仍使用 consistency-only、merged/source、正文证据口径；不得把文学 craft 或 `rule-mr-*` 聚合工作项计入 CED；T9 仍不接受解释性豁免。
 
 ## 入口
 
-- **V9 任务事实入口（已开工）：`tasks/V9-README.md`**
-- V9 Task 173 DONE：`tasks/173-interpreter-exit-hang-fix-DONE.md`
-- V9 Task 174 DONE：`tasks/174-logging-system-foundation-DONE.md`
-- V9 Task 175 DONE：`tasks/175-cost-tracking-and-budget-circuit-breaker-DONE.md`
-- V9 Task 176 DONE：`tasks/176-windows-anti-hang-wrapper-DONE.md`
-- V9 Task 177 DONE：`tasks/177-export-book-manuscript-DONE.md`
-- V9 Task 178 DONE：`tasks/178-wheel-packaging-resource-loading-DONE.md`
-- V9 Task 179 DONE：`tasks/179-cli-experience-fixes-DONE.md`
-- V9 Task 180 DONE：`tasks/180-doctor-environment-check-DONE.md`
-- V9 Task 181 DONE：`tasks/181-ci-and-test-cleanup-DONE.md`
-- V9 Task 182 DONE：`tasks/182-five-gate-and-segment-audit-tools-DONE.md`
-- V9 Task 183 DONE：`tasks/183-profile-tuning-cli-DONE.md`
-- V9 Task 184 DONE：`tasks/184-genres-creative-modes-json-schema-DONE.md`
-- V9 Task 185 完成报告：`tasks/185-urban-short-window-calibration-DONE.md`
-- V9 Task 186 任务书：`tasks/186-urban-ch100-climb.md`
-- V9 Task 187 执行记录：`tasks/187-urban-ch100-climb-execution.md`
-- V9 Task 187.w 当前修复记录：`tasks/187.w-urban-ch50-t9-clean.md`
+- **V9 任务事实入口（已完成）：`tasks/V9-README.md`**
+- V9 归档索引：`archive/v9/INDEX.md`
+- V9 Task 173-188 单项任务文档：`archive/v9/`
+- V9 Task 185 完成报告：`archive/v9/185-urban-short-window-calibration-DONE.md`
+- V9 Task 186 任务书：`archive/v9/186-urban-ch100-climb.md`
+- V9 Task 187 执行记录：`archive/v9/187-urban-ch100-climb-execution.md`
+- V9 Task 187 DONE：`archive/v9/187-urban-ch100-climb-execution-DONE.md`
+- V9 Task 188 DONE：`archive/v9/188-v9-closure-and-archive-DONE.md`
 - V8 历史任务事实（已收尾，含 V8.5）：`tasks/V8-README.md`
 - V8 归档索引（全部任务文档与报告）：`archive/v8/INDEX.md`
 - V8 长调研报告（GenreRuntimeProfile 设计依据，活跃参考）：`docs/reports/v8-literature-and-landscape-review.md`

@@ -135,7 +135,7 @@ Task 127 score halt 重构 ──┐
 
 ## 7. 交付物
 
-- `tasks/128-strict-mode-fault-tolerance-and-quality-ramp-DONE.md`
+- `archive/v5/tasks/128-strict-mode-fault-tolerance-and-quality-ramp-DONE.md`
 - 代码改动：`src/songyan/workflows/phase2_graph.py`、settlement 相关模块、quality gate 相关模块、revision handler
 - 新增/更新测试
 - Ch1–Ch150 baseline 重跑日志与报告

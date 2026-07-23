@@ -1,6 +1,6 @@
 # Task 170h: 结构性改写支持 — 场景模板约束 + 非人实体戏份分配 + 声纹工程升级
 
-> **专项**: 文学提质专项（`tasks/170-literary-quality-remediation-README.md`）
+> **专项**: 文学提质专项（`archive/v7/tasks/170-literary-quality-remediation-README.md`）
 > **类型**: 结构性改写 / 声源工程（路径 B 第一步）
 > **优先级**: P0（决定 170g 能否从 blocker 改判并重新评估 Ch200 入口）
 > **依赖**: Task 170g Phase2 已完成（结论：未达标，保持 blocker）

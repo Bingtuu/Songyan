@@ -1,6 +1,6 @@
 # Task 170o：human_voice_homogeneity 说话人归因校准 + seeding gap 根因暴露 — DONE
 
-> **专项**: 文学提质专项（`tasks/170-literary-quality-remediation-README.md`）
+> **专项**: 文学提质专项（`archive/v7/tasks/170-literary-quality-remediation-README.md`）
 > **类型**: 量具校准（补 170m 未覆盖的 voice 量具）/ 根因暴露
 > **优先级**: P0
 > **依赖**: Task 170m 已完成（exposition_carrier 已校准；但 `detect_human_voice_homogeneity` 仅做了 non_character_keywords 注入，未修说话人归因）
@@ -120,4 +120,4 @@ detect_human_voice_homogeneity 在真实正文上结构性恒 0
 
 - `src/songyan/agents/rule_auditor.py`（`detect_human_voice_homogeneity` 归因校准 + `run_rule_audit` 透传）
 - `tests/test_rule_auditor.py`（3 个新增单测）
-- `tasks/170o-voice-homogeneity-attribution-calibration-DONE.md`
+- `archive/v7/tasks/170o-voice-homogeneity-attribution-calibration-DONE.md`

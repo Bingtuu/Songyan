@@ -38,7 +38,7 @@ Ch1-5 小窗口实跑在 **Ch3 被 `health_low_p1_halt: P1_count=11` 挡停**。
 - `src/songyan/agents/continuity_auditor/_scanners.py` 修正 + 演进型 field 常量。
 - `tests/test_171p_state_mismatch_construct.py`。
 - 复验记录（写入本 spec 或 DONE）。
-- `tasks/171p-ch200-wall-fix-DONE.md`。
+- `archive/v7/tasks/171p-ch200-wall-fix-DONE.md`。
 
 ## 明确不做
 - 不放宽 health 7.0 / P1 halt 冻结口径；不改 gate 逻辑；不做 LLM 闭环；不在此扩大到非 state-mismatch 的其它 P1 源。

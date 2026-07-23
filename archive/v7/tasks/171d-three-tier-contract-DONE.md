@@ -2,7 +2,7 @@
 
 > **框架**: `docs/reports/v7-literary-framework-review.md` §8 A 组（A1/A3/A4；A2 行为层已达标）
 > **状态**: ✅ **完成**
-> **报告**: `docs/reports/task-171d-three-tier-contract-report.md`
+> **报告**: `archive/v7/reports/task-171d-three-tier-contract-report.md`
 > **完成时间**: 2026-07-10
 
 ---
@@ -49,7 +49,7 @@ Task 171d 把框架 §8 "三层契约"从**文档概念**落成 **metrics 出口
 ## 验证清单
 - [x] `ruff check src/ tests/ scripts/run_171d_calibrate.py` 全通过。
 - [x] `test_171d_three_tier_contract.py`(9)+`test_145_stage_a_metrics.py`+`test_148_foreshadowing_metrics.py`+`test_llm_client.py`+`test_171c_literary_postproc.py`+`test_171b_sampling.py` **49 passed**（`render_stage_a_metrics` 插入新段无回归）。
-- [x] `run_171d_calibrate.py` 跑通 4 DB、465 章，报告落 `docs/reports/task-171d-three-tier-contract-report.md`。
+- [x] `run_171d_calibrate.py` 跑通 4 DB、465 章，报告落 `archive/v7/reports/task-171d-three-tier-contract-report.md`。
 - [x] 框架 §8 A 组表已加"代码现状溯源说明"，A1/A3/A4 指向本任务。
 
 ---

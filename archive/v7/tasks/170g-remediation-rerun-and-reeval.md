@@ -1,6 +1,6 @@
 # Task 170g: 提质复评出口（Ch200 放行判定）
 
-> **专项**: 文学提质专项（`tasks/170-literary-quality-remediation-README.md`）
+> **专项**: 文学提质专项（`archive/v7/tasks/170-literary-quality-remediation-README.md`）
 > **类型**: 出口验证（终检）
 > **优先级**: P0（决定能否放行 Task 171 Ch200）
 > **依赖**: 170c + 170d + 170e + 170f 全部 DONE
@@ -88,4 +88,4 @@ python scripts/run_170g_reeval.py   # 或参数化的 170b 评估脚本
 
 ## 专项收口
 
-170g DONE 时，回填 `tasks/170-literary-quality-remediation-README.md` 的出口结论，并在 V7 文档中明确：文学提质专项完成、量具已可信、Ch200 是否放行。
+170g DONE 时，回填 `archive/v7/tasks/170-literary-quality-remediation-README.md` 的出口结论，并在 V7 文档中明确：文学提质专项完成、量具已可信、Ch200 是否放行。

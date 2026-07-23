@@ -40,18 +40,18 @@
 
 | Task | 名称 | 类型 | 依赖 | 风险 | 文档 |
 |------|------|:---:|:---:|:---:|------|
-| 170c | T9 近似/改写重复检测 | 量具 | 170b | 低·独立 | ✅ `tasks/170c-t9-near-duplicate-detection-DONE.md` |
-| 170d | LiteraryAuditor 校准 | 量具 | 170b | 低·独立 | ✅ `tasks/170d-literary-auditor-calibration-DONE.md` |
-| 170e | voice 声纹区分提质 | 提质 | 170d | 中·碰生成链 | ✅ `tasks/170e-voice-differentiation-DONE.md` |
-| 170f | pacing 节奏 + exposition 融合 | 提质 | 170d | 中·碰生成链 | ✅ `tasks/170f-pacing-exposition.md`（过程）、`tasks/170f-pacing-exposition-DONE.md`（DONE 报告）、`docs/reports/task-170f-stage2-reeval-report.md` |
-| 170g | 提质复评出口 | 出口 | c+d+e+f | — | ✅ `tasks/170g-remediation-rerun-and-reeval-DONE.md`（改判 blocker）、`docs/reports/task-170g-remediation-reeval-report.md` |
-| 170g Phase2 | 工艺补丁与小样本复评 | 出口补丁 | 170g | — | ✅ `tasks/170g-phase2-remediation-DONE.md`（结论仍 blocker）、`docs/reports/task-170g-phase2-remediation-reeval-report.md` |
-| 170h | 路径 B 结构性改写：场景模板约束 + 非人实体戏份分配 + 声纹工程升级 | 提质 | 170g Phase2 | — | ✅ `tasks/170h-structural-rewrite-voice-exposition-DONE.md`、`docs/reports/task-170h-remediation-reeval-report.md` |
-| 170i | 路径 B 第二步：主角认知冲突/误判代价 + 人类角色声纹锚定 | 提质 | 170h | — | ✅ `tasks/170i-protagonist-cognitive-conflict-voice-anchoring.md`、`tasks/170i-protagonist-cognitive-conflict-voice-anchoring-DONE.md`（结论仍 blocker）、`docs/reports/task-170i-remediation-reeval-report.md` |
-| 170j | 路径 B 第三步：最小声纹锚定（minimal_voice_anchor） | 提质 | 170i | — | ✅ `tasks/170j-ai-tone-voice-feasibility-assessment-DONE.md` |
-| 170k | 路径 B 第四步：角色对抗性目标锚定（opposing_goal_anchor） | 提质 | 170j | — | ✅ `tasks/170k-opposing-goal-anchor.md`、`tasks/170k-opposing-goal-anchor-DONE.md`（结论仍 blocker）、`docs/reports/task-170k-opposing-goal-anchor-reeval-report.md` |
-| 170l | 路径 B 第五步：声纹工程升级接口化（few_shot_voice_anchor + AI 腔禁用表） | 提质 | 170k | — | ✅ `tasks/170l-few-shot-voice-anchor.md`、`tasks/170l-few-shot-voice-anchor-DONE.md`（结论仍 blocker；同时修复 RuleAuditor 引号匹配 bug）、`docs/reports/task-170l-few-shot-voice-anchor-reeval-report.md` |
-| 170m | 量具二次校准：RuleAuditor exposition carrier 动态化 + ground truth 闭环 | 量具 | 170l | 低·独立 | ✅ `tasks/170m-exposition-carrier-recalibration.md`、`tasks/170m-exposition-carrier-recalibration-DONE.md`、`docs/reports/task-170m-exposition-carrier-recalibration-report.md` |
+| 170c | T9 近似/改写重复检测 | 量具 | 170b | 低·独立 | ✅ `archive/v7/tasks/170c-t9-near-duplicate-detection-DONE.md` |
+| 170d | LiteraryAuditor 校准 | 量具 | 170b | 低·独立 | ✅ `archive/v7/tasks/170d-literary-auditor-calibration-DONE.md` |
+| 170e | voice 声纹区分提质 | 提质 | 170d | 中·碰生成链 | ✅ `archive/v7/tasks/170e-voice-differentiation-DONE.md` |
+| 170f | pacing 节奏 + exposition 融合 | 提质 | 170d | 中·碰生成链 | ✅ `archive/v7/tasks/170f-pacing-exposition.md`（过程）、`archive/v7/tasks/170f-pacing-exposition-DONE.md`（DONE 报告）、`archive/v7/reports/task-170f-stage2-reeval-report.md` |
+| 170g | 提质复评出口 | 出口 | c+d+e+f | — | ✅ `archive/v7/tasks/170g-remediation-rerun-and-reeval-DONE.md`（改判 blocker）、`archive/v7/reports/task-170g-remediation-reeval-report.md` |
+| 170g Phase2 | 工艺补丁与小样本复评 | 出口补丁 | 170g | — | ✅ `archive/v7/tasks/170g-phase2-remediation-DONE.md`（结论仍 blocker）、`archive/v7/reports/task-170g-phase2-remediation-reeval-report.md` |
+| 170h | 路径 B 结构性改写：场景模板约束 + 非人实体戏份分配 + 声纹工程升级 | 提质 | 170g Phase2 | — | ✅ `archive/v7/tasks/170h-structural-rewrite-voice-exposition-DONE.md`、`archive/v7/reports/task-170h-remediation-reeval-report.md` |
+| 170i | 路径 B 第二步：主角认知冲突/误判代价 + 人类角色声纹锚定 | 提质 | 170h | — | ✅ `archive/v7/tasks/170i-protagonist-cognitive-conflict-voice-anchoring.md`、`archive/v7/tasks/170i-protagonist-cognitive-conflict-voice-anchoring-DONE.md`（结论仍 blocker）、`archive/v7/reports/task-170i-remediation-reeval-report.md` |
+| 170j | 路径 B 第三步：最小声纹锚定（minimal_voice_anchor） | 提质 | 170i | — | ✅ `archive/v7/tasks/170j-ai-tone-voice-feasibility-assessment-DONE.md` |
+| 170k | 路径 B 第四步：角色对抗性目标锚定（opposing_goal_anchor） | 提质 | 170j | — | ✅ `archive/v7/tasks/170k-opposing-goal-anchor.md`、`archive/v7/tasks/170k-opposing-goal-anchor-DONE.md`（结论仍 blocker）、`archive/v7/reports/task-170k-opposing-goal-anchor-reeval-report.md` |
+| 170l | 路径 B 第五步：声纹工程升级接口化（few_shot_voice_anchor + AI 腔禁用表） | 提质 | 170k | — | ✅ `archive/v7/tasks/170l-few-shot-voice-anchor.md`、`archive/v7/tasks/170l-few-shot-voice-anchor-DONE.md`（结论仍 blocker；同时修复 RuleAuditor 引号匹配 bug）、`archive/v7/reports/task-170l-few-shot-voice-anchor-reeval-report.md` |
+| 170m | 量具二次校准：RuleAuditor exposition carrier 动态化 + ground truth 闭环 | 量具 | 170l | 低·独立 | ✅ `archive/v7/tasks/170m-exposition-carrier-recalibration.md`、`archive/v7/tasks/170m-exposition-carrier-recalibration-DONE.md`、`archive/v7/reports/task-170m-exposition-carrier-recalibration-report.md` |
 
 ## 依赖与执行顺序
 
@@ -136,20 +136,20 @@
 
 ## 文档入口
 
-- 立项依据：`tasks/170b-midwindow-literary-readability-assessment-DONE.md`、`docs/reports/task-170b-literary-readability-assessment-report.md`
-- 170g 出口 DONE（改判 blocker）：`tasks/170g-remediation-rerun-and-reeval-DONE.md`
-- 170g Phase2 DONE（仍 blocker）：`tasks/170g-phase2-remediation-DONE.md`
-- 170g 复评报告：`docs/reports/task-170g-remediation-reeval-report.md`
-- 170g Phase2 复评报告：`docs/reports/task-170g-phase2-remediation-reeval-report.md`
-- 170h DONE（路径 B 第一步，仍 blocker）：`tasks/170h-structural-rewrite-voice-exposition-DONE.md`
-- 170h 复评报告：`docs/reports/task-170h-remediation-reeval-report.md`
-- 170i DONE（路径 B 第二步，仍 blocker）：`tasks/170i-protagonist-cognitive-conflict-voice-anchoring-DONE.md`
-- 170i 复评报告：`docs/reports/task-170i-remediation-reeval-report.md`
-- 170j DONE（路径 B 第三步，仍 blocker）：`tasks/170j-ai-tone-voice-feasibility-assessment-DONE.md`
-- 170k DONE（路径 B 第四步，仍 blocker）：`tasks/170k-opposing-goal-anchor-DONE.md`
-- 170k 复评报告：`docs/reports/task-170k-opposing-goal-anchor-reeval-report.md`
-- 170l DONE（路径 B 第五步，仍 blocker；修复 RuleAuditor 引号匹配 bug）：`tasks/170l-few-shot-voice-anchor-DONE.md`
-- 170l 复评报告：`docs/reports/task-170l-few-shot-voice-anchor-reeval-report.md`
+- 立项依据：`archive/v7/tasks/170b-midwindow-literary-readability-assessment-DONE.md`、`archive/v7/reports/task-170b-literary-readability-assessment-report.md`
+- 170g 出口 DONE（改判 blocker）：`archive/v7/tasks/170g-remediation-rerun-and-reeval-DONE.md`
+- 170g Phase2 DONE（仍 blocker）：`archive/v7/tasks/170g-phase2-remediation-DONE.md`
+- 170g 复评报告：`archive/v7/reports/task-170g-remediation-reeval-report.md`
+- 170g Phase2 复评报告：`archive/v7/reports/task-170g-phase2-remediation-reeval-report.md`
+- 170h DONE（路径 B 第一步，仍 blocker）：`archive/v7/tasks/170h-structural-rewrite-voice-exposition-DONE.md`
+- 170h 复评报告：`archive/v7/reports/task-170h-remediation-reeval-report.md`
+- 170i DONE（路径 B 第二步，仍 blocker）：`archive/v7/tasks/170i-protagonist-cognitive-conflict-voice-anchoring-DONE.md`
+- 170i 复评报告：`archive/v7/reports/task-170i-remediation-reeval-report.md`
+- 170j DONE（路径 B 第三步，仍 blocker）：`archive/v7/tasks/170j-ai-tone-voice-feasibility-assessment-DONE.md`
+- 170k DONE（路径 B 第四步，仍 blocker）：`archive/v7/tasks/170k-opposing-goal-anchor-DONE.md`
+- 170k 复评报告：`archive/v7/reports/task-170k-opposing-goal-anchor-reeval-report.md`
+- 170l DONE（路径 B 第五步，仍 blocker；修复 RuleAuditor 引号匹配 bug）：`archive/v7/tasks/170l-few-shot-voice-anchor-DONE.md`
+- 170l 复评报告：`archive/v7/reports/task-170l-few-shot-voice-anchor-reeval-report.md`
 - V7 事实入口：`tasks/V7-README.md`
 - 项目状态：`docs/STATUS.md`
-- 改判与 Phase 2 计划：`docs/superpowers/plans/ghost-rider-nick-fury-adam-warlock.md`
+- 改判与 Phase 2 计划：`archive/superpowers/plans/ghost-rider-nick-fury-adam-warlock.md`

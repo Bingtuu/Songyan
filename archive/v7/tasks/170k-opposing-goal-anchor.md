@@ -1,6 +1,6 @@
 # Task 170k: 路径 B 第四步 — 角色对抗性目标锚定（opposing_goal_anchor）
 
-> **专项**: 文学提质专项（`tasks/170-literary-quality-remediation-README.md`）
+> **专项**: 文学提质专项（`archive/v7/tasks/170-literary-quality-remediation-README.md`）
 > **类型**: 轻量策略迭代（路径 B 第四步）
 > **优先级**: P0
 > **依赖**: Task 170j 已完成（结论：未达标，维持 blocker）
@@ -79,7 +79,7 @@ Task 170k 是 170j `minimal_voice_anchor` 失败后的**下一个轻量策略**�
   - 机器/LLM 偏差 < 3 分
 
 ### 决策交付
-- `tasks/170k-opposing-goal-anchor-DONE.md` 必须明确给出：
+- `archive/v7/tasks/170k-opposing-goal-anchor-DONE.md` 必须明确给出：
   - 与 170j 基线对比表；
   - 是否改判 observation/pass；
   - 若未达标，下一步建议（继续轻量迭代 / 升级 / 降级）。
@@ -118,7 +118,7 @@ Task 170k 是 170j `minimal_voice_anchor` 失败后的**下一个轻量策略**�
 **要点：**
 - `--init` 创建隔离 DB，临时 mode profile 启用 `["minimal_voice_anchor", "opposing_goal_anchor"]`。
 - `--start 29 --end 32` 跑生成。
-- 自动生成 `docs/reports/task-170k-opposing-goal-anchor-reeval-report.md`。
+- 自动生成 `archive/v7/reports/task-170k-opposing-goal-anchor-reeval-report.md`。
 
 ### 4. 单测
 
@@ -138,8 +138,8 @@ Task 170k 是 170j `minimal_voice_anchor` 失败后的**下一个轻量策略**�
 6. `--init` 创建实验项目。
 7. 后台/前台跑 Ch29–Ch32 生成。
 8. 跑 `run_170k_reeval.py` 出报告。
-9. 根据复评结果回填 `tasks/170k-opposing-goal-anchor-DONE.md`。
-10. 更新 `docs/STATUS.md`、`tasks/V7-README.md`、`README.md`、`tasks/170-literary-quality-remediation-README.md`。
+9. 根据复评结果回填 `archive/v7/tasks/170k-opposing-goal-anchor-DONE.md`。
+10. 更新 `docs/STATUS.md`、`tasks/V7-README.md`、`README.md`、`archive/v7/tasks/170-literary-quality-remediation-README.md`。
 11. 跑 pytest 全批次验证。
 
 ---
@@ -163,5 +163,5 @@ Task 170k 是 170j `minimal_voice_anchor` 失败后的**下一个轻量策略**�
 - `scripts/run_170k_experiment.py`
 - `scripts/run_170k_reeval.py`
 - `tests/literary_optimization/test_opposing_goal_anchor.py`
-- `docs/reports/task-170k-opposing-goal-anchor-reeval-report.md`
-- `tasks/170k-opposing-goal-anchor-DONE.md`
+- `archive/v7/reports/task-170k-opposing-goal-anchor-reeval-report.md`
+- `archive/v7/tasks/170k-opposing-goal-anchor-DONE.md`

@@ -46,7 +46,7 @@
 - [x] 从 Ch1 分段运行到 Ch100：25 / 50 / 75 / 100 四个边界均做 early-warning。
 - [x] 每个边界记录五门：budget、consistency CED、overdue、health、completeness。
 - [x] 每个边界额外记录 resolve 健康度：resolved 数量、due/overdue 可见性、是否出现 resolve 后翻回 overdue。
-- [x] Ch100 产出 `docs/reports/172c-wuxia-ch100-climb.md` 终判报告。
+- [x] Ch100 产出 `archive/v8/reports/172c-wuxia-ch100-climb.md` 终判报告。
 - [x] 完成后同步 `docs/STATUS.md`、`tasks/V8-README.md`、`README.md` 的 172c 状态。
 
 ## 4. Out of Scope
@@ -175,7 +175,7 @@ Ch100 终判必须同时满足：
 | CED | consistency CED ≤ sci-fi Ch100 × 1.15，即 ≤ 0.4573 |
 | overdue | unresolved overdue ≤ sci-fi Ch100 同尺度，即 ≤ 168 |
 | resolve | `foreshadowings.status='resolved'` 数量 > 0，且无同事务翻回 overdue 证据 |
-| report | `docs/reports/172c-wuxia-ch100-climb.md` 写明四段曲线、五门判定、失败/重试清单 |
+| report | `archive/v8/reports/172c-wuxia-ch100-climb.md` 写明四段曲线、五门判定、失败/重试清单 |
 
 通过后，172c 标记为完成；V8 多体裁中篇证据扩展为 xuanhuan + wuxia 两个非 sci-fi 体裁 Ch100。
 
@@ -193,7 +193,7 @@ Ch100 终判必须同时满足：
 
 ## 9. 完成后交付
 
-- `docs/reports/172c-wuxia-ch100-climb.md`
+- `archive/v8/reports/172c-wuxia-ch100-climb.md`
 - `tasks/172c-wuxia-ch100-climb.md` 状态更新为完成
 - `docs/STATUS.md` 当前判断与最近验证更新
 - `tasks/V8-README.md` 172c 状态与文档入口更新

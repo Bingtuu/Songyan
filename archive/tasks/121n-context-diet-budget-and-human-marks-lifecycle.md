@@ -1,4 +1,4 @@
-﻿# Task 121n: Context Diet 2.0 预算调整与 human_marks 生命周期优化
+# Task 121n: Context Diet 2.0 预算调整与 human_marks 生命周期优化
 
 > **日期**: 2026-06-22
 > **类型**: V5.1 preflight / 上下文稳定性

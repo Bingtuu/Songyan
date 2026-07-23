@@ -74,7 +74,7 @@ V8 当前完成判据已满足，且 172c（wuxia 第二体裁 Ch100）已作为
 |------|------|:----:|----------|
 | 172 | 项目模板化与体裁可插拔 | ✅ 完成 | `archive/v8/tasks/172-project-template-plugin-DONE.md` |
 | 172-TEST | 合并到 main 门槛值与测试计划 | ✅ 完成 | `archive/v8/tasks/172-project-template-plugin-TEST-PLAN.md` |
-| 172-PLAN | 实施计划 | ✅ 完成 | `docs/superpowers/plans/2026-07-13-project-template-plugin-plan.md` |
+| 172-PLAN | 实施计划 | ✅ 完成 | `archive/superpowers/plans/2026-07-13-project-template-plugin-plan.md` |
 
 ### V8.1：体裁运行时画像（GenreRuntimeProfile）
 

@@ -14,8 +14,8 @@
 
 - 项目状态：`docs/STATUS.md`
 - 文档路由：`docs/INDEX.md`
-- 当前阶段：V8 已全量闭环（含 V8.5）；V9 已开工（Task 173-188，173-184 已完成）
-- V9 任务事实（当前阶段）：`tasks/V9-README.md`
+- 当前阶段：V9 已全量闭环（Task 173-188）；V10 预登记，尚未开工
+- V9 任务事实（已收尾）：`tasks/V9-README.md`；单项任务文档归档 `archive/v9/`（索引 `archive/v9/INDEX.md`）
 - V8 历史任务事实（已收尾）：`tasks/V8-README.md`；任务文档与报告归档 `archive/v8/`（索引 `archive/v8/INDEX.md`）
 - V7 历史任务事实（已收尾）：`tasks/V7-README.md`
 - V6 历史任务事实（已收尾）：`tasks/V6-README.md`
@@ -33,7 +33,7 @@ V7（Task 160-171w）已收尾：篇章级质量修复 → 叙事自驱 → enfo
 
 V8（Task 172-172l）已全量闭环：**多体裁可插拔质量 + 章数爬坡**目标达成——`GenreRuntimeProfile` 运行时契约与文学护栏从 sci-fi 隐式画像解耦；P/C/Q/S/V 五维验收全绿；xuanhuan + wuxia 双体裁 Ch100 五门 PASS；V8.5 遗留收口（172j/172k/172l）清零，C 判据 end10/end15/end20 三档证据落盘。V8 任务文档与报告见 `archive/v8/`。
 
-当前阶段为 **V9（设计定稿，Task 173-188）**：生产化地基（V9.1 长跑可靠性 173-176 / V9.2 交付发布 177-181 / V9.3 工具链收编 182-184）+ urban 标定（185）与 Ch100 爬坡（186 任务书 → 187 执行）+ 收口（188）；验收 = A 组地基 8 条 + B 组 urban Ch100 六条 + C 组守护项；跨体裁 Ch200 与优秀度信号包归 V10。事实入口 `tasks/V9-README.md`。
+V9（Task 173-188）已全量闭环：生产化地基（V9.1 长跑可靠性 173-176 / V9.2 交付发布 177-181 / V9.3 工具链收编 182-184）+ urban 标定（185）与 Ch100 爬坡（186 任务书 → 187 执行）+ 收口（188）全部完成；A 组地基 8 条、B 组 urban Ch100 六条、C 组守护项均 PASS。跨体裁 Ch200 与优秀度信号包归 V10，V10 尚未开工。V9 事实入口 `tasks/V9-README.md`，归档入口 `archive/v9/INDEX.md`。
 
 ## 不可违背规则
 
@@ -117,4 +117,4 @@ Windows 下长跑或 pytest 卡住时，使用防卡 wrapper（Task 176 已工�
 - 不用 `git reset --hard` 或 `git checkout --` 覆盖用户改动。
 - 当前入口保持短；长历史、旧规划、旧报告放入 `archive/`。
 - 归档内容默认不读，除非用户要求追溯历史决策。
-- 历史产物已归档至 `archive/v5/`、`archive/v6/`、`archive/v7/`、`archive/v8/`（V8 任务文档与报告，2026-07-18），入口见各 `INDEX.md`。
+- 历史产物已归档至 `archive/v5/`、`archive/v6/`、`archive/v7/`、`archive/v8/`、`archive/v9/` 与 `archive/superpowers/`，入口见各 `INDEX.md`。

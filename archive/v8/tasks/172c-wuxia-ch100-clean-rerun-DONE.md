@@ -4,7 +4,7 @@
 > **项目**: `273a8408be8e4caf8cbc1e91954da600`  
 > **DB**: `.tmp/task172b_wuxia_ch100.db`  
 > **Run**: `run-82968662`  
-> **报告**: `docs/reports/172c-wuxia-ch100-climb.md`
+> **报告**: `archive/v8/reports/172c-wuxia-ch100-climb.md`
 
 ## 结论
 

@@ -75,7 +75,7 @@ Task 170 分两类窗口：
 建议输出两类文件：
 
 - 机器可读：`.tmp/task170_adaptive_gate_validation_metrics.jsonl`
-- 人类可读：`docs/reports/task-170-adaptive-gate-validation-report.md`
+- 人类可读：`archive/v7/reports/task-170-adaptive-gate-validation-report.md`
 
 ## 数据收集要求
 
@@ -243,7 +243,7 @@ Task 170 分两类窗口：
 建议 CLI：
 
 ```powershell
-python scripts/run_170_adaptive_gate_validation.py --scenario all --output docs/reports/task-170-adaptive-gate-validation-report.md
+python scripts/run_170_adaptive_gate_validation.py --scenario all --output archive/v7/reports/task-170-adaptive-gate-validation-report.md
 ```
 
 脚本职责：
@@ -263,7 +263,7 @@ python scripts/run_170_adaptive_gate_validation.py --scenario all --output docs/
 
 ## 报告结构
 
-`docs/reports/task-170-adaptive-gate-validation-report.md` 应包含：
+`archive/v7/reports/task-170-adaptive-gate-validation-report.md` 应包含：
 
 1. 执行摘要。
 2. 环境和 run/config。
@@ -305,7 +305,7 @@ Task 170 完成时必须满足：
 - [ ] 可读性/文学性抽检无 blocker。
 - [ ] 不改变 T9/T10/T5/T6 既有口径。
 - [ ] 更新 `tasks/V7-README.md` / `docs/STATUS.md` / `docs/v7-plan.md`。
-- [ ] 生成 `tasks/170-enforce-small-window-validation-and-t12-calibration-DONE.md`。
+- [ ] 生成 `archive/v7/tasks/170-enforce-small-window-validation-and-t12-calibration-DONE.md`。
 
 ## 与 Task 171 的关系
 

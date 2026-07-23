@@ -11,7 +11,7 @@
 
 ## 立项依据
 
-Task 171a 已完成量具的代码侧重建（构念重定义 + 归因召回 + 体裁解耦通电），并在真实 scifi prose 上实证注入生效（`docs/reports/task-171a-metric-validity-report.md`）。但框架 §8 的 **B2/B3**（≥2 体裁盲标 ground truth + voice/exposition P/R/F1 ≥ 0.8）需要两项 171a 无法即时满足的前置——第二体裁 prose 语料、遮机器分的盲标——故拆出本任务。
+Task 171a 已完成量具的代码侧重建（构念重定义 + 归因召回 + 体裁解耦通电），并在真实 scifi prose 上实证注入生效（`archive/v7/reports/task-171a-metric-validity-report.md`）。但框架 §8 的 **B2/B3**（≥2 体裁盲标 ground truth + voice/exposition P/R/F1 ≥ 0.8）需要两项 171a 无法即时满足的前置——第二体裁 prose 语料、遮机器分的盲标——故拆出本任务。
 
 ## 任务边界
 
@@ -28,14 +28,14 @@ Task 171a 已完成量具的代码侧重建（构念重定义 + 归因召回 + �
 
 ## 验收标准
 - ≥2 体裁盲标 GT 文件落地（`.tmp/ground_truth/task171a1_*`）。
-- `docs/reports/task-171a-1-metric-prf-report.md`：voice/exposition 各维度 P/R/F1 + 逐条误报/漏报样例 + 出口判定。
+- `archive/v7/reports/task-171a-1-metric-prf-report.md`：voice/exposition 各维度 P/R/F1 + 逐条误报/漏报样例 + 出口判定。
 - `ruff`/pytest 通过（若含代码改动）。
 
 ## 交付物（预期）
 - `scripts/run_171a1_ground_truth_export.py`、`scripts/run_171a1_reeval.py`
 - `.tmp/ground_truth/task171a1_<genre>_ground_truth.jsonl`（≥2 体裁）
-- `docs/reports/task-171a-1-metric-prf-report.md`
-- `tasks/171a-1-metric-validity-quantification-DONE.md`
+- `archive/v7/reports/task-171a-1-metric-prf-report.md`
+- `archive/v7/tasks/171a-1-metric-validity-quantification-DONE.md`
 
 ## 明确不做
 - 不改生成侧行为（那是 171c）；不阻塞 Ch200 主线；不放宽任何冻结口径。

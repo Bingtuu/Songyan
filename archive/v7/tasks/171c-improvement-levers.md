@@ -44,9 +44,9 @@ Task 171c 解决旧框架的**单一仓鼠轮**错误（框架文档 E5）：路
 
 ## 交付物（预期）
 - 各杠杆的实验脚本 `scripts/run_171c_<lever>_experiment.py`
-- `docs/reports/task-171c-improvement-levers-report.md`（逐杠杆 A/B + 退出判定）
+- `archive/v7/reports/task-171c-improvement-levers-report.md`（逐杠杆 A/B + 退出判定）
 - 成熟杠杆的代码落地（如 RevisionHandler 后处理路径）+ 单测
-- `tasks/171c-improvement-levers-DONE.md`
+- `archive/v7/tasks/171c-improvement-levers-DONE.md`
 
 ## 明确不做
 - 不重启 prompt 工程仓鼠轮（170h–170l 已封存）；不在量具未达标维度上迭代；不阻塞 Ch200 主线；不放宽任何冻结口径；不做全自动 LLM 改写闭环（换模型/后处理均为受控实验 + 人工确认）。

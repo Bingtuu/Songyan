@@ -1,4 +1,4 @@
-﻿# Task 070: JSONL 诊断增强
+# Task 070: JSONL 诊断增强
 
 > **Phase**: V3.1 — 质量跃迁
 > **优先级**: P2

@@ -1,4 +1,4 @@
-﻿# Pass 4 — LLM 基础设施审计报告
+# Pass 4 — LLM 基础设施审计报告
 
 > **范围**: client.py + retry.py + parsing.py + token_estimator.py + 8 个调用站点
 > **日期**: 2026-06-10

@@ -306,11 +306,11 @@ V5.1 Code Review 执行结果汇总:
   - pytest 基线: 1803 passed, 0 failed, 超目标 1731
 
   报告文件:
-  - docs/reports/pass14-state-management-audit.md
-  - docs/reports/pass15-agent-boundary-audit.md
-  - docs/reports/pass16-context-diet-audit.md
-  - docs/reports/pass17-prompt-engineering-audit.md
-  - docs/reports/pass18-test-matrix-audit.md
+  - archive/v5/reports/pass14-state-management-audit.md
+  - archive/v5/reports/pass15-agent-boundary-audit.md
+  - archive/v5/reports/pass16-context-diet-audit.md
+  - archive/v5/reports/pass17-prompt-engineering-audit.md
+  - archive/v5/reports/pass18-test-matrix-audit.md
 ```
 
 ---

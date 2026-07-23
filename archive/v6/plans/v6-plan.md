@@ -47,7 +47,7 @@ V6 通过 = 同时满足以下五项（所有阈值与术语见 §1.4，由不�
 
 > 阈值校准纪律：⚙ 阈值在阶段 A 出口用历史 DB 复算实际分布后，若发现首版值明显不合理（如 138n 基线本身已超红线），须在标定报告中记录并调整，再冻结为 V6 正式口径——**不允许在长跑撞红线后临时放宽**。
 >
-> **阶段 A 标定冻结（2026-07-01，Task 148z，见 `docs/reports/v6-stageA-threshold-calibration.md`）**：
+> **阶段 A 标定冻结（2026-07-01，Task 148z，见 `archive/v6/reports/v6-stageA-threshold-calibration.md`）**：
 > - **T3 冻结**：W=5 均值相对前 10 章基线降 ≥20%（a2bed648 历史 run 触线、30 章健康 run 不触线，口径有效）。
 > - **T6(a) 冻结**：Ch50-100 窗 orphan 斜率 ≤ **3.14/章**（=138n 基线 6.2836×0.5）；**T6(b)** P1 critical orphan=0；**T6c** T7 基线=1.767/章（138k rehearsal），降幅比值手工核算，"被降级 critical ≤15%" 子句延后至 Task 149。
 > - **T8 冻结**：N=5。
@@ -72,7 +72,7 @@ V6 通过 = 同时满足以下五项（所有阈值与术语见 §1.4，由不�
 > 1. **`songyan report` 当前不读 continuity DB**（`cli/main.py` `report_cmd` 只读 JSONL run logs 生成流式验证报告）。因此阶段 A（Task 145-148）"在 songyan report 暴露度量"需先建立"report 读取 DB 逐章度量"的能力——这是阶段 A 的**真实前置 gap**，非纯展示改动。
 > 2. **LiteraryAuditor 已入库**：`literary_observations` 表已有 `character_autonomy_score` / `conceptual_grounding_score` / `fissure_preservation_score` 列。故 Task 147 是"加趋势查询 + 滑动窗口"，非"从零入库"，工作量小于初稿描述。注意维度名是 **`conceptual_grounding_score`**，`conceptual_idling` 仅是 observation type（存于 observations JSON），非独立列。
 > 3. **continuity_reports 无逐章计数列**：该表只存 JSON blob（orphaned_settings/forgotten_items 等），orphan 计数是运行时 `classify_report` 派生。故 Task 145 画"逐章曲线"需新增逐章度量的持久化设计（时间序列或逐章 continuity 记录），不能假设已有计数列。
-> 4. **命名冲突**：已存在 `OpenThread`（context.py，settlement 运行时提取的开放线索，无状态机）。V6 新增的 `PlotThread`（前置规划线索，有 `opened/advanced/resolved` 状态机）必须独立共存、不合并；`ArcPlan`（前置规划）亦区别于回顾型 `ArcSummary`。详见 `tasks/141-narrative-skeleton-data-model.md` 的「关键区分」表。
+> 4. **命名冲突**：已存在 `OpenThread`（context.py，settlement 运行时提取的开放线索，无状态机）。V6 新增的 `PlotThread`（前置规划线索，有 `opened/advanced/resolved` 状态机）必须独立共存、不合并；`ArcPlan`（前置规划）亦区别于回顾型 `ArcSummary`。详见 `archive/v6/tasks/141-narrative-skeleton-data-model.md` 的「关键区分」表。
 
 ### 阶段 0：最小叙事骨架 MVP（治本起点）
 

@@ -15,7 +15,7 @@
 > - `src/songyan/db/migrations.py`
 > - `src/songyan/db/repository.py`
 > - `tests/test_123_gates.py`
-> **关联文档**: `tasks/121a-v50-goal-assessment-and-v51-plan.md`、`tasks/115-context-emergency-review-DONE.md`、`tasks/118-continuity-health-governance-DONE.md`
+> **关联文档**: `archive/v5/tasks/121a-v50-goal-assessment-and-v51-plan.md`、`tasks/115-context-emergency-review-DONE.md`、`tasks/118-continuity-health-governance-DONE.md`
 
 ---
 

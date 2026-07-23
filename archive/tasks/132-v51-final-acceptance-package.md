@@ -65,14 +65,14 @@ V5.1 不是新增大功能，而是 V5.0 之后的**质量收口与可观测性�
 - [ ] 最终 ruff 检查结果通过。
 - [ ] 关键实跑证据：
   - `run-a2bed648`（Task 121q）：Ch1–Ch150 全部成功。
-  - `run-89d7a2d4`（Task 129）：enforce 模式 Ch1–Ch15 验证，Ch15 后因 quality gate streak 暂停；详见 `docs/reports/task-129-enforce-validation-report.md`。
+  - `run-89d7a2d4`（Task 129）：enforce 模式 Ch1–Ch15 验证，Ch15 后因 quality gate streak 暂停；详见 `archive/v5/reports/task-129-enforce-validation-report.md`。
   - Task 126/127/128 的验证记录见对应 `-DONE.md`。
 
 ### 3.4 文档收口
 - [ ] 更新 `docs/STATUS.md`，标记 V5.1 完成。
 - [ ] 更新 `tasks/V5-README.md`，新增 V5.1 任务状态表。
 - [ ] 更新 `docs/INDEX.md`，增加 V5.1 验收入口。
-- [ ] 输出 `tasks/132-v51-final-acceptance-package-DONE.md`。
+- [ ] 输出 `archive/v5/tasks/132-v51-final-acceptance-package-DONE.md`。
 
 ---
 
@@ -127,7 +127,7 @@ Task 131 文档清理 ────┘
 
 ## 8. 交付物
 
-- `tasks/132-v51-final-acceptance-package-DONE.md`
+- `archive/v5/tasks/132-v51-final-acceptance-package-DONE.md`
 - 更新后的 `docs/STATUS.md`
 - 更新后的 `tasks/V5-README.md`
 - 更新后的 `docs/INDEX.md`

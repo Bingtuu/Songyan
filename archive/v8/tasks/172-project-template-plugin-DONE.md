@@ -2,7 +2,7 @@
 
 > **目标**: 建立 `ProjectTemplate` 模板层，让 CLI 和长跑 harness 可以通过 `--template` / `TEMPLATE_ID` 一键切换体裁，覆盖全部 7 个已有 genre，并支持轻量继承/变体。
 >
-> **实施计划**: `docs/superpowers/plans/2026-07-13-project-template-plugin-plan.md`
+> **实施计划**: `archive/superpowers/plans/2026-07-13-project-template-plugin-plan.md`
 
 ## 完成内容
 

@@ -1,4 +1,4 @@
-﻿# Task 072: Settlement source_quote 去噪
+# Task 072: Settlement source_quote 去噪
 
 > **Phase**: V3.1 — 质量跃迁
 > **优先级**: P2

@@ -1,6 +1,6 @@
 # Task 170i: 路径 B 第二步 — 主角认知冲突/误判代价 + 人类角色声纹锚定（DONE）
 
-> **专项**: 文学提质专项（`tasks/170-literary-quality-remediation-README.md`）
+> **专项**: 文学提质专项（`archive/v7/tasks/170-literary-quality-remediation-README.md`）
 > **类型**: 结构性改写 / 声源工程（路径 B 第二步）
 > **优先级**: P0
 > **依赖**: Task 170h 已完成（结论：未达标，维持 blocker）
@@ -126,7 +126,7 @@
 - **生成 run_id**: `run-83a004b3`
 - **生成 DB**: `.tmp/task170i_ch1_ch32.db`
 - **生成状态**: 已完成（Ch1–Ch9 accept，Ch10 degraded accept，Ch11–Ch32 accept；最终 run 状态 completed）
-- **复评报告**: `docs/reports/task-170i-remediation-reeval-report.md`
+- **复评报告**: `archive/v7/reports/task-170i-remediation-reeval-report.md`
 - **正文导出**: `.tmp/task170i_prose_ch28_ch32.md`
 
 ---

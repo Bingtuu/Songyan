@@ -1,6 +1,6 @@
 # Task 170m: 量具二次校准（RuleAuditor exposition carrier 动态化 + 人工 ground truth 闭环）
 
-> **专项**: 文学提质专项（`tasks/170-literary-quality-remediation-README.md`）
+> **专项**: 文学提质专项（`archive/v7/tasks/170-literary-quality-remediation-README.md`）
 > **类型**: 量具校准 / 事实基础设施
 > **优先级**: P0
 > **依赖**: Task 170l 已完成（结论：未达标，维持 blocker；同时暴露 RuleAuditor 引号匹配 bug）
@@ -44,7 +44,7 @@ Task 170l 小样本复评显示 `exposition_carrier_count=72`（Ch30=27, Ch31=24
 - 根据 ground truth 至少调整一项阈值（如 `_NON_CHARACTER_DIALOGUE_WORD_LIMIT`、`_DIRECT_REVELATION_QUOTE_RE` 长度下限、`_INFO_DELIVERY_DIALOGUE_RE` 长度下限等），并给出调整理由。
 
 ### 决策交付
-- `tasks/170m-exposition-carrier-recalibration-DONE.md` 必须明确给出：
+- `archive/v7/tasks/170m-exposition-carrier-recalibration-DONE.md` 必须明确给出：
   - 校准后的 Ch30–Ch32 `exposition_carrier_count`；
   - 检测器 P/R/F1；
   - 与 170l 原计数的差异解释；
@@ -129,9 +129,9 @@ Task 170l 小样本复评显示 `exposition_carrier_count=72`（Ch30=27, Ch31=24
 7. 升级 reeval 脚本输出对比表。
 8. 新增/更新单测并通过。
 9. 跑 `ruff check src/ tests/`。
-10. 跑校准后的 reeval，生成 `docs/reports/task-170m-exposition-carrier-recalibration-report.md`。
-11. 回填 `tasks/170m-exposition-carrier-recalibration-DONE.md`。
-12. 更新 `docs/STATUS.md`、`tasks/V7-README.md`、`tasks/170-literary-quality-remediation-README.md`、`README.md`。
+10. 跑校准后的 reeval，生成 `archive/v7/reports/task-170m-exposition-carrier-recalibration-report.md`。
+11. 回填 `archive/v7/tasks/170m-exposition-carrier-recalibration-DONE.md`。
+12. 更新 `docs/STATUS.md`、`tasks/V7-README.md`、`archive/v7/tasks/170-literary-quality-remediation-README.md`、`README.md`。
 
 ---
 
@@ -159,9 +159,9 @@ Task 170l 小样本复评显示 `exposition_carrier_count=72`（Ch30=27, Ch31=24
 - 单测：
   - `tests/test_rule_auditor.py`
 - 报告：
-  - `docs/reports/task-170m-exposition-carrier-recalibration-report.md`
+  - `archive/v7/reports/task-170m-exposition-carrier-recalibration-report.md`
 - DONE 文档：
-  - `tasks/170m-exposition-carrier-recalibration-DONE.md`
+  - `archive/v7/tasks/170m-exposition-carrier-recalibration-DONE.md`
 
 ---
 
@@ -170,4 +170,4 @@ Task 170l 小样本复评显示 `exposition_carrier_count=72`（Ch30=27, Ch31=24
 本 task 完成后，根据校准结果决策：
 - 若校准后 `exposition_carrier_count` 显著下降且 P/R/F1 可信 → 重新评估 170l 文学失败是否主要是 voice/ai_tone 问题，路径 B 升级方向可聚焦声纹工程。
 - 若校准后 `exposition_carrier_count` 仍然很高且检测器召回充分 → 确认 exposition 约束确实失效，路径 B 升级或目标降级。
-- 无论哪种结果，都必须在 `tasks/170m-exposition-carrier-recalibration-DONE.md` 中给出量化结论。
+- 无论哪种结果，都必须在 `archive/v7/tasks/170m-exposition-carrier-recalibration-DONE.md` 中给出量化结论。

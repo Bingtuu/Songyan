@@ -167,9 +167,9 @@ project.genre -> lookup genre_runtime_profiles table
 **做**：
 
 1. 在 `src/songyan/context/`、`src/songyan/agents/context_manager/`、`src/songyan/services/` 中扫描与 token budget、衰减、halt 阈值相关的常量。
-2. 输出审计报告到 `docs/reports/172a.1-context-diet-constants-audit.md`，字段包括：常量名、当前值、所在文件、是否体裁敏感、建议归属 Profile 字段。
+2. 输出审计报告到 `archive/v8/reports/172a.1-context-diet-constants-audit.md`，字段包括：常量名、当前值、所在文件、是否体裁敏感、建议归属 Profile 字段。
 3. 识别哪些字段已被环境变量覆盖，哪些完全硬编码。
-4. 基于当前默认值，先生成 `scifi` profile 的完整字段快照，作为后续所有体裁调参的 baseline；该快照写入 `docs/reports/172a.1-scifi-baseline-profile.json` 并登记到 `genre_runtime_profiles` 表。
+4. 基于当前默认值，先生成 `scifi` profile 的完整字段快照，作为后续所有体裁调参的 baseline；该快照写入 `archive/v8/reports/172a.1-scifi-baseline-profile.json` 并登记到 `genre_runtime_profiles` 表。
 
 **不做**：
 
@@ -343,7 +343,7 @@ def test_two_distinct_ratio_fields():
    - wuxia `--end 10`；
    - urban `--end 10`。
 3. 输出指标：ContextEmergency 频率、budget_used 峰值、连续性审计 mismatch 数、伏笔 planted/due/overdue、accepted 率、CED。
-4. 将结果写入 `docs/reports/172a.7-genre-short-window-validation.md`。
+4. 将结果写入 `archive/v8/reports/172a.7-genre-short-window-validation.md`。
 
 **不做**：
 
@@ -375,8 +375,8 @@ def test_two_distinct_ratio_fields():
 Task 172a 完成后需产出：
 
 1. `tasks/172a-v8-genre-runtime-profiles-DONE.md` 记录最终参数与验证结果；
-2. `docs/reports/172a.1-context-diet-constants-audit.md` 与 `docs/reports/172a.1-scifi-baseline-profile.json`；
-3. `docs/reports/172a.7-genre-short-window-validation.md` 多体裁短窗口报告；
+2. `archive/v8/reports/172a.1-context-diet-constants-audit.md` 与 `archive/v8/reports/172a.1-scifi-baseline-profile.json`；
+3. `archive/v8/reports/172a.7-genre-short-window-validation.md` 多体裁短窗口报告；
 4. 将 xuanhuan/wuxia/urban Profile 登记到 `docs/STATUS.md` 的 V8 阶段事实；
 5. 明确 Task 172b（Ch100+ 多体裁长跑验证）的触发条件。
 

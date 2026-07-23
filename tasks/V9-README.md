@@ -4,7 +4,7 @@
 > **定位**: 自用为主、按开源标准打磨——不追求终端用户产品体验，但地基（打包/CI/日志/导出/成本）按可发布标准补齐
 > **当前口径**: V8（含 V8.5）已全量闭环。V9 不做优秀度信号包与跨体裁 Ch200（捆绑留 V10），只做两件事：① 补齐生产化地基；② urban 第三体裁 Ch100 爬坡作为地基的实战验收
 > **任务编号**: V9 从 Task 173 开始；**扁平编号**——每个可独立执行、独立验收、独立出 DONE 文档的工作项各占一个编号（粒度对标 V6 的 141-159 / V7 的 160-171w）；编号是 trace id，不等同于严格执行顺序；撞墙定点修复按父任务字母后缀登记（如 `187.p`）
-> **状态**: 已开工（2026-07-22：**V9.1 全部完成**（173/174/175/176 ✅）；**V9.2 全部完成**（177/178/179/180/181 ✅）；**V9.3 全部完成**（182/183/184 ✅）；**V9.4 Task 185 已完成**：urban `base_budget=12000` 经 run1/run2/run3 三轮 end15 实跑标定为短窗口初值，run3（registry 默认值）15/15 accepted、T9=0、emergency=0，scifi end10 回归无漂移；**V9.5 Task 187 已完成**：urban Ch1-Ch100 **100/100 accepted**，five-gate PASS、T9=0、segment audit PASS；**进入 V9.6 Task 188 收口**）
+> **状态**: ✅ 已完成（2026-07-23：**V9.1 全部完成**（173/174/175/176 ✅）；**V9.2 全部完成**（177/178/179/180/181 ✅）；**V9.3 全部完成**（182/183/184 ✅）；**V9.4 Task 185 已完成**：urban `base_budget=12000` 经 run1/run2/run3 三轮 end15 实跑标定为短窗口初值，run3（registry 默认值）15/15 accepted、T9=0、emergency=0，scifi end10 回归无漂移；**V9.5 Task 187 已完成**：urban Ch1-Ch100 **100/100 accepted**，five-gate PASS、T9=0、segment audit PASS；**V9.6 Task 188 已完成**：任务文档归档 `archive/v9/`，STATUS / INDEX / README / AGENTS / 本文口径一致）
 
 本文是 V9 阶段任务文档的事实入口。V8 历史事实入口见 `tasks/V8-README.md`（任务文档与报告在 `archive/v8/`）；更早阶段见 V7/V6/V5-README。
 
@@ -86,28 +86,28 @@ V9 通过 = A 组（地基）+ B 组（爬坡）同时满足，C 组（守护）
 
 | Task | 名称 | 状态 | 内容要点 | 验收要点 |
 |------|------|:----:|----------|----------|
-| 173 | 解释器退出挂死修复 | ✅ | LLM client 显式 registry + `aclose_llm_clients()`；pipeline wrapper 收尾对称关闭 LLM client + sqlite checkpointer（D2 实跑确证挂死根因为 checkpointer 连接泄漏，py-spy 线程栈实证）；`SONGYAN_FORCE_EXIT` 最外层兜底 | DONE: `tasks/173-interpreter-exit-hang-fix-DONE.md`；sqlite 模式 2.5s 自然退出（修复前同环境挂死 50+ 分钟） |
-| 174 | 日志体系落地 | ✅ | `logging_setup.py`：CLI/harness 入口 configure 一次；`LOG_LEVEL` 修活；console 人类可读 + `logs/app/*.jsonl` 文件双写；`LiteLLM`/httpx 等第三方 WARNING 起；关键日志带 `run_id/chapter_number/stage/version_id/db_path`，并与既有 `logs/chapter_runs/*.jsonl` 对齐 | DONE: `tasks/174-logging-system-foundation-DONE.md`；三边重建演示闭环（scifi end10 Ch4 四维度交叉一致） |
-| 175 | 成本追踪与预算熔断 | ✅ | `llm_call_usage` 落库 + call_llm 拦截 + agent 归因；`run_cost_budget` 双检查熔断（**DB 权威**：D1 实跑发现 ContextVar 跨节点失效并修复 `22c1052`；熔断异常传播修复 `0b07e9d`）+ total_cost 双接线；report 成本视图；阶段 D 实跑验收全通过 | DONE: `tasks/175-cost-tracking-and-budget-circuit-breaker-DONE.md`；scifi end10：10/10、usage 151 行 estimate 0%、总成本 ¥0.886、熔断 pause→提额 resume→completed 全链路实证 |
-| 176 | Windows 防卡 wrapper 工具化 | ✅ | `scripts/run_with_timeout.ps1`：任意命令 + 硬超时 + 四档标记 + 进程树清理（先 taskkill /T 后 fallback + child sweep + PID 复用守卫）+ meta 诊断字段；`-DetectPytestSummary` 防误判门控 + `-SuccessMarkerRegex` 业务标记；`-SelfTest` 11 项自检 | DONE: `tasks/176-windows-anti-hang-wrapper-DONE.md`；自检 11/11；实跑验收 scifi `--end 1` PASS_NORMAL_EXIT |
+| 173 | 解释器退出挂死修复 | ✅ | LLM client 显式 registry + `aclose_llm_clients()`；pipeline wrapper 收尾对称关闭 LLM client + sqlite checkpointer（D2 实跑确证挂死根因为 checkpointer 连接泄漏，py-spy 线程栈实证）；`SONGYAN_FORCE_EXIT` 最外层兜底 | DONE: `archive/v9/173-interpreter-exit-hang-fix-DONE.md`；sqlite 模式 2.5s 自然退出（修复前同环境挂死 50+ 分钟） |
+| 174 | 日志体系落地 | ✅ | `logging_setup.py`：CLI/harness 入口 configure 一次；`LOG_LEVEL` 修活；console 人类可读 + `logs/app/*.jsonl` 文件双写；`LiteLLM`/httpx 等第三方 WARNING 起；关键日志带 `run_id/chapter_number/stage/version_id/db_path`，并与既有 `logs/chapter_runs/*.jsonl` 对齐 | DONE: `archive/v9/174-logging-system-foundation-DONE.md`；三边重建演示闭环（scifi end10 Ch4 四维度交叉一致） |
+| 175 | 成本追踪与预算熔断 | ✅ | `llm_call_usage` 落库 + call_llm 拦截 + agent 归因；`run_cost_budget` 双检查熔断（**DB 权威**：D1 实跑发现 ContextVar 跨节点失效并修复 `22c1052`；熔断异常传播修复 `0b07e9d`）+ total_cost 双接线；report 成本视图；阶段 D 实跑验收全通过 | DONE: `archive/v9/175-cost-tracking-and-budget-circuit-breaker-DONE.md`；scifi end10：10/10、usage 151 行 estimate 0%、总成本 ¥0.886、熔断 pause→提额 resume→completed 全链路实证 |
+| 176 | Windows 防卡 wrapper 工具化 | ✅ | `scripts/run_with_timeout.ps1`：任意命令 + 硬超时 + 四档标记 + 进程树清理（先 taskkill /T 后 fallback + child sweep + PID 复用守卫）+ meta 诊断字段；`-DetectPytestSummary` 防误判门控 + `-SuccessMarkerRegex` 业务标记；`-SelfTest` 11 项自检 | DONE: `archive/v9/176-windows-anti-hang-wrapper-DONE.md`；自检 11/11；实跑验收 scifi `--end 1` PASS_NORMAL_EXIT |
 
 ### V9.2 交付与发布
 
 | Task | 名称 | 状态 | 内容要点 | 验收要点 |
 |------|------|:----:|----------|----------|
-| 177 | songyan export 正文导出 | ✅ | accepted head 正文 + 弧/卷元数据；`--format md/txt --by flat/arc/volume`；正式 service 收编任务脚本里的 `_export_prose()` 模式但不改历史脚本 | DONE: `tasks/177-export-book-manuscript-DONE.md`；xuanhuan Ch100 arc 4 文件、wuxia Ch100 flat 1 文件、xuanhuan volume 忽略 `(0,0)` 占位并完整导出；抽章 hash 与 DB 正文一致 |
-| 178 | wheel 打包与资源加载修复 | ✅ | `prompts/cards`、`prompts/literary_plugins`、`genres`、`creative_modes`、`project_templates` 迁入 `songyan` 包内；`evals/seeds` 保留为 `evals` 包资源；`schema.sql` 纳入 package-data；loader 统一使用 `importlib.resources`，测试注入口保留；170j/k/l 临时 mode 写入改为 TemporaryDirectory | DONE: `tasks/178-wheel-packaging-resource-loading-DONE.md`；资源测试 6 passed，资源相关测试组 137 passed；全量 pytest **2903 passed, 2 skipped, 1 xfailed**，ruff 全绿；wheel 非仓库 cwd 资源枚举 + `create-project --template scifi` + Ch1-3 3/3 accepted；scifi end10 10/10 accepted、budget 峰值 0.9693、成本 ¥0.8744、T9=1（诊断级残留，未记作 T9=0） |
-| 179 | CLI 体验修复 | ✅ | `songyan run` 成功输出 `run_id: <id>`；`--mode-id` 未显式传入时从 `projects.mode_id` 回读，显式传入仍覆盖；README CLI 表补 `songyan index` 与 `run` 关键参数 | DONE: `tasks/179-cli-experience-fixes-DONE.md`；聚焦 CLI 测试 **12 passed**；默认全量 pytest **2903 passed, 2 skipped, 1 xfailed**；ruff 全绿；code review 0 P0/P1/P2 |
-| 180 | songyan doctor 环境自检 | ✅ | `songyan doctor [--json] [--check-llm] [--init-db]`；默认无成本只读检查 `.env`、LLM key/config、SQLite URL/path/schema、checkpointer mode、runtime package resources；`--init-db` 才写 schema；schema drift 检测覆盖关键迁移列/索引 | DONE: `tasks/180-doctor-environment-check-DONE.md`；doctor 聚焦测试 **12 passed**；默认全量 pytest **2903 passed, 2 skipped, 1 xfailed**；ruff 全绿；code review 1 P2 已修复 |
-| 181 | CI 上线与测试清零 | ✅ | GitHub Actions 覆盖 ruff + mypy + 默认 pytest + CLI pytest；修 `tests/cli` 4 个既有失败；README tests badge 改为 workflow badge，不再手写 passed 数；mypy 27 errors 清零 | DONE: `tasks/181-ci-and-test-cleanup-DONE.md`；CLI **35 passed**；mypy **0 errors**；默认全量 pytest **2904 passed, 2 skipped, 1 xfailed**；ruff 全绿；code review 1 P2 已修复 |
+| 177 | songyan export 正文导出 | ✅ | accepted head 正文 + 弧/卷元数据；`--format md/txt --by flat/arc/volume`；正式 service 收编任务脚本里的 `_export_prose()` 模式但不改历史脚本 | DONE: `archive/v9/177-export-book-manuscript-DONE.md`；xuanhuan Ch100 arc 4 文件、wuxia Ch100 flat 1 文件、xuanhuan volume 忽略 `(0,0)` 占位并完整导出；抽章 hash 与 DB 正文一致 |
+| 178 | wheel 打包与资源加载修复 | ✅ | `prompts/cards`、`prompts/literary_plugins`、`genres`、`creative_modes`、`project_templates` 迁入 `songyan` 包内；`evals/seeds` 保留为 `evals` 包资源；`schema.sql` 纳入 package-data；loader 统一使用 `importlib.resources`，测试注入口保留；170j/k/l 临时 mode 写入改为 TemporaryDirectory | DONE: `archive/v9/178-wheel-packaging-resource-loading-DONE.md`；资源测试 6 passed，资源相关测试组 137 passed；全量 pytest **2903 passed, 2 skipped, 1 xfailed**，ruff 全绿；wheel 非仓库 cwd 资源枚举 + `create-project --template scifi` + Ch1-3 3/3 accepted；scifi end10 10/10 accepted、budget 峰值 0.9693、成本 ¥0.8744、T9=1（诊断级残留，未记作 T9=0） |
+| 179 | CLI 体验修复 | ✅ | `songyan run` 成功输出 `run_id: <id>`；`--mode-id` 未显式传入时从 `projects.mode_id` 回读，显式传入仍覆盖；README CLI 表补 `songyan index` 与 `run` 关键参数 | DONE: `archive/v9/179-cli-experience-fixes-DONE.md`；聚焦 CLI 测试 **12 passed**；默认全量 pytest **2903 passed, 2 skipped, 1 xfailed**；ruff 全绿；code review 0 P0/P1/P2 |
+| 180 | songyan doctor 环境自检 | ✅ | `songyan doctor [--json] [--check-llm] [--init-db]`；默认无成本只读检查 `.env`、LLM key/config、SQLite URL/path/schema、checkpointer mode、runtime package resources；`--init-db` 才写 schema；schema drift 检测覆盖关键迁移列/索引 | DONE: `archive/v9/180-doctor-environment-check-DONE.md`；doctor 聚焦测试 **12 passed**；默认全量 pytest **2903 passed, 2 skipped, 1 xfailed**；ruff 全绿；code review 1 P2 已修复 |
+| 181 | CI 上线与测试清零 | ✅ | GitHub Actions 覆盖 ruff + mypy + 默认 pytest + CLI pytest；修 `tests/cli` 4 个既有失败；README tests badge 改为 workflow badge，不再手写 passed 数；mypy 27 errors 清零 | DONE: `archive/v9/181-ci-and-test-cleanup-DONE.md`；CLI **35 passed**；mypy **0 errors**；默认全量 pytest **2904 passed, 2 skipped, 1 xfailed**；ruff 全绿；code review 1 P2 已修复 |
 
 ### V9.3 爬坡工具链
 
 | Task | 名称 | 状态 | 内容要点 | 验收要点 |
 |------|------|:----:|----------|----------|
-| 182 | 五门判定器与段审计收编 | ✅ | `.tmp/vdim_compare.py` / `.tmp/segment_audit.py` 已收编为 `scripts/five_gate_check.py` / `scripts/segment_audit.py`；`--genre/--db/--baseline/--up-to` 参数化；sci-fi corrected CED baseline 迁入 `src/songyan/evals/baselines/`；只读 DB 防副作用 | DONE: `tasks/182-five-gate-and-segment-audit-tools-DONE.md`；xuanhuan/wuxia Ch100 重放 PASS；`.tmp/vdim_compare.py` 对照逐门一致；默认全量 pytest **2914 passed, 2 skipped, 1 xfailed**；CLI **35 passed**；mypy/ruff 全绿；code review P2 已修复 |
-| 183 | Profile 调参 CLI | ✅ | `songyan profile show/diff/upsert --genre <g>`；registry / DB override / effective 三列渲染；upsert 写入“代码默认模型 + 用户显式字段”的伪稀疏 DB profile；`--reset` 清空 override 意图；文档化 172j 降回边界 | DONE: `tasks/183-profile-tuning-cli-DONE.md`；聚焦测试 **7 passed**；CLI **35 passed**；默认全量 pytest **2921 passed, 2 skipped, 1 xfailed**；mypy/ruff 全绿；code review P2 已修复 |
-| 184 | genres/creative_modes JSON Schema | ✅ | `src/songyan/genres/data/_schema.json` + `src/songyan/creative_modes/data/_schema.json`；loader 在 Pydantic 前执行 JSON Schema 校验；`_schema` 元文件不进入 profile/mode 列表 | DONE: `tasks/184-genres-creative-modes-json-schema-DONE.md`；资源/schema 聚焦 **86 passed**；默认全量 pytest **2930 passed, 2 skipped, 1 xfailed**；CLI **35 passed**；mypy/ruff 全绿；code review P2 已修复 |
+| 182 | 五门判定器与段审计收编 | ✅ | `.tmp/vdim_compare.py` / `.tmp/segment_audit.py` 已收编为 `scripts/five_gate_check.py` / `scripts/segment_audit.py`；`--genre/--db/--baseline/--up-to` 参数化；sci-fi corrected CED baseline 迁入 `src/songyan/evals/baselines/`；只读 DB 防副作用 | DONE: `archive/v9/182-five-gate-and-segment-audit-tools-DONE.md`；xuanhuan/wuxia Ch100 重放 PASS；`.tmp/vdim_compare.py` 对照逐门一致；默认全量 pytest **2914 passed, 2 skipped, 1 xfailed**；CLI **35 passed**；mypy/ruff 全绿；code review P2 已修复 |
+| 183 | Profile 调参 CLI | ✅ | `songyan profile show/diff/upsert --genre <g>`；registry / DB override / effective 三列渲染；upsert 写入“代码默认模型 + 用户显式字段”的伪稀疏 DB profile；`--reset` 清空 override 意图；文档化 172j 降回边界 | DONE: `archive/v9/183-profile-tuning-cli-DONE.md`；聚焦测试 **7 passed**；CLI **35 passed**；默认全量 pytest **2921 passed, 2 skipped, 1 xfailed**；mypy/ruff 全绿；code review P2 已修复 |
+| 184 | genres/creative_modes JSON Schema | ✅ | `src/songyan/genres/data/_schema.json` + `src/songyan/creative_modes/data/_schema.json`；loader 在 Pydantic 前执行 JSON Schema 校验；`_schema` 元文件不进入 profile/mode 列表 | DONE: `archive/v9/184-genres-creative-modes-json-schema-DONE.md`；资源/schema 聚焦 **86 passed**；默认全量 pytest **2930 passed, 2 skipped, 1 xfailed**；CLI **35 passed**；mypy/ruff 全绿；code review P2 已修复 |
 
 ### V9.4 urban 标定
 
@@ -121,8 +121,8 @@ V9 通过 = A 组（地基）+ B 组（爬坡）同时满足，C 组（守护）
 
 | Task | 名称 | 状态 | 内容要点 | 验收要点 |
 |------|------|:----:|----------|----------|
-| 186 | urban Ch100 任务书 | ✅ | 目标 / 前置证据（185 数据）/ 分段验收 / 撞墙路由表（预算墙→base_budget；overdue 墙→先查 resolve 再调 floor；CED 墙→热点章+角色密度；health 墙→weight 校准）；冻结口径引用 172b §1.1；review 后修正 harness 固定路径、`--project-id` 与 wrapper marker | 任务书已评审并准入 187：`tasks/186-urban-ch100-climb.md` |
-| 187 | urban Ch100 爬坡执行 | ✅ | `TEMPLATE_ID=urban RUN_ID=187` 复用 `scripts/run_172b_ch100_climb.py`；Ch1-Ch100 100/100 accepted，期间完成 187.u/s/v/p/t/w/x/y/z 定点修复；机制修复后均 clean rerun | DONE：`tasks/187-urban-ch100-climb-execution-DONE.md`；终判 100/100 accepted、budget 0.9595、CED 0.11、overdue 100、health 8.6、T9=0、critical_orphans=0 |
+| 186 | urban Ch100 任务书 | ✅ | 目标 / 前置证据（185 数据）/ 分段验收 / 撞墙路由表（预算墙→base_budget；overdue 墙→先查 resolve 再调 floor；CED 墙→热点章+角色密度；health 墙→weight 校准）；冻结口径引用 172b §1.1；review 后修正 harness 固定路径、`--project-id` 与 wrapper marker | 任务书已评审并准入 187：`archive/v9/186-urban-ch100-climb.md` |
+| 187 | urban Ch100 爬坡执行 | ✅ | `TEMPLATE_ID=urban RUN_ID=187` 复用 `scripts/run_172b_ch100_climb.py`；Ch1-Ch100 100/100 accepted，期间完成 187.u/s/v/p/t/w/x/y/z 定点修复；机制修复后均 clean rerun | DONE：`archive/v9/187-urban-ch100-climb-execution-DONE.md`；终判 100/100 accepted、budget 0.9595、CED 0.11、overdue 100、health 8.6、T9=0、critical_orphans=0 |
 
 #### Task 187 当前分段事实（2026-07-21）
 
@@ -137,7 +137,7 @@ V9 通过 = A 组（地基）+ B 组（爬坡）同时满足，C 组（守护）
 
 | Task | 名称 | 状态 | 内容要点 | 验收要点 |
 |------|------|:----:|----------|----------|
-| 188 | V9 收口与归档 | ◻ | STATUS / AGENTS / README / 本文更新；任务文档归档 `archive/v9/`；V10 方向登记 | V9 全量闭环，文档事实源一致 |
+| 188 | V9 收口与归档 | ✅ | STATUS / AGENTS / README / 本文更新；任务文档归档 `archive/v9/`；V10 方向登记 | DONE: `archive/v9/188-v9-closure-and-archive-DONE.md`；V9 全量闭环，文档事实源一致 |
 
 ---
 
@@ -235,14 +235,17 @@ V9.6  188                                  （收口）
 ## 文档入口
 
 - V9 任务事实：`tasks/V9-README.md`（本文）
-- V9 各任务文档（开工前补写）：`tasks/173-*.md` … `tasks/188-*.md`
+- V9 归档索引：`archive/v9/INDEX.md`
+- V9 各任务文档（已归档）：`archive/v9/173-*.md` … `archive/v9/188-*.md`
 - V8 历史事实：`tasks/V8-README.md`；归档 `archive/v8/INDEX.md`
 - V9 中篇爬坡冻结口径参照：`archive/v8/tasks/172b-xuanhuan-ch100-climb.md` §1.1
 - urban 标定输入详情：`archive/v8/tasks/172k-c-dimension-evidence-closure.md`
-- Task 185 urban 标定完成报告：`tasks/185-urban-short-window-calibration-DONE.md`
-- Task 186 urban Ch100 任务书：`tasks/186-urban-ch100-climb.md`
-- Task 187 urban Ch100 爬坡执行：`tasks/187-urban-ch100-climb-execution.md`
-- Task 187.w Ch50 T9 收口：`tasks/187.w-urban-ch50-t9-clean.md`
+- Task 185 urban 标定完成报告：`archive/v9/185-urban-short-window-calibration-DONE.md`
+- Task 186 urban Ch100 任务书：`archive/v9/186-urban-ch100-climb.md`
+- Task 187 urban Ch100 爬坡执行：`archive/v9/187-urban-ch100-climb-execution.md`
+- Task 187 urban Ch100 完成报告：`archive/v9/187-urban-ch100-climb-execution-DONE.md`
+- Task 187.w Ch50 T9 收口：`archive/v9/187.w-urban-ch50-t9-clean.md`
+- Task 188 V9 收口：`archive/v9/188-v9-closure-and-archive-DONE.md`
 - GenreRuntimeProfile 机制与调参语义：`archive/v8/tasks/172a-v8-genre-runtime-profiles.md`、`archive/v8/tasks/172j-budget-pruner-max-shadowing-fix.md`
 - 长调研报告（V10 储备）：`docs/reports/v8-literature-and-landscape-review.md`
 - 项目状态：`docs/STATUS.md`；文档路由：`docs/INDEX.md`

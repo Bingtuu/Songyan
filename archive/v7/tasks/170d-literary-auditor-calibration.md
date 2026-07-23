@@ -1,6 +1,6 @@
 # Task 170d: LiteraryAuditor 校准（量具可信化）
 
-> **专项**: 文学提质专项（`tasks/170-literary-quality-remediation-README.md`）
+> **专项**: 文学提质专项（`archive/v7/tasks/170-literary-quality-remediation-README.md`）
 > **类型**: 量具修复（先行、独立、低风险）
 > **优先级**: P0（量具优先——提质复评依赖可信的文学诊断）
 > **依赖**: 170b DONE（提供机器/人工偏差数据）

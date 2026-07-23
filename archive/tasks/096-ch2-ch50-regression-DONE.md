@@ -1,4 +1,4 @@
-﻿# Task 096-DONE: Ch2-Ch50 回归验证（动态字数容差）
+# Task 096-DONE: Ch2-Ch50 回归验证（动态字数容差）
 
 > **Phase**: V4.0 Phase B — 回归验证
 > **优先级**: P0

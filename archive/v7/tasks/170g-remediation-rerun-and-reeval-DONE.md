@@ -1,12 +1,12 @@
 # Task 170g: 提质复评出口（Ch200 放行判定）— DONE（改判 blocker）
 
-> **专项**: 文学提质专项（`tasks/170-literary-quality-remediation-README.md`）
+> **专项**: 文学提质专项（`archive/v7/tasks/170-literary-quality-remediation-README.md`）
 > **类型**: 出口验证（终检）
 > **优先级**: P0（决定能否放行 Task 171 Ch200）
 > **依赖**: 170c + 170d + 170e + 170f 全部 DONE
 > **状态**: 🔴 **blocker（不放行 Task 171 Ch200）**
 > **负责人**: songyan-agent
-> **复评报告**: `docs/reports/task-170g-remediation-reeval-report.md`
+> **复评报告**: `archive/v7/reports/task-170g-remediation-reeval-report.md`
 > **生成日志**: `.tmp/run_170g_quick.log`
 > **隔离 DB**: `.tmp/task170g_quick.db`（小样本快速验证）
 > **Run ID**: `run-8660e9d1`（Ch29–Ch32，4/4 success）
@@ -57,7 +57,7 @@
 
 3. **复用工具参数化**（避免覆盖 170b/170f 基线产物）：
    - `scripts/run_170g_generation.py`：隔离 DB `.tmp/task170g_ch1_ch40.db`（默认），本次小样本改用 `.tmp/task170g_quick.db`。
-   - `scripts/run_170g_reeval.py`：报告 `docs/reports/task-170g-remediation-reeval-report.md`。
+   - `scripts/run_170g_reeval.py`：报告 `archive/v7/reports/task-170g-remediation-reeval-report.md`。
 
 ### 2. 中段窗口复评策略
 
@@ -75,7 +75,7 @@
 
 > 说明：小样本用 observe 模式是为了速度和与 170f Stage 2 可比；完整 Ch28–Ch40 enforce 复评仍可作为后续补充，但当前以真实小样本证据作为 170g 出口依据。
 
-### 3. 复评数据（来源：`docs/reports/task-170g-remediation-reeval-report.md`）
+### 3. 复评数据（来源：`archive/v7/reports/task-170g-remediation-reeval-report.md`）
 
 #### 5 维 rubric（1–5，LLM 初评）
 
@@ -145,7 +145,7 @@
   - `tests/evals tests/integration`：76 passed, 4 skipped
 - [x] 顶层 `pytest tests/test_*.py -q` 通过：1862 passed, 1 xfailed。
 - [x] Ch29–Ch32 小样本重生成完成：`run-8660e9d1`，4/4 success，failed=[]，Halt: None。
-- [x] Ch29–Ch32 复评报告产出：`docs/reports/task-170g-remediation-reeval-report.md`。
+- [x] Ch29–Ch32 复评报告产出：`archive/v7/reports/task-170g-remediation-reeval-report.md`。
 - [x] 用户复核终判：**blocker**。
 - [x] **明确结论：不放行 Task 171 Ch200；170g Phase2 小样本复评仍未达标，继续冻结阶段 Z 入口。**
 
@@ -154,7 +154,7 @@
 ## 后续步骤
 
 1. **不启动 Task 171 Ch200 长跑**。阶段 Z 入口冻结，直到 170g 复评达到 pass 标准。
-2. **执行 170g Phase 2 工艺补丁**（见 `tasks/170g-remediation-rerun-and-reeval-DONE.md` 改判说明与 `docs/STATUS.md` 当前优先级）：
+2. **执行 170g Phase 2 工艺补丁**（见 `archive/v7/tasks/170g-remediation-rerun-and-reeval-DONE.md` 改判说明与 `docs/STATUS.md` 当前优先级）：
    - 非角色声源声纹补漏（`_helpers.py` + Writer 1.2.0）。
    - exposition 检测升级（RuleAuditor 新增 direct_revelation_monologue / protagonist_summary_tell / info_delivery_dialogue）。
    - CreativeDirector 世界观揭示场景正路径模板。
@@ -168,7 +168,7 @@
 
 ## Phase2 复评结果（2026-07-08）
 
-按本节第 5 条，执行了 170g Phase2 工艺补丁与小样本复评，详见 `tasks/170g-phase2-remediation-DONE.md`。
+按本节第 5 条，执行了 170g Phase2 工艺补丁与小样本复评，详见 `archive/v7/tasks/170g-phase2-remediation-DONE.md`。
 
 ### 复评数据
 
@@ -223,10 +223,10 @@
 - 工艺卡更新：`prompts/cards/writer/1.1.0.yaml`、`prompts/cards/writer/1.2.0.yaml`
 - 代码检测：`src/songyan/agents/rule_auditor.py`、`src/songyan/models/review.py`、`src/songyan/models/__init__.py`
 - 单测：`tests/test_rule_auditor.py`、`tests/test_prompt_loader.py`
-- 复评报告：`docs/reports/task-170g-remediation-reeval-report.md`
+- 复评报告：`archive/v7/reports/task-170g-remediation-reeval-report.md`
 - 生成日志：`.tmp/run_170g_quick.log`
 - 隔离 DB：`.tmp/task170g_quick.db`
-- 状态更新：`docs/STATUS.md`、`tasks/V7-README.md`、`README.md`、`tasks/170-literary-quality-remediation-README.md`、`AGENTS.md`
+- 状态更新：`docs/STATUS.md`、`tasks/V7-README.md`、`README.md`、`archive/v7/tasks/170-literary-quality-remediation-README.md`、`AGENTS.md`
 
 ---
 

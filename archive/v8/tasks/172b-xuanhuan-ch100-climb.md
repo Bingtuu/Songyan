@@ -76,7 +76,7 @@ V8-README V 维度判据：
 
 ### 证据 & 报告
 
-产出 `docs/reports/172b-xuanhuan-ch100-climb.md`：逐段 budget 曲线、ContextEmergency 频率、overdue 轨迹、CED vs scifi Ch1-100 基线、health 趋势、失败清单。
+产出 `archive/v8/reports/172b-xuanhuan-ch100-climb.md`：逐段 budget 曲线、ContextEmergency 频率、overdue 轨迹、CED vs scifi Ch1-100 基线、health 趋势、失败清单。
 
 ### V 维度验收判定器（可证伪）
 

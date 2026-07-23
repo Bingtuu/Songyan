@@ -3,7 +3,7 @@
 > **框架**: `docs/reports/v7-literary-framework-review.md` §8 D2 + Task 171 20% 抽读结论
 > **类型**: Ch200+ 质量护栏（observe-first，不恢复文学硬门）
 > **优先级**: P1（Task 172 Ch250 前置，须在 171u hard clean 后执行）
-> **依赖**: 171u；分析报告 `docs/reports/task-171-ch200-analysis-and-next-step-report.md`
+> **依赖**: 171u；分析报告 `archive/v7/reports/task-171-ch200-analysis-and-next-step-report.md`
 > **状态**: ⚠️ 条件未通过（核心工程护栏已落地；Ch201-Ch220 小窗口实跑 partial，后续拆为 Task 171w hardening）
 
 ## 结论
@@ -24,7 +24,7 @@ Task 171 Ch200 完成后，20% 抽读复盘确认：文本没有随长度明显�
 171v 已经完成“把文学护栏接入 planning/prompt 链路”的核心工程，但小窗口实跑证明它没有稳定改变正文输出，因此不能继续把后续修复仍记在 171v 内部。为避免混淆“已实跑的失败事实”和“下一步待修复范围”，后续拆出：
 
 - **171v**：保留为本任务事实源，记录护栏接入、测试结果、小窗口失败证据和不进入 172 的判定。
-- **171w**：新增 `tasks/171w-171v-hardening-and-ch201-ch220-rerun.md`，专门处理 hardening、Ch207 settlement 数值校验、Ch201-Ch220 重验和 172 前置出口。
+- **171w**：新增 `archive/v7/tasks/171w-171v-hardening-and-ch201-ch220-rerun.md`，专门处理 hardening、Ch207 settlement 数值校验、Ch201-Ch220 重验和 172 前置出口。
 
 171w 通过前，171v 不得改判完成；Task 172 不得启动。
 

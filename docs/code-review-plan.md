@@ -1,4 +1,4 @@
-﻿# Songyan V4.0 全域代码审查计划
+# Songyan V4.0 全域代码审查计划
 
 > **目的**: 对 Songyan 项目做一次彻底的"项目体检"，覆盖合规、架构、测试、LLM 基础设施、RAG、Prompt 质量、安全、性能、依赖、文档、工程韧性共 11 个分析维度 + 2 个修复验证维度 + 1 个持续回归维度 —— 总计 14 个审查 Pass。
 > **审查范围**: `src/songyan/`（102 个 .py 文件）、`tests/`（106 个测试文件）、`prompts/`（21 个 craft card）、`docs/`、`scripts/`、`evals/`
@@ -108,7 +108,7 @@ P0 全部清零后才能启动 Task 098。
 ### 12.4 输出
 
 - 每个 F 的修复 commit + 验证报告
-- 汇总到 `docs/reports/pass12-p0-fix-verification.md`
+- 汇总到 `archive/v5/reports/pass12-p0-fix-verification.md`
 
 ---
 
@@ -152,7 +152,7 @@ B1 项可全部并行，B2 项可全部并行，B1 和 B2 互相独立。
 
 - 每个修复的 commit + 验证报告
 - 回归合入确认（`pytest tests/` 全绿）
-- 汇总到 `docs/reports/pass13-p1p2-batch-fix.md`
+- 汇总到 `archive/v5/reports/pass13-p1p2-batch-fix.md`
 
 ---
 

@@ -1,6 +1,6 @@
 # Task 170l: 路径 B 第五步 — 声纹工程升级接口化（few_shot_voice_anchor + AI 腔句式禁用表）
 
-> **专项**: 文学提质专项（`tasks/170-literary-quality-remediation-README.md`）
+> **专项**: 文学提质专项（`archive/v7/tasks/170-literary-quality-remediation-README.md`）
 > **类型**: 路径 B 第五步 / 升级方案轻量入口
 > **优先级**: P0
 > **依赖**: Task 170k 已完成（结论：未达标，维持 blocker）
@@ -100,7 +100,7 @@ Task 170l 是 170h–170k **连续四步轻量策略均未让 voice/exposition �
   - 机器/LLM 偏差 < 3 分
 
 ### 决策交付
-- `tasks/170l-few-shot-voice-anchor-DONE.md` 必须明确给出：
+- `archive/v7/tasks/170l-few-shot-voice-anchor-DONE.md` 必须明确给出：
   - 与 170k 基线对比表；
   - 是否改判 observation/pass；
   - 若未达标，下一步建议（继续叠加 / 升级 / 降级）。
@@ -155,7 +155,7 @@ Task 170l 是 170h–170k **连续四步轻量策略均未让 voice/exposition �
 **要点：**
 - `--init` 创建隔离 DB，临时 mode profile 启用四个策略。
 - `--start 29 --end 32` 跑生成。
-- 自动生成 `docs/reports/task-170l-few-shot-voice-anchor-reeval-report.md`。
+- 自动生成 `archive/v7/reports/task-170l-few-shot-voice-anchor-reeval-report.md`。
 
 ### 6. 单测
 
@@ -177,8 +177,8 @@ Task 170l 是 170h–170k **连续四步轻量策略均未让 voice/exposition �
 8. `--init` 创建实验项目。
 9. 后台/前台跑 Ch29–Ch32 生成。
 10. 跑 `run_170l_reeval.py` 出报告。
-11. 根据复评结果回填 `tasks/170l-few-shot-voice-anchor-DONE.md`。
-12. 更新 `docs/STATUS.md`、`tasks/V7-README.md`、`README.md`、`tasks/170-literary-quality-remediation-README.md`。
+11. 根据复评结果回填 `archive/v7/tasks/170l-few-shot-voice-anchor-DONE.md`。
+12. 更新 `docs/STATUS.md`、`tasks/V7-README.md`、`README.md`、`archive/v7/tasks/170-literary-quality-remediation-README.md`。
 13. 跑 pytest 全批次验证。
 
 ---
@@ -211,5 +211,5 @@ Task 170l 是 170h–170k **连续四步轻量策略均未让 voice/exposition �
 - `scripts/run_170l_experiment.py`
 - `scripts/run_170l_reeval.py`
 - `tests/literary_optimization/test_base.py`（更新）
-- `docs/reports/task-170l-few-shot-voice-anchor-reeval-report.md`
-- `tasks/170l-few-shot-voice-anchor-DONE.md`
+- `archive/v7/reports/task-170l-few-shot-voice-anchor-reeval-report.md`
+- `archive/v7/tasks/170l-few-shot-voice-anchor-DONE.md`

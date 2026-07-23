@@ -19,6 +19,10 @@
 - `119-reporting-wrapper-hardening.md` — Task 119 历史规划稿
 - `120-v5-final-acceptance-package.md` — Task 120 历史规划稿
 
+## tasks/
+
+- `121a-*.md` 至 `140-*.md` — V5.1/V5.2 单项任务文档与 DONE 记录；`tasks/V5-README.md` 保留为历史事实总入口。
+
 ## reports/
 
 - `124-gate-impact-analysis-run-a2bed648.md` — Task 124 候选硬门禁影响面分析

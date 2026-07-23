@@ -2,7 +2,7 @@
 
 > **框架**: `docs/reports/v7-literary-framework-review.md` §8 B 组 + §7.1 R0
 > **状态**: ✅ **代码侧完成（B1/B4/B5 达标）**；B2/B3（≥2 体裁盲标 P/R/F1）拆分至 **Task 171a-1**
-> **报告**: `docs/reports/task-171a-metric-validity-report.md`
+> **报告**: `archive/v7/reports/task-171a-metric-validity-report.md`
 > **完成时间**: 2026-07-10
 
 ---
@@ -57,11 +57,11 @@ Task 171a 重建了文学量具的**效度基础**——消除旧框架 E2/E3（
 - [x] `tests/test_rule_auditor.py` + `test_rule_auditor_dynamic_keywords.py` + `test_non_character_voice_cards.py` + `test_revision_handler_literary.py` + `test_171a_literary_keyword_wiring.py` + `test_170p_new_character_seeding.py`：128 passed。
 - [x] `tests/test_108_core_nodes.py` + `test_rewrite_node.py`：28 passed（`_nodes.py` 改动无回归）。
 - [x] 真实 prose 集成验证（170p DB Ch1–5，注入 vs 不注入对比）。
-- [x] 报告 `docs/reports/task-171a-metric-validity-report.md` 产出。
+- [x] 报告 `archive/v7/reports/task-171a-metric-validity-report.md` 产出。
 
 ---
 
 ## 出口与下一步
 - **171a 代码侧达标**：量具可动、注入生效、召回句式补齐、体裁解耦通电。
-- **下一步 Task 171a-1**（已建 spec `tasks/171a-1-metric-validity-quantification.md`）：生成第二体裁小样本 + 盲标 GT + 计算 voice/exposition P/R/F1，补齐 B2/B3。
+- **下一步 Task 171a-1**（已建 spec `archive/v7/tasks/171a-1-metric-validity-quantification.md`）：生成第二体裁小样本 + 盲标 GT + 计算 voice/exposition P/R/F1，补齐 B2/B3。
 - 171a 不阻塞 Ch200；171c 提质须待 171a-1 各维度 P/R/F1 达标后，才在达标维度上启动。

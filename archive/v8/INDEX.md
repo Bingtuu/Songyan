@@ -7,7 +7,7 @@
 - **V8 已收尾，任务文档与报告统一归档**：172/172a/172b/172c/172d 主线、全部撞墙定点修复（172a.p/172b.p/172b.q/172c.p–172c.t）、V8.4 技术债（172e-172i）、V8.5 收口（172j/172k/172l）均已迁出 `tasks/` 与 `docs/reports/`，只保留 `tasks/V8-README.md` 作为历史事实总索引。
 - **归档文件保留原文件名**，便于从历史文档追溯；归档内容默认不读，仅在追溯设计边界时查阅。
 - **归档文档内部交叉引用保持冻结**（与 v7 惯例一致）：文内 `tasks/172*.md`、`docs/reports/172*.md` 等相对路径指向的是归档前位置，阅读时请按本索引映射到 `archive/v8/` 下对应文件。
-- **172 实施计划留在原位**：`docs/superpowers/plans/2026-07-13-project-template-plugin-plan.md`（172-PLAN）未迁移。
+- **172 实施计划已归档**：`archive/superpowers/plans/2026-07-13-project-template-plugin-plan.md`（172-PLAN）。
 - **外部调研报告保留为活跃入口**：`docs/reports/v8-literature-and-landscape-review.md` 仍作为 GenreRuntimeProfile 设计依据的活跃参考，未归档。
 
 ## 目录
@@ -59,4 +59,4 @@
 |---|---|
 | `tasks/V8-README.md` | V8 历史任务总索引（已收尾，含 Task 编号治理规则与五维验收证据链） |
 | `docs/reports/v8-literature-and-landscape-review.md` | V8 长调研报告：体裁差异与 GenreRuntimeProfile 设计依据，仍作为 V9 调参的活跃参考 |
-| `docs/superpowers/plans/2026-07-13-project-template-plugin-plan.md` | 172 实施计划（172-PLAN），保留原位 |
+| `archive/superpowers/plans/2026-07-13-project-template-plugin-plan.md` | 172 实施计划（172-PLAN） |

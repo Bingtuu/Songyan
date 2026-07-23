@@ -41,9 +41,9 @@
 ## 交付物（预期）
 - `src/songyan/evals/db_metrics.py`：`detect_literary_spot_read` + 三层契约摘要渲染。
 - `scripts/run_171d_calibrate.py`（基线标定）。
-- `docs/reports/task-171d-three-tier-contract-report.md`（标定依据 + 分层视图样例 + observe-only 证明）。
+- `archive/v7/reports/task-171d-three-tier-contract-report.md`（标定依据 + 分层视图样例 + observe-only 证明）。
 - `tests/test_171d_three_tier_contract.py`。
-- `tasks/171d-three-tier-contract-DONE.md`。
+- `archive/v7/tasks/171d-three-tier-contract-DONE.md`。
 
 ## 明确不做
 - 不把 Tier 2 趋势地板接成自动阻塞（只出抽读建议）；不改 T9/T10/T5/T6/T12 冻结阈值；不新增 Agent/节点；不做全自动 LLM 改写闭环；不阻塞 Ch200 主线。

@@ -1,6 +1,6 @@
 # Task 170g Phase2: 文学质量卡点工艺补丁与小样本复评 — DONE
 
-> **专项**: 文学提质专项（`tasks/170-literary-quality-remediation-README.md`）
+> **专项**: 文学提质专项（`archive/v7/tasks/170-literary-quality-remediation-README.md`）
 > **类型**: 工程补丁 + 小样本验证
 > **优先级**: P0（决定 170g 能否从 blocker 改判并重新评估 Ch200 入口）
 > **依赖**: Task 170g 改判 blocker 已完成
@@ -8,7 +8,7 @@
 > **负责人**: songyan-agent
 > **生成日志**: `.tmp/run_170g_phase2.log`
 > **隔离 DB**: `.tmp/task170g_phase2.db`
-> **复评报告**: `docs/reports/task-170g-phase2-remediation-reeval-report.md`（已生成）
+> **复评报告**: `archive/v7/reports/task-170g-phase2-remediation-reeval-report.md`（已生成）
 > **Run ID**: `run-ac99288a`（Ch29–Ch32，因 Ch31 settlement GBK 编码失败手动 accept `v-31-8-ddd9baaa`）
 
 ---
@@ -182,7 +182,7 @@ ruff check src/songyan/agents/revision_handler/__init__.py tests/test_revision_h
   ASSESS_START="29" ASSESS_END="32" `
   python scripts/run_170g_reeval.py --project-id 6c38c19edb3d4b83ba6963ba78e1e2f0
   ```
-- 报告输出：`docs/reports/task-170g-phase2-remediation-reeval-report.md`。
+- 报告输出：`archive/v7/reports/task-170g-phase2-remediation-reeval-report.md`。
 
 ### 结果
 
@@ -279,7 +279,7 @@ Phase2 的结果进一步验证了这一判断：在 V7 当前边界内追加 5 
 - [x] `python -m pytest tests/evals tests/integration -q -k "not test_ch1_20"` 通过。
 - [x] `python -m pytest tests/test_*.py -q` 通过。
 - [x] Ch29–Ch32 Phase2 重生成完成（run `run-ac99288a`，Ch31 因 settlement 输出编码问题失败后手动 accept `v-31-8-ddd9baaa`，复评使用该版本）。
-- [x] Ch29–Ch32 Phase2 复评报告产出：`docs/reports/task-170g-phase2-remediation-reeval-report.md`。
+- [x] Ch29–Ch32 Phase2 复评报告产出：`archive/v7/reports/task-170g-phase2-remediation-reeval-report.md`。
 - [x] 出口判定回填：**未达标，保持 blocker**。
 
 ---
@@ -310,7 +310,7 @@ Phase2 的结果进一步验证了这一判断：在 V7 当前边界内追加 5 
   - `tests/test_non_character_voice_cards.py`
   - `tests/test_prompt_loader.py`
   - `tests/test_revision_handler_literary.py`
-- 报告（待生成）：`docs/reports/task-170g-phase2-remediation-reeval-report.md`
+- 报告（待生成）：`archive/v7/reports/task-170g-phase2-remediation-reeval-report.md`
 
 ---
 

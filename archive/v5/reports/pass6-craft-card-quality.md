@@ -1,4 +1,4 @@
-﻿# Craft Card Prompt 质量评估
+# Craft Card Prompt 质量评估
 
 > **范围**: prompts/cards/ 目录下 9 个 Agent 的 21 个 craft card 文件
 > **视角**: 中文小说创作工具 — 评估 LLM Prompt 对网文生成的指导质量

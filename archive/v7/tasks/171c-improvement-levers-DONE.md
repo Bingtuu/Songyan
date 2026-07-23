@@ -2,7 +2,7 @@
 
 > **框架**: `docs/reports/v7-literary-framework-review.md` §6.2 支柱 4 + §7.1 R2 + §8.5
 > **状态**: ✅ **完成（离线结论收尾，用户拍板）**
-> **报告**: `docs/reports/task-171c-improvement-levers-report.md`
+> **报告**: `archive/v7/reports/task-171c-improvement-levers-report.md`
 > **完成时间**: 2026-07-10
 
 ---
@@ -54,7 +54,7 @@ scifi Ch1 长引语被拆成 4 段短引号后 exposition 命中归零（0.8→0
 - [x] `ruff check` 覆盖 `client.py`/`literary_postproc.py`/`run_171c_ab.py`/两测试 全通过。
 - [x] `tests/test_llm_client.py`+`test_171c_literary_postproc.py`+`test_171b_sampling.py` **28 passed**。
 - [x] A/B 实测：baseline/postproc arm + compare 产物落 `.tmp/task171c/`。
-- [x] 报告 `docs/reports/task-171c-improvement-levers-report.md` 产出。
+- [x] 报告 `archive/v7/reports/task-171c-improvement-levers-report.md` 产出。
 - [x] 清理临时诊断脚本（`.tmp/inspect_171c_postproc.py`）。
 
 ---

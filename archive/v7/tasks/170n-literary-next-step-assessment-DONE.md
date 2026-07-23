@@ -1,6 +1,6 @@
 # Task 170n：文学提质下一阶段方向评估 — DONE
 
-> **专项**: 文学提质专项（`tasks/170-literary-quality-remediation-README.md`）
+> **专项**: 文学提质专项（`archive/v7/tasks/170-literary-quality-remediation-README.md`）
 > **类型**: 方向评估 / 决策前置
 > **优先级**: P0
 > **依赖**: Task 170m 已完成
@@ -50,7 +50,7 @@ Task 170m 校准后确认：voice/exposition 仍未达标，路径 B 轻量策�
 
 ### 方向 C（目标降级）改动面
 
-- `docs/v7-plan.md` / `tasks/V7-README.md` / `tasks/170-literary-quality-remediation-README.md`：更新 Ch200 入口标准，明确降级后的“不劣化”口径。
+- `docs/v7-plan.md` / `tasks/V7-README.md` / `archive/v7/tasks/170-literary-quality-remediation-README.md`：更新 Ch200 入口标准，明确降级后的“不劣化”口径。
 - `src/songyan/workflows/_nodes.py` 或 `phase2_graph.py`：增加长跑中每 N 章触发 LiteraryAuditor + RuleAuditor 联合抽读并生成报告。
 - `scripts/run_171_ch200_long_run.py`（新建）：启动 Ch200 长跑，内置抽读窗口和 halt 条件。
 - 风险：文学债可能累积，需要人工抽读纪律。
@@ -104,17 +104,17 @@ Task 170m 校准后确认：voice/exposition 仍未达标，路径 B 轻量策�
 - [x] 对每条方向输出核心假设、子策略、预期收益、风险、回退点、改动文件清单。
 - [x] 完成代码面调研（Writer/CreativeDirector/RevisionHandler/QualityGate 扩展点）。
 - [x] 给出推荐方向及理由。
-- [x] 更新 `docs/STATUS.md`、`tasks/V7-README.md`、`tasks/170-literary-quality-remediation-README.md`、`README.md`。
+- [x] 更新 `docs/STATUS.md`、`tasks/V7-README.md`、`archive/v7/tasks/170-literary-quality-remediation-README.md`、`README.md`。
 - [x] 回填本 DONE 文档。
 
 ---
 
 ## 交付物
 
-- `tasks/170n-literary-next-step-assessment.md`
-- `tasks/170n-literary-next-step-assessment-DONE.md`
-- `docs/reports/task-170n-literary-next-step-assessment-report.md`
-- 更新后的 `docs/STATUS.md`、`tasks/V7-README.md`、`tasks/170-literary-quality-remediation-README.md`、`README.md`
+- `archive/v7/tasks/170n-literary-next-step-assessment.md`
+- `archive/v7/tasks/170n-literary-next-step-assessment-DONE.md`
+- `archive/v7/reports/task-170n-literary-next-step-assessment-report.md`
+- 更新后的 `docs/STATUS.md`、`tasks/V7-README.md`、`archive/v7/tasks/170-literary-quality-remediation-README.md`、`README.md`
 
 ---
 

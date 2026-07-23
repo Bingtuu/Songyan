@@ -37,7 +37,7 @@
 
 | 类型 | 路径 / ID |
 |------|-----------|
-| 上一轮任务文档 | `tasks/121g-ch1-ch150-single-run-rerun-ch115-blocker-DONE.md` |
+| 上一轮任务文档 | `archive/v5/tasks/121g-ch1-ch150-single-run-rerun-ch115-blocker-DONE.md` |
 | run_id | `run-0fd1456e` |
 | project_id | `7950dbf3b70c468695e5bfe528d66acf` |
 | JSONL | `logs/chapter_runs/run-0fd1456e.jsonl` |

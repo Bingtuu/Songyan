@@ -1,6 +1,6 @@
 # Task 170c: T9 近似/改写重复检测补强 — DONE
 
-> **专项**: 文学提质专项（`tasks/170-literary-quality-remediation-README.md`）
+> **专项**: 文学提质专项（`archive/v7/tasks/170-literary-quality-remediation-README.md`）
 > **类型**: 量具修复（先行、独立、低风险）
 > **状态**: ✅ 完成（2026-07-06）
 > **依赖**: 170b DONE（提供 Ch31 漏报样本 + 隔离 DB `.tmp/task170b_ch1_ch40.db`）

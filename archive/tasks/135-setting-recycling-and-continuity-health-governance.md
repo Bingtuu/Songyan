@@ -73,7 +73,7 @@ orphaned 单一指标权重过高，导致健康分随设定数量线性下降�
 - [ ] enforce 模式 Ch1–Ch20 验证中，continuity health score 不再跌至 0.0（目标 ≥ 3.0）。
 - [ ] 不破坏 observe 模式下 `run-a2bed648` 的 continuity 路径。
 - [ ] `ruff check src/ tests/` 通过。
-- [ ] 输出 `tasks/135-setting-recycling-and-continuity-health-governance-DONE.md`。
+- [ ] 输出 `archive/v5/tasks/135-setting-recycling-and-continuity-health-governance-DONE.md`。
 
 ---
 
@@ -99,7 +99,7 @@ Task 129 enforce 验证 ──────────────────�
 
 ## 7. 交付物
 
-- `tasks/135-setting-recycling-and-continuity-health-governance-DONE.md`
+- `archive/v5/tasks/135-setting-recycling-and-continuity-health-governance-DONE.md`
 - SettingEvaporator / ContinuityAuditor / CreativeDirector / Writer 相关代码改动
 - 新增测试文件
 - enforce 模式 Ch1–Ch20 验证报告

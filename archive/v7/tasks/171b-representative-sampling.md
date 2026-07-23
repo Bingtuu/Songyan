@@ -61,8 +61,8 @@ Task 171b 解决旧框架的**样本不代表性**错误：所有 Task 170 实�
 ## 交付物（预期）
 - `scripts/run_171b_sampling.py`（对话密度分层 + 样本清单导出）
 - `.tmp/samples/task171b_sample_manifest.*`（体裁 × 场景 × 章节清单）
-- `docs/reports/task-171b-representative-sampling-report.md`（分层结果 + 2×2 归因 checklist）
-- `tasks/171b-representative-sampling-DONE.md`
+- `archive/v7/reports/task-171b-representative-sampling-report.md`（分层结果 + 2×2 归因 checklist）
+- `archive/v7/tasks/171b-representative-sampling-DONE.md`
 
 ## 明确不做
 - 不改量具（171a）、不做提质（171c）、不阻塞 Ch200 主线；不放宽任何冻结口径。

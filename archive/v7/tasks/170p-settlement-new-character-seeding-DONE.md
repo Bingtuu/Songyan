@@ -1,6 +1,6 @@
 # Task 170p：修复 seeding gap — SettlementExtractor 新配角自动入库 — DONE
 
-> **专项**: 文学提质专项（`tasks/170-literary-quality-remediation-README.md`）
+> **专项**: 文学提质专项（`archive/v7/tasks/170-literary-quality-remediation-README.md`）
 > **类型**: 数据层根因修复（voice 前置）
 > **优先级**: P0
 > **依赖**: Task 170o 已完成（voice 量具归因校准，暴露 seeding gap）
@@ -92,7 +92,7 @@ SettlementExtractor._apply：if update.character_id not in valid_char_ids → sk
 - `src/songyan/agents/settlement_extractor/__init__.py`、`_validate.py`、`_apply.py`
 - `prompts/cards/settlement_extractor/1.0.3.yaml`、`_manifest.yaml`
 - `tests/test_170p_new_character_seeding.py`
-- `tasks/170p-settlement-new-character-seeding-DONE.md`
+- `archive/v7/tasks/170p-settlement-new-character-seeding-DONE.md`
 
 ---
 

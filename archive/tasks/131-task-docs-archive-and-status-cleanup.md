@@ -129,7 +129,7 @@ archive/ 目录已存在 ──┘                                  └──►
 
 ## 7. 交付物
 
-- `tasks/131-task-docs-archive-and-status-cleanup-DONE.md`
+- `archive/v5/tasks/131-task-docs-archive-and-status-cleanup-DONE.md`
 - 归档文件：`archive/tasks/` 下新增的历史规划稿
 - 更新后的 `docs/INDEX.md`
 - 更新后的 `docs/STATUS.md`

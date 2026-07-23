@@ -4,7 +4,7 @@
 > **类型**: 量具效度重建（R&D 线，"文学结论"的唯一近期硬前置）
 > **优先级**: P0（R&D 线起点；未完成则任何"模型写不好"的文学结论无效）
 > **依赖**: Task 170 系列已结束（170o/170p 已修 seeding gap，留下 voice 归因召回短板）；不依赖也不阻塞 Task 171 Ch200 主线
-> **状态**: ✅ **代码侧完成（B1/B4/B5 达标）**；B2/B3 拆分至 Task 171a-1。DONE：`tasks/171a-literary-metric-validity-rebuild-DONE.md`，报告：`docs/reports/task-171a-metric-validity-report.md`
+> **状态**: ✅ **代码侧完成（B1/B4/B5 达标）**；B2/B3 拆分至 Task 171a-1。DONE：`archive/v7/tasks/171a-literary-metric-validity-rebuild-DONE.md`，报告：`archive/v7/reports/task-171a-metric-validity-report.md`
 > **负责人**: songyan-agent
 
 ---
@@ -105,8 +105,8 @@ Task 171a 是新框架 R&D 线的**第一步、也是唯一的近期硬前置**�
 - `scripts/run_171a_ground_truth_export.py`、`scripts/run_171a_reeval.py`
 - `.tmp/ground_truth/task171a_*_ground_truth.jsonl`（≥2 体裁盲标集）
 - `tests/test_171a_*.py`（归因三句式 / 融合度 / 解耦回退）
-- `docs/reports/task-171a-metric-validity-report.md`（P/R/F1 效度报告 + 出口判定）
-- `tasks/171a-literary-metric-validity-rebuild-DONE.md`
+- `archive/v7/reports/task-171a-metric-validity-report.md`（P/R/F1 效度报告 + 出口判定）
+- `archive/v7/tasks/171a-literary-metric-validity-rebuild-DONE.md`
 
 ---
 

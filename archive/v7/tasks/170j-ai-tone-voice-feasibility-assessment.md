@@ -1,6 +1,6 @@
 # Task 170j: 路径 B 第三步 — 文学塌陷根因诊断与保守修复
 
-> **专项**: 文学提质专项（`tasks/170-literary-quality-remediation-README.md`）
+> **专项**: 文学提质专项（`archive/v7/tasks/170-literary-quality-remediation-README.md`）
 > **类型**: 根因诊断 / 保守修复 / 路径可行性评估（路径 B 第三步）
 > **优先级**: P0（决定路径 B 是否能在 V7 内达标，或需升级/降级方案）
 > **依赖**: Task 170i 已完成（结论：未达标，维持 blocker）
@@ -97,7 +97,7 @@ Task 170j 是 170i 路径 B 第二步失败后的 **路径 B 第三步**。170i 
   - 机器/LLM 偏差 < 3 分
 
 ### 决策交付
-- `tasks/170j-ai-tone-voice-feasibility-assessment-DONE.md` 必须明确给出：
+- `archive/v7/tasks/170j-ai-tone-voice-feasibility-assessment-DONE.md` 必须明确给出：
   - 诊断结论；
   - A/B/C 各方案实验数据对照表；
   - 推荐方案或"不可行"判定；
@@ -194,7 +194,7 @@ Task 170j 是 170i 路径 B 第二步失败后的 **路径 B 第三步**。170i 
 ### 6. 评估与决策文档
 
 **Files:**
-- `tasks/170j-ai-tone-voice-feasibility-assessment-DONE.md`（新增）
+- `archive/v7/tasks/170j-ai-tone-voice-feasibility-assessment-DONE.md`（新增）
 
 **改动：**
 - 汇总诊断报告与 A/B/C 实验数据；
@@ -223,9 +223,9 @@ Task 170j 是 170i 路径 B 第二步失败后的 **路径 B 第三步**。170i 
    - 出三份复评报告。
 6. **路径可行性评估与决策**：
    - 汇总数据；
-   - 回填 `tasks/170j-ai-tone-voice-feasibility-assessment-DONE.md`。
+   - 回填 `archive/v7/tasks/170j-ai-tone-voice-feasibility-assessment-DONE.md`。
 7. **状态更新**：
-   - 更新 `docs/STATUS.md`、`tasks/V7-README.md`、`README.md`、`tasks/170-literary-quality-remediation-README.md`。
+   - 更新 `docs/STATUS.md`、`tasks/V7-README.md`、`README.md`、`archive/v7/tasks/170-literary-quality-remediation-README.md`。
 
 ---
 
@@ -267,7 +267,7 @@ Task 170j 是 170i 路径 B 第二步失败后的 **路径 B 第三步**。170i 
   - `docs/reports/task-170j-approachA-reeval-report.md`
   - `docs/reports/task-170j-approachB-reeval-report.md`
   - `docs/reports/task-170j-approachC-reeval-report.md`
-  - `tasks/170j-ai-tone-voice-feasibility-assessment-DONE.md`
+  - `archive/v7/tasks/170j-ai-tone-voice-feasibility-assessment-DONE.md`
 
 ---
 

@@ -15,7 +15,7 @@
 - **稳定性面长跑底盘已跑通**：171p/171q/171r/171s 依次修复 state_mismatch、分段修订 duplicate、state_mismatch health/P1 构念、critical setting 同义提及刷新等撞墙问题。
 - **D1 hard clean pass 已取得**：171t 补齐文本洁净量具，171u 对 Ch200 当前 accepted head 创建 20 个 clean versions 并复算报告；当前 T9 meta/artifact=0、duplicate=0，T6b critical orphan peak=0。
 - **后续拆分**：171v = Ch200+ 文学可读性护栏；172 = Ch250 过渡验证。
-- **事实报告**：`docs/reports/task-171-ch200-long-run-report.md`、`docs/reports/task-171-ch200-analysis-and-next-step-report.md`。
+- **事实报告**：`archive/v7/reports/task-171-ch200-long-run-report.md`、`archive/v7/reports/task-171-ch200-analysis-and-next-step-report.md`。
 
 ## 历史进度（2026-07-10）
 
@@ -37,7 +37,7 @@
 
 - **harness / D2 / D3 就绪且经真实 API 验证**；**D1 全量 Ch200 被 Ch3 的 state_mismatch=11 稳定性面 halt 挡住**——这是真实治理信号（V6 期 SettlementExtractor 角色状态提取精度已知关注点，Task 138 系列），**不在本 Task 内联修**。
 - **路由至 `171p`**：Ch3 `state_mismatch` 峰值定点排查（是否早章瞬时/gate 灵敏度 vs 真实退化）。修复并复验后再放 D1 全量长跑。**不放宽 T9/health 冻结口径。**
-- 报告：`docs/reports/task-171-ch200-long-run-report.md`。
+- 报告：`archive/v7/reports/task-171-ch200-long-run-report.md`。
 
 ---
 

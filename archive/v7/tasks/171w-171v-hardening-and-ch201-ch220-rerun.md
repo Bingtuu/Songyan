@@ -59,7 +59,7 @@
 
 ### 已知问题
 
-`docs/reports/task-171-ch200-long-run-report.md` 当前标题是 Ch1-Ch200 主报告，但 header 的 `Run ID` 写成 `run-e27b763f`，而该 run 是 Ch201-Ch220 小窗口。报告尾部还残留旧 V6 harness 聚合 fail 表，容易被误读为 Ch200 主线回退。
+`archive/v7/reports/task-171-ch200-long-run-report.md` 当前标题是 Ch1-Ch200 主报告，但 header 的 `Run ID` 写成 `run-e27b763f`，而该 run 是 Ch201-Ch220 小窗口。报告尾部还残留旧 V6 harness 聚合 fail 表，容易被误读为 Ch200 主线回退。
 
 ### 交付
 
@@ -73,7 +73,7 @@
    - health/orphan 当前事实源；
    - T12；
    - 文学 Tier 2 observe-only。
-4. `docs/reports/task-171-ch200-analysis-and-next-step-report.md` 的“下一步”需要改为：
+4. `archive/v7/reports/task-171-ch200-analysis-and-next-step-report.md` 的“下一步”需要改为：
    - 171v 条件未通过；
    - 先做 171w；
    - 171w 重验通过后再进 172。
@@ -401,8 +401,8 @@ python -m pytest tests/test_settlement_extractor.py -q
 
 1. `scripts/run_171_ch200.py` 新增 `--run-id` / `--output` / `--include-legacy-harness` 三个参数。
 2. Ch200 主报告已通过 `--report --run-id run-fb39245c` 重新生成，run_id 正确。
-3. Ch201-Ch220 独立窗口报告已生成：`docs/reports/task-171w-ch201-ch220-window-report.md`（`--report --run-id run-e27b763f --output ...`），不覆盖 Ch200 主报告。
-4. `docs/reports/task-171-ch200-analysis-and-next-step-report.md` 的 171w 段已从"规划中"更新为已完成，172 前置标记为已满足。
+3. Ch201-Ch220 独立窗口报告已生成：`archive/v7/reports/task-171w-ch201-ch220-window-report.md`（`--report --run-id run-e27b763f --output ...`），不覆盖 Ch200 主报告。
+4. `archive/v7/reports/task-171-ch200-analysis-and-next-step-report.md` 的 171w 段已从"规划中"更新为已完成，172 前置标记为已满足。
 5. `docs/STATUS.md` 当前判断/最新证据/下一步均已更新，移除 19/20 旧数据，统一为 20/20。
 6. Ch200 主报告中 `run-e27b763f` 残留引用已清理。
 

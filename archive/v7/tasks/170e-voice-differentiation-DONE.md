@@ -1,6 +1,6 @@
 # Task 170e: voice 声纹区分提质 — DONE
 
-> **专项**: 文学提质专项（`tasks/170-literary-quality-remediation-README.md`）
+> **专项**: 文学提质专项（`archive/v7/tasks/170-literary-quality-remediation-README.md`）
 > **类型**: 生成侧提质（中风险——碰生成链）
 > **状态**: ✅ 完成（2026-07-07）
 > **依赖**: 170d DONE（校准后可信量具）

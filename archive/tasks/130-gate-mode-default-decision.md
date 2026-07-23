@@ -81,7 +81,7 @@
 | Task 126 Ch1–Ch20 enforce | ✅ 已完成 | 0 gate 触发（禁用 score_drop 后） |
 | Task 127 score halt 重构 | ✅ 已完成 | 解决开局期误触发 |
 | Task 128 严格模式容错 | ✅ 已完成 | 修复 QG false 阻断 run；pytest 1856 passed |
-| Task 129 Ch1–Ch50 enforce | ⚠️ 条件完成 | `run-89d7a2d4` Ch1–Ch15 后因 quality_gate_fail_streak 暂停；详见 `docs/reports/task-129-enforce-validation-report.md` |
+| Task 129 Ch1–Ch50 enforce | ⚠️ 条件完成 | `run-89d7a2d4` Ch1–Ch15 后因 quality_gate_fail_streak 暂停；详见 `archive/v5/reports/task-129-enforce-validation-report.md` |
 
 ### 4.2 决策规则
 
@@ -125,7 +125,7 @@ THEN 回滚 Task 125/127 调优，V5.1 不推进 enforce
 
 ## 6. 验收标准
 
-- [ ] 输出 `tasks/130-gate-mode-default-decision-DONE.md` 决策文档。
+- [ ] 输出 `archive/v5/tasks/130-gate-mode-default-decision-DONE.md` 决策文档。
 - [ ] 文档中明确记录选择方案 A/B/C/D/E 中的哪一个及其数据依据。
 - [ ] 若涉及 CLI 改动，新增/更新对应测试并通过 pytest。
 - [ ] 全量 pytest / ruff 通过。
@@ -157,7 +157,7 @@ Task 129 Ch1-Ch50 enforce ────────┘
 
 ## 9. 交付物
 
-- `tasks/130-gate-mode-default-decision-DONE.md`
+- `archive/v5/tasks/130-gate-mode-default-decision-DONE.md`
 - CLI 改动（如需）：`src/songyan/cli/` 相关文件
 - 新增/更新测试
 - 全量 pytest / ruff 通过记录

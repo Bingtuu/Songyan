@@ -5,7 +5,7 @@
 > **优先级**: P1
 > **依赖**: V8 验收完成（172a/172b/172d 已闭合）
 > **状态**: ✅ 完成
-> **实施计划**: `docs/superpowers/plans/2026-07-15-task-172i-profile-fallback-semantics.md`
+> **实施计划**: `archive/superpowers/plans/2026-07-15-task-172i-profile-fallback-semantics.md`
 
 ---
 

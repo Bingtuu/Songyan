@@ -1,6 +1,6 @@
 # Task 170m: 量具二次校准（RuleAuditor exposition carrier 动态化 + 人工 ground truth 闭环）— DONE
 
-> **专项**: 文学提质专项（`tasks/170-literary-quality-remediation-README.md`）
+> **专项**: 文学提质专项（`archive/v7/tasks/170-literary-quality-remediation-README.md`）
 > **类型**: 量具校准 / 事实基础设施
 > **优先级**: P0
 > **依赖**: Task 170l 已完成（结论：未达标，维持 blocker；同时暴露 RuleAuditor 引号匹配 bug）
@@ -89,7 +89,7 @@ Task 170m 在 170l 暴露量具失真后，对 RuleAuditor 的 `exposition_carri
 - 加载 ground truth（支持 `accept` / `reject` / `retype:<type>`）。
 - 用动态关键词重新跑检测。
 - 按 carrier_type 输出 precision / recall / F1、校准前后计数对比、漏报/误报样例、阈值建议。
-- 报告输出到 `docs/reports/task-170m-exposition-carrier-recalibration-report.md`。
+- 报告输出到 `archive/v7/reports/task-170m-exposition-carrier-recalibration-report.md`。
 
 ### 5. 单测
 
@@ -121,8 +121,8 @@ Task 170m 在 170l 暴露量具失真后，对 RuleAuditor 的 `exposition_carri
   - `tests/test_rule_auditor.py` + `tests/test_rule_auditor_dynamic_keywords.py` 82 passed
   - 分模块 pytest 全量通过（db/models/genres 357、rag/settlement/creative_modes/cli 133、evals/integration 76、顶层 test_*.py 1906）
 - [x] Ground truth 标注完成（Ch30–Ch32，机器预标 + agent provisional 终审，6 条接受）。
-- [x] `scripts/run_170m_reeval.py` 产出校准报告 `docs/reports/task-170m-exposition-carrier-recalibration-report.md`。
-- [x] 回填本 DONE 文档并更新 `docs/STATUS.md` / `tasks/V7-README.md` / `README.md` / `tasks/170-literary-quality-remediation-README.md`。
+- [x] `scripts/run_170m_reeval.py` 产出校准报告 `archive/v7/reports/task-170m-exposition-carrier-recalibration-report.md`。
+- [x] 回填本 DONE 文档并更新 `docs/STATUS.md` / `tasks/V7-README.md` / `README.md` / `archive/v7/tasks/170-literary-quality-remediation-README.md`。
 
 ---
 
@@ -137,8 +137,8 @@ Task 170m 在 170l 暴露量具失真后，对 RuleAuditor 的 `exposition_carri
 - `.tmp/ground_truth/task170m_ch30_ch32_ground_truth.jsonl`
 - `.tmp/ground_truth/task170m_ch30_ch32_ground_truth.md`
 - `tests/test_rule_auditor_dynamic_keywords.py`
-- `docs/reports/task-170m-exposition-carrier-recalibration-report.md`
-- `tasks/170m-exposition-carrier-recalibration-DONE.md`
+- `archive/v7/reports/task-170m-exposition-carrier-recalibration-report.md`
+- `archive/v7/tasks/170m-exposition-carrier-recalibration-DONE.md`
 
 ---
 
@@ -154,6 +154,6 @@ Task 170m 在 170l 暴露量具失真后，对 RuleAuditor 的 `exposition_carri
 
 ## 下一步（按路径 B 纪律）
 
-1. 用户审阅 `docs/reports/task-170m-exposition-carrier-recalibration-report.md` 与 ground truth 文件；如需要，用人工终审覆盖 agent provisional 标注。
+1. 用户审阅 `archive/v7/reports/task-170m-exposition-carrier-recalibration-report.md` 与 ground truth 文件；如需要，用人工终审覆盖 agent provisional 标注。
 2. 若用户确认 ground truth，可用校准后量具复评 170j/170k/170l 历史生成产物，判断 earlier 路径的 exposition 硬灌是否被系统性高估。
-3. 基于复评结果，在 `tasks/170-literary-quality-remediation-README.md` 中更新路径 B 升级 / AI 腔后处理 / 目标降级的决策依据。
+3. 基于复评结果，在 `archive/v7/tasks/170-literary-quality-remediation-README.md` 中更新路径 B 升级 / AI 腔后处理 / 目标降级的决策依据。

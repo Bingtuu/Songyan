@@ -1,12 +1,12 @@
 # Task 170k: 路径 B 第四步 — 角色对抗性目标锚定（opposing_goal_anchor）— DONE（维持 blocker）
 
-> **专项**: 文学提质专项（`tasks/170-literary-quality-remediation-README.md`）
+> **专项**: 文学提质专项（`archive/v7/tasks/170-literary-quality-remediation-README.md`）
 > **类型**: 轻量策略迭代（路径 B 第四步）
 > **优先级**: P0
 > **依赖**: Task 170j 已完成（结论：未达标，维持 blocker）
 > **状态**: ✅ **已完成（维持 blocker）。Ch29–Ch32 小样本复评未达 Ch200 放行标准（voice 2.00 / exposition 2.50 / 窗口均值 3.00）。170k 不放行 Task 171 Ch200，阶段 Z 入口继续冻结。**
 > **负责人**: songyan-agent
-> **复评报告**: `docs/reports/task-170k-opposing-goal-anchor-reeval-report.md`
+> **复评报告**: `archive/v7/reports/task-170k-opposing-goal-anchor-reeval-report.md`
 > **生成日志**: `logs/chapter_runs/run-f9fc6a07.jsonl`
 > **隔离 DB**: `.tmp/task170k_opposing_goal_anchor.db`
 > **Run ID**: `run-f9fc6a07`（Ch29–Ch32，4/4 success）
@@ -98,7 +98,7 @@ Task 170k 在 170j `minimal_voice_anchor` 失败后尝试叠加**角色对抗性
 **要点：**
 - 临时 mode profile 启用 `["minimal_voice_anchor", "opposing_goal_anchor"]`。
 - 隔离 DB `.tmp/task170k_opposing_goal_anchor.db`。
-- `run_170k_reeval.py` 输出 `docs/reports/task-170k-opposing-goal-anchor-reeval-report.md`。
+- `run_170k_reeval.py` 输出 `archive/v7/reports/task-170k-opposing-goal-anchor-reeval-report.md`。
 
 ### 5. 单测
 
@@ -115,10 +115,10 @@ Task 170k 在 170j `minimal_voice_anchor` 失败后尝试叠加**角色对抗性
 - [x] `ruff check src/ tests/` 通过。
 - [x] `tests/literary_optimization/test_base.py` 通过，registry 包含 `minimal_voice_anchor` / `opposing_goal_anchor`。
 - [x] Ch29–Ch32 隔离 DB 重生成完成（`run-f9fc6a07`，4/4 success，failed=[]）。
-- [x] `python scripts/run_170k_reeval.py` 复评报告产出：`docs/reports/task-170k-opposing-goal-anchor-reeval-report.md`。
+- [x] `python scripts/run_170k_reeval.py` 复评报告产出：`archive/v7/reports/task-170k-opposing-goal-anchor-reeval-report.md`。
 - [x] T9 硬红线：元标记泄漏 0、整段落重复 0。
 - [x] 机器/LLM 偏差：0 / 4 章，量具可信。
-- [x] 回填本 DONE 文档并更新 `docs/STATUS.md` / `tasks/V7-README.md` / `README.md` / `tasks/170-literary-quality-remediation-README.md`。
+- [x] 回填本 DONE 文档并更新 `docs/STATUS.md` / `tasks/V7-README.md` / `README.md` / `archive/v7/tasks/170-literary-quality-remediation-README.md`。
 
 ---
 
@@ -136,9 +136,9 @@ Task 170k 在 170j `minimal_voice_anchor` 失败后尝试叠加**角色对抗性
 - 临时 mode profile：
   - `creative_modes/webnovel_intense_opposing_goal_anchor.json`
 - 复评报告：
-  - `docs/reports/task-170k-opposing-goal-anchor-reeval-report.md`
+  - `archive/v7/reports/task-170k-opposing-goal-anchor-reeval-report.md`
 - DONE 文档：
-  - `tasks/170k-opposing-goal-anchor-DONE.md`
+  - `archive/v7/tasks/170k-opposing-goal-anchor-DONE.md`
 
 ---
 
