@@ -1167,7 +1167,10 @@ class TestSceneSplitStrategy:
         with patch(
             "songyan.agents.revision_handler._handle_scene_split",
             return_value=split_response,
-        ) as mock_split:
+        ) as mock_split, patch(
+            "songyan.agents.revision_handler.call_llm",
+            return_value=_make_valid_llm_response(content=split_response),
+        ):
             result, revised = await run_revision(content, report)
 
         mock_split.assert_called_once()

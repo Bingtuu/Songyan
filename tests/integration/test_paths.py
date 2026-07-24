@@ -80,6 +80,7 @@ async def test_path_a_no_issues_accept(test_db, mock_call_llm) -> None:
         literary_resp(),
         settlement_resp(),
         summary_resp(),
+        summary_resp(),
     ]
 
     state = await run_chapter_pipeline(
@@ -179,6 +180,7 @@ async def test_path_c_two_rounds_forced_pass(test_db, mock_call_llm) -> None:
         literary_resp(),
         settlement_resp(),
         summary_resp(),
+        summary_resp(),
     ]
 
     state = await run_chapter_pipeline(project_id, 2, thread_id=thread_id)
@@ -186,8 +188,8 @@ async def test_path_c_two_rounds_forced_pass(test_db, mock_call_llm) -> None:
 
     final = await resume_human_confirm(thread_id, "accept")
     assert final["status"] == "done"
-    assert final["revision_round"] == 1  # rewrite 后允许 1 轮最后修正
-    assert final.get("_was_rewritten") is False
+    assert final["revision_round"] == 0  # rewrite 后 clean audit 直接进入确认
+    assert final.get("_was_rewritten") is True
 
     versions = await _versions(project_id)
     accepted_versions = [v for v in versions if v.version_type == "accepted"]
@@ -298,6 +300,7 @@ async def test_path_f_edit_saves_edited_version(test_db, mock_call_llm) -> None:
         llm_clean_resp(),
         literary_resp(),
         settlement_resp(),
+        summary_resp(),
         summary_resp(),
     ]
 
@@ -421,7 +424,10 @@ async def test_path_i_revision_rebound_rollback(test_db, mock_call_llm) -> None:
         revision_resp(),         # 1st revision → v2
         llm_worsening_resp(),    # 2nd audit: 3 issues, score much lower → rebound!
         literary_resp(),
+        llm_clean_resp(),        # rollback/best version audit → clean
+        literary_resp(),
         settlement_resp(),
+        summary_resp(),
         summary_resp(),
     ]
 
@@ -430,22 +436,23 @@ async def test_path_i_revision_rebound_rollback(test_db, mock_call_llm) -> None:
 
     final = await resume_human_confirm(thread_id, "accept")
     assert final["status"] == "done"
-    assert final["revision_round"] == 1
+    assert final["revision_round"] == 2
     assert final.get("_revision_rebound") is False
 
     versions = await _versions(project_id)
-    # v1 (draft), v2 (revision, discarded due to rebound), v3 (accepted)
-    assert len(versions) == 3
+    # v1 draft, v2 rebound candidate, v3 post-rebound pass, v4 accepted settlement version.
+    assert len(versions) == 4
 
     head = await _head(project_id)
     assert head is not None
     accepted_versions = [v for v in versions if v.version_type == "accepted"]
     assert len(accepted_versions) == 1
     assert head.accepted_version_id == accepted_versions[0].version_id
-    # rollback 后 accepted 版本应继承自最佳版本（v1）或当前被接受版本（v2）
+    # rollback 后 accepted 版本应继承自已有候选版本，而不是凭空覆盖正文。
     assert accepted_versions[0].parent_version_id in {
         versions[0].version_id,
         versions[1].version_id,
+        versions[2].version_id,
     }
 
     # settlement/summary should still work on rolled-back version

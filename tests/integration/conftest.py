@@ -5,7 +5,7 @@ from __future__ import annotations
 import contextlib
 import json
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -109,6 +109,14 @@ def mock_call_llm():
     with contextlib.ExitStack() as stack:
         for target in targets:
             stack.enter_context(patch(target, _mock))
+        from songyan.models.revision import RevisionOutput
+
+        stack.enter_context(
+            patch(
+                "songyan.agents.revision_handler.run_segmented_revision",
+                new=AsyncMock(return_value=(RevisionOutput(segmented=False), "")),
+            )
+        )
         yield _mock
 
 

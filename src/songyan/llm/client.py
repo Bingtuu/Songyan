@@ -137,6 +137,38 @@ def _is_rate_limit_error(exc: Exception) -> bool:
     return False
 
 
+def _response_content_to_text(content: Any) -> str:
+    """Normalize LangChain/LiteLLM response content into plain assistant text.
+
+    DeepSeek v4 style responses may arrive as content blocks, e.g.
+    ``[{"type": "thinking", ...}, {"type": "text", "text": "..."}]``.
+    Downstream agents expect only the assistant text/JSON, not provider
+    reasoning blocks or Python list stringification.
+    """
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        parts: list[str] = []
+        for block in content:
+            if isinstance(block, str):
+                parts.append(block)
+                continue
+            if not isinstance(block, dict):
+                continue
+            block_type = str(block.get("type") or "").lower()
+            if block_type in {"thinking", "reasoning"}:
+                continue
+            text = block.get("text")
+            if text is None:
+                text = block.get("content")
+            if isinstance(text, str):
+                parts.append(text)
+        return "".join(parts)
+    if content is None:
+        return ""
+    return str(content)
+
+
 async def _maybe_close_resource(resource: Any, *, seen: set[int]) -> None:
     """Close one resource if it exposes close/aclose; best-effort and idempotent."""
     if resource is None:
@@ -410,7 +442,7 @@ async def call_llm(
             from langchain_core.messages import HumanMessage
 
             response: BaseMessage = await llm.ainvoke([HumanMessage(content=prompt)])
-            text = str(response.content)
+            text = _response_content_to_text(response.content)
         except (TypeError, ValueError, KeyError, AttributeError):
             # 编程错误（参数类型、配置错误等），直接抛出，不重试
             raise

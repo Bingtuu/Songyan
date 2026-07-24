@@ -63,6 +63,47 @@ class TestCallLlm:
                 assert result == "Hello, world!"
 
     @pytest.mark.asyncio
+    async def test_call_llm_normalizes_content_blocks(self) -> None:
+        """DeepSeek v4 / LiteLLM content blocks should expose only text blocks."""
+        mock_llm = MagicMock()
+        mock_response = MagicMock()
+        mock_response.content = [
+            {"type": "thinking", "thinking": "internal reasoning"},
+            {"type": "text", "text": '{"ok": true}'},
+        ]
+        mock_llm.ainvoke = AsyncMock(return_value=mock_response)
+
+        async def _passthrough(coro, **kwargs):
+            return await coro()
+
+        with patch("songyan.llm.client.get_llm", return_value=mock_llm):
+            with patch(
+                "songyan.llm.client.retry_with_backoff", new_callable=AsyncMock
+            ) as mock_retry:
+                mock_retry.side_effect = _passthrough
+                result = await call_llm("test prompt")
+                assert result == '{"ok": true}'
+
+    @pytest.mark.asyncio
+    async def test_call_llm_skips_reasoning_only_blocks(self) -> None:
+        """Reasoning-only content should not be stringified into downstream JSON."""
+        mock_llm = MagicMock()
+        mock_response = MagicMock()
+        mock_response.content = [{"type": "reasoning", "content": "hidden"}]
+        mock_llm.ainvoke = AsyncMock(return_value=mock_response)
+
+        async def _passthrough(coro, **kwargs):
+            return await coro()
+
+        with patch("songyan.llm.client.get_llm", return_value=mock_llm):
+            with patch(
+                "songyan.llm.client.retry_with_backoff", new_callable=AsyncMock
+            ) as mock_retry:
+                mock_retry.side_effect = _passthrough
+                result = await call_llm("test prompt")
+                assert result == ""
+
+    @pytest.mark.asyncio
     async def test_call_llm_type_error_not_retried(self) -> None:
         """TypeError/ValueError/KeyError/AttributeError 不应触发重试，直接抛出."""
         mock_llm = MagicMock()
