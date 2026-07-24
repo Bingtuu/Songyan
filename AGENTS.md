@@ -14,8 +14,8 @@
 
 - 项目状态：`docs/STATUS.md`
 - 文档路由：`docs/INDEX.md`
-- 当前阶段：V10.1 前置已开工，Task 189/190 已完成；Task 191 尚未开工；V9 已全量闭环（Task 173-188）
-- V10 规划入口：`tasks/V10-README.md`；README 本身不占任务号；Task 189 DONE：`tasks/189-ch200-baseline-and-checkpoints-DONE.md`；冻结 baseline：`tasks/189-scifi-ch200-baseline.json`；Task 190 DONE：`tasks/190-ch100-terminal-source-inventory-DONE.md`
+- 当前阶段：V10.1 前置已完成，Task 189/190/191 已完成；尚未启动非 sci-fi Ch200 长跑；V9 已全量闭环（Task 173-188）
+- V10 规划入口：`tasks/V10-README.md`；README 本身不占任务号；Task 189 DONE：`tasks/189-ch200-baseline-and-checkpoints-DONE.md`；冻结 baseline：`tasks/189-scifi-ch200-baseline.json`；Task 190 DONE：`tasks/190-ch100-terminal-source-inventory-DONE.md`；Task 191 DONE：`tasks/191-ch200-harness-preparation-DONE.md`
 - V9 任务事实（已收尾）：`tasks/V9-README.md`；单项任务文档归档 `archive/v9/`（索引 `archive/v9/INDEX.md`）
 - V8 历史任务事实（已收尾）：`tasks/V8-README.md`；任务文档与报告归档 `archive/v8/`（索引 `archive/v8/INDEX.md`）
 - V7 历史任务事实（已收尾）：`tasks/V7-README.md`
@@ -36,7 +36,7 @@ V8（Task 172-172l）已全量闭环：**多体裁可插拔质量 + 章数爬坡
 
 V9（Task 173-188）已全量闭环：生产化地基（V9.1 长跑可靠性 173-176 / V9.2 交付发布 177-181 / V9.3 工具链收编 182-184）+ urban 标定（185）与 Ch100 爬坡（186 任务书 → 187 执行）+ 收口（188）全部完成；A 组地基 8 条、B 组 urban Ch100 六条、C 组守护项均 PASS。V9 事实入口 `tasks/V9-README.md`，归档入口 `archive/v9/INDEX.md`。
 
-V10 规划入口已建立（`tasks/V10-README.md`），目标为**跨体裁 Ch200 + 优秀度信号包 + 结构升级 spike**。Task 189 已完成 sci-fi Ch200 baseline/checkpoint 冻结：`tasks/189-scifi-ch200-baseline.json` 为受版本管理 canonical baseline，`.tmp/189_scifi_ch200_baseline.json` 仅为可选工作副本；Task 190/191 尚未开工，尚未启动非 sci-fi Ch200 长跑或优秀度实现。V10 不补 V9 地基，也不做 V11 的开源用户可用化收尾。V10 前置顺序是：先完成 Ch100 终点事实源盘点、Ch200 harness 准备（190-191），再启动任何非 sci-fi Ch200 长跑或优秀度实现。
+V10 规划入口已建立（`tasks/V10-README.md`），目标为**跨体裁 Ch200 + 优秀度信号包 + 结构升级 spike**。Task 189 已完成 sci-fi Ch200 baseline/checkpoint 冻结：`tasks/189-scifi-ch200-baseline.json` 为受版本管理 canonical baseline，`.tmp/189_scifi_ch200_baseline.json` 仅为可选工作副本；Task 190 已完成 Ch100 终点事实源盘点（xuanhuan=REBUILD_REQUIRED、wuxia=BLOCKED_DIRTY_SAMPLE、urban=CONTINUE_READY）；Task 191 已完成 Ch200 harness 准备，产物为 `scripts/run_v10_ch200_climb.py`；尚未启动非 sci-fi Ch200 长跑或优秀度实现。V10 不补 V9 地基，也不做 V11 的开源用户可用化收尾。后续启动任何非 sci-fi Ch200 长跑前，必须使用 Task 191 harness，并遵守 Task 190 三态准入与 Task 189 baseline。
 
 ## 不可违背规则
 
