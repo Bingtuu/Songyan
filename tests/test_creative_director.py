@@ -657,6 +657,7 @@ class TestTemperatureParam:
             )
 
         assert captured_kwargs.get("temperature") == 0.99
+        assert captured_kwargs.get("max_tokens") == 8192
 
 
 # ---------------------------------------------------------------------------

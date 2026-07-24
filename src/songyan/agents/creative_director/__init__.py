@@ -57,6 +57,7 @@ logger = structlog.get_logger(__name__)
 
 _MOTIF_LOOKBACK_CHAPTERS = 8
 _MOTIF_LOOKBACK_THRESHOLD = 4
+STRUCTURED_BRIEF_MAX_TOKENS = 8192
 
 
 def _load_prompt_template() -> str:
@@ -646,7 +647,12 @@ async def generate_creative_brief(
 
     # 调用 LLM
     try:
-        response_text = await call_llm(prompt, temperature=temperature, max_retries=3)
+        response_text = await call_llm(
+            prompt,
+            temperature=temperature,
+            max_tokens=STRUCTURED_BRIEF_MAX_TOKENS,
+            max_retries=3,
+        )
     except LLMError:
         logger.error(
             "creative_director.llm_failed",

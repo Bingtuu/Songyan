@@ -371,6 +371,7 @@ class TestRunLlmAudit:
             await run_llm_audit("正文", temperature=0.5)
         mock.assert_called_once()
         assert mock.call_args[1]["temperature"] == 0.5
+        assert mock.call_args[1]["max_tokens"] == 8192
 
 
 class TestSaveLlmAudit:

@@ -24,6 +24,7 @@ from songyan.utils.token_estimator import truncate_to_tokens
 logger = structlog.get_logger(__name__)
 
 MAX_CONTENT_TOKENS = 4000  # 正文 Token 上限，超出时截断（保守估计）
+STRUCTURED_AUDIT_MAX_TOKENS = 8192
 VALID_SEVERITIES = {"critical", "major", "minor", "info"}
 VALID_FIX_TYPES = {"patch", "rewrite_scene", "confirm", "register_setting"}
 DEFAULT_DIMENSIONS = [c.value for c in ReviewCategory]
@@ -238,7 +239,11 @@ async def run_llm_audit(
     start_time = time.perf_counter()
 
     prompt = _render_prompt(content, context_package)
-    llm_response = await call_llm(prompt, temperature=temperature)
+    llm_response = await call_llm(
+        prompt,
+        temperature=temperature,
+        max_tokens=STRUCTURED_AUDIT_MAX_TOKENS,
+    )
 
     try:
         data = parse_llm_response(llm_response)
