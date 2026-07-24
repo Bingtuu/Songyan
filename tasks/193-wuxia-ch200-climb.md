@@ -1,0 +1,205 @@
+# Task 193: wuxia Ch200 爬坡
+
+> **阶段**: V10.2 跨体裁 Ch200 爬坡
+> **类型**: deterministic clean / Ch200 分段长跑 / 段边界审计
+> **优先级**: P0
+> **依赖**: Task 189 / Task 190 / Task 191；当前 goal 下按编号在 Task 192 之后推进
+> **状态**: ◻ 任务书已建立，未启动实跑
+> **预计工作量**: 大
+
+---
+
+## Goal
+
+对 wuxia Ch100 source 的 Ch28 省略号占位段执行 deterministic clean，重跑 T9=0 后使用 Task 191 harness 初始化 V10 Ch200 DB，并推进 Ch101-Ch200 到最终验收。
+
+---
+
+## Context
+
+Task 190 已判定 wuxia 为 `BLOCKED_DIRTY_SAMPLE`：`.tmp/task172b_wuxia_ch100.db` 具备 100/100 accepted、five-gate PASS、segment audit PASS，但 T9=1。唯一已定位问题是 Ch28 的省略号占位段 `……`。V10 守护项规定 T9 是硬红线，不接受解释性豁免。
+
+因此 Task 193 的第一阶段不是长跑，而是清洁 Ch28 并重判 T9=0。清洁必须保留版本链：不得覆盖旧 `chapter_versions.content`，必须创建新版本并事务性切换 accepted/current head。
+
+---
+
+## In Scope（必须完成）
+
+- [ ] 定位 wuxia Ch28 accepted version 和 T9 命中段落，生成清洁前证据。
+- [ ] 实现或使用 deterministic clean 路径移除 Ch28 省略号占位段。
+- [ ] 清洁写入必须遵守版本规则：
+  - 新增 `chapter_versions` 记录；
+  - 不 UPDATE 旧正文；
+  - 事务性更新 accepted/current head；
+  - 保留旧 version 可追溯。
+- [ ] 重跑 wuxia Ch100 T9，确认 meta/artifact=0、duplicate=0、timeline=0。
+- [ ] 重跑 wuxia Ch100 five-gate 与 segment audit，确认 clean 后仍 PASS。
+- [ ] 更新 `.tmp/190_ch100_source_inventory.json` 的 wuxia 记录，且在 DONE 文档中明确从 `BLOCKED_DIRTY_SAMPLE` 提升为可用 source 的证据。
+- [ ] 使用 Task 191 harness 初始化 V10 Ch200 target DB：
+
+```powershell
+python scripts/run_v10_ch200_climb.py --init-from-source --genre wuxia --format json
+```
+
+- [ ] 使用 Task 191 harness 按 Ch125 / Ch150 / Ch175 / Ch200 分段推进：
+
+```powershell
+powershell -File scripts/run_with_timeout.ps1 -TimeoutSec <sec> -- python scripts/run_v10_ch200_climb.py --to 125 --genre wuxia
+powershell -File scripts/run_with_timeout.ps1 -TimeoutSec <sec> -- python scripts/run_v10_ch200_climb.py --to 150 --genre wuxia
+powershell -File scripts/run_with_timeout.ps1 -TimeoutSec <sec> -- python scripts/run_v10_ch200_climb.py --to 175 --genre wuxia
+powershell -File scripts/run_with_timeout.ps1 -TimeoutSec <sec> -- python scripts/run_v10_ch200_climb.py --to 200 --genre wuxia
+```
+
+- [ ] 每个段边界执行审计，five-gate 必须显式绑定 Task 189 baseline：
+
+```powershell
+python scripts/run_v10_ch200_climb.py --audit --genre wuxia --up-to <125|150|175|200> --baseline tasks/189-scifi-ch200-baseline.json
+```
+
+- [ ] 产出 `tasks/193-wuxia-ch200-climb-DONE.md`，并同步核心入口文档。
+
+---
+
+## Out of Scope（明确不做）
+
+- 不完整重建 wuxia Ch100，除非 deterministic clean 被 review 判定不可安全执行。
+- 不修改 T9 检测器以放过 `……`。
+- 不把 Ch28 旧 accepted version 覆盖掉。
+- 不修改 wuxia profile，除非另开后缀修复任务并提供回归证据。
+- 不在任一段硬门失败后继续跑下一段。
+
+---
+
+## 数据与路径契约
+
+| 项 | 路径 / 口径 |
+|----|-------------|
+| Ch100 source DB | `.tmp/task172b_wuxia_ch100.db` |
+| Ch100 source project_id | `273a8408be8e4caf8cbc1e91954da600` |
+| Ch100 source run_id | `run-82968662` |
+| dirty chapter | Ch28 |
+| dirty issue | 省略号占位段 `……`，T9 meta/artifact=1 |
+| V10 Ch200 target DB | `.tmp/task_v10_wuxia_ch200.db` |
+| V10 project file | `.tmp/task_v10_wuxia_project.json` |
+| V10 segment log | `.tmp/task_v10_wuxia_segments.jsonl` |
+| five-gate report | `.tmp/v10_wuxia_seg<checkpoint>_five_gate.json` |
+| segment audit report | `.tmp/v10_wuxia_seg<checkpoint>_audit.json` |
+| metrics report | `.tmp/v10_wuxia_seg<checkpoint>_metrics.md` |
+| final report | `.tmp/v10_wuxia_ch200_final.json` |
+| baseline | `tasks/189-scifi-ch200-baseline.json` |
+
+---
+
+## 执行阶段
+
+### A. Ch28 deterministic clean
+
+1. 只读查询 Ch28 accepted version、正文 hash、命中段落。
+2. 生成清洁候选正文：只移除占位段，不改写整章，不改变叙事内容。
+3. 通过 service / repository / UnitOfWork 或受控脚本创建新 `chapter_versions`，事务性更新 `chapter_heads.accepted_version_id` 和 `current_version_id`。
+4. 记录旧 version_id、新 version_id、正文 hash diff、命中段落前后对照。
+
+### B. Ch100 clean 复核
+
+必须重跑：
+
+- T9 meta/artifact、duplicate、timeline；
+- five-gate `--up-to 100`；
+- segment audit `--up-to 100`；
+- profile show/diff，确认无意外 override。
+
+通过后，更新 source inventory 中 wuxia verdict 为可初始化状态，并记录 clean 证据。
+
+### C. Ch200 初始化与分段推进
+
+1. 使用 `scripts/run_v10_ch200_climb.py --init-from-source --genre wuxia` 初始化 V10 DB。
+2. 依次推进 Ch125、Ch150、Ch175、Ch200。
+3. 每段结束先审计再继续。
+
+### D. 收口
+
+DONE 文档至少记录：
+
+- Ch28 clean 前后证据；
+- 新旧 `chapter_versions` 和 head 切换记录；
+- Ch100 clean 复核；
+- Ch200 每段 accepted、budget、CED、overdue、health、T9、segment audit；
+- 成本、wrapper 结果、run_id；
+- 是否有后缀修复任务。
+
+---
+
+## 失败路由
+
+| 失败点 | 处理 |
+|--------|------|
+| Ch28 命中不止已知占位段 | 暂停 deterministic clean，开 `193.p` 诊断 |
+| clean 后 T9 仍 > 0 | 冻结 clean 版本，定位新增命中，不进入 Ch200 |
+| clean 后 five-gate 或 segment audit 失败 | 回查是否 clean 破坏正文/状态；必要时开后缀修复 |
+| `--init-from-source` 拒绝 source | 修复 source inventory / genre / T9 / accepted head，不绕过 harness |
+| Ch125/150/175/200 任一五门失败 | 冻结现场，开 `193.<suffix>` 修复，不推进下一段 |
+| wrapper 超时或成本熔断 | 记录 `WRAPPER_RESULT`、成本状态和 resume 命令，低频监控后继续 |
+
+---
+
+## Review 要求
+
+完成前必须自查：
+
+- 是否创建新 `chapter_versions` 而非覆盖旧正文；
+- 是否只做局部 deterministic clean，没有整章重写；
+- 是否 clean 后 T9=0 是真实复算结果；
+- 是否 source inventory 与 DONE 文档一致；
+- 是否所有 Ch125+ five-gate 都显式传入 Task 189 baseline；
+- 是否没有为了过关修改 T9/CED/five-gate 口径。
+
+---
+
+## 测试与验证要求
+
+若新增 clean 工具或写路径，必须补测试覆盖：
+
+- 新版本创建，不覆盖旧 version；
+- head 切换事务一致；
+- T9 dirty -> clean；
+- 错误 project_id / chapter / missing accepted version 拒绝。
+
+常规代码改动必须执行：
+
+```powershell
+powershell -File scripts/run_with_timeout.ps1 -TimeoutSec 2400 -- python -m pytest tests/ -q
+ruff check src/ tests/
+git diff --check
+```
+
+长跑段边界至少执行：
+
+```powershell
+python scripts/run_v10_ch200_climb.py --audit --genre wuxia --up-to <checkpoint> --baseline tasks/189-scifi-ch200-baseline.json
+```
+
+影响 harness、five-gate、segment audit 或 Ch200 口径时，必须重放 Task 189 Ch125/150/175/200 baseline。
+
+---
+
+## 验收标准
+
+- [ ] Ch28 dirty sample 已用版本化方式 clean，旧版本可追溯。
+- [ ] wuxia Ch100 source 复核 T9=0，five-gate PASS，segment audit PASS。
+- [ ] `.tmp/190_ch100_source_inventory.json` 与 DONE 文档同步登记 wuxia 可用 source。
+- [ ] `.tmp/task_v10_wuxia_ch200.db` 初始化自 clean Ch100 source，且 V10 `project_runs` 独立。
+- [ ] Ch1-Ch200 全 accepted。
+- [ ] Ch125 / Ch150 / Ch175 / Ch200 four checkpoints 五门 PASS。
+- [ ] Ch200 T9=0；segment audit PASS。
+- [ ] DONE 文档和核心入口已更新。
+- [ ] 验证命令通过，提交一次，不 push。
+
+---
+
+## 参考文档
+
+- `tasks/189-ch200-baseline-and-checkpoints-DONE.md`
+- `tasks/189-scifi-ch200-baseline.json`
+- `tasks/190-ch100-terminal-source-inventory-DONE.md`
+- `tasks/191-ch200-harness-preparation-DONE.md`
+- `archive/v8/tasks/172c-wuxia-ch100-clean-rerun-DONE.md`
