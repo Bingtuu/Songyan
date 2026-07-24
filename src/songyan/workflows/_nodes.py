@@ -411,7 +411,7 @@ async def goal_planner_node(state: dict[str, Any]) -> dict[str, Any]:
         ]
         if schedule_item_ids:
             await mark_schedule_items_injected(schedule_item_ids)
-        return {"chapter_goal_id": goal_id, "status": "creative_direction"}
+        return {"chapter_goal_id": goal_id, "status": "creative_direction", "error": None}
     except (LLMError, LLMResponseParseError) as exc:
         logger.warning(
             "goal_planner_node.llm_failed",
@@ -463,7 +463,7 @@ async def creative_director_node(state: dict[str, Any]) -> dict[str, Any]:
             for card in style_cards:
                 await repo.save_dialogue_style_card(card.character_id, card)
 
-        return {"creative_brief_id": brief_id, "status": "context_assembly"}
+        return {"creative_brief_id": brief_id, "status": "context_assembly", "error": None}
     except (LLMError, LLMResponseParseError) as exc:
         logger.warning(
             "creative_director_node.llm_failed",
@@ -1225,7 +1225,7 @@ async def llm_auditor_node(state: dict[str, Any]) -> dict[str, Any]:
         result=result,
         report_id=report_id,
     )
-    return {"_llm_report_id": report_id, "status": "review_merging"}
+    return {"_llm_report_id": report_id, "status": "review_merging", "error": None}
 
 
 async def review_merger_node(state: dict[str, Any]) -> dict[str, Any]:

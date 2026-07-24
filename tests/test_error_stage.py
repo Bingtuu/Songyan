@@ -40,6 +40,41 @@ async def test_goal_planner_error_stage() -> None:
 
 
 @pytest.mark.asyncio
+async def test_goal_planner_success_clears_stale_error() -> None:
+    """A successful structured node must clear any previous diagnostic error."""
+    project = MagicMock(genre_id="xuanhuan", mode_id="webnovel_intense")
+    narrative_ctx = MagicMock(scheduled_items=[])
+    repo = MagicMock()
+    repo.create = AsyncMock()
+
+    with (
+        patch("songyan.workflows._nodes.load_project", new_callable=AsyncMock) as mock_project,
+        patch("songyan.workflows._nodes.load_genre_profile", return_value=MagicMock()),
+        patch("songyan.workflows._nodes.load_creative_mode_profile", return_value=MagicMock()),
+        patch(
+            "songyan.workflows._nodes.load_narrative_goal_context",
+            new_callable=AsyncMock,
+        ) as mock_narrative,
+        patch("songyan.workflows._nodes.define_chapter_goal", new_callable=AsyncMock),
+        patch("songyan.workflows._nodes.ChapterGoalRepository", return_value=repo),
+    ):
+        mock_project.return_value = project
+        mock_narrative.return_value = narrative_ctx
+        result = await goal_planner_node(
+            {
+                "project_id": "p-1",
+                "chapter_number": 1,
+                "mode_id": "webnovel_intense",
+                "previous_summary": "",
+                "error": "old parse error",
+            }
+        )
+
+    assert result["status"] == "creative_direction"
+    assert result["error"] is None
+
+
+@pytest.mark.asyncio
 async def test_creative_director_error_stage() -> None:
     """creative_director_node returns status='creative_director' on error."""
     with patch("songyan.workflows._nodes.load_chapter_goal", new_callable=AsyncMock) as mock:
@@ -47,6 +82,57 @@ async def test_creative_director_error_stage() -> None:
         result = await creative_director_node({"chapter_goal_id": "missing"})
     assert result["status"] == "creative_director"
     assert result["error"] is not None
+
+
+@pytest.mark.asyncio
+async def test_creative_director_success_clears_stale_error() -> None:
+    """CreativeDirector success must not leave an older LLM parse error in state."""
+    project = MagicMock(genre_id="xuanhuan", mode_id="webnovel_intense")
+    character_repo = MagicMock()
+    character_repo.list_by_project = AsyncMock(return_value=[])
+    setting_repo = MagicMock()
+    setting_repo.list_by_project = AsyncMock(return_value=[])
+    brief_repo = MagicMock()
+    brief_repo.create = AsyncMock()
+
+    with (
+        patch("songyan.workflows._nodes.load_chapter_goal", new_callable=AsyncMock) as mock_goal,
+        patch("songyan.workflows._nodes.load_project", new_callable=AsyncMock) as mock_project,
+        patch("songyan.workflows._nodes.load_genre_profile", return_value=MagicMock()),
+        patch("songyan.workflows._nodes.load_creative_mode_profile", return_value=MagicMock()),
+        patch("songyan.workflows._nodes.CharacterRepository", return_value=character_repo),
+        patch("songyan.workflows._nodes.SettingSnapshotRepository", return_value=setting_repo),
+        patch(
+            "songyan.workflows._nodes.load_narrative_goal_context",
+            new_callable=AsyncMock,
+            return_value=None,
+        ),
+        patch(
+            "songyan.workflows._nodes.generate_creative_brief",
+            new_callable=AsyncMock,
+            return_value=MagicMock(),
+        ),
+        patch("songyan.workflows._nodes.CreativeBriefRepository", return_value=brief_repo),
+        patch(
+            "songyan.workflows._nodes.generate_dialogue_style_cards",
+            new_callable=AsyncMock,
+            return_value=[],
+        ),
+    ):
+        mock_goal.return_value = MagicMock()
+        mock_project.return_value = project
+        result = await creative_director_node(
+            {
+                "project_id": "p-1",
+                "chapter_number": 1,
+                "chapter_goal_id": "goal-1",
+                "mode_id": "webnovel_intense",
+                "error": "CreativeDirector LLM call failed: parse error",
+            }
+        )
+
+    assert result["status"] == "context_assembly"
+    assert result["error"] is None
 
 
 @pytest.mark.asyncio
@@ -101,6 +187,33 @@ async def test_llm_auditor_llm_error_returns_diagnostic_state() -> None:
         result = await llm_auditor_node({"current_version_id": "v-1"})
     assert result["status"] == "llm_auditor"
     assert result["error"] is not None
+
+
+@pytest.mark.asyncio
+async def test_llm_auditor_success_clears_stale_error() -> None:
+    """LLMAuditor success must clear an older audit parse failure."""
+    version = MagicMock()
+    version.version_id = "v-1"
+    version.content = "正文"
+
+    with (
+        patch("songyan.workflows._nodes.load_version", new_callable=AsyncMock) as mock_ver,
+        patch("songyan.workflows._nodes._get_context_package", new_callable=AsyncMock) as mock_ctx,
+        patch(
+            "songyan.workflows._nodes.run_llm_audit",
+            new_callable=AsyncMock,
+            return_value=MagicMock(),
+        ),
+        patch("songyan.workflows._nodes.save_llm_audit", new_callable=AsyncMock),
+    ):
+        mock_ver.return_value = version
+        mock_ctx.return_value = None
+        result = await llm_auditor_node(
+            {"current_version_id": "v-1", "error": "LLM audit failed: parse error"}
+        )
+
+    assert result["status"] == "review_merging"
+    assert result["error"] is None
 
 
 @pytest.mark.asyncio
