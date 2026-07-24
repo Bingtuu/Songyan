@@ -3,7 +3,7 @@
 > **阶段**: V10.1 Ch200 口径与工具
 > **类型**: 只读重放 / baseline 冻结 / 工具口径校验
 > **优先级**: P0（所有非 sci-fi Ch200 终判的标尺）
-> **状态**: ◻ 规划中
+> **状态**: ✅ 完成（DONE：`tasks/189-ch200-baseline-and-checkpoints-DONE.md`）
 > **来源**: `tasks/V10-README.md` Task 189
 
 ---
@@ -60,20 +60,20 @@ python scripts/five_gate_check.py --genre scifi --db <scifi_ch200.db> --project-
 python scripts/five_gate_check.py --genre scifi --db <scifi_ch200.db> --project-id <project_id> --up-to 200 --format json > .tmp/189_scifi_ch200_at200.json
 ```
 
-注意：上述命令只用于采集 sci-fi 自身指标。当前 `five_gate_check.py` 默认 baseline 是包内 `scifi_ch100_baseline.json`，对 Ch125+ 会回退到最后一个 Ch100 点。因此，执行者必须从这些输出中提取 metrics，生成 `.tmp/189_scifi_ch200_baseline.json`，供后续非 sci-fi Ch200 显式传入。不得把默认 baseline 输出误当作 Ch200 对照值。
+注意：上述命令只用于采集 sci-fi 自身指标。当前 `five_gate_check.py` 默认 baseline 是包内 `scifi_ch100_baseline.json`，对 Ch125+ 会回退到最后一个 Ch100 点。因此，执行者必须从这些输出中提取 metrics，生成受版本管理的 `tasks/189-scifi-ch200-baseline.json`，供后续非 sci-fi Ch200 显式传入。不得把默认 baseline 输出误当作 Ch200 对照值。
 
-生成 `.tmp/189_scifi_ch200_baseline.json` 后，再用正式工具验证 baseline 文件可被读取：
+生成 `tasks/189-scifi-ch200-baseline.json` 后，再用正式工具验证 baseline 文件可被读取：
 
 ```powershell
-python scripts/five_gate_check.py --genre scifi --db <scifi_ch200.db> --project-id <project_id> --up-to 125 --baseline .tmp/189_scifi_ch200_baseline.json --format json
-python scripts/five_gate_check.py --genre scifi --db <scifi_ch200.db> --project-id <project_id> --up-to 150 --baseline .tmp/189_scifi_ch200_baseline.json --format json
-python scripts/five_gate_check.py --genre scifi --db <scifi_ch200.db> --project-id <project_id> --up-to 175 --baseline .tmp/189_scifi_ch200_baseline.json --format json
-python scripts/five_gate_check.py --genre scifi --db <scifi_ch200.db> --project-id <project_id> --up-to 200 --baseline .tmp/189_scifi_ch200_baseline.json --format json
+python scripts/five_gate_check.py --genre scifi --db <scifi_ch200.db> --project-id <project_id> --up-to 125 --baseline tasks/189-scifi-ch200-baseline.json --format json
+python scripts/five_gate_check.py --genre scifi --db <scifi_ch200.db> --project-id <project_id> --up-to 150 --baseline tasks/189-scifi-ch200-baseline.json --format json
+python scripts/five_gate_check.py --genre scifi --db <scifi_ch200.db> --project-id <project_id> --up-to 175 --baseline tasks/189-scifi-ch200-baseline.json --format json
+python scripts/five_gate_check.py --genre scifi --db <scifi_ch200.db> --project-id <project_id> --up-to 200 --baseline tasks/189-scifi-ch200-baseline.json --format json
 
 python scripts/segment_audit.py --db <scifi_ch200.db> --project-id <project_id> --up-to 200 --format json
 ```
 
-metrics/T9 也必须复算：
+T9 必须复算；完整 `songyan metrics` 报告若在 Ch200 历史库上超时或过慢，应登记为 Task 191 harness/metrics 准备或后缀修复项，不作为 Task 189 baseline 冻结的阻塞项：
 
 ```powershell
 $env:DATABASE_URL = "sqlite:///<scifi_ch200.db>"
@@ -87,10 +87,11 @@ Remove-Item Env:\DATABASE_URL
 
 | 文件 | 内容 |
 |------|------|
-| `.tmp/189_scifi_ch200_baseline.json` | Ch125/150/175/200 的 accepted、budget、CED、overdue、health、gap、halt |
+| `tasks/189-scifi-ch200-baseline.json` | 受版本管理的 canonical baseline，含 Ch125/150/175/200 的 accepted、budget、CED、overdue、health、gap、halt |
+| `.tmp/189_scifi_ch200_baseline.json` | 可选工作副本，不作为长期事实入口 |
 | `.tmp/189_scifi_ch200_at125.json` ... `.tmp/189_scifi_ch200_at200.json` | 从 sci-fi DB 采集的原始 checkpoint 指标 |
 | `.tmp/189_scifi_ch200_segment_audit.json` | Ch200 段审计结果 |
-| `.tmp/189_scifi_ch200_metrics.md` | T9 / metrics 报告 |
+| `.tmp/189_scifi_ch200_metrics.md` | T9 复算报告；完整 metrics 慢路径若未完成，必须在 DONE 中明确路由 |
 | `tasks/189-ch200-baseline-and-checkpoints-DONE.md` | 结论、命令、路径、对照表、是否入包建议 |
 
 是否把 baseline 纳入 `src/songyan/evals/baselines/` 由执行结果决定；若只是报告级引用，可先留在归档报告，不强行入包。
@@ -100,11 +101,11 @@ Remove-Item Env:\DATABASE_URL
 ## 验收判据
 
 1. 明确记录 sci-fi Ch200 DB / project_id / run_id，或明确登记 DB 缺失并停止 baseline 冻结。
-2. Ch125 / Ch150 / Ch175 / Ch200 四个 checkpoint 均有正式工具输出，并已生成 `.tmp/189_scifi_ch200_baseline.json`。
-3. Ch200 T9 复算为 hard clean：meta/artifact=0、duplicate=0、timeline=0，或明确说明与 V7 D1 报告的差异。
+2. Ch125 / Ch150 / Ch175 / Ch200 四个 checkpoint 均有正式工具输出，并已生成 `tasks/189-scifi-ch200-baseline.json`。
+3. Ch200 T9 复算为 hard clean：meta/artifact=0、duplicate=0、timeline=0，或明确说明与 V7 D1 报告的差异；完整 `songyan metrics` 慢路径若未完成，必须明确路由，不得伪装为完成证据。
 4. `segment_audit.py --up-to 200` 输出 critical_orphans 与 halt_would_fire。
 5. 形成 V10 使用的 sci-fi Ch200 对照表，字段至少包括：budget peak、CED、overdue、health、accepted、gap、halt、T9。
-6. 后续所有非 sci-fi Ch200 five-gate 命令必须显式传入 `--baseline .tmp/189_scifi_ch200_baseline.json`；文档中不得使用默认 Ch100 baseline 跑 Ch125+。
+6. 后续所有非 sci-fi Ch200 five-gate 命令必须显式传入 `--baseline tasks/189-scifi-ch200-baseline.json`；文档中不得使用默认 Ch100 baseline 跑 Ch125+。
 7. 不改五门判定函数；若发现工具不支持 Ch200，应转入 Task 191 或后缀任务处理。
 8. 产出 DONE 文档，并更新 `tasks/V10-README.md` 的 Task 189 状态。
 
@@ -126,7 +127,7 @@ Remove-Item Env:\DATABASE_URL
 |------|------|
 | V7 Ch200 DB 缺失 | 先出缺口报告；必要时立恢复/重建子任务，不得伪造重放 |
 | V7 报告数值与 V9 工具重放不一致 | 以当前正式工具为准，但必须解释漂移来源 |
-| 误用包内 Ch100 baseline 跑 Ch125+ | 立即作废该输出；重新生成并显式传入 `.tmp/189_scifi_ch200_baseline.json` |
+| 误用包内 Ch100 baseline 跑 Ch125+ | 立即作废该输出；重新生成并显式传入 `tasks/189-scifi-ch200-baseline.json` |
 | T9 复算非 0 | 先确认是否使用 D1 clean accepted head；不得解释性豁免 |
 | segment audit 不支持 Ch200 | 转 Task 191 修工具 I/O，不改判定口径 |
 

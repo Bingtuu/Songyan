@@ -3,7 +3,7 @@
 > **阶段**: V10.1 Ch200 口径与工具
 > **类型**: 只读盘点 / 事实源审计 / continuation 准入
 > **优先级**: P0（决定 192-194 是续跑还是重建起点）
-> **状态**: ◻ 规划中
+> **状态**: ✅ 完成（DONE：`tasks/190-ch100-terminal-source-inventory-DONE.md`；review 修复 2026-07-24：wuxia 降为 BLOCKED_DIRTY_SAMPLE、segments.jsonl 数据源修正、profile 文件修复、日期修正）
 > **来源**: `tasks/V10-README.md` Task 190
 
 ---

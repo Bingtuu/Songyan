@@ -501,7 +501,14 @@ def evaluate_project(
     allow_gap: int = DEFAULT_ALLOWED_GAP,
 ) -> FiveGateReport:
     """Collect and evaluate one target project against the formal baseline."""
-    baseline = baseline_at(load_baseline(baseline_path), up_to)
+    baseline_points = load_baseline(baseline_path)
+    if baseline_path is not None and up_to < baseline_points[0].up_to:
+        msg = (
+            f"baseline {baseline_path} starts at Ch{baseline_points[0].up_to}; "
+            f"cannot evaluate Ch{up_to}. Use a baseline that covers this chapter range."
+        )
+        raise FiveGateToolError(msg)
+    baseline = baseline_at(baseline_points, up_to)
     metrics = collect_metrics(db_path, project_id=project_id, up_to=up_to, genre=genre)
     return evaluate_metrics(metrics, baseline, allow_gap=allow_gap)
 

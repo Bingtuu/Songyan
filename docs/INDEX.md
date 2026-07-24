@@ -8,7 +8,7 @@
 |------|------|
 | `AGENTS.md` | 开发代理短指令与不可违背规则 |
 | `docs/STATUS.md` | 当前状态、测试口径、下一步 |
-| `tasks/V10-README.md` | **V10 规划入口（尚未开工）**：跨体裁 Ch200 + 优秀度信号包 + 结构升级 spike；本文不占任务号；Task 189/190/191 任务书已建立，尚未执行 |
+| `tasks/V10-README.md` | **V10 规划入口（V10.1 前置中）**：跨体裁 Ch200 + 优秀度信号包 + 结构升级 spike；本文不占任务号；Task 189/190 已完成，Task 191 尚未执行 |
 | `tasks/V9-README.md` | **V9 历史事实入口（已收尾）**：生产化地基 + urban 第三体裁 Ch100，Task 173-188 扁平编号；V9.1/V9.2/V9.3/V9.4/V9.5/V9.6 全部完成；urban Ch1-Ch100 100/100 accepted，five-gate PASS，segment audit PASS，T9=0；单项任务文档归档 `archive/v9/` |
 | `tasks/V8-README.md` | **V8 历史任务事实入口（已收尾，含 V8.5）**：多体裁可插拔质量 + 章数爬坡；含 Task 编号治理规则；任务文档与报告归档 `archive/v8/` |
 | `tasks/V7-README.md` | **V7 历史任务事实入口（已收尾）**：sci-fi 单一体裁 Ch200 达成 |
@@ -40,8 +40,11 @@ V8 已全量闭环（P/C/Q/S/V 五维全绿 + V8.5 遗留清零）。任务文�
 | 文件 | 用途 |
 |------|------|
 | `tasks/V10-README.md` | V10 总索引、阶段验收判据、任务拆解与执行纪律 |
+| `tasks/189-ch200-baseline-and-checkpoints-DONE.md` | Task 189 DONE：sci-fi Ch200 baseline 与 checkpoint 冻结结果 |
+| `tasks/189-scifi-ch200-baseline.json` | Task 189 冻结 baseline：Ch125/150/175/200 sci-fi Ch200 对照点 |
 | `tasks/189-ch200-baseline-and-checkpoints.md` | Task 189 任务书：Ch200 baseline 与 checkpoint 冻结 |
 | `tasks/190-ch100-terminal-source-inventory.md` | Task 190 任务书：xuanhuan/wuxia/urban Ch100 终点事实源盘点 |
+| `tasks/190-ch100-terminal-source-inventory-DONE.md` | Task 190 DONE：盘点结果与准入结论（xuanhuan=REBUILD_REQUIRED、wuxia=BLOCKED_DIRTY_SAMPLE、urban=CONTINUE_READY） |
 | `tasks/191-ch200-harness-preparation.md` | Task 191 任务书：Ch200 harness 准备与 dry-run 验收 |
 
 ## V9 历史产物（已收尾，保留入口）
@@ -122,8 +125,9 @@ V8 已全量闭环（P/C/Q/S/V 五维全绿 + V8.5 遗留清零）。任务文�
 
 | 场景 | 文件 |
 |------|------|
-| V10 规划入口（尚未开工） | `tasks/V10-README.md` |
+| V10 规划入口（V10.1 前置中） | `tasks/V10-README.md` |
 | V10.1 口径与工具任务书 | `tasks/189-ch200-baseline-and-checkpoints.md`、`tasks/190-ch100-terminal-source-inventory.md`、`tasks/191-ch200-harness-preparation.md` |
+| V10.1 已完成证据 | `tasks/189-ch200-baseline-and-checkpoints-DONE.md`、`tasks/189-scifi-ch200-baseline.json`、`tasks/190-ch100-terminal-source-inventory-DONE.md` |
 | V9 任务入口（已收尾） | `tasks/V9-README.md` |
 | V9 归档索引 | `archive/v9/INDEX.md` |
 | V9 长跑可靠性 DONE | `archive/v9/173-interpreter-exit-hang-fix-DONE.md`、`archive/v9/174-logging-system-foundation-DONE.md`、`archive/v9/175-cost-tracking-and-budget-circuit-breaker-DONE.md`、`archive/v9/176-windows-anti-hang-wrapper-DONE.md` |

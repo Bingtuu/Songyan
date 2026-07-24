@@ -6,7 +6,7 @@
 
 | 项 | 结论 |
 |----|------|
-| 当前阶段 | **V10 规划入口与 V10.1 任务书已建立，尚未开工**：V9 已全量闭环（2026-07-23），事实入口 `tasks/V9-README.md`，归档入口 `archive/v9/INDEX.md`。V10 规划入口为 `tasks/V10-README.md`；Task 189/190/191 任务书已写好，分别覆盖 Ch200 baseline/checkpoint 冻结、Ch100 终点事实源盘点、Ch200 harness 准备；尚未启动实跑或代码实现 |
+| 当前阶段 | **V10.1 前置已开工，Task 189/190 已完成**：V9 已全量闭环（2026-07-23），事实入口 `tasks/V9-README.md`，归档入口 `archive/v9/INDEX.md`。V10 规划入口为 `tasks/V10-README.md`；Task 189 已冻结 sci-fi Ch200 baseline/checkpoint；Task 190 已完成 xuanhuan/wuxia/urban Ch100 终点事实源盘点（xuanhuan=REBUILD_REQUIRED、wuxia=BLOCKED_DIRTY_SAMPLE、urban=CONTINUE_READY）；Task 191 尚未开工，仍未启动非 sci-fi Ch200 长跑或优秀度实现 |
 | V7 收尾 | **已完成**。sci-fi/space_opera + webnovel_intense 单一体裁稳定跑到 Ch200，200/200 accepted，D1 hard clean pass；Ch201-Ch220 20/20 accepted |
 | V8.1 运行时画像 | **已完成**（Task 172a + 172a.p）。`GenreRuntimeProfile` 把 Context Diet 2.0 运行时契约从 sci-fi 默认值解耦；xuanhuan Ch8 halt 已消除（base_budget=15000） |
 | V8.3 文学护栏 | **已完成**（Task 172d）。`literary_guardrail_observe` 去科幻硬编码，lexicon/主角名参数化到 `GenreProfile`，三体裁各配一套；DONE 文档已补齐 |
@@ -29,6 +29,8 @@
 | V9 生产化地基 | 173：显式 LLM client registry + `aclose_llm_clients()`，pipeline 收尾对称关闭 LLM client + sqlite checkpointer，`SONGYAN_FORCE_EXIT` 最外层兜底；174：`configure_logging()` 接入 CLI + harness，`logs/app/*.jsonl` 落盘，第三方 WARNING 起，关键字段与 `logs/chapter_runs` 对齐；175：`llm_call_usage` 逐调用落库（token/cost 双来源标记、按重试尝试计行、agent 归因），`run_cost_budget` 双检查熔断（DB 权威）+ `total_cost` 双接线，`songyan report` 成本视图；177：`songyan export` 正式 service + CLI，accepted head 正文导出，支持 `md/txt` 与 `flat/arc/volume`，xuanhuan/wuxia Ch100 实库验收通过；178：运行资源迁入包内并用 `importlib.resources` 加载，`evals/seeds` 与 `schema.sql` 入 wheel，非仓库 cwd 资源枚举 + `create-project` + Ch1-3 生成通过；179：`songyan run` 输出 `run_id`，`--mode-id` 默认回读项目 mode，README CLI 表补 `index`；180：`songyan doctor` 默认无成本只读自检，支持 JSON、显式 DB 初始化与 LLM client 探针；181：GitHub Actions 覆盖 ruff/mypy/default pytest/CLI pytest，CLI 测试与 mypy 清零；182：`scripts/five_gate_check.py` 与 `scripts/segment_audit.py` 正式收编，包内 sci-fi baseline，双体裁 Ch100 重放 PASS；183：`songyan profile show/diff/upsert` 上线，支持 DB override 调参不改代码；184：genres/creative_modes 包内 `_schema.json` + loader 预校验上线，坏资源 fail fast，`_schema` 元文件不污染资源列表 |
 | V9.4 urban 标定 | **Task 185 已完成（2026-07-20）**：base_budget=12000 经 run1/run2（DB override）/run3（registry 默认值）三轮 end15 实跑标定，budget 峰值 ≤0.9643、emergency=0（172k 的 17 次连续 emergency 消除）；T9 全部命中逐条定性与定点修（检测器精度 8 项 + urban writer_rules 禁 `//` 注释体），终态检测器复测 run3/run2 accepted 正文 **T9=0**；run3 15/15、overdue 3、CED 5.46；185 终态初值为 12000（187.p 后 Ch100 爬坡 registry 为 14000）；scifi end10 回归 10/10、T9 1→0（精度修复预期后果）、无漂移；执行记录见 `archive/v9/185-urban-short-window-calibration-DONE.md` |
 | V9.5 urban Ch100 | **Task 187 已完成（2026-07-22）**：正式样本 DB `.tmp/task172b_urban_ch100.db`、project `81e345042b124ee2a73094b82e4be555`、run `run-d22b1a44`；Ch1-Ch100 **100/100 accepted**，five-gate PASS（budget 0.9595、CED 0.11、overdue 100、health 8.6、gap 0），segment audit PASS（critical_orphans=0、halt_would_fire=false），T9=0（187.x/y/z precision 修复 + deterministic clean 后复跑）。终判证据落盘 `.tmp/187_urban_ch100_final.json` / `.tmp/187_seg100_audit.json` / `.tmp/187_seg100_metrics.md` |
+| V10.1 Ch200 baseline | **Task 189 已完成（2026-07-23）**：sci-fi Ch200 事实源 `.tmp/task171_ch1_ch200.db`、project `835afdf11a294b5eac74a5d8998bd9a2`、run `run-fb39245c`；Ch125/150/175/200 显式 baseline 回放均 PASS；canonical baseline `tasks/189-scifi-ch200-baseline.json`（`.tmp/189_scifi_ch200_baseline.json` 仅为可选工作副本）；Ch200 指标 budget 0.9888、CED 0.3803、overdue 352、health 9.8、accepted 200/200、T9=0、segment audit 已按 `up_to=200` 截断且 critical_orphans=0 / halt_would_fire=false；完整 `songyan metrics` Ch200 慢路径路由至 Task 191 或后缀修复 |
+| V10.1 Ch100 盘点 | **Task 190 已完成（2026-07-24）**：xuanhuan=REBUILD_REQUIRED（DB 被覆盖，仅 1 章 0 accepted，project_id 已变）、wuxia=BLOCKED_DIRTY_SAMPLE（100/100、five-gate PASS、T9=1 meta Ch28 省略号占位，需 pre-Ch200 clean）、urban=CONTINUE_READY（100/100、five-gate PASS、T9=0）；统一盘点文件 `tasks/190-ch100-terminal-source-inventory-DONE.md` + `.tmp/190_ch100_source_inventory.json` |
 | V9.1 阶段 D 实跑验收（2026-07-19） | 熔断实证：¥0.05 预算 ¥0.0514 停（paused + 成本明细 + 章保留），提额 resume 至 completed，成本跨 3 进程 0.0514→0.3647 连续；scifi end10：10/10、0 halt、overdue=0、budget 峰值 0.8325、usage 151 行 estimate 0%、总成本 ¥0.886（≈¥0.089/章）、report 成本视图正确；173 挂死根因确证（sqlite checkpointer 泄漏）真修后 2.5s 自然退出；T9=1（Ch4 countdown_increase，diagnostic 级内容启发式，非系统性） |
 | 172c wuxia 段 3 | Ch51-75 完成（75/75 accepted，0 halt）；Ch75 五门：budget PASS、CED FAIL、**overdue 203 vs sci-fi 117 FAIL**、health 5.6 FAIL、completeness PASS |
 | 172c.r 修复落地 | resolve 失效四层根因全修：prompt card 1.0.4 补 resolve 契约、settlement 事实源纳 overdue、resolve 防幻觉校验、5.3 同事务覆写修复；health 口径对齐 vdim（archived/dormant/active-overdue 全计）；12 新测试绿 |
@@ -90,16 +92,21 @@
 
 ## 下一步
 
-1. **Task 189（未开工）**：先执行 Ch200 baseline 与 checkpoint 冻结，确认 sci-fi Ch200 DB / project_id / run_id，并生成显式 Ch200 baseline。
-2. **Task 190/191（未开工）**：189 完成后盘点三体裁 Ch100 终点事实源，再准备 Ch200 harness；191 准入前不启动 192-194。
-3. **V10 开工纪律**：189-191 完成前，不直接启动 Ch200 或优秀度实现；优秀度信号先 report/observe，不进入自动硬门。
-3. **守护项**：后续 CED 仍使用 consistency-only、merged/source、正文证据口径；不得把文学 craft 或 `rule-mr-*` 聚合工作项计入 CED；T9 仍不接受解释性豁免。
+1. **Task 191（下一步，未开工）**：在 Task 190 事实源明确后准备 Ch200 harness；191 准入前不启动 192-194。
+2. **xuanhuan Ch100 重建**：DB 已覆盖不可用，需在 Task 191 harness 就绪后重新跑 Ch100（REBUILD_REQUIRED），再进入 Ch200 爬坡。
+3. **wuxia Ch28 clean**：T9=1（Ch28 省略号占位段），需在 Task 193 启动前执行 deterministic clean 并重跑 T9 确认 T9=0；其余章节可直接续跑。
+4. **V10 开工纪律**：190/191 完成前，不直接启动非 sci-fi Ch200 或优秀度实现；优秀度信号先 report/observe，不进入自动硬门。
+5. **守护项**：后续 CED 仍使用 consistency-only、merged/source、正文证据口径；不得把文学 craft 或 `rule-mr-*` 聚合工作项计入 CED；T9 仍不接受解释性豁免；Ch125+ five-gate 必须显式传入 `tasks/189-scifi-ch200-baseline.json`。
 
 ## 入口
 
-- **V10 规划入口（未开工）：`tasks/V10-README.md`**
+- **V10 规划入口（V10.1 前置中）：`tasks/V10-README.md`**
+- V10 Task 189 DONE：`tasks/189-ch200-baseline-and-checkpoints-DONE.md`
+- V10 Task 189 baseline：`tasks/189-scifi-ch200-baseline.json`
 - V10 Task 189 任务书：`tasks/189-ch200-baseline-and-checkpoints.md`
 - V10 Task 190 任务书：`tasks/190-ch100-terminal-source-inventory.md`
+- V10 Task 190 DONE：`tasks/190-ch100-terminal-source-inventory-DONE.md`
+- V10 Task 190 统一盘点：`.tmp/190_ch100_source_inventory.json`
 - V10 Task 191 任务书：`tasks/191-ch200-harness-preparation.md`
 - V9 任务事实入口（已完成）：`tasks/V9-README.md`
 - V9 归档索引：`archive/v9/INDEX.md`

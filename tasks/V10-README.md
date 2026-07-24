@@ -2,9 +2,9 @@
 
 > **阶段**: 跨体裁 Ch200 + 优秀度信号包 + 结构升级 spike
 > **定位**: V10 不是开源交付体验阶段，而是工程版 1.0 前的质量与长度再验证阶段：证明多体裁长窗口仍稳定，并把“好不好看/是否有 AI 腔/是否同质化”从主观讨论推进到可复核信号。
-> **当前口径**: V9 已全量闭环；V10 规划入口已建立，尚未启动实跑或代码实现。V10 不再补 V9 生产化地基，也不做 V11 的外部用户可用化收尾。
+> **当前口径**: V9 已全量闭环；V10 规划入口已建立，Task 189 已完成 sci-fi Ch200 baseline/checkpoint 冻结；Task 190/191 尚未开工。V10 不再补 V9 生产化地基，也不做 V11 的外部用户可用化收尾。
 > **任务编号**: V10 预计从 Task 189 开始；本文不占任务号。只有可独立执行、独立验收、独立出 DONE 文档的工作项才编号；撞墙修复继续按父任务字母后缀登记（如 `192.p`）。
-> **状态**: ◻ 规划中（等待 V10 任务书评审与首个可执行任务开工）
+> **状态**: ◐ V10.1 前置中（Task 189 ✅；Task 190/191 ◻；尚未启动非 sci-fi Ch200 长跑）
 
 本文是 V10 阶段任务规划入口。V9 历史事实入口见 `tasks/V9-README.md`，V9 单项任务归档见 `archive/v9/INDEX.md`。
 
@@ -105,13 +105,13 @@ V10 不把结构升级强行并入主流程。spike 的目标是形成取舍结�
 
 | Task | 名称 | 状态 | 内容要点 | 验收要点 |
 |------|------|:----:|----------|----------|
-| 189 | Ch200 baseline 与 checkpoint 冻结 | ◻ | sci-fi Ch200 baseline 重放；形成 Ch125/150/175/200 对标表；明确 CED/overdue/health/T9 口径 | 任务书：`tasks/189-ch200-baseline-and-checkpoints.md`；baseline 文件入包或归档；工具重放与 V7 报告一致 |
-| 190 | Ch100 终点事实源盘点 | ◻ | 盘点 xuanhuan/wuxia/urban clean Ch100 DB、project_id、run_id、accepted head、T9 状态 | 任务书：`tasks/190-ch100-terminal-source-inventory.md`；每个体裁有可复用或需重建的明确结论 |
+| 189 | Ch200 baseline 与 checkpoint 冻结 | ✅ | sci-fi Ch200 baseline 重放；形成 Ch125/150/175/200 对标表；明确 CED/overdue/health/T9 口径 | DONE：`tasks/189-ch200-baseline-and-checkpoints-DONE.md`；冻结 baseline：`tasks/189-scifi-ch200-baseline.json`；工具重放与 V7 报告一致 |
+| 190 | Ch100 终点事实源盘点 | ✅ | 盘点 xuanhuan/wuxia/urban clean Ch100 DB、project_id、run_id、accepted head、T9 状态 | DONE：`tasks/190-ch100-terminal-source-inventory-DONE.md`；urban CONTINUE_READY，wuxia BLOCKED_DIRTY_SAMPLE（T9=1，需 Ch28 clean），xuanhuan REBUILD_REQUIRED |
 | 191 | Ch200 harness 准备 | ◻ | 参数化 `run_172b_ch100_climb.py` 或新增 Ch200 harness；固定 DB 路径、预算、wrapper、报告路径 | 任务书：`tasks/191-ch200-harness-preparation.md`；dry-run / help / 路径测试通过；不改五门判定函数 |
 
 ### V10.2 跨体裁 Ch200 爬坡
 
-> 192-194 的正式任务书应在 189-191 完成后再写，避免在 baseline、Ch100 起点和 harness 未冻结前写入假设性命令。
+> 192-194 的正式任务书应在 190-191 完成后再写，避免在 Ch100 起点和 harness 未冻结前写入假设性命令；Ch125+ five-gate 必须显式传入 Task 189 冻结的 Ch200 baseline：`tasks/189-scifi-ch200-baseline.json`。
 
 | Task | 名称 | 状态 | 内容要点 | 验收要点 |
 |------|------|:----:|----------|----------|
@@ -151,7 +151,7 @@ V10 不把结构升级强行并入主流程。spike 的目标是形成取舍结�
 
 ## 执行纪律
 
-1. **先口径，后实跑**：189-191 完成前，不启动任何 Ch200 长跑。
+1. **先口径，后实跑**：190/191 完成前，不启动任何非 sci-fi Ch200 长跑。
 2. **段边界早停**：Ch125 / Ch150 / Ch175 / Ch200 任一段五门不过，先冻结现场并路由定点修复。
 3. **优秀度先离线/observe**：优秀度信号未校准前不得进入自动门禁，也不得默认注入生成 prompt。
 4. **诊断 DB 不作终判样本**：机制修复后必须 clean rerun。

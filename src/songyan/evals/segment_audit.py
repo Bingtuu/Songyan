@@ -116,9 +116,10 @@ def collect_segment_audit(
         critical_orphans, total_orphans = _predict_orphans(
             cur,
             project_id,
+            resolved_up_to,
             next_audit_chapter,
         )
-        health_trajectory = _collect_health_trajectory(cur, project_id)
+        health_trajectory = _collect_health_trajectory(cur, project_id, resolved_up_to)
 
     return SegmentAuditReport(
         project_id=project_id,
@@ -192,11 +193,17 @@ def _is_legacy_evidence_issue(issue: dict[str, Any]) -> bool:
     return severity in {"critical", "major"} and bool(issue.get("evidence_quote"))
 
 
-def _predict_orphans(cur: Any, project_id: str, next_audit_chapter: int) -> tuple[int, int]:
+def _predict_orphans(
+    cur: Any,
+    project_id: str,
+    up_to: int,
+    next_audit_chapter: int,
+) -> tuple[int, int]:
     cur.execute(
         """SELECT last_mentioned_chapter, category FROM setting_tracking
-           WHERE project_id = ? AND status = 'active'""",
-        (project_id,),
+           WHERE project_id = ? AND status = 'active'
+             AND (last_mentioned_chapter IS NULL OR last_mentioned_chapter <= ?)""",
+        (project_id, up_to),
     )
     critical_orphans = 0
     total_orphans = 0
@@ -211,11 +218,16 @@ def _predict_orphans(cur: Any, project_id: str, next_audit_chapter: int) -> tupl
     return critical_orphans, total_orphans
 
 
-def _collect_health_trajectory(cur: Any, project_id: str) -> tuple[HealthPoint, ...]:
+def _collect_health_trajectory(
+    cur: Any,
+    project_id: str,
+    up_to: int,
+) -> tuple[HealthPoint, ...]:
     cur.execute(
         """SELECT checked_up_to_chapter, overall_health_score FROM continuity_reports
-           WHERE project_id = ? ORDER BY checked_up_to_chapter""",
-        (project_id,),
+           WHERE project_id = ? AND checked_up_to_chapter <= ?
+           ORDER BY checked_up_to_chapter""",
+        (project_id, up_to),
     )
     return tuple(
         HealthPoint(

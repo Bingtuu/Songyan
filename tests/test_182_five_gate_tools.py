@@ -296,6 +296,23 @@ def test_evaluate_project_fails_budget_gate_when_halt_record_exists(tmp_path: Pa
     )
 
 
+def test_explicit_baseline_rejects_chapter_before_first_point(tmp_path: Path) -> None:
+    db_path = tmp_path / "metrics.db"
+    baseline_path = tmp_path / "ch200-baseline.json"
+    _init_metric_db(db_path)
+    _seed_metric_rows(db_path)
+    _write_baseline(baseline_path)
+
+    with pytest.raises(FiveGateToolError, match="starts at Ch2"):
+        evaluate_project(
+            db_path,
+            project_id="p1",
+            genre="fixture",
+            up_to=1,
+            baseline_path=baseline_path,
+        )
+
+
 def _init_segment_db(db_path: Path) -> None:
     conn = sqlite3.connect(db_path)
     conn.executescript(
@@ -376,6 +393,41 @@ def test_segment_audit_collects_hotspots_orphans_and_health(tmp_path: Path) -> N
         {"chapter_number": 3, "issue_count": 1},
     ]
     assert [point.health for point in report.health_trajectory] == [8.1, 8.7]
+
+
+def test_segment_audit_up_to_excludes_future_state(tmp_path: Path) -> None:
+    db_path = tmp_path / "segment.db"
+    _init_segment_db(db_path)
+    conn = sqlite3.connect(db_path)
+    conn.executemany(
+        "INSERT INTO chapter_heads VALUES (?, ?, ?)",
+        [("p1", 1, "v1"), ("p1", 2, "v2"), ("p1", 3, "v3"), ("p1", 4, "v4")],
+    )
+    conn.executemany(
+        "INSERT INTO chapter_versions VALUES (?, ?, ?)",
+        [("v1", "p1", 1), ("v2", "p1", 2), ("v3", "p1", 3), ("v4", "p1", 4)],
+    )
+    conn.executemany(
+        "INSERT INTO setting_tracking VALUES (?, ?, ?, ?)",
+        [
+            ("p1", 0, "critical", "active"),
+            ("p1", 4, "critical", "active"),
+        ],
+    )
+    conn.executemany(
+        "INSERT INTO continuity_reports VALUES (?, ?, ?)",
+        [("p1", 3, 8.7), ("p1", 4, 3.0)],
+    )
+    conn.commit()
+    conn.close()
+
+    report = collect_segment_audit(db_path, project_id="p1", up_to=3, top=2)
+
+    assert report.next_audit_chapter == 6
+    assert report.critical_orphans == 1
+    assert report.total_orphans == 1
+    assert [point.checked_up_to_chapter for point in report.health_trajectory] == [3]
+    assert [point.health for point in report.health_trajectory] == [8.7]
 
 
 def test_segment_audit_rejects_unknown_project_even_with_up_to(tmp_path: Path) -> None:
