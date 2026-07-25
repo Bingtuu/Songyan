@@ -2,9 +2,9 @@
 
 > **阶段**: 跨体裁 Ch200 + 优秀度信号包 + 结构升级 spike
 > **定位**: V10 不是开源交付体验阶段，而是工程版 1.0 前的质量与长度再验证阶段：证明多体裁长窗口仍稳定，并把“好不好看/是否有 AI 腔/是否同质化”从主观讨论推进到可复核信号。
-> **当前口径**: V9 已全量闭环；V10 规划入口已建立，Task 189 已完成 sci-fi Ch200 baseline/checkpoint 冻结，Task 190 已完成 Ch100 终点事实源盘点（xuanhuan=REBUILD_REQUIRED、wuxia=BLOCKED_DIRTY_SAMPLE、urban=CONTINUE_READY）；Task 191 已完成 Ch200 harness 准备；Task 192/193/194 正式任务书已建立。Task 192.p / 192.q / 192.r / 192.s / 192.t 均已完成；xuanhuan clean Ch100 rebuild 已推进到 Ch75（75/75 accepted，failed=[]，T9=0，segment audit PASS），尚未完成 Ch100 source 复核。V10 不再补 V9 生产化地基，也不做 V11 的外部用户可用化收尾。
+> **当前口径**: V9 已全量闭环；V10 规划入口已建立，Task 189 已完成 sci-fi Ch200 baseline/checkpoint 冻结，Task 190 已完成 Ch100 终点事实源盘点（xuanhuan=REBUILD_REQUIRED、wuxia=BLOCKED_DIRTY_SAMPLE、urban=CONTINUE_READY）；Task 191 已完成 Ch200 harness 准备；Task 192/193/194 正式任务书已建立。Task 192.p / 192.q / 192.r / 192.s / 192.t 均已完成；xuanhuan clean Ch100 rebuild 已推进到 Ch81（81/81 accepted，failed=[]），但 Ch81 触发 `health_low_p1_halt`，segment audit @81 `critical_orphans=10` / `halt_would_fire=true`；已建立 Task 192.u，修复前不得继续 Ch82/100 或初始化 Ch200。V10 不再补 V9 生产化地基，也不做 V11 的外部用户可用化收尾。
 > **任务编号**: V10 预计从 Task 189 开始；本文不占任务号。只有可独立执行、独立验收、独立出 DONE 文档的工作项才编号；撞墙修复继续按父任务字母后缀登记（如 `192.p`）。
-> **状态**: ◐ V10.2 Task 192 clean Ch100 rebuild 中（Task 189 ✅；Task 190 ✅；Task 191 ✅；Task 192.p/q/r/s/t ✅；xuanhuan Ch75 ✅；尚未启动非 sci-fi Ch200 长跑）
+> **状态**: ⏸ V10.2 Task 192 clean Ch100 rebuild Ch81 hard-gate blocker（Task 189 ✅；Task 190 ✅；Task 191 ✅；Task 192.p/q/r/s/t ✅；xuanhuan Ch81 生成 ✅；Task 192.u 待修；尚未启动非 sci-fi Ch200 长跑）
 
 本文是 V10 阶段任务规划入口。V9 历史事实入口见 `tasks/V9-README.md`，V9 单项任务归档见 `archive/v9/INDEX.md`。
 
@@ -115,12 +115,13 @@ V10 不把结构升级强行并入主流程。spike 的目标是形成取舍结�
 
 | Task | 名称 | 状态 | 内容要点 | 验收要点 |
 |------|------|:----:|----------|----------|
-| 192 | xuanhuan Ch200 爬坡 | ◐ | clean Ch100 rebuild 已到 Ch75：75/75 accepted、failed=[]、five-gate PASS、T9=0，192.t 后 segment audit PASS；后续继续 Ch100，复核后再用 Task 191 harness 初始化 V10 Ch200 DB | 任务书：`tasks/192-xuanhuan-ch200-climb.md`；执行报告：`docs/reports/192-xuanhuan-ch100-climb.md` |
+| 192 | xuanhuan Ch200 爬坡 | ⏸ | clean Ch100 rebuild 已到 Ch81：81/81 accepted、failed=[]，但 Ch81 触发 `health_low_p1_halt` 且 segment audit @81 `critical_orphans=10`；需先完成 192.u 后再继续 Ch100 | 任务书：`tasks/192-xuanhuan-ch200-climb.md`；执行报告：`docs/reports/192-xuanhuan-ch100-climb.md` |
 | 192.p | scifi 短窗口 ContextEmergency 回归修复 | ✅ | 修复 Task 192 工具链改动后暴露的 scifi 短窗口回归失败；settlement 结构化输出预算提升到 8192；scifi end10 复跑 10/10 completed | DONE：`tasks/192.p-scifi-short-regression-context-emergency-DONE.md` |
 | 192.q | xuanhuan Ch17 CreativeDirector JSON parse 修复 | ✅ | CreativeDirector 改为复用通用 JSON repair parser；Ch17 resume 成功 | DONE：`tasks/192.q-xuanhuan-ch17-creative-director-json-parse-DONE.md` |
 | 192.r | xuanhuan Ch24 settlement numerical validation 处理 | ✅ | 冻结 Ch24 数值结算失败现场；resume 后 Ch24/25 成功，failed=[] | DONE：`tasks/192.r-xuanhuan-ch24-settlement-numerical-validation-DONE.md` |
 | 192.s | xuanhuan Ch50 T9 duplicate clean | ✅ | Ch50 初判 T9 duplicate=1（Ch8 重复段落）；使用版本化 deterministic clean 创建 `clean-8-6-cd06a7b7`，复判 T9=0、five-gate PASS、segment audit PASS | DONE：`tasks/192.s-xuanhuan-ch50-t9-duplicate-clean-DONE.md` |
 | 192.t | xuanhuan Ch75 segment audit critical orphan repair | ✅ | Ch75 初判 segment audit `critical_orphans=5`；通过 repository 刷新 5 条 active critical tracking 到 Ch75 accepted version `v-6afe9dd8`，复判 `critical_orphans=0` / `halt_would_fire=false` | DONE：`tasks/192.t-xuanhuan-ch75-segment-audit-critical-orphans-DONE.md` |
+| 192.u | xuanhuan Ch81 health_low_p1 critical orphan repair | ⏸ | Ch81 触发 `health_low_p1_halt: P1_count=1 (critical orphaned setting)`；segment audit @81 `critical_orphans=10`；冻结 `.tmp/backups/192u_xuanhuan_ch81_health_low_p1_halt_20260726-0202/`；修复前不得继续 Ch82/100 | 任务书：`tasks/192.u-xuanhuan-ch81-health-low-p1-critical-orphan.md` |
 | 193 | wuxia Ch200 爬坡 | ◐ | 任务书已建立；先对 Ch28 省略号占位执行版本化 deterministic clean 并重跑 T9=0，再进入 Ch200 分段爬坡 | 任务书：`tasks/193-wuxia-ch200-climb.md`；未启动实跑 |
 | 194 | urban Ch200 爬坡 | ◐ | 任务书已建立；urban 是当前唯一 CONTINUE_READY source，可用 Task 191 harness 初始化并按 Ch125/150/175/200 推进 | 任务书：`tasks/194-urban-ch200-climb.md`；未启动实跑 |
 | 195 | 跨体裁 Ch200 总验收 | ◻ | 汇总三体裁 Ch200 与 sci-fi baseline；形成 V10 长窗口结论 | 总报告落盘；STATUS/README/INDEX 更新 |
