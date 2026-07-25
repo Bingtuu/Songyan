@@ -2,9 +2,9 @@
 
 > **阶段**: 跨体裁 Ch200 + 优秀度信号包 + 结构升级 spike
 > **定位**: V10 不是开源交付体验阶段，而是工程版 1.0 前的质量与长度再验证阶段：证明多体裁长窗口仍稳定，并把“好不好看/是否有 AI 腔/是否同质化”从主观讨论推进到可复核信号。
-> **当前口径**: V9 已全量闭环；V10 规划入口已建立，Task 189 已完成 sci-fi Ch200 baseline/checkpoint 冻结；Task 190 已完成 Ch100 终点事实源盘点（xuanhuan=REBUILD_REQUIRED、wuxia=BLOCKED_DIRTY_SAMPLE、urban=CONTINUE_READY）；Task 191 已完成 Ch200 harness 准备；Task 192/193/194 正式任务书已建立，尚未启动实跑。V10 不再补 V9 生产化地基，也不做 V11 的外部用户可用化收尾。
+> **当前口径**: V9 已全量闭环；V10 规划入口已建立，Task 189 已完成 sci-fi Ch200 baseline/checkpoint 冻结，Task 190 已完成 Ch100 终点事实源盘点（xuanhuan=REBUILD_REQUIRED、wuxia=BLOCKED_DIRTY_SAMPLE、urban=CONTINUE_READY）；Task 191 已完成 Ch200 harness 准备；Task 192/193/194 正式任务书已建立。Task 192 前置修复 `tasks/192.p-scifi-short-regression-context-emergency-DONE.md` 已完成，scifi 短窗口回归已恢复绿灯；下一步回到 xuanhuan clean Ch100 rebuild。V10 不再补 V9 生产化地基，也不做 V11 的外部用户可用化收尾。
 > **任务编号**: V10 预计从 Task 189 开始；本文不占任务号。只有可独立执行、独立验收、独立出 DONE 文档的工作项才编号；撞墙修复继续按父任务字母后缀登记（如 `192.p`）。
-> **状态**: ◐ V10.2 任务书已建立（Task 189 ✅；Task 190 ✅；Task 191 ✅；Task 192/193/194 任务书已建；尚未启动非 sci-fi Ch200 长跑）
+> **状态**: ◐ V10.2 Task 192 主线恢复中（Task 189 ✅；Task 190 ✅；Task 191 ✅；Task 192.p ✅；Task 192/193/194 任务书已建；尚未启动非 sci-fi Ch200 长跑）
 
 本文是 V10 阶段任务规划入口。V9 历史事实入口见 `tasks/V9-README.md`，V9 单项任务归档见 `archive/v9/INDEX.md`。
 
@@ -115,7 +115,8 @@ V10 不把结构升级强行并入主流程。spike 的目标是形成取舍结�
 
 | Task | 名称 | 状态 | 内容要点 | 验收要点 |
 |------|------|:----:|----------|----------|
-| 192 | xuanhuan Ch200 爬坡 | ◐ | 任务书已建立；先恢复/重建 clean Ch100，再用 Task 191 harness 初始化 V10 Ch200 DB 并按 Ch125/150/175/200 审计 | 任务书：`tasks/192-xuanhuan-ch200-climb.md`；未启动实跑 |
+| 192 | xuanhuan Ch200 爬坡 | ◐ | 任务书已建立；192.p 已恢复 scifi 回归绿灯；下一步重新初始化 xuanhuan clean Ch100 rebuild，再用 Task 191 harness 初始化 V10 Ch200 DB 并按 Ch125/150/175/200 审计 | 任务书：`tasks/192-xuanhuan-ch200-climb.md`；未启动实跑 |
+| 192.p | scifi 短窗口 ContextEmergency 回归修复 | ✅ | 修复 Task 192 工具链改动后暴露的 scifi 短窗口回归失败；settlement 结构化输出预算提升到 8192；scifi end10 复跑 10/10 completed | DONE：`tasks/192.p-scifi-short-regression-context-emergency-DONE.md` |
 | 193 | wuxia Ch200 爬坡 | ◐ | 任务书已建立；先对 Ch28 省略号占位执行版本化 deterministic clean 并重跑 T9=0，再进入 Ch200 分段爬坡 | 任务书：`tasks/193-wuxia-ch200-climb.md`；未启动实跑 |
 | 194 | urban Ch200 爬坡 | ◐ | 任务书已建立；urban 是当前唯一 CONTINUE_READY source，可用 Task 191 harness 初始化并按 Ch125/150/175/200 推进 | 任务书：`tasks/194-urban-ch200-climb.md`；未启动实跑 |
 | 195 | 跨体裁 Ch200 总验收 | ◻ | 汇总三体裁 Ch200 与 sci-fi baseline；形成 V10 长窗口结论 | 总报告落盘；STATUS/README/INDEX 更新 |

@@ -53,6 +53,7 @@ TEMPLATE_ID = os.getenv("TEMPLATE_ID", "xuanhuan")
 RUN_ID = os.getenv("RUN_ID", "172b")
 SEGMENT = int(os.getenv("SEGMENT", "25"))
 HALT_RETRIES = int(os.getenv("HALT_RETRIES", "2"))
+ON_FAILURE = os.getenv("ON_FAILURE", "abort" if RUN_ID == "192" else "isolate")
 DB_PATH = Path(f".tmp/task172b_{TEMPLATE_ID}_ch100.db")
 PROJECT_FILE = Path(f".tmp/task172b_{TEMPLATE_ID}_project.json")
 REPORT_PATH = Path(f"docs/reports/{RUN_ID}-{TEMPLATE_ID}-ch100-climb.md")
@@ -235,7 +236,10 @@ async def main() -> None:
         raise ValueError(f"project not found: {project_id}")
 
     gate_config = GateConfig.for_mode("enforce")
-    print(f"[climb] project={project_id} genre={project.genre_id} to=Ch{args.to} seg={SEGMENT}")
+    print(
+        f"[climb] project={project_id} genre={project.genre_id} "
+        f"to=Ch{args.to} seg={SEGMENT} on_failure={ON_FAILURE}"
+    )
 
     segments: list[dict[str, Any]] = []
     halt_reason: str | None = None
@@ -253,11 +257,20 @@ async def main() -> None:
                     chapter_range=(1, seg_end),
                     mode_id=project.mode_id,
                     auto_confirm=True,
-                    on_failure="isolate",
+                    on_failure=ON_FAILURE,
                     gate_config=gate_config,
                     resume=True,
                 )
                 print(f"completed={len(result.chapters_completed)} failed={result.chapters_failed}")
+                if result.chapters_failed and ON_FAILURE in {"abort", "retry"}:
+                    halt_reason = (
+                        f"chapter_failed_abort: {result.chapters_failed}"
+                    )
+                    print(
+                        "=== stopping climb due to failed chapters "
+                        f"-> route {_halt_route()} ==="
+                    )
+                    break
                 halt_reason = None
                 break
             except AutoHaltException as exc:
@@ -272,7 +285,7 @@ async def main() -> None:
 
         if halt_reason:
             print(
-                "=== stopping climb due to halt (retries exhausted) "
+                "=== stopping climb due to halt/failed chapter "
                 f"-> route {_halt_route()} ==="
             )
             break
@@ -291,7 +304,7 @@ def _write_report(
         "",
         f"- 生成时间: {datetime.now().isoformat()}",
         f"- 项目: `{project_id}`  体裁: `{genre}`  目标: Ch{target}",
-        f"- Gate: enforce / isolate / resume  Halt: {halt_reason or 'None'}",
+        f"- Gate: enforce / {ON_FAILURE} / resume  Halt: {halt_reason or 'None'}",
         "",
         "## 分段指标",
         "",

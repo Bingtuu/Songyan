@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib
 from importlib.resources import files
 
 import scripts.run_172b_ch100_climb as climb
@@ -129,11 +130,38 @@ def test_critical_orphan_and_overdue_keep_blocking_severity() -> None:
     assert by_type["foreshadowing"].priority == 10
 
 
+def test_task192_ch100_rebuild_defaults_to_abort_failure_policy(monkeypatch) -> None:
+    """Task 192 clean source rebuild must stop on the first failed chapter."""
+    monkeypatch.setenv("RUN_ID", "192")
+    monkeypatch.delenv("ON_FAILURE", raising=False)
+    reloaded = importlib.reload(climb)
+
+    try:
+        assert reloaded.ON_FAILURE == "abort"
+    finally:
+        monkeypatch.setenv("RUN_ID", "172b")
+        importlib.reload(climb)
+
+
+def test_ch100_climb_legacy_default_remains_isolate(monkeypatch) -> None:
+    """Historical 172b/172c climb diagnostics keep the existing isolate default."""
+    monkeypatch.delenv("RUN_ID", raising=False)
+    monkeypatch.delenv("ON_FAILURE", raising=False)
+    reloaded = importlib.reload(climb)
+
+    try:
+        assert reloaded.RUN_ID == "172b"
+        assert reloaded.ON_FAILURE == "isolate"
+    finally:
+        importlib.reload(climb)
+
+
 def test_172c_report_title_and_halt_route_are_not_172b(tmp_path, monkeypatch) -> None:
     """RUN_ID=172c report should route to the latest wuxia repair path."""
     report_path = tmp_path / "172c-wuxia-ch100-climb.md"
     monkeypatch.setattr(climb, "RUN_ID", "172c")
     monkeypatch.setattr(climb, "REPORT_PATH", report_path)
+    monkeypatch.setattr(climb, "ON_FAILURE", "isolate")
 
     climb._write_report(
         project_id="proj-wuxia",
@@ -156,5 +184,6 @@ def test_172c_report_title_and_halt_route_are_not_172b(tmp_path, monkeypatch) ->
 
     text = report_path.read_text(encoding="utf-8")
     assert text.startswith("# Task 172c: wuxia Ch100 爬坡验证报告")
+    assert "enforce / isolate / resume" in text
     assert "172c.t" in text
     assert "172b.p" not in text

@@ -2262,7 +2262,10 @@ class TestExtractSettlement:
         content = "林凡握紧双拳，眼中燃起怒火。他取出一枚下品灵石，开始吸收其中的灵气。"
         llm_response = _make_valid_llm_response()
 
-        with patch("songyan.agents.settlement_extractor.call_llm", return_value=llm_response):
+        with patch(
+            "songyan.agents.settlement_extractor.call_llm",
+            return_value=llm_response,
+        ) as mock_call:
             with patch(
                 "songyan.agents.settlement_extractor._load_current_character_states",
                 return_value=[
@@ -2290,6 +2293,7 @@ class TestExtractSettlement:
         assert len(result.numerical_updates) == 1
         assert result.validation_status == "valid"
         assert result.validation_errors == []
+        assert mock_call.call_args.kwargs["max_tokens"] == 8192
 
     async def test_task112_normalizes_invalid_setting_key_before_validation(self) -> None:
         content = "实验室位置与历史被第一次完整揭示。"

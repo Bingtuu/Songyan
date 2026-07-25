@@ -6,7 +6,7 @@
 
 | 项 | 结论 |
 |----|------|
-| 当前阶段 | **V10.2 任务书已建立，尚未启动实跑**：V9 已全量闭环（2026-07-23），事实入口 `tasks/V9-README.md`，归档入口 `archive/v9/INDEX.md`。V10 规划入口为 `tasks/V10-README.md`；Task 189 已冻结 sci-fi Ch200 baseline/checkpoint；Task 190 已完成 xuanhuan/wuxia/urban Ch100 终点事实源盘点（xuanhuan=REBUILD_REQUIRED、wuxia=BLOCKED_DIRTY_SAMPLE、urban=CONTINUE_READY）；Task 191 已完成 Ch200 harness 准备；Task 192/193/194 正式任务书已建立；仍未启动非 sci-fi Ch200 长跑或优秀度实现 |
+| 当前阶段 | **V10.2 Task 192 主线恢复中**：V9 已全量闭环（2026-07-23），事实入口 `tasks/V9-README.md`，归档入口 `archive/v9/INDEX.md`。V10 规划入口为 `tasks/V10-README.md`；Task 189 已冻结 sci-fi Ch200 baseline/checkpoint；Task 190 已完成 xuanhuan/wuxia/urban Ch100 终点事实源盘点（xuanhuan=REBUILD_REQUIRED、wuxia=BLOCKED_DIRTY_SAMPLE、urban=CONTINUE_READY）；Task 191 已完成 Ch200 harness 准备；Task 192/193/194 正式任务书已建立；Task 192.p 已完成并恢复 scifi 短窗口回归绿灯；Task 192 的 xuanhuan clean Ch100 rebuild 尚未完成；非 sci-fi Ch200 长跑和优秀度实现仍未启动 |
 | V7 收尾 | **已完成**。sci-fi/space_opera + webnovel_intense 单一体裁稳定跑到 Ch200，200/200 accepted，D1 hard clean pass；Ch201-Ch220 20/20 accepted |
 | V8.1 运行时画像 | **已完成**（Task 172a + 172a.p）。`GenreRuntimeProfile` 把 Context Diet 2.0 运行时契约从 sci-fi 默认值解耦；xuanhuan Ch8 halt 已消除（base_budget=15000） |
 | V8.3 文学护栏 | **已完成**（Task 172d）。`literary_guardrail_observe` 去科幻硬编码，lexicon/主角名参数化到 `GenreProfile`，三体裁各配一套；DONE 文档已补齐 |
@@ -32,7 +32,8 @@
 | V10.1 Ch200 baseline | **Task 189 已完成（2026-07-23）**：sci-fi Ch200 事实源 `.tmp/task171_ch1_ch200.db`、project `835afdf11a294b5eac74a5d8998bd9a2`、run `run-fb39245c`；Ch125/150/175/200 显式 baseline 回放均 PASS；canonical baseline `tasks/189-scifi-ch200-baseline.json`（`.tmp/189_scifi_ch200_baseline.json` 仅为可选工作副本）；Ch200 指标 budget 0.9888、CED 0.3803、overdue 352、health 9.8、accepted 200/200、T9=0、segment audit 已按 `up_to=200` 截断且 critical_orphans=0 / halt_would_fire=false；完整 `songyan metrics` Ch200 慢路径仍未作为 Task 189 验收证据，后续如需复算走后缀修复或 Ch200 总验收 |
 | V10.1 Ch100 盘点 | **Task 190 已完成（2026-07-24）**：xuanhuan=REBUILD_REQUIRED（DB 被覆盖，仅 1 章 0 accepted，project_id 已变）、wuxia=BLOCKED_DIRTY_SAMPLE（100/100、five-gate PASS、T9=1 meta Ch28 省略号占位，需 pre-Ch200 clean）、urban=CONTINUE_READY（100/100、five-gate PASS、T9=0）；统一盘点文件 `tasks/190-ch100-terminal-source-inventory-DONE.md` + `.tmp/190_ch100_source_inventory.json` |
 | V10.1 Ch200 harness | **Task 191 已完成（2026-07-24）**：新增 `scripts/run_v10_ch200_climb.py`，冻结 V10 Ch200 DB/project/segment/audit/metrics 路径；支持 `--init`、`--init-from-source`、`--status`、`--audit`、`--to` 与 `--dry-run`；强制 Task 190 三态准入（urban allowed，wuxia/xuanhuan blocked），复制前校验 source DB 为 clean Ch100、source 与 Task 190 inventory 匹配、source `genre_id` 匹配、T9 meta/duplicate/timeline clean，并在目标 DB 创建 V10 `project_runs`；Ch125+ five-gate 显式绑定 `tasks/189-scifi-ch200-baseline.json`；聚焦测试 `tests/test_191_ch200_harness.py` **10 passed**，全量 pytest **2993 passed, 2 skipped, 1 xfailed**，ruff 通过；未启动 Ch101 |
-| V10.2 Ch200 任务书 | **Task 192/193/194 任务书已建立（2026-07-24）**：192 要求 xuanhuan 先恢复/重建 clean Ch100，再初始化 Ch200；193 要求 wuxia 先对 Ch28 省略号占位执行版本化 deterministic clean 并重跑 T9=0；194 明确 urban 是当前唯一可直接初始化的 CONTINUE_READY source。三份任务书均强制使用 Task 191 harness、Task 189 baseline、段边界先审计后继续；尚未启动任何非 sci-fi Ch200 实跑 |
+| V10.2 Ch200 任务书 | **Task 192/193/194 任务书已建立（2026-07-24）**：192 要求 xuanhuan 先恢复/重建 clean Ch100，再初始化 Ch200；193 要求 wuxia 先对 Ch28 省略号占位执行版本化 deterministic clean 并重跑 T9=0；194 明确 urban 是当前唯一可直接初始化的 CONTINUE_READY source。Task 192 期间发现 scifi 短窗口回归失败（ContextEmergency halt），已通过 192.p 修复并复验；尚未启动任何非 sci-fi Ch200 实跑 |
+| V10.2 Task 192.p | **已完成（2026-07-25）**：冻结原 scifi 失败现场 `.tmp/backups/192_scifi_short_regression_failed_20260725-120940/`；定位 Ch8 settlement JSON 输出 4096 token 截断导致 parse failure；`SettlementExtractor` 结构化输出预算提升到 8192；`RUN_ID=192` Ch100 rebuild 默认 `ON_FAILURE=abort`，历史 172b/172c 默认 isolate 不变；scifi end10 复跑 `run-e71bccd8` 10/10 completed、failed=[]、wrapper `PASS_NORMAL_EXIT`；全量 pytest **3004 passed, 2 skipped, 1 xfailed**，ruff 全绿；DONE：`tasks/192.p-scifi-short-regression-context-emergency-DONE.md` |
 | V9.1 阶段 D 实跑验收（2026-07-19） | 熔断实证：¥0.05 预算 ¥0.0514 停（paused + 成本明细 + 章保留），提额 resume 至 completed，成本跨 3 进程 0.0514→0.3647 连续；scifi end10：10/10、0 halt、overdue=0、budget 峰值 0.8325、usage 151 行 estimate 0%、总成本 ¥0.886（≈¥0.089/章）、report 成本视图正确；173 挂死根因确证（sqlite checkpointer 泄漏）真修后 2.5s 自然退出；T9=1（Ch4 countdown_increase，diagnostic 级内容启发式，非系统性） |
 | 172c wuxia 段 3 | Ch51-75 完成（75/75 accepted，0 halt）；Ch75 五门：budget PASS、CED FAIL、**overdue 203 vs sci-fi 117 FAIL**、health 5.6 FAIL、completeness PASS |
 | 172c.r 修复落地 | resolve 失效四层根因全修：prompt card 1.0.4 补 resolve 契约、settlement 事实源纳 overdue、resolve 防幻觉校验、5.3 同事务覆写修复；health 口径对齐 vdim（archived/dormant/active-overdue 全计）；12 新测试绿 |
@@ -94,7 +95,7 @@
 
 ## 下一步
 
-1. **Task 192 xuanhuan Ch200（下一步，按编号推进）**：DB 已覆盖不可用，需按 `tasks/192-xuanhuan-ch200-climb.md` 恢复或重新跑 Ch100（REBUILD_REQUIRED），再进入 Ch200 爬坡。
+1. **Task 192 xuanhuan Ch200（下一步，按编号推进）**：192.p 已恢复 scifi 回归绿灯；DB 已覆盖不可用，需按 `tasks/192-xuanhuan-ch200-climb.md` 重新初始化 xuanhuan clean Ch100 rebuild（REBUILD_REQUIRED，`RUN_ID=192` 默认 failed chapter 即停），再进入 Ch200 爬坡。
 2. **Task 193 wuxia Ch28 clean + Ch200**：T9=1（Ch28 省略号占位段），需按 `tasks/193-wuxia-ch200-climb.md` 执行版本化 deterministic clean 并重跑 T9 确认 T9=0；其余章节可直接续跑。
 3. **Task 194 urban Ch200**：urban 是当前唯一 `CONTINUE_READY` 体裁，可按 `tasks/194-urban-ch200-climb.md` 初始化 V10 Ch200 DB；但在当前 goal 下不得跳过 192/193。
 4. **段边界纪律**：Ch125/150/175/200 必须先审计再继续；任一硬门失败时冻结现场并开父任务后缀修复。
@@ -102,7 +103,7 @@
 
 ## 入口
 
-- **V10 规划入口（V10.2 任务书已建立）：`tasks/V10-README.md`**
+- **V10 规划入口（V10.2 Task 192 主线恢复中）：`tasks/V10-README.md`**
 - V10 Task 189 DONE：`tasks/189-ch200-baseline-and-checkpoints-DONE.md`
 - V10 Task 189 baseline：`tasks/189-scifi-ch200-baseline.json`
 - V10 Task 189 任务书：`tasks/189-ch200-baseline-and-checkpoints.md`
@@ -113,6 +114,7 @@
 - V10 Task 191 DONE：`tasks/191-ch200-harness-preparation-DONE.md`
 - V10 Task 191 harness：`scripts/run_v10_ch200_climb.py`
 - V10 Task 192 任务书：`tasks/192-xuanhuan-ch200-climb.md`
+- V10 Task 192.p DONE：`tasks/192.p-scifi-short-regression-context-emergency-DONE.md`
 - V10 Task 193 任务书：`tasks/193-wuxia-ch200-climb.md`
 - V10 Task 194 任务书：`tasks/194-urban-ch200-climb.md`
 - V9 任务事实入口（已完成）：`tasks/V9-README.md`

@@ -355,9 +355,9 @@ python scripts/run_172b_ch100_climb.py --to 100
 | V8 | ✅ 完成 | 多体裁可插拔 + xuanhuan/wuxia Ch100 通过 |
 | V8.5 | ✅ 完成 | 验收后遗留收口：预算上限修复、C 判据三档证据闭环、文档治理 |
 | V9 | ✅ 完成 | 生产化地基（长跑可靠性/导出/打包/CI/成本追踪/质量门工具收编）+ urban 第三体裁 Ch100；urban Ch1-Ch100 100/100 accepted，five-gate PASS，segment audit PASS，T9=0；任务文档已归档 `archive/v9/` |
-| V10 | ◐ V10.2 任务书已建立 | 跨体裁 Ch200、优秀度信号包、结构升级 spike；Task 189 已冻结 sci-fi Ch200 baseline，Task 190 已完成 Ch100 终点事实源盘点，Task 191 已完成 Ch200 harness 准备，Task 192/193/194 任务书已建立，尚未启动非 sci-fi Ch200 长跑 |
+| V10 | ◐ V10.2 Task 192 主线恢复中 | 跨体裁 Ch200、优秀度信号包、结构升级 spike；Task 189 已冻结 sci-fi Ch200 baseline，Task 190 已完成 Ch100 终点事实源盘点，Task 191 已完成 Ch200 harness 准备，Task 192.p 已完成，Task 192/193/194 任务书已建立，尚未启动非 sci-fi Ch200 长跑 |
 
-各阶段事实入口见 [`tasks/V10-README.md`](tasks/V10-README.md)（当前 V10.2 任务书入口）以及 `tasks/V5-README.md`、`tasks/V6-README.md`、`tasks/V7-README.md`、`tasks/V8-README.md`、`tasks/V9-README.md`（均已收尾）；V5-V9 单项任务文档与报告分别归档在 [`archive/v5/`](archive/v5/INDEX.md)、[`archive/v6/`](archive/v6/INDEX.md)、[`archive/v7/`](archive/v7/INDEX.md)、[`archive/v8/`](archive/v8/INDEX.md)、[`archive/v9/`](archive/v9/INDEX.md)。
+各阶段事实入口见 [`tasks/V10-README.md`](tasks/V10-README.md)（当前 V10.2 Task 192 入口）以及 `tasks/V5-README.md`、`tasks/V6-README.md`、`tasks/V7-README.md`、`tasks/V8-README.md`、`tasks/V9-README.md`（均已收尾）；V5-V9 单项任务文档与报告分别归档在 [`archive/v5/`](archive/v5/INDEX.md)、[`archive/v6/`](archive/v6/INDEX.md)、[`archive/v7/`](archive/v7/INDEX.md)、[`archive/v8/`](archive/v8/INDEX.md)、[`archive/v9/`](archive/v9/INDEX.md)。
 
 ---
 
@@ -505,6 +505,7 @@ python scripts/run_172a7_genre_validation.py --templates scifi --end 10
 - [`tasks/191-ch200-harness-preparation-DONE.md`](tasks/191-ch200-harness-preparation-DONE.md) — V10 Task 191：Ch200 harness 准备完成报告
 - [`scripts/run_v10_ch200_climb.py`](scripts/run_v10_ch200_climb.py) — V10 Task 191：Ch200 分段爬坡 harness
 - [`tasks/192-xuanhuan-ch200-climb.md`](tasks/192-xuanhuan-ch200-climb.md) — V10 Task 192：xuanhuan Ch200 爬坡任务书
+- [`tasks/192.p-scifi-short-regression-context-emergency-DONE.md`](tasks/192.p-scifi-short-regression-context-emergency-DONE.md) — V10 Task 192.p：scifi 短窗口 ContextEmergency 回归修复完成报告
 - [`tasks/193-wuxia-ch200-climb.md`](tasks/193-wuxia-ch200-climb.md) — V10 Task 193：wuxia Ch200 爬坡任务书
 - [`tasks/194-urban-ch200-climb.md`](tasks/194-urban-ch200-climb.md) — V10 Task 194：urban Ch200 爬坡任务书
 - [`tasks/V9-README.md`](tasks/V9-README.md) — V9 任务事实入口（已收尾，生产化地基 + urban Ch100）

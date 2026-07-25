@@ -49,6 +49,7 @@ MAX_CONTENT_TOKENS = 6000
 MAX_PROMPT_CHARACTER_STATES = 40
 MAX_PROMPT_SETTINGS = 40
 MAX_PROMPT_FORESHADOWINGS = 30
+STRUCTURED_SETTLEMENT_MAX_TOKENS = 8192
 FORESHADOWING_DUE_WINDOW = 5
 _NO_NUMERICAL_VALUE_MARKERS = {"", "无", "none", "null", "n/a", "na", "未知", "不明"}
 _INVALID_CLOSING_VALUE = float("inf")
@@ -673,7 +674,11 @@ async def extract_settlement(
     # Task 139e: settlement prompt 较重（10K+ tokens），给单次调用更宽松的超时，
     # 同时减少重试次数，避免总等待时间过长。
     llm_response = await call_llm(
-        prompt, temperature=temperature, timeout=120, max_retries=2
+        prompt,
+        temperature=temperature,
+        timeout=120,
+        max_tokens=STRUCTURED_SETTLEMENT_MAX_TOKENS,
+        max_retries=2,
     )
     data = parse_llm_response(llm_response)
 
