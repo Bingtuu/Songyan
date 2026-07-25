@@ -355,7 +355,7 @@ python scripts/run_172b_ch100_climb.py --to 100
 | V8 | ✅ 完成 | 多体裁可插拔 + xuanhuan/wuxia Ch100 通过 |
 | V8.5 | ✅ 完成 | 验收后遗留收口：预算上限修复、C 判据三档证据闭环、文档治理 |
 | V9 | ✅ 完成 | 生产化地基（长跑可靠性/导出/打包/CI/成本追踪/质量门工具收编）+ urban 第三体裁 Ch100；urban Ch1-Ch100 100/100 accepted，five-gate PASS，segment audit PASS，T9=0；任务文档已归档 `archive/v9/` |
-| V10 | ◐ V10.2 Task 192 clean Ch100 rebuild 中 | 跨体裁 Ch200、优秀度信号包、结构升级 spike；Task 189 已冻结 sci-fi Ch200 baseline，Task 190 已完成 Ch100 终点事实源盘点，Task 191 已完成 Ch200 harness 准备，Task 192.p/q/r/s/t/u/v 已完成，xuanhuan clean rebuild 到 Ch93（93/93 accepted，failed=[]，T9=0，five-gate PASS，segment audit PASS），尚未完成 Ch100 source 复核 |
+| V10 | ◐ V10.2 Task 192.w blocker 待修复 | 跨体裁 Ch200、优秀度信号包、结构升级 spike；Task 189 已冻结 sci-fi Ch200 baseline，Task 190 已完成 Ch100 终点事实源盘点，Task 191 已完成 Ch200 harness 准备，Task 192.p/q/r/s/t/u/v 已完成，xuanhuan clean rebuild 到 Ch98（98/98 accepted，failed=[99]），Ch99 settlement numerical validation 待修复 |
 
 各阶段事实入口见 [`tasks/V10-README.md`](tasks/V10-README.md)（当前 V10.2 Task 192 clean rebuild 入口）以及 `tasks/V5-README.md`、`tasks/V6-README.md`、`tasks/V7-README.md`、`tasks/V8-README.md`、`tasks/V9-README.md`（均已收尾）；V5-V9 单项任务文档与报告分别归档在 [`archive/v5/`](archive/v5/INDEX.md)、[`archive/v6/`](archive/v6/INDEX.md)、[`archive/v7/`](archive/v7/INDEX.md)、[`archive/v8/`](archive/v8/INDEX.md)、[`archive/v9/`](archive/v9/INDEX.md)。
 
@@ -515,7 +515,8 @@ python scripts/run_172a7_genre_validation.py --templates scifi --end 10
 - [`tasks/192.u-xuanhuan-ch81-health-low-p1-critical-orphan-DONE.md`](tasks/192.u-xuanhuan-ch81-health-low-p1-critical-orphan-DONE.md) — V10 Task 192.u：xuanhuan Ch81 health_low_p1 critical orphan 修复完成报告
 - [`tasks/192.v-xuanhuan-ch93-health-low-p1-critical-orphan.md`](tasks/192.v-xuanhuan-ch93-health-low-p1-critical-orphan.md) — V10 Task 192.v：xuanhuan Ch93 health_low_p1 critical orphan 修复任务书
 - [`tasks/192.v-xuanhuan-ch93-health-low-p1-critical-orphan-DONE.md`](tasks/192.v-xuanhuan-ch93-health-low-p1-critical-orphan-DONE.md) — V10 Task 192.v：xuanhuan Ch93 health_low_p1 critical orphan 修复完成报告
-- [`docs/reports/192-xuanhuan-ch100-climb.md`](docs/reports/192-xuanhuan-ch100-climb.md) — V10 Task 192：xuanhuan clean Ch100 rebuild 阶段报告（当前到 Ch93，segment audit PASS）
+- [`tasks/192.w-xuanhuan-ch99-settlement-numerical-validation.md`](tasks/192.w-xuanhuan-ch99-settlement-numerical-validation.md) — V10 Task 192.w：xuanhuan Ch99 settlement numerical validation 修复任务书
+- [`docs/reports/192-xuanhuan-ch100-climb.md`](docs/reports/192-xuanhuan-ch100-climb.md) — V10 Task 192：xuanhuan clean Ch100 rebuild 阶段报告（当前到 Ch98，Ch99 failed）
 - [`tasks/193-wuxia-ch200-climb.md`](tasks/193-wuxia-ch200-climb.md) — V10 Task 193：wuxia Ch200 爬坡任务书
 - [`tasks/194-urban-ch200-climb.md`](tasks/194-urban-ch200-climb.md) — V10 Task 194：urban Ch200 爬坡任务书
 - [`tasks/V9-README.md`](tasks/V9-README.md) — V9 任务事实入口（已收尾，生产化地基 + urban Ch100）
