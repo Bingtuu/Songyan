@@ -4,7 +4,7 @@
 > **类型**: Ch100 起点重建 / Ch200 分段长跑 / 段边界审计
 > **优先级**: P0
 > **依赖**: Task 189 / Task 190 / Task 191
-> **状态**: ◐ clean Ch100 rebuild 暂停于 Ch99 segment audit critical orphan blocker；99/99 accepted、failed=[]，但 segment audit @99 `critical_orphans=4` / `halt_would_fire=true`，Task 192.x 已建立，修复前不得继续 Ch100 或 Ch200 初始化
+> **状态**: ◐ clean Ch100 rebuild 中；Ch99 已完成并经 192.x 修复到 T9=0、five-gate PASS、segment audit PASS（99/99 accepted，failed=[]），尚未完成 Ch100 source 复核与 Ch200 初始化
 > **预计工作量**: 大
 
 ---

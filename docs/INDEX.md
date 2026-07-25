@@ -8,7 +8,7 @@
 |------|------|
 | `AGENTS.md` | 开发代理短指令与不可违背规则 |
 | `docs/STATUS.md` | 当前状态、测试口径、下一步 |
-| `tasks/V10-README.md` | **V10 规划入口（V10.2 Task 192.x blocker 待修复）**：跨体裁 Ch200 + 优秀度信号包 + 结构升级 spike；本文不占任务号；Task 189/190/191/192.p/q/r/s/t/u/v/w 已完成，xuanhuan clean rebuild 到 Ch99 后 segment audit critical orphan failed，修复前不得继续 Ch100 |
+| `tasks/V10-README.md` | **V10 规划入口（V10.2 Task 192 clean Ch100 rebuild 中）**：跨体裁 Ch200 + 优秀度信号包 + 结构升级 spike；本文不占任务号；Task 189/190/191/192.p/q/r/s/t/u/v/w/x 已完成，xuanhuan clean rebuild 到 Ch99 且 T9/five-gate/segment audit PASS，尚未启动非 sci-fi Ch200 长跑 |
 | `tasks/V9-README.md` | **V9 历史事实入口（已收尾）**：生产化地基 + urban 第三体裁 Ch100，Task 173-188 扁平编号；V9.1/V9.2/V9.3/V9.4/V9.5/V9.6 全部完成；urban Ch1-Ch100 100/100 accepted，five-gate PASS，segment audit PASS，T9=0；单项任务文档归档 `archive/v9/` |
 | `tasks/V8-README.md` | **V8 历史任务事实入口（已收尾，含 V8.5）**：多体裁可插拔质量 + 章数爬坡；含 Task 编号治理规则；任务文档与报告归档 `archive/v8/` |
 | `tasks/V7-README.md` | **V7 历史任务事实入口（已收尾）**：sci-fi 单一体裁 Ch200 达成 |
@@ -62,7 +62,8 @@ V8 已全量闭环（P/C/Q/S/V 五维全绿 + V8.5 遗留清零）。任务文�
 | `tasks/192.w-xuanhuan-ch99-settlement-numerical-validation.md` | Task 192.w 任务书：xuanhuan Ch99 settlement numerical validation 修复 |
 | `tasks/192.w-xuanhuan-ch99-settlement-numerical-validation-DONE.md` | Task 192.w DONE：Ch99 settlement numerical validation 修复完成报告 |
 | `tasks/192.x-xuanhuan-ch99-segment-audit-critical-orphans.md` | Task 192.x 任务书：xuanhuan Ch99 segment audit critical orphan 修复 |
-| `docs/reports/192-xuanhuan-ch100-climb.md` | Task 192 执行报告：xuanhuan clean Ch100 rebuild 阶段报告（当前到 Ch99，segment audit FAIL） |
+| `tasks/192.x-xuanhuan-ch99-segment-audit-critical-orphans-DONE.md` | Task 192.x DONE：Ch99 segment audit critical orphan 修复完成报告 |
+| `docs/reports/192-xuanhuan-ch100-climb.md` | Task 192 执行报告：xuanhuan clean Ch100 rebuild 阶段报告（当前到 Ch99，segment audit PASS） |
 | `tasks/193-wuxia-ch200-climb.md` | Task 193 任务书：wuxia Ch28 deterministic clean + Ch200 分段爬坡 |
 | `tasks/194-urban-ch200-climb.md` | Task 194 任务书：urban CONTINUE_READY source + Ch200 分段爬坡 |
 
@@ -144,10 +145,10 @@ V8 已全量闭环（P/C/Q/S/V 五维全绿 + V8.5 遗留清零）。任务文�
 
 | 场景 | 文件 |
 |------|------|
-| V10 规划入口（V10.2 Task 192.x blocker 待修复） | `tasks/V10-README.md` |
+| V10 规划入口（V10.2 Task 192 clean Ch100 rebuild 中） | `tasks/V10-README.md` |
 | V10.1 口径与工具任务书 | `tasks/189-ch200-baseline-and-checkpoints.md`、`tasks/190-ch100-terminal-source-inventory.md`、`tasks/191-ch200-harness-preparation.md` |
 | V10.1 已完成证据 | `tasks/189-ch200-baseline-and-checkpoints-DONE.md`、`tasks/189-scifi-ch200-baseline.json`、`tasks/190-ch100-terminal-source-inventory-DONE.md`、`tasks/191-ch200-harness-preparation-DONE.md` |
-| V10.2 Ch200 爬坡任务书与前置修复 | `tasks/192-xuanhuan-ch200-climb.md`、`tasks/192.p-scifi-short-regression-context-emergency-DONE.md`、`tasks/192.q-xuanhuan-ch17-creative-director-json-parse-DONE.md`、`tasks/192.r-xuanhuan-ch24-settlement-numerical-validation-DONE.md`、`tasks/192.s-xuanhuan-ch50-t9-duplicate-clean-DONE.md`、`tasks/192.t-xuanhuan-ch75-segment-audit-critical-orphans.md`、`tasks/192.t-xuanhuan-ch75-segment-audit-critical-orphans-DONE.md`、`tasks/192.u-xuanhuan-ch81-health-low-p1-critical-orphan.md`、`tasks/192.u-xuanhuan-ch81-health-low-p1-critical-orphan-DONE.md`、`tasks/192.v-xuanhuan-ch93-health-low-p1-critical-orphan.md`、`tasks/192.v-xuanhuan-ch93-health-low-p1-critical-orphan-DONE.md`、`tasks/192.w-xuanhuan-ch99-settlement-numerical-validation.md`、`tasks/192.w-xuanhuan-ch99-settlement-numerical-validation-DONE.md`、`tasks/192.x-xuanhuan-ch99-segment-audit-critical-orphans.md`、`docs/reports/192-xuanhuan-ch100-climb.md`、`tasks/193-wuxia-ch200-climb.md`、`tasks/194-urban-ch200-climb.md` |
+| V10.2 Ch200 爬坡任务书与前置修复 | `tasks/192-xuanhuan-ch200-climb.md`、`tasks/192.p-scifi-short-regression-context-emergency-DONE.md`、`tasks/192.q-xuanhuan-ch17-creative-director-json-parse-DONE.md`、`tasks/192.r-xuanhuan-ch24-settlement-numerical-validation-DONE.md`、`tasks/192.s-xuanhuan-ch50-t9-duplicate-clean-DONE.md`、`tasks/192.t-xuanhuan-ch75-segment-audit-critical-orphans.md`、`tasks/192.t-xuanhuan-ch75-segment-audit-critical-orphans-DONE.md`、`tasks/192.u-xuanhuan-ch81-health-low-p1-critical-orphan.md`、`tasks/192.u-xuanhuan-ch81-health-low-p1-critical-orphan-DONE.md`、`tasks/192.v-xuanhuan-ch93-health-low-p1-critical-orphan.md`、`tasks/192.v-xuanhuan-ch93-health-low-p1-critical-orphan-DONE.md`、`tasks/192.w-xuanhuan-ch99-settlement-numerical-validation.md`、`tasks/192.w-xuanhuan-ch99-settlement-numerical-validation-DONE.md`、`tasks/192.x-xuanhuan-ch99-segment-audit-critical-orphans.md`、`tasks/192.x-xuanhuan-ch99-segment-audit-critical-orphans-DONE.md`、`docs/reports/192-xuanhuan-ch100-climb.md`、`tasks/193-wuxia-ch200-climb.md`、`tasks/194-urban-ch200-climb.md` |
 | V9 任务入口（已收尾） | `tasks/V9-README.md` |
 | V9 归档索引 | `archive/v9/INDEX.md` |
 | V9 长跑可靠性 DONE | `archive/v9/173-interpreter-exit-hang-fix-DONE.md`、`archive/v9/174-logging-system-foundation-DONE.md`、`archive/v9/175-cost-tracking-and-budget-circuit-breaker-DONE.md`、`archive/v9/176-windows-anti-hang-wrapper-DONE.md` |
