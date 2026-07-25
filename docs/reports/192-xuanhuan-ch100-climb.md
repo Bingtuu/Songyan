@@ -14,7 +14,7 @@
 
 ## 结论
 
-Ch75 生成链路完成，75/75 accepted、failed=[]、无 halt；five-gate 与 T9 通过，但 segment audit 硬门失败，不能继续 Ch76/100。
+Ch75 生成链路完成，75/75 accepted、failed=[]、无 halt。初次 segment audit 发现 `critical_orphans=5` / `halt_would_fire=true`，已通过 Task 192.t 刷新 5 条仍被 Ch75 正文承接的 critical setting tracking，复判 segment audit PASS；当前可继续推进 Ch100。
 
 ## Ch75 段边界审计
 
@@ -22,7 +22,10 @@ Ch75 生成链路完成，75/75 accepted、failed=[]、无 halt；five-gate 与 
 - DB SHA256: `97D65464F71B30BB065C297CAE09FFF732A13071A902F3A502B08634F0A8E7BF`
 - five-gate: PASS（`.tmp/192_xuanhuan_ch75_five_gate.json`）
 - T9: PASS（`.tmp/192_xuanhuan_ch75_t9.json`）：`meta_artifact=0`、`duplicate=0`、`timeline=0`
-- segment audit: **FAIL**（`.tmp/192_xuanhuan_ch75_segment_audit.json`）：`critical_orphans=5`、`halt_would_fire=true`
+- segment audit 初判: **FAIL**（`.tmp/192_xuanhuan_ch75_segment_audit.json`）：`critical_orphans=5`、`halt_would_fire=true`
 - hotspots: Ch72=33 issues, Ch68=25 issues, Ch73=22 issues
+- Task 192.t 修复: 使用 `SettingTrackingRepository.promote_to_active()` 将 5 条 active critical tracking 刷新到 Ch75 accepted version `v-6afe9dd8`
+- segment audit 复判: **PASS**（`.tmp/192t_xuanhuan_ch75_segment_audit_after.json`）：`critical_orphans=0`、`halt_would_fire=false`
+- 修复后 DB SHA256: `85D1399373E5D3F0FA4DD276C0476EC0407E33396A35696918786AA41173F606`
 
-现场已冻结到 `.tmp/backups/192t_xuanhuan_ch75_segment_audit_critical_orphans_20260726-0105/`。后续必须先完成 `tasks/192.t-xuanhuan-ch75-segment-audit-critical-orphans.md`，使 Ch75 segment audit PASS 后再继续 Ch100。
+初判失败现场已冻结到 `.tmp/backups/192t_xuanhuan_ch75_segment_audit_critical_orphans_20260726-0105/`。后续可继续 Ch100，但 Ch100 边界仍必须复跑 T9/five-gate/segment audit/source inventory。
