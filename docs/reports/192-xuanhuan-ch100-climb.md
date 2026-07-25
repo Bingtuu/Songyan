@@ -1,30 +1,28 @@
-# Task 192: xuanhuan Ch50 爬坡验证报告
+# Task 192: xuanhuan Ch75 爬坡验证报告
 
-- 生成时间: 2026-07-25T21:30:40.891713
-- 项目: `d160a55a51de4a2bb82440ebc03ec23a`  体裁: `xuanhuan`  目标: Ch50
+- 生成时间: 2026-07-26T01:01:01.135913
+- 项目: `d160a55a51de4a2bb82440ebc03ec23a`  体裁: `xuanhuan`  目标: Ch75
 - Gate: enforce / abort / resume  Halt: None
 
 ## 分段指标
 
 | up_to | accepted | budget_peak | before_emerg_peak | emerg | overdue | health | CED/1k |
 |---:|---:|---:|---:|---:|---:|---:|---:|
-| 25 | 25 | 0.8632 | 0.0 | 0 | 0 | 9.1 | 2.0874 |
-| 50 | 50 | 0.8632 | 0.0 | 0 | 1 | 9.4 | 2.2304 |
+| 25 | 25 | 0.8632 | 0.0 | 0 | 0 | 9.1 | 4.5755 |
+| 50 | 50 | 0.8632 | 0.0 | 0 | 1 | 9.4 | 2.2309 |
+| 75 | 75 | 0.8632 | 0.0 | 0 | 1 | 9.2 | 2.5739 |
 
 ## 结论
 
-Ch50 生成链路完成，50/50 accepted、failed=[]、无 halt。初次段边界 T9 复核发现 duplicate=1，已通过 Task 192.s 版本化清理 Ch8 重复段落并复核为 T9=0；Ch50 source 当前可继续推进 Ch75/Ch100。
+Ch75 生成链路完成，75/75 accepted、failed=[]、无 halt；five-gate 与 T9 通过，但 segment audit 硬门失败，不能继续 Ch76/100。
 
-## Ch50 段边界审计
+## Ch75 段边界审计
 
-- Wrapper: `run-20260725-183118441` / `PASS_NORMAL_EXIT`
-- DB SHA256: `5422A2234F1965CD07DEBA1B20CF834E91BA920287203C927B74A467274E90CA`
-- five-gate: PASS（`.tmp/192_xuanhuan_ch50_five_gate.json`）
-- segment audit: `critical_orphans=0`、`halt_would_fire=false`（`.tmp/192_xuanhuan_ch50_segment_audit.json`）
-- T9 初判: **FAIL**（`.tmp/192_xuanhuan_ch50_t9.json`）：`meta_artifact=0`、`duplicate=1`、`timeline=0`
-- duplicate hit: Ch8 paragraph 37 duplicates paragraph 22, similarity=1.0
-- Task 192.s 修复: Ch8 `v-d62aa178` -> `clean-8-6-cd06a7b7`（versioned clean，parent 保留）
-- T9 复判: **PASS**（`.tmp/192s_xuanhuan_ch50_t9_after.json`）：`meta_artifact=0`、`duplicate=0`、`timeline=0`
-- 修复后 DB SHA256: `E375918948D8467987FE25138DAD7D16A47EEB82D0E95D7FA22370B34D641926`
+- Wrapper: `run-20260725-214429675` / `PASS_NORMAL_EXIT`
+- DB SHA256: `97D65464F71B30BB065C297CAE09FFF732A13071A902F3A502B08634F0A8E7BF`
+- five-gate: PASS（`.tmp/192_xuanhuan_ch75_five_gate.json`）
+- T9: PASS（`.tmp/192_xuanhuan_ch75_t9.json`）：`meta_artifact=0`、`duplicate=0`、`timeline=0`
+- segment audit: **FAIL**（`.tmp/192_xuanhuan_ch75_segment_audit.json`）：`critical_orphans=5`、`halt_would_fire=true`
+- hotspots: Ch72=33 issues, Ch68=25 issues, Ch73=22 issues
 
-初判失败现场已冻结到 `.tmp/backups/192s_xuanhuan_ch50_t9_duplicate_20260725-2132/`。后续可继续 Ch75，但仍必须在 Ch75/Ch100 边界重复 T9/five-gate/segment audit。
+现场已冻结到 `.tmp/backups/192t_xuanhuan_ch75_segment_audit_critical_orphans_20260726-0105/`。后续必须先完成 `tasks/192.t-xuanhuan-ch75-segment-audit-critical-orphans.md`，使 Ch75 segment audit PASS 后再继续 Ch100。

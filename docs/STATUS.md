@@ -6,7 +6,7 @@
 
 | 项 | 结论 |
 |----|------|
-| 当前阶段 | **V10.2 Task 192 clean Ch100 rebuild 中**：V9 已全量闭环（2026-07-23），事实入口 `tasks/V9-README.md`，归档入口 `archive/v9/INDEX.md`。V10 规划入口为 `tasks/V10-README.md`；Task 189 已冻结 sci-fi Ch200 baseline/checkpoint；Task 190 已完成 xuanhuan/wuxia/urban Ch100 终点事实源盘点（xuanhuan=REBUILD_REQUIRED、wuxia=BLOCKED_DIRTY_SAMPLE、urban=CONTINUE_READY）；Task 191 已完成 Ch200 harness 准备；Task 192/193/194 正式任务书已建立；Task 192.p/q/r/s 已完成；xuanhuan clean Ch100 rebuild 已到 Ch50（50/50 accepted，failed=[]，T9=0）；Ch100 source 复核尚未完成；非 sci-fi Ch200 长跑和优秀度实现仍未启动 |
+| 当前阶段 | **V10.2 Task 192 clean Ch100 rebuild Ch75 segment-audit blocker**：V9 已全量闭环（2026-07-23），事实入口 `tasks/V9-README.md`，归档入口 `archive/v9/INDEX.md`。V10 规划入口为 `tasks/V10-README.md`；Task 189 已冻结 sci-fi Ch200 baseline/checkpoint；Task 190 已完成 xuanhuan/wuxia/urban Ch100 终点事实源盘点（xuanhuan=REBUILD_REQUIRED、wuxia=BLOCKED_DIRTY_SAMPLE、urban=CONTINUE_READY）；Task 191 已完成 Ch200 harness 准备；Task 192/193/194 正式任务书已建立；Task 192.p/q/r/s 已完成；xuanhuan clean Ch100 rebuild 已到 Ch75（75/75 accepted，failed=[]，T9=0），但 segment audit `critical_orphans=5` / `halt_would_fire=true`，已建立 Task 192.t；Ch100 source 复核尚未完成；非 sci-fi Ch200 长跑和优秀度实现仍未启动 |
 | V7 收尾 | **已完成**。sci-fi/space_opera + webnovel_intense 单一体裁稳定跑到 Ch200，200/200 accepted，D1 hard clean pass；Ch201-Ch220 20/20 accepted |
 | V8.1 运行时画像 | **已完成**（Task 172a + 172a.p）。`GenreRuntimeProfile` 把 Context Diet 2.0 运行时契约从 sci-fi 默认值解耦；xuanhuan Ch8 halt 已消除（base_budget=15000） |
 | V8.3 文学护栏 | **已完成**（Task 172d）。`literary_guardrail_observe` 去科幻硬编码，lexicon/主角名参数化到 `GenreProfile`，三体裁各配一套；DONE 文档已补齐 |
@@ -36,6 +36,7 @@
 | V10.2 Task 192.p | **已完成（2026-07-25）**：冻结原 scifi 失败现场 `.tmp/backups/192_scifi_short_regression_failed_20260725-120940/`；定位 Ch8 settlement JSON 输出 4096 token 截断导致 parse failure；`SettlementExtractor` 结构化输出预算提升到 8192；`RUN_ID=192` Ch100 rebuild 默认 `ON_FAILURE=abort`，历史 172b/172c 默认 isolate 不变；scifi end10 复跑 `run-e71bccd8` 10/10 completed、failed=[]、wrapper `PASS_NORMAL_EXIT`；全量 pytest **3004 passed, 2 skipped, 1 xfailed**，ruff 全绿；DONE：`tasks/192.p-scifi-short-regression-context-emergency-DONE.md` |
 | V10.2 Task 192.q/r + Ch25 | **192.q/192.r 已完成，Task 192 第一段到 Ch25（2026-07-25）**：192.q 修复 CreativeDirector 未转义内部英文引号导致的 JSON parse failure，同时保持多 JSON 对象拒绝语义；bits-code-guard 最终 review 0 P0/P1/P2；最终全量 pytest **3006 passed, 2 skipped, 1 xfailed**，ruff 全绿；scifi end10 回归 10/10 completed、failed=[]、T9=0、budget_peak 0.979、wrapper PASS_NORMAL_EXIT；192.r 冻结 Ch24 settlement numerical validation failure，resume 后未复现；最终 Ch25 报告 `docs/reports/192-xuanhuan-ch100-climb.md`：25/25 accepted、failed=[]、budget_peak 0.8632、emergency=0、overdue=0、health=9.1、CED/1k=2.0874；wrapper `run-20260725-162600836` PASS_NORMAL_EXIT |
 | V10.2 Task 192 Ch50 / 192.s | **Ch50 已完成并清到 T9=0（2026-07-25）**：wrapper `run-20260725-183118441` PASS_NORMAL_EXIT；run `run-2f42e276` completed，Ch1-Ch50 completed，failed=[]，accepted heads 50/50，cost 6.740467；初判 DB SHA256 `5422A2234F1965CD07DEBA1B20CF834E91BA920287203C927B74A467274E90CA`，T9 duplicate=1（Ch8 paragraph 37 duplicates paragraph 22），冻结 `.tmp/backups/192s_xuanhuan_ch50_t9_duplicate_20260725-2132/`；192.s 使用版本化 deterministic clean 创建 Ch8 `clean-8-6-cd06a7b7`（parent `v-d62aa178`），修复后 DB SHA256 `E375918948D8467987FE25138DAD7D16A47EEB82D0E95D7FA22370B34D641926`；复判 T9=0、five-gate PASS、segment audit `critical_orphans=0` / `halt_would_fire=false`；DONE：`tasks/192.s-xuanhuan-ch50-t9-duplicate-clean-DONE.md` |
+| V10.2 Task 192 Ch75 / 192.t | **Ch75 生成完成但 segment audit 硬门失败（2026-07-26）**：wrapper `run-20260725-214429675` PASS_NORMAL_EXIT；DB `.tmp/task172b_xuanhuan_ch100.db` SHA256 `97D65464F71B30BB065C297CAE09FFF732A13071A902F3A502B08634F0A8E7BF`；run `run-2f42e276` completed，Ch1-Ch75 completed，failed=[]，accepted heads 75/75，cost 10.668106；five-gate Ch75 PASS；T9 Ch75 PASS（meta_artifact=0、duplicate=0、timeline=0）；segment audit **FAIL**：`critical_orphans=5`、`halt_would_fire=true`，hotspots Ch72=33 / Ch68=25 / Ch73=22；冻结 `.tmp/backups/192t_xuanhuan_ch75_segment_audit_critical_orphans_20260726-0105/`，任务书 `tasks/192.t-xuanhuan-ch75-segment-audit-critical-orphans.md`；修复前不得继续 Ch76/100 |
 | V9.1 阶段 D 实跑验收（2026-07-19） | 熔断实证：¥0.05 预算 ¥0.0514 停（paused + 成本明细 + 章保留），提额 resume 至 completed，成本跨 3 进程 0.0514→0.3647 连续；scifi end10：10/10、0 halt、overdue=0、budget 峰值 0.8325、usage 151 行 estimate 0%、总成本 ¥0.886（≈¥0.089/章）、report 成本视图正确；173 挂死根因确证（sqlite checkpointer 泄漏）真修后 2.5s 自然退出；T9=1（Ch4 countdown_increase，diagnostic 级内容启发式，非系统性） |
 | 172c wuxia 段 3 | Ch51-75 完成（75/75 accepted，0 halt）；Ch75 五门：budget PASS、CED FAIL、**overdue 203 vs sci-fi 117 FAIL**、health 5.6 FAIL、completeness PASS |
 | 172c.r 修复落地 | resolve 失效四层根因全修：prompt card 1.0.4 补 resolve 契约、settlement 事实源纳 overdue、resolve 防幻觉校验、5.3 同事务覆写修复；health 口径对齐 vdim（archived/dormant/active-overdue 全计）；12 新测试绿 |
@@ -97,7 +98,7 @@
 
 ## 下一步
 
-1. **Task 192 xuanhuan Ch75 clean rebuild（下一步，按编号推进）**：Ch50 已经 192.s 清到 T9=0；继续用 Ch100 rebuild harness 推进到 Ch75，边界必须复跑 T9、five-gate、segment audit；任一硬门失败立即冻结并开 192 后缀修复。
+1. **Task 192.t xuanhuan Ch75 segment audit critical orphan repair（下一步，按编号/后缀推进）**：Ch75 生成完成且 five-gate/T9 通过，但 segment audit `critical_orphans=5`、`halt_would_fire=true`；先定位并修复 critical orphan，复判 segment audit PASS 后再继续 Ch100。不得用解释性豁免继续。
 2. **Task 193 wuxia Ch28 clean + Ch200**：T9=1（Ch28 省略号占位段），需按 `tasks/193-wuxia-ch200-climb.md` 执行版本化 deterministic clean 并重跑 T9 确认 T9=0；其余章节可直接续跑。
 3. **Task 194 urban Ch200**：urban 是当前唯一 `CONTINUE_READY` 体裁，可按 `tasks/194-urban-ch200-climb.md` 初始化 V10 Ch200 DB；但在当前 goal 下不得跳过 192/193。
 4. **段边界纪律**：Ch125/150/175/200 必须先审计再继续；任一硬门失败时冻结现场并开父任务后缀修复。
@@ -120,7 +121,8 @@
 - V10 Task 192.q DONE：`tasks/192.q-xuanhuan-ch17-creative-director-json-parse-DONE.md`
 - V10 Task 192.r DONE：`tasks/192.r-xuanhuan-ch24-settlement-numerical-validation-DONE.md`
 - V10 Task 192.s DONE：`tasks/192.s-xuanhuan-ch50-t9-duplicate-clean-DONE.md`
-- V10 Task 192 Ch50 执行报告：`docs/reports/192-xuanhuan-ch100-climb.md`
+- V10 Task 192.t 任务书：`tasks/192.t-xuanhuan-ch75-segment-audit-critical-orphans.md`
+- V10 Task 192 Ch75 执行报告：`docs/reports/192-xuanhuan-ch100-climb.md`
 - V10 Task 193 任务书：`tasks/193-wuxia-ch200-climb.md`
 - V10 Task 194 任务书：`tasks/194-urban-ch200-climb.md`
 - V9 任务事实入口（已完成）：`tasks/V9-README.md`

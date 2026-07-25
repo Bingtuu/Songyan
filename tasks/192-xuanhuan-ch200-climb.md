@@ -4,7 +4,7 @@
 > **类型**: Ch100 起点重建 / Ch200 分段长跑 / 段边界审计
 > **优先级**: P0
 > **依赖**: Task 189 / Task 190 / Task 191
-> **状态**: ◐ clean Ch100 rebuild 中；Ch50 已完成并经 192.s 清到 T9=0（50/50 accepted，failed=[]），尚未完成 Ch100 source 复核与 Ch200 初始化
+> **状态**: ⏸ clean Ch100 rebuild 到 Ch75 但 segment audit 硬门失败；Ch75 75/75 accepted、failed=[]、five-gate PASS、T9=0，但 `critical_orphans=5` / `halt_would_fire=true`，须先完成 `tasks/192.t-xuanhuan-ch75-segment-audit-critical-orphans.md`
 > **预计工作量**: 大
 
 ---
