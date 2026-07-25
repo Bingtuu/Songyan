@@ -36,6 +36,7 @@ Ch100 全 accepted 达标，无 halt。V 维度证据见上表。
 - Ch200 target DB: `.tmp/task_v10_xuanhuan_ch200.db`
 - init-from-source run_id: `run-v10-xuanhuan-3b4ba8e4`
 - Ch101-Ch105: accepted 105/105，failed=[]
-- 当前 blocker: Ch105 `health_low_p1_halt`，P1 target `xuanhuan_lingyuan.technique.lingyuan_quan_first_form`
-- 冻结目录: `.tmp/backups/192y_xuanhuan_ch105_health_low_p1_halt_20260726-0743/`
-- 后续必须先完成 Task 192.y，不能继续 Ch106/125
+- Ch105 direct P1 已由 Task 192.y 修复：`fix-105-5-75d18199`
+- 当前 blocker: segment audit @105 `critical_orphans=13` / `halt_would_fire=true`
+- 冻结目录: `.tmp/backups/192z_xuanhuan_ch105_segment_audit_critical_orphans_20260726-0753/`
+- 后续必须先完成 Task 192.z，不能继续 Ch106/125
