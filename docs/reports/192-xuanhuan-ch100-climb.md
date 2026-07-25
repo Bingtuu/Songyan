@@ -13,7 +13,7 @@
 
 ## 结论
 
-Ch50 生成链路完成，50/50 accepted、failed=[]、无 halt；但段边界 T9 复核未通过，不能作为 clean source 继续推进。
+Ch50 生成链路完成，50/50 accepted、failed=[]、无 halt。初次段边界 T9 复核发现 duplicate=1，已通过 Task 192.s 版本化清理 Ch8 重复段落并复核为 T9=0；Ch50 source 当前可继续推进 Ch75/Ch100。
 
 ## Ch50 段边界审计
 
@@ -21,7 +21,10 @@ Ch50 生成链路完成，50/50 accepted、failed=[]、无 halt；但段边界 T
 - DB SHA256: `5422A2234F1965CD07DEBA1B20CF834E91BA920287203C927B74A467274E90CA`
 - five-gate: PASS（`.tmp/192_xuanhuan_ch50_five_gate.json`）
 - segment audit: `critical_orphans=0`、`halt_would_fire=false`（`.tmp/192_xuanhuan_ch50_segment_audit.json`）
-- T9: **FAIL**（`.tmp/192_xuanhuan_ch50_t9.json`）：`meta_artifact=0`、`duplicate=1`、`timeline=0`
+- T9 初判: **FAIL**（`.tmp/192_xuanhuan_ch50_t9.json`）：`meta_artifact=0`、`duplicate=1`、`timeline=0`
 - duplicate hit: Ch8 paragraph 37 duplicates paragraph 22, similarity=1.0
+- Task 192.s 修复: Ch8 `v-d62aa178` -> `clean-8-6-cd06a7b7`（versioned clean，parent 保留）
+- T9 复判: **PASS**（`.tmp/192s_xuanhuan_ch50_t9_after.json`）：`meta_artifact=0`、`duplicate=0`、`timeline=0`
+- 修复后 DB SHA256: `E375918948D8467987FE25138DAD7D16A47EEB82D0E95D7FA22370B34D641926`
 
-现场已冻结到 `.tmp/backups/192s_xuanhuan_ch50_t9_duplicate_20260725-2132/`。后续必须先完成 `tasks/192.s-xuanhuan-ch50-t9-duplicate-clean.md`，清到 T9=0 后再继续 Ch75/Ch100。
+初判失败现场已冻结到 `.tmp/backups/192s_xuanhuan_ch50_t9_duplicate_20260725-2132/`。后续可继续 Ch75，但仍必须在 Ch75/Ch100 边界重复 T9/five-gate/segment audit。
