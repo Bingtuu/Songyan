@@ -4,7 +4,7 @@
 > **类型**: Ch100 起点重建 / Ch200 分段长跑 / 段边界审计
 > **优先级**: P0
 > **依赖**: Task 189 / Task 190 / Task 191
-> **状态**: ◐ clean Ch100 rebuild 中；Ch99 已完成并经 192.x 修复到 T9=0、five-gate PASS、segment audit PASS（99/99 accepted，failed=[]），尚未完成 Ch100 source 复核与 Ch200 初始化
+> **状态**: ◐ clean Ch100 source ready；100/100 accepted、failed=[]，T9=0、five-gate PASS、segment audit PASS，source inventory 已更新为 xuanhuan CONTINUE_READY；尚未初始化 Ch200
 > **预计工作量**: 大
 
 ---
