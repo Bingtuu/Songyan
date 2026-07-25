@@ -52,7 +52,7 @@ from songyan.workflows.phase2_graph import run_project_pipeline
 TEMPLATE_ID = os.getenv("TEMPLATE_ID", "xuanhuan")
 RUN_ID = os.getenv("RUN_ID", "172b")
 SEGMENT = int(os.getenv("SEGMENT", "25"))
-HALT_RETRIES = int(os.getenv("HALT_RETRIES", "2"))
+HALT_RETRIES = int(os.getenv("HALT_RETRIES", "0" if RUN_ID == "192" else "2"))
 ON_FAILURE = os.getenv("ON_FAILURE", "abort" if RUN_ID == "192" else "isolate")
 DB_PATH = Path(f".tmp/task172b_{TEMPLATE_ID}_ch100.db")
 PROJECT_FILE = Path(f".tmp/task172b_{TEMPLATE_ID}_project.json")

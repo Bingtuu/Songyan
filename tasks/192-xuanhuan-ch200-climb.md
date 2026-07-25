@@ -4,7 +4,7 @@
 > **类型**: Ch100 起点重建 / Ch200 分段长跑 / 段边界审计
 > **优先级**: P0
 > **依赖**: Task 189 / Task 190 / Task 191
-> **状态**: ⏸ clean Ch100 rebuild 到 Ch81 但硬门失败；Ch81 81/81 accepted、failed=[]，但 `health_low_p1_halt: P1_count=1 (critical orphaned setting)` 且 segment audit @81 `critical_orphans=10` / `halt_would_fire=true`，须先完成 `tasks/192.u-xuanhuan-ch81-health-low-p1-critical-orphan.md`
+> **状态**: ◐ clean Ch100 rebuild 中；Ch81 已完成并经 192.u 修复到 T9=0、five-gate PASS、segment audit PASS（81/81 accepted，failed=[]），尚未完成 Ch100 source 复核与 Ch200 初始化
 > **预计工作量**: 大
 
 ---

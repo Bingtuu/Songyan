@@ -16,7 +16,7 @@
 
 Ch75 生成链路完成，75/75 accepted、failed=[]、无 halt。初次 segment audit 发现 `critical_orphans=5` / `halt_would_fire=true`，已通过 Task 192.t 刷新 5 条仍被 Ch75 正文承接的 critical setting tracking，复判 segment audit PASS。
 
-Ch76-Ch81 继续生成后，Ch81 accepted 成功但触发硬门 `health_low_p1_halt: P1_count=1 (critical orphaned setting)`；segment audit @81 显示 `critical_orphans=10` / `halt_would_fire=true`。现场已冻结，当前不得继续 Ch82/100。
+Ch76-Ch81 继续生成后，Ch81 accepted 成功但触发硬门 `health_low_p1_halt: P1_count=1 (critical orphaned setting)`；segment audit @81 显示 `critical_orphans=10` / `halt_would_fire=true`。Task 192.u 已通过版本化 continuity patch 和 harness 默认重试修复恢复 PASS；当前可继续推进 Ch100。
 
 ## Ch75 段边界审计
 
@@ -41,4 +41,13 @@ Ch81 硬门失败现场已冻结到 `.tmp/backups/192u_xuanhuan_ch81_health_low_
 - segment audit @81: `critical_orphans=10`、`halt_would_fire=true`
 - run `run-2f42e276` 现场状态：`current_chapter=82`、`status=running`（人工 Ctrl-C 后保留现场状态，不改 DB）
 
-后续必须先完成 `tasks/192.u-xuanhuan-ch81-health-low-p1-critical-orphan.md`，复判 Ch81 PASS 后再继续 Ch100。
+192.u 修复证据：
+
+- Ch81 accepted patch: `fix-81-5-214e4cd7`（parent `v-df18b9ed`）
+- DB SHA256 after: `FA551AE2067CA0DBFCB3FFAD831C8B550B55BA97018E032FDDA24075229DD5F9`
+- segment audit after: `critical_orphans=0`、`halt_would_fire=false`
+- T9 after: `meta_artifact=0`、`duplicate=0`、`timeline=0`
+- five-gate after: PASS
+- harness discipline: Task 192 默认 `HALT_RETRIES=0`
+
+后续可继续 Ch100，但 Ch100 边界仍必须复跑 T9/five-gate/segment audit/source inventory。

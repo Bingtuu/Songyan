@@ -134,10 +134,12 @@ def test_task192_ch100_rebuild_defaults_to_abort_failure_policy(monkeypatch) -> 
     """Task 192 clean source rebuild must stop on the first failed chapter."""
     monkeypatch.setenv("RUN_ID", "192")
     monkeypatch.delenv("ON_FAILURE", raising=False)
+    monkeypatch.delenv("HALT_RETRIES", raising=False)
     reloaded = importlib.reload(climb)
 
     try:
         assert reloaded.ON_FAILURE == "abort"
+        assert reloaded.HALT_RETRIES == 0
     finally:
         monkeypatch.setenv("RUN_ID", "172b")
         importlib.reload(climb)
@@ -147,11 +149,13 @@ def test_ch100_climb_legacy_default_remains_isolate(monkeypatch) -> None:
     """Historical 172b/172c climb diagnostics keep the existing isolate default."""
     monkeypatch.delenv("RUN_ID", raising=False)
     monkeypatch.delenv("ON_FAILURE", raising=False)
+    monkeypatch.delenv("HALT_RETRIES", raising=False)
     reloaded = importlib.reload(climb)
 
     try:
         assert reloaded.RUN_ID == "172b"
         assert reloaded.ON_FAILURE == "isolate"
+        assert reloaded.HALT_RETRIES == 2
     finally:
         importlib.reload(climb)
 
