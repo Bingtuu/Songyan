@@ -174,6 +174,30 @@ class TestParseLLMResponse:
         result = _parse_llm_response(text)
         assert result == {"key": "value"}
 
+    def test_repairs_unescaped_inner_quotes_from_structured_brief(self) -> None:
+        """DeepSeek may emit unescaped quotes inside JSON string values."""
+        text = (
+            '{"creative_intent": "不要让读者觉得"又过了一关"。", '
+            '"required_tensions": []}'
+        )
+
+        result = _parse_llm_response(text)
+
+        assert result["creative_intent"] == '不要让读者觉得"又过了一关"。'
+        assert result["required_tensions"] == []
+
+    def test_rejects_multiple_json_objects_after_repair(self) -> None:
+        """CreativeDirector must not silently accept the first JSON object."""
+        text = (
+            '示例：{"creative_intent": "example"}\n'
+            '实际：{"creative_intent": "actual", "required_tensions": []}'
+        )
+
+        with pytest.raises(LLMResponseParseError) as exc_info:
+            _parse_llm_response(text)
+
+        assert "JSON 非对象类型" in str(exc_info.value)
+
     def test_invalid_json(self) -> None:
         with pytest.raises(LLMResponseParseError) as exc_info:
             _parse_llm_response("not json")

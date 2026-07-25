@@ -86,11 +86,26 @@ def _parse_llm_response(text: str) -> dict[str, Any]:
     """解析 LLM 响应为字典."""
     json_text = _extract_json(text)
     try:
-        result: dict[str, Any] = json.loads(json_text)
-        return result
-    except json.JSONDecodeError as e:
-        msg = f"LLM 返回内容无法解析为 JSON: {e}"
-        raise LLMResponseParseError(msg, raw_response=text) from e
+        result: Any = json.loads(json_text)
+    except json.JSONDecodeError as exc:
+        try:
+            from json_repair import repair_json
+
+            result = json.loads(repair_json(json_text))
+        except (
+            ImportError,
+            ValueError,
+            TypeError,
+            RuntimeError,
+            json.JSONDecodeError,
+        ) as repair_exc:
+            msg = f"LLM 返回内容无法解析为 JSON: {exc}"
+            raise LLMResponseParseError(msg, raw_response=text) from repair_exc
+
+    if not isinstance(result, dict):
+        msg = f"LLM 返回 JSON 非对象类型（实际为 {type(result).__name__}）"
+        raise LLMResponseParseError(msg, raw_response=text)
+    return result
 
 
 def _validate_tension(tension_data: dict[str, Any]) -> Tension | None:
