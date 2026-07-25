@@ -6,7 +6,7 @@
 
 | 项 | 结论 |
 |----|------|
-| 当前阶段 | **V10.2 Task 192 xuanhuan Ch100 source ready**：V9 已全量闭环（2026-07-23），事实入口 `tasks/V9-README.md`，归档入口 `archive/v9/INDEX.md`。V10 规划入口为 `tasks/V10-README.md`；Task 189 已冻结 sci-fi Ch200 baseline/checkpoint；Task 190 已完成 xuanhuan/wuxia/urban Ch100 终点事实源盘点（xuanhuan=REBUILD_REQUIRED、wuxia=BLOCKED_DIRTY_SAMPLE、urban=CONTINUE_READY）；Task 191 已完成 Ch200 harness 准备；Task 192/193/194 正式任务书已建立；Task 192.p/q/r/s/t/u/v/w/x 已完成；xuanhuan clean Ch100 rebuild 已完成（100/100 accepted，failed=[]，T9=0，five-gate PASS，segment audit PASS，profile 无 DB override），source inventory 已更新为 CONTINUE_READY；尚未初始化 xuanhuan Ch200；非 sci-fi Ch200 长跑和优秀度实现仍未启动 |
+| 当前阶段 | **V10.2 Task 192.y blocker 待修复**：V9 已全量闭环（2026-07-23），事实入口 `tasks/V9-README.md`，归档入口 `archive/v9/INDEX.md`。V10 规划入口为 `tasks/V10-README.md`；Task 189 已冻结 sci-fi Ch200 baseline/checkpoint；Task 190 已完成 xuanhuan/wuxia/urban Ch100 终点事实源盘点（xuanhuan=REBUILD_REQUIRED、wuxia=BLOCKED_DIRTY_SAMPLE、urban=CONTINUE_READY）；Task 191 已完成 Ch200 harness 准备；Task 192/193/194 正式任务书已建立；Task 192.p/q/r/s/t/u/v/w/x 已完成；xuanhuan clean Ch100 source ready，Ch200 target 已初始化并推进到 Ch105（105/105 accepted，failed=[]），但 Ch105 触发 `health_low_p1_halt`，P1 target `xuanhuan_lingyuan.technique.lingyuan_quan_first_form`；Task 192.y 已建立，修复前不得继续 Ch106/125；非 sci-fi Ch200 长跑和优秀度实现仍未完成 |
 | V7 收尾 | **已完成**。sci-fi/space_opera + webnovel_intense 单一体裁稳定跑到 Ch200，200/200 accepted，D1 hard clean pass；Ch201-Ch220 20/20 accepted |
 | V8.1 运行时画像 | **已完成**（Task 172a + 172a.p）。`GenreRuntimeProfile` 把 Context Diet 2.0 运行时契约从 sci-fi 默认值解耦；xuanhuan Ch8 halt 已消除（base_budget=15000） |
 | V8.3 文学护栏 | **已完成**（Task 172d）。`literary_guardrail_observe` 去科幻硬编码，lexicon/主角名参数化到 `GenreProfile`，三体裁各配一套；DONE 文档已补齐 |
@@ -42,6 +42,7 @@
 | V10.2 Task 192 Ch99 settlement / 192.w | **Ch99 settlement numerical validation 已修复（2026-07-26）**：通过 single-chapter resume runner `.tmp/run_192w_ch99_resume.py` 重跑 Ch99，wrapper `run-20260726-062134627` `PASS_NORMAL_EXIT`；Ch99 accepted/current head `v-34d19e11`，accepted heads 99/99，run failed=[]，DB SHA256 `DAC367B5F88DB84B90394F71F6CB6C0188AC187C7AFECBF833C1C9FCD70DFE08`；T9=0，five-gate PASS；post-fix segment audit @99 **FAIL**：`critical_orphans=4`、`halt_would_fire=true`，已路由 192.x；DONE `tasks/192.w-xuanhuan-ch99-settlement-numerical-validation-DONE.md` |
 | V10.2 Task 192 Ch99 segment audit / 192.x | **Ch99 segment audit 已修复到 PASS（2026-07-26）**：创建版本化 continuity patch `fix-99-6-86643cba`（parent `v-34d19e11`），刷新 4 条 critical tracking 到 Ch99 accepted version；最终 DB SHA256 `F61372E46AD6B2ADF6A45DC598F33361179EC59E0D10939C0FB3692651D0FAE6`；复判 segment audit **PASS**：`critical_orphans=0`、`halt_would_fire=false`；T9=0；five-gate PASS；DONE `tasks/192.x-xuanhuan-ch99-segment-audit-critical-orphans-DONE.md` |
 | V10.2 Task 192 Ch100 source | **xuanhuan clean Ch100 source 已复核为 CONTINUE_READY（2026-07-26）**：wrapper `run-20260726-064032548` `PASS_NORMAL_EXIT`；run `run-2f42e276` completed，Ch1-Ch100 completed，failed=[]，accepted heads 100/100，total_cost=14.86454；Ch100 accepted/current head `v-c5278e2a`；DB SHA256 `259DA168BD7BE44199A72D74AADE58666494D886EBA58B6096BAAEDA773FC452`；five-gate PASS（budget 0.8632、CED/1k 0.043、overdue 6、health 8.5、gap 0）；segment audit PASS（critical_orphans=0、halt_would_fire=false）；T9=0；profile view `diff_count=0`（DB has no override）；`.tmp/190_ch100_source_inventory.json` 已将 xuanhuan 更新为 `CONTINUE_READY` |
+| V10.2 Task 192 Ch105 / 192.y | **Ch105 触发 health_low_p1 hard gate，已冻结并建立修复任务（2026-07-26）**：Task 191 harness target DB `.tmp/task_v10_xuanhuan_ch200.db`；run `run-v10-xuanhuan-3b4ba8e4` paused，current_chapter=105，accepted heads 105/105，failed=[]，total_cost=0.826441；Ch105 accepted/current head `v-04f5c7df`；DB SHA256 `2B116456496EDC5454733961D69D66D95F562B71281E3CF907B6CB6F98D40E9F`；hard gate `health_low_p1_halt: P1_count=1 (critical orphaned setting)`；P1 target `xuanhuan_lingyuan.technique.lingyuan_quan_first_form`；wrapper `run-20260726-070245145` `FAIL_NONZERO_EXIT`；现场冻结 `.tmp/backups/192y_xuanhuan_ch105_health_low_p1_halt_20260726-0743/`；任务书 `tasks/192.y-xuanhuan-ch105-health-low-p1-critical-orphan.md` 已建立，修复前不得继续 Ch106/125 |
 | V9.1 阶段 D 实跑验收（2026-07-19） | 熔断实证：¥0.05 预算 ¥0.0514 停（paused + 成本明细 + 章保留），提额 resume 至 completed，成本跨 3 进程 0.0514→0.3647 连续；scifi end10：10/10、0 halt、overdue=0、budget 峰值 0.8325、usage 151 行 estimate 0%、总成本 ¥0.886（≈¥0.089/章）、report 成本视图正确；173 挂死根因确证（sqlite checkpointer 泄漏）真修后 2.5s 自然退出；T9=1（Ch4 countdown_increase，diagnostic 级内容启发式，非系统性） |
 | 172c wuxia 段 3 | Ch51-75 完成（75/75 accepted，0 halt）；Ch75 五门：budget PASS、CED FAIL、**overdue 203 vs sci-fi 117 FAIL**、health 5.6 FAIL、completeness PASS |
 | 172c.r 修复落地 | resolve 失效四层根因全修：prompt card 1.0.4 补 resolve 契约、settlement 事实源纳 overdue、resolve 防幻觉校验、5.3 同事务覆写修复；health 口径对齐 vdim（archived/dormant/active-overdue 全计）；12 新测试绿 |
@@ -103,7 +104,7 @@
 
 ## 下一步
 
-1. **Task 192 xuanhuan Ch200 初始化（下一步，按编号推进）**：xuanhuan clean Ch100 source 已复核为 CONTINUE_READY；下一步必须使用 Task 191 harness 执行 `python scripts/run_v10_ch200_climb.py --init-from-source --genre xuanhuan --format json`，不得手写临时脚本绕过 harness。
+1. **Task 192.y xuanhuan Ch105 health_low_p1 修复（下一步，按编号推进）**：Ch105 已 accepted、failed=[]，但触发 P1 critical orphan；必须先修复 `xuanhuan_lingyuan.technique.lingyuan_quan_first_form` 并复判 segment audit/T9/five-gate PASS 后，才能继续 Ch106/125。
 2. **Task 193 wuxia Ch28 clean + Ch200**：T9=1（Ch28 省略号占位段），需按 `tasks/193-wuxia-ch200-climb.md` 执行版本化 deterministic clean 并重跑 T9 确认 T9=0；其余章节可直接续跑。
 3. **Task 194 urban Ch200**：urban 是当前唯一 `CONTINUE_READY` 体裁，可按 `tasks/194-urban-ch200-climb.md` 初始化 V10 Ch200 DB；但在当前 goal 下不得跳过 192/193。
 4. **段边界纪律**：Ch125/150/175/200 必须先审计再继续；任一硬门失败时冻结现场并开父任务后缀修复。
@@ -136,6 +137,7 @@
 - V10 Task 192.w DONE：`tasks/192.w-xuanhuan-ch99-settlement-numerical-validation-DONE.md`
 - V10 Task 192.x 任务书：`tasks/192.x-xuanhuan-ch99-segment-audit-critical-orphans.md`
 - V10 Task 192.x DONE：`tasks/192.x-xuanhuan-ch99-segment-audit-critical-orphans-DONE.md`
+- V10 Task 192.y 任务书：`tasks/192.y-xuanhuan-ch105-health-low-p1-critical-orphan.md`
 - V10 Task 192 Ch75 执行报告：`docs/reports/192-xuanhuan-ch100-climb.md`
 - V10 Task 193 任务书：`tasks/193-wuxia-ch200-climb.md`
 - V10 Task 194 任务书：`tasks/194-urban-ch200-climb.md`
