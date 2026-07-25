@@ -286,8 +286,8 @@ def test_quality_gate_router_pass() -> None:
 
 
 def test_quality_gate_router_error_fallback() -> None:
-    """error 存在 → 路由到 pass（容错）."""
-    assert quality_gate_router({"error": "something", "status": "rewrite"}) == "pass"
+    """error 存在 → 路由到 blocked，终止本章错误路径."""
+    assert quality_gate_router({"error": "something", "status": "rewrite"}) == "blocked"
 
 
 # ---------------------------------------------------------------------------

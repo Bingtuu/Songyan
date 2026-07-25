@@ -148,7 +148,7 @@ def revision_router(state: Phase1State) -> str:
         raise ValueError(f"Pipeline 输入校验失败: {'; '.join(errors)}")
 
     if state.get("error"):
-        return "pass"
+        return "error"
     needs = state.get("_needs_revision", False)
     rround = int(state.get("revision_round", 0))
     was_rewritten = state.get("_was_rewritten", False)
@@ -189,7 +189,7 @@ def quality_gate_router(state: Phase1State) -> str:
     只有当 status=rewrite 且 QG 未通过时才返回 rewrite。
     """
     if state.get("error"):
-        return "pass"
+        return "blocked"
     # Task 116: 检查 QG 通过状态，避免低分 rewrite 覆盖高分 QG passed best
     if state.get("status") == "rewrite" and not state.get("_quality_gate_passed", False):
         return "rewrite"
@@ -207,14 +207,23 @@ def rewrite_router(state: Phase1State) -> str:
     结构完整时才继续审查重写稿。
     """
     if state.get("error"):
-        return "audit"
+        return "error"
     if state.get("status") == "human_confirm":
         return "human_confirm"
     return "audit"
 
 
+def stop_on_error_router(state: Phase1State) -> str:
+    """Route sequential edges to END when a node returned a diagnostic error."""
+    if state.get("error"):
+        return "error"
+    return "next"
+
+
 def human_confirm_router(state: Phase1State) -> str:
     """human_confirm 后路由."""
+    if state.get("error"):
+        return "error"
     decision = state.get("human_decision")
     if decision == "accept" or decision is None:
         return "accept"
@@ -274,33 +283,71 @@ async def build_phase1_graph() -> Any:
     builder.add_node("human_confirm", human_confirm_node)  # type: ignore[type-var]
     builder.add_node("settlement_extractor", settlement_extractor_node)  # type: ignore[type-var]
 
-    # 顺序边
+    # 顺序边。任何节点返回 error 时必须终止本章，避免错误状态继续
+    # 流入后续节点并污染 clean rerun 样本。
     builder.set_entry_point("goal_planner")
-    builder.add_edge("goal_planner", "creative_director")
-    builder.add_edge("creative_director", "context_manager")
-    builder.add_edge("context_manager", "writer")
-    builder.add_edge("writer", "rule_auditor")
-    builder.add_edge("rule_auditor", "llm_auditor")
-    builder.add_edge("llm_auditor", "review_merger")
-    builder.add_edge("review_merger", "literary_auditor")
+    builder.add_conditional_edges(
+        "goal_planner",
+        stop_on_error_router,
+        {"next": "creative_director", "error": END},
+    )
+    builder.add_conditional_edges(
+        "creative_director",
+        stop_on_error_router,
+        {"next": "context_manager", "error": END},
+    )
+    builder.add_conditional_edges(
+        "context_manager",
+        stop_on_error_router,
+        {"next": "writer", "error": END},
+    )
+    builder.add_conditional_edges(
+        "writer",
+        stop_on_error_router,
+        {"next": "rule_auditor", "error": END},
+    )
+    builder.add_conditional_edges(
+        "rule_auditor",
+        stop_on_error_router,
+        {"next": "llm_auditor", "error": END},
+    )
+    builder.add_conditional_edges(
+        "llm_auditor",
+        stop_on_error_router,
+        {"next": "review_merger", "error": END},
+    )
+    builder.add_conditional_edges(
+        "review_merger",
+        stop_on_error_router,
+        {"next": "literary_auditor", "error": END},
+    )
 
     # 条件边：revision 路由（073 新增 rewrite 分支）
     # Task 100b: pass → quality_gate（不再直接进入 human_confirm）
     builder.add_conditional_edges(
         "literary_auditor",
         revision_router,
-        {"revise": "revision_handler", "pass": "quality_gate", "rewrite": "rewrite"},
+        {
+            "revise": "revision_handler",
+            "pass": "quality_gate",
+            "rewrite": "rewrite",
+            "error": END,
+        },
     )
 
-    # revision_handler → rule_auditor（循环）
-    builder.add_edge("revision_handler", "rule_auditor")
+    # revision_handler → rule_auditor（循环）；修订失败时立即终止本章。
+    builder.add_conditional_edges(
+        "revision_handler",
+        stop_on_error_router,
+        {"next": "rule_auditor", "error": END},
+    )
 
     # rewrite → 条件路由：结构失败回滚 best 后直接进入 human_confirm；
     # 结构完整的重写稿仍需 audit，但不再 revision。
     builder.add_conditional_edges(
         "rewrite",
         rewrite_router,
-        {"audit": "rule_auditor", "human_confirm": "human_confirm"},
+        {"audit": "rule_auditor", "human_confirm": "human_confirm", "error": END},
     )
 
     # Task 100b: 质量门条件边
@@ -475,4 +522,3 @@ async def resume_human_confirm(
     finally:
         if edited_content is not None:
             set_editor_callable(None)
-

@@ -27,6 +27,7 @@ from songyan.workflows.phase1_graph import (
     quality_gate_router,
     revision_router,
     rewrite_router,
+    stop_on_error_router,
 )
 from songyan.workflows.review_merger import (
     _compute_overall_score,
@@ -304,14 +305,14 @@ class TestRevisionRouter:
         )
         assert revision_router(state) == "pass"
 
-    def test_error_defaults_to_pass(self) -> None:
+    def test_error_stops_revision_route(self) -> None:
         state = _base_revision_state(
             revision_round=0,
             _needs_revision=True,
             _has_critical=True,
             error="something wrong",
         )
-        assert revision_router(state) == "pass"
+        assert revision_router(state) == "error"
 
     def test_new_issues_introduced_at_max_round_triggers_rewrite(self) -> None:
         """AG-04: revision 引入新问题时，达到最大轮次后触发 rewrite."""
@@ -348,6 +349,10 @@ class TestQualityGateRouter:
         state = _base_revision_state(status="human_review_required")
         assert quality_gate_router(state) == "blocked"
 
+    def test_error_blocks_graph(self) -> None:
+        state = _base_revision_state(status="quality_gate", error="boom")
+        assert quality_gate_router(state) == "blocked"
+
 
 class TestRewriteRouter:
     def test_struct_failure_recovery_goes_to_human_confirm(self) -> None:
@@ -359,9 +364,19 @@ class TestRewriteRouter:
         state = _base_revision_state(status="rule_auditing")
         assert rewrite_router(state) == "audit"
 
-    def test_error_falls_back_to_audit_path(self) -> None:
+    def test_error_stops_rewrite_route(self) -> None:
         state = _base_revision_state(status="human_confirm", error="boom")
-        assert rewrite_router(state) == "audit"
+        assert rewrite_router(state) == "error"
+
+
+class TestStopOnErrorRouter:
+    def test_success_goes_next(self) -> None:
+        state = _base_revision_state(error=None)
+        assert stop_on_error_router(state) == "next"
+
+    def test_error_goes_error(self) -> None:
+        state = _base_revision_state(error="CreativeDirector LLM call failed")
+        assert stop_on_error_router(state) == "error"
 
 
 class TestHumanConfirmRouter:
@@ -407,6 +422,12 @@ class TestHumanConfirmRouter:
         state = self._base_state()
         state["human_decision"] = None
         assert human_confirm_router(state) == "accept"
+
+    def test_error_stops_before_default_accept(self) -> None:
+        state = self._base_state()
+        state["human_decision"] = None
+        state["error"] = "human confirm failed"
+        assert human_confirm_router(state) == "error"
 
     def test_word_count_guard(self) -> None:
         state = self._base_state()
