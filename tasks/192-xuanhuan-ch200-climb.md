@@ -4,7 +4,7 @@
 > **类型**: Ch100 起点重建 / Ch200 分段长跑 / 段边界审计
 > **优先级**: P0
 > **依赖**: Task 189 / Task 190 / Task 191
-> **状态**: ◐ clean Ch100 rebuild 暂停于 Ch93 hard gate；93/93 accepted、failed=[]，Ch93 触发 `health_low_p1_halt`，Task 192.v 已建立，修复前不得继续 Ch94/100 或 Ch200 初始化
+> **状态**: ◐ clean Ch100 rebuild 中；Ch93 已完成并经 192.v 修复到 T9=0、five-gate PASS、segment audit PASS（93/93 accepted，failed=[]），尚未完成 Ch100 source 复核与 Ch200 初始化
 > **预计工作量**: 大
 
 ---
