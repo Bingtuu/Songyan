@@ -4,7 +4,7 @@
 > **类型**: Ch100 起点重建 / Ch200 分段长跑 / 段边界审计
 > **优先级**: P0
 > **依赖**: Task 189 / Task 190 / Task 191
-> **状态**: ◐ clean Ch100 rebuild 中；Ch25 已完成（25/25 accepted，failed=[]），尚未完成 Ch100 source 复核与 Ch200 初始化
+> **状态**: ⏸ clean Ch100 rebuild 到 Ch50 但 T9 硬门失败；Ch50 50/50 accepted、failed=[]，段边界 T9 duplicate=1，须先完成 `tasks/192.s-xuanhuan-ch50-t9-duplicate-clean.md`
 > **预计工作量**: 大
 
 ---
