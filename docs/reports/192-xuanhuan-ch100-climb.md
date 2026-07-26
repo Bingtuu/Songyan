@@ -48,4 +48,5 @@ Ch100 全 accepted 达标，无 halt。V 维度证据见上表。
 - Task 192.ac 已修复 Ch108 segment audit critical orphan：accepted/current head `fix-108-10-c8519110`，2 条 critical tracking 刷新到 Ch108；segment audit @108 PASS（`critical_orphans=0`、`halt_would_fire=false`）；T9 @108 PASS（`meta_artifact=0`、`duplicate=0`、`timeline=0`）
 - Ch109-Ch111 已通过 Task 191 harness 继续生成并 accepted：Ch109 `v-d48df7a7`、Ch110 `v-6a691775`、Ch111 `v-229e33c0`；accepted 111/111，failed=[]，run status=`paused`
 - Task 192.ad 已修复 Ch111 `health_low_streak_halt`：final accepted/current head `fix-111-7-4abf3d31`；11 条 overdue foreshadowing resolved、10 条 P2 marks resolved、9 条 critical tracking 刷新到 Ch111；segment audit @111 PASS（`critical_orphans=0`、`halt_would_fire=false`）；T9 @111 PASS（`meta_artifact=0`、`duplicate=0`、`timeline=0`）；run status=`running`、failed=[]
-- 下一步可继续 Ch112→Ch125；Ch125 段边界仍必须显式使用 `tasks/189-scifi-ch200-baseline.json`
+- Ch112→Ch120 resume 后，Ch120 accepted 但触发 `health_low_p1_halt: P1_count=4 (critical orphaned setting)`；run status=`paused`、failed_chapters=[112,117,118]；当前 blocker: Task 192.ae，冻结目录 `.tmp/backups/192ae_xuanhuan_ch120_health_low_p1_halt_20260726-1141/`
+- 修复前不得继续 Ch121/125；Ch125 段边界仍必须显式使用 `tasks/189-scifi-ch200-baseline.json`
