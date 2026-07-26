@@ -4,7 +4,7 @@
 > **类型**: Ch100 起点重建 / Ch200 分段长跑 / 段边界审计
 > **优先级**: P0
 > **依赖**: Task 189 / Task 190 / Task 191
-> **状态**: ◐ Ch200 target 已初始化并推进到 Ch120；Ch111 `health_low_streak_halt` 已由 192.ad 修复；Ch120 accepted 后触发 `health_low_p1_halt`，且 run 存在 failed_chapters=[112,117,118]；Task 192.ae 已建立，修复前不得继续 Ch121/125
+> **状态**: ◐ Ch200 target 已初始化并推进到 Ch120；Ch111 `health_low_streak_halt` 已由 192.ad 修复；Ch120 `health_low_p1_halt` 与 failed_chapters=[112,117,118] 已由 192.ae 修复；下一步继续 Ch121→Ch125，并在 Ch125 执行 five-gate / segment audit / T9
 > **预计工作量**: 大
 
 ---
