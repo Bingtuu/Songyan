@@ -6,7 +6,7 @@
 
 | 项 | 结论 |
 |----|------|
-| 当前阶段 | **V10.2 Task 192.ak xuanhuan Ch144 health_low_streak_halt blocker**：Task 189/190/191 已完成，Task 192/193/194 任务书已建立；Task 192.p/q/r/s/t/u/v/w/x/y/z/aa/ab/ac/ad/ae/af/ag/ah/ai/aj 已完成；xuanhuan clean Ch100 source ready，Ch125 checkpoint PASS，Ch129 clean，Ch131 repaired，Ch134 clean，Ch138 clean；Ch139/140/141/142/143/144 accepted 后触发 `health_low_streak_halt: window=3 P2_total=10 >= limit=2`，run paused、completed_count=144、failed=[]；已建立 Task 192.ak，修复前不得继续 Ch145/150；非 sci-fi Ch200 长跑和优秀度实现仍未完成 |
+| 当前阶段 | **V10.2 Task 192 xuanhuan Ch200 climb 继续推进**：Task 189/190/191 已完成，Task 192/193/194 任务书已建立；Task 192.p/q/r/s/t/u/v/w/x/y/z/aa/ab/ac/ad/ae/af/ag/ah/ai/aj/ak 已完成；xuanhuan clean Ch100 source ready，Ch125 checkpoint PASS，Ch129 clean，Ch131 repaired，Ch134 clean，Ch138 clean，Ch144 health_low_streak_halt 已由 192.ak 修复；run completed_count=144、failed=[]，continuity audit @144 P2=0、health=9.4，segment audit @144 PASS、T9=0；下一步使用 Task 191 harness 继续 Ch145→Ch150，并在 Ch150 审计；非 sci-fi Ch200 长跑和优秀度实现仍未完成 |
 | V7 收尾 | **已完成**。sci-fi/space_opera + webnovel_intense 单一体裁稳定跑到 Ch200，200/200 accepted，D1 hard clean pass；Ch201-Ch220 20/20 accepted |
 | V8.1 运行时画像 | **已完成**（Task 172a + 172a.p）。`GenreRuntimeProfile` 把 Context Diet 2.0 运行时契约从 sci-fi 默认值解耦；xuanhuan Ch8 halt 已消除（base_budget=15000） |
 | V8.3 文学护栏 | **已完成**（Task 172d）。`literary_guardrail_observe` 去科幻硬编码，lexicon/主角名参数化到 `GenreProfile`，三体裁各配一套；DONE 文档已补齐 |
@@ -61,6 +61,7 @@
 | V10.2 Task 192 Ch135-Ch138 / 192.aj | **Ch138 health_low_p1_halt 已冻结（2026-07-26）**：继续 `--to 150 --genre xuanhuan` 后，Ch135 accepted `v-2be94c1b`，Ch136 accepted `v-8258ea44`，Ch137 accepted `v-46a2e7ab`，Ch138 accepted `v-054ad6c5`；随后 auto halt：`health_low_p1_halt: P1_count=1 (critical orphaned setting)`，target=`xuanhuan_lingyuan.guardians.corrupted_seal_extension`；wrapper `run-20260726-163616508` FAIL_NONZERO_EXIT；run paused、current_chapter=138、completed_count=138、failed=[]、total_cost=7.14876；frozen DB SHA256 `3A3FC92DAE11A625FFAD949B3DB9FA074B77B02D70AC0A3B90A6291FC4B9E039`；冻结目录 `.tmp/backups/192aj_xuanhuan_ch138_health_low_p1_halt_20260726-1708/`；任务书 `tasks/192.aj-xuanhuan-ch138-health-low-p1-halt.md` |
 | V10.2 Task 192.aj DONE / Ch138 health low P1 repair | **Ch138 health_low_p1_halt 已修复（2026-07-26）**：创建 Ch138 P1 patch `fix-138-p1-192aj` 清理 `xuanhuan_lingyuan.guardians.corrupted_seal_extension`，并创建 segment patch `fix-138-segment-192aj` 刷新 6 个 critical tracking；最终 Ch138 accepted/current head `fix-138-segment-192aj`；run completed 1..138、failed=[]、status=completed；continuity audit @138 health=8.0、P1=0；segment audit @138 PASS：`critical_orphans=0`、`total_orphans=79`、`halt_would_fire=false`；T9=0；final DB SHA256 `E9F2F1CB7F8A5F4914A8E9DF311D178B320FF6B50BBF78912DD83A65AB4EA08F`；DONE `tasks/192.aj-xuanhuan-ch138-health-low-p1-halt-DONE.md` |
 | V10.2 Task 192 Ch139-Ch144 / 192.ak | **Ch144 health_low_streak_halt 已冻结（2026-07-26）**：继续 `--to 150 --genre xuanhuan` 后，Ch139 accepted `v-3cb97221`，Ch140 `v-46713e7a`，Ch141 `v-f43ba17c`，Ch142 `v-a48a236d`，Ch143 `v-76680018`，Ch144 `v-33897fb8`；随后 auto halt：`health_low_streak_halt: window=3 P2_total=10 >= limit=2`；wrapper `run-20260726-173235633` FAIL_NONZERO_EXIT；run paused、current_chapter=144、completed_count=144、failed=[]、total_cost=8.198983；frozen DB SHA256 `8FBA0FC23D6042A727FD77497A50C45B5A7EBDC1ADCBC17BE23EED0A244CA983`；冻结目录 `.tmp/backups/192ak_xuanhuan_ch144_health_low_streak_halt_20260726-1824/`；任务书 `tasks/192.ak-xuanhuan-ch144-health-low-streak-halt.md` |
+| V10.2 Task 192.ak DONE / Ch144 health low streak repair | **Ch144 health_low_streak_halt 已修复（2026-07-26）**：创建 Ch144 continuity patch `fix-144-health-low-192ak` 清理 10 条 overdue P2 伏笔，并创建 segment patch `fix-144-segment-192ak` 刷新 8 个 critical tracking；最终 Ch144 accepted/current head `fix-144-segment-192ak`；run completed 1..144、failed=[]、status=completed；continuity audit @144 health=9.4、P1=0、P2=0、overdue=0；segment audit @144 PASS：`critical_orphans=0`、`total_orphans=76`、`halt_would_fire=false`；T9=0；final DB SHA256 `B0D7F801A3B9E3FDE25A7B30905C8B4D0AB669C9330D01DCED1E9010DA8AD623`；DONE `tasks/192.ak-xuanhuan-ch144-health-low-streak-halt-DONE.md` |
 | V9.1 阶段 D 实跑验收（2026-07-19） | 熔断实证：¥0.05 预算 ¥0.0514 停（paused + 成本明细 + 章保留），提额 resume 至 completed，成本跨 3 进程 0.0514→0.3647 连续；scifi end10：10/10、0 halt、overdue=0、budget 峰值 0.8325、usage 151 行 estimate 0%、总成本 ¥0.886（≈¥0.089/章）、report 成本视图正确；173 挂死根因确证（sqlite checkpointer 泄漏）真修后 2.5s 自然退出；T9=1（Ch4 countdown_increase，diagnostic 级内容启发式，非系统性） |
 | 172c wuxia 段 3 | Ch51-75 完成（75/75 accepted，0 halt）；Ch75 五门：budget PASS、CED FAIL、**overdue 203 vs sci-fi 117 FAIL**、health 5.6 FAIL、completeness PASS |
 | 172c.r 修复落地 | resolve 失效四层根因全修：prompt card 1.0.4 补 resolve 契约、settlement 事实源纳 overdue、resolve 防幻觉校验、5.3 同事务覆写修复；health 口径对齐 vdim（archived/dormant/active-overdue 全计）；12 新测试绿 |
@@ -122,7 +123,7 @@
 
 ## 下一步
 
-1. **Task 192.ak xuanhuan Ch144 health_low_streak_halt 修复（下一步，按编号推进）**：先清理 Ch142-Ch144 连续 health_low P2 pressure；修复前不得继续 Ch145/150。
+1. **Task 192 xuanhuan Ch145→Ch150 继续爬坡（下一步，按编号推进）**：192.ak 已修复 Ch144 health_low_streak_halt；下一步必须使用 Task 191 harness 继续到 Ch150，并在 Ch150 执行 five-gate（显式 `tasks/189-scifi-ch200-baseline.json`）、segment audit、metrics/T9。
 2. **Task 193 wuxia Ch28 clean + Ch200**：T9=1（Ch28 省略号占位段），需按 `tasks/193-wuxia-ch200-climb.md` 执行版本化 deterministic clean 并重跑 T9 确认 T9=0；其余章节可直接续跑。
 3. **Task 194 urban Ch200**：urban 是当前唯一 `CONTINUE_READY` 体裁，可按 `tasks/194-urban-ch200-climb.md` 初始化 V10 Ch200 DB；但在当前 goal 下不得跳过 192/193。
 4. **段边界纪律**：Ch125/150/175/200 必须先审计再继续；任一硬门失败或 accepted head 空洞时冻结现场并开父任务后缀修复。
@@ -130,7 +131,7 @@
 
 ## 入口
 
-- **V10 规划入口（V10.2 Task 192.ak xuanhuan Ch144 health_low_streak_halt blocker）：`tasks/V10-README.md`**
+- **V10 规划入口（V10.2 Task 192 xuanhuan Ch200 climb 继续推进）：`tasks/V10-README.md`**
 - V10 Task 189 DONE：`tasks/189-ch200-baseline-and-checkpoints-DONE.md`
 - V10 Task 189 baseline：`tasks/189-scifi-ch200-baseline.json`
 - V10 Task 189 任务书：`tasks/189-ch200-baseline-and-checkpoints.md`
