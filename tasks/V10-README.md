@@ -2,9 +2,9 @@
 
 > **阶段**: 跨体裁 Ch200 + 优秀度信号包 + 结构升级 spike
 > **定位**: V10 不是开源交付体验阶段，而是工程版 1.0 前的质量与长度再验证阶段：证明多体裁长窗口仍稳定，并把“好不好看/是否有 AI 腔/是否同质化”从主观讨论推进到可复核信号。
-> **当前口径**: V9 已全量闭环；V10 规划入口已建立，Task 189 已完成 sci-fi Ch200 baseline/checkpoint 冻结，Task 190 已完成 Ch100 终点事实源盘点（xuanhuan=REBUILD_REQUIRED、wuxia=BLOCKED_DIRTY_SAMPLE、urban=CONTINUE_READY）；Task 191 已完成 Ch200 harness 准备；Task 192/193/194 正式任务书已建立。Task 192.p / 192.q / 192.r / 192.s / 192.t / 192.u / 192.v / 192.w / 192.x / 192.y / 192.z / 192.aa 均已完成；xuanhuan clean Ch100 source ready，Ch200 target 已初始化并推进到 Ch105（105/105 accepted，failed=[]），Ch105 segment audit 已由 192.z 修复到 `critical_orphans=0` / `halt_would_fire=false`，192.aa 已清理 Ch106 invalid model run-state pollution，下一步显式 `LLM_MODEL=deepseek/deepseek-v4-flash` 恢复 Ch106→Ch125。V10 不再补 V9 生产化地基，也不做 V11 的外部用户可用化收尾。
+> **当前口径**: V9 已全量闭环；V10 规划入口已建立，Task 189 已完成 sci-fi Ch200 baseline/checkpoint 冻结，Task 190 已完成 Ch100 终点事实源盘点（xuanhuan=REBUILD_REQUIRED、wuxia=BLOCKED_DIRTY_SAMPLE、urban=CONTINUE_READY）；Task 191 已完成 Ch200 harness 准备；Task 192/193/194 正式任务书已建立。Task 192.p / 192.q / 192.r / 192.s / 192.t / 192.u / 192.v / 192.w / 192.x / 192.y / 192.z / 192.aa 均已完成；xuanhuan clean Ch100 source ready，Ch200 target 已初始化并推进到 Ch108 hard gate：Ch106/107 accepted，Ch108 settlement numerical validation failed，accepted 107/107、failed=[108]；Task 192.ab 已建立，修复前不得继续 Ch109/125。V10 不再补 V9 生产化地基，也不做 V11 的外部用户可用化收尾。
 > **任务编号**: V10 预计从 Task 189 开始；本文不占任务号。只有可独立执行、独立验收、独立出 DONE 文档的工作项才编号；撞墙修复继续按父任务字母后缀登记（如 `192.p`）。
-> **状态**: ◐ V10.2 Task 192 xuanhuan Ch200 climb 可恢复 Ch106/125（Task 189 ✅；Task 190 ✅；Task 191 ✅；Task 192.p/q/r/s/t/u/v/w/x/y/z/aa ✅；xuanhuan Ch105 segment audit PASS；尚未完成非 sci-fi Ch200 长跑）
+> **状态**: ◐ V10.2 Task 192.ab blocker 待修复（Task 189 ✅；Task 190 ✅；Task 191 ✅；Task 192.p/q/r/s/t/u/v/w/x/y/z/aa ✅；xuanhuan Ch108 settlement FAIL；尚未完成非 sci-fi Ch200 长跑）
 
 本文是 V10 阶段任务规划入口。V9 历史事实入口见 `tasks/V9-README.md`，V9 单项任务归档见 `archive/v9/INDEX.md`。
 
@@ -115,7 +115,7 @@ V10 不把结构升级强行并入主流程。spike 的目标是形成取舍结�
 
 | Task | 名称 | 状态 | 内容要点 | 验收要点 |
 |------|------|:----:|----------|----------|
-| 192 | xuanhuan Ch200 爬坡 | ◐ | clean Ch100 source ready；Task 191 harness 已初始化 Ch200 target；Ch101-Ch105 accepted，failed=[]；Ch105 direct P1 已由 192.y 修复，segment audit blocker 已由 192.z 修复到 PASS，192.aa 已清理 invalid model run-state pollution；下一步显式模型恢复 Ch106→Ch125 | 任务书：`tasks/192-xuanhuan-ch200-climb.md`；执行报告：`docs/reports/192-xuanhuan-ch100-climb.md` |
+| 192 | xuanhuan Ch200 爬坡 | ◐ | clean Ch100 source ready；Task 191 harness 已初始化 Ch200 target；Ch106/107 accepted；Ch108 settlement numerical validation failed，修复前不得继续 Ch109/125 | 任务书：`tasks/192-xuanhuan-ch200-climb.md`；执行报告：`docs/reports/192-xuanhuan-ch100-climb.md` |
 | 192.p | scifi 短窗口 ContextEmergency 回归修复 | ✅ | 修复 Task 192 工具链改动后暴露的 scifi 短窗口回归失败；settlement 结构化输出预算提升到 8192；scifi end10 复跑 10/10 completed | DONE：`tasks/192.p-scifi-short-regression-context-emergency-DONE.md` |
 | 192.q | xuanhuan Ch17 CreativeDirector JSON parse 修复 | ✅ | CreativeDirector 改为复用通用 JSON repair parser；Ch17 resume 成功 | DONE：`tasks/192.q-xuanhuan-ch17-creative-director-json-parse-DONE.md` |
 | 192.r | xuanhuan Ch24 settlement numerical validation 处理 | ✅ | 冻结 Ch24 数值结算失败现场；resume 后 Ch24/25 成功，failed=[] | DONE：`tasks/192.r-xuanhuan-ch24-settlement-numerical-validation-DONE.md` |
@@ -128,6 +128,7 @@ V10 不把结构升级强行并入主流程。spike 的目标是形成取舍结�
 | 192.y | xuanhuan Ch105 health_low_p1 critical orphan repair | ✅ | Ch105 P1 critical orphan：`xuanhuan_lingyuan.technique.lingyuan_quan_first_form`；创建 Ch105 accepted patch `fix-105-5-75d18199`，resolve P1；post-fix segment audit blocker 路由 192.z | DONE：`tasks/192.y-xuanhuan-ch105-health-low-p1-critical-orphan-DONE.md` |
 | 192.z | xuanhuan Ch105 segment audit critical orphan repair | ✅ | Ch105 post-fix segment audit `critical_orphans=13` / `halt_would_fire=true`；创建 accepted patch `fix-105-6-4cc94f2e` 并刷新 13 条 critical tracking；复判 segment audit/T9 PASS | DONE：`tasks/192.z-xuanhuan-ch105-segment-audit-critical-orphans-DONE.md` |
 | 192.aa | xuanhuan Ch106 invalid model run-state cleanup | ✅ | Ch106 resume 时未显式设置 `LLM_MODEL`，链路回退 `deepseek-chat` 并污染 failed_chapters；确认 Ch106-Ch108 无 accepted head 后恢复 run state 到 Ch105 / failed=[] | DONE：`tasks/192.aa-xuanhuan-ch106-invalid-model-run-state-cleanup-DONE.md` |
+| 192.ab | xuanhuan Ch108 settlement numerical validation | ◐ | Ch108 SettlementExtractor 数值校验失败：`cultivation_level closing_value (40.0) != formula (9.000)`；现场已冻结，待修复 | 任务书：`tasks/192.ab-xuanhuan-ch108-settlement-numerical-validation.md` |
 | 193 | wuxia Ch200 爬坡 | ◐ | 任务书已建立；先对 Ch28 省略号占位执行版本化 deterministic clean 并重跑 T9=0，再进入 Ch200 分段爬坡 | 任务书：`tasks/193-wuxia-ch200-climb.md`；未启动实跑 |
 | 194 | urban Ch200 爬坡 | ◐ | 任务书已建立；urban 是当前唯一 CONTINUE_READY source，可用 Task 191 harness 初始化并按 Ch125/150/175/200 推进 | 任务书：`tasks/194-urban-ch200-climb.md`；未启动实跑 |
 | 195 | 跨体裁 Ch200 总验收 | ◻ | 汇总三体裁 Ch200 与 sci-fi baseline；形成 V10 长窗口结论 | 总报告落盘；STATUS/README/INDEX 更新 |
