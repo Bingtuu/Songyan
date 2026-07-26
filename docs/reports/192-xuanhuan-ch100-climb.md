@@ -37,6 +37,9 @@ Ch100 全 accepted 达标，无 halt。V 维度证据见上表。
 - init-from-source run_id: `run-v10-xuanhuan-3b4ba8e4`
 - Ch101-Ch105: accepted 105/105，failed=[]
 - Ch105 direct P1 已由 Task 192.y 修复：`fix-105-5-75d18199`
-- 当前 blocker: segment audit @105 `critical_orphans=13` / `halt_would_fire=true`
+- Ch105 segment audit blocker 已由 Task 192.z 修复：`fix-105-6-4cc94f2e`
+- segment audit @105: PASS（`.tmp/192z_xuanhuan_ch105_segment_audit_after.json`）：`critical_orphans=0`、`halt_would_fire=false`
+- T9 @105: PASS（`.tmp/192z_xuanhuan_ch105_t9_after.json`）：`meta_artifact=0`、`duplicate=0`、`timeline=0`
+- DB SHA256 after 192.z: `E87011FDE32DD16E439CC13CE442F655F2461C9D7F52D38B1AA0F32A98B21333`
 - 冻结目录: `.tmp/backups/192z_xuanhuan_ch105_segment_audit_critical_orphans_20260726-0753/`
-- 后续必须先完成 Task 192.z，不能继续 Ch106/125
+- 后续可恢复 Ch106→Ch125；Ch125 段边界必须显式使用 `tasks/189-scifi-ch200-baseline.json`
