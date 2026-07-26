@@ -4,7 +4,7 @@
 > **类型**: Ch100 起点重建 / Ch200 分段长跑 / 段边界审计
 > **优先级**: P0
 > **依赖**: Task 189 / Task 190 / Task 191
-> **状态**: ◐ Ch200 target 已初始化并推进到 Ch111；Ch108 settlement numerical validation 已由 192.ab 修复；Ch108 segment audit critical orphan 已由 192.ac 修复；Ch109-Ch111 accepted，failed=[]；Ch111 后触发 `health_low_streak_halt`，Task 192.ad 已建立，修复前不得继续 Ch112/125
+> **状态**: ◐ Ch200 target 已初始化并推进到 Ch111；Ch108 settlement numerical validation 已由 192.ab 修复；Ch108 segment audit critical orphan 已由 192.ac 修复；Ch111 `health_low_streak_halt` 已由 192.ad 修复；accepted 111/111、failed=[]、run 可 resume；下一步使用 Task 191 harness 继续 Ch112→Ch125
 > **预计工作量**: 大
 
 ---
