@@ -46,4 +46,6 @@ Ch100 全 accepted 达标，无 halt。V 维度证据见上表。
 - 显式 `LLM_MODEL=deepseek/deepseek-v4-flash` 恢复后：Ch106/107 accepted，Ch108 settlement numerical validation failed（`cultivation_level closing_value (40.0) != formula (9.000)`）
 - Task 192.ab 已修复 Ch108 settlement：formal single-chapter resume accepted `v-d841678c`，run restored to accepted 108/108、failed=[]；T9 @108 PASS
 - Task 192.ac 已修复 Ch108 segment audit critical orphan：accepted/current head `fix-108-10-c8519110`，2 条 critical tracking 刷新到 Ch108；segment audit @108 PASS（`critical_orphans=0`、`halt_would_fire=false`）；T9 @108 PASS（`meta_artifact=0`、`duplicate=0`、`timeline=0`）
-- 下一步可继续 Ch109→Ch125；Ch125 段边界仍必须显式使用 `tasks/189-scifi-ch200-baseline.json`
+- Ch109-Ch111 已通过 Task 191 harness 继续生成并 accepted：Ch109 `v-d48df7a7`、Ch110 `v-6a691775`、Ch111 `v-229e33c0`；accepted 111/111，failed=[]，run status=`paused`
+- 当前 blocker: Task 192.ad，Ch111 后触发 `health_low_streak_halt: window=3 P2_total=11 >= limit=2`，冻结目录 `.tmp/backups/192ad_xuanhuan_ch111_health_low_streak_halt_20260726-0947/`
+- 修复前不得继续 Ch112/125；Ch125 段边界仍必须显式使用 `tasks/189-scifi-ch200-baseline.json`
