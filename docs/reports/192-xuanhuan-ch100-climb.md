@@ -54,4 +54,6 @@ Ch100 全 accepted 达标，无 halt。V 维度证据见上表。
 - Ch125 five-gate PASS（`.tmp/v10_xuanhuan_seg125_five_gate.json`，显式 baseline `tasks/189-scifi-ch200-baseline.json`）：accepted=125、gap=0、budget_peak=0.8632、CED/1k=0.0415、overdue=14、health_latest=8.2
 - Ch125 segment audit PASS（`.tmp/v10_xuanhuan_seg125_audit.json`）：`critical_orphans=0`、`total_orphans=45`、`halt_would_fire=false`
 - Ch125 T9 PASS（`.tmp/v10_xuanhuan_seg125_metrics.md`）：meta=0、duplicate=0、timeline=0。注：metrics legacy sufficient 聚合仍显示旧 Ch120 health<7；该 report 产生于 192.ae 修复前，V10 Ch125 官方五门/segment/T9 均 PASS。
-- 下一步可继续 Ch126→Ch150；Ch150 段边界仍必须显式使用 `tasks/189-scifi-ch200-baseline.json` 执行 five-gate，并同步执行 segment audit / T9。
+- Ch126→Ch150 继续执行时，Ch126 `v-43987bdd`、Ch127 `v-5ea172f7`、Ch128 `v-4fe7230b` accepted；Ch129 `rev-129-3-7e40fa28` 在 human_gate accept 后触发 SettlementExtractor JSON parse failure：`LLM 返回内容无法解析为 JSON（标准解析和 repair 均失败）`；run 记录 failed=[129]，isolate 进入 Ch130 后已人工中断 wrapper。
+- Task 192.af 已建立并冻结现场：run status=`paused`、current_chapter=129、completed_count=128、failed=[129]；frozen DB SHA256 `5B76CCA8007E419B678D0BA31847A5FAD26D82B271FC4015C22F9873FD00AC42`；冻结目录 `.tmp/backups/192af_xuanhuan_ch129_settlement_json_parse_20260726-1404/`。
+- 下一步必须先完成 `tasks/192.af-xuanhuan-ch129-settlement-json-parse.md`；修复前不得继续 Ch130/150。Ch130 已存在非 accepted draft/revision，后续必须明确隔离或保证不影响 resume。
