@@ -8,7 +8,7 @@
 |------|------|
 | `AGENTS.md` | 开发代理短指令与不可违背规则 |
 | `docs/STATUS.md` | 当前状态、测试口径、下一步 |
-| `tasks/V10-README.md` | **V10 规划入口（V10.2 Task 192 xuanhuan Ch200 climb 继续推进）**：跨体裁 Ch200 + 优秀度信号包 + 结构升级 spike；本文不占任务号；Task 189/190/191/192.p/q/r/s/t/u/v/w/x/y/z/aa/ab/ac/ad/ae 已完成，xuanhuan Ch200 target 已到 Ch120，下一步继续 Ch121→Ch125 并在 Ch125 审计 |
+| `tasks/V10-README.md` | **V10 规划入口（V10.2 Task 192 xuanhuan Ch200 climb 继续推进）**：跨体裁 Ch200 + 优秀度信号包 + 结构升级 spike；本文不占任务号；Task 189/190/191/192.p/q/r/s/t/u/v/w/x/y/z/aa/ab/ac/ad/ae 已完成，xuanhuan Ch200 target 已到 Ch125，下一步继续 Ch126→Ch150 并在 Ch150 审计 |
 | `tasks/V9-README.md` | **V9 历史事实入口（已收尾）**：生产化地基 + urban 第三体裁 Ch100，Task 173-188 扁平编号；V9.1/V9.2/V9.3/V9.4/V9.5/V9.6 全部完成；urban Ch1-Ch100 100/100 accepted，five-gate PASS，segment audit PASS，T9=0；单项任务文档归档 `archive/v9/` |
 | `tasks/V8-README.md` | **V8 历史任务事实入口（已收尾，含 V8.5）**：多体裁可插拔质量 + 章数爬坡；含 Task 编号治理规则；任务文档与报告归档 `archive/v8/` |
 | `tasks/V7-README.md` | **V7 历史任务事实入口（已收尾）**：sci-fi 单一体裁 Ch200 达成 |
