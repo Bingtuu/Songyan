@@ -4,7 +4,7 @@
 > **类型**: Ch100 起点重建 / Ch200 分段长跑 / 段边界审计
 > **优先级**: P0
 > **依赖**: Task 189 / Task 190 / Task 191
-> **状态**: ◐ Ch200 target 已初始化并推进到 Ch108 hard gate；Ch106/107 accepted，Ch108 settlement numerical validation failed（accepted 107/107，failed=[108]）；Task 192.ab 已建立，修复前不得继续 Ch109/125
+> **状态**: ◐ Ch200 target 已初始化并推进到 Ch108；Ch108 settlement numerical validation 已由 192.ab 修复，accepted 108/108、failed=[]；post-fix segment audit @108 `critical_orphans=2`，Task 192.ac 已建立，修复前不得继续 Ch109/125
 > **预计工作量**: 大
 
 ---
