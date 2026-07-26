@@ -6,7 +6,7 @@
 
 | 项 | 结论 |
 |----|------|
-| 当前阶段 | **V10.2 Task 192.an xuanhuan Ch150 five-gate health stale report blocker**：Task 189/190/191 已完成，Task 192/193/194 任务书已建立；Task 192.p/q/r/s/t/u/v/w/x/y/z/aa/ab/ac/ad/ae/af/ag/ah/ai/aj/ak/al/am 已完成；xuanhuan clean Ch100 source ready，Ch125 checkpoint PASS，Ch129 clean，Ch131 repaired，Ch134 clean，Ch138 clean，Ch144 clean；Ch150 direct P1 已由 192.al 修复，segment audit critical_orphans 已由 192.am 修复，accepted/current head=`fix-150-segment-192am`，run completed_count=150、failed=[]；当前仅剩 five-gate 同章旧 continuity report 排序导致 health=7.3 stale FAIL；已建立 Task 192.an，修复前不得继续 Ch151/175；非 sci-fi Ch200 长跑和优秀度实现仍未完成 |
+| 当前阶段 | **V10.2 Task 192 xuanhuan Ch200 climb 继续推进**：Task 189/190/191 已完成，Task 192/193/194 任务书已建立；Task 192.p/q/r/s/t/u/v/w/x/y/z/aa/ab/ac/ad/ae/af/ag/ah/ai/aj/ak/al/am/an 已完成；xuanhuan clean Ch100 source ready，Ch125 checkpoint PASS，Ch129 clean，Ch131 repaired，Ch134 clean，Ch138 clean，Ch144 clean，Ch150 checkpoint PASS；Ch150 accepted/current head=`fix-150-segment-192am`，run completed_count=150、failed=[]；下一步使用 Task 191 harness 继续 Ch151→Ch175，并在 Ch175 审计；非 sci-fi Ch200 长跑和优秀度实现仍未完成 |
 | V7 收尾 | **已完成**。sci-fi/space_opera + webnovel_intense 单一体裁稳定跑到 Ch200，200/200 accepted，D1 hard clean pass；Ch201-Ch220 20/20 accepted |
 | V8.1 运行时画像 | **已完成**（Task 172a + 172a.p）。`GenreRuntimeProfile` 把 Context Diet 2.0 运行时契约从 sci-fi 默认值解耦；xuanhuan Ch8 halt 已消除（base_budget=15000） |
 | V8.3 文学护栏 | **已完成**（Task 172d）。`literary_guardrail_observe` 去科幻硬编码，lexicon/主角名参数化到 `GenreProfile`，三体裁各配一套；DONE 文档已补齐 |
@@ -67,6 +67,7 @@
 | V10.2 Task 192.am / Ch150 segment audit critical orphans | **Ch150 segment audit critical_orphans 已冻结（2026-07-26）**：post-fix segment audit @150 `critical_orphans=3`、`total_orphans=78`、`halt_would_fire=true`；critical keys：`xuanhuan_lingyuan.lingyuan_token.lushen_blood_residue_age_ten`、`xuanhuan_lingyuan.blood_meridian.star_lingyuan_resonance`、`xuanhuan_lingyuan_inheritance.mother.blood_imprint_third_layer_trigger`；post-fix five-gate health FAIL；冻结目录 `.tmp/backups/192am_xuanhuan_ch150_segment_audit_critical_orphans_20260726-2029/`；任务书 `tasks/192.am-xuanhuan-ch150-segment-audit-critical-orphans.md` |
 | V10.2 Task 192.am DONE / Ch150 segment repair | **Ch150 segment audit critical_orphans 已修复，five-gate stale report 已路由 192.an（2026-07-26）**：创建 Ch150 accepted patch `fix-150-segment-192am`，刷新 3 个 critical tracking 到 Ch150；segment audit @150 PASS（critical_orphans=0、total_orphans=75、halt_would_fire=false）；continuity audit @150 health=8.3、P1=0；T9=0；five-gate @150 仍 FAIL（health_latest=7.3），根因为同章旧 continuity report 排序；DONE `tasks/192.am-xuanhuan-ch150-segment-audit-critical-orphans-DONE.md` |
 | V10.2 Task 192.an / Ch150 five-gate stale health report | **Ch150 five-gate stale report 已冻结（2026-07-26）**：DB 中 Ch150 reports 同时存在旧 `cont_fad57c16` health=7.3 与新 `cont_fd2f0aa2` health=8.3；`five_gate_check.py` 只按 `checked_up_to_chapter DESC` 排序，导致 health_latest 读到旧值；冻结目录 `.tmp/backups/192an_xuanhuan_ch150_five_gate_health_stale_report_20260726-2112/`；任务书 `tasks/192.an-xuanhuan-ch150-five-gate-health-stale-report.md` |
+| V10.2 Task 192.an DONE / Ch150 five-gate health stale report | **Ch150 five-gate stale report 已修复，Ch150 checkpoint PASS（2026-07-26）**：five-gate health latest 改为同章按 `created_at DESC` 选择最新 report；聚焦测试 13 passed；ruff PASS；xuanhuan Ch150 five-gate PASS（health=8.3）、segment audit PASS、T9 PASS；Task 189 sci-fi baseline Ch125/150/175/200 replay 全 PASS；DONE `tasks/192.an-xuanhuan-ch150-five-gate-health-stale-report-DONE.md` |
 | V9.1 阶段 D 实跑验收（2026-07-19） | 熔断实证：¥0.05 预算 ¥0.0514 停（paused + 成本明细 + 章保留），提额 resume 至 completed，成本跨 3 进程 0.0514→0.3647 连续；scifi end10：10/10、0 halt、overdue=0、budget 峰值 0.8325、usage 151 行 estimate 0%、总成本 ¥0.886（≈¥0.089/章）、report 成本视图正确；173 挂死根因确证（sqlite checkpointer 泄漏）真修后 2.5s 自然退出；T9=1（Ch4 countdown_increase，diagnostic 级内容启发式，非系统性） |
 | 172c wuxia 段 3 | Ch51-75 完成（75/75 accepted，0 halt）；Ch75 五门：budget PASS、CED FAIL、**overdue 203 vs sci-fi 117 FAIL**、health 5.6 FAIL、completeness PASS |
 | 172c.r 修复落地 | resolve 失效四层根因全修：prompt card 1.0.4 补 resolve 契约、settlement 事实源纳 overdue、resolve 防幻觉校验、5.3 同事务覆写修复；health 口径对齐 vdim（archived/dormant/active-overdue 全计）；12 新测试绿 |
@@ -128,7 +129,7 @@
 
 ## 下一步
 
-1. **Task 192.an xuanhuan Ch150 five-gate health stale report 修复（下一步，按编号推进）**：192.am 已修复 segment audit critical_orphans，但 five-gate 仍因同章旧 continuity report 排序读到 stale health=7.3；修复前不得继续 Ch151/175。修复后必须重新执行 five-gate（显式 `tasks/189-scifi-ch200-baseline.json`）、segment audit、metrics/T9，并说明 Task 189 baseline 影响。
+1. **Task 192 xuanhuan Ch151→Ch175 继续爬坡（下一步，按编号推进）**：Ch150 checkpoint 已 PASS；下一步必须使用 Task 191 harness 继续到 Ch175，并在 Ch175 执行 five-gate（显式 `tasks/189-scifi-ch200-baseline.json`）、segment audit、metrics/T9。
 2. **Task 193 wuxia Ch28 clean + Ch200**：T9=1（Ch28 省略号占位段），需按 `tasks/193-wuxia-ch200-climb.md` 执行版本化 deterministic clean 并重跑 T9 确认 T9=0；其余章节可直接续跑。
 3. **Task 194 urban Ch200**：urban 是当前唯一 `CONTINUE_READY` 体裁，可按 `tasks/194-urban-ch200-climb.md` 初始化 V10 Ch200 DB；但在当前 goal 下不得跳过 192/193。
 4. **段边界纪律**：Ch125/150/175/200 必须先审计再继续；任一硬门失败或 accepted head 空洞时冻结现场并开父任务后缀修复。
@@ -136,7 +137,7 @@
 
 ## 入口
 
-- **V10 规划入口（V10.2 Task 192.an xuanhuan Ch150 five-gate health stale report blocker）：`tasks/V10-README.md`**
+- **V10 规划入口（V10.2 Task 192 xuanhuan Ch200 climb 继续推进）：`tasks/V10-README.md`**
 - V10 Task 189 DONE：`tasks/189-ch200-baseline-and-checkpoints-DONE.md`
 - V10 Task 189 baseline：`tasks/189-scifi-ch200-baseline.json`
 - V10 Task 189 任务书：`tasks/189-ch200-baseline-and-checkpoints.md`

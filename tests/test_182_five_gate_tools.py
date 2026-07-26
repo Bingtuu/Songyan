@@ -220,6 +220,29 @@ def test_collect_metrics_uses_parent_source_and_consistency_only(tmp_path: Path)
     assert metrics.ced.ced_per_1k_words == 2.0
 
 
+def test_collect_metrics_uses_latest_same_chapter_continuity_report(tmp_path: Path) -> None:
+    db_path = tmp_path / "metrics.db"
+    _init_metric_db(db_path)
+    _seed_metric_rows(db_path)
+
+    conn = sqlite3.connect(db_path)
+    conn.execute("ALTER TABLE continuity_reports ADD COLUMN created_at TEXT")
+    conn.execute(
+        "UPDATE continuity_reports SET created_at = ? WHERE project_id = ?",
+        ("2026-07-26 11:56:07", "p1"),
+    )
+    conn.execute(
+        "INSERT INTO continuity_reports VALUES (?, ?, ?, ?)",
+        ("p1", 2, 8.8, "2026-07-26 12:50:46"),
+    )
+    conn.commit()
+    conn.close()
+
+    metrics = collect_metrics(db_path, project_id="p1", up_to=2, genre="fixture")
+
+    assert metrics.health_latest == 8.8
+
+
 def test_missing_db_fails_without_creating_file(tmp_path: Path) -> None:
     db_path = tmp_path / "missing.db"
 

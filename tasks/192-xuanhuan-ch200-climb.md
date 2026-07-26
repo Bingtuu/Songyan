@@ -4,7 +4,7 @@
 > **类型**: Ch100 起点重建 / Ch200 分段长跑 / 段边界审计
 > **优先级**: P0
 > **依赖**: Task 189 / Task 190 / Task 191
-> **状态**: ◐ Ch200 target 已初始化并推进到 Ch150 accepted；Ch111 `health_low_streak_halt` 已由 192.ad 修复；Ch120 `health_low_p1_halt` 与 failed_chapters=[112,117,118] 已由 192.ae 修复；Ch125 five-gate / segment audit / T9 PASS；Ch129 SettlementExtractor JSON parse 已由 192.af 修复；Ch129 segment audit critical orphans 已由 192.ag 修复；Ch131 已由 192.ah 修复；Ch134 已由 192.ai 修复；Ch138 已由 192.aj 修复；Ch144 `health_low_streak_halt` 已由 192.ak 修复；Ch150 direct P1 已由 192.al 修复；segment audit critical_orphans 已由 192.am 修复；five-gate stale health report 已冻结并建立 192.an，修复前不得继续 Ch151/175
+> **状态**: ◐ Ch200 target 已初始化并推进到 Ch150 checkpoint PASS；Ch111 `health_low_streak_halt` 已由 192.ad 修复；Ch120 `health_low_p1_halt` 与 failed_chapters=[112,117,118] 已由 192.ae 修复；Ch125 five-gate / segment audit / T9 PASS；Ch129 SettlementExtractor JSON parse 已由 192.af 修复；Ch129 segment audit critical orphans 已由 192.ag 修复；Ch131 已由 192.ah 修复；Ch134 已由 192.ai 修复；Ch138 已由 192.aj 修复；Ch144 `health_low_streak_halt` 已由 192.ak 修复；Ch150 direct P1 已由 192.al 修复；segment audit critical_orphans 已由 192.am 修复；five-gate stale health report 已由 192.an 修复；下一步继续 Ch151→Ch175
 > **预计工作量**: 大
 
 ---

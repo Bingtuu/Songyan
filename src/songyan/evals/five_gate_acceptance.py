@@ -365,10 +365,14 @@ def collect_metrics(
         )
         overdue = int(cur.fetchone()[0])
 
+        health_order = "checked_up_to_chapter DESC"
+        if _column_exists(cur, "continuity_reports", "created_at"):
+            health_order += ", datetime(created_at) DESC"
+        health_order += ", rowid DESC"
         cur.execute(
-            """SELECT overall_health_score FROM continuity_reports
-               WHERE project_id = ? AND checked_up_to_chapter <= ?
-               ORDER BY checked_up_to_chapter DESC LIMIT 1""",
+            f"""SELECT overall_health_score FROM continuity_reports
+                WHERE project_id = ? AND checked_up_to_chapter <= ?
+                ORDER BY {health_order} LIMIT 1""",
             (project_id, up_to),
         )
         health_row = cur.fetchone()
@@ -430,6 +434,11 @@ def _table_exists(cur: sqlite3.Cursor, table_name: str) -> bool:
         (table_name,),
     )
     return cur.fetchone() is not None
+
+
+def _column_exists(cur: sqlite3.Cursor, table_name: str, column_name: str) -> bool:
+    cur.execute(f"PRAGMA table_info({table_name})")
+    return any(str(row["name"]) == column_name for row in cur.fetchall())
 
 
 def evaluate_metrics(
