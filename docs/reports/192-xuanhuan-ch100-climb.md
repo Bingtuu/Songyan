@@ -42,4 +42,5 @@ Ch100 全 accepted 达标，无 halt。V 维度证据见上表。
 - T9 @105: PASS（`.tmp/192z_xuanhuan_ch105_t9_after.json`）：`meta_artifact=0`、`duplicate=0`、`timeline=0`
 - DB SHA256 after 192.z: `E87011FDE32DD16E439CC13CE442F655F2461C9D7F52D38B1AA0F32A98B21333`
 - 冻结目录: `.tmp/backups/192z_xuanhuan_ch105_segment_audit_critical_orphans_20260726-0753/`
-- 后续可恢复 Ch106→Ch125；Ch125 段边界必须显式使用 `tasks/189-scifi-ch200-baseline.json`
+- Ch106 invalid model run-state pollution 已由 Task 192.aa 清理：run 恢复为 `current_chapter=105`、`failed=[]`、accepted 105/105；DB SHA256 after 192.aa `A28A59EF06D0F93DBA33AC0CEF99BBA35CB9E96BA8106062D5D2072154CAC618`
+- 后续可用显式 `LLM_MODEL=deepseek/deepseek-v4-flash` 恢复 Ch106→Ch125；Ch125 段边界必须显式使用 `tasks/189-scifi-ch200-baseline.json`

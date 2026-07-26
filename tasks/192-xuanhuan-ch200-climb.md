@@ -4,7 +4,7 @@
 > **类型**: Ch100 起点重建 / Ch200 分段长跑 / 段边界审计
 > **优先级**: P0
 > **依赖**: Task 189 / Task 190 / Task 191
-> **状态**: ◐ Ch200 target 已初始化并推进到 Ch105；Ch101-Ch105 accepted、failed=[]，Ch105 direct P1 已由 192.y 修复，segment audit blocker 已由 192.z 修复到 PASS；下一步使用 Task 191 harness 恢复 Ch106→Ch125
+> **状态**: ◐ Ch200 target 已初始化并推进到 Ch105；Ch101-Ch105 accepted、failed=[]，Ch105 direct P1 已由 192.y 修复，segment audit blocker 已由 192.z 修复到 PASS，192.aa 已清理 invalid model run-state pollution；下一步使用 Task 191 harness + 显式 `LLM_MODEL=deepseek/deepseek-v4-flash` 恢复 Ch106→Ch125
 > **预计工作量**: 大
 
 ---
