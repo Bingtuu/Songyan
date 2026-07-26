@@ -6,7 +6,7 @@
 
 | 项 | 结论 |
 |----|------|
-| 当前阶段 | **V10.2 Task 192.ah xuanhuan Ch131 LiteraryAuditor JSON parse blocker**：V9 已全量闭环（2026-07-23），事实入口 `tasks/V9-README.md`，归档入口 `archive/v9/INDEX.md`。V10 规划入口为 `tasks/V10-README.md`；Task 189 已冻结 sci-fi Ch200 baseline/checkpoint；Task 190 已完成 xuanhuan/wuxia/urban Ch100 终点事实源盘点（xuanhuan=REBUILD_REQUIRED、wuxia=BLOCKED_DIRTY_SAMPLE、urban=CONTINUE_READY）；Task 191 已完成 Ch200 harness 准备；Task 192/193/194 正式任务书已建立；Task 192.p/q/r/s/t/u/v/w/x/y/z/aa/ab/ac/ad/ae/af/ag 已完成；xuanhuan clean Ch100 source ready，Ch125 checkpoint PASS，Ch129 clean；Ch130 accepted 后，Ch131 LiteraryAuditor JSON parse failure，run 已冻结为 paused、completed_count=130、failed=[131]；已建立 Task 192.ah，修复前不得继续 Ch132/150；非 sci-fi Ch200 长跑和优秀度实现仍未完成 |
+| 当前阶段 | **V10.2 Task 192 xuanhuan Ch200 climb 继续推进**：V9 已全量闭环（2026-07-23），事实入口 `tasks/V9-README.md`，归档入口 `archive/v9/INDEX.md`。V10 规划入口为 `tasks/V10-README.md`；Task 189 已冻结 sci-fi Ch200 baseline/checkpoint；Task 190 已完成 xuanhuan/wuxia/urban Ch100 终点事实源盘点（xuanhuan=REBUILD_REQUIRED、wuxia=BLOCKED_DIRTY_SAMPLE、urban=CONTINUE_READY）；Task 191 已完成 Ch200 harness 准备；Task 192/193/194 正式任务书已建立；Task 192.p/q/r/s/t/u/v/w/x/y/z/aa/ab/ac/ad/ae/af/ag/ah 已完成；xuanhuan clean Ch100 source ready，Ch125 checkpoint PASS，Ch129 clean，Ch131 LiteraryAuditor JSON parse 已由 192.ah 修复，run completed 1..131、failed=[]、segment audit @131 PASS、T9=0；下一步使用 Task 191 harness 继续 Ch132→Ch150，并在 Ch150 执行 five-gate/segment audit/T9；非 sci-fi Ch200 长跑和优秀度实现仍未完成 |
 | V7 收尾 | **已完成**。sci-fi/space_opera + webnovel_intense 单一体裁稳定跑到 Ch200，200/200 accepted，D1 hard clean pass；Ch201-Ch220 20/20 accepted |
 | V8.1 运行时画像 | **已完成**（Task 172a + 172a.p）。`GenreRuntimeProfile` 把 Context Diet 2.0 运行时契约从 sci-fi 默认值解耦；xuanhuan Ch8 halt 已消除（base_budget=15000） |
 | V8.3 文学护栏 | **已完成**（Task 172d）。`literary_guardrail_observe` 去科幻硬编码，lexicon/主角名参数化到 `GenreProfile`，三体裁各配一套；DONE 文档已补齐 |
@@ -55,6 +55,7 @@
 | V10.2 Task 192 Ch129 segment audit / 192.ag | **Ch129 segment audit critical_orphans 已冻结（2026-07-26）**：192.af 修复后复验 segment audit @129 失败：`critical_orphans=11`、`total_orphans=89`、`halt_would_fire=true`；T9 Ch1-Ch129 PASS：meta=0、duplicate=0、timeline=0；run 已冻结为 `status=paused`、`current_chapter=129`、completed_count=129、failed=[]；frozen DB SHA256 `47B740BF5CB9C0693A30AAADE83C4BAEDACAB191967B1524042255047BA456D0`；冻结目录 `.tmp/backups/192ag_xuanhuan_ch129_segment_audit_critical_orphans_20260726-1437/`；任务书 `tasks/192.ag-xuanhuan-ch129-segment-audit-critical-orphans.md` |
 | V10.2 Task 192.ag DONE / Ch129 segment repair | **Ch129 segment audit critical_orphans 已修复（2026-07-26）**：创建 Ch129 accepted continuity patch `fix-129-d8015e35`（parent `v-08f5f8f0`），补入三重钥匙、守门者、灵渊拳、母亲守门者血脉、红色传承印记、灵渊令牌/血脉手印/金色徽记/令牌二分/猎渊者等承接；刷新 11 条 critical tracking 到 Ch129 并 resolve 对应 unresolved P1 marks；final DB SHA256 `2A405CBE67D8D17C5BD4CEFD24B9EBF3005FFFC631A6587B55BB9F31A3F3ED1C`；run status=`completed`、completed_count=129、failed=[]；segment audit @129 PASS：`critical_orphans=0`、`total_orphans=78`、`halt_would_fire=false`；T9=0；DONE `tasks/192.ag-xuanhuan-ch129-segment-audit-critical-orphans-DONE.md` |
 | V10.2 Task 192 Ch131 LiteraryAuditor JSON parse / 192.ah | **Ch131 LiteraryAuditor JSON parse failure 已冻结（2026-07-26）**：Ch129 clean 后继续 `--to 150 --genre xuanhuan`，Ch130 accepted `v-7561da67`；Ch131 draft `v-131-1-2d72805f` 在 LiteraryAuditor 阶段触发 `LLM 返回内容无法解析为 JSON（标准解析和 repair 均失败）`，chapter_failed，failed=[131]；isolate 继续进入 Ch132 GoalPlanner 后人工中断 wrapper；run 已冻结为 `status=paused`、`current_chapter=131`、completed_count=130、failed=[131]、total_cost=5.8667；frozen DB SHA256 `4A128DEBFB66631F84446B0889FEDE7BA2B6973CA21F9E18B8A91A4F7A308FAC`；冻结目录 `.tmp/backups/192ah_xuanhuan_ch131_literary_auditor_json_parse_20260726-1511/`；任务书 `tasks/192.ah-xuanhuan-ch131-literary-auditor-json-parse.md` |
+| V10.2 Task 192.ah DONE / Ch131 LiteraryAuditor repair | **Ch131 LiteraryAuditor JSON parse 已修复（2026-07-26）**：使用现有 pipeline API 单章重跑 Ch131，wrapper `run-20260726-151558289` PASS；Ch131 accepted version `v-23e50dbd`，SettlementExtractor valid，SummaryWriter generated `sum-d160a55a51de4a2bb82440ebc03ec23a-131-80e9dd98`；run state 已修正为 completed 1..131、failed=[]、total_cost=5.982179；final DB SHA256 `6ABE3E76698C3FA0DE0CAC03BD3E5BBADADE30031699FA410C70AC3D189D5FBE`；segment audit @131 PASS：`critical_orphans=0`、`total_orphans=70`、`halt_would_fire=false`；T9=0；DONE `tasks/192.ah-xuanhuan-ch131-literary-auditor-json-parse-DONE.md` |
 | V9.1 阶段 D 实跑验收（2026-07-19） | 熔断实证：¥0.05 预算 ¥0.0514 停（paused + 成本明细 + 章保留），提额 resume 至 completed，成本跨 3 进程 0.0514→0.3647 连续；scifi end10：10/10、0 halt、overdue=0、budget 峰值 0.8325、usage 151 行 estimate 0%、总成本 ¥0.886（≈¥0.089/章）、report 成本视图正确；173 挂死根因确证（sqlite checkpointer 泄漏）真修后 2.5s 自然退出；T9=1（Ch4 countdown_increase，diagnostic 级内容启发式，非系统性） |
 | 172c wuxia 段 3 | Ch51-75 完成（75/75 accepted，0 halt）；Ch75 五门：budget PASS、CED FAIL、**overdue 203 vs sci-fi 117 FAIL**、health 5.6 FAIL、completeness PASS |
 | 172c.r 修复落地 | resolve 失效四层根因全修：prompt card 1.0.4 补 resolve 契约、settlement 事实源纳 overdue、resolve 防幻觉校验、5.3 同事务覆写修复；health 口径对齐 vdim（archived/dormant/active-overdue 全计）；12 新测试绿 |
@@ -116,7 +117,7 @@
 
 ## 下一步
 
-1. **Task 192.ah xuanhuan Ch131 LiteraryAuditor JSON parse 修复（下一步，按编号推进）**：先修复 Ch131 accepted head / settlement / summary 与 run state；修复前不得继续 Ch132/150。
+1. **Task 192 xuanhuan Ch132→Ch150 继续爬坡（下一步，按编号推进）**：192.ah 已修复 Ch131 accepted head / settlement / summary 与 run state；下一步必须使用 Task 191 harness 继续到 Ch150，并在 Ch150 执行 five-gate（显式 `tasks/189-scifi-ch200-baseline.json`）、segment audit、metrics/T9。
 2. **Task 193 wuxia Ch28 clean + Ch200**：T9=1（Ch28 省略号占位段），需按 `tasks/193-wuxia-ch200-climb.md` 执行版本化 deterministic clean 并重跑 T9 确认 T9=0；其余章节可直接续跑。
 3. **Task 194 urban Ch200**：urban 是当前唯一 `CONTINUE_READY` 体裁，可按 `tasks/194-urban-ch200-climb.md` 初始化 V10 Ch200 DB；但在当前 goal 下不得跳过 192/193。
 4. **段边界纪律**：Ch125/150/175/200 必须先审计再继续；任一硬门失败或 accepted head 空洞时冻结现场并开父任务后缀修复。
@@ -124,7 +125,7 @@
 
 ## 入口
 
-- **V10 规划入口（V10.2 Task 192.ah xuanhuan Ch131 LiteraryAuditor JSON parse blocker）：`tasks/V10-README.md`**
+- **V10 规划入口（V10.2 Task 192 xuanhuan Ch200 climb 继续推进）：`tasks/V10-README.md`**
 - V10 Task 189 DONE：`tasks/189-ch200-baseline-and-checkpoints-DONE.md`
 - V10 Task 189 baseline：`tasks/189-scifi-ch200-baseline.json`
 - V10 Task 189 任务书：`tasks/189-ch200-baseline-and-checkpoints.md`

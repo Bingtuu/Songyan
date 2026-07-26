@@ -4,7 +4,7 @@
 > **类型**: Ch100 起点重建 / Ch200 分段长跑 / 段边界审计
 > **优先级**: P0
 > **依赖**: Task 189 / Task 190 / Task 191
-> **状态**: ◐ Ch200 target 已初始化并推进到 Ch130 accepted；Ch111 `health_low_streak_halt` 已由 192.ad 修复；Ch120 `health_low_p1_halt` 与 failed_chapters=[112,117,118] 已由 192.ae 修复；Ch125 five-gate / segment audit / T9 PASS；Ch129 SettlementExtractor JSON parse 已由 192.af 修复；Ch129 segment audit critical orphans 已由 192.ag 修复；Ch131 LiteraryAuditor JSON parse failed，进入 192.ah 修复；修复前不得继续 Ch132/150
+> **状态**: ◐ Ch200 target 已初始化并推进到 Ch131 clean；Ch111 `health_low_streak_halt` 已由 192.ad 修复；Ch120 `health_low_p1_halt` 与 failed_chapters=[112,117,118] 已由 192.ae 修复；Ch125 five-gate / segment audit / T9 PASS；Ch129 SettlementExtractor JSON parse 已由 192.af 修复；Ch129 segment audit critical orphans 已由 192.ag 修复；Ch131 LiteraryAuditor JSON parse 已由 192.ah 修复；下一步继续 Ch132→Ch150，并在 Ch150 审计
 > **预计工作量**: 大
 
 ---
