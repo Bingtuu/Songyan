@@ -571,6 +571,7 @@ python scripts/run_172a7_genre_validation.py --templates scifi --end 10
 - [`tasks/192-xuanhuan-ch200-climb-DONE.md`](tasks/192-xuanhuan-ch200-climb-DONE.md) — V10 Task 192：xuanhuan Ch200 climb 完成报告
 - [`docs/reports/192-xuanhuan-ch100-climb.md`](docs/reports/192-xuanhuan-ch100-climb.md) — V10 Task 192：xuanhuan clean Ch100 rebuild 阶段报告（Ch100 source ready）
 - [`tasks/193-wuxia-ch200-climb.md`](tasks/193-wuxia-ch200-climb.md) — V10 Task 193：wuxia Ch200 爬坡任务书
+- [`tasks/193.p-wuxia-ch125-missing-checkpoints-table-DONE.md`](tasks/193.p-wuxia-ch125-missing-checkpoints-table-DONE.md) — V10 Task 193.p：wuxia Ch125 前旧 DB 缺 checkpoint table runtime 修复
 - [`tasks/194-urban-ch200-climb.md`](tasks/194-urban-ch200-climb.md) — V10 Task 194：urban Ch200 爬坡任务书
 - [`tasks/V9-README.md`](tasks/V9-README.md) — V9 任务事实入口（已收尾，生产化地基 + urban Ch100）
 - [`archive/v5/INDEX.md`](archive/v5/INDEX.md) — V5 任务文档与报告归档索引

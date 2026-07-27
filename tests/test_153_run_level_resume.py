@@ -502,6 +502,17 @@ class TestCheckpointPruning:
         finally:
             settings.checkpointer_mode = original
 
+    async def test_prune_orphan_checkpoints_sqlite_without_tables(self, test_db: Any) -> None:
+        """Continuation DBs copied from old runs may not have LangGraph tables yet."""
+        from songyan.config import settings
+
+        original = settings.checkpointer_mode
+        settings.checkpointer_mode = "sqlite"
+        try:
+            assert await prune_orphan_checkpoints(PID, set()) == 0
+        finally:
+            settings.checkpointer_mode = original
+
     async def test_prune_orphan_checkpoints_sqlite(self, test_db: Any) -> None:
         """metadata 带 project_id 的旧 checkpoint 可被清理；不匹配的保留."""
         from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver

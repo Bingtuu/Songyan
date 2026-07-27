@@ -89,6 +89,11 @@ async def prune_orphan_checkpoints(project_id: str, active_thread_ids: set[str])
     async with aiosqlite.connect(db_path) as conn:
         await conn.execute("PRAGMA foreign_keys = ON")
         await conn.execute("PRAGMA busy_timeout = 5000")
+        table_cursor = await conn.execute(
+            "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'checkpoints' LIMIT 1"
+        )
+        if await table_cursor.fetchone() is None:
+            return 0
         if active_thread_ids:
             placeholders = ",".join("?" for _ in active_thread_ids)
             cursor = await conn.execute(
