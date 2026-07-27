@@ -6,7 +6,7 @@
 
 | 项 | 结论 |
 |----|------|
-| 当前阶段 | **V10.2 Task 192 xuanhuan Ch200 climb 继续推进**：Task 189/190/191 已完成，Task 192/193/194 任务书已建立；Task 192.p/q/r/s/t/u/v/w/x/y/z/aa/ab/ac/ad/ae/af/ag/ah/ai/aj/ak/al/am/an/ao/ap 已完成；Task 192.aq 已建立并冻结 Ch168 hard gate；xuanhuan clean Ch100 source ready，Ch125 checkpoint PASS，Ch150 checkpoint PASS，Ch156 clean，Ch162 clean；Ch168 accepted/current head=`v-7e77baf0`，run paused、completed_count=168、failed=[]，硬门 `health_low_p1_halt: P1_count=2`；下一步必须先修复 192.aq，不得继续 Ch169/175；非 sci-fi Ch200 长跑和优秀度实现仍未完成 |
+| 当前阶段 | **V10.2 Task 192 xuanhuan Ch200 climb 继续推进**：Task 189/190/191 已完成，Task 192/193/194 任务书已建立；Task 192.p/q/r/s/t/u/v/w/x/y/z/aa/ab/ac/ad/ae/af/ag/ah/ai/aj/ak/al/am/an/ao/ap/aq 已完成；xuanhuan clean Ch100 source ready，Ch125 checkpoint PASS，Ch150 checkpoint PASS，Ch156 clean，Ch162 clean，Ch168 clean；Ch168 accepted/current head=`fix-168-segment-192aq`，run completed_count=168、failed=[]；下一步使用 Task 191 harness 继续 Ch169→Ch175，并在 Ch175 审计；非 sci-fi Ch200 长跑和优秀度实现仍未完成 |
 | V7 收尾 | **已完成**。sci-fi/space_opera + webnovel_intense 单一体裁稳定跑到 Ch200，200/200 accepted，D1 hard clean pass；Ch201-Ch220 20/20 accepted |
 | V8.1 运行时画像 | **已完成**（Task 172a + 172a.p）。`GenreRuntimeProfile` 把 Context Diet 2.0 运行时契约从 sci-fi 默认值解耦；xuanhuan Ch8 halt 已消除（base_budget=15000） |
 | V8.3 文学护栏 | **已完成**（Task 172d）。`literary_guardrail_observe` 去科幻硬编码，lexicon/主角名参数化到 `GenreProfile`，三体裁各配一套；DONE 文档已补齐 |
@@ -73,6 +73,7 @@
 | V10.2 Task 192.ap / Ch162 health low P1 | **Ch162 health_low_p1_halt 已冻结（2026-07-27）**：Task 191 harness 从 Ch156 继续到 Ch175，Ch157 `v-7989644f`、Ch158 `v-bf5663cd`、Ch159 `v-6a5b432a`、Ch160 `v-d30779c0`、Ch161 `v-e47e6539`、Ch162 `v-52e6e1ff` accepted；随后 auto halt：`health_low_p1_halt: P1_count=1 (critical orphaned setting)`；P1 target=`xuanhuan_lingyuan_seal.self.as_door`；wrapper `run-20260727-033920959` FAIL_NONZERO_EXIT；run paused、current_chapter=162、completed_count=162、failed=[]、total_cost=11.560201；continuity audit @162 health=8.6；frozen DB SHA256 `0DCD6FC174DB12FC86D911E1BBCB44CE63FE64DDAE1A4E21255081A45E1DF642`；冻结目录 `.tmp/backups/192ap_xuanhuan_ch162_health_low_p1_halt_20260727-0442/`；任务书 `tasks/192.ap-xuanhuan-ch162-health-low-p1-halt.md` |
 | V10.2 Task 192.ap DONE / Ch162 health low P1 repair | **Ch162 health_low_p1_halt 已修复到 continuity / segment audit / T9 PASS（2026-07-27）**：创建 Ch162 accepted patches `fix-162-p1-192ap` 与 `fix-162-segment-192ap`，并创建 Ch161 clean patch `clean-161-t9-192ap`；最终 Ch162 accepted/current head `fix-162-segment-192ap`，Ch161 accepted/current head `clean-161-t9-192ap`；run completed 1..162、failed=[]、status=completed；continuity audit @162 health=9.6、overdue=0；segment audit @162 PASS（critical_orphans=0、total_orphans=76、halt_would_fire=false）；T9=0；final DB SHA256 `B196E7C30F32535D032EBDBAA39A7EE0CC07F01635B6CA7881B58E18B815F66B`；DONE `tasks/192.ap-xuanhuan-ch162-health-low-p1-halt-DONE.md` |
 | V10.2 Task 192.aq / Ch168 health low P1 | **Ch168 health_low_p1_halt 已冻结（2026-07-27）**：Task 191 harness 从 Ch162 继续到 Ch175，Ch163 `v-650700df`、Ch164 `v-c12070fc`、Ch165 `v-49e1f8ae`、Ch166 `v-6c25b677`、Ch167 `v-1b8e1a39`、Ch168 `v-7e77baf0` accepted；随后 auto halt：`health_low_p1_halt: P1_count=2 (critical orphaned setting)`；P1 targets=`xuanhuan_lingyuan.guardians.mother_descendant`、`xuanhuan_lingyuan_seal.self.as_door`；wrapper `run-20260727-101441188` FAIL_NONZERO_EXIT；run paused、current_chapter=168、completed_count=168、failed=[]、total_cost=12.644732；continuity audit @168 health=7.2；frozen DB SHA256 `7582592A83263CA235345463426A1E70AFFE7D82703A6814656B6068D7CA7C30`；冻结目录 `.tmp/backups/192aq_xuanhuan_ch168_health_low_p1_halt_20260727-1206/`；任务书 `tasks/192.aq-xuanhuan-ch168-health-low-p1-halt.md` |
+| V10.2 Task 192.aq DONE / Ch168 health low P1 repair | **Ch168 health_low_p1_halt 已修复到 continuity / segment audit / T9 PASS（2026-07-27）**：创建 Ch168 accepted patches `fix-168-p1-192aq` 与 `fix-168-segment-192aq`；最终 Ch168 accepted/current head `fix-168-segment-192aq`；run completed 1..168、failed=[]、status=completed；continuity audit @168 health=9.2、P1=0、P2=1；segment audit @168 PASS（critical_orphans=0、total_orphans=84、halt_would_fire=false）；T9=0；final DB SHA256 `FBFA3816B1DD0A02737571119994020131B1543BF9B9DAA6B4D4A9698676F75F`；DONE `tasks/192.aq-xuanhuan-ch168-health-low-p1-halt-DONE.md` |
 | V9.1 阶段 D 实跑验收（2026-07-19） | 熔断实证：¥0.05 预算 ¥0.0514 停（paused + 成本明细 + 章保留），提额 resume 至 completed，成本跨 3 进程 0.0514→0.3647 连续；scifi end10：10/10、0 halt、overdue=0、budget 峰值 0.8325、usage 151 行 estimate 0%、总成本 ¥0.886（≈¥0.089/章）、report 成本视图正确；173 挂死根因确证（sqlite checkpointer 泄漏）真修后 2.5s 自然退出；T9=1（Ch4 countdown_increase，diagnostic 级内容启发式，非系统性） |
 | 172c wuxia 段 3 | Ch51-75 完成（75/75 accepted，0 halt）；Ch75 五门：budget PASS、CED FAIL、**overdue 203 vs sci-fi 117 FAIL**、health 5.6 FAIL、completeness PASS |
 | 172c.r 修复落地 | resolve 失效四层根因全修：prompt card 1.0.4 补 resolve 契约、settlement 事实源纳 overdue、resolve 防幻觉校验、5.3 同事务覆写修复；health 口径对齐 vdim（archived/dormant/active-overdue 全计）；12 新测试绿 |
@@ -134,7 +135,7 @@
 
 ## 下一步
 
-1. **Task 192.aq xuanhuan Ch168 health_low_p1_halt 修复（下一步，按编号推进）**：Ch168 已 accepted 但触发 `health_low_p1_halt: P1_count=2`；现场已冻结，任务书已建立；修复前不得继续 Ch169/175。修复完成后再恢复 Task 191 harness 到 Ch175，并在 Ch175 执行 five-gate（显式 `tasks/189-scifi-ch200-baseline.json`）、segment audit、metrics/T9。
+1. **Task 192 xuanhuan Ch169→Ch175 继续爬坡（下一步，按编号推进）**：Ch168 已由 192.aq 修复到 clean；下一步必须使用 Task 191 harness 继续到 Ch175，并在 Ch175 执行 five-gate（显式 `tasks/189-scifi-ch200-baseline.json`）、segment audit、metrics/T9。
 2. **Task 193 wuxia Ch28 clean + Ch200**：T9=1（Ch28 省略号占位段），需按 `tasks/193-wuxia-ch200-climb.md` 执行版本化 deterministic clean 并重跑 T9 确认 T9=0；其余章节可直接续跑。
 3. **Task 194 urban Ch200**：urban 是当前唯一 `CONTINUE_READY` 体裁，可按 `tasks/194-urban-ch200-climb.md` 初始化 V10 Ch200 DB；但在当前 goal 下不得跳过 192/193。
 4. **段边界纪律**：Ch125/150/175/200 必须先审计再继续；任一硬门失败或 accepted head 空洞时冻结现场并开父任务后缀修复。
@@ -173,6 +174,7 @@
 - V10 Task 192.ap 任务书：`tasks/192.ap-xuanhuan-ch162-health-low-p1-halt.md`
 - V10 Task 192.ap DONE：`tasks/192.ap-xuanhuan-ch162-health-low-p1-halt-DONE.md`
 - V10 Task 192.aq 任务书：`tasks/192.aq-xuanhuan-ch168-health-low-p1-halt.md`
+- V10 Task 192.aq DONE：`tasks/192.aq-xuanhuan-ch168-health-low-p1-halt-DONE.md`
 - V10 Task 192 Ch75 执行报告：`docs/reports/192-xuanhuan-ch100-climb.md`
 - V10 Task 193 任务书：`tasks/193-wuxia-ch200-climb.md`
 - V10 Task 194 任务书：`tasks/194-urban-ch200-climb.md`
