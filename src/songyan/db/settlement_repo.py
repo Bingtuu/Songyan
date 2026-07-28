@@ -186,6 +186,46 @@ class ForeshadowingRepository:
             for row in rows
         ]
 
+    async def list_overdue_actionable(
+        self, project_id: str, up_to_chapter: int
+    ) -> list[ForeshadowingItem]:
+        """Task 193.t: operational 决策口径的 overdue 查询（lifecycle-aware）.
+
+        与冻结验收门口径 ``list_overdue_unresolved``（172c.r，全计
+        archived/dormant/active，供五门 overdue / vdim 使用）不同，本查询只计
+        ``lifecycle_status = 'active'`` 的 overdue——dormant（生命周期调度器
+        对 >5 章逾期自动停放）与 archived（>15 章退役）是系统自身已退休的条目，
+        不应再对 run 产生停机等急性压力（192.ad：11 条 overdue 含 dormant/
+        archived 被计入 P2 触发 health_low_streak_halt）。
+
+        仅用于 continuity health / streak halt 的 operational 统计；验收门
+        （five_gate 自有 SQL、vdim）不使用本方法，冻结口径不变。
+        """
+        async with get_db() as conn:
+            conn.row_factory = Row
+            cursor = await conn.execute(
+                """SELECT * FROM foreshadowings
+                WHERE project_id = ?
+                  AND expected_resolve_chapter IS NOT NULL
+                  AND expected_resolve_chapter < ?
+                  AND status != 'resolved'
+                  AND lifecycle_status = 'active'
+                ORDER BY planted_in_chapter, foreshadowing_id""",
+                (project_id, up_to_chapter),
+            )
+            rows = await cursor.fetchall()
+        return [
+            ForeshadowingItem(
+                foreshadowing_id=row["foreshadowing_id"],
+                description=row["description"],
+                planted_in_chapter=row["planted_in_chapter"],
+                expected_resolve_chapter=row["expected_resolve_chapter"],
+                status=row["status"],
+                source_version_id=row["source_version_id"],
+            )
+            for row in rows
+        ]
+
     async def archive_overdue(
         self, project_id: str, current_chapter: int, window: int = 5,
         conn: aiosqlite.Connection | None = None,

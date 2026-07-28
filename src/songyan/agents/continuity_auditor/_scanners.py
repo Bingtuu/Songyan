@@ -352,8 +352,15 @@ async def _find_overdue_foreshadowings(
     172c.r: 改用 ``list_overdue_unresolved``（与 vdim 冻结验收口径一致）——
     旧实现复用 ``list_active()``，同时漏计 archived/dormant overdue 与
     active 但 status='overdue' 的条目，导致 health 指标与 vdim overdue 门割裂。
+
+    193.t: 切换为 ``list_overdue_actionable``——本函数的唯一消费者是
+    continuity health / streak halt 的 **operational 决策**（要不要停 run），
+    而 dormant（>5 章逾期系统停放）/ archived（>15 章退役）是生命周期调度器
+    已退休的条目，不应再产生急性 P2 压力（192.ad 实证）。vdim / five-gate 的
+    overdue 验收门走 five_gate 自有 SQL（冻结全计口径），不受影响；两口径的
+    分工自此显式分离：验收门看全量债务，operational 只看当前可操作债务。
     """
-    overdue_items = await foreshadowing_repo.list_overdue_unresolved(
+    overdue_items = await foreshadowing_repo.list_overdue_actionable(
         project_id, up_to_chapter
     )
     result: list[OverdueForeshadowing] = []

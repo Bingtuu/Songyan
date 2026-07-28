@@ -179,14 +179,22 @@ class TestListOverdueUnresolved:
 
 
 # =============================================================================
-# Scanner 口径：_find_overdue_foreshadowings 对齐 vdim
+# Scanner 口径：_find_overdue_foreshadowings（193.t 起为 operational 口径）
 # =============================================================================
 
 
 class TestFindOverdueForeshadowingsScope:
-    async def test_counts_archived_dormant_and_active_overdue(
+    async def test_counts_only_active_lifecycle_overdue(
         self, fs_db: Path
     ) -> None:
+        """193.t: operational（health/streak）只计 lifecycle active 的 overdue.
+
+        172c.r 曾要求与 vdim 冻结口径一致（archived/dormant 全计）；193.t 将
+        验收门口径（five_gate 自有 SQL / vdim，仍全计）与 operational 口径显式
+        分离——dormant/archived 是生命周期调度器已停放/退役条目，不再产生停
+        run 的急性 P2 压力（192.ad）。全计口径的回归守护见
+        TestListOverdueUnresolved 与 tests/test_193t_overdue_actionable.py。
+        """
         await _seed_project("p1")
         await _seed_version("p1")
         repo = ForeshadowingRepository()
@@ -200,11 +208,7 @@ class TestFindOverdueForeshadowingsScope:
 
         result = await _find_overdue_foreshadowings("p1", 50, repo)
         ids = {fs.foreshadowing_id for fs in result}
-        assert ids == {
-            "fs-active-overdue",
-            "fs-dormant-overdue",
-            "fs-archived-overdue",
-        }
+        assert ids == {"fs-active-overdue"}
         for fs in result:
             assert fs.overdue_by == 50 - 10
 
