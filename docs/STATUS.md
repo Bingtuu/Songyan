@@ -6,7 +6,7 @@
 
 | 项 | 结论 |
 |----|------|
-| 当前阶段 | **V10.2 Task 193.q wuxia Ch117 health_low_p1_halt 已冻结**：Task 189/190/191 已完成，Task 192/193/194 任务书已建立；Task 192 xuanhuan Ch200 已完成，含 192.p/q/r/s/t/u/v/w/x/y/z/aa/ab/ac/ad/ae/af/ag/ah/ai/aj/ak/al/am/an/ao/ap/aq/ar/as/at/au/av/aw 全部 DONE；xuanhuan Ch200 accepted/current head=`v-5659d486`，run completed_count=200、failed=[]，five-gate PASS、segment audit PASS、T9=0；Task 193 已完成 wuxia Ch28 deterministic clean/source 初始化与 193.p checkpoint table runtime 修复；wuxia 当前 Ch117 accepted/current head=`v-2175f61b`、run_id=`run-v10-wuxia-5bbfab3a`、run paused、failed=[]、health=7.0；P1 target=`broken_blade_sect_martial_arts.blood_abyss.reverse_practice`；下一步必须先修复 193.q，不得继续 Ch118/Ch125；urban Ch200 与优秀度实现仍未完成 |
+| 当前阶段 | **V10.2 Task 193 wuxia Ch200 climb 继续推进**：Task 189/190/191 已完成，Task 192/193/194 任务书已建立；Task 192 xuanhuan Ch200 已完成，含 192.p/q/r/s/t/u/v/w/x/y/z/aa/ab/ac/ad/ae/af/ag/ah/ai/aj/ak/al/am/an/ao/ap/aq/ar/as/at/au/av/aw 全部 DONE；xuanhuan Ch200 accepted/current head=`v-5659d486`，run completed_count=200、failed=[]，five-gate PASS、segment audit PASS、T9=0；Task 193 已完成 wuxia Ch28 deterministic clean/source 初始化、193.p checkpoint table runtime 修复与 193.q Ch117 P1 修复；wuxia 当前 Ch117 accepted/current head=`fix-117-p1-193q`、run_id=`run-v10-wuxia-5bbfab3a`、run running、failed=[]、continuity health=8.0、segment audit PASS、T9=0；下一步从 Ch118 resume 到 Ch125 审计；urban Ch200 与优秀度实现仍未完成 |
 | V7 收尾 | **已完成**。sci-fi/space_opera + webnovel_intense 单一体裁稳定跑到 Ch200，200/200 accepted，D1 hard clean pass；Ch201-Ch220 20/20 accepted |
 | V8.1 运行时画像 | **已完成**（Task 172a + 172a.p）。`GenreRuntimeProfile` 把 Context Diet 2.0 运行时契约从 sci-fi 默认值解耦；xuanhuan Ch8 halt 已消除（base_budget=15000） |
 | V8.3 文学护栏 | **已完成**（Task 172d）。`literary_guardrail_observe` 去科幻硬编码，lexicon/主角名参数化到 `GenreProfile`，三体裁各配一套；DONE 文档已补齐 |
@@ -88,6 +88,7 @@
 | V10.2 Task 192.aw DONE / Ch200 five-gate health repair | **Ch200 five-gate health FAIL 已修复，Task 192 xuanhuan Ch200 达成（2026-07-28）**：根因为 Ch200 accepted 后缺少 `checked_up_to_chapter=200` continuity report，five-gate 读到 Ch198 stale health=7.6；补跑 continuity audit @200 得 `cont_b75b3a02` health=8.1、P1=0；Task 191 harness audit @200 PASS：five-gate PASS（budget=0.8632、CED/1k=0.0416、overdue=14、health=8.1、accepted=200/gap=0）、segment audit PASS（critical_orphans=0、total_orphans=50、halt_would_fire=false）、T9=0；final DB SHA256 `ADD39F823B7EE5F4A6A8121F9491B7DC4AE4D5C16F16F9CEB8D1093EE337380F`；DONE `tasks/192.aw-xuanhuan-ch200-five-gate-health-fail-DONE.md`；父任务 DONE `tasks/192-xuanhuan-ch200-climb-DONE.md` |
 | V10.2 Task 193.p DONE / wuxia checkpoint table compatibility | **旧 source DB 缺 LangGraph checkpoint tables 已修复（2026-07-28）**：Task 193 初始化 wuxia V10 target 后，首次 `--to 125` 在 `prune_orphan_checkpoints()` 处因 `sqlite3.OperationalError: no such table: checkpoints` 失败；冻结目录 `.tmp/backups/193p_wuxia_ch125_missing_checkpoints_table_20260728-0540/`；修复为 sqlite 模式先检测 `checkpoints` 表，缺表时幂等返回 0；聚焦测试 `TestCheckpointPruning` 3 passed，ruff PASS；resume 后原错误未复发，wuxia run `run-v10-wuxia-5bbfab3a` 已推进至 Ch114 accepted、failed=[]、当前 Ch115，后续继续 Task 193 Ch125 |
 | V10.2 Task 193.q / wuxia Ch117 health_low_p1_halt | **Ch117 health_low_p1_halt 已冻结（2026-07-28）**：Task 191 harness 从 Ch114 继续到 Ch125，Ch115 `v-8b029d2a`、Ch116 `v-257849b6`、Ch117 `v-2175f61b` accepted；随后 auto halt：`health_low_p1_halt: P1_count=1 (critical orphaned setting)`；P1 target=`broken_blade_sect_martial_arts.blood_abyss.reverse_practice`；continuity report `cont_a5fa5f32` health=7.0；run paused、completed 1..117、failed=[]、total_cost=2.662271；frozen DB SHA256 `4B148DE653E26D0BC78D383177B9C35ED7515E33BD91F7811530153564CFEE94`；冻结目录 `.tmp/backups/193q_wuxia_ch117_health_low_p1_halt_20260728-0755/`；任务书 `tasks/193.q-wuxia-ch117-health-low-p1-halt.md` |
+| V10.2 Task 193.q DONE / wuxia Ch117 health_low_p1_halt repair | **Ch117 health_low_p1_halt 已修复（2026-07-28）**：创建 Ch117 accepted patch `fix-117-p1-193q`（parent `v-2175f61b`），补回 `broken_blade_sect_martial_arts.blood_abyss.reverse_practice` 正文承接并 resolve P1 mark；continuity audit `cont_847d2313` health=8.0、critical_orphans=0；segment audit @117 PASS（critical_orphans=0、total_orphans=75、halt_would_fire=false）；T9=0；run restored to `running`、completed 1..117、failed=[]、total_cost=2.662271；final DB SHA256 `4D0D9587ED0A04F4CCE0ED9B733224C864C5B94F2DCF2991A6AE0D031B9A495F`；DONE `tasks/193.q-wuxia-ch117-health-low-p1-halt-DONE.md` |
 | V9.1 阶段 D 实跑验收（2026-07-19） | 熔断实证：¥0.05 预算 ¥0.0514 停（paused + 成本明细 + 章保留），提额 resume 至 completed，成本跨 3 进程 0.0514→0.3647 连续；scifi end10：10/10、0 halt、overdue=0、budget 峰值 0.8325、usage 151 行 estimate 0%、总成本 ¥0.886（≈¥0.089/章）、report 成本视图正确；173 挂死根因确证（sqlite checkpointer 泄漏）真修后 2.5s 自然退出；T9=1（Ch4 countdown_increase，diagnostic 级内容启发式，非系统性） |
 | 172c wuxia 段 3 | Ch51-75 完成（75/75 accepted，0 halt）；Ch75 五门：budget PASS、CED FAIL、**overdue 203 vs sci-fi 117 FAIL**、health 5.6 FAIL、completeness PASS |
 | 172c.r 修复落地 | resolve 失效四层根因全修：prompt card 1.0.4 补 resolve 契约、settlement 事实源纳 overdue、resolve 防幻觉校验、5.3 同事务覆写修复；health 口径对齐 vdim（archived/dormant/active-overdue 全计）；12 新测试绿 |
@@ -149,14 +150,14 @@
 
 ## 下一步
 
-1. **Task 193.q wuxia Ch117 health_low_p1_halt（下一步，按编号推进）**：Task 193 已完成 Ch28 clean/source 初始化与 193.p runtime 修复；当前 Ch117 accepted 后触发 P1 hard gate，必须先修复 `broken_blade_sect_martial_arts.blood_abyss.reverse_practice` 并复判 continuity/segment/T9，通过后才能继续 Ch118/Ch125。
+1. **Task 193 wuxia Ch118→Ch125（下一步，按编号推进）**：Task 193.q 已修复并复判通过；继续使用 Task 191 harness 从 Ch118 resume 到 Ch125，随后执行 Ch125 five-gate / segment audit / metrics T9，不得跳过段审计。
 2. **Task 194 urban Ch200**：urban 是当前唯一 `CONTINUE_READY` 体裁，可按 `tasks/194-urban-ch200-climb.md` 初始化 V10 Ch200 DB；但在当前 goal 下不得跳过 193。
 3. **段边界纪律**：Ch125/150/175/200 必须先审计再继续；任一硬门失败或 accepted head 空洞时冻结现场并开父任务后缀修复。
 4. **守护项**：后续 CED 仍使用 consistency-only、merged/source、正文证据口径；不得把文学 craft 或 `rule-mr-*` 聚合工作项计入 CED；T9 仍不接受解释性豁免；Ch125+ five-gate 必须显式传入 `tasks/189-scifi-ch200-baseline.json`。
 
 ## 入口
 
-- **V10 规划入口（V10.2 Task 193.q wuxia Ch117 health_low_p1_halt 已冻结）：`tasks/V10-README.md`**
+- **V10 规划入口（V10.2 Task 193 wuxia Ch200 climb 继续推进）：`tasks/V10-README.md`**
 - V10 Task 189 DONE：`tasks/189-ch200-baseline-and-checkpoints-DONE.md`
 - V10 Task 189 baseline：`tasks/189-scifi-ch200-baseline.json`
 - V10 Task 189 任务书：`tasks/189-ch200-baseline-and-checkpoints.md`
@@ -205,6 +206,7 @@
 - V10 Task 193 任务书：`tasks/193-wuxia-ch200-climb.md`
 - V10 Task 193.p DONE：`tasks/193.p-wuxia-ch125-missing-checkpoints-table-DONE.md`
 - V10 Task 193.q 任务书：`tasks/193.q-wuxia-ch117-health-low-p1-halt.md`
+- V10 Task 193.q DONE：`tasks/193.q-wuxia-ch117-health-low-p1-halt-DONE.md`
 - V10 Task 194 任务书：`tasks/194-urban-ch200-climb.md`
 - V9 任务事实入口（已完成）：`tasks/V9-README.md`
 - V9 归档索引：`archive/v9/INDEX.md`
