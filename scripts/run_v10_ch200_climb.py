@@ -848,6 +848,53 @@ def _audit_commands(
     }
 
 
+def _load_json_output(raw: str) -> dict[str, Any] | None:
+    """Parse a captured command stdout as JSON; None when not JSON."""
+    try:
+        payload = json.loads(raw)
+    except (json.JSONDecodeError, TypeError):
+        return None
+    return payload if isinstance(payload, dict) else None
+
+
+def _build_audit_verdict(
+    plan: dict[str, Any],
+    five_gate: dict[str, Any] | None,
+    segment: dict[str, Any] | None,
+) -> dict[str, Any]:
+    """Task 193.w F2/F3: 段审计 verdict 块.
+
+    five_gate / segment_audit 脚本的退出码不承载判定（segment_audit 恒 0），
+    必须解析 JSON 输出上浮 verdict；stale health 预警（192.aw 型）：health
+    报告滞后审计点 >= 2 章时提示先补跑 continuity audit 再判 health 门。
+    """
+    up_to = int(plan.get("up_to") or 0)
+    metrics = five_gate.get("metrics") if five_gate else None
+    health_chapter = (
+        metrics.get("health_report_chapter") if isinstance(metrics, dict) else None
+    )
+    stale = (
+        isinstance(health_chapter, int)
+        and up_to > 0
+        and (up_to - health_chapter) >= 2
+    )
+    verdict: dict[str, Any] = {
+        "five_gate": five_gate.get("verdict") if five_gate else None,
+        "segment_halt_would_fire": (
+            bool(segment.get("halt_would_fire")) if segment else None
+        ),
+        "critical_orphans": segment.get("critical_orphans") if segment else None,
+        "health_report_chapter": health_chapter,
+        "stale_health_warning": stale,
+    }
+    if stale:
+        verdict["health_note"] = (
+            f"health 报告 @Ch{health_chapter} 滞后于审计点 Ch{up_to}（192.aw 型）；"
+            f"若 health 门 FAIL，先补跑 continuity audit 到 Ch{up_to} 再判定"
+        )
+    return verdict
+
+
 def run_audit(plan: dict[str, Any]) -> dict[str, Any]:
     """Execute audit commands and write outputs."""
     paths = plan["paths"]
@@ -870,9 +917,15 @@ def run_audit(plan: dict[str, Any]) -> dict[str, Any]:
     env = os.environ.copy()
     env["DATABASE_URL"] = plan["environment"]["DATABASE_URL"]
     metrics = _run_capture(plan["commands"]["metrics"], env=env)
+    verdict = _build_audit_verdict(
+        plan,
+        _load_json_output(five_gate.stdout),
+        _load_json_output(segment.stdout),
+    )
     return {
         **plan,
         "dry_run": False,
+        "verdict": verdict,
         "exit_codes": {
             "five_gate": five_gate.returncode,
             "segment_audit": segment.returncode,

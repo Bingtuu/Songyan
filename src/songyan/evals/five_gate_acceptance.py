@@ -57,6 +57,8 @@ class TargetMetrics:
     health_latest: float | None
     ced: CedMetric
     halt: str | None = None
+    # Task 193.w F1: health 取值报告的章号（192.aw 型 stale health 鉴别证据）
+    health_report_chapter: int | None = None
 
     @property
     def gap(self) -> int:
@@ -74,6 +76,7 @@ class TargetMetrics:
             "budget_used_peak": self.budget_used_peak,
             "overdue_foreshadowing": self.overdue_foreshadowing,
             "health_latest": self.health_latest,
+            "health_report_chapter": self.health_report_chapter,
             "halt": self.halt,
             "ced": self.ced.to_dict(),
         }
@@ -370,7 +373,7 @@ def collect_metrics(
             health_order += ", datetime(created_at) DESC"
         health_order += ", rowid DESC"
         cur.execute(
-            f"""SELECT overall_health_score FROM continuity_reports
+            f"""SELECT overall_health_score, checked_up_to_chapter FROM continuity_reports
                 WHERE project_id = ? AND checked_up_to_chapter <= ?
                 ORDER BY {health_order} LIMIT 1""",
             (project_id, up_to),
@@ -380,6 +383,9 @@ def collect_metrics(
             float(health_row["overall_health_score"])
             if health_row and health_row["overall_health_score"] is not None
             else None
+        )
+        health_report_chapter = (
+            int(health_row["checked_up_to_chapter"]) if health_row else None
         )
 
         ced = consistency_ced_for_accepted_heads(conn, project_id, up_to)
@@ -395,6 +401,7 @@ def collect_metrics(
         health_latest=health,
         ced=ced,
         halt=halt,
+        health_report_chapter=health_report_chapter,
     )
 
 
@@ -502,7 +509,11 @@ def evaluate_metrics(
             target=metrics.health_latest,
             baseline=baseline.health_latest,
             threshold=8.0,
-            detail="latest health must be >= 8.0",
+            detail=(
+                f"latest health must be >= 8.0 (report @Ch{metrics.health_report_chapter})"
+                if metrics.health_report_chapter is not None
+                else "latest health must be >= 8.0 (no continuity report)"
+            ),
         ),
         GateResult(
             name="completeness",
@@ -572,6 +583,7 @@ def render_text_report(report: FiveGateReport) -> str:
         ),
         (
             f"  health      : {metrics.genre} {metrics.health_latest} "
+            f"(report @Ch{metrics.health_report_chapter}) "
             f"-> {_label(gate_map['health'])} (need >=8.0)"
         ),
         (
