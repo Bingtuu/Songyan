@@ -23,6 +23,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--db", required=True, type=Path, help="target SQLite DB path")
     parser.add_argument("--project-id", required=True, help="target project_id")
     parser.add_argument("--up-to", type=int, default=None, help="chapter boundary to audit")
+    parser.add_argument(
+        "--genre",
+        default=None,
+        help="genre id; orphan thresholds follow GenreRuntimeProfile when set",
+    )
     parser.add_argument("--top", type=int, default=8, help="number of hotspot chapters")
     parser.add_argument(
         "--format",
@@ -42,6 +47,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             project_id=args.project_id,
             up_to=args.up_to,
             top=args.top,
+            genre=args.genre,
         )
     except FiveGateToolError as exc:
         print(f"segment_audit error: {exc}", file=sys.stderr)

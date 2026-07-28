@@ -127,6 +127,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--source-run-id", default=None, help="Task 190 source run_id")
     parser.add_argument("--run-id", default=None, help="new V10 run trace id")
     parser.add_argument("--up-to", type=int, default=None, help="checkpoint for --audit")
+    parser.add_argument(
+        "--cost-budget",
+        type=float,
+        default=None,
+        help="run cost budget (CNY); falls back to SONGYAN_RUN_COST_BUDGET",
+    )
     parser.add_argument("--baseline", type=Path, default=DEFAULT_BASELINE)
     parser.add_argument("--inventory", type=Path, default=DEFAULT_INVENTORY)
     parser.add_argument("--canonical-inventory", type=Path, default=DEFAULT_CANONICAL_INVENTORY)
@@ -639,12 +645,35 @@ def _append_segment_log(path: Path, record: dict[str, Any]) -> None:
         f.write(json.dumps(record, ensure_ascii=False) + "\n")
 
 
+def resolve_cost_budget(args: argparse.Namespace) -> float | None:
+    """Task 193.r: 成本预算解析 — 显式 --cost-budget 优先，回读 SONGYAN_RUN_COST_BUDGET."""
+    value = getattr(args, "cost_budget", None)
+    if value is not None:
+        return float(value)
+    raw = os.environ.get("SONGYAN_RUN_COST_BUDGET")
+    if raw:
+        try:
+            return float(raw)
+        except ValueError:
+            return None
+    return None
+
+
+def apply_cost_budget(value: float) -> None:
+    """Task 193.r: 预算写入运行时 settings（与 database_url 覆写同进程作用域）."""
+    from songyan.config import settings
+
+    settings.run_cost_budget = float(value)
+
+
 def build_status_payload(genre: str, paths: HarnessPaths) -> dict[str, Any]:
     """Collect no-write status for a V10 target DB."""
     project_info = _load_project_file(paths.project_file)
     db_exists = paths.db.exists()
     project_id = project_info.get("project_id") if project_info else None
     accepted = _accepted_summary(paths.db, project_id) if db_exists and project_id else None
+    run_info = _run_summary(paths.db, project_id) if db_exists and project_id else None
+    cost_budget = resolve_cost_budget(argparse.Namespace(cost_budget=None))
     next_step = "run --init-from-source with a CONTINUE_READY source"
     if db_exists and project_info:
         next_step = "run --audit --up-to <checkpoint> or --to <checkpoint>"
@@ -657,8 +686,38 @@ def build_status_payload(genre: str, paths: HarnessPaths) -> dict[str, Any]:
         "project_file_exists": paths.project_file.exists(),
         "project": project_info,
         "accepted": accepted,
+        "run": run_info,
+        "cost_budget": cost_budget,
         "next_step": next_step,
     }
+
+
+def _run_summary(db_path: Path, project_id: str | None) -> dict[str, Any] | None:
+    """Task 193.r: --status 展示最新 run 状态（含 pause_reason；旧库无列回退 None）."""
+    if project_id is None:
+        return None
+    try:
+        uri = f"file:{db_path.as_posix()}?mode=ro"
+        conn = sqlite3.connect(uri, uri=True)
+        cols = {
+            row[1] for row in conn.execute("PRAGMA table_info(project_runs)").fetchall()
+        }
+        select = "run_id, status, current_chapter, total_cost, updated_at"
+        if "pause_reason" in cols:
+            select += ", pause_reason"
+        row = conn.execute(
+            f"""SELECT {select} FROM project_runs
+                WHERE project_id = ? ORDER BY updated_at DESC LIMIT 1""",
+            (project_id,),
+        ).fetchone()
+        conn.close()
+    except sqlite3.Error as exc:
+        return {"error": str(exc)}
+    if row is None:
+        return None
+    info = dict(zip(select.split(", "), row, strict=True))
+    info.setdefault("pause_reason", None)
+    return info
 
 
 def _load_project_file(path: Path) -> dict[str, Any] | None:
@@ -771,6 +830,8 @@ def _audit_commands(
             project_id,
             "--up-to",
             str(up_to),
+            "--genre",
+            genre,
             "--format",
             "json",
         ],
@@ -844,6 +905,7 @@ def build_to_plan(
     project_info = _load_project_file(paths.project_file) or {}
     project_id = project_info.get("project_id")
     run_id = args.run_id or project_info.get("run_id") or f"run-v10-{genre}-{uuid.uuid4().hex[:8]}"
+    cost_budget = resolve_cost_budget(args)
     wrapper_command = [
         "powershell",
         "-File",
@@ -859,6 +921,8 @@ def build_to_plan(
         str(target),
         "--genre",
         genre,
+        "--cost-budget",
+        str(cost_budget) if cost_budget is not None else "<required>",
     ]
     return {
         "task": TASK_ID,
@@ -868,11 +932,24 @@ def build_to_plan(
         "target": target,
         "project_id": project_id,
         "run_id": run_id,
+        "cost_budget": cost_budget,
         "paths": paths.to_dict(target),
         "baseline": args.baseline.as_posix(),
         "wrapper_command": wrapper_command,
         "next_step": "run via wrapper; Task 191 validation must use dry-run only",
     }
+
+
+async def ensure_target_schema(db_path: Path) -> None:
+    """Task 193.u: --to 前保证目标库 schema 与代码一致.
+
+    旧 source 复制库（如 172b 时代 DB）可能缺少后续 additive 迁移列
+    （如 193.r 的 project_runs.pause_reason）；harness 路径不经 CLI 的
+    init_schema，需在 pipeline 启动前显式迁移。init_schema 幂等。
+    """
+    from songyan.db.migrations import init_schema
+
+    await init_schema(db_path)
 
 
 async def run_to_checkpoint(plan: dict[str, Any]) -> dict[str, Any]:
@@ -894,7 +971,14 @@ async def run_to_checkpoint(plan: dict[str, Any]) -> dict[str, Any]:
             f"V10 run_id does not exist in target DB: {run_id}; "
             "re-run --init-from-source for this target DB"
         )
+    await ensure_target_schema(db_path)
     settings.database_url = f"sqlite:///{db_path.as_posix()}"
+    cost_budget = plan.get("cost_budget")
+    if cost_budget is None:
+        raise HarnessError(
+            "missing cost budget; pass --cost-budget <CNY> or set SONGYAN_RUN_COST_BUDGET"
+        )
+    apply_cost_budget(float(cost_budget))
     project = await ProjectRepository().get(str(project_id))
     if project is None:
         raise HarnessError(f"project not found: {project_id}")
@@ -972,6 +1056,11 @@ def main(argv: Sequence[str] | None = None) -> int:
             payload = plan if args.dry_run else run_audit(plan)
         elif args.to is not None:
             plan = build_to_plan(genre=genre, args=args, paths=paths)
+            if not args.dry_run and plan["cost_budget"] is None:
+                raise HarnessError(
+                    "real --to requires a cost budget: pass --cost-budget <CNY> "
+                    "or set SONGYAN_RUN_COST_BUDGET (V10 执行纪律第 6 条)"
+                )
             payload = plan if args.dry_run else asyncio.run(run_to_checkpoint(plan))
         else:
             raise HarnessError("no action selected")

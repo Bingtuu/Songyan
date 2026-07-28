@@ -20,6 +20,9 @@ class ProjectRunState(BaseModel):
     accumulated_summary: str = ""
     total_cost: float = 0.0
     status: str = "running"  # running | paused | completed | failed
+    # Task 193.r: 暂停原因 — auto_halt:* 为质量熔断；user_requested / cost_budget /
+    # external 为非质量暂停。None = 历史行（评测侧按保守旧行为处理）。
+    pause_reason: str | None = None
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(default_factory=datetime.now)
 

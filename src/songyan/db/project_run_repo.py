@@ -23,9 +23,9 @@ class ProjectRunRepository:
                 """INSERT INTO project_runs (
                     run_id, project_id, chapter_range_start, chapter_range_end,
                     current_chapter, completed_chapters, failed_chapters,
-                    accumulated_summary, total_cost, status,
+                    accumulated_summary, total_cost, status, pause_reason,
                     created_at, updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
                     run_state.run_id,
                     run_state.project_id,
@@ -37,6 +37,7 @@ class ProjectRunRepository:
                     run_state.accumulated_summary,
                     run_state.total_cost,
                     run_state.status,
+                    run_state.pause_reason,
                     run_state.created_at.isoformat(),
                     run_state.updated_at.isoformat(),
                 ),
@@ -77,6 +78,7 @@ class ProjectRunRepository:
                     accumulated_summary = ?,
                     total_cost = ?,
                     status = ?,
+                    pause_reason = ?,
                     updated_at = ?
                 WHERE run_id = ?""",
                 (
@@ -86,6 +88,7 @@ class ProjectRunRepository:
                     run_state.accumulated_summary,
                     run_state.total_cost,
                     run_state.status,
+                    run_state.pause_reason,
                     run_state.updated_at.isoformat(),
                     run_state.run_id,
                 ),
@@ -124,6 +127,10 @@ class ProjectRunRepository:
             accumulated_summary=row["accumulated_summary"] or "",
             total_cost=row["total_cost"] or 0.0,
             status=row["status"] or "running",
+            # Task 193.r: 旧库未迁移时无此列，回退 None（评测侧按保守旧行为处理）
+            pause_reason=(
+                row["pause_reason"] if "pause_reason" in row.keys() else None
+            ),
             created_at=datetime.fromisoformat(row["created_at"]),
             updated_at=datetime.fromisoformat(row["updated_at"]),
         )

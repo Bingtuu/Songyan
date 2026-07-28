@@ -2,15 +2,24 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+import json
+import sqlite3
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, TypeAlias
 
+from pydantic import ValidationError
+
+from songyan.db.genre_runtime_profile_repo import load_profile_from_registry
 from songyan.evals.consistency_ced import parse_issues
 from songyan.evals.five_gate_acceptance import FiveGateToolError, open_readonly_db
+from songyan.models.genre_runtime_profile import GenreRuntimeProfile
 
 JsonScalar: TypeAlias = str | int | float | bool | None
 
+# Task 193.r: 不再作为唯一真源——与运行时 ``_scanners.ORPHANED_THRESHOLDS``
+# 同值，仅在未指定 genre 时作为 legacy 默认；指定 genre 时阈值经
+# ``_resolve_orphan_thresholds`` 与运行时同源（注册表基线 + 目标库 DB 覆盖层）。
 ORPHAN_THRESHOLDS: dict[str, int] = {
     "critical": 3,
     "recurring": 4,
@@ -58,6 +67,7 @@ class SegmentAuditReport:
     total_orphans: int
     hotspots: tuple[Hotspot, ...]
     health_trajectory: tuple[HealthPoint, ...]
+    orphan_thresholds: dict[str, int] = field(default_factory=dict)
 
     @property
     def halt_would_fire(self) -> bool:
@@ -66,7 +76,13 @@ class SegmentAuditReport:
 
     def to_dict(
         self,
-    ) -> dict[str, JsonScalar | list[dict[str, JsonScalar]] | list[dict[str, int]]]:
+    ) -> dict[
+        str,
+        JsonScalar
+        | list[dict[str, JsonScalar]]
+        | list[dict[str, int]]
+        | dict[str, int],
+    ]:
         """Return a JSON-serializable representation."""
         return {
             "project_id": self.project_id,
@@ -75,6 +91,7 @@ class SegmentAuditReport:
             "critical_orphans": self.critical_orphans,
             "total_orphans": self.total_orphans,
             "halt_would_fire": self.halt_would_fire,
+            "orphan_thresholds": dict(self.orphan_thresholds),
             "hotspots": [hotspot.to_dict() for hotspot in self.hotspots],
             "health_trajectory": [point.to_dict() for point in self.health_trajectory],
         }
@@ -86,8 +103,14 @@ def collect_segment_audit(
     project_id: str,
     up_to: int | None = None,
     top: int = 8,
+    genre: str | None = None,
 ) -> SegmentAuditReport:
-    """Collect segment-boundary forensic signals from a historical DB."""
+    """Collect segment-boundary forensic signals from a historical DB.
+
+    Task 193.r: ``genre`` 提供时 orphan 阈值与运行时同源（GenreRuntimeProfile
+    注册表基线 + 目标库 ``genre_runtime_profiles`` 覆盖层，子模型整体替换）；
+    缺省保持 legacy ``ORPHAN_THRESHOLDS`` 行为。
+    """
     if top < 1:
         msg = "top must be >= 1"
         raise FiveGateToolError(msg)
@@ -113,11 +136,13 @@ def collect_segment_audit(
 
         hotspots = _collect_hotspots(cur, project_id, resolved_up_to, top=top)
         next_audit_chapter = ((resolved_up_to // 3) + 1) * 3
+        orphan_thresholds = _resolve_orphan_thresholds(cur, genre)
         critical_orphans, total_orphans = _predict_orphans(
             cur,
             project_id,
             resolved_up_to,
             next_audit_chapter,
+            orphan_thresholds,
         )
         health_trajectory = _collect_health_trajectory(cur, project_id, resolved_up_to)
 
@@ -129,6 +154,7 @@ def collect_segment_audit(
         total_orphans=total_orphans,
         hotspots=hotspots,
         health_trajectory=health_trajectory,
+        orphan_thresholds=orphan_thresholds,
     )
 
 
@@ -193,16 +219,63 @@ def _is_legacy_evidence_issue(issue: dict[str, Any]) -> bool:
     return severity in {"critical", "major"} and bool(issue.get("evidence_quote"))
 
 
+def _table_exists(cur: sqlite3.Cursor, table_name: str) -> bool:
+    cur.execute(
+        "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ? LIMIT 1",
+        (table_name,),
+    )
+    return cur.fetchone() is not None
+
+
+def _resolve_orphan_thresholds(cur: sqlite3.Cursor, genre: str | None) -> dict[str, int]:
+    """Resolve orphan thresholds 与运行时同源（Task 193.r）.
+
+    与 ``load_profile()`` 同语义、但只读目标库（不触碰环境 DATABASE_URL）：
+    1. 代码注册表为体裁基线（未知体裁回退 scifi baseline）；
+    2. 目标库 ``genre_runtime_profiles`` 记录为覆盖层，``continuity`` 子模型
+       异于全新默认模型时按整体替换（172i 语义），否则保留注册表基线；
+    3. 未提供 genre 时回退 legacy ``ORPHAN_THRESHOLDS``（= scifi 默认值）。
+    """
+    if not genre:
+        return dict(ORPHAN_THRESHOLDS)
+    key = genre.strip().lower()
+    base = load_profile_from_registry(key)
+    if not _table_exists(cur, "genre_runtime_profiles"):
+        return dict(base.continuity.orphaned_thresholds)
+    cur.execute(
+        "SELECT profile_json FROM genre_runtime_profiles WHERE genre = ?",
+        (key,),
+    )
+    row = cur.fetchone()
+    if not row or not row[0]:
+        return dict(base.continuity.orphaned_thresholds)
+    try:
+        override = GenreRuntimeProfile.model_validate(json.loads(str(row[0])))
+    except (json.JSONDecodeError, ValidationError, TypeError):
+        return dict(base.continuity.orphaned_thresholds)
+    default_continuity = GenreRuntimeProfile(genre=override.genre).continuity.model_dump(
+        mode="json"
+    )
+    if override.continuity.model_dump(mode="json") != default_continuity:
+        return dict(override.continuity.orphaned_thresholds)
+    return dict(base.continuity.orphaned_thresholds)
+
+
 def _predict_orphans(
     cur: Any,
     project_id: str,
     up_to: int,
     next_audit_chapter: int,
+    thresholds: dict[str, int],
 ) -> tuple[int, int]:
+    # 比较语义与运行时 halt 路径 ``SettingTrackingRepository.find_orphaned``
+    # （``last_mentioned_chapter < up_to - threshold``，即 silent > threshold）
+    # 严格一致。``_helpers`` 强制承接侧的 ``>=`` 属于上下文组装的提前预警，
+    # 是不同消费者，刻意不对齐。NULL last_mentioned 由 SQL 比较自然排除。
     cur.execute(
         """SELECT last_mentioned_chapter, category FROM setting_tracking
            WHERE project_id = ? AND status = 'active'
-             AND (last_mentioned_chapter IS NULL OR last_mentioned_chapter <= ?)""",
+             AND last_mentioned_chapter <= ?""",
         (project_id, up_to),
     )
     critical_orphans = 0
@@ -210,8 +283,8 @@ def _predict_orphans(
     for row in cur.fetchall():
         last_mentioned = row["last_mentioned_chapter"]
         category = str(row["category"] or "background")
-        threshold = ORPHAN_THRESHOLDS.get(category, ORPHAN_THRESHOLDS["background"])
-        if last_mentioned is not None and (next_audit_chapter - int(last_mentioned)) > threshold:
+        threshold = thresholds.get(category, thresholds.get("background", 5))
+        if (next_audit_chapter - int(last_mentioned)) > threshold:
             total_orphans += 1
             if category == "critical":
                 critical_orphans += 1

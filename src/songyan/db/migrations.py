@@ -471,6 +471,18 @@ async def _migrate_setting_tracking_lifecycle_columns(conn: aiosqlite.Connection
             )
 
 
+async def _migrate_project_runs_pause_reason(conn: aiosqlite.Connection) -> None:
+    """Task 193.r: 为 project_runs 添加 pause_reason 列.
+
+    区分质量熔断暂停（auto_halt:*）与非质量暂停（user_requested /
+    cost_budget / external）；历史行保持 NULL，评测侧按保守旧行为处理。
+    """
+    cursor = await conn.execute("PRAGMA table_info(project_runs)")
+    cols = {row[1] for row in await cursor.fetchall()}
+    if "pause_reason" not in cols:
+        await conn.execute("ALTER TABLE project_runs ADD COLUMN pause_reason TEXT")
+
+
 async def _migrate_chapter_versions_score_card(conn: aiosqlite.Connection) -> None:
     """为 chapter_versions 表添加 score_card 列（Task 106 评分体系）."""
     cursor = await conn.execute(
@@ -973,6 +985,7 @@ async def init_schema(db_path: str | Path | None = None) -> None:
         await _migrate_adaptive_halt_decisions(conn)
         await _migrate_genre_runtime_profiles(conn)
         await _migrate_llm_call_usage(conn)
+        await _migrate_project_runs_pause_reason(conn)
         await conn.commit()
 
 
@@ -1093,4 +1106,5 @@ async def run_migrations(conn: aiosqlite.Connection) -> None:
     await _migrate_adaptive_halt_decisions(conn)
     await _migrate_genre_runtime_profiles(conn)
     await _migrate_llm_call_usage(conn)
+    await _migrate_project_runs_pause_reason(conn)
     logger.info("migrations.run_all", status="complete")

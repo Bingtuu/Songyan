@@ -414,8 +414,15 @@ def detect_halt(conn: sqlite3.Connection, project_id: str, up_to: int) -> str | 
             return f"adaptive_halt@Ch{row['evaluated_at_chapter']}:{reasons}"
 
     if _table_exists(cur, "project_runs"):
+        # Task 193.r: pause_reason 区分质量熔断与非质量暂停；旧库无此列时回退保守旧行为
+        has_pause_reason = _column_exists(cur, "project_runs", "pause_reason")
+        select_cols = (
+            "status, current_chapter, pause_reason"
+            if has_pause_reason
+            else "status, current_chapter"
+        )
         cur.execute(
-            """SELECT status, current_chapter FROM project_runs
+            f"""SELECT {select_cols} FROM project_runs
                WHERE project_id = ? AND status IN ('paused', 'failed')
                ORDER BY updated_at DESC LIMIT 1""",
             (project_id,),
@@ -424,7 +431,21 @@ def detect_halt(conn: sqlite3.Connection, project_id: str, up_to: int) -> str | 
         if row:
             current_chapter = int(row["current_chapter"] or 0)
             if current_chapter <= up_to:
-                return f"project_run_{row['status']}@Ch{current_chapter}"
+                status = str(row["status"])
+                if status == "failed":
+                    return f"project_run_failed@Ch{current_chapter}"
+                pause_reason = (
+                    str(row["pause_reason"])
+                    if has_pause_reason and row["pause_reason"]
+                    else None
+                )
+                # 人工/成本/外部暂停不是质量熔断，不计 halt；
+                # 无 reason 的历史行保持保守旧行为（计 halt）。
+                if pause_reason is not None and not pause_reason.startswith("auto_halt"):
+                    return None
+                if pause_reason:
+                    return f"project_run_paused@Ch{current_chapter}:{pause_reason}"
+                return f"project_run_{status}@Ch{current_chapter}"
     return None
 
 

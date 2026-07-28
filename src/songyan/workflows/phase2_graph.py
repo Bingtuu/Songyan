@@ -121,6 +121,9 @@ async def _persist_run_progress(
     run_state.accumulated_summary = persisted_summary
     if status is not None:
         run_state.status = status
+    # Task 193.r: 非暂停/失败终态一律清理 pause_reason，避免 resume 后残留旧原因
+    if run_state.status not in ("paused", "failed"):
+        run_state.pause_reason = None
     # Task 175: 落盘前刷新 run 级成本，保证 project_runs.total_cost 与
     # llm_call_usage 合计一致（含 LLMBudgetExceededError pause 路径）
     await _refresh_run_total_cost(run_state)
@@ -336,8 +339,16 @@ async def _pause_run_for_auto_halt(
     completed: list[int],
     failed: list[int],
     persisted_summary: str,
+    *,
+    pause_reason: str = "auto_halt:unspecified",
 ) -> None:
-    """自动熔断前持久化项目级运行状态，保留已完成章节."""
+    """自动熔断前持久化项目级运行状态，保留已完成章节.
+
+    Task 193.r: ``pause_reason`` 区分质量熔断（``auto_halt:*``）与非质量暂停
+    （``cost_budget`` / ``user_requested`` / ``external``），供评测侧
+    ``detect_halt`` 判定，不影响运行时行为。
+    """
+    run_state.pause_reason = pause_reason
     await _persist_run_progress(
         run_state,
         completed,
@@ -440,6 +451,7 @@ async def _check_auto_halt_window(
                 completed,
                 failed,
                 persisted_summary,
+                pause_reason="auto_halt:quality_gate_fail_streak",
             )
             raise AutoHaltException(
                 message=f"连续 3 章质量门未通过（Ch{_ch_start}-Ch{chapter_number}）",
@@ -458,6 +470,7 @@ async def _check_auto_halt_window(
             completed,
             failed,
             persisted_summary,
+            pause_reason="auto_halt:health_low_streak_halt",
         )
         raise AutoHaltException(
             message=(
@@ -476,6 +489,7 @@ async def _check_auto_halt_window(
                 completed,
                 failed,
                 persisted_summary,
+                pause_reason="auto_halt:context_emergency_degraded_streak",
             )
             raise AutoHaltException(
                 message=(
@@ -906,6 +920,7 @@ async def _run_project_pipeline_impl(
                 completed,
                 failed,
                 persisted_summary,
+                pause_reason="cost_budget",
             )
             logger.error(
                 "project_pipeline.budget_exceeded",
@@ -981,6 +996,7 @@ async def _run_project_pipeline_impl(
                     completed,
                     failed,
                     persisted_summary,
+                    pause_reason="auto_halt:adaptive_halt",
                 )
                 raise AutoHaltException(
                     message=(
@@ -1023,6 +1039,7 @@ async def _run_project_pipeline_impl(
                     completed,
                     failed,
                     persisted_summary,
+                    pause_reason="auto_halt:adaptive_halt",
                 )
                 raise AutoHaltException(
                     message=(
@@ -1060,6 +1077,7 @@ async def _run_project_pipeline_impl(
                 completed,
                 failed,
                 persisted_summary,
+                pause_reason="auto_halt:chapter_gate",
             )
             raise AutoHaltException(
                 message=(

@@ -368,6 +368,7 @@ CREATE TABLE IF NOT EXISTS project_runs (
     accumulated_summary TEXT DEFAULT '',
     total_cost          REAL DEFAULT 0.0,
     status              TEXT DEFAULT 'running',
+    pause_reason        TEXT, -- Task 193.r: auto_halt:* / user_requested / cost_budget
     created_at          TEXT DEFAULT (datetime('now')),
     updated_at          TEXT DEFAULT (datetime('now'))
 );
