@@ -2,9 +2,9 @@
 
 > **阶段**: 跨体裁 Ch200 + 优秀度信号包 + 结构升级 spike
 > **定位**: V10 不是开源交付体验阶段，而是工程版 1.0 前的质量与长度再验证阶段：证明多体裁长窗口仍稳定，并把“好不好看/是否有 AI 腔/是否同质化”从主观讨论推进到可复核信号。
-> **当前口径**: V9 已全量闭环；V10 规划入口已建立，Task 189 已完成 sci-fi Ch200 baseline/checkpoint 冻结，Task 190 已完成 Ch100 终点事实源盘点，Task 191 已完成 Ch200 harness 准备；Task 192/193/194 正式任务书已建立。Task 192 xuanhuan Ch200 已完成，含 192.p/q/r/s/t/u/v/w/x/y/z/aa/ab/ac/ad/ae/af/ag/ah/ai/aj/ak/al/am/an/ao/ap/aq/ar/as/at/au/av/aw 均已完成；xuanhuan Ch200 accepted/current head=`v-5659d486`，run completed_count=200、failed=[]；five-gate @200 PASS、segment audit PASS、T9=0；当前按编号推进 Task 193：wuxia Ch28 deterministic clean/source 初始化已完成，193.p checkpoint table runtime 修复已完成，193.q Ch117 P1 hard gate 修复完成；wuxia 已推进到 Ch120 accepted，因用户要求人工暂停于 Ch121 under_review；下一步从 Ch121 resume 到 Ch125 审计。V10 不再补 V9 生产化地基，也不做 V11 的外部用户可用化收尾。
+> **当前口径**: V9 已全量闭环；V10 规划入口已建立，Task 189 已完成 sci-fi Ch200 baseline/checkpoint 冻结，Task 190 已完成 Ch100 终点事实源盘点，Task 191 已完成 Ch200 harness 准备；Task 192/193/194 正式任务书已建立。Task 192 xuanhuan Ch200 已完成，含 192.p/q/r/s/t/u/v/w/x/y/z/aa/ab/ac/ad/ae/af/ag/ah/ai/aj/ak/al/am/an/ao/ap/aq/ar/as/at/au/av/aw 均已完成；xuanhuan Ch200 accepted/current head=`v-5659d486`，run completed_count=200、failed=[]；five-gate @200 PASS、segment audit PASS、T9=0；当前按编号推进 Task 193：wuxia Ch28 deterministic clean/source 初始化已完成，193.p/q/r/s/t/u/v/w 全部完成（根因治理线 193.s→v→t 收口：词条匹配修复诊断 8 章捕获 7/8、overdue actionable 口径；评测口径线 193.r/u/w 收口：暂停区分、schema drift、段审计 verdict/stale 防护）；wuxia 已推进到 Ch125 accepted，Ch125 段边界审计 five-gate/segment/T9 全 PASS；下一步 Ch126→Ch150 后执行 Ch150 段审计。V10 不再补 V9 生产化地基，也不做 V11 的外部用户可用化收尾。
 > **任务编号**: V10 预计从 Task 189 开始；本文不占任务号。只有可独立执行、独立验收、独立出 DONE 文档的工作项才编号；撞墙修复继续按父任务字母后缀登记（如 `192.p`）。
-> **状态**: ◐ V10.2 Task 193 wuxia Ch200 climb 人工暂停（Task 189 ✅；Task 190 ✅；Task 191 ✅；Task 192 ✅；Task 193 已到 Ch120 accepted 且 193.q ✅；当前 Ch121 under_review 未 accepted；下一步 Ch121→Ch125；尚未完成 wuxia/urban Ch200 长跑）
+> **状态**: ◐ V10.2 Task 193 wuxia Ch200 climb 进行中（Task 189/190/191/192 ✅；Task 193 已到 Ch125 accepted、Ch125 段审计 five-gate/segment/T9 全 PASS，193.p/q/r/s/t/u/v/w ✅；下一步 Ch126→Ch150；尚未完成 wuxia/urban Ch200 长跑）
 
 本文是 V10 阶段任务规划入口。V9 历史事实入口见 `tasks/V9-README.md`，V9 单项任务归档见 `archive/v9/INDEX.md`。
 
