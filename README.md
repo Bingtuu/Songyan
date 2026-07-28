@@ -582,6 +582,8 @@ python scripts/run_172a7_genre_validation.py --templates scifi --end 10
 - [`tasks/193.t-overdue-operational-lifecycle-filter-DONE.md`](tasks/193.t-overdue-operational-lifecycle-filter-DONE.md) — V10 Task 193.t：overdue operational 消费侧 lifecycle 过滤完成报告
 - [`tasks/193.v-setting-reference-term-matching.md`](tasks/193.v-setting-reference-term-matching.md) — V10 Task 193.v：setting tracking 正文引用词条匹配修复任务书（193.s Phase C 承接）
 - [`tasks/193.v-setting-reference-term-matching-DONE.md`](tasks/193.v-setting-reference-term-matching-DONE.md) — V10 Task 193.v：词条匹配修复完成报告（F4 对照 7/8、scifi end10 回归 10/10 T9=0）
+- [`tasks/193.w-segment-audit-verdict-and-stale-health-guard.md`](tasks/193.w-segment-audit-verdict-and-stale-health-guard.md) — V10 Task 193.w：段审计判定消费修复任务书（verdict 块 + stale health 预警）
+- [`tasks/193.w-segment-audit-verdict-and-stale-health-guard-DONE.md`](tasks/193.w-segment-audit-verdict-and-stale-health-guard-DONE.md) — V10 Task 193.w：段审计判定消费修复完成报告
 - [`tasks/193.u-wuxia-ch121-resume-schema-drift.md`](tasks/193.u-wuxia-ch121-resume-schema-drift.md) — V10 Task 193.u：wuxia Ch121 resume schema drift 修复任务书
 - [`tasks/193.u-wuxia-ch121-resume-schema-drift-DONE.md`](tasks/193.u-wuxia-ch121-resume-schema-drift-DONE.md) — V10 Task 193.u：wuxia Ch121 resume schema drift 修复完成报告（含 Ch125 段边界审计 PASS 证据）
 - [`tasks/194-urban-ch200-climb.md`](tasks/194-urban-ch200-climb.md) — V10 Task 194：urban Ch200 爬坡任务书

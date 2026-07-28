@@ -158,6 +158,7 @@ V10 不把结构升级强行并入主流程。spike 的目标是形成取舍结�
 | 193.v | setting tracking 正文引用词条匹配修复 | ✅ | F1a 《》纳入 name 拆分、F1b core phrase 下限按来源分级（name 3 / description 5，test_138c 护栏驱动调整）、F2 虚字归一化 relaxed 路径、F3 name 派生 ≥3 字 term CJK 后缀放宽；共享 `_term_in_content` 默认行为不变；F4 对照：诊断 8 章捕获 7/8（Ch163 深度 paraphrase 归 alias 遗留；Ch120 查明旧逻辑本可捕获、硬门真因为 isolate 空洞章）、lost=0、抽检无误刷；scifi end10 回归 10/10、T9=0（Ch2 瞬时锁经单章 resume 补齐）；冻结库复跑与 192 DONE 一致；wuxia Ch126+ 起新逻辑 | DONE：`tasks/193.v-setting-reference-term-matching-DONE.md` |
 | 193.t | overdue operational 消费侧 lifecycle 过滤 | ✅ | 新增 `list_overdue_actionable`（仅 lifecycle active）并切换 `_find_overdue_foreshadowings`；冻结口径 `list_overdue_unresolved` 与五门 overdue（five_gate 自有 SQL）零改动；dormant/archived 决策：均排除（生命周期调度器已停放/退役条目，全量债务由五门段审计兜底）；xuanhuan 冻结库复跑 overdue=14 与 192 DONE 一致；scifi end10 回归 10/10 T9=0 一次通过；wuxia Ch126+ 起 actionable 口径 | DONE：`tasks/193.t-overdue-operational-lifecycle-filter-DONE.md` |
 | 193.u | wuxia Ch121 resume schema drift 修复 | ✅ | 旧 source 复制库缺 `pause_reason` 列致 resume 崩溃；修复为 `--to` 前 `ensure_target_schema`（幂等）；Ch121→Ch125 resume 完成（125/125、failed=[]、cost 4.147），途中成本熔断优雅暂停 `pause_reason='cost_budget'` 生产实证；Ch125 five-gate PASS、segment audit PASS、T9=0 | DONE：`tasks/193.u-wuxia-ch121-resume-schema-drift-DONE.md` |
+| 193.w | 段审计判定消费修复 | ✅ | five-gate health 门输出 `health_report_chapter`（判定逻辑零变化）；harness run_audit 解析 JSON 生成 verdict 块（segment halt 上浮、stale health lag≥2 预警）；Ch125 实库显示 @Ch123，xuanhuan 冻结库 @200 复跑结论与 192 DONE 一致 | DONE：`tasks/193.w-segment-audit-verdict-and-stale-health-guard-DONE.md` |
 | 194 | urban Ch200 爬坡 | ◐ | 任务书已建立；urban 是当前唯一 CONTINUE_READY source，可用 Task 191 harness 初始化并按 Ch125/150/175/200 推进 | 任务书：`tasks/194-urban-ch200-climb.md`；未启动实跑 |
 | 195 | 跨体裁 Ch200 总验收 | ◻ | 汇总三体裁 Ch200 与 sci-fi baseline；形成 V10 长窗口结论 | 总报告落盘；STATUS/README/INDEX 更新 |
 
@@ -186,7 +187,7 @@ V10 不把结构升级强行并入主流程。spike 的目标是形成取舍结�
 
 | Task | 名称 | 状态 | 内容要点 | 验收要点 |
 |------|------|:----:|----------|----------|
-| 207 | V10 收口与归档 | ◻ | STATUS / README / INDEX / AGENTS / 本文更新；任务归档到 `archive/v10/`；V11 前置确认 | V10 全量闭环；V11 可按 `tasks/V11-Plan.md` 进入开源可用化收尾 |
+| 207 | V10 收口与归档 | ◻ | STATUS / README / INDEX / AGENTS / 本文更新；任务归档到 `archive/v10/`；V11 前置确认；**登记项一并处理**：metrics 慢路径修复（189 遗留，`songyan metrics --chapters 1-200` 历史库卡死）、评测工具次要清理（baseline `min_up_to` 字段未消费、five_gate `final>=100` 过时语义、harness inventory 的 DONE markdown 正则兜底、`_genre_from_db_path` 文件名反推、`DATABASE_URL cleanup` 提示误导、`_create_v10_project_run` 裸写 repository 评估）；alias/命名漂移与 settlement 持久化按 193.s/v 决策路由 V11 | V10 全量闭环；V11 可按 `tasks/V11-Plan.md` 进入开源可用化收尾 |
 
 ---
 

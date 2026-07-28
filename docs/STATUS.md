@@ -151,9 +151,9 @@
 
 ## 下一步
 
-1. **Task 193 wuxia Ch126→Ch150（下一步，按编号推进）**：Ch121→Ch125 已完成（125/125、failed=[]、cost 4.147），Ch125 段边界审计 five-gate/segment/T9 全 PASS；继续使用 Task 191 harness 推进到 Ch150（真实 `--to` 需 `--cost-budget` 或 `SONGYAN_RUN_COST_BUDGET`，wuxia 近段费率 ~0.2 CNY/章），随后执行 Ch150 five-gate / segment audit / metrics T9，不得跳过段审计。
-2. **Task 193 根因治理已全部完成**：193.s 诊断（漏报 100% 落词面匹配层）、193.v 词条匹配修复（诊断 8 章捕获 7/8、lost=0）、193.t overdue actionable 口径（dormant/archived 不再计入 health/streak P2）均已 DONE；wuxia Ch126+ 起同时启用 193.v 新匹配逻辑与 193.t actionable 口径，Ch126-150 是与 xuanhuan 同窗口（撞门 5 次）的对照段。
-3. **Task 194 urban Ch200**：urban 是当前唯一 `CONTINUE_READY` 体裁，可按 `tasks/194-urban-ch200-climb.md` 初始化 V10 Ch200 DB；但在当前 goal 下不得跳过 193。
+1. **Task 193 wuxia Ch126→Ch150（下一步，按编号推进）**：193.w 段审计判定消费修复已完成（Ch150 审计前置解除）；Ch121→Ch125 已完成（125/125、failed=[]、cost 4.147），Ch125 段边界审计 five-gate/segment/T9 全 PASS；使用 Task 191 harness 推进到 Ch150（真实 `--to` 需 `--cost-budget`，wuxia 近段费率 ~0.2 CNY/章，建议预算 10），随后执行 Ch150 five-gate / segment audit / metrics T9（harness `--audit` 现自带 verdict 块与 stale health 预警），不得跳过段审计。
+3. **Task 193 根因治理已全部完成**：193.s 诊断（漏报 100% 落词面匹配层）、193.v 词条匹配修复（诊断 8 章捕获 7/8、lost=0）、193.t overdue actionable 口径（dormant/archived 不再计入 health/streak P2）均已 DONE；wuxia Ch126+ 起同时启用 193.v 新匹配逻辑与 193.t actionable 口径，Ch126-150 是与 xuanhuan 同窗口（撞门 5 次）的对照段。
+4. **Task 194 urban Ch200**：urban 是当前唯一 `CONTINUE_READY` 体裁，可按 `tasks/194-urban-ch200-climb.md` 初始化 V10 Ch200 DB；但在当前 goal 下不得跳过 193。
 5. **段边界纪律**：Ch125/150/175/200 必须先审计再继续；任一硬门失败或 accepted head 空洞时冻结现场并开父任务后缀修复。
 6. **守护项**：后续 CED 仍使用 consistency-only、merged/source、正文证据口径；不得把文学 craft 或 `rule-mr-*` 聚合工作项计入 CED；T9 仍不接受解释性豁免；Ch125+ five-gate 必须显式传入 `tasks/189-scifi-ch200-baseline.json`。
 
@@ -220,6 +220,8 @@
 - V10 Task 193.t DONE：`tasks/193.t-overdue-operational-lifecycle-filter-DONE.md`
 - V10 Task 193.v 任务书：`tasks/193.v-setting-reference-term-matching.md`
 - V10 Task 193.v DONE：`tasks/193.v-setting-reference-term-matching-DONE.md`
+- V10 Task 193.w 任务书：`tasks/193.w-segment-audit-verdict-and-stale-health-guard.md`
+- V10 Task 193.w DONE：`tasks/193.w-segment-audit-verdict-and-stale-health-guard-DONE.md`
 - V10 Task 194 任务书：`tasks/194-urban-ch200-climb.md`
 - V9 任务事实入口（已完成）：`tasks/V9-README.md`
 - V9 归档索引：`archive/v9/INDEX.md`
