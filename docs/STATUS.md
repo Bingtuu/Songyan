@@ -1,4 +1,4 @@
-﻿# Songyan 项目状态
+# Songyan 项目状态
 
 > 短状态板。这里只保留当前判断、最新证据和下一步，避免挤占开发上下文。任务细节看 `tasks/V10-README.md`，文档路由看 `docs/INDEX.md`，长历史看 `archive/`。
 
@@ -6,7 +6,7 @@
 
 | 项 | 结论 |
 |----|------|
-| 当前阶段 | **V10.2 Task 193 wuxia Ch200 climb 人工暂停**：Task 189/190/191 已完成，Task 192/193/194 任务书已建立；Task 192 xuanhuan Ch200 已完成，含 192.p/q/r/s/t/u/v/w/x/y/z/aa/ab/ac/ad/ae/af/ag/ah/ai/aj/ak/al/am/an/ao/ap/aq/ar/as/at/au/av/aw 全部 DONE；xuanhuan Ch200 accepted/current head=`v-5659d486`，run completed_count=200、failed=[]，five-gate PASS、segment audit PASS、T9=0；Task 193 已完成 wuxia Ch28 deterministic clean/source 初始化、193.p checkpoint table runtime 修复与 193.q Ch117 P1 修复；wuxia 当前 accepted_count=120，Ch120 accepted/current head=`v-0b7d1806`，Ch121 `rev-121-3-5ee3b52c` under_review 未 accepted；run_id=`run-v10-wuxia-5bbfab3a`、run paused（user_requested_pause）、current_chapter=121、failed=[]、total_cost=3.159457；尚未执行 Ch125 审计；下一步从 Ch121 resume 到 Ch125 审计；urban Ch200 与优秀度实现仍未完成 |
+| 当前阶段 | **V10.2 Task 193 wuxia Ch200 climb 进行中（Ch125 段审计 PASS）**：Task 189/190/191 已完成，Task 192/193/194 任务书已建立；Task 192 xuanhuan Ch200 已完成，含 192.p/q/r/s/t/u/v/w/x/y/z/aa/ab/ac/ad/ae/af/ag/ah/ai/aj/ak/al/am/an/ao/ap/aq/ar/as/at/au/av/aw 全部 DONE；xuanhuan Ch200 accepted/current head=`v-5659d486`，run completed_count=200、failed=[]，five-gate PASS、segment audit PASS、T9=0；Task 193 已完成 wuxia Ch28 deterministic clean/source 初始化、193.p checkpoint table runtime 修复、193.q Ch117 P1 修复、193.r 评测口径修复包（detect_halt 区分人工暂停/质量熔断、segment_audit 阈值 Profile 同源、harness 成本预算接线；xuanhuan 冻结库复跑结论零漂移）与 193.u resume schema drift 修复（`--to` 前 `ensure_target_schema`）、193.s 根因诊断（报告 `docs/reports/193s-setting-tracking-root-cause.md`）与 193.v 词条匹配修复（F1 《》拆分 + core phrase 分级下限、F2 虚字归一化、F3 name 派生后缀放宽；诊断 8 章捕获 7/8、lost=0、scifi end10 回归 10/10 T9=0）；wuxia 当前 accepted_count=125，Ch125 accepted/current head=`v-f979edd1`；Ch121→Ch125 resume 完成（途中成本熔断优雅暂停 `pause_reason='cost_budget'` 生产实证，提额 6.0 后 completed）；run_id=`run-v10-wuxia-5bbfab3a`、final_status=completed @125、failed=[]、total_cost=4.146785；Ch125 段边界审计 five-gate PASS（halt=None、budget 0.9646、CED 0.1584≤0.448、overdue 73≤184、health 8.1）、segment audit PASS（critical_orphans=0、halt_would_fire=false）、T9=0；下一步 Ch126→Ch150 后执行 Ch150 段审计；urban Ch200 与优秀度实现仍未完成 |
 | V7 收尾 | **已完成**。sci-fi/space_opera + webnovel_intense 单一体裁稳定跑到 Ch200，200/200 accepted，D1 hard clean pass；Ch201-Ch220 20/20 accepted |
 | V8.1 运行时画像 | **已完成**（Task 172a + 172a.p）。`GenreRuntimeProfile` 把 Context Diet 2.0 运行时契约从 sci-fi 默认值解耦；xuanhuan Ch8 halt 已消除（base_budget=15000） |
 | V8.3 文学护栏 | **已完成**（Task 172d）。`literary_guardrail_observe` 去科幻硬编码，lexicon/主角名参数化到 `GenreProfile`，三体裁各配一套；DONE 文档已补齐 |
@@ -151,10 +151,11 @@
 
 ## 下一步
 
-1. **Task 193 wuxia Ch121→Ch125（下一步，按编号推进）**：当前是用户要求的人工暂停点，不是 hard gate；继续使用 Task 191 harness 从 Ch121 resume 到 Ch125，随后执行 Ch125 five-gate / segment audit / metrics T9，不得跳过段审计。
-2. **Task 194 urban Ch200**：urban 是当前唯一 `CONTINUE_READY` 体裁，可按 `tasks/194-urban-ch200-climb.md` 初始化 V10 Ch200 DB；但在当前 goal 下不得跳过 193。
-3. **段边界纪律**：Ch125/150/175/200 必须先审计再继续；任一硬门失败或 accepted head 空洞时冻结现场并开父任务后缀修复。
-4. **守护项**：后续 CED 仍使用 consistency-only、merged/source、正文证据口径；不得把文学 craft 或 `rule-mr-*` 聚合工作项计入 CED；T9 仍不接受解释性豁免；Ch125+ five-gate 必须显式传入 `tasks/189-scifi-ch200-baseline.json`。
+1. **Task 193 wuxia Ch126→Ch150（下一步，按编号推进）**：Ch121→Ch125 已完成（125/125、failed=[]、cost 4.147），Ch125 段边界审计 five-gate/segment/T9 全 PASS；继续使用 Task 191 harness 推进到 Ch150（真实 `--to` 需 `--cost-budget` 或 `SONGYAN_RUN_COST_BUDGET`，wuxia 近段费率 ~0.2 CNY/章），随后执行 Ch150 five-gate / segment audit / metrics T9，不得跳过段审计。
+2. **Task 193 根因治理已全部完成**：193.s 诊断（漏报 100% 落词面匹配层）、193.v 词条匹配修复（诊断 8 章捕获 7/8、lost=0）、193.t overdue actionable 口径（dormant/archived 不再计入 health/streak P2）均已 DONE；wuxia Ch126+ 起同时启用 193.v 新匹配逻辑与 193.t actionable 口径，Ch126-150 是与 xuanhuan 同窗口（撞门 5 次）的对照段。
+3. **Task 194 urban Ch200**：urban 是当前唯一 `CONTINUE_READY` 体裁，可按 `tasks/194-urban-ch200-climb.md` 初始化 V10 Ch200 DB；但在当前 goal 下不得跳过 193。
+5. **段边界纪律**：Ch125/150/175/200 必须先审计再继续；任一硬门失败或 accepted head 空洞时冻结现场并开父任务后缀修复。
+6. **守护项**：后续 CED 仍使用 consistency-only、merged/source、正文证据口径；不得把文学 craft 或 `rule-mr-*` 聚合工作项计入 CED；T9 仍不接受解释性豁免；Ch125+ five-gate 必须显式传入 `tasks/189-scifi-ch200-baseline.json`。
 
 ## 入口
 
@@ -208,6 +209,17 @@
 - V10 Task 193.p DONE：`tasks/193.p-wuxia-ch125-missing-checkpoints-table-DONE.md`
 - V10 Task 193.q 任务书：`tasks/193.q-wuxia-ch117-health-low-p1-halt.md`
 - V10 Task 193.q DONE：`tasks/193.q-wuxia-ch117-health-low-p1-halt-DONE.md`
+- V10 Task 193.r 任务书：`tasks/193.r-eval-gate-caliber-fixes.md`
+- V10 Task 193.r DONE：`tasks/193.r-eval-gate-caliber-fixes-DONE.md`
+- V10 Task 193.u 任务书：`tasks/193.u-wuxia-ch121-resume-schema-drift.md`
+- V10 Task 193.u DONE：`tasks/193.u-wuxia-ch121-resume-schema-drift-DONE.md`
+- V10 Task 193.s 任务书：`tasks/193.s-setting-tracking-refresh-root-cause.md`
+- V10 Task 193.s DONE：`tasks/193.s-setting-tracking-refresh-root-cause-DONE.md`
+- V10 Task 193.s 诊断报告：`docs/reports/193s-setting-tracking-root-cause.md`
+- V10 Task 193.t 任务书：`tasks/193.t-overdue-operational-lifecycle-filter.md`
+- V10 Task 193.t DONE：`tasks/193.t-overdue-operational-lifecycle-filter-DONE.md`
+- V10 Task 193.v 任务书：`tasks/193.v-setting-reference-term-matching.md`
+- V10 Task 193.v DONE：`tasks/193.v-setting-reference-term-matching-DONE.md`
 - V10 Task 194 任务书：`tasks/194-urban-ch200-climb.md`
 - V9 任务事实入口（已完成）：`tasks/V9-README.md`
 - V9 归档索引：`archive/v9/INDEX.md`

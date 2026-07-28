@@ -574,6 +574,16 @@ python scripts/run_172a7_genre_validation.py --templates scifi --end 10
 - [`tasks/193.p-wuxia-ch125-missing-checkpoints-table-DONE.md`](tasks/193.p-wuxia-ch125-missing-checkpoints-table-DONE.md) — V10 Task 193.p：wuxia Ch125 前旧 DB 缺 checkpoint table runtime 修复
 - [`tasks/193.q-wuxia-ch117-health-low-p1-halt.md`](tasks/193.q-wuxia-ch117-health-low-p1-halt.md) — V10 Task 193.q：wuxia Ch117 health_low_p1_halt 修复任务书
 - [`tasks/193.q-wuxia-ch117-health-low-p1-halt-DONE.md`](tasks/193.q-wuxia-ch117-health-low-p1-halt-DONE.md) — V10 Task 193.q：wuxia Ch117 health_low_p1_halt 修复完成报告
+- [`tasks/193.r-eval-gate-caliber-fixes.md`](tasks/193.r-eval-gate-caliber-fixes.md) — V10 Task 193.r：评测口径修复包任务书（detect_halt 人工暂停区分 / segment_audit 阈值 Profile 化 / harness 成本预算）
+- [`tasks/193.r-eval-gate-caliber-fixes-DONE.md`](tasks/193.r-eval-gate-caliber-fixes-DONE.md) — V10 Task 193.r：评测口径修复包完成报告
+- [`tasks/193.s-setting-tracking-refresh-root-cause.md`](tasks/193.s-setting-tracking-refresh-root-cause.md) — V10 Task 193.s：setting tracking 刷新漏报根因诊断任务书（诊断优先 + 决策门）
+- [`tasks/193.s-setting-tracking-refresh-root-cause-DONE.md`](tasks/193.s-setting-tracking-refresh-root-cause-DONE.md) — V10 Task 193.s：根因诊断完成报告（诊断报告见 `docs/reports/193s-setting-tracking-root-cause.md`）
+- [`tasks/193.t-overdue-operational-lifecycle-filter.md`](tasks/193.t-overdue-operational-lifecycle-filter.md) — V10 Task 193.t：overdue operational 消费侧 lifecycle 过滤任务书
+- [`tasks/193.t-overdue-operational-lifecycle-filter-DONE.md`](tasks/193.t-overdue-operational-lifecycle-filter-DONE.md) — V10 Task 193.t：overdue operational 消费侧 lifecycle 过滤完成报告
+- [`tasks/193.v-setting-reference-term-matching.md`](tasks/193.v-setting-reference-term-matching.md) — V10 Task 193.v：setting tracking 正文引用词条匹配修复任务书（193.s Phase C 承接）
+- [`tasks/193.v-setting-reference-term-matching-DONE.md`](tasks/193.v-setting-reference-term-matching-DONE.md) — V10 Task 193.v：词条匹配修复完成报告（F4 对照 7/8、scifi end10 回归 10/10 T9=0）
+- [`tasks/193.u-wuxia-ch121-resume-schema-drift.md`](tasks/193.u-wuxia-ch121-resume-schema-drift.md) — V10 Task 193.u：wuxia Ch121 resume schema drift 修复任务书
+- [`tasks/193.u-wuxia-ch121-resume-schema-drift-DONE.md`](tasks/193.u-wuxia-ch121-resume-schema-drift-DONE.md) — V10 Task 193.u：wuxia Ch121 resume schema drift 修复完成报告（含 Ch125 段边界审计 PASS 证据）
 - [`tasks/194-urban-ch200-climb.md`](tasks/194-urban-ch200-climb.md) — V10 Task 194：urban Ch200 爬坡任务书
 - [`tasks/V9-README.md`](tasks/V9-README.md) — V9 任务事实入口（已收尾，生产化地基 + urban Ch100）
 - [`archive/v5/INDEX.md`](archive/v5/INDEX.md) — V5 任务文档与报告归档索引
