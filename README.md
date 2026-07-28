@@ -355,9 +355,9 @@ python scripts/run_172b_ch100_climb.py --to 100
 | V8 | ✅ 完成 | 多体裁可插拔 + xuanhuan/wuxia Ch100 通过 |
 | V8.5 | ✅ 完成 | 验收后遗留收口：预算上限修复、C 判据三档证据闭环、文档治理 |
 | V9 | ✅ 完成 | 生产化地基（长跑可靠性/导出/打包/CI/成本追踪/质量门工具收编）+ urban 第三体裁 Ch100；urban Ch1-Ch100 100/100 accepted，five-gate PASS，segment audit PASS，T9=0；任务文档已归档 `archive/v9/` |
-| V10 | ◐ V10.2 Task 193 wuxia Ch200 climb 继续推进 | 跨体裁 Ch200、优秀度信号包、结构升级 spike；Task 189 已冻结 sci-fi Ch200 baseline，Task 190 已完成 Ch100 终点事实源盘点，Task 191 已完成 Ch200 harness 准备，Task 192 xuanhuan Ch200 已完成；Task 193.q 已修复，下一步从 Ch118 resume 到 Ch125 审计 |
+| V10 | ◐ V10.2 Task 193 wuxia Ch200 climb 人工暂停 | 跨体裁 Ch200、优秀度信号包、结构升级 spike；Task 189 已冻结 sci-fi Ch200 baseline，Task 190 已完成 Ch100 终点事实源盘点，Task 191 已完成 Ch200 harness 准备，Task 192 xuanhuan Ch200 已完成；Task 193 已到 Ch120 accepted，当前按用户要求暂停于 Ch121 under_review，下一步 Ch121→Ch125 审计 |
 
-各阶段事实入口见 [`tasks/V10-README.md`](tasks/V10-README.md)（当前 V10.2 Task 193 wuxia Ch200 climb 继续推进）以及 `tasks/V5-README.md`、`tasks/V6-README.md`、`tasks/V7-README.md`、`tasks/V8-README.md`、`tasks/V9-README.md`（均已收尾）；V5-V9 单项任务文档与报告分别归档在 [`archive/v5/`](archive/v5/INDEX.md)、[`archive/v6/`](archive/v6/INDEX.md)、[`archive/v7/`](archive/v7/INDEX.md)、[`archive/v8/`](archive/v8/INDEX.md)、[`archive/v9/`](archive/v9/INDEX.md)。
+各阶段事实入口见 [`tasks/V10-README.md`](tasks/V10-README.md)（当前 V10.2 Task 193 wuxia Ch200 climb 人工暂停）以及 `tasks/V5-README.md`、`tasks/V6-README.md`、`tasks/V7-README.md`、`tasks/V8-README.md`、`tasks/V9-README.md`（均已收尾）；V5-V9 单项任务文档与报告分别归档在 [`archive/v5/`](archive/v5/INDEX.md)、[`archive/v6/`](archive/v6/INDEX.md)、[`archive/v7/`](archive/v7/INDEX.md)、[`archive/v8/`](archive/v8/INDEX.md)、[`archive/v9/`](archive/v9/INDEX.md)。
 
 ---
 

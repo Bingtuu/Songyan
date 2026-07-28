@@ -2,9 +2,9 @@
 
 > **阶段**: 跨体裁 Ch200 + 优秀度信号包 + 结构升级 spike
 > **定位**: V10 不是开源交付体验阶段，而是工程版 1.0 前的质量与长度再验证阶段：证明多体裁长窗口仍稳定，并把“好不好看/是否有 AI 腔/是否同质化”从主观讨论推进到可复核信号。
-> **当前口径**: V9 已全量闭环；V10 规划入口已建立，Task 189 已完成 sci-fi Ch200 baseline/checkpoint 冻结，Task 190 已完成 Ch100 终点事实源盘点，Task 191 已完成 Ch200 harness 准备；Task 192/193/194 正式任务书已建立。Task 192 xuanhuan Ch200 已完成，含 192.p/q/r/s/t/u/v/w/x/y/z/aa/ab/ac/ad/ae/af/ag/ah/ai/aj/ak/al/am/an/ao/ap/aq/ar/as/at/au/av/aw 均已完成；xuanhuan Ch200 accepted/current head=`v-5659d486`，run completed_count=200、failed=[]；five-gate @200 PASS、segment audit PASS、T9=0；当前按编号推进 Task 193：wuxia Ch28 deterministic clean/source 初始化已完成，193.p checkpoint table runtime 修复已完成，193.q Ch117 P1 hard gate 修复完成；wuxia 当前 Ch117 accepted/current head=`fix-117-p1-193q`，下一步从 Ch118 resume 到 Ch125 审计。V10 不再补 V9 生产化地基，也不做 V11 的外部用户可用化收尾。
+> **当前口径**: V9 已全量闭环；V10 规划入口已建立，Task 189 已完成 sci-fi Ch200 baseline/checkpoint 冻结，Task 190 已完成 Ch100 终点事实源盘点，Task 191 已完成 Ch200 harness 准备；Task 192/193/194 正式任务书已建立。Task 192 xuanhuan Ch200 已完成，含 192.p/q/r/s/t/u/v/w/x/y/z/aa/ab/ac/ad/ae/af/ag/ah/ai/aj/ak/al/am/an/ao/ap/aq/ar/as/at/au/av/aw 均已完成；xuanhuan Ch200 accepted/current head=`v-5659d486`，run completed_count=200、failed=[]；five-gate @200 PASS、segment audit PASS、T9=0；当前按编号推进 Task 193：wuxia Ch28 deterministic clean/source 初始化已完成，193.p checkpoint table runtime 修复已完成，193.q Ch117 P1 hard gate 修复完成；wuxia 已推进到 Ch120 accepted，因用户要求人工暂停于 Ch121 under_review；下一步从 Ch121 resume 到 Ch125 审计。V10 不再补 V9 生产化地基，也不做 V11 的外部用户可用化收尾。
 > **任务编号**: V10 预计从 Task 189 开始；本文不占任务号。只有可独立执行、独立验收、独立出 DONE 文档的工作项才编号；撞墙修复继续按父任务字母后缀登记（如 `192.p`）。
-> **状态**: ◐ V10.2 Task 193 wuxia Ch200 climb 继续推进（Task 189 ✅；Task 190 ✅；Task 191 ✅；Task 192 ✅；Task 193 已到 Ch117 accepted 且 193.q ✅；下一步 Ch118→Ch125；尚未完成 wuxia/urban Ch200 长跑）
+> **状态**: ◐ V10.2 Task 193 wuxia Ch200 climb 人工暂停（Task 189 ✅；Task 190 ✅；Task 191 ✅；Task 192 ✅；Task 193 已到 Ch120 accepted 且 193.q ✅；当前 Ch121 under_review 未 accepted；下一步 Ch121→Ch125；尚未完成 wuxia/urban Ch200 长跑）
 
 本文是 V10 阶段任务规划入口。V9 历史事实入口见 `tasks/V9-README.md`，V9 单项任务归档见 `archive/v9/INDEX.md`。
 
@@ -150,7 +150,7 @@ V10 不把结构升级强行并入主流程。spike 的目标是形成取舍结�
 | 192.au | xuanhuan Ch192 health_low_p1_halt | ✅ | Ch192 accepted/current head `fix-192-segment-192au`；5 个 direct P1 targets 已回收，20 条 segment critical tracking 已刷新；continuity P1=0，segment audit PASS，T9=0；run completed 1..192，failed=[] | DONE：`tasks/192.au-xuanhuan-ch192-health-low-p1-halt-DONE.md` |
 | 192.av | xuanhuan Ch198 health_low_p1_halt | ✅ | Ch198 accepted/current head `fix-198-segment-192av`；direct P1 target `xuanhuan_lingyuan_technique.escape.shadow_step` 已回收，13 条 segment critical tracking 已刷新；continuity P1=0，segment audit PASS，T9=0；run completed 1..198，failed=[] | DONE：`tasks/192.av-xuanhuan-ch198-health-low-p1-halt-DONE.md` |
 | 192.aw | xuanhuan Ch200 five-gate health fail | ✅ | 补跑 Ch200 continuity audit `cont_b75b3a02`，health=8.1；five-gate @200 PASS、segment audit @200 PASS、T9=0；Task 192 父任务收口 | DONE：`tasks/192.aw-xuanhuan-ch200-five-gate-health-fail-DONE.md` |
-| 193 | wuxia Ch200 爬坡 | ◐ | 任务书已建立；先对 Ch28 省略号占位执行版本化 deterministic clean 并重跑 T9=0，再进入 Ch200 分段爬坡 | 任务书：`tasks/193-wuxia-ch200-climb.md`；未启动实跑 |
+| 193 | wuxia Ch200 爬坡 | ◐ | Ch28 deterministic clean/source 初始化已完成；193.p/q 已完成；已推进到 accepted_count=120，Ch120 head=`v-0b7d1806`；用户要求人工暂停于 Ch121 under_review（`rev-121-3-5ee3b52c`），run paused、failed=[]、total_cost=3.159457 | 任务书：`tasks/193-wuxia-ch200-climb.md`；下一步从 Ch121 resume 到 Ch125，随后执行 Ch125 five-gate/segment/T9 |
 | 193.p | wuxia Ch125 missing checkpoints table | ✅ | 修复旧 Ch100 source 复制出的 V10 target DB 缺少 LangGraph checkpoint tables 时，`prune_orphan_checkpoints()` 在 setup 前崩溃的问题；缺表幂等返回 0，表存在时保持原清理语义 | DONE：`tasks/193.p-wuxia-ch125-missing-checkpoints-table-DONE.md` |
 | 193.q | wuxia Ch117 health_low_p1_halt | ✅ | 创建 Ch117 continuity patch `fix-117-p1-193q`，补回 `blood_abyss.reverse_practice` 正文承接；continuity health=8.0、critical_orphans=0，segment audit PASS，T9=0；run restored to running | DONE：`tasks/193.q-wuxia-ch117-health-low-p1-halt-DONE.md` |
 | 194 | urban Ch200 爬坡 | ◐ | 任务书已建立；urban 是当前唯一 CONTINUE_READY source，可用 Task 191 harness 初始化并按 Ch125/150/175/200 推进 | 任务书：`tasks/194-urban-ch200-climb.md`；未启动实跑 |

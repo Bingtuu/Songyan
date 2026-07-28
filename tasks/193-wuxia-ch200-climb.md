@@ -4,7 +4,7 @@
 > **类型**: deterministic clean / Ch200 分段长跑 / 段边界审计
 > **优先级**: P0
 > **依赖**: Task 189 / Task 190 / Task 191；当前 goal 下按编号在 Task 192 之后推进
-> **状态**: ◻ 任务书已建立，未启动实跑
+> **状态**: ◐ 进行中；已到 Ch120 accepted，当前人工暂停于 Ch121 under_review
 > **预计工作量**: 大
 
 ---
@@ -91,6 +91,15 @@ python scripts/run_v10_ch200_climb.py --audit --genre wuxia --up-to <125|150|175
 ---
 
 ## 执行阶段
+
+### 当前执行记录（2026-07-28）
+
+- Ch28 deterministic clean/source 初始化已完成；wuxia V10 target DB 为 `.tmp/task_v10_wuxia_ch200.db`。
+- Task 193.p 已完成：旧 Ch100 source 复制出的 V10 target DB 缺 LangGraph checkpoint tables 时，`prune_orphan_checkpoints()` 缺表幂等返回 0。
+- Task 193.q 已完成：Ch117 `health_low_p1_halt` P1 target `broken_blade_sect_martial_arts.blood_abyss.reverse_practice` 已通过 accepted patch `fix-117-p1-193q` 修复，continuity/segment/T9 复判通过。
+- 193.q 后继续使用 Task 191 harness `--to 125 --genre wuxia`：Ch118 `v-c632abb2`、Ch119 `v-7d9cc930`、Ch120 `v-0b7d1806` accepted。
+- 用户要求暂停时，Ch121 已生成并修订至 `rev-121-3-5ee3b52c`，但仍 `under_review`，未 accepted；尚未到 Ch125 段边界，尚未执行 Ch125 five-gate / segment audit / metrics T9。
+- run `run-v10-wuxia-5bbfab3a` 已标记 `paused`，`current_chapter=121`，completed_count=120，failed=[]，total_cost=3.159457；DB SHA256 `AEB862EF616761B4AFE5540495674AB5987A01D003E91560993F5AEE08005BF5`；暂停证据 `.tmp/193_wuxia_pause_20260728_0838.json`。
 
 ### A. Ch28 deterministic clean
 
