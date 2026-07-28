@@ -54,7 +54,7 @@ _SETTING_REFERENCE_BOUNDARY_CHARS = set(
     "\"'“”‘’ \t\r\n"
 )
 _SETTING_REFERENCE_SPLIT_RE = re.compile(
-    r"[·—\-_/（）()\[\]【】,，、;；:.：\s]+|"
+    r"[·—\-_/（）()\[\]【】〈〉《》,，、;；:.：\s]+|"
     r"[的了着过在为是被将把从到向对于由以中上下里内外前后间处和与及或并]"
 )
 _LOW_INFO_REFERENCE_TOKENS = {
@@ -159,20 +159,24 @@ def _setting_low_info_tokens(setting: dict[str, Any]) -> set[str]:
 
 
 def _setting_core_phrases(setting: dict[str, Any]) -> set[str]:
-    """从 setting name/description 派生较强的中文核心短语。"""
-    text = " ".join(
-        [
-            str(setting.get("setting_name") or ""),
-            str(setting.get("description") or ""),
-        ]
-    )
+    """从 setting name/description 派生较强的中文核心短语。
+
+    Task 193.v F1b：**name 派生**片段下限 5 → 3，`灵渊拳`/`第一式`/`守门者`
+    级短核心词不再被丢弃；**description 派生**片段维持下限 5——描述文本的
+    3-4 字泛词（如 `巨型遗迹`）误刷面过大
+    （test_task138c_aliases_do_not_match_broad_words 护栏）。
+    """
     low_info = _setting_low_info_tokens(setting)
     phrases: set[str] = set()
-    for run in _cjk_runs(text):
-        for part in _SETTING_REFERENCE_SPLIT_RE.split(run):
-            cleaned = part.strip()
-            if len(cleaned) >= 5 and cleaned not in low_info:
-                phrases.add(cleaned)
+    for text, min_len in (
+        (str(setting.get("setting_name") or ""), 3),
+        (str(setting.get("description") or ""), 5),
+    ):
+        for run in _cjk_runs(text):
+            for part in _SETTING_REFERENCE_SPLIT_RE.split(run):
+                cleaned = part.strip()
+                if len(cleaned) >= min_len and cleaned not in low_info:
+                    phrases.add(cleaned)
     return phrases
 
 
@@ -315,8 +319,12 @@ def _add_cluster_reference_terms(
         )
 
 
-def _setting_reference_terms(setting: dict[str, Any]) -> set[str]:
-    """生成 setting 的轻量引用词集合."""
+def _setting_name_reference_terms(setting: dict[str, Any]) -> set[str]:
+    """生成 setting_name 派生的引用词集（name 整串 + 拆分件）.
+
+    Task 193.v F3：该子集用于"设定名词 CJK 后缀放宽"的判定——只有 name 派生
+    term 才允许放宽（`猎渊者` ↔ `猎渊者印记`），description 派生 phrase 不适用。
+    """
     terms: set[str] = set()
     name = (setting.get("setting_name") or "").strip()
     if len(name) >= 2:
@@ -326,11 +334,17 @@ def _setting_reference_terms(setting: dict[str, Any]) -> set[str]:
         # 正文明明多次出现却判为 orphan → 误触 health_low_p1_halt。将中英文引号纳入
         # 分隔符，使引号内实体成为独立 name-part term（仍受 len>=2 与 low-info 过滤约束）。
         for part in re.split(
-            r"[·—\-_/（）()\[\]【】,，、;；:\s'\u2018\u2019\u201c\u201d\"“”]+", name
+            r"[·—\-_/（）()\[\]【】〈〉《》,，、;；:\s'\u2018\u2019\u201c\u201d\"“”]+", name
         ):
             cleaned = part.strip()
             if len(cleaned) >= 2:
                 terms.add(cleaned)
+    return terms
+
+
+def _setting_reference_terms(setting: dict[str, Any]) -> set[str]:
+    """生成 setting 的轻量引用词集合."""
+    terms = _setting_name_reference_terms(setting)
 
     setting_key = str(setting.get("setting_key") or "")
     key_tail = setting_key.split(".")[-1].replace("_", "")
@@ -409,6 +423,42 @@ async def _recycle_duplicate_setting_clusters(
     return refreshed_keys
 
 
+_RELAXED_PARTICLE_CHARS = "的之了"
+
+
+def _strip_reference_particles(text: str) -> str:
+    """Task 193.v F2：删除虚字（的/之/了）的归一化副本，仅用于命中判定."""
+    return text.translate(str.maketrans("", "", _RELAXED_PARTICLE_CHARS))
+
+
+def _term_in_content_relaxed(
+    term: str,
+    content: str,
+    *,
+    allow_cjk_suffix: bool,
+) -> bool:
+    """Task 193.v F2/F3：正文引用扫描专用的放宽匹配（不改共享默认行为）.
+
+    在 ``_term_in_content`` 基础命中之上叠加两条放宽，仅对 >= 3 字 term 生效：
+    - F2 虚字归一化：term 与 content 删除 的/之/了 后再做子串匹配，覆盖
+      `与守灵交易` ↔ `与守灵的交易` 类插字 paraphrase；
+    - F3 设定名词后缀放宽（``allow_cjk_suffix=True``，仅 name 派生 term）：
+      允许 CJK 后缀，`猎渊者` ↔ `猎渊者印记`。
+    """
+    if _term_in_content(term, content):
+        return True
+    lowered_term = term.lower()
+    if len(lowered_term) < 3:
+        return False
+    lowered_content = content.lower()
+    if allow_cjk_suffix and lowered_term in lowered_content:
+        return True
+    stripped_term = _strip_reference_particles(lowered_term)
+    if len(stripped_term) < 3:
+        return False
+    return stripped_term in _strip_reference_particles(lowered_content)
+
+
 def _detect_setting_references(
     content: str,
     active_settings: list[dict[str, Any]],
@@ -416,6 +466,8 @@ def _detect_setting_references(
     """扫描正文，返回被引用的 setting_tracking_id -> setting_key 映射.
 
     优先使用 setting_name；若 setting_name 为空或太短，则回退到 setting_key 最后一段。
+    Task 193.v：基础匹配之外叠加 relaxed 路径（F2 虚字归一化 + F3 name 派生
+    CJK 后缀放宽），共享 ``_term_in_content`` 默认行为不变。
     """
     referenced: dict[str, str] = {}
     if not content:
@@ -427,8 +479,11 @@ def _detect_setting_references(
         if not tracking_id or not setting_key:
             continue
 
+        name_terms = _setting_name_reference_terms(setting)
         for term in _setting_reference_terms(setting):
-            if _term_in_content(term, content):
+            if _term_in_content_relaxed(
+                term, content, allow_cjk_suffix=term in name_terms
+            ):
                 referenced[tracking_id] = setting_key
                 break
         else:
