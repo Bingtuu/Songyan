@@ -68,7 +68,7 @@ AnnotationRecord schema：`{genre, chapter, version_id, sample_layer, scores, ra
 
 - 6 个最弱锚点章（overall=2，人工深读判定的最差样本）规则命中全为 0——漏报率 100%；
 - 仅有的 2 次锚点命中落在 overall=5 的最强章上，组均值方向反转（弱 0.00 < 强 0.33）。n=6/组纯属噪声，但即便忽略显著性，该信号在最需要区分的两极样本上毫无区分力；
-- fatigue 词表 max=3、2/3 章为 0，无分档能力。
+- fatigue 词表 max=3、33/60 章（55.0%）为 0，无分档能力。
 
 ### 4.3 不匹配分析（Task 198 输入）
 
@@ -80,7 +80,7 @@ AnnotationRecord schema：`{genre, chapter, version_id, sample_layer, scores, ra
 | 章节号自指泄漏 | scifi Ch84 "林渊在第21章看到过这个协议的设计蓝图"；scifi Ch194 "在第162章的老雷留下的线索中" | 无 |
 | 工程残留/未渲染标记 | xuanhuan Ch50 残留 `## 二/三/四` Markdown 标题；scifi Ch84 未渲染舞台指示"（停顿半秒）"；xuanhuan Ch194 英文残留 "invisible" | 无 |
 | 设定补丁段（说明文重述） | xuanhuan Ch118 第 185 行设定汇总段（令牌二分/星辰血脉/七家族手印） | 无 |
-| 模板化修辞（否定三连/明喻机器化/意象库存枯竭） | xuanhuan Ch118 "纹路像活物/像活的" ×4；spotcheck 多章排比复读 | 部分（仅覆盖固定搭配，无复读计数） |
+| 模板化修辞（否定三连/明喻机器化/意象库存枯竭） | xuanhuan Ch118 "纹路"明喻逐字重复 3 次（"像是活物"×1 + "像是活的"×2）；spotcheck 多章排比复读 | 部分（仅覆盖固定搭配，无复读计数） |
 
 198 规则包扩充应以这五类为主方向，优先做"章内/跨章逐字复读检测"与"自指泄漏/工程残留词面规则"——它们在深读缺陷中占比最高且词面可达。
 
