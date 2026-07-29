@@ -68,7 +68,7 @@ LLM_TEMPERATURE=0.7
 ## 启动协议
 
 1. 读取 `AGENTS.md`（全局约束）
-2. 读取 `system_prompt/development-tech-plan-v2.md`（技术方案）
+2. 读取 `development-tech-plan-v2.md`（技术方案）
 3. 读取 `docs/STATUS.md`（当前项目状态）
 4. 读取 `tasks/00x-xxx.md`（当前 Task 规格）
 5. 用 5-8 行总结你理解的任务边界

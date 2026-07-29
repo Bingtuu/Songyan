@@ -68,4 +68,4 @@ class NewModel(BaseModel):
 ## 参考文档
 
 - `docs/architecture/xxx.md` — [相关设计文档]
-- `system_prompt/development-tech-plan-v2.md` — [技术方案相关章节]
+- `archive/v5/context-docs/system_prompt/development-tech-plan-v2.md` — [技术方案相关章节]
