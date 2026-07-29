@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import sqlite3
 import sys
@@ -15,6 +16,7 @@ from songyan.evals.excellence_sampling import (
     DEFAULT_SEED,
     SAMPLES_PER_GENRE,
     SEGMENT_SIZE,
+    ExcellenceSamplingError,
     load_accepted_chapters,
     load_chapter_content,
     stratified_sample,
@@ -52,22 +54,25 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--output", type=Path, default=OUTPUT)
     args = parser.parse_args(argv)
 
-    samples = []
+    samples: list[dict[str, object]] = []
     for src in SOURCES:
-        conn = _connect_readonly(Path(src["db"]))
-        chapters = load_accepted_chapters(conn, src["project_id"], src["genre"])
-        chapters = [c for c in chapters if c.chapter_number <= src["up_to"]]
-        picked = stratified_sample(chapters, per_genre=SAMPLES_PER_GENRE, seed=args.seed)
-        if args.dump_texts:
-            args.dump_texts.mkdir(parents=True, exist_ok=True)
-            for c in picked:
-                content = load_chapter_content(conn, c.version_id)
-                out = args.dump_texts / f"{c.genre}-ch{c.chapter_number:03d}.txt"
-                out.write_text(
-                    f"# {c.genre} Ch{c.chapter_number} ({c.version_id})\n\n{content}",
-                    encoding="utf-8",
-                )
-        conn.close()
+        try:
+            with contextlib.closing(_connect_readonly(Path(src["db"]))) as conn:
+                chapters = load_accepted_chapters(conn, src["project_id"], src["genre"])
+                chapters = [c for c in chapters if c.chapter_number <= src["up_to"]]
+                picked = stratified_sample(chapters, per_genre=SAMPLES_PER_GENRE, seed=args.seed)
+                if args.dump_texts:
+                    args.dump_texts.mkdir(parents=True, exist_ok=True)
+                    for c in picked:
+                        content = load_chapter_content(conn, c.version_id)
+                        out = args.dump_texts / f"{c.genre}-ch{c.chapter_number:03d}.txt"
+                        out.write_text(
+                            f"# {c.genre} Ch{c.chapter_number} ({c.version_id})\n\n{content}",
+                            encoding="utf-8",
+                        )
+        except ExcellenceSamplingError as exc:
+            print(f"build_196_sample_set error: {exc}", file=sys.stderr)
+            return 2
         samples.extend(c.to_dict() for c in picked)
         print(f"{src['genre']}: {len(chapters)} accepted -> sampled {len(picked)}")
 
