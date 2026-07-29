@@ -135,6 +135,25 @@ class TestLoadAcceptedChapters:
             load_accepted_chapters(conn, "no-such", "xuanhuan")
         conn.close()
 
+    def test_null_and_dangling_heads_excluded(self, tmp_path: Path) -> None:
+        """JOIN/WHERE 口径：NULL accepted_version_id 与悬空 head 均不得入选."""
+        db = tmp_path / "t.db"
+        _init_db(db)
+        conn = sqlite3.connect(db)
+        conn.executemany(
+            "INSERT INTO chapter_heads VALUES (?, ?, ?, ?)",
+            [
+                ("p1", 201, None, "draft"),  # accepted_version_id = NULL
+                ("p1", 202, "v-dangling", "accepted"),  # 无匹配 chapter_versions 行
+            ],
+        )
+        conn.commit()
+        chapters = load_accepted_chapters(conn, "p1", "xuanhuan")
+        conn.close()
+        assert len(chapters) == 200
+        assert all(c.version_id != "v-dangling" for c in chapters)
+        assert {c.chapter_number for c in chapters} == set(range(1, 201))
+
 
 class TestLoadChapterContent:
     def test_returns_content(self, tmp_path: Path) -> None:
