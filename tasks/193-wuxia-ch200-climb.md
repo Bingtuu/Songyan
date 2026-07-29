@@ -4,7 +4,7 @@
 > **类型**: deterministic clean / Ch200 分段长跑 / 段边界审计
 > **优先级**: P0
 > **依赖**: Task 189 / Task 190 / Task 191；当前 goal 下按编号在 Task 192 之后推进
-> **状态**: ◐ 进行中；已到 Ch120 accepted，当前人工暂停于 Ch121 under_review
+> **状态**: ◐ 进行中；已到 Ch150 accepted，Ch150 段边界审计 PASS（经 193.x/193.y 修复）
 > **预计工作量**: 大
 
 ---
@@ -100,6 +100,15 @@ python scripts/run_v10_ch200_climb.py --audit --genre wuxia --up-to <125|150|175
 - 193.q 后继续使用 Task 191 harness `--to 125 --genre wuxia`：Ch118 `v-c632abb2`、Ch119 `v-7d9cc930`、Ch120 `v-0b7d1806` accepted。
 - 用户要求暂停时，Ch121 已生成并修订至 `rev-121-3-5ee3b52c`，但仍 `under_review`，未 accepted；尚未到 Ch125 段边界，尚未执行 Ch125 five-gate / segment audit / metrics T9。
 - run `run-v10-wuxia-5bbfab3a` 已标记 `paused`，`current_chapter=121`，completed_count=120，failed=[]，total_cost=3.159457；DB SHA256 `AEB862EF616761B4AFE5540495674AB5987A01D003E91560993F5AEE08005BF5`；暂停证据 `.tmp/193_wuxia_pause_20260728_0838.json`。
+
+### 当前执行记录（2026-07-29，Ch150 段）
+
+- Ch121→Ch125 resume 已完成（途中成本熔断优雅暂停 `pause_reason='cost_budget'`，提额 6.0 后 completed）；Ch125 段边界审计 five-gate/segment/T9 全 PASS。
+- 继续使用 Task 191 harness `--to 150 --genre wuxia --cost-budget 10`（wrapper `run-20260729-183812490`，`PASS_NORMAL_EXIT`）：Ch126→Ch150 全部 accepted，failed=[]，run final_status=completed @150，total_cost=8.035272；Ch150 accepted/current head=`v-a3a9083f`。
+- Ch150 段边界审计初判：five-gate PASS（显式绑 `tasks/189-scifi-ch200-baseline.json`），但 segment audit FAIL：`critical_orphans=2`、`halt_would_fire=true`、`next_audit_chapter=153`。
+- Task 193.x 已完成：2 条 critical tracking（`blood_abyss.reverse_practice`、`blood_sacrifice.complete_manual`）经 Ch149/Ch150 正文承接证据（天罡正气/血纹/三道弧线符号，逐字验证 6/6）后用 `promote_to_active()` 刷新到 Ch150 `v-a3a9083f`；复判 segment audit PASS（critical_orphans=0、halt=false）。DONE `tasks/193.x-wuxia-ch150-segment-audit-critical-orphans-DONE.md`。
+- Task 193.y 已完成：193.x 后 T9 复判发现 Ch145 accepted `v-f581c63b` 第 85 段逐字重复第 30 段（duplicate=1），经 `apply_chapter_text_cleaning()` 版本化 clean 为 `clean-145-6-c534f0e7`；复判 T9=0、five-gate PASS、segment audit PASS。DONE `tasks/193.y-wuxia-ch145-t9-duplicate-clean-DONE.md`。
+- 至此 Ch150 段边界审计三项全 PASS；下一步 `--to 175` 后执行 Ch175 段审计。
 
 ### A. Ch28 deterministic clean
 
