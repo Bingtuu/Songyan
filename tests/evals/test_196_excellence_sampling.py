@@ -1,19 +1,20 @@
 """Task 196 excellence_sampling 测试."""
 from __future__ import annotations
 
-import sqlite3  # noqa: F401  # 后续 Task 追加测试使用
-from pathlib import Path  # noqa: F401  # 后续 Task 追加测试使用
+import sqlite3
+from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
 from songyan.evals.excellence_sampling import (
     DEFAULT_SEED,
+    SEGMENT_SIZE,
     AnnotationRecord,
-    AnnotationScores,  # noqa: F401  # 后续 Task 追加测试使用
     ExcellenceSamplingError,
     SampledChapter,
-    load_accepted_chapters,  # noqa: F401  # 后续 Task 追加测试使用
+    load_accepted_chapters,
+    load_chapter_content,
     stratified_sample,
 )
 
@@ -24,7 +25,7 @@ def _make_chapters(genre: str = "xuanhuan", count: int = 200) -> list[SampledCha
             genre=genre,
             chapter_number=i,
             version_id=f"v-{genre}-{i:03d}",
-            segment=(i - 1) // 25 + 1,
+            segment=(i - 1) // SEGMENT_SIZE + 1,
         )
         for i in range(1, count + 1)
     ]
@@ -87,3 +88,66 @@ class TestAnnotationRecord:
         data["sample_layer"] = "unknown"
         with pytest.raises(ValidationError):
             AnnotationRecord(**data)
+
+
+def _init_db(db_path: Path, project_id: str = "p1", chapters: int = 200) -> None:
+    conn = sqlite3.connect(db_path)
+    conn.executescript(
+        """
+        CREATE TABLE chapter_heads (
+            project_id TEXT, chapter_number INTEGER,
+            accepted_version_id TEXT, status TEXT );
+        CREATE TABLE chapter_versions (
+            version_id TEXT, project_id TEXT, chapter_number INTEGER,
+            content TEXT, parent_version_id TEXT );
+        """
+    )
+    heads = [
+        (project_id, i, f"v-{i:03d}", "accepted") for i in range(1, chapters + 1)
+    ]
+    versions = [
+        (f"v-{i:03d}", project_id, i, f"第{i}章正文", None)
+        for i in range(1, chapters + 1)
+    ]
+    conn.executemany("INSERT INTO chapter_heads VALUES (?, ?, ?, ?)", heads)
+    conn.executemany("INSERT INTO chapter_versions VALUES (?, ?, ?, ?, ?)", versions)
+    conn.commit()
+    conn.close()
+
+
+class TestLoadAcceptedChapters:
+    def test_loads_200_chapters(self, tmp_path: Path) -> None:
+        db = tmp_path / "t.db"
+        _init_db(db)
+        conn = sqlite3.connect(db)
+        chapters = load_accepted_chapters(conn, "p1", "xuanhuan")
+        conn.close()
+        assert len(chapters) == 200
+        assert chapters[0].segment == 1
+        assert chapters[-1].segment == 8
+        assert chapters[86].version_id == "v-087"
+
+    def test_unknown_project_raises(self, tmp_path: Path) -> None:
+        db = tmp_path / "t.db"
+        _init_db(db)
+        conn = sqlite3.connect(db)
+        with pytest.raises(ExcellenceSamplingError):
+            load_accepted_chapters(conn, "no-such", "xuanhuan")
+        conn.close()
+
+
+class TestLoadChapterContent:
+    def test_returns_content(self, tmp_path: Path) -> None:
+        db = tmp_path / "t.db"
+        _init_db(db)
+        conn = sqlite3.connect(db)
+        assert load_chapter_content(conn, "v-087") == "第87章正文"
+        conn.close()
+
+    def test_missing_version_raises(self, tmp_path: Path) -> None:
+        db = tmp_path / "t.db"
+        _init_db(db)
+        conn = sqlite3.connect(db)
+        with pytest.raises(ExcellenceSamplingError):
+            load_chapter_content(conn, "v-missing")
+        conn.close()

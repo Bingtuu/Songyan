@@ -28,7 +28,7 @@ class SampledChapter:
     version_id: str
     segment: int  # 1-based，25 章一个弧段
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, object]:
         return {
             "genre": self.genre,
             "chapter": self.chapter_number,
@@ -62,7 +62,10 @@ def stratified_sample(
     per_genre: int = SAMPLES_PER_GENRE,
     seed: int = DEFAULT_SEED,
 ) -> list[SampledChapter]:
-    """按 25 章弧段分层抽样：每段配额 = 基数 + 前 rem 段各 +1，段内固定 seed 随机."""
+    """按 25 章弧段分层抽样：每段配额 = 基数 + 前 rem 段各 +1，段内固定 seed 随机.
+
+    当某弧段章节数不足配额时，该段返回实际可用数量，总数可能少于 per_genre。
+    """
     if not chapters:
         raise ExcellenceSamplingError("empty chapter list")
     segments: dict[int, list[SampledChapter]] = {}
