@@ -4,7 +4,7 @@
 > **类型**: deterministic clean / Ch200 分段长跑 / 段边界审计
 > **优先级**: P0
 > **依赖**: Task 189 / Task 190 / Task 191；当前 goal 下按编号在 Task 192 之后推进
-> **状态**: ◐ 进行中；已到 Ch150 accepted，Ch150 段边界审计 PASS（经 193.x/193.y 修复）
+> **状态**: ◐ 进行中；已到 Ch155 accepted，Ch155 经 193.z/193.aa 修复后 five-gate/segment/T9 全 PASS
 > **预计工作量**: 大
 
 ---
@@ -109,6 +109,30 @@ python scripts/run_v10_ch200_climb.py --audit --genre wuxia --up-to <125|150|175
 - Task 193.x 已完成：2 条 critical tracking（`blood_abyss.reverse_practice`、`blood_sacrifice.complete_manual`）经 Ch149/Ch150 正文承接证据（天罡正气/血纹/三道弧线符号，逐字验证 6/6）后用 `promote_to_active()` 刷新到 Ch150 `v-a3a9083f`；复判 segment audit PASS（critical_orphans=0、halt=false）。DONE `tasks/193.x-wuxia-ch150-segment-audit-critical-orphans-DONE.md`。
 - Task 193.y 已完成：193.x 后 T9 复判发现 Ch145 accepted `v-f581c63b` 第 85 段逐字重复第 30 段（duplicate=1），经 `apply_chapter_text_cleaning()` 版本化 clean 为 `clean-145-6-c534f0e7`；复判 T9=0、five-gate PASS、segment audit PASS。DONE `tasks/193.y-wuxia-ch145-t9-duplicate-clean-DONE.md`。
 - 至此 Ch150 段边界审计三项全 PASS；下一步 `--to 175` 后执行 Ch175 段审计。
+
+### 当前执行记录（2026-07-29，Ch155 blocker / 193.z）
+
+- 使用 Task 191 harness 从 Ch150 继续执行 `--to 175 --genre wuxia --cost-budget 14`（wrapper `run-20260729-213157512`，显式 `LLM_MODEL=deepseek/deepseek-v4-flash`）。
+- Ch151、Ch152、Ch153、Ch154 均 accepted；Ch153 曾触发 rewrite，最终 accepted settlement version `v-142b4ce3`。
+- Ch155 二轮修订版本 `rev-155-3-9ac1de69` 的 RuleAuditor 已清洁且 mandatory reference PASS，但 LLMAuditor 返回空内容，JSON 标准解析与 repair 均失败：
+
+```text
+llm_auditor_node.audit_failed chapter_number=155 error='LLM 返回内容无法解析为 JSON（标准解析和 repair 均失败）' version_id=rev-155-3-9ac1de69
+project_pipeline.chapter_failed chapter_number=155 error='LLM audit failed: LLM 返回内容无法解析为 JSON（标准解析和 repair 均失败）'
+```
+
+- pipeline isolate 继续进入 Ch156 前置；为避免扩大 gap 与继续消耗成本，已人工中止外部进程，并用 `ProjectRunRepository.update()` 将 run 冻结为 `status=paused`、`pause_reason=user_requested`、`current_chapter=155`、`failed_chapters=[155]`。
+- 冻结后状态：accepted_count=154，run total_cost=8.796384；冻结目录 `.tmp/backups/193z_wuxia_ch155_llm_auditor_json_parse_20260729-220836/`。
+- 已创建 blocker 任务书：`tasks/193.z-wuxia-ch155-llm-auditor-json-parse.md`；修复前不得继续 Ch156+。
+
+### 当前执行记录（2026-07-29，Ch155 修复完成 / 193.z + 193.aa）
+
+- Task 193.z 已完成：使用单章 resume 脚本 `.tmp/run_193z_ch155_resume.py` 重跑 Ch155，wrapper `run-20260729-221336654` `PASS_NORMAL_EXIT`；pipeline `completed=[155]`、`failed=[]`、`final_status=completed`，final accepted settlement version `v-3af05880`。
+- 单章 runner 结束后，已用 `ProjectRunRepository.update()` 将 `project_runs.completed_chapters` 恢复为 1..155、`failed=[]`、`status=completed`、`current_chapter=155`。
+- post-fix five-gate @155 PASS，但 segment audit @155 初判 `critical_orphans=1`、`halt_would_fire=true`，目标为 `broken_blade_sect_location_cave_altar.blood_lock.tie_bloodline`；已冻结现场 `.tmp/backups/193aa_wuxia_ch155_segment_critical_orphan_20260729-2230/` 并路由 193.aa。
+- Task 193.aa 已完成：创建 Ch155 accepted continuity patch `fix-155-segment-193aa`（parent `v-3af05880`），补回“义庄地下洞窟祭坛 / 白骨 / 铁氏嫡系血脉锁 / 密室裂缝”正文承接，并通过 `SettingTrackingRepository.promote_to_active()` 刷新目标 tracking 到 Ch155。
+- 最终状态：Ch155 accepted/current head=`fix-155-segment-193aa`；run `run-v10-wuxia-5bbfab3a` completed @155、failed=[]、total_cost=9.05207；five-gate @155 PASS、segment audit @155 PASS（critical_orphans=0、halt=false）、T9=0。
+- 下一步继续使用 Task 191 harness 从 Ch156 推进到 Ch175；真实 `--to` 必须带 `--cost-budget` 或 `SONGYAN_RUN_COST_BUDGET`，到 Ch175 后先审计再继续。
 
 ### A. Ch28 deterministic clean
 
