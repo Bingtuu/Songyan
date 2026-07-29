@@ -4,7 +4,7 @@
 > **类型**: deterministic clean / Ch200 分段长跑 / 段边界审计
 > **优先级**: P0
 > **依赖**: Task 189 / Task 190 / Task 191；当前 goal 下按编号在 Task 192 之后推进
-> **状态**: ◐ 进行中；已到 Ch155 accepted，Ch155 经 193.z/193.aa 修复后 five-gate/segment/T9 全 PASS
+> **状态**: ◐ 进行中；已到 Ch162 accepted，Ch162 经 193.ab/193.ac 修复后 five-gate/segment/T9 全 PASS
 > **预计工作量**: 大
 
 ---
@@ -133,6 +133,16 @@ project_pipeline.chapter_failed chapter_number=155 error='LLM audit failed: LLM 
 - Task 193.aa 已完成：创建 Ch155 accepted continuity patch `fix-155-segment-193aa`（parent `v-3af05880`），补回“义庄地下洞窟祭坛 / 白骨 / 铁氏嫡系血脉锁 / 密室裂缝”正文承接，并通过 `SettingTrackingRepository.promote_to_active()` 刷新目标 tracking 到 Ch155。
 - 最终状态：Ch155 accepted/current head=`fix-155-segment-193aa`；run `run-v10-wuxia-5bbfab3a` completed @155、failed=[]、total_cost=9.05207；five-gate @155 PASS、segment audit @155 PASS（critical_orphans=0、halt=false）、T9=0。
 - 下一步继续使用 Task 191 harness 从 Ch156 推进到 Ch175；真实 `--to` 必须带 `--cost-budget` 或 `SONGYAN_RUN_COST_BUDGET`，到 Ch175 后先审计再继续。
+
+### 当前执行记录（2026-07-29，Ch162 修复完成 / 193.ab + 193.ac）
+
+- 继续使用 Task 191 harness 从 Ch155 执行 `--to 175 --genre wuxia --cost-budget 15`（wrapper `run-20260729-223717368`，显式 `LLM_MODEL=deepseek/deepseek-v4-flash`）。
+- Ch156-Ch162 accepted；Ch156/157 曾进入 rewrite 才通过，Ch158-Ch161 accepted 后继续，Ch162 accepted/current 初始 head=`v-b786a6f6`。
+- Ch162 结算与 continuity audit 后触发 `health_low_p1_halt: P1_count=1 (critical orphaned setting)`，run 自动暂停，accepted_count=162、failed=[]、pause_reason=`auto_halt:chapter_gate`、total_cost=10.29487。
+- Task 193.ab 已完成：创建 direct P1 patch `fix-162-p1-193ab`（parent `v-b786a6f6`），补回《血祭刀诀》完整秘录、血祭三转、天罡正气与血脉为桥承接，刷新 `blood_sacrifice.complete_manual` 到 Ch162。post-fix segment audit 仍发现 `blood_abyss.reverse_practice` critical orphan。
+- Task 193.ac 已完成：创建 segment patch `fix-162-segment-193ac`（parent `fix-162-p1-193ab`），将“反练”明确为“血引归墟反练”，刷新 `blood_abyss.reverse_practice` 到 Ch162。
+- 最终状态：Ch162 accepted/current head=`fix-162-segment-193ac`；run completed @162、failed=[]、total_cost=10.29487；five-gate @162 PASS、segment audit @162 PASS（critical_orphans=0、halt=false）、T9=0。
+- 下一步继续 Task 191 harness 从 Ch163 推进到 Ch175；真实 `--to` 必须带 `--cost-budget` 或 `SONGYAN_RUN_COST_BUDGET`，到 Ch175 后先审计再继续。
 
 ### A. Ch28 deterministic clean
 
