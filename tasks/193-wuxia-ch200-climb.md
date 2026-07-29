@@ -4,7 +4,7 @@
 > **类型**: deterministic clean / Ch200 分段长跑 / 段边界审计
 > **优先级**: P0
 > **依赖**: Task 189 / Task 190 / Task 191；当前 goal 下按编号在 Task 192 之后推进
-> **状态**: ◐ 进行中；已到 Ch175 accepted，193.ad 修复后 five-gate/segment/T9 全 PASS；下一步 Ch176→Ch200
+> **状态**: ✅ 已完成；wuxia Ch200 five-gate/segment/T9 全 PASS
 > **预计工作量**: 大
 
 ---
@@ -155,6 +155,15 @@ project_pipeline.chapter_failed chapter_number=155 error='LLM audit failed: LLM 
 - Task 193.ad 已完成：创建 Ch175 accepted continuity patch `fix-175-segment-193ad`（parent `v-6b82012e`），补回“义庄地下洞窟祭坛 / 密室裂缝 / 白骨 / 铁氏嫡系血脉锁 / 铁氏血脉锁”正文承接，并刷新 target tracking 到 Ch175。
 - 复判：five-gate @175 PASS（budget=0.9646、CED/1k=0.1536、overdue=143、health=9.1、gap=0），segment audit @175 PASS（critical_orphans=0、halt_would_fire=false），T9=0；run completed @175、failed=[]、total_cost=12.781521。
 - 下一步继续 Task 191 harness 从 Ch176 推进到 Ch200；真实 `--to` 必须带 `--cost-budget` 或 `SONGYAN_RUN_COST_BUDGET`，到 Ch200 后先审计再进入 Task 194。
+
+### 收口记录（2026-07-30，Ch200 完成）
+
+- 使用 Task 191 harness 从 Ch175 执行 `--to 200 --genre wuxia --cost-budget 22`（wrapper `run-20260730-015351605`，显式 `LLM_MODEL=deepseek/deepseek-v4-flash`）。
+- Ch176-Ch200 全部 accepted；run `run-v10-wuxia-5bbfab3a` completed @200、failed=[]、total_cost=17.187324；Ch200 accepted/current head=`v-1ecab81e`。
+- Ch200 accepted 后补跑 continuity audit @200，report=`cont_b2bc955f`，health=9.0、critical_orphans=0，消除 stale health warning。
+- Ch200 checkpoint audit 显式绑定 `tasks/189-scifi-ch200-baseline.json`：five-gate PASS（budget=0.9646、CED/1k=0.1346、overdue=169、health=9.0、accepted=200/gap=0），segment audit PASS（critical_orphans=0、total_orphans=52、halt_would_fire=false），metrics/T9=0。
+- final DB SHA256：`0058CD69C5232EE1472426E524B4D88454B840BF07D3C0CA12CFA685C613CD01`。
+- DONE：`tasks/193-wuxia-ch200-climb-DONE.md`。
 
 ### A. Ch28 deterministic clean
 
