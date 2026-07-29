@@ -4,7 +4,7 @@
 > **类型**: deterministic clean / Ch200 分段长跑 / 段边界审计
 > **优先级**: P0
 > **依赖**: Task 189 / Task 190 / Task 191；当前 goal 下按编号在 Task 192 之后推进
-> **状态**: ◐ 进行中；已到 Ch162 accepted，Ch162 经 193.ab/193.ac 修复后 five-gate/segment/T9 全 PASS
+> **状态**: ◐ 进行中；已到 Ch175 accepted，Ch175 five-gate PASS、T9=0，但 segment audit FAIL，已路由 193.ad 修复
 > **预计工作量**: 大
 
 ---
@@ -143,6 +143,16 @@ project_pipeline.chapter_failed chapter_number=155 error='LLM audit failed: LLM 
 - Task 193.ac 已完成：创建 segment patch `fix-162-segment-193ac`（parent `fix-162-p1-193ab`），将“反练”明确为“血引归墟反练”，刷新 `blood_abyss.reverse_practice` 到 Ch162。
 - 最终状态：Ch162 accepted/current head=`fix-162-segment-193ac`；run completed @162、failed=[]、total_cost=10.29487；five-gate @162 PASS、segment audit @162 PASS（critical_orphans=0、halt=false）、T9=0。
 - 下一步继续 Task 191 harness 从 Ch163 推进到 Ch175；真实 `--to` 必须带 `--cost-budget` 或 `SONGYAN_RUN_COST_BUDGET`，到 Ch175 后先审计再继续。
+
+### 当前执行记录（2026-07-30，Ch175 segment audit blocker / 193.ad）
+
+- 使用 Task 191 harness 从 Ch162 执行 `--to 175 --genre wuxia --cost-budget 16`（wrapper `run-20260729-234725258`，显式 `LLM_MODEL=deepseek/deepseek-v4-flash`）。
+- Ch163-Ch175 全部 accepted；run `run-v10-wuxia-5bbfab3a` completed @175、failed=[]、total_cost=12.781521；Ch175 accepted/current head=`v-6b82012e`。
+- Ch175 checkpoint audit 显式绑定 `tasks/189-scifi-ch200-baseline.json`：five-gate PASS（budget=0.9646、CED/1k=0.1553、overdue=143、health=9.1、accepted=175/gap=0），metrics/T9=0。
+- Segment audit @175 FAIL：`critical_orphans=1`、`total_orphans=49`、`halt_would_fire=true`、`next_audit_chapter=177`。
+- 唯一 critical target：`broken_blade_sect_location_cave_altar.blood_lock.tie_bloodline`（`洞窟祭坛血纹·铁氏血脉锁`），tracking_id=`track-273a8408be8e4caf8cbc1e91954da600-5b381892`，last_mentioned=Ch173。
+- 已冻结现场：`.tmp/backups/193ad_wuxia_ch175_segment_critical_orphan_20260730-0140/`；任务书 `tasks/193.ad-wuxia-ch175-segment-critical-orphan.md`。
+- 修复完成前禁止继续 Ch176+。
 
 ### A. Ch28 deterministic clean
 

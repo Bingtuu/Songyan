@@ -6,7 +6,7 @@
 
 | 项 | 结论 |
 |----|------|
-| 当前阶段 | **V10.2 Task 193 wuxia Ch200 climb**：Task 192 xuanhuan Ch200 已完成；Task 193 已完成 Ch150 段边界 PASS（193.x/193.y 后 five-gate/segment/T9 全 PASS）。Ch155 经 193.z/193.aa 修复后 PASS；Ch156-Ch162 accepted；Ch162 曾触发 `health_low_p1_halt`，已由 193.ab direct P1 patch 与 193.ac segment patch 修复。当前 Ch162 accepted/current head=`fix-162-segment-193ac`，run `run-v10-wuxia-5bbfab3a` 为 `completed @162`、`failed=[]`、`total_cost=10.29487`；Ch162 five-gate PASS、segment audit PASS、T9=0。下一步继续 Ch163→Ch175 并执行 Ch175 审计。urban Ch200 与 Task 195 总验收尚未完成；V10.3 Task 196 优秀度样本集与校准协议已提前完成 |
+| 当前阶段 | **V10.2 Task 193 wuxia Ch200 climb**：Task 192 xuanhuan Ch200 已完成；Task 193 已推进到 Ch175 accepted，run `run-v10-wuxia-5bbfab3a` 为 `completed @175`、`failed=[]`、`total_cost=12.781521`，Ch175 accepted/current head=`v-6b82012e`。Ch175 checkpoint audit 显式绑定 Task 189 baseline 后 five-gate PASS、T9=0，但 segment audit FAIL（`critical_orphans=1`、`halt_would_fire=true`），唯一 target=`broken_blade_sect_location_cave_altar.blood_lock.tie_bloodline`；已冻结现场并创建 Task 193.ad，修复前禁止继续 Ch176+。urban Ch200 与 Task 195 总验收尚未完成；V10.3 Task 196 优秀度样本集与校准协议已提前完成 |
 | V7 收尾 | **已完成**。sci-fi/space_opera + webnovel_intense 单一体裁稳定跑到 Ch200，200/200 accepted，D1 hard clean pass；Ch201-Ch220 20/20 accepted |
 | V8.1 运行时画像 | **已完成**（Task 172a + 172a.p）。`GenreRuntimeProfile` 把 Context Diet 2.0 运行时契约从 sci-fi 默认值解耦；xuanhuan Ch8 halt 已消除（base_budget=15000） |
 | V8.3 文学护栏 | **已完成**（Task 172d）。`literary_guardrail_observe` 去科幻硬编码，lexicon/主角名参数化到 `GenreProfile`，三体裁各配一套；DONE 文档已补齐 |
@@ -32,7 +32,7 @@
 | V10.1 Ch200 baseline | **Task 189 已完成（2026-07-23）**：sci-fi Ch200 事实源 `.tmp/task171_ch1_ch200.db`、project `835afdf11a294b5eac74a5d8998bd9a2`、run `run-fb39245c`；Ch125/150/175/200 显式 baseline 回放均 PASS；canonical baseline `tasks/189-scifi-ch200-baseline.json`（`.tmp/189_scifi_ch200_baseline.json` 仅为可选工作副本）；Ch200 指标 budget 0.9888、CED 0.3803、overdue 352、health 9.8、accepted 200/200、T9=0、segment audit 已按 `up_to=200` 截断且 critical_orphans=0 / halt_would_fire=false；完整 `songyan metrics` Ch200 慢路径仍未作为 Task 189 验收证据，后续如需复算走后缀修复或 Ch200 总验收 |
 | V10.1 Ch100 盘点 | **Task 190 已完成（2026-07-24）**：xuanhuan=REBUILD_REQUIRED（DB 被覆盖，仅 1 章 0 accepted，project_id 已变）、wuxia=BLOCKED_DIRTY_SAMPLE（100/100、five-gate PASS、T9=1 meta Ch28 省略号占位，需 pre-Ch200 clean）、urban=CONTINUE_READY（100/100、five-gate PASS、T9=0）；统一盘点文件 `tasks/190-ch100-terminal-source-inventory-DONE.md` + `.tmp/190_ch100_source_inventory.json` |
 | V10.1 Ch200 harness | **Task 191 已完成（2026-07-24）**：新增 `scripts/run_v10_ch200_climb.py`，冻结 V10 Ch200 DB/project/segment/audit/metrics 路径；支持 `--init`、`--init-from-source`、`--status`、`--audit`、`--to` 与 `--dry-run`；强制 Task 190 三态准入（urban allowed，wuxia/xuanhuan blocked），复制前校验 source DB 为 clean Ch100、source 与 Task 190 inventory 匹配、source `genre_id` 匹配、T9 meta/duplicate/timeline clean，并在目标 DB 创建 V10 `project_runs`；Ch125+ five-gate 显式绑定 `tasks/189-scifi-ch200-baseline.json`；聚焦测试 `tests/test_191_ch200_harness.py` **10 passed**，全量 pytest **2993 passed, 2 skipped, 1 xfailed**，ruff 通过；未启动 Ch101 |
-| V10.2 Ch200 任务书 | **Task 192/193/194 任务书已建立（2026-07-24）**：Task 192 已完成 xuanhuan Ch200；Task 193 已推进到 Ch162 accepted 且 193.ab/193.ac 修复后 five-gate/segment/T9 全 PASS；Task 194 urban Ch200 未启动 |
+| V10.2 Ch200 任务书 | **Task 192/193/194 任务书已建立（2026-07-24）**：Task 192 已完成 xuanhuan Ch200；Task 193 已推进到 Ch175 accepted，当前阻塞于 193.ad Ch175 segment critical orphan；Task 194 urban Ch200 未启动 |
 | V10.2 Task 192.p | **已完成（2026-07-25）**：冻结原 scifi 失败现场 `.tmp/backups/192_scifi_short_regression_failed_20260725-120940/`；定位 Ch8 settlement JSON 输出 4096 token 截断导致 parse failure；`SettlementExtractor` 结构化输出预算提升到 8192；`RUN_ID=192` Ch100 rebuild 默认 `ON_FAILURE=abort`，历史 172b/172c 默认 isolate 不变；scifi end10 复跑 `run-e71bccd8` 10/10 completed、failed=[]、wrapper `PASS_NORMAL_EXIT`；全量 pytest **3004 passed, 2 skipped, 1 xfailed**，ruff 全绿；DONE：`tasks/192.p-scifi-short-regression-context-emergency-DONE.md` |
 | V10.2 Task 192.q/r + Ch25 | **192.q/192.r 已完成，Task 192 第一段到 Ch25（2026-07-25）**：192.q 修复 CreativeDirector 未转义内部英文引号导致的 JSON parse failure，同时保持多 JSON 对象拒绝语义；bits-code-guard 最终 review 0 P0/P1/P2；最终全量 pytest **3006 passed, 2 skipped, 1 xfailed**，ruff 全绿；scifi end10 回归 10/10 completed、failed=[]、T9=0、budget_peak 0.979、wrapper PASS_NORMAL_EXIT；192.r 冻结 Ch24 settlement numerical validation failure，resume 后未复现；最终 Ch25 报告 `docs/reports/192-xuanhuan-ch100-climb.md`：25/25 accepted、failed=[]、budget_peak 0.8632、emergency=0、overdue=0、health=9.1、CED/1k=2.0874；wrapper `run-20260725-162600836` PASS_NORMAL_EXIT |
 | V10.2 Task 192 Ch50 / 192.s | **Ch50 已完成并清到 T9=0（2026-07-25）**：wrapper `run-20260725-183118441` PASS_NORMAL_EXIT；run `run-2f42e276` completed，Ch1-Ch50 completed，failed=[]，accepted heads 50/50，cost 6.740467；初判 DB SHA256 `5422A2234F1965CD07DEBA1B20CF834E91BA920287203C927B74A467274E90CA`，T9 duplicate=1（Ch8 paragraph 37 duplicates paragraph 22），冻结 `.tmp/backups/192s_xuanhuan_ch50_t9_duplicate_20260725-2132/`；192.s 使用版本化 deterministic clean 创建 Ch8 `clean-8-6-cd06a7b7`（parent `v-d62aa178`），修复后 DB SHA256 `E375918948D8467987FE25138DAD7D16A47EEB82D0E95D7FA22370B34D641926`；复判 T9=0、five-gate PASS、segment audit `critical_orphans=0` / `halt_would_fire=false`；DONE：`tasks/192.s-xuanhuan-ch50-t9-duplicate-clean-DONE.md` |
@@ -94,6 +94,7 @@
 | V10.2 Task 193.aa / wuxia Ch155 segment critical orphan | **Ch155 segment critical orphan 已修复到 PASS（2026-07-29）**：目标 `broken_blade_sect_location_cave_altar.blood_lock.tie_bloodline`；创建 Ch155 accepted continuity patch `fix-155-segment-193aa`（parent `v-3af05880`），补回“义庄地下洞窟祭坛 / 白骨 / 铁氏嫡系血脉锁 / 密室裂缝”正文承接，并刷新 tracking 到 Ch155；run completed 1..155、failed=[]、total_cost=9.05207；segment audit @155 PASS（critical_orphans=0、halt=false），five-gate @155 PASS，T9=0；DONE `tasks/193.aa-wuxia-ch155-segment-critical-orphan-DONE.md` |
 | V10.2 Task 193.ab / wuxia Ch162 health_low_p1_halt | **Ch162 direct P1 已修复，post-fix segment blocker 已路由 193.ac（2026-07-29）**：Ch156-Ch162 accepted 后触发 `health_low_p1_halt`，direct target `broken_blade_sect_martial_arts.blood_sacrifice.complete_manual`；创建 Ch162 patch `fix-162-p1-193ab`（parent `v-b786a6f6`），补回“血祭刀诀完整秘录 / 血祭三转 / 天罡正气 / 血脉为桥”正文承接并刷新 tracking；run completed @162、failed=[]；post-fix segment audit 仍有 `blood_abyss.reverse_practice` critical orphan，已路由 193.ac；DONE `tasks/193.ab-wuxia-ch162-health-low-p1-halt-DONE.md` |
 | V10.2 Task 193.ac / wuxia Ch162 segment critical orphan | **Ch162 segment critical orphan 已修复到 PASS（2026-07-29）**：创建 Ch162 patch `fix-162-segment-193ac`（parent `fix-162-p1-193ab`），将“反练”明确为“血引归墟反练”，刷新 `broken_blade_sect_martial_arts.blood_abyss.reverse_practice` 到 Ch162；segment audit @162 PASS（critical_orphans=0、halt=false）、five-gate @162 PASS、T9=0；run completed @162、failed=[]、total_cost=10.29487；DONE `tasks/193.ac-wuxia-ch162-segment-critical-orphan-DONE.md` |
+| V10.2 Task 193.ad / wuxia Ch175 segment critical orphan | **Ch175 segment audit FAIL 已冻结（2026-07-30）**：Task 191 harness `--to 175 --genre wuxia --cost-budget 16` 完成 Ch163-Ch175，wrapper `run-20260729-234725258` PASS_NORMAL_EXIT；run completed 1..175、failed=[]、total_cost=12.781521；Ch175 head=`v-6b82012e`；five-gate @175 PASS（budget=0.9646、CED/1k=0.1553、overdue=143、health=9.1、gap=0）；T9=0；segment audit @175 FAIL（critical_orphans=1、total_orphans=49、halt_would_fire=true），唯一 target=`broken_blade_sect_location_cave_altar.blood_lock.tie_bloodline`；冻结目录 `.tmp/backups/193ad_wuxia_ch175_segment_critical_orphan_20260730-0140/`；任务书 `tasks/193.ad-wuxia-ch175-segment-critical-orphan.md` |
 | V9.1 阶段 D 实跑验收（2026-07-19） | 熔断实证：¥0.05 预算 ¥0.0514 停（paused + 成本明细 + 章保留），提额 resume 至 completed，成本跨 3 进程 0.0514→0.3647 连续；scifi end10：10/10、0 halt、overdue=0、budget 峰值 0.8325、usage 151 行 estimate 0%、总成本 ¥0.886（≈¥0.089/章）、report 成本视图正确；173 挂死根因确证（sqlite checkpointer 泄漏）真修后 2.5s 自然退出；T9=1（Ch4 countdown_increase，diagnostic 级内容启发式，非系统性） |
 | 172c wuxia 段 3 | Ch51-75 完成（75/75 accepted，0 halt）；Ch75 五门：budget PASS、CED FAIL、**overdue 203 vs sci-fi 117 FAIL**、health 5.6 FAIL、completeness PASS |
 | 172c.r 修复落地 | resolve 失效四层根因全修：prompt card 1.0.4 补 resolve 契约、settlement 事实源纳 overdue、resolve 防幻觉校验、5.3 同事务覆写修复；health 口径对齐 vdim（archived/dormant/active-overdue 全计）；12 新测试绿 |
@@ -155,15 +156,15 @@
 
 ## 下一步
 
-1. **Task 193 wuxia Ch163→Ch175**：193.ab/193.ac 已完成，下一步继续使用 Task 191 harness 推进到 Ch175（真实 `--to` 需 `--cost-budget` 或 `SONGYAN_RUN_COST_BUDGET`），随后执行 Ch175 five-gate / segment audit / metrics T9。
-2. **Task 193 wuxia Ch176→Ch200**：仅在 Ch175 审计 PASS 后继续推进到 Ch200，并执行终点 five-gate / segment audit / T9。
+1. **Task 193.ad wuxia Ch175 segment critical orphan**：先修复 Ch175 segment hard gate，复判 five-gate / segment audit / metrics T9 全 PASS。
+2. **Task 193 wuxia Ch176→Ch200**：仅在 193.ad 完成且 Ch175 审计 PASS 后继续推进到 Ch200，并执行终点 five-gate / segment audit / T9。
 3. **Task 194 urban Ch200**：urban 是当前唯一 `CONTINUE_READY` 体裁，可按 `tasks/194-urban-ch200-climb.md` 初始化 V10 Ch200 DB；但在当前 goal 下不得跳过 193。
 4. **段边界纪律**：Ch125/150/175/200 必须先审计再继续；任一硬门失败或 accepted head 空洞时冻结现场并开父任务后缀修复。
 5. **守护项**：后续 CED 仍使用 consistency-only、merged/source、正文证据口径；不得把文学 craft 或 `rule-mr-*` 聚合工作项计入 CED；T9 仍不接受解释性豁免；Ch125+ five-gate 必须显式传入 `tasks/189-scifi-ch200-baseline.json`。
 
 ## 入口
 
-- **V10 规划入口（V10.2 Task 193 wuxia Ch163→Ch175）：`tasks/V10-README.md`**
+- **V10 规划入口（V10.2 Task 193.ad wuxia Ch175 segment repair）：`tasks/V10-README.md`**
 - V10 Task 189 DONE：`tasks/189-ch200-baseline-and-checkpoints-DONE.md`
 - V10 Task 189 baseline：`tasks/189-scifi-ch200-baseline.json`
 - V10 Task 189 任务书：`tasks/189-ch200-baseline-and-checkpoints.md`
@@ -234,6 +235,7 @@
 - V10 Task 193.ab DONE：`tasks/193.ab-wuxia-ch162-health-low-p1-halt-DONE.md`
 - V10 Task 193.ac 任务书：`tasks/193.ac-wuxia-ch162-segment-critical-orphan.md`
 - V10 Task 193.ac DONE：`tasks/193.ac-wuxia-ch162-segment-critical-orphan-DONE.md`
+- V10 Task 193.ad 任务书：`tasks/193.ad-wuxia-ch175-segment-critical-orphan.md`
 - V10 Task 194 任务书：`tasks/194-urban-ch200-climb.md`
 - V9 任务事实入口（已完成）：`tasks/V9-README.md`
 - V9 归档索引：`archive/v9/INDEX.md`
