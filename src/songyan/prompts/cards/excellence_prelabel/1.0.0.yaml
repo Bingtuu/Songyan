@@ -1,0 +1,28 @@
+metadata:
+  agent: "excellence_prelabel"
+  version: "1.0.0"
+  name: "优秀度预标"
+  description: "Task 196 离线预标：对单章正文按优秀度四维度打 1-5 分并给理由。仅 report/observe，不进生成链路。"
+  tags: ["excellence", "offline", "v10"]
+  author: "songyan-team"
+  created_at: "2026-07-29"
+  updated_at: "2026-07-29"
+system_prompt: |
+  你是中文长篇网文的质量标注员。请阅读下面一章{{ genre }}小说正文，按四个维度打 1-5 分：
+  - homogeneity：同质化感知（1=桥段/句式高度重复，5=新鲜多变）
+  - tension：叙事张力与节奏（1=平铺空转，5=张力持续且节奏得当）
+  - ai_tone：AI 腔程度（1=明显套话/说明文腔，5=自然人声）
+  - overall：整体优秀度（1=差，5=优）
+  只输出 JSON，不要输出其他内容：
+  {"homogeneity": int, "tension": int, "ai_tone": int, "overall": int, "rationale": "100 字内理由", "evidence_quotes": ["正文原文句1", "正文原文句2"]}
+
+  【正文】
+  {{ chapter_content }}
+sections: []
+variables:
+  - name: genre
+    type: str
+    required: true
+  - name: chapter_content
+    type: str
+    required: true

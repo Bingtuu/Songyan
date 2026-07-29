@@ -170,3 +170,19 @@ class TestLoadChapterContent:
         with pytest.raises(ExcellenceSamplingError):
             load_chapter_content(conn, "v-missing")
         conn.close()
+
+
+class TestPrelabelCard:
+    def test_card_loads_and_renders(self) -> None:
+        from songyan.prompts.loader import get_prompt_loader, reset_prompt_loader
+
+        reset_prompt_loader()
+        loader = get_prompt_loader()
+        card = loader.load_card("excellence_prelabel")
+        rendered = loader.render_card(
+            card, {"genre": "xuanhuan", "chapter_content": "测试正文"}
+        )
+        text = rendered.system_prompt
+        assert "测试正文" in text
+        assert "homogeneity" in text
+        reset_prompt_loader()
