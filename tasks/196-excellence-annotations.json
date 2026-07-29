@@ -248,6 +248,956 @@
       ],
       "annotator": "agent-deep-read",
       "disagreement": null
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 17,
+      "version_id": "v-937f42f3",
+      "sample_layer": "prelabel",
+      "scores": {
+        "homogeneity": 4,
+        "tension": 5,
+        "ai_tone": 4,
+        "overall": 4
+      },
+      "rationale": "情节设计有层次，阵法考验与主角破局方式新颖，节奏张弛有度。对话和内心活动自然，但部分描述稍显套路化。整体质量上乘，略有AI腔痕迹。",
+      "evidence_quotes": [
+        "“你还要躲多久？”",
+        "“吞。”",
+        "“本座倒小瞧了你。”"
+      ],
+      "annotator": "llm-prelabel",
+      "disagreement": null
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 21,
+      "version_id": "v-d50378bc",
+      "sample_layer": "prelabel",
+      "scores": {
+        "homogeneity": 3,
+        "tension": 4,
+        "ai_tone": 4,
+        "overall": 4
+      },
+      "rationale": "情节有起伏，战斗描写细腻，节奏张弛有度；但部分设定和桥段（如血煞阵、吞噬功法）在玄幻文中较常见，同质化中等。语言自然，无明显AI腔。",
+      "evidence_quotes": [
+        "陆沉伏低，绕向左侧的山脊。",
+        "小队长脸色变了。他能感觉到体内的气血在流失，像是有无形的手在抽取他的血液。",
+        "那声音不是从空气中传过来的，是直接在他脑子里响起的。"
+      ],
+      "annotator": "llm-prelabel",
+      "disagreement": null
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 23,
+      "version_id": "v-909d2d2c",
+      "sample_layer": "prelabel",
+      "scores": {
+        "homogeneity": 4,
+        "tension": 5,
+        "ai_tone": 4,
+        "overall": 4
+      },
+      "rationale": "桥段设计有创新（如心魔幻境破局方式），节奏张弛有度，细节描写生动；但部分设定（如灵火淬体、星辰碎裂）略显常见，AI腔轻微但整体自然。",
+      "evidence_quotes": [
+        "心魔幻境中，唯有亲手斩杀幻象，方能破境。但你不杀，却劈碎虚空——此法从未有人用过。",
+        "陆沉握紧了剑，逆方向转身，背对那两个人。剑刃挥出，没有劈向他们，而是劈向前方的虚空。"
+      ],
+      "annotator": "llm-prelabel",
+      "disagreement": null
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 32,
+      "version_id": "v-43cd97a4",
+      "sample_layer": "prelabel",
+      "scores": {
+        "homogeneity": 3,
+        "tension": 5,
+        "ai_tone": 4,
+        "overall": 4
+      },
+      "rationale": "情节紧凑，动作描写细腻，节奏控制得当，但部分设定（如祭坛、血祭）略显常见。语言自然，少有AI腔。",
+      "evidence_quotes": [
+        "风灌进衣领，撕扯着伤口崩裂处新结的血痂。",
+        "他看见上方的崖沿越来越远，碎石跟着他一起坠落，在灰白的天空下像一场倒置的雨。",
+        "血祭启封，非血不可开。"
+      ],
+      "annotator": "llm-prelabel",
+      "disagreement": null
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 39,
+      "version_id": "v-f1d2c7fa",
+      "sample_layer": "prelabel",
+      "scores": {
+        "homogeneity": 3,
+        "tension": 4,
+        "ai_tone": 4,
+        "overall": 4
+      },
+      "rationale": "情节有起伏，灵力冲突与追踪戏码增强张力，但部分修炼描写稍显套路。语言较自然，AI腔不重。",
+      "evidence_quotes": [
+        "丹田深处猛地一震，灵渊传承像被点燃的火药桶，灵力从漩涡核心炸开，沿着经脉轰然扩散。",
+        "陆沉突然停下。脚步声也跟着停住。气流凝滞了片刻，只有风吹草叶的沙沙声还在响。"
+      ],
+      "annotator": "llm-prelabel",
+      "disagreement": null
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 47,
+      "version_id": "v-ebff35cf",
+      "sample_layer": "prelabel",
+      "scores": {
+        "homogeneity": 3,
+        "tension": 4,
+        "ai_tone": 4,
+        "overall": 4
+      },
+      "rationale": "情节有起伏，节奏紧凑，但部分桥段（如灵力枯竭、强行催动）略显套路。语言自然，细节丰富，人物动机清晰。",
+      "evidence_quotes": [
+        "陆沉蹲在潭边一块被苔藓覆盖的巨石上，目光扫过潭水四周的地形。",
+        "他的身体被一股巨大的吸力拽住，感觉丹田中的灵力被疯狂抽取，灌入石台深处。",
+        "她留下的刻痕与他的灵渊印记产生了共鸣，这意味着她刻意在七星禁制中留下了某种“后门”。"
+      ],
+      "annotator": "llm-prelabel",
+      "disagreement": null
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 53,
+      "version_id": "v-b3464f24",
+      "sample_layer": "prelabel",
+      "scores": {
+        "homogeneity": 4,
+        "tension": 5,
+        "ai_tone": 4,
+        "overall": 5
+      },
+      "rationale": "情节紧凑，情感饱满，细节生动，节奏张弛有度，人物塑造立体，整体质量高。",
+      "evidence_quotes": [
+        "“他们撑了七年。”",
+        "“别重蹈你爹娘的覆辙。别把自己填进去。”",
+        "陆沉转身看向传送阵。"
+      ],
+      "annotator": "llm-prelabel",
+      "disagreement": null
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 60,
+      "version_id": "v-e13fbd50",
+      "sample_layer": "prelabel",
+      "scores": {
+        "homogeneity": 4,
+        "tension": 5,
+        "ai_tone": 5,
+        "overall": 5
+      },
+      "rationale": "情节层层递进，情感饱满，对话与描写自然融合，无AI套话感。母亲牺牲、封印秘密、碎片传承等设定新颖且富有张力，节奏控制得当。",
+      "evidence_quotes": [
+        "她把自己变成了第二道屏障。",
+        "告诉孩子，不是他的错。",
+        "我要知道母亲在印记里留了什么。"
+      ],
+      "annotator": "llm-prelabel",
+      "disagreement": null
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 61,
+      "version_id": "v-96cd512f",
+      "sample_layer": "prelabel",
+      "scores": {
+        "homogeneity": 4,
+        "tension": 5,
+        "ai_tone": 4,
+        "overall": 4
+      },
+      "rationale": "情节有反转和悬念，节奏紧凑，情感张力强。部分描述略重复（如封印、黑气），但整体叙事新鲜。AI腔较少，但个别句式偏说明性。",
+      "evidence_quotes": [
+        "“石殿里等你的人——是我。”",
+        "“你母亲腹中——第二道封印。”",
+        "“记住……石殿里的……不是……”"
+      ],
+      "annotator": "llm-prelabel",
+      "disagreement": null
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 71,
+      "version_id": "v-5cb0b943",
+      "sample_layer": "prelabel",
+      "scores": {
+        "homogeneity": 4,
+        "tension": 5,
+        "ai_tone": 5,
+        "overall": 5
+      },
+      "rationale": "情节推进自然，融合突破、回忆、悬疑与情感爆发，节奏张弛有度。语言生动，人物心理刻画细腻，无AI套话感。",
+      "evidence_quotes": [
+        "掌心的琥珀色火焰……自主追了上去，沿着气息收缩的轨迹钻进矿石的裂隙里。",
+        "剑光穿透了他的后背，从前胸穿出。血溅了半丈远。",
+        "他攥紧拳头，掌心的火焰随着情绪波动跳动了一下，周围的空气微微扭曲。"
+      ],
+      "annotator": "llm-prelabel",
+      "disagreement": null
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 80,
+      "version_id": "v-a51dafa8",
+      "sample_layer": "prelabel",
+      "scores": {
+        "homogeneity": 4,
+        "tension": 5,
+        "ai_tone": 4,
+        "overall": 4
+      },
+      "rationale": "情节有新鲜感，传承部件组合与压制法器设定不俗套；战斗节奏紧凑，从密室共鸣到追杀围猎层层递进；语言自然，少量说明性句子稍显平直，但整体无AI腔。",
+      "evidence_quotes": [
+        "短剑上的金色兽纹和祭坛石棺上的图腾一模一样，玉简引出的灵渊之力和短剑的剑身共鸣，两件物品根本不是独立的遗物，而是同一套传承的拆分部件。",
+        "领头那人抬手，示意队伍停下。他的目光缓缓扫过采石场的每一处阴影，然后开口，声音低沉沙哑，像是从喉咙深处挤出来的:“小老鼠，跑得倒快。”"
+      ],
+      "annotator": "llm-prelabel",
+      "disagreement": null
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 84,
+      "version_id": "v-efaf5591",
+      "sample_layer": "prelabel",
+      "scores": {
+        "homogeneity": 3,
+        "tension": 5,
+        "ai_tone": 4,
+        "overall": 4
+      },
+      "rationale": "战斗描写密集且节奏紧凑，张力持续攀升，但部分桥段（如执事临死前透露关键信息）略显套路。语言有网文特色，少量说明性句子稍显生硬，整体自然度尚可。",
+      "evidence_quotes": [
+        "金色剑气撕开黑色光幕的声响，像铁片刮过骨头。",
+        "执事首领的笑容僵在脸上。",
+        "你身上的那股力量……不是你自己的。"
+      ],
+      "annotator": "llm-prelabel",
+      "disagreement": null
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 92,
+      "version_id": "v-f427f038",
+      "sample_layer": "prelabel",
+      "scores": {
+        "homogeneity": 3,
+        "tension": 4,
+        "ai_tone": 4,
+        "overall": 4
+      },
+      "rationale": "打斗与探索桥段虽常见但细节丰富，节奏紧凑有悬念；语言自然，少量说明性句子略减分；整体完成度高，情感与动作描写到位。",
+      "evidence_quotes": [
+        "陆沉没有回头。第二枚令牌碎片在掌心发烫，灵渊印记在丹田深处缓缓跳动，像一颗刚刚苏醒的心脏。",
+        "陆沉咬紧牙关，把那念头压下去。现在不是想这些的时候。",
+        "在光柱的底部，他看到了一个人影——一个半透明的、被锁链缠绕的人影。那张脸，和他母亲一模一样。"
+      ],
+      "annotator": "llm-prelabel",
+      "disagreement": null
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 98,
+      "version_id": "v-6864c4b7",
+      "sample_layer": "prelabel",
+      "scores": {
+        "homogeneity": 4,
+        "tension": 5,
+        "ai_tone": 4,
+        "overall": 4
+      },
+      "rationale": "战斗场景层次丰富，节奏紧凑，细节描写生动，但部分设定（如令牌共鸣、金身觉醒）略显常见。语言自然，无明显AI腔。",
+      "evidence_quotes": [
+        "雾气触及皮肤的瞬间，刺痛从毛孔钻入骨髓——不是普通的冷，是腐蚀性的灼烧，带着某种活物般的蠕动感。",
+        "陆沉的心脏猛地收紧。从灵渊老人的描述中判断，这头雾兽的实力至少相当于凝丹初期的人类修士。而他现在的修为，拼尽全力也只摸到聚气境巅峰的门槛——中间隔着一整条凝脉境的鸿沟。"
+      ],
+      "annotator": "llm-prelabel",
+      "disagreement": null
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 105,
+      "version_id": "fix-105-6-4cc94f2e",
+      "sample_layer": "prelabel",
+      "scores": {
+        "homogeneity": 4,
+        "tension": 5,
+        "ai_tone": 4,
+        "overall": 4
+      },
+      "rationale": "记忆闪回与主线交织，叙事节奏紧凑，情感张力强；部分设定说明稍显密集，但整体人声自然，无明显AI套话。",
+      "evidence_quotes": [
+        "碎片刺入心脏的瞬间，陆沉听见了血液滴落的声音。",
+        "母亲的声音很轻，却像雷一样砸进陆沉的耳朵里。",
+        "他握紧碎片，指尖掐进了掌心。"
+      ],
+      "annotator": "llm-prelabel",
+      "disagreement": null
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 120,
+      "version_id": "fix-120-6-904de5f4",
+      "sample_layer": "prelabel",
+      "scores": {
+        "homogeneity": 4,
+        "tension": 5,
+        "ai_tone": 4,
+        "overall": 5
+      },
+      "rationale": "情节推进紧凑，对话与描写交织，悬念层层叠加；虽有部分玄幻常见设定，但细节丰富、情感真实，无明显AI腔。",
+      "evidence_quotes": [
+        "“你当时在。”陆沉说。不是问句。",
+        "“第二个祭品终于来了……”",
+        "“你必须在它锁定坐标前完成探索，或者逃。”守灵的声音压得很低，带着一丝压抑的颤抖，“没有第三种选择。”"
+      ],
+      "annotator": "llm-prelabel",
+      "disagreement": null
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 134,
+      "version_id": "fix-134-segment-192ai",
+      "sample_layer": "prelabel",
+      "scores": {
+        "homogeneity": 3,
+        "tension": 5,
+        "ai_tone": 4,
+        "overall": 5
+      },
+      "rationale": "情节推进紧凑，情感张力强，母子对峙与真相揭露层层递进。句式有变化，少量说明性段落略减分，但整体自然流畅，人物对话生动。",
+      "evidence_quotes": [
+        "“死路。”她说。两个字砸在石壁上，震落一层薄霜。",
+        "“他叫林越。十八岁，炼气七层，天资极好。你父亲让他来救我出去...”",
+        "“可值得的从来不是换命。”"
+      ],
+      "annotator": "llm-prelabel",
+      "disagreement": null
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 135,
+      "version_id": "v-2be94c1b",
+      "sample_layer": "prelabel",
+      "scores": {
+        "homogeneity": 4,
+        "tension": 5,
+        "ai_tone": 4,
+        "overall": 4
+      },
+      "rationale": "情节紧凑，斩断血脉的仪式描写细腻且富有张力，节奏把控得当。同质化程度低，细节丰富。AI腔较少，但部分描述稍显模板化。整体优秀，情感冲击力强。",
+      "evidence_quotes": [
+        "匕尖刺入皮肤。冰凉的触感从心口蔓延到四肢。血肉被刃口撕裂的声音传到耳朵里，比预想的更清晰，像撕开一片浸湿的布帛。",
+        "母亲幻影的轮廓只剩下一道模糊的光影，五官已经看不清了，只能辨认出大致的形状。她站在两步外，没有靠近，也没有后退，像是一道即将散去的风。"
+      ],
+      "annotator": "llm-prelabel",
+      "disagreement": null
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 145,
+      "version_id": "v-39e1b2f0",
+      "sample_layer": "prelabel",
+      "scores": {
+        "homogeneity": 3,
+        "tension": 4,
+        "ai_tone": 4,
+        "overall": 4
+      },
+      "rationale": "情节有反转和悬念，节奏紧凑，但部分描写稍显冗长；语言自然，无明显AI腔；整体完成度高，但同质化方面略有套路感。",
+      "evidence_quotes": [
+        "灵渊老人的虚影正在碎裂。",
+        "别信守门者。",
+        "他只有一条路。石棺。"
+      ],
+      "annotator": "llm-prelabel",
+      "disagreement": null
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 148,
+      "version_id": "v-99243d32",
+      "sample_layer": "prelabel",
+      "scores": {
+        "homogeneity": 4,
+        "tension": 5,
+        "ai_tone": 4,
+        "overall": 4
+      },
+      "rationale": "情节紧凑，悬念层层递进，封印崩裂、父亲真相、三天时限等设定有新鲜感；对话和描写自然，略有说明性段落但整体流畅；节奏张弛有度，结尾留钩有力。",
+      "evidence_quotes": [
+        "“你父亲……用血肉镇压的，不是东西，”它的声音沙哑得像两块石头在摩擦，“是渊眼的‘核’——灵渊存在的源头。”",
+        "“最多，一炷香。”话音未落，裂缝深处传来一声低沉的咆哮。",
+        "陆沉深吸一口气，转身离开。他的脚步没有停顿。"
+      ],
+      "annotator": "llm-prelabel",
+      "disagreement": null
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 162,
+      "version_id": "fix-162-segment-192ap",
+      "sample_layer": "prelabel",
+      "scores": {
+        "homogeneity": 4,
+        "tension": 5,
+        "ai_tone": 4,
+        "overall": 4
+      },
+      "rationale": "情节推进紧凑，悬念层层叠加，人物对话与内心博弈自然，但部分解释性段落稍显说明文倾向。整体叙事张力强，设定丰富且不落俗套。",
+      "evidence_quotes": [
+        "“你在撒谎。”",
+        "“代价是——那座石殿会坍塌。”",
+        "若他失去人格锚点，三道封印会把他推成钥匙；若他守住人格锚点，同一套封印也可能成为反锁牢笼的门闩。"
+      ],
+      "annotator": "llm-prelabel",
+      "disagreement": null
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 164,
+      "version_id": "v-c12070fc",
+      "sample_layer": "prelabel",
+      "scores": {
+        "homogeneity": 4,
+        "tension": 5,
+        "ai_tone": 5,
+        "overall": 5
+      },
+      "rationale": "桥段设计有新意，悬念层层递进，节奏紧凑；语言细腻自然，无AI套话；人物心理与场景描写扎实，情感张力强。",
+      "evidence_quotes": [
+        "守灵的石门还嵌在通道尽头的岩壁上，边缘渗着暗红色的光，像一道未愈合的伤口。",
+        "献祭法阵是个陷阱。你要的不是我的血，是我的‘锁’。",
+        "他用灵渊里的那种感知方式，把意识沉进符文里，感受它们的流动方向、能量脉络、共鸣频率。"
+      ],
+      "annotator": "llm-prelabel",
+      "disagreement": null
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 178,
+      "version_id": "v-45e0ef0c",
+      "sample_layer": "prelabel",
+      "scores": {
+        "homogeneity": 4,
+        "tension": 5,
+        "ai_tone": 5,
+        "overall": 5
+      },
+      "rationale": "情节紧凑，战斗描写细腻，突破与伏笔自然交织，人物反应真实，无套路化表达。",
+      "evidence_quotes": [
+        "暗河水声在洞口外轰鸣。",
+        "刀锋在距离陆沉脖颈三寸处停住了。",
+        "别……用她的血……"
+      ],
+      "annotator": "llm-prelabel",
+      "disagreement": null
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 199,
+      "version_id": "v-ca567d1e",
+      "sample_layer": "prelabel",
+      "scores": {
+        "homogeneity": 4,
+        "tension": 5,
+        "ai_tone": 5,
+        "overall": 5
+      },
+      "rationale": "情节设计新颖，融合血脉封印、钥匙与锁孔反转设定，打破常见套路；叙事节奏紧凑，从坠落、记忆揭露到地底异变层层递进，张力持续；语言自然生动，无AI套话，人物对话与内心独白真实。",
+      "evidence_quotes": [
+        "不是钥匙，是锁孔。你小时候得过的那场病，还记得吗？",
+        "门后不是生路，是父亲的坟墓。",
+        "地底的锁链拖拽声骤然变得狂暴，像是什么东西正在用力撕扯。"
+      ],
+      "annotator": "llm-prelabel",
+      "disagreement": null
+    },
+    {
+      "genre": "scifi",
+      "chapter": 17,
+      "version_id": "rev-17-2-85c91acb",
+      "sample_layer": "prelabel",
+      "scores": {
+        "homogeneity": 4,
+        "tension": 5,
+        "ai_tone": 4,
+        "overall": 4
+      },
+      "rationale": "桥段有经典科幻元素但组合新鲜，叙事张力强，节奏紧凑，AI腔较少但个别描述稍显模式化。",
+      "evidence_quotes": [
+        "核心舱室的空气凝滞如固态。",
+        "老雷的全息投影从立方体中射出，悬浮在舱室中央。",
+        "方舟在崩塌。"
+      ],
+      "annotator": "llm-prelabel",
+      "disagreement": null
+    },
+    {
+      "genre": "scifi",
+      "chapter": 21,
+      "version_id": "rev-21-3-71f464db",
+      "sample_layer": "prelabel",
+      "scores": {
+        "homogeneity": 4,
+        "tension": 5,
+        "ai_tone": 4,
+        "overall": 4
+      },
+      "rationale": "情节设计有层次，记忆回溯与实时危机交织，张力持续攀升。AI腔较少，但部分描述稍显套路化（如‘钝刀’‘溺水’比喻）。整体完成度高，节奏紧凑。",
+      "evidence_quotes": [
+        "共鸣过载像一把钝刀，正在一寸寸剜开他的神经回路。",
+        "林渊的意识在数据洪流中浮沉，方舟的底层协议像无数条发光的锁链，从四面八方挤进他的大脑皮层。",
+        "林渊冲向控制台。"
+      ],
+      "annotator": "llm-prelabel",
+      "disagreement": null
+    },
+    {
+      "genre": "scifi",
+      "chapter": 23,
+      "version_id": "rev-23-3-f095d922",
+      "sample_layer": "prelabel",
+      "scores": {
+        "homogeneity": 4,
+        "tension": 5,
+        "ai_tone": 4,
+        "overall": 4
+      },
+      "rationale": "科幻设定新颖，神经损伤与纳米猎手等桥段有新鲜感；节奏紧凑，从危机到发现层层递进；AI腔较少，但部分描述稍显说明性；整体优秀，悬念和情感冲击力强。",
+      "evidence_quotes": [
+        "左臂像被塞进了一台正在运转的离心机",
+        "那是建造者的语言",
+        "搭档还活着，而且就在这艘方舟里"
+      ],
+      "annotator": "llm-prelabel",
+      "disagreement": null
+    },
+    {
+      "genre": "scifi",
+      "chapter": 39,
+      "version_id": "rev-39-5-d7343b44",
+      "sample_layer": "prelabel",
+      "scores": {
+        "homogeneity": 4,
+        "tension": 5,
+        "ai_tone": 4,
+        "overall": 4
+      },
+      "rationale": "叙事张力持续且节奏紧凑，通过感官细节和意识流描写营造强烈沉浸感；桥段虽有科幻常见元素但组合方式较新颖；AI腔轻微，部分说明性语句略显机械，整体接近自然人声。",
+      "evidence_quotes": [
+        "指尖触到黑色立方体的瞬间，林渊的视野像被撕碎的胶片。",
+        "七种不同频率的振动同时穿透他的颅骨，在颅腔内壁反弹、叠加、干涉，形成一种他无法用语言描述的共振。",
+        "记住我们。不要成为他们。"
+      ],
+      "annotator": "llm-prelabel",
+      "disagreement": null
+    },
+    {
+      "genre": "scifi",
+      "chapter": 47,
+      "version_id": "clean-47-5-221d6fbc",
+      "sample_layer": "prelabel",
+      "scores": {
+        "homogeneity": 4,
+        "tension": 5,
+        "ai_tone": 4,
+        "overall": 4
+      },
+      "rationale": "桥段有经典科幻悬疑元素但组合新鲜，叙事张力持续攀升，节奏紧凑；AI腔较少，对话自然但有少量说明性段落；整体优秀，悬念设置和反转有力。",
+      "evidence_quotes": [
+        "倒计时的数字像血一样红。",
+        "你还有四分半钟。",
+        "你脚下的每一块甲板，都是。"
+      ],
+      "annotator": "llm-prelabel",
+      "disagreement": null
+    },
+    {
+      "genre": "scifi",
+      "chapter": 50,
+      "version_id": "rev-50-2-d38a99f1",
+      "sample_layer": "prelabel",
+      "scores": {
+        "homogeneity": 4,
+        "tension": 5,
+        "ai_tone": 4,
+        "overall": 4
+      },
+      "rationale": "情节设计新颖，融合了星图共鸣、协议改写、记忆碎片等元素，避免了常见套路；叙事节奏紧凑，从激活协议到倒计时危机层层递进，张力持续；AI腔较少，对话自然，但部分描述稍显说明性；整体优秀，悬念设置和反转合理。",
+      "evidence_quotes": [
+        "舱壁开始发光……不是静态的投影，而是活着的、在呼吸的星图。",
+        "恒星净化协议不是用来保护地球的……它是建造者设计的自毁程序——用来清除我。",
+        "记住——别相信修复，要相信改写。"
+      ],
+      "annotator": "llm-prelabel",
+      "disagreement": null
+    },
+    {
+      "genre": "scifi",
+      "chapter": 53,
+      "version_id": "v-53-1-7336c8c9",
+      "sample_layer": "prelabel",
+      "scores": {
+        "homogeneity": 4,
+        "tension": 5,
+        "ai_tone": 4,
+        "overall": 4
+      },
+      "rationale": "桥段设计有层次感，破锁过程逐步升级，情感与悬念交织，节奏紧凑。少量说明性描述稍显模式化，但整体叙事张力强，人物反应真实。",
+      "evidence_quotes": [
+        "林渊的左手不自觉地按上了右臂的神经接口位置。",
+        "共鸣频率全功率输出。虚拟陈曦的表情在瞬间扭曲，从温柔变成震惊，从关切变成愤怒。"
+      ],
+      "annotator": "llm-prelabel",
+      "disagreement": null
+    },
+    {
+      "genre": "scifi",
+      "chapter": 60,
+      "version_id": "rev-60-3-d81a5608",
+      "sample_layer": "prelabel",
+      "scores": {
+        "homogeneity": 4,
+        "tension": 5,
+        "ai_tone": 4,
+        "overall": 4
+      },
+      "rationale": "情节有反转和层层递进的悬念，节奏紧凑，对话与内心独白交织出张力。少量重复句式（如‘但他们不知道’）稍显模式化，但整体叙事新鲜且情感饱满。AI腔较少，人物语言有自然起伏。",
+      "evidence_quotes": [
+        "“角膜后门不是用来观察我的，是用来观察他们的。”",
+        "“用七十六个文明的灭绝来测试播种体的解锁阈值，这叫必要？”",
+        "“替我……看看太阳……”"
+      ],
+      "annotator": "llm-prelabel",
+      "disagreement": null
+    },
+    {
+      "genre": "scifi",
+      "chapter": 61,
+      "version_id": "rev-61-3-7adec2a6",
+      "sample_layer": "prelabel",
+      "scores": {
+        "homogeneity": 4,
+        "tension": 5,
+        "ai_tone": 4,
+        "overall": 4
+      },
+      "rationale": "情节有反转和记忆融合的独特设计，张力层层递进，节奏紧凑；AI腔较少，但部分描述稍显套路化（如‘烧红的刀’、‘碎玻璃’等比喻常见）。整体优秀，结尾悬念设置得当。",
+      "evidence_quotes": [
+        "她的瞳孔在最后一帧变成了那个波形。",
+        "我只是掀了棋盘。",
+        "别走我的路。"
+      ],
+      "annotator": "llm-prelabel",
+      "disagreement": null
+    },
+    {
+      "genre": "scifi",
+      "chapter": 71,
+      "version_id": "rev-71-2-7b30cba0",
+      "sample_layer": "prelabel",
+      "scores": {
+        "homogeneity": 4,
+        "tension": 5,
+        "ai_tone": 4,
+        "overall": 4
+      },
+      "rationale": "桥段有创意（相位干扰器DIY、神经接口共鸣），但部分设定（方舟意志、收割者）属常见科幻元素；张力持续且节奏紧凑，从逃生舱修理到被锁定层层递进；AI腔较少，但少量说明性描述（如电解液蒸发细节）稍显机械；整体优秀，细节丰富，情感与悬念并存。",
+      "evidence_quotes": [
+        "他需要的是能产生相位干扰的装置，不是炸弹。",
+        "共鸣频率的数值开始反向跳动，从69.8%向上攀升，越过70%，71%，72%——不是他在调整，也不是方舟在拉他。是收割者主舰，正在主动匹配他的频率。"
+      ],
+      "annotator": "llm-prelabel",
+      "disagreement": null
+    },
+    {
+      "genre": "scifi",
+      "chapter": 80,
+      "version_id": "rev-80-3-0c6ac775",
+      "sample_layer": "prelabel",
+      "scores": {
+        "homogeneity": 4,
+        "tension": 5,
+        "ai_tone": 4,
+        "overall": 4
+      },
+      "rationale": "情节有新鲜感，利用协议层夹缝和容器转化设定；张力持续攀升，对话与动作描写节奏紧凑；AI腔较少，但部分描述稍显模式化；整体优秀，悬念设置和情感冲击力强。",
+      "evidence_quotes": [
+        "“我的意识被拆成字段，嵌入第七层和第八层的夹缝。”",
+        "“共鸣频率是方舟用来筛选和操控容器的工具。”",
+        "“队长在等你。”"
+      ],
+      "annotator": "llm-prelabel",
+      "disagreement": null
+    },
+    {
+      "genre": "scifi",
+      "chapter": 92,
+      "version_id": "rev-92-3-dec6aa05",
+      "sample_layer": "prelabel",
+      "scores": {
+        "homogeneity": 4,
+        "tension": 5,
+        "ai_tone": 4,
+        "overall": 5
+      },
+      "rationale": "情节新颖，融合神经接口、共鸣能力与文明档案馆设定，桥段不重复；张力持续攀升，节奏紧凑，情感冲击强；AI腔轻微，对话自然但部分描述稍显程式化；整体优秀，悬念与情感深度俱佳。",
+      "evidence_quotes": [
+        "他的共鸣频率在瞬间拉升到极限，他的意识直接楔入了日志文件的底层结构，在自毁程序触发前的零点三秒内锁定了所有数据块。",
+        "不是天赋。不是建造者基因工程的隐藏特性。是陈曦在四十七分钟的疼痛中泄漏出来的神经信号，像病毒一样传播到她接触过的每一个人身上。",
+        "她在实验的第十七分钟，在皮层损伤率达到百分之四十的时候，要求我记录一段信息。她说：‘如果林渊以后问到，告诉他——不是他的错。’"
+      ],
+      "annotator": "llm-prelabel",
+      "disagreement": null
+    },
+    {
+      "genre": "scifi",
+      "chapter": 98,
+      "version_id": "rev-98-2-3b1485fe",
+      "sample_layer": "prelabel",
+      "scores": {
+        "homogeneity": 4,
+        "tension": 5,
+        "ai_tone": 4,
+        "overall": 4
+      },
+      "rationale": "科幻设定新颖，引力波编码、容器节点等概念有原创性；叙事节奏紧凑，层层递进，悬念与反转设计出色；AI腔较少，对话自然，但部分描述稍显模式化；整体完成度高，情感张力与逻辑自洽并存。",
+      "evidence_quotes": [
+        "波谷深度差，波峰宽度差，间隔时间。三种参数，可以构建一个三维信息矩阵。",
+        "方舟不是监狱。方舟是播种器。",
+        "抱歉。赵铭的声音从身后传来，和记忆片段中的声音重叠：这是唯一的办法。"
+      ],
+      "annotator": "llm-prelabel",
+      "disagreement": null
+    },
+    {
+      "genre": "scifi",
+      "chapter": 105,
+      "version_id": "v-105-4-5ccc037e",
+      "sample_layer": "prelabel",
+      "scores": {
+        "homogeneity": 4,
+        "tension": 5,
+        "ai_tone": 4,
+        "overall": 5
+      },
+      "rationale": "科幻设定新颖，量子化与协议层概念独特，叙事张力强，节奏紧凑。AI腔较少，但部分描述稍显说明性。整体优秀，悬念与反转出色。",
+      "evidence_quotes": [
+        "量子化蔓延到肩膀的那一刻，林渊的左半身像是被浸入液氦。",
+        "方舟的真正目的不是飞船，不是墓地，不是信标。它是一个筛选器。",
+        "你的神经签名是上一周期幸存者的神经签名的精确副本——误差小于十亿分之一。"
+      ],
+      "annotator": "llm-prelabel",
+      "disagreement": null
+    },
+    {
+      "genre": "scifi",
+      "chapter": 118,
+      "version_id": "v-118-1-a763b99e",
+      "sample_layer": "prelabel",
+      "scores": {
+        "homogeneity": 4,
+        "tension": 5,
+        "ai_tone": 5,
+        "overall": 5
+      },
+      "rationale": "桥段新颖，寄生者与基因锁设定独特；节奏紧凑，从对话到崩塌再到逃亡一气呵成；语言生动，无AI套话；整体完成度高，悬念与情感张力俱佳。",
+      "evidence_quotes": [
+        "“你发出的摩尔斯电码。”",
+        "“钥匙不选择用途。钥匙只是工具。”",
+        "他的左臂正在变成一个武器接口。"
+      ],
+      "annotator": "llm-prelabel",
+      "disagreement": null
+    },
+    {
+      "genre": "scifi",
+      "chapter": 120,
+      "version_id": "rev-120-3-fb59ff9d",
+      "sample_layer": "prelabel",
+      "scores": {
+        "homogeneity": 4,
+        "tension": 5,
+        "ai_tone": 4,
+        "overall": 4
+      },
+      "rationale": "科幻设定新颖，基因钥匙与意识陷阱设计巧妙，节奏紧凑，危机层层递进。少数描述稍显重复（如温度、裂纹），但整体张力持续，人物反应真实，AI腔较弱。",
+      "evidence_quotes": [
+        "钥匙是钥匙，也是锁。",
+        "共鸣频率被反向锁定——不是他控制了协议，而是协议锁定了他的信号来源。",
+        "林渊！别过来！它在用我的意识签名钓鱼！"
+      ],
+      "annotator": "llm-prelabel",
+      "disagreement": null
+    },
+    {
+      "genre": "scifi",
+      "chapter": 134,
+      "version_id": "rev-134-2-1bb7553c",
+      "sample_layer": "prelabel",
+      "scores": {
+        "homogeneity": 4,
+        "tension": 5,
+        "ai_tone": 4,
+        "overall": 4
+      },
+      "rationale": "科幻设定新颖，神经签名、金属化、频率深渊等概念有原创性；叙事节奏紧凑，倒计时制造持续张力；细节描写生动，但少量句式稍显模式化（如‘像…一样’）。整体优秀，情感与悬念交织。",
+      "evidence_quotes": [
+        "神经签名重置倒计时：一分五十八秒。",
+        "他的意识在螺旋结构中找到了一个平衡点——不稳定，但足以维持六十秒左右的清醒。",
+        "不是对抗死亡，是借用死亡的力量暂时活着。"
+      ],
+      "annotator": "llm-prelabel",
+      "disagreement": null
+    },
+    {
+      "genre": "scifi",
+      "chapter": 135,
+      "version_id": "v-135-4-d1c4c57e",
+      "sample_layer": "prelabel",
+      "scores": {
+        "homogeneity": 4,
+        "tension": 5,
+        "ai_tone": 4,
+        "overall": 5
+      },
+      "rationale": "叙事节奏紧凑，神经签名倒计时制造持续张力；桥段虽含常见‘极限操作’元素，但细节丰富、情感层次深；AI腔较弱，仅个别说明性句子略显机械；整体完成度高，记忆碎片反转与妹妹伏笔增强感染力。",
+      "evidence_quotes": [
+        "神经签名剩余时间：29秒。",
+        "成功是陷阱——",
+        "你终于来了，哥哥。"
+      ],
+      "annotator": "llm-prelabel",
+      "disagreement": null
+    },
+    {
+      "genre": "scifi",
+      "chapter": 145,
+      "version_id": "v-145-4-8158ebec",
+      "sample_layer": "prelabel",
+      "scores": {
+        "homogeneity": 4,
+        "tension": 5,
+        "ai_tone": 4,
+        "overall": 5
+      },
+      "rationale": "设定新颖，融合量子化身体、文明备份与收割者威胁，桥段不重复；节奏紧凑，从身体瓦解到三次灭绝层层递进，张力持续；语言有文学质感，但少数说明性段落稍显机械；整体完成度高，情感与科幻设定平衡。",
+      "evidence_quotes": [
+        "他的身体开始从内部瓦解。不是比喻。皮肤下的银色光纹像藤蔓一样蔓延",
+        "建造者文明的技术水平远超人类想象。他们的身体由量子态信息构成",
+        "文明的价值不在保存，在传播。"
+      ],
+      "annotator": "llm-prelabel",
+      "disagreement": null
+    },
+    {
+      "genre": "scifi",
+      "chapter": 148,
+      "version_id": "clean-148-5-b09119b8",
+      "sample_layer": "prelabel",
+      "scores": {
+        "homogeneity": 4,
+        "tension": 5,
+        "ai_tone": 4,
+        "overall": 5
+      },
+      "rationale": "节奏紧凑，倒计时与神经写入并行制造持续张力；桥段有经典科幻元素但组合新鲜；少量说明性语句稍显机械，整体接近自然人声。",
+      "evidence_quotes": [
+        "电流灌入脊髓的瞬间，视野彻底变成了黑白。",
+        "林渊，记住——你从来不是一个人。",
+        "你们等了十年。现在，我来了。"
+      ],
+      "annotator": "llm-prelabel",
+      "disagreement": null
+    },
+    {
+      "genre": "scifi",
+      "chapter": 162,
+      "version_id": "v-162-1-9cf8b7ae",
+      "sample_layer": "prelabel",
+      "scores": {
+        "homogeneity": 3,
+        "tension": 4,
+        "ai_tone": 4,
+        "overall": 4
+      },
+      "rationale": "科幻设定新颖，因果律与时空拓扑概念有创意，叙事节奏紧凑，但部分桥段（如‘被制造’的揭示）略显套路。语言生动，AI腔较少，情感张力足。",
+      "evidence_quotes": [
+        "因果律武器的本质，是时空拓扑的局部编辑。",
+        "你是被制造的。你的基因序列在三十七万年前被修改过，因果印记被植入你的DNA中，然后你被投放到地球上，像一颗种子一样等待发芽。"
+      ],
+      "annotator": "llm-prelabel",
+      "disagreement": null
+    },
+    {
+      "genre": "scifi",
+      "chapter": 164,
+      "version_id": "clean-164-5-d9c46ef3",
+      "sample_layer": "prelabel",
+      "scores": {
+        "homogeneity": 4,
+        "tension": 5,
+        "ai_tone": 4,
+        "overall": 4
+      },
+      "rationale": "科幻设定新颖，奇点引擎、基因修改与方舟建造的悖论有创意。叙事张力强，时间紧迫感与意识融合抉择层层推进。AI腔轻微，部分说明性对话稍显生硬，但整体自然。",
+      "evidence_quotes": [
+        "你的基因修改与方舟建造是同一个过程的两个部分。你体内的十七处基因修改，每一处都对应方舟核心的一个协议层。",
+        "你的生物神经网络将与方舟量子核心融合。你的意识将成为方舟的中央处理器。"
+      ],
+      "annotator": "llm-prelabel",
+      "disagreement": null
+    },
+    {
+      "genre": "scifi",
+      "chapter": 169,
+      "version_id": "rev-169-2-c16efded",
+      "sample_layer": "prelabel",
+      "scores": {
+        "homogeneity": 4,
+        "tension": 5,
+        "ai_tone": 4,
+        "overall": 4
+      },
+      "rationale": "科幻设定新颖，陷阱协议与接收通道的嵌套反转有创意；叙事节奏紧凑，从破解到陷阱触发再到记忆幻觉层层递进；AI腔较少，但部分描述稍显重复（如精神力被抽干）。",
+      "evidence_quotes": [
+        "陷阱协议有三层，第一层是镜像空间，第二层是神经签名同步，第三层是应急通道锁机制。",
+        "林渊的意识在黑暗中沉浮，像一艘被风暴撕碎的船，在无边的海洋中漂流。"
+      ],
+      "annotator": "llm-prelabel",
+      "disagreement": null
+    },
+    {
+      "genre": "scifi",
+      "chapter": 178,
+      "version_id": "rev-178-2-d69ff758",
+      "sample_layer": "prelabel",
+      "scores": {
+        "homogeneity": 4,
+        "tension": 5,
+        "ai_tone": 4,
+        "overall": 4
+      },
+      "rationale": "科幻设定新颖，量子锁、神经签名、因果律武器等元素丰富，叙事节奏紧凑，危机感层层递进。少量说明性段落稍显机械，但整体对话与心理描写自然，AI腔不突出。",
+      "evidence_quotes": [
+        "“锁的文明特征与他之前解析的虚空核封存物完全一致——同样的拓扑逻辑，同样的非线性编码，同样的多层嵌套结构。”",
+        "“林渊的右拳砸在控制台上。金属表面在他的拳头下凹陷，手背上的皮肤裂开，血沿着指缝滴落在控制台的按键上。”",
+        "“陈薇的声音。不是合成的，是她的声音。语速极快，音节之间有0.2秒的波形间隙——那是信号被干扰的痕迹，但语调是她的。”"
+      ],
+      "annotator": "llm-prelabel",
+      "disagreement": null
     }
   ]
 }
