@@ -2,9 +2,9 @@
 
 > **阶段**: 跨体裁 Ch200 + 优秀度信号包 + 结构升级 spike
 > **定位**: V10 不是开源交付体验阶段，而是工程版 1.0 前的质量与长度再验证阶段：证明多体裁长窗口仍稳定，并把“好不好看/是否有 AI 腔/是否同质化”从主观讨论推进到可复核信号。
-> **当前口径**: V9 已全量闭环；V10 规划入口已建立，Task 189 已完成 sci-fi Ch200 baseline/checkpoint 冻结，Task 190 已完成 Ch100 终点事实源盘点，Task 191 已完成 Ch200 harness 准备；Task 192/193/194 正式任务书已建立。Task 192 xuanhuan Ch200 已完成，含 192.p/q/r/s/t/u/v/w/x/y/z/aa/ab/ac/ad/ae/af/ag/ah/ai/aj/ak/al/am/an/ao/ap/aq/ar/as/at/au/av/aw 均已完成；xuanhuan Ch200 accepted/current head=`v-5659d486`，run completed_count=200、failed=[]；five-gate @200 PASS、segment audit PASS、T9=0；当前按编号推进 Task 193：wuxia Ch28 deterministic clean/source 初始化已完成，193.p/q/r/s/t/u/v/w 全部完成（根因治理线 193.s→v→t 收口：词条匹配修复诊断 8 章捕获 7/8、overdue actionable 口径；评测口径线 193.r/u/w 收口：暂停区分、schema drift、段审计 verdict/stale 防护）；wuxia 已推进到 Ch125 accepted，Ch125 段边界审计 five-gate/segment/T9 全 PASS；下一步 Ch126→Ch150 后执行 Ch150 段审计。V10 不再补 V9 生产化地基，也不做 V11 的外部用户可用化收尾。
+> **当前口径**: V9 已全量闭环；V10 规划入口已建立，Task 189 已完成 sci-fi Ch200 baseline/checkpoint 冻结，Task 190 已完成 Ch100 终点事实源盘点，Task 191 已完成 Ch200 harness 准备；Task 192/193/194 正式任务书已建立。Task 192 xuanhuan Ch200 已完成，含 192.p/q/r/s/t/u/v/w/x/y/z/aa/ab/ac/ad/ae/af/ag/ah/ai/aj/ak/al/am/an/ao/ap/aq/ar/as/at/au/av/aw 均已完成；xuanhuan Ch200 accepted/current head=`v-5659d486`，run completed_count=200、failed=[]；five-gate @200 PASS、segment audit PASS、T9=0；当前按编号推进 Task 193：wuxia Ch28 deterministic clean/source 初始化已完成，193.p/q/r/s/t/u/v/w 全部完成（根因治理线 193.s→v→t 收口：词条匹配修复诊断 8 章捕获 7/8、overdue actionable 口径；评测口径线 193.r/u/w 收口：暂停区分、schema drift、段审计 verdict/stale 防护）；wuxia 已推进到 Ch125 accepted，Ch125 段边界审计 five-gate/segment/T9 全 PASS；下一步 Ch126→Ch150 后执行 Ch150 段审计。V10.3 Task 196 优秀度样本集与校准协议已按 2026-07-29 用户决策提前完成（60 章样本集 + 72 条三层标注 + 校准报告落盘；judge 预标单向宽松偏差与规则试点负结果已如实记录；wuxia/urban 爬坡后续排序待 196 结论后定）。V10 不再补 V9 生产化地基，也不做 V11 的外部用户可用化收尾。
 > **任务编号**: V10 预计从 Task 189 开始；本文不占任务号。只有可独立执行、独立验收、独立出 DONE 文档的工作项才编号；撞墙修复继续按父任务字母后缀登记（如 `192.p`）。
-> **状态**: ◐ V10.2 Task 193 wuxia Ch200 climb 进行中（Task 189/190/191/192 ✅；Task 193 已到 Ch125 accepted、Ch125 段审计 five-gate/segment/T9 全 PASS，193.p/q/r/s/t/u/v/w ✅；下一步 Ch126→Ch150；尚未完成 wuxia/urban Ch200 长跑）
+> **状态**: ◐ V10.2 Task 193 wuxia Ch200 climb 进行中（Task 189/190/191/192 ✅；V10.3 Task 196 ✅（提前启动成果：样本集/标注/校准报告落盘）；Task 193 已到 Ch125 accepted、Ch125 段审计 five-gate/segment/T9 全 PASS，193.p/q/r/s/t/u/v/w ✅；下一步 Ch126→Ch150；尚未完成 wuxia/urban Ch200 长跑）
 
 本文是 V10 阶段任务规划入口。V9 历史事实入口见 `tasks/V9-README.md`，V9 单项任务归档见 `archive/v9/INDEX.md`。
 
@@ -166,7 +166,7 @@ V10 不把结构升级强行并入主流程。spike 的目标是形成取舍结�
 
 | Task | 名称 | 状态 | 内容要点 | 验收要点 |
 |------|------|:----:|----------|----------|
-| 196 | 优秀度样本集与校准协议 | ◻ | 定义信号边界、样本抽样、人工/自动标注协议；区分 report-only 与候选 gate | 样本清单 + 校准口径 + 误报记录；不是纯文档任务 |
+| 196 | 优秀度样本集与校准协议 | ✅ | 定义信号边界、样本抽样、人工/自动标注协议；区分 report-only 与候选 gate | DONE：`tasks/196-excellence-signal-calibration-DONE.md`；样本清单：`tasks/196-excellence-sample-set.json`（60 章，seed=196）；标注记录：`tasks/196-excellence-annotations.json`（72 条三层）；校准报告：`tasks/196-excellence-calibration-report.md`（judge 单向宽松偏差 + 规则试点负结果） |
 | 197 | 跨章同质化/多样性/叙事张力指数 | ◻ | 检测重复冲突结构、重复场景功能、重复桥段节奏、张力曲线塌陷 | report-only 输出；有章节证据与误报记录 |
 | 198 | 中文 AI 腔规则包 | ◻ | 从词表升级到规则包：套话、保护性表达、说明文腔、抽象空转 | `songyan metrics/report` 可定位命中段落 |
 | 199 | style extraction → style card | ◻ | 从 accepted 正文抽取项目风格卡；V10 内先生成与报告，不默认注入 Writer/CreativeDirector | style card 生成可复现；不改变历史样本判定 |

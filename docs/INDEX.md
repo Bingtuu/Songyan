@@ -126,6 +126,11 @@ V8 已全量闭环（P/C/Q/S/V 五维全绿 + V8.5 遗留清零）。任务文�
 | `tasks/193.v-setting-reference-term-matching-DONE.md` | Task 193.v DONE：setting tracking 正文引用词条匹配修复（Ch126+ 起生效） |
 | `tasks/193.w-segment-audit-verdict-and-stale-health-guard-DONE.md` | Task 193.w DONE：段审计判定消费修复（health_report_chapter + verdict 块 + stale 预警） |
 | `tasks/194-urban-ch200-climb.md` | Task 194 任务书：urban CONTINUE_READY source + Ch200 分段爬坡 |
+| `tasks/196-excellence-signal-calibration.md` | Task 196 任务书：优秀度样本集与校准协议（V10.3 首任务，提前启动） |
+| `tasks/196-excellence-sample-set.json` | Task 196 样本清单：双冻结库各 30 章，seed=196 可复现，8 弧段全覆盖 |
+| `tasks/196-excellence-annotations.json` | Task 196 标注记录：72 条三层标注（anchor 12 / prelabel 48 / spotcheck 12） |
+| `tasks/196-excellence-calibration-report.md` | Task 196 校准报告：信号边界、judge 宽松偏差、规则试点负结果、197-202 接口约定 |
+| `tasks/196-excellence-signal-calibration-DONE.md` | Task 196 DONE：优秀度样本集与校准协议完成报告 |
 
 ## V9 历史产物（已收尾，保留入口）
 
