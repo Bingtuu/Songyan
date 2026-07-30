@@ -4,7 +4,7 @@
 > **类型**: Ch200 分段长跑 / 段边界审计 / 长窗口稳定性验证
 > **优先级**: P0
 > **依赖**: Task 189 / Task 190 / Task 191
-> **状态**: ◐ 进行中；Ch125 checkpoint PASS，下一步 Ch126→Ch150
+> **状态**: ◐ 进行中；Ch147 health halt 已修复，下一步 Ch148→Ch150
 > **预计工作量**: 大
 
 ---
@@ -31,7 +31,9 @@ Task 194 在技术上是 V10.2 中唯一无需 Ch100 修复即可初始化的非
 - 194.b 修复 Ch125 T9 artifact：Ch101 head=`clean-101-6-08a9d35b`，Ch102 head=`clean-102-5-19c5821f`。
 - Ch125 checkpoint 最终 PASS：five-gate PASS（budget=0.9595、CED/1k=0.0905、overdue=108、health=9.5、gap=0）、segment audit PASS（critical_orphans=0、halt_would_fire=false）、T9=0。
 - Ch125 continuity audit：`cont_400f76fd`，health=9.5，critical_orphans=0。
-- 下一步：仅在上述 Ch125 PASS 基础上继续 Ch126→Ch150；真实 `--to` 必须继续带 cost budget。
+- Ch126→Ch150 使用真实 `--to 150 --genre urban --cost-budget 8` 推进；wrapper `run-20260730-081620942` 在 Ch147 accepted 后触发 `health_low_streak_halt`（Ch145-Ch147 窗口 P2_total=2）。
+- 194.c 修复 Ch147 两个 overdue foreshadowings：Ch147 head=`fix-147-health-194c`，continuity audit `cont_979d3a7d` health=8.0、P1=0、P2=0、critical_orphans=0；run restored completed 1..147、failed=[]。
+- 下一步：仅在 194.c DONE 基础上继续 Ch148→Ch150；真实 `--to` 必须继续带 cost budget。
 
 ---
 
