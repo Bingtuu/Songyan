@@ -4,7 +4,7 @@
 > **类型**: Ch200 分段长跑 / 段边界审计 / 长窗口稳定性验证
 > **优先级**: P0
 > **依赖**: Task 189 / Task 190 / Task 191
-> **状态**: ◐ 进行中；Ch147 health halt 已修复，下一步 Ch148→Ch150
+> **状态**: ◐ 进行中；Ch150 checkpoint PASS，下一步 Ch151→Ch175
 > **预计工作量**: 大
 
 ---
@@ -33,7 +33,11 @@ Task 194 在技术上是 V10.2 中唯一无需 Ch100 修复即可初始化的非
 - Ch125 continuity audit：`cont_400f76fd`，health=9.5，critical_orphans=0。
 - Ch126→Ch150 使用真实 `--to 150 --genre urban --cost-budget 8` 推进；wrapper `run-20260730-081620942` 在 Ch147 accepted 后触发 `health_low_streak_halt`（Ch145-Ch147 窗口 P2_total=2）。
 - 194.c 修复 Ch147 两个 overdue foreshadowings：Ch147 head=`fix-147-health-194c`，continuity audit `cont_979d3a7d` health=8.0、P1=0、P2=0、critical_orphans=0；run restored completed 1..147、failed=[]。
-- 下一步：仅在 194.c DONE 基础上继续 Ch148→Ch150；真实 `--to` 必须继续带 cost budget。
+- Ch148→Ch150 resume 时曾以 `--cost-budget 4` 触发非质量 `cost_budget` pause（累计 cost 已高于新预算），随后用 `--cost-budget 12` 继续；wrapper `run-20260730-112317794` PASS_NORMAL_EXIT，run completed @150、failed=[]、total_cost=7.307357。
+- Ch150 初判 five-gate PASS，但 segment audit `critical_orphans=1` / `halt_would_fire=true`，T9 meta/artifact=2、duplicate=1，已冻结并路由 194.d。
+- 194.d 修复 Ch135/Ch139 T9 hard hits 与 Ch150 segment critical orphan：Ch135 head=`clean-135-4-3a31a17d`，Ch139 head=`clean-139-5-7b378d26`，Ch150 head=`fix-150-segment-194d`。
+- Ch150 checkpoint 最终 PASS：accepted=150/150、failed=[]、five-gate PASS（budget=0.9595、CED/1k=0.0786、overdue=116、health=8.7、gap=0）、segment audit PASS（critical_orphans=0、halt_would_fire=false）、T9=0（timeline=2 report-only）。
+- 下一步：仅在 Ch150 PASS 基础上继续 Ch151→Ch175；真实 `--to` 必须继续带 cost budget。
 
 ---
 
@@ -56,10 +60,10 @@ python scripts/run_v10_ch200_climb.py --status --genre urban --format json
 - [ ] 使用 Task 191 harness 按 Ch125 / Ch150 / Ch175 / Ch200 分段推进：
 
 ```powershell
-powershell -File scripts/run_with_timeout.ps1 -TimeoutSec <sec> -- python scripts/run_v10_ch200_climb.py --to 125 --genre urban
-powershell -File scripts/run_with_timeout.ps1 -TimeoutSec <sec> -- python scripts/run_v10_ch200_climb.py --to 150 --genre urban
-powershell -File scripts/run_with_timeout.ps1 -TimeoutSec <sec> -- python scripts/run_v10_ch200_climb.py --to 175 --genre urban
-powershell -File scripts/run_with_timeout.ps1 -TimeoutSec <sec> -- python scripts/run_v10_ch200_climb.py --to 200 --genre urban
+powershell -File scripts/run_with_timeout.ps1 -TimeoutSec <sec> -- python scripts/run_v10_ch200_climb.py --to 125 --genre urban --cost-budget <budget>
+powershell -File scripts/run_with_timeout.ps1 -TimeoutSec <sec> -- python scripts/run_v10_ch200_climb.py --to 150 --genre urban --cost-budget <budget>
+powershell -File scripts/run_with_timeout.ps1 -TimeoutSec <sec> -- python scripts/run_v10_ch200_climb.py --to 175 --genre urban --cost-budget <budget>
+powershell -File scripts/run_with_timeout.ps1 -TimeoutSec <sec> -- python scripts/run_v10_ch200_climb.py --to 200 --genre urban --cost-budget <budget>
 ```
 
 - [ ] 每个段边界执行审计，five-gate 必须显式绑定 Task 189 baseline：
