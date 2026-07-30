@@ -4,7 +4,7 @@
 > **类型**: Ch200 分段长跑 / 段边界审计 / 长窗口稳定性验证
 > **优先级**: P0
 > **依赖**: Task 189 / Task 190 / Task 191
-> **状态**: ◐ 进行中；Ch175 checkpoint PASS，下一步 Ch176→Ch200
+> **状态**: ◐ 进行中；Ch179 settlement numerical validation 已冻结，194.h 修复中
 > **预计工作量**: 大
 
 ---
@@ -46,7 +46,9 @@ Task 194 在技术上是 V10.2 中唯一无需 Ch100 修复即可初始化的非
 - Ch175 checkpoint audit 显式绑定 Task 189 baseline 后 five-gate PASS、segment audit PASS（critical_orphans=0、halt_would_fire=false），但 T9 hard gate FAIL：meta=2（Ch171 protected directive `【保护内容 — 请勿修改】`，Ch175 pure ellipsis paragraph `...`）、duplicate=0、timeline=2 report-only；冻结目录 `.tmp/backups/194g_urban_ch175_t9_meta_hard_gate_20260730-1542/`。
 - 194.g deterministic clean：Ch171 `v-5ac30ced` → `clean-171-5-c9c50b0a`；Ch175 `v-2f8b36fe` → `clean-175-4-d429a6b1`；两章 RAG chunks 已重建。
 - Ch175 checkpoint post-clean PASS：run completed=1..175、failed=[]、total_cost=10.710629；five-gate PASS、segment PASS、T9 PASS（meta=0、duplicate=0、timeline=2 report-only）。
-- 下一步：继续 Ch176→Ch200；真实 `--to 200` 必须带 cost budget，Ch200 后执行终点 checkpoint audit。
+- Ch176→Ch200 使用真实 `--to 200 --genre urban --cost-budget 20` 推进；Ch176-Ch178 accepted（Ch176=`v-9e8700c1`、Ch177=`v-4fccf48d`、Ch178=`v-424077ac`）。
+- Ch179 质量门后进入 SettlementExtractor，触发 numerical validation failure：`heartbeat_interval_ms closing_value (480.0) 不等于 公式值 (362.000)`；Ch179 未 accepted。pipeline 随后继续进入 Ch180，已人工中断并冻结 run：status=`paused`、pause_reason=`manual_freeze:ch179_settlement_numerical_validation`、current_chapter=179、completed=1..178、failed=[179]、total_cost=11.259048；冻结目录 `.tmp/backups/194h_urban_ch179_settlement_numerical_validation_20260730-1813/`。
+- 下一步：先完成 194.h 修复 Ch179 accepted gap；修复前不得继续 Ch180+。
 
 ---
 
