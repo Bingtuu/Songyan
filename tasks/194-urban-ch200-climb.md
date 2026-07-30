@@ -4,7 +4,7 @@
 > **类型**: Ch200 分段长跑 / 段边界审计 / 长窗口稳定性验证
 > **优先级**: P0
 > **依赖**: Task 189 / Task 190 / Task 191
-> **状态**: ◐ 进行中；Ch175 T9 meta hard gate 已冻结，194.g 修复中
+> **状态**: ◐ 进行中；Ch175 checkpoint PASS，下一步 Ch176→Ch200
 > **预计工作量**: 大
 
 ---
@@ -44,7 +44,9 @@ Task 194 在技术上是 V10.2 中唯一无需 Ch100 修复即可初始化的非
 - 194.f 修复 3 条 overdue foreshadowing 状态并重跑 continuity @174：`cont_d2b52f65` health=8.0、P1=0、P2=0、overdue=0；Ch174 health hard gate 根因清除，DONE `tasks/194.f-urban-ch174-health-low-streak-halt-DONE.md`。
 - Ch175 resume 使用真实 `--to 175 --genre urban --cost-budget 16` 完成，run completed 1..175、failed=[]、total_cost=10.710629，Ch175 accepted/current head=`v-2f8b36fe`。
 - Ch175 checkpoint audit 显式绑定 Task 189 baseline 后 five-gate PASS、segment audit PASS（critical_orphans=0、halt_would_fire=false），但 T9 hard gate FAIL：meta=2（Ch171 protected directive `【保护内容 — 请勿修改】`，Ch175 pure ellipsis paragraph `...`）、duplicate=0、timeline=2 report-only；冻结目录 `.tmp/backups/194g_urban_ch175_t9_meta_hard_gate_20260730-1542/`。
-- 下一步：先完成 194.g T9 meta clean；修复前不得继续 Ch176+。
+- 194.g deterministic clean：Ch171 `v-5ac30ced` → `clean-171-5-c9c50b0a`；Ch175 `v-2f8b36fe` → `clean-175-4-d429a6b1`；两章 RAG chunks 已重建。
+- Ch175 checkpoint post-clean PASS：run completed=1..175、failed=[]、total_cost=10.710629；five-gate PASS、segment PASS、T9 PASS（meta=0、duplicate=0、timeline=2 report-only）。
+- 下一步：继续 Ch176→Ch200；真实 `--to 200` 必须带 cost budget，Ch200 后执行终点 checkpoint audit。
 
 ---
 
