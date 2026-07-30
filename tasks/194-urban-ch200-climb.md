@@ -4,7 +4,7 @@
 > **类型**: Ch200 分段长跑 / 段边界审计 / 长窗口稳定性验证
 > **优先级**: P0
 > **依赖**: Task 189 / Task 190 / Task 191
-> **状态**: ◻ 任务书已建立，未启动实跑
+> **状态**: ◐ 进行中；Ch125 checkpoint PASS，下一步 Ch126→Ch150
 > **预计工作量**: 大
 
 ---
@@ -23,17 +23,29 @@ Task 194 在技术上是 V10.2 中唯一无需 Ch100 修复即可初始化的非
 
 ---
 
+## 执行记录（2026-07-30）
+
+- Task 191 dry-run / init-from-source 已完成；target DB：`.tmp/task_v10_urban_ch200.db`；project_id=`81e345042b124ee2a73094b82e4be555`；run_id=`run-v10-urban-743a979a`。
+- Ch101→Ch125 使用真实 `--to 125 --genre urban --cost-budget 8` 推进；wrapper `run-20260730-052658782` 正常退出，但初次结果 `final_status=partial`、`failed=[123]`。
+- 194.a 修复 Ch123 settlement JSON parse 后 accepted gap：Ch123 head=`fix-123-accept-194a`，run restored completed 1..125、failed=[]。
+- 194.b 修复 Ch125 T9 artifact：Ch101 head=`clean-101-6-08a9d35b`，Ch102 head=`clean-102-5-19c5821f`。
+- Ch125 checkpoint 最终 PASS：five-gate PASS（budget=0.9595、CED/1k=0.0905、overdue=108、health=9.5、gap=0）、segment audit PASS（critical_orphans=0、halt_would_fire=false）、T9=0。
+- Ch125 continuity audit：`cont_400f76fd`，health=9.5，critical_orphans=0。
+- 下一步：仅在上述 Ch125 PASS 基础上继续 Ch126→Ch150；真实 `--to` 必须继续带 cost budget。
+
+---
+
 ## In Scope（必须完成）
 
-- [ ] 确认 `.tmp/190_ch100_source_inventory.json` 中 urban 仍为 `CONTINUE_READY`，source DB / project_id / run_id 与 Task 190 一致。
-- [ ] 使用 Task 191 harness dry-run 初始化计划，确认 allowed=true、target path 正确、baseline 为 Task 189。
-- [ ] 使用 Task 191 harness 初始化 V10 Ch200 target DB：
+- [x] 确认 `.tmp/190_ch100_source_inventory.json` 中 urban 仍为 `CONTINUE_READY`，source DB / project_id / run_id 与 Task 190 一致。
+- [x] 使用 Task 191 harness dry-run 初始化计划，确认 allowed=true、target path 正确、baseline 为 Task 189。
+- [x] 使用 Task 191 harness 初始化 V10 Ch200 target DB：
 
 ```powershell
 python scripts/run_v10_ch200_climb.py --init-from-source --genre urban --format json
 ```
 
-- [ ] 初始化后执行 status，确认 target DB、project file、V10 run_id、accepted Ch1-Ch100。
+- [x] 初始化后执行 status，确认 target DB、project file、V10 run_id、accepted Ch1-Ch100。
 
 ```powershell
 python scripts/run_v10_ch200_climb.py --status --genre urban --format json

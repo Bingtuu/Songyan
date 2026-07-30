@@ -2,9 +2,9 @@
 
 > **阶段**: 跨体裁 Ch200 + 优秀度信号包 + 结构升级 spike
 > **定位**: V10 不是开源交付体验阶段，而是工程版 1.0 前的质量与长度再验证阶段：证明多体裁长窗口仍稳定，并把“好不好看/是否有 AI 腔/是否同质化”从主观讨论推进到可复核信号。
-> **当前口径**: V9 已全量闭环；Task 189/190/191 已完成；Task 192 xuanhuan Ch200 已完成（Ch200 accepted/current head=`v-5659d486`，five-gate @200 PASS、segment audit PASS、T9=0）；Task 193 wuxia Ch200 已完成（Ch200 accepted/current head=`v-1ecab81e`，five-gate @200 PASS、segment audit PASS、T9=0，total_cost=17.187324）。下一步启动 Task 194 urban Ch200。Task 196 优秀度样本集与校准协议已提前完成。V10 不再补 V9 生产化地基，也不做 V11 的外部用户可用化收尾。
+> **当前口径**: V9 已全量闭环；Task 189/190/191 已完成；Task 192 xuanhuan Ch200 已完成（Ch200 accepted/current head=`v-5659d486`，five-gate @200 PASS、segment audit PASS、T9=0）；Task 193 wuxia Ch200 已完成（Ch200 accepted/current head=`v-1ecab81e`，five-gate @200 PASS、segment audit PASS、T9=0，total_cost=17.187324）；Task 194 urban Ch200 进行中，Ch125 checkpoint 已 PASS（accepted=125/125、failed=[]、five-gate PASS、segment PASS、T9=0）。下一步继续 urban Ch126→Ch150。Task 196 优秀度样本集与校准协议已提前完成。V10 不再补 V9 生产化地基，也不做 V11 的外部用户可用化收尾。
 > **任务编号**: V10 预计从 Task 189 开始；本文不占任务号。只有可独立执行、独立验收、独立出 DONE 文档的工作项才编号；撞墙修复继续按父任务字母后缀登记（如 `192.p`）。
-> **状态**: ◐ V10.2 Task 194 待启动（Task 189/190/191/192/193 ✅；Task 196 ✅；下一步 urban Ch200）
+> **状态**: ◐ V10.2 Task 194 进行中（Task 189/190/191/192/193 ✅；urban Ch125 PASS；Task 196 ✅；下一步 urban Ch150）
 
 本文是 V10 阶段任务规划入口。V9 历史事实入口见 `tasks/V9-README.md`，V9 单项任务归档见 `archive/v9/INDEX.md`。
 
@@ -166,7 +166,7 @@ V10 不把结构升级强行并入主流程。spike 的目标是形成取舍结�
 | 193.ab | wuxia Ch162 health_low_p1_halt | ✅ | 创建 Ch162 direct P1 patch `fix-162-p1-193ab`，刷新 `blood_sacrifice.complete_manual` 到 Ch162；post-fix segment blocker 路由 193.ac | DONE：`tasks/193.ab-wuxia-ch162-health-low-p1-halt-DONE.md` |
 | 193.ac | wuxia Ch162 segment critical orphan | ✅ | 创建 Ch162 segment patch `fix-162-segment-193ac`，刷新 `blood_abyss.reverse_practice` 到 Ch162；segment audit @162 PASS、five-gate PASS、T9=0 | DONE：`tasks/193.ac-wuxia-ch162-segment-critical-orphan-DONE.md` |
 | 193.ad | wuxia Ch175 segment critical orphan | ✅ | 创建 Ch175 segment patch `fix-175-segment-193ad`，刷新 `broken_blade_sect_location_cave_altar.blood_lock.tie_bloodline` 到 Ch175；segment audit @175 PASS、five-gate PASS、T9=0 | DONE：`tasks/193.ad-wuxia-ch175-segment-critical-orphan-DONE.md` |
-| 194 | urban Ch200 爬坡 | ◐ | 任务书已建立；urban 是当前唯一 CONTINUE_READY source，可用 Task 191 harness 初始化并按 Ch125/150/175/200 推进 | 任务书：`tasks/194-urban-ch200-climb.md`；未启动实跑 |
+| 194 | urban Ch200 爬坡 | ◐ | Task 191 harness 已初始化并推进到 Ch125；194.a 修复 Ch123 settlement accepted gap；194.b 修复 Ch101/102 T9 slash artifact | Ch125 PASS：accepted=125/125、failed=[]、five-gate PASS、segment PASS、T9=0；下一步 Ch126→Ch150；任务书：`tasks/194-urban-ch200-climb.md` |
 | 195 | 跨体裁 Ch200 总验收 | ◻ | 汇总三体裁 Ch200 与 sci-fi baseline；形成 V10 长窗口结论 | 总报告落盘；STATUS/README/INDEX 更新 |
 
 ### V10.3 优秀度信号包
