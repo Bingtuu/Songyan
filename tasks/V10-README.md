@@ -2,9 +2,9 @@
 
 > **阶段**: 跨体裁 Ch200 + 优秀度信号包 + 结构升级 spike
 > **定位**: V10 不是开源交付体验阶段，而是工程版 1.0 前的质量与长度再验证阶段：证明多体裁长窗口仍稳定，并把“好不好看/是否有 AI 腔/是否同质化”从主观讨论推进到可复核信号。
-> **当前口径**: V9 已全量闭环；Task 189/190/191 已完成；Task 192 xuanhuan Ch200 已完成（Ch200 accepted/current head=`v-5659d486`，five-gate @200 PASS、segment audit PASS、T9=0）；Task 193 wuxia Ch200 已完成（Ch200 accepted/current head=`v-1ecab81e`，five-gate @200 PASS、segment audit PASS、T9=0，total_cost=17.187324）；Task 194 urban Ch200 进行中，Ch150 checkpoint 已 PASS，194.e 已修复 Ch162（head=`v-345029d6`），Ch162-Ch174 accepted；Ch174 health_low_streak_halt 已冻结并路由 194.f（run paused，current_chapter=174，failed=[]，total_cost=10.554465）。下一步先修复 Ch172-Ch174 health low streak，再继续 urban Ch175。Task 196 优秀度样本集与校准协议已提前完成。V10 不再补 V9 生产化地基，也不做 V11 的外部用户可用化收尾。
+> **当前口径**: V9 已全量闭环；Task 189/190/191 已完成；Task 192 xuanhuan Ch200 已完成（Ch200 accepted/current head=`v-5659d486`，five-gate @200 PASS、segment audit PASS、T9=0）；Task 193 wuxia Ch200 已完成（Ch200 accepted/current head=`v-1ecab81e`，five-gate @200 PASS、segment audit PASS、T9=0，total_cost=17.187324）；Task 194 urban Ch200 进行中，Ch150 checkpoint 已 PASS，194.e 已修复 Ch162（head=`v-345029d6`），Ch162-Ch174 accepted；194.f 已修复 Ch174 health_low_streak_halt（latest continuity `cont_d2b52f65` health=8.0、P2=0）。下一步 resume urban Ch175 并审计。Task 196 优秀度样本集与校准协议已提前完成。V10 不再补 V9 生产化地基，也不做 V11 的外部用户可用化收尾。
 > **任务编号**: V10 预计从 Task 189 开始；本文不占任务号。只有可独立执行、独立验收、独立出 DONE 文档的工作项才编号；撞墙修复继续按父任务字母后缀登记（如 `192.p`）。
-> **状态**: ◐ V10.2 Task 194 进行中（Task 189/190/191/192/193 ✅；urban Ch150 PASS；194.e ✅；194.f Ch174 修复中；Task 196 ✅）
+> **状态**: ◐ V10.2 Task 194 进行中（Task 189/190/191/192/193 ✅；urban Ch150 PASS；194.e ✅；194.f ✅；下一步 urban Ch175；Task 196 ✅）
 
 本文是 V10 阶段任务规划入口。V9 历史事实入口见 `tasks/V9-README.md`，V9 单项任务归档见 `archive/v9/INDEX.md`。
 
@@ -166,13 +166,13 @@ V10 不把结构升级强行并入主流程。spike 的目标是形成取舍结�
 | 193.ab | wuxia Ch162 health_low_p1_halt | ✅ | 创建 Ch162 direct P1 patch `fix-162-p1-193ab`，刷新 `blood_sacrifice.complete_manual` 到 Ch162；post-fix segment blocker 路由 193.ac | DONE：`tasks/193.ab-wuxia-ch162-health-low-p1-halt-DONE.md` |
 | 193.ac | wuxia Ch162 segment critical orphan | ✅ | 创建 Ch162 segment patch `fix-162-segment-193ac`，刷新 `blood_abyss.reverse_practice` 到 Ch162；segment audit @162 PASS、five-gate PASS、T9=0 | DONE：`tasks/193.ac-wuxia-ch162-segment-critical-orphan-DONE.md` |
 | 193.ad | wuxia Ch175 segment critical orphan | ✅ | 创建 Ch175 segment patch `fix-175-segment-193ad`，刷新 `broken_blade_sect_location_cave_altar.blood_lock.tie_bloodline` 到 Ch175；segment audit @175 PASS、five-gate PASS、T9=0 | DONE：`tasks/193.ad-wuxia-ch175-segment-critical-orphan-DONE.md` |
-| 194 | urban Ch200 爬坡 | ◐ | Task 191 harness 已初始化；Ch150 checkpoint PASS；Ch162-Ch174 accepted；194.a/b/c/d/e 已完成；194.f 修复中 | Ch174 health_low_streak_halt 已冻结，run paused/current=174/failed=[]；先修 Ch172-Ch174 health low streak，再回 Ch175；任务书：`tasks/194-urban-ch200-climb.md` |
+| 194 | urban Ch200 爬坡 | ◐ | Task 191 harness 已初始化；Ch150 checkpoint PASS；Ch162-Ch174 accepted；194.a/b/c/d/e/f 已完成 | Ch174 health 已修复，run paused/current=174/failed=[]；下一步 Ch175；任务书：`tasks/194-urban-ch200-climb.md` |
 | 194.a | urban Ch123 settlement JSON parse | ✅ | Ch123 quality gate accepted 后 SettlementExtractor JSON parse failed，导致 accepted head gap；创建 `fix-123-accept-194a` 与 fallback summary，run restored completed 1..125、failed=[] | DONE：`tasks/194.a-urban-ch123-settlement-json-parse-DONE.md` |
 | 194.b | urban Ch125 T9 meta clean | ✅ | Ch101/Ch102 slash artifact deterministic clean：`clean-101-6-08a9d35b`、`clean-102-5-19c5821f`；Ch125 checkpoint five-gate/segment/T9 PASS | DONE：`tasks/194.b-urban-ch125-t9-meta-clean-DONE.md` |
 | 194.c | urban Ch147 health_low_streak_halt | ✅ | 修复两个 overdue foreshadowings，Ch147 head `fix-147-health-194c`；continuity health=8.0、P1=0、P2=0、critical_orphans=0 | DONE：`tasks/194.c-urban-ch147-health-low-streak-halt-DONE.md` |
 | 194.d | urban Ch150 segment/T9 hard gates | ✅ | Ch135/Ch139 T9 clean，Ch150 segment patch `fix-150-segment-194d`；Ch150 checkpoint five-gate/segment/T9 PASS | DONE：`tasks/194.d-urban-ch150-segment-t9-hard-gates-DONE.md` |
 | 194.e | urban Ch162 GoalPlanner JSON parse | ✅ | Ch162 retry/resume 成功，accepted/current head `v-345029d6`；run 后续推进保持 failed=[] | DONE：`tasks/194.e-urban-ch162-goal-planner-json-parse-DONE.md` |
-| 194.f | urban Ch174 health_low_streak_halt | ◐ | Ch172=`v-bad824d1`、Ch173=`v-f52c35c6`、Ch174=`v-f5a8d2d8`；Ch174 后触发 health_low_streak_halt（window=Ch172-Ch174，P2_total=3 >= limit=2） | 任务书：`tasks/194.f-urban-ch174-health-low-streak-halt.md` |
+| 194.f | urban Ch174 health_low_streak_halt | ✅ | 3 条 overdue P2 foreshadowings resolve；`cont_d2b52f65` health=8.0、P1=0、P2=0、overdue=0 | DONE：`tasks/194.f-urban-ch174-health-low-streak-halt-DONE.md` |
 | 195 | 跨体裁 Ch200 总验收 | ◻ | 汇总三体裁 Ch200 与 sci-fi baseline；形成 V10 长窗口结论 | 总报告落盘；STATUS/README/INDEX 更新 |
 
 ### V10.3 优秀度信号包
