@@ -4,7 +4,7 @@
 > **类型**: Ch200 分段长跑 / 段边界审计 / 长窗口稳定性验证
 > **优先级**: P0
 > **依赖**: Task 189 / Task 190 / Task 191
-> **状态**: ◐ 进行中；Ch162 GoalPlanner JSON parse 已冻结，194.e 修复中
+> **状态**: ◐ 进行中；Ch174 health_low_streak_halt 已冻结，194.f 修复中
 > **预计工作量**: 大
 
 ---
@@ -39,7 +39,9 @@ Task 194 在技术上是 V10.2 中唯一无需 Ch100 修复即可初始化的非
 - Ch150 checkpoint 最终 PASS：accepted=150/150、failed=[]、five-gate PASS（budget=0.9595、CED/1k=0.0786、overdue=116、health=8.7、gap=0）、segment audit PASS（critical_orphans=0、halt_would_fire=false）、T9=0（timeline=2 report-only）。
 - Ch151→Ch175 使用真实 `--to 175 --genre urban --cost-budget 16` 推进；wrapper `run-20260730-121831667` 中 Ch151-Ch161 accepted，Ch162 在 GoalPlanner 阶段触发 `LLM 返回内容无法解析为 JSON（标准解析和 repair 均失败）`，raw_response 为空。
 - 为避免 isolate 继续形成更复杂 gap，在 Ch163 启动后人工中断 wrapper，并使用 `ProjectRunRepository.update()` 冻结 run：status=`paused`、pause_reason=`manual_freeze:ch162_goal_planner_json_parse`、current_chapter=162、completed_count=161、failed=[162]、total_cost=8.748416；冻结目录 `.tmp/backups/194e_urban_ch162_goal_planner_json_parse_20260730-1326/`。
-- 下一步：先完成 194.e 修复 Ch162 accepted gap；修复前不得继续 Ch163+。
+- 194.e 使用 Task 191 harness resume `--to 175 --genre urban --cost-budget 16` 从 Ch162 重跑，Ch162 GoalPlanner 未复现，Ch162 accepted/current head=`v-345029d6`，随后继续生成 Ch163-Ch174。
+- Ch174 后触发 `health_low_streak_halt` 硬门：window=Ch172-Ch174、P2_total=3 >= limit=2；run 已冻结为 status=`paused`、pause_reason=`auto_halt:health_low_streak_halt`、current_chapter=174、completed=1..174、failed=[]、total_cost=10.554465；Ch172=`v-bad824d1`、Ch173=`v-f52c35c6`、Ch174=`v-f5a8d2d8`；最新 continuity `cont_b8daaae4` health=7.9；冻结目录 `.tmp/backups/194f_urban_ch174_health_low_streak_halt_20260730-1501/`。
+- 下一步：先完成 194.f 修复 Ch172-Ch174 health low streak；修复前不得继续 Ch175。
 
 ---
 
