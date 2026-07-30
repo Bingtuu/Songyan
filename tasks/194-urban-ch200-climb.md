@@ -4,7 +4,7 @@
 > **类型**: Ch200 分段长跑 / 段边界审计 / 长窗口稳定性验证
 > **优先级**: P0
 > **依赖**: Task 189 / Task 190 / Task 191
-> **状态**: ◐ 进行中；Ch174 health_low_streak_halt 已修复，下一步 resume Ch175
+> **状态**: ◐ 进行中；Ch175 T9 meta hard gate 已冻结，194.g 修复中
 > **预计工作量**: 大
 
 ---
@@ -42,7 +42,9 @@ Task 194 在技术上是 V10.2 中唯一无需 Ch100 修复即可初始化的非
 - 194.e 使用 Task 191 harness resume `--to 175 --genre urban --cost-budget 16` 从 Ch162 重跑，Ch162 GoalPlanner 未复现，Ch162 accepted/current head=`v-345029d6`，随后继续生成 Ch163-Ch174。
 - Ch174 后触发 `health_low_streak_halt` 硬门：window=Ch172-Ch174、P2_total=3 >= limit=2；run 已冻结为 status=`paused`、pause_reason=`auto_halt:health_low_streak_halt`、current_chapter=174、completed=1..174、failed=[]、total_cost=10.554465；Ch172=`v-bad824d1`、Ch173=`v-f52c35c6`、Ch174=`v-f5a8d2d8`；最新 continuity `cont_b8daaae4` health=7.9；冻结目录 `.tmp/backups/194f_urban_ch174_health_low_streak_halt_20260730-1501/`。
 - 194.f 修复 3 条 overdue foreshadowing 状态并重跑 continuity @174：`cont_d2b52f65` health=8.0、P1=0、P2=0、overdue=0；Ch174 health hard gate 根因清除，DONE `tasks/194.f-urban-ch174-health-low-streak-halt-DONE.md`。
-- 下一步：resume Ch175；真实 `--to 175` 必须带 cost budget，Ch175 完成后立即执行 checkpoint audit。
+- Ch175 resume 使用真实 `--to 175 --genre urban --cost-budget 16` 完成，run completed 1..175、failed=[]、total_cost=10.710629，Ch175 accepted/current head=`v-2f8b36fe`。
+- Ch175 checkpoint audit 显式绑定 Task 189 baseline 后 five-gate PASS、segment audit PASS（critical_orphans=0、halt_would_fire=false），但 T9 hard gate FAIL：meta=2（Ch171 protected directive `【保护内容 — 请勿修改】`，Ch175 pure ellipsis paragraph `...`）、duplicate=0、timeline=2 report-only；冻结目录 `.tmp/backups/194g_urban_ch175_t9_meta_hard_gate_20260730-1542/`。
+- 下一步：先完成 194.g T9 meta clean；修复前不得继续 Ch176+。
 
 ---
 
