@@ -55,7 +55,9 @@ Task 194 在技术上是 V10.2 中唯一无需 Ch100 修复即可初始化的非
 - Ch199→Ch200 使用真实 `--to 200 --genre urban --cost-budget 20` resume；wrapper `run-20260731-121733537` PASS_NORMAL_EXIT，但 run final_status=partial、completed=1..198、failed=[199,200]。
 - Ch199 Writer 返回 0 字，LiteraryAuditor 空响应 parse failed；Ch199 current draft=`v-199-1-8a64d8c8`、word_count=0、accepted=null。Ch200 GoalPlanner 空响应 parse failed，无 head。
 - 已冻结 194.j：run status=`paused`、pause_reason=`manual_freeze:ch199_200_llm_empty_parse`、current_chapter=199、completed=1..198、failed=[199,200]、total_cost=14.43615；冻结目录 `.tmp/backups/194j_urban_ch199_200_llm_empty_parse_20260731-1225/`。
-- 下一步：先完成 194.j 修复 Ch199/Ch200 accepted gap；修复前不得执行 Ch200 终点审计。
+- 为 194.j 新增 Task 191 harness `--on-failure retry`（默认不变），聚焦测试 11 passed，ruff passed；`run-20260731-144318657` / `run-20260731-150024943` 使用 `--on-failure retry` 后仍因 LLM 空响应卡在 Ch199。
+- 最新冻结：run status=`paused`、pause_reason=`manual_freeze:ch199_llm_empty_parse_retry_failed`、current_chapter=199、completed=1..198、failed=[199]、total_cost=14.666101；最新备份 `.tmp/backups/194j_retry_on_failure_still_failed_20260731-1504/`。
+- 下一步：先完成 194.j 修复 Ch199 accepted gap；修复前不得执行 Ch200 终点审计。
 
 ---
 

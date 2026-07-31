@@ -2,7 +2,7 @@
 
 > **阶段**: 跨体裁 Ch200 + 优秀度信号包 + 结构升级 spike
 > **定位**: V10 不是开源交付体验阶段，而是工程版 1.0 前的质量与长度再验证阶段：证明多体裁长窗口仍稳定，并把“好不好看/是否有 AI 腔/是否同质化”从主观讨论推进到可复核信号。
-> **当前口径**: V9 已全量闭环；Task 189/190/191 已完成；Task 192 xuanhuan Ch200 已完成（Ch200 accepted/current head=`v-5659d486`，five-gate @200 PASS、segment audit PASS、T9=0）；Task 193 wuxia Ch200 已完成（Ch200 accepted/current head=`v-1ecab81e`，five-gate @200 PASS、segment audit PASS、T9=0，total_cost=17.187324）；Task 194 urban Ch200 进行中，Ch175 checkpoint 已 PASS（five-gate/segment/T9 全 PASS），194.e/194.f/194.g/194.h/194.i 已完成；Ch199/200 LLM empty parse 已冻结并路由 194.j，run paused/current=199/completed=1..198/failed=[199,200]。下一步先修复 Ch199/200 accepted gap，再执行 Ch200 终点审计。Task 196 优秀度样本集与校准协议已提前完成。V10 不再补 V9 生产化地基，也不做 V11 的外部用户可用化收尾。
+> **当前口径**: V9 已全量闭环；Task 189/190/191 已完成；Task 192 xuanhuan Ch200 已完成（Ch200 accepted/current head=`v-5659d486`，five-gate @200 PASS、segment audit PASS、T9=0）；Task 193 wuxia Ch200 已完成（Ch200 accepted/current head=`v-1ecab81e`，five-gate @200 PASS、segment audit PASS、T9=0，total_cost=17.187324）；Task 194 urban Ch200 进行中，Ch175 checkpoint 已 PASS（five-gate/segment/T9 全 PASS），194.e/194.f/194.g/194.h/194.i 已完成；Ch199 LLM empty parse 持续冻结并路由 194.j，run paused/current=199/completed=1..198/failed=[199]。下一步先修复 Ch199 accepted gap，再执行 Ch200 终点审计。Task 196 优秀度样本集与校准协议已提前完成。V10 不再补 V9 生产化地基，也不做 V11 的外部用户可用化收尾。
 > **任务编号**: V10 预计从 Task 189 开始；本文不占任务号。只有可独立执行、独立验收、独立出 DONE 文档的工作项才编号；撞墙修复继续按父任务字母后缀登记（如 `192.p`）。
 > **状态**: ◐ V10.2 Task 194 进行中（Task 189/190/191/192/193 ✅；urban Ch175 PASS；194.e/f/g/h/i ✅；194.j 修复中；Task 196 ✅）
 
@@ -176,7 +176,7 @@ V10 不把结构升级强行并入主流程。spike 的目标是形成取舍结�
 | 194.g | urban Ch175 T9 meta hard gate | ✅ | Ch171/Ch175 deterministic clean，heads `clean-171-5-c9c50b0a` / `clean-175-4-d429a6b1`；T9 PASS，five-gate/segment PASS | DONE：`tasks/194.g-urban-ch175-t9-meta-hard-gate-DONE.md` |
 | 194.h | urban Ch179 settlement numerical validation | ✅ | Ch179 SettlementExtractor numerical validation failed：`heartbeat_interval_ms closing_value 480.0 != formula 362.000`；resume 后 Ch179 accepted/current head=`v-4b8815b0`，failed=[]，后续继续推进 | DONE：`tasks/194.h-urban-ch179-settlement-numerical-validation-DONE.md` |
 | 194.i | urban Ch198 health_low_streak_halt | ✅ | 12 条 overdue foreshadowings resolved，Ch182/186/187/196 T9 clean，Ch198 continuity patch `fix-198-segment-194i`；continuity health=8.1、P2=1；segment @198 PASS；T9 @198 PASS；run restored running | DONE：`tasks/194.i-urban-ch198-health-low-streak-halt-DONE.md` |
-| 194.j | urban Ch199-Ch200 LLM empty parse | ◐ | Ch199 Writer 0 字 + LiteraryAuditor 空响应 parse failed；Ch200 GoalPlanner 空响应 parse failed；run frozen paused/current=199/completed=1..198/failed=[199,200] | 任务书：`tasks/194.j-urban-ch199-200-llm-empty-parse.md` |
+| 194.j | urban Ch199-Ch200 LLM empty parse | ◐ | 已新增 harness `--on-failure retry`（默认不变）并验证；多次 retry 后仍因 LLM 空响应卡在 Ch199，run paused/current=199/completed=1..198/failed=[199] | 任务书：`tasks/194.j-urban-ch199-200-llm-empty-parse.md` |
 | 195 | 跨体裁 Ch200 总验收 | ◻ | 汇总三体裁 Ch200 与 sci-fi baseline；形成 V10 长窗口结论 | 总报告落盘；STATUS/README/INDEX 更新 |
 
 ### V10.3 优秀度信号包
