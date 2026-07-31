@@ -4,7 +4,7 @@
 > **类型**: Ch200 分段长跑 / 段边界审计 / 长窗口稳定性验证
 > **优先级**: P0
 > **依赖**: Task 189 / Task 190 / Task 191
-> **状态**: ◐ 进行中；Ch199/Ch200 LLM empty parse 已冻结，194.j 修复中
+> **状态**: ✅ 完成；urban Ch200 已 PASS，DONE：`tasks/194-urban-ch200-climb-DONE.md`
 > **预计工作量**: 大
 
 ---
@@ -57,7 +57,10 @@ Task 194 在技术上是 V10.2 中唯一无需 Ch100 修复即可初始化的非
 - 已冻结 194.j：run status=`paused`、pause_reason=`manual_freeze:ch199_200_llm_empty_parse`、current_chapter=199、completed=1..198、failed=[199,200]、total_cost=14.43615；冻结目录 `.tmp/backups/194j_urban_ch199_200_llm_empty_parse_20260731-1225/`。
 - 为 194.j 新增 Task 191 harness `--on-failure retry`（默认不变），聚焦测试 11 passed，ruff passed；`run-20260731-144318657` / `run-20260731-150024943` 使用 `--on-failure retry` 后仍因 LLM 空响应卡在 Ch199。
 - 最新冻结：run status=`paused`、pause_reason=`manual_freeze:ch199_llm_empty_parse_retry_failed`、current_chapter=199、completed=1..198、failed=[199]、total_cost=14.666101；最新备份 `.tmp/backups/194j_retry_on_failure_still_failed_20260731-1504/`。
-- 下一步：先完成 194.j 修复 Ch199 accepted gap；修复前不得执行 Ch200 终点审计。
+- 194.j 最终登记 fallback model：`deepseek/deepseek-v4-flash` 多次空响应未恢复，临时显式使用 `deepseek/deepseek-chat` 完成 Ch199/Ch200；Ch199 accepted/current head=`v-6635ac72`，Ch200 accepted/current head=`v-b687fc47`，run completed=1..200、failed=[]、total_cost=14.91622。DONE：`tasks/194.j-urban-ch199-200-llm-empty-parse-DONE.md`。
+- Ch200 终点审计初判 five-gate PASS、segment PASS，但 T9 meta=1，命中 `Echo_Core心跳维持脚本/注释区`；已冻结并路由 194.k，备份 `.tmp/backups/194k_urban_ch200_t9_meta_hard_gate_20260731-1636/`。
+- 194.k 创建 Ch200 deterministic clean version `clean-200-t9-194k`（parent=`v-b687fc47`），将 `Echo_Core心跳维持脚本/注释区` 改为 `Echo_Core心跳维持脚本的注释区`，Ch200 RAG chunks 已重建。
+- Ch200 终点最终 PASS：run status=`completed`、current_chapter=200、completed=1..200、failed=[]、pause_reason=null；five-gate PASS（budget=0.9595、CED/1k=0.066、overdue=153、health=8.2、gap=0）、segment audit PASS（critical_orphans=0、halt_would_fire=false）、T9=0（timeline=3 report-only）；final DB SHA256 `08921291C3F9E3A5F42199CD7AA109A1164372150D42C08001A845DA9A212861`。DONE：`tasks/194.k-urban-ch200-t9-meta-hard-gate-DONE.md`。
 
 ---
 
@@ -77,7 +80,7 @@ python scripts/run_v10_ch200_climb.py --init-from-source --genre urban --format 
 python scripts/run_v10_ch200_climb.py --status --genre urban --format json
 ```
 
-- [ ] 使用 Task 191 harness 按 Ch125 / Ch150 / Ch175 / Ch200 分段推进：
+- [x] 使用 Task 191 harness 按 Ch125 / Ch150 / Ch175 / Ch200 分段推进：
 
 ```powershell
 powershell -File scripts/run_with_timeout.ps1 -TimeoutSec <sec> -- python scripts/run_v10_ch200_climb.py --to 125 --genre urban --cost-budget <budget>
@@ -86,13 +89,13 @@ powershell -File scripts/run_with_timeout.ps1 -TimeoutSec <sec> -- python script
 powershell -File scripts/run_with_timeout.ps1 -TimeoutSec <sec> -- python scripts/run_v10_ch200_climb.py --to 200 --genre urban --cost-budget <budget>
 ```
 
-- [ ] 每个段边界执行审计，five-gate 必须显式绑定 Task 189 baseline：
+- [x] 每个段边界执行审计，five-gate 必须显式绑定 Task 189 baseline：
 
 ```powershell
 python scripts/run_v10_ch200_climb.py --audit --genre urban --up-to <125|150|175|200> --baseline tasks/189-scifi-ch200-baseline.json
 ```
 
-- [ ] 产出 `tasks/194-urban-ch200-climb-DONE.md`，并同步核心入口文档。
+- [x] 产出 `tasks/194-urban-ch200-climb-DONE.md`，并同步核心入口文档。
 
 ---
 
@@ -251,12 +254,12 @@ git diff --check
 
 ## 验收标准
 
-- [ ] urban V10 target DB 初始化自 Task 190 `CONTINUE_READY` source。
-- [ ] V10 project file 与 target DB `project_runs` 一致。
-- [ ] Ch1-Ch200 全 accepted。
-- [ ] Ch125 / Ch150 / Ch175 / Ch200 four checkpoints 五门 PASS。
-- [ ] Ch200 T9=0；segment audit PASS。
-- [ ] DONE 文档和核心入口已更新。
+- [x] urban V10 target DB 初始化自 Task 190 `CONTINUE_READY` source。
+- [x] V10 project file 与 target DB `project_runs` 一致。
+- [x] Ch1-Ch200 全 accepted。
+- [x] Ch125 / Ch150 / Ch175 / Ch200 four checkpoints 五门 PASS。
+- [x] Ch200 T9=0；segment audit PASS。
+- [x] DONE 文档和核心入口已更新。
 - [ ] 验证命令通过，提交一次，不 push。
 
 ---
