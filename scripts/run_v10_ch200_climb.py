@@ -133,6 +133,12 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="run cost budget (CNY); falls back to SONGYAN_RUN_COST_BUDGET",
     )
+    parser.add_argument(
+        "--on-failure",
+        choices=("isolate", "retry", "abort"),
+        default="isolate",
+        help="single-chapter failure policy for real --to runs; default keeps Task 191 behavior",
+    )
     parser.add_argument("--baseline", type=Path, default=DEFAULT_BASELINE)
     parser.add_argument("--inventory", type=Path, default=DEFAULT_INVENTORY)
     parser.add_argument("--canonical-inventory", type=Path, default=DEFAULT_CANONICAL_INVENTORY)
@@ -977,6 +983,8 @@ def build_to_plan(
         "--cost-budget",
         str(cost_budget) if cost_budget is not None else "<required>",
     ]
+    if args.on_failure != "isolate":
+        wrapper_command.extend(["--on-failure", args.on_failure])
     return {
         "task": TASK_ID,
         "action": "to",
@@ -986,6 +994,7 @@ def build_to_plan(
         "project_id": project_id,
         "run_id": run_id,
         "cost_budget": cost_budget,
+        "on_failure": args.on_failure,
         "paths": paths.to_dict(target),
         "baseline": args.baseline.as_posix(),
         "wrapper_command": wrapper_command,
@@ -1040,7 +1049,7 @@ async def run_to_checkpoint(plan: dict[str, Any]) -> dict[str, Any]:
         chapter_range=(1, int(plan["target"])),
         mode_id=project.mode_id,
         auto_confirm=True,
-        on_failure="isolate",
+        on_failure=str(plan.get("on_failure") or "isolate"),
         gate_config=GateConfig.for_mode("enforce"),
         resume=True,
         run_id=run_id,

@@ -389,6 +389,42 @@ def test_audit_dry_run_pins_task189_ch200_baseline(tmp_path: Path) -> None:
     assert payload["environment"]["DATABASE_URL"].endswith("task_v10_urban_ch200.db")
 
 
+def test_to_dry_run_can_request_retry_failure_policy(tmp_path: Path) -> None:
+    project_file = tmp_path / "task_v10_urban_project.json"
+    project_file.write_text(
+        json.dumps(
+            {
+                "project_id": "urban-p",
+                "run_id": "run-v10-urban-test",
+                "db": (tmp_path / "task_v10_urban_ch200.db").as_posix(),
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    payload = _json_stdout(
+        _run_harness(
+            "--to",
+            "200",
+            "--genre",
+            "urban",
+            "--work-dir",
+            tmp_path.as_posix(),
+            "--cost-budget",
+            "1",
+            "--on-failure",
+            "retry",
+            "--dry-run",
+            "--format",
+            "json",
+        )
+    )
+
+    assert payload["on_failure"] == "retry"
+    assert "--on-failure" in payload["wrapper_command"]
+    assert "retry" in payload["wrapper_command"]
+
+
 def test_missing_tmp_inventory_reports_canonical_source_and_next_step(
     tmp_path: Path,
 ) -> None:
