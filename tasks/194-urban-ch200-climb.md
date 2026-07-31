@@ -4,7 +4,7 @@
 > **类型**: Ch200 分段长跑 / 段边界审计 / 长窗口稳定性验证
 > **优先级**: P0
 > **依赖**: Task 189 / Task 190 / Task 191
-> **状态**: ◐ 进行中；Ch179 settlement numerical validation 已冻结，194.h 修复中
+> **状态**: ◐ 进行中；Ch198 health_low_streak_halt 已冻结，194.i 修复中
 > **预计工作量**: 大
 
 ---
@@ -48,7 +48,10 @@ Task 194 在技术上是 V10.2 中唯一无需 Ch100 修复即可初始化的非
 - Ch175 checkpoint post-clean PASS：run completed=1..175、failed=[]、total_cost=10.710629；five-gate PASS、segment PASS、T9 PASS（meta=0、duplicate=0、timeline=2 report-only）。
 - Ch176→Ch200 使用真实 `--to 200 --genre urban --cost-budget 20` 推进；Ch176-Ch178 accepted（Ch176=`v-9e8700c1`、Ch177=`v-4fccf48d`、Ch178=`v-424077ac`）。
 - Ch179 质量门后进入 SettlementExtractor，触发 numerical validation failure：`heartbeat_interval_ms closing_value (480.0) 不等于 公式值 (362.000)`；Ch179 未 accepted。pipeline 随后继续进入 Ch180，已人工中断并冻结 run：status=`paused`、pause_reason=`manual_freeze:ch179_settlement_numerical_validation`、current_chapter=179、completed=1..178、failed=[179]、total_cost=11.259048；冻结目录 `.tmp/backups/194h_urban_ch179_settlement_numerical_validation_20260730-1813/`。
-- 下一步：先完成 194.h 修复 Ch179 accepted gap；修复前不得继续 Ch180+。
+- 194.h 使用 Task 191 harness resume（真实 `--to 200 --genre urban --cost-budget 20`）后 Ch179 retry 成功，Ch179 accepted/current head=`v-4b8815b0`，accepted gap 清除，DONE `tasks/194.h-urban-ch179-settlement-numerical-validation-DONE.md`。
+- 同一 run 继续推进 Ch180-Ch198，Ch196 head=`v-06a477dc`，Ch197 head=`v-c4e6aad1`，Ch198 head=`v-ce44758d`，completed=1..198，failed=[]，total_cost=14.349237。
+- Ch198 accepted 后自动触发 `health_low_streak_halt`：window=Ch196-Ch198、P2_total=13 >= limit=2；latest continuity `cont_523ceb63` health=7.7、overdue_foreshadowings=13；run 已冻结为 status=`paused`、pause_reason=`auto_halt:health_low_streak_halt`、current_chapter=198、completed=1..198、failed=[]；冻结目录 `.tmp/backups/194i_urban_ch198_health_low_streak_halt_20260730-2145/`。
+- 下一步：先完成 194.i 修复 Ch198 health_low_streak_halt；修复前不得继续 Ch199/Ch200。
 
 ---
 
