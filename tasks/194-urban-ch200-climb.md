@@ -4,7 +4,7 @@
 > **类型**: Ch200 分段长跑 / 段边界审计 / 长窗口稳定性验证
 > **优先级**: P0
 > **依赖**: Task 189 / Task 190 / Task 191
-> **状态**: ◐ 进行中；Ch198 health_low_streak_halt 已修复，等待 Ch200 终点
+> **状态**: ◐ 进行中；Ch199/Ch200 LLM empty parse 已冻结，194.j 修复中
 > **预计工作量**: 大
 
 ---
@@ -52,7 +52,10 @@ Task 194 在技术上是 V10.2 中唯一无需 Ch100 修复即可初始化的非
 - 同一 run 继续推进 Ch180-Ch198，Ch196 head=`v-06a477dc`，Ch197 head=`v-c4e6aad1`，Ch198 head=`v-ce44758d`，completed=1..198，failed=[]，total_cost=14.349237。
 - Ch198 accepted 后自动触发 `health_low_streak_halt`：window=Ch196-Ch198、P2_total=13 >= limit=2；latest continuity `cont_523ceb63` health=7.7、overdue_foreshadowings=13；run 已冻结为 status=`paused`、pause_reason=`auto_halt:health_low_streak_halt`、current_chapter=198、completed=1..198、failed=[]；冻结目录 `.tmp/backups/194i_urban_ch198_health_low_streak_halt_20260730-2145/`。
 - 194.i 修复完成：12 条已兑现 overdue foreshadowings resolved，保留 1 条开放目标；Ch182/186/187/196 T9 clean heads=`clean-182-t9-194i` / `clean-186-t9-194i` / `clean-187-t9-194i` / `clean-196-t9-194i`；Ch198 continuity patch head=`fix-198-segment-194i`；continuity @198 `cont_da02974e` health=8.1、P1=0、P2=1；segment audit @198 PASS；T9 @198 PASS；run restored running、completed=1..198、failed=[]。
-- 下一步：继续 Ch199→Ch200，真实 `--to 200 --genre urban` 必须带 `--cost-budget`；Ch200 后执行终点审计。
+- Ch199→Ch200 使用真实 `--to 200 --genre urban --cost-budget 20` resume；wrapper `run-20260731-121733537` PASS_NORMAL_EXIT，但 run final_status=partial、completed=1..198、failed=[199,200]。
+- Ch199 Writer 返回 0 字，LiteraryAuditor 空响应 parse failed；Ch199 current draft=`v-199-1-8a64d8c8`、word_count=0、accepted=null。Ch200 GoalPlanner 空响应 parse failed，无 head。
+- 已冻结 194.j：run status=`paused`、pause_reason=`manual_freeze:ch199_200_llm_empty_parse`、current_chapter=199、completed=1..198、failed=[199,200]、total_cost=14.43615；冻结目录 `.tmp/backups/194j_urban_ch199_200_llm_empty_parse_20260731-1225/`。
+- 下一步：先完成 194.j 修复 Ch199/Ch200 accepted gap；修复前不得执行 Ch200 终点审计。
 
 ---
 
