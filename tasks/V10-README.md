@@ -2,9 +2,9 @@
 
 > **阶段**: 跨体裁 Ch200 + 优秀度信号包 + 结构升级 spike
 > **定位**: V10 不是开源交付体验阶段，而是工程版 1.0 前的质量与长度再验证阶段：证明多体裁长窗口仍稳定，并把“好不好看/是否有 AI 腔/是否同质化”从主观讨论推进到可复核信号。
-> **当前口径**: V9 已全量闭环；Task 189/190/191 已完成；Task 192 xuanhuan Ch200 已完成（Ch200 accepted/current head=`v-5659d486`，five-gate @200 PASS、segment audit PASS、T9=0）；Task 193 wuxia Ch200 已完成（Ch200 accepted/current head=`v-1ecab81e`，five-gate @200 PASS、segment audit PASS、T9=0，total_cost=17.187324）；Task 194 urban Ch200 已完成（Ch200 accepted/current head=`clean-200-t9-194k`，run completed @200、failed=[]、total_cost=14.91622；five-gate @200 PASS、segment audit @200 PASS、T9=0）。Task 196 优秀度样本集与校准协议已提前完成。下一步进入 Task 195 跨体裁 Ch200 总验收。V10 不再补 V9 生产化地基，也不做 V11 的外部用户可用化收尾。
+> **当前口径**: V9 已全量闭环；Task 189/190/191 已完成；Task 192 xuanhuan Ch200 已完成（Ch200 accepted/current head=`v-5659d486`，five-gate @200 PASS、segment audit PASS、T9 hard hits=0）；Task 193 wuxia Ch200 已完成（Ch200 accepted/current head=`v-1ecab81e`，five-gate @200 PASS、segment audit PASS、T9 hard hits=0，total_cost=17.187324）；Task 194 urban Ch200 已完成（Ch200 accepted/current head=`clean-200-t9-194k`，run completed @200、failed=[]、total_cost=14.91622；five-gate @200 PASS、segment audit @200 PASS、T9 hard hits=0；timeline=3 report-only）。Task 195 跨体裁 Ch200 总验收已完成，三体裁均 accepted=200/gap=0、failed=[]、five-gate PASS、segment audit PASS、T9 hard hits=0；Task 196 优秀度样本集与校准协议已提前完成。下一步进入 Task 197。V10 不再补 V9 生产化地基，也不做 V11 的外部用户可用化收尾。
 > **任务编号**: V10 预计从 Task 189 开始；本文不占任务号。只有可独立执行、独立验收、独立出 DONE 文档的工作项才编号；撞墙修复继续按父任务字母后缀登记（如 `192.p`）。
-> **状态**: ◐ V10.2 Task 195 待启动（Task 189/190/191/192/193/194 ✅；Task 196 ✅）
+> **状态**: ◐ V10.3 Task 197 待启动（Task 189/190/191/192/193/194/195 ✅；Task 196 ✅）
 
 本文是 V10 阶段任务规划入口。V9 历史事实入口见 `tasks/V9-README.md`，V9 单项任务归档见 `archive/v9/INDEX.md`。
 
@@ -111,7 +111,7 @@ V10 不把结构升级强行并入主流程。spike 的目标是形成取舍结�
 
 ### V10.2 跨体裁 Ch200 爬坡
 
-> 192-194 的正式任务书已建立；Ch125+ five-gate 必须显式传入 Task 189 冻结的 Ch200 baseline：`tasks/189-scifi-ch200-baseline.json`。当前 goal 按编号推进仍从 Task 192 开始；各任务内部必须服从 Task 190 三态准入：xuanhuan 需先恢复/重建 clean Ch100，wuxia 需先 Ch28 clean，urban 可直接初始化。
+> 192-195 已完成；Ch125+ five-gate 必须显式传入 Task 189 冻结的 Ch200 baseline：`tasks/189-scifi-ch200-baseline.json`。各 Ch200 爬坡任务内部均已服从 Task 190 三态准入：xuanhuan 先恢复 clean Ch100，wuxia 先完成 dirty sample clean，urban 从 CONTINUE_READY source 初始化。
 
 | Task | 名称 | 状态 | 内容要点 | 验收要点 |
 |------|------|:----:|----------|----------|
@@ -178,7 +178,7 @@ V10 不把结构升级强行并入主流程。spike 的目标是形成取舍结�
 | 194.i | urban Ch198 health_low_streak_halt | ✅ | 12 条 overdue foreshadowings resolved，Ch182/186/187/196 T9 clean，Ch198 continuity patch `fix-198-segment-194i`；continuity health=8.1、P2=1；segment @198 PASS；T9 @198 PASS；run restored running | DONE：`tasks/194.i-urban-ch198-health-low-streak-halt-DONE.md` |
 | 194.j | urban Ch199-Ch200 LLM empty parse | ✅ | 已新增 harness `--on-failure retry`（默认不变）并验证；flash 多次 retry 仍空响应，临时登记 fallback model `deepseek/deepseek-chat` 完成 Ch199/200；Ch199 head=`v-6635ac72`，Ch200 head=`v-b687fc47`，run completed=1..200、failed=[] | DONE：`tasks/194.j-urban-ch199-200-llm-empty-parse-DONE.md` |
 | 194.k | urban Ch200 T9 meta hard gate | ✅ | Ch200 `v-b687fc47` T9 slash artifact deterministic clean 为 `clean-200-t9-194k`；Ch200 RAG chunks 重建；复判 five-gate PASS、segment audit PASS、T9=0 | DONE：`tasks/194.k-urban-ch200-t9-meta-hard-gate-DONE.md` |
-| 195 | 跨体裁 Ch200 总验收 | ◻ | 汇总三体裁 Ch200 与 sci-fi baseline；形成 V10 长窗口结论 | 总报告落盘；STATUS/README/INDEX 更新 |
+| 195 | 跨体裁 Ch200 总验收 | ✅ | 汇总三体裁 Ch200 与 sci-fi baseline；形成 V10.2 长窗口结论 | DONE：`tasks/195-cross-genre-ch200-acceptance-DONE.md`；三体裁 accepted=200、gap=0、failed=[]、five-gate PASS、segment audit PASS、T9 hard hits=0；STATUS/README/INDEX/AGENTS 已同步 |
 
 ### V10.3 优秀度信号包
 

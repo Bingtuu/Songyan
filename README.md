@@ -283,7 +283,7 @@ songyan export --project-id <id> --by arc --format md --output exports/
 | 长篇稳定性 | 科幻 220 章；玄幻、武侠、都市 Ch200 验证完成 |
 | 多体裁运行时 | 已支持按体裁配置上下文预算、质量阈值和伏笔调度 |
 | 生产化工具 | CLI、导出、doctor、成本追踪、质量报告、CI 已接入 |
-| 当前重点 | 汇总跨体裁 Ch200 总验收，并继续完善优秀度信号包 |
+| 当前重点 | 跨体裁 Ch200 总验收已完成，继续完善优秀度信号包 |
 
 详细阶段记录见 [`docs/STATUS.md`](docs/STATUS.md) 和 [`tasks/V10-README.md`](tasks/V10-README.md)。
 

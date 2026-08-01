@@ -6,7 +6,7 @@
 
 | 项 | 结论 |
 |----|------|
-| 当前阶段 | **V10.2 Task 195 跨体裁 Ch200 总验收待启动**：Task 192 xuanhuan Ch200 已完成；Task 193 wuxia Ch200 已完成；Task 194 urban Ch200 已完成。Urban run `run-v10-urban-743a979a` completed @200、failed=[]、total_cost=14.91622，Ch200 accepted/current head=`clean-200-t9-194k`；Ch200 终点审计显式绑定 Task 189 baseline 后 PASS：five-gate PASS（budget=0.9595、CED/1k=0.066、overdue=153、health=8.2、gap=0）、segment audit PASS（critical_orphans=0、halt_would_fire=false）、T9=0；194.j 使用 fallback model `deepseek/deepseek-chat` 完成 Ch199/200，不能记为 flash clean sample；194.k 已清理 Ch200 T9 slash artifact。V10.3 Task 196 优秀度样本集与校准协议已提前完成，但本轮总验收不混入优秀度或结构 spike |
+| 当前阶段 | **V10.2 Task 195 跨体裁 Ch200 总验收已完成；下一步进入 V10.3 Task 197**：Task 189/190/191/192/193/194/195 均完成，Task 196 优秀度样本集与校准协议已提前完成。Task 195 以 `tasks/189-scifi-ch200-baseline.json` 为冻结标尺复核三体裁 Ch200：xuanhuan / wuxia / urban 均 run completed @200、failed=[]、accepted=200/gap=0、five-gate PASS、segment audit PASS（critical_orphans=0、halt_would_fire=false）、T9 hard hits=0；urban Ch200 accepted/current head=`clean-200-t9-194k`，194.j 使用 fallback model `deepseek/deepseek-chat` 完成 Ch199/200，不能记为 flash clean sample。Task 195 不混入优秀度或结构 spike |
 | V7 收尾 | **已完成**。sci-fi/space_opera + webnovel_intense 单一体裁稳定跑到 Ch200，200/200 accepted，D1 hard clean pass；Ch201-Ch220 20/20 accepted |
 | V8.1 运行时画像 | **已完成**（Task 172a + 172a.p）。`GenreRuntimeProfile` 把 Context Diet 2.0 运行时契约从 sci-fi 默认值解耦；xuanhuan Ch8 halt 已消除（base_budget=15000） |
 | V8.3 文学护栏 | **已完成**（Task 172d）。`literary_guardrail_observe` 去科幻硬编码，lexicon/主角名参数化到 `GenreProfile`，三体裁各配一套；DONE 文档已补齐 |
@@ -32,7 +32,7 @@
 | V10.1 Ch200 baseline | **Task 189 已完成（2026-07-23）**：sci-fi Ch200 事实源 `.tmp/task171_ch1_ch200.db`、project `835afdf11a294b5eac74a5d8998bd9a2`、run `run-fb39245c`；Ch125/150/175/200 显式 baseline 回放均 PASS；canonical baseline `tasks/189-scifi-ch200-baseline.json`（`.tmp/189_scifi_ch200_baseline.json` 仅为可选工作副本）；Ch200 指标 budget 0.9888、CED 0.3803、overdue 352、health 9.8、accepted 200/200、T9=0、segment audit 已按 `up_to=200` 截断且 critical_orphans=0 / halt_would_fire=false；完整 `songyan metrics` Ch200 慢路径仍未作为 Task 189 验收证据，后续如需复算走后缀修复或 Ch200 总验收 |
 | V10.1 Ch100 盘点 | **Task 190 已完成（2026-07-24）**：xuanhuan=REBUILD_REQUIRED（DB 被覆盖，仅 1 章 0 accepted，project_id 已变）、wuxia=BLOCKED_DIRTY_SAMPLE（100/100、five-gate PASS、T9=1 meta Ch28 省略号占位，需 pre-Ch200 clean）、urban=CONTINUE_READY（100/100、five-gate PASS、T9=0）；统一盘点文件 `tasks/190-ch100-terminal-source-inventory-DONE.md` + `.tmp/190_ch100_source_inventory.json` |
 | V10.1 Ch200 harness | **Task 191 已完成（2026-07-24）**：新增 `scripts/run_v10_ch200_climb.py`，冻结 V10 Ch200 DB/project/segment/audit/metrics 路径；支持 `--init`、`--init-from-source`、`--status`、`--audit`、`--to` 与 `--dry-run`；强制 Task 190 三态准入（urban allowed，wuxia/xuanhuan blocked），复制前校验 source DB 为 clean Ch100、source 与 Task 190 inventory 匹配、source `genre_id` 匹配、T9 meta/duplicate/timeline clean，并在目标 DB 创建 V10 `project_runs`；Ch125+ five-gate 显式绑定 `tasks/189-scifi-ch200-baseline.json`；聚焦测试 `tests/test_191_ch200_harness.py` **10 passed**，全量 pytest **2993 passed, 2 skipped, 1 xfailed**，ruff 通过；未启动 Ch101 |
-| V10.2 Ch200 任务书 | **Task 192/193/194 已完成（2026-07-31）**：Task 192 xuanhuan Ch200、Task 193 wuxia Ch200、Task 194 urban Ch200 均达到 five-gate/segment/T9 全 PASS；下一步 Task 195 跨体裁 Ch200 总验收 |
+| V10.2 跨体裁 Ch200 总验收 | **Task 195 已完成（2026-08-01）**：Task 192 xuanhuan、Task 193 wuxia、Task 194 urban 三体裁 Ch200 均通过总验收；本轮复核 status / five-gate / segment audit / T9 hard hits，三体裁均 accepted=200、gap=0、failed=[]、five-gate PASS、segment audit PASS、T9 hard hits=0；DONE：`tasks/195-cross-genre-ch200-acceptance-DONE.md` |
 | V10.2 Task 192.p | **已完成（2026-07-25）**：冻结原 scifi 失败现场 `.tmp/backups/192_scifi_short_regression_failed_20260725-120940/`；定位 Ch8 settlement JSON 输出 4096 token 截断导致 parse failure；`SettlementExtractor` 结构化输出预算提升到 8192；`RUN_ID=192` Ch100 rebuild 默认 `ON_FAILURE=abort`，历史 172b/172c 默认 isolate 不变；scifi end10 复跑 `run-e71bccd8` 10/10 completed、failed=[]、wrapper `PASS_NORMAL_EXIT`；全量 pytest **3004 passed, 2 skipped, 1 xfailed**，ruff 全绿；DONE：`tasks/192.p-scifi-short-regression-context-emergency-DONE.md` |
 | V10.2 Task 192.q/r + Ch25 | **192.q/192.r 已完成，Task 192 第一段到 Ch25（2026-07-25）**：192.q 修复 CreativeDirector 未转义内部英文引号导致的 JSON parse failure，同时保持多 JSON 对象拒绝语义；bits-code-guard 最终 review 0 P0/P1/P2；最终全量 pytest **3006 passed, 2 skipped, 1 xfailed**，ruff 全绿；scifi end10 回归 10/10 completed、failed=[]、T9=0、budget_peak 0.979、wrapper PASS_NORMAL_EXIT；192.r 冻结 Ch24 settlement numerical validation failure，resume 后未复现；最终 Ch25 报告 `docs/reports/192-xuanhuan-ch100-climb.md`：25/25 accepted、failed=[]、budget_peak 0.8632、emergency=0、overdue=0、health=9.1、CED/1k=2.0874；wrapper `run-20260725-162600836` PASS_NORMAL_EXIT |
 | V10.2 Task 192 Ch50 / 192.s | **Ch50 已完成并清到 T9=0（2026-07-25）**：wrapper `run-20260725-183118441` PASS_NORMAL_EXIT；run `run-2f42e276` completed，Ch1-Ch50 completed，failed=[]，accepted heads 50/50，cost 6.740467；初判 DB SHA256 `5422A2234F1965CD07DEBA1B20CF834E91BA920287203C927B74A467274E90CA`，T9 duplicate=1（Ch8 paragraph 37 duplicates paragraph 22），冻结 `.tmp/backups/192s_xuanhuan_ch50_t9_duplicate_20260725-2132/`；192.s 使用版本化 deterministic clean 创建 Ch8 `clean-8-6-cd06a7b7`（parent `v-d62aa178`），修复后 DB SHA256 `E375918948D8467987FE25138DAD7D16A47EEB82D0E95D7FA22370B34D641926`；复判 T9=0、five-gate PASS、segment audit `critical_orphans=0` / `halt_would_fire=false`；DONE：`tasks/192.s-xuanhuan-ch50-t9-duplicate-clean-DONE.md` |
@@ -169,14 +169,14 @@
 
 ## 下一步
 
-1. **Task 195 总验收**：汇总 Task 192/193/194 三体裁 Ch200 与 Task 189 sci-fi baseline，形成 V10.2 长窗口结论。
-2. **验收纪律**：总验收必须逐项核对 accepted 无 gap、failed=[]、five-gate PASS、segment audit PASS、T9=0，并显式引用 `tasks/189-scifi-ch200-baseline.json`。
-3. **守护项**：CED 仍使用 consistency-only、merged/source、正文证据口径；不得把文学 craft 或 `rule-mr-*` 聚合工作项计入 CED；T9 仍不接受解释性豁免。
-4. **范围边界**：Task 195 不混入优秀度信号包或 KG diff / FactTrack validity interval / Storyline Tree spike。
+1. **Task 197 启动**：进入 V10.3 优秀度信号包实现，优先做跨章同质化 / 多样性 / 叙事张力指数，沿用 Task 196 样本集与校准协议。
+2. **优秀度边界**：197-203 仍保持 report/observe，默认不注入 Writer / CreativeDirector prompt，不进入自动 hard gate。
+3. **守护项**：CED 仍使用 consistency-only、merged/source、正文证据口径；不得把文学 craft、同质化、AI 腔或 `rule-mr-*` 聚合工作项计入 CED；T9 仍不接受解释性豁免。
+4. **后续排队**：KG diff / FactTrack validity interval / Storyline Tree 仍为 Task 204-206 spike；Task 207 负责 V10 收口与归档。
 
 ## 入口
 
-- **V10 规划入口（V10.2 Task 195 总验收）：`tasks/V10-README.md`**
+- **V10 规划入口（V10.3 Task 197 待启动）：`tasks/V10-README.md`**
 - V10 Task 189 DONE：`tasks/189-ch200-baseline-and-checkpoints-DONE.md`
 - V10 Task 189 baseline：`tasks/189-scifi-ch200-baseline.json`
 - V10 Task 189 任务书：`tasks/189-ch200-baseline-and-checkpoints.md`
@@ -254,6 +254,8 @@
 - V10 Task 194.j DONE：`tasks/194.j-urban-ch199-200-llm-empty-parse-DONE.md`
 - V10 Task 194.k DONE：`tasks/194.k-urban-ch200-t9-meta-hard-gate-DONE.md`
 - V10 Task 194 DONE：`tasks/194-urban-ch200-climb-DONE.md`
+- V10 Task 195 任务书：`tasks/195-cross-genre-ch200-acceptance.md`
+- V10 Task 195 DONE：`tasks/195-cross-genre-ch200-acceptance-DONE.md`
 - V9 任务事实入口（已完成）：`tasks/V9-README.md`
 - V9 归档索引：`archive/v9/INDEX.md`
 - V9 Task 173-188 单项任务文档：`archive/v9/`
