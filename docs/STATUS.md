@@ -22,11 +22,12 @@
 | `tasks/V10-README.md` | V10 总结入口 |
 | `archive/v10/INDEX.md` | V10 物理归档索引 |
 | `archive/v10/reports/207-v10-closure-report.md` | V10 closure report |
-| `tasks/V11-Plan.md` | V11 开源可用化预登记 |
+| `tasks/V11-README.md` | V11 正式阶段入口 |
+| `tasks/V11-Plan.md` | V11 早期规划备忘 |
 
 ## 最新归档状态
 
-- `tasks/` 仅保留活跃入口：`TEMPLATE.md`、`V10-README.md`、`V11-Plan.md`。
+- `tasks/` 仅保留活跃入口：`TEMPLATE.md`、`V10-README.md`、`V11-README.md`、`V11-Plan.md`。
 - V10 单项任务书与 DONE 文档已移至 `archive/v10/tasks/`。
 - V10 JSON artifact 已移至 `archive/v10/artifacts/`。
 - V10 Markdown 报告已移至 `archive/v10/reports/`。

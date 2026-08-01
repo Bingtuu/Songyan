@@ -6,7 +6,7 @@
 
 1. 读取 `AGENTS.md`。
 2. 读取 `docs/STATUS.md`。
-3. 若任务指定阶段或历史 Task，先读对应阶段索引，例如 `tasks/V10-README.md` 或 `archive/v10/INDEX.md`，再读单项归档文件。
+3. 当前阶段任务默认先读 `tasks/V11-README.md`；若任务指定历史阶段或历史 Task，再读对应阶段索引，例如 `tasks/V10-README.md` 或 `archive/v10/INDEX.md`。
 4. 用 5-8 行说明任务边界，再改代码或文档。
 5. 默认按现有架构和当前事实源推进，不重复扫全量历史目录。
 
@@ -20,16 +20,25 @@
 | `tasks/V10-README.md` | V10 总结入口 |
 | `archive/v10/INDEX.md` | V10 物理归档索引 |
 | `archive/v10/reports/207-v10-closure-report.md` | V10 closure report |
-| `tasks/V11-Plan.md` | V11 开源可用化预登记 |
+| `tasks/V11-README.md` | V11 正式阶段入口 |
+| `tasks/V11-Plan.md` | V11 早期规划备忘 |
 
 ## 当前阶段
 
-V10 已全量闭环，Task 189-207 已完成并物理归档。V10 结论：
+V10 已全量闭环，Task 189-207 已完成并物理归档。当前阶段进入 V11 开源可用化收尾，正式入口为 `tasks/V11-README.md`，首任务为 Task 208 V11 readiness audit。V11 的目标是达到“负责任开源给外部技术用户”的条件，而不是把 Songyan 包装成普通商业产品。
+
+V10 结论：
 
 - sci-fi baseline 冻结，xuanhuan / wuxia / urban 均完成 Ch200 总验收。
 - Task 196-203 优秀度信号包只作为 report-only 观察层。
 - Task 204-206 结构 spike 均 decision=`defer`，不接 runtime、prompt、CED 或 hard gate。
-- 下一阶段进入 V11 开源可用化收尾，重点是安装、配置、doctor、项目创建、导出、恢复和发布纪律。
+
+V11 当前执行纪律：
+
+- Task 208 审计先行：先从外部技术用户路径冻结缺口，再开发 209-215。
+- 开源门槛见 `tasks/V11-README.md`，未满足时只能内部使用或发 preview，不标记为正式开源可用版本。
+- V11 重点是安装、配置、doctor、项目创建、导出、恢复、run bundle、配置安全和发布纪律。
+- `tasks/V11-Plan.md` 只是早期规划备忘，不再作为正式执行事实源。
 
 ## 不可违背规则
 
@@ -87,10 +96,12 @@ V10 已全量闭环，Task 189-207 已完成并物理归档。V10 结论：
 ### V11 守护项
 
 - V11 只做开源可用化收尾，不扩张生成能力。
+- Task 208 readiness audit 先行；未完成审计前，不直接启动 Quickstart / doctor / backup 等实现任务。
 - CED 仍只统计 consistency-only、merged/source、正文证据。
 - T9 仍是硬红线，PASS 样本必须 clean rerun 后 T9=0。
 - Task 197-206 的 report-only / spike 信号不得进入 prompt、CED 或 hard gate。
 - KG diff / FactTrack validity interval / Storyline Tree 若要生产化，必须另立 V11+ 任务并提供回归证据。
+- 未满足 `tasks/V11-README.md` 的开源门槛前，不标记正式开源可用版本。
 
 ## 代码规范
 
@@ -126,4 +137,4 @@ powershell -File scripts/run_with_timeout.ps1 -TimeoutSec <秒> -- <命令>
 - 不用 `git reset --hard` 或 `git checkout --` 覆盖用户改动。
 - 当前入口保持短；长历史、旧规划、旧报告放入 `archive/`。
 - 归档内容默认不读，除非用户要求追溯历史决策。
-- `tasks/` 只保留活跃入口；V10 单项任务、报告和 artifact 已归档到 `archive/v10/`。
+- `tasks/` 只保留活跃入口：`TEMPLATE.md`、`V10-README.md`、`V11-README.md`、`V11-Plan.md`；V10 单项任务、报告和 artifact 已归档到 `archive/v10/`。

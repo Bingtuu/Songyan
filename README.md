@@ -288,7 +288,7 @@ songyan export --project-id <id> --by arc --format md --output exports/
 | 生产化工具 | CLI、导出、doctor、成本追踪、质量报告、CI 已接入 |
 | 当前重点 | V10 已完成；下一阶段进入 V11 开源可用化收尾 |
 | V10 收口报告 | [`archive/v10/reports/207-v10-closure-report.md`](archive/v10/reports/207-v10-closure-report.md) |
-| 下一阶段入口 | [`tasks/V11-Plan.md`](tasks/V11-Plan.md) |
+| 下一阶段入口 | [`tasks/V11-README.md`](tasks/V11-README.md) |
 
 详细阶段记录见 [`docs/STATUS.md`](docs/STATUS.md) 和 [`tasks/V10-README.md`](tasks/V10-README.md)。
 
@@ -364,7 +364,7 @@ powershell -File scripts/run_with_timeout.ps1 -TimeoutSec 3600 -- <你的命令>
 - [`docs/INDEX.md`](docs/INDEX.md) — 文档索引。
 - [`tasks/V10-README.md`](tasks/V10-README.md) — V10 阶段规划和完成入口。
 - [`archive/v10/reports/207-v10-closure-report.md`](archive/v10/reports/207-v10-closure-report.md) — V10 收口报告。
-- [`tasks/V11-Plan.md`](tasks/V11-Plan.md) — V11 开源可用化预登记。
+- [`tasks/V11-README.md`](tasks/V11-README.md) — V11 开源可用化正式阶段入口。
 - [`AGENTS.md`](AGENTS.md) — 开发规范和工程纪律。
 - [`archive/`](archive/) — 历史任务、报告和归档资料。
 

@@ -10,13 +10,16 @@
 | `AGENTS.md` | 开发代理短指令与不可违背规则 |
 | `docs/STATUS.md` | 当前状态、下一步和归档状态 |
 | `tasks/V10-README.md` | V10 阶段总结入口 |
-| `tasks/V11-Plan.md` | V11 开源可用化预登记 |
+| `tasks/V11-README.md` | V11 正式阶段入口、开源门槛、Task 208-215 拆分 |
 
 ## 当前开发入口
 
 | 场景 | 文件 |
 |------|------|
-| V11 启动 | `tasks/V11-Plan.md` |
+| V11 启动 | `tasks/V11-README.md` |
+| V11 首任务 | Task 208 V11 readiness audit（范围见 `tasks/V11-README.md`） |
+| 开源门槛 | `tasks/V11-README.md` 的“开源门槛与 V11 目标” |
+| V11 规划备忘 | `tasks/V11-Plan.md` |
 | V10 追溯 | `archive/v10/INDEX.md` |
 | V10 closure report | `archive/v10/reports/207-v10-closure-report.md` |
 | 架构手册 | `docs/architecture/04-vibe-coding-engineering.md` |
@@ -46,3 +49,10 @@
 - `archive/v10/artifacts/` 保存 V10 JSON 样本、manifest 和 report artifact。
 - `archive/v10/reports/` 保存 V10 Markdown 报告。
 - `docs/reports/` 不再作为默认活跃报告目录；新报告若不是 README 直引，应优先进入任务归档或被 `.gitignore` 忽略。
+
+## V11 当前路由
+
+- 正式阶段事实入口：`tasks/V11-README.md`。
+- 早期规划备忘：`tasks/V11-Plan.md`，不再作为正式执行入口。
+- 下一步：启动 Task 208 readiness audit，先审计外部用户路径，再按证据推进 Task 209-215。
+- 正式开源条件：必须满足 `tasks/V11-README.md` 的开源门槛；未满足时只能内部使用或发 preview。
