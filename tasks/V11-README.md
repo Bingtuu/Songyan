@@ -3,7 +3,7 @@
 > **阶段**: 开源可用化收尾
 > **定位**: V11 是正式开源前最后一个工程阶段，目标是把已有能力交付给外部技术用户，而不是继续扩张生成能力。
 > **当前口径**: V10 已全量闭环并归档；V11 从 Task 208 启动。`tasks/V11-Plan.md` 是早期备忘，本文是 V11 正式阶段入口。
-> **状态**: 待启动；首任务为 Task 208 V11 readiness audit。
+> **状态**: 已启动；Task 208 readiness audit 与 Task 209 Quickstart 文档闭环已完成，下一步进入 Task 210 doctor / preflight 增强。
 
 ---
 
@@ -98,9 +98,9 @@ V11 只服务以下外部技术用户路径：
 
 | Task | 名称 | 状态 | 目标 | 依赖 |
 |------|------|:----:|------|------|
-| 208 | V11 readiness audit | 待启动 | 从外部技术用户视角只读审计 README、CLI、doctor、create-project、run、export、report 路径，产出缺口清单和后续任务拆分 | V10 closure |
-| 209 | Quickstart 与用户文档闭环 | 待定 | 把 README/docs 改成可执行最短路径，覆盖 Ch1-3、10 章教程、成本、日志、导出和故障入口 | 208 |
-| 210 | doctor / preflight 增强 | 待定 | 强化本地环境、资源、schema、LLM、写权限、预算和日志检查，输出机器可读 JSON 与人类可读建议 | 208/209 |
+| 208 | V11 readiness audit | DONE | 从外部技术用户视角只读审计 README、CLI、doctor、create-project、run、export、report 路径，产出缺口清单和后续任务拆分 | V10 closure |
+| 209 | Quickstart 与用户文档闭环 | DONE | 把 README/docs 改成可执行最短路径，覆盖 Ch1-3、10 章教程、成本、日志、导出和故障入口 | 208 |
+| 210 | doctor / preflight 增强 | 待启动 | 强化本地环境、资源、schema、LLM、写权限、预算和日志检查，输出机器可读 JSON 与人类可读建议 | 208/209 |
 | 211 | backup / restore / schema ledger | 待定 | 建立项目资产生命周期：备份、恢复、schema 版本/迁移状态校验，明确 export 与 backup 边界 | 208 |
 | 212 | 失败恢复体验 | 待定 | 标准化常见失败分类、提示和恢复动作，覆盖 retry/resume/isolate/提额/诊断包路径 | 208/210 |
 | 213 | run bundle 诊断包 | 待定 | 输出 run 元信息、章节状态、成本、五门/T9/CED/overdue/health、日志索引和脱敏报告 | 208/210 |
@@ -109,23 +109,39 @@ V11 只服务以下外部技术用户路径：
 
 ---
 
-## 首任务：Task 208
+## Task 208 审计结论
 
-Task 208 不直接修功能。它的职责是冻结 V11 的外部用户基线：
+Task 208 已完成。任务书见 `tasks/208-v11-readiness-audit.md`，DONE 见 `tasks/208-v11-readiness-audit-DONE.md`，审计报告见 `docs/reports/208-v11-readiness-audit.md`。
 
-- 读取 README、AGENTS、STATUS、INDEX、V11-README、V11-Plan。
-- 在不读历史任务细节的前提下模拟外部用户路径。
-- 盘点已有 CLI 能力和缺口：doctor、create-project、run、report、export、profile、metrics。
-- 记录哪些路径已可用，哪些只是内部可用，哪些文档缺口会误导外部用户。
-- 产出 readiness audit 报告和 V11 后续任务清单。
-- 若发现必须改 runtime 才能完成审计，先登记，不在 208 中实现。
+结论：
 
-完成条件：
+- 可以进入 Task 209。
+- 当前仍不能标记为正式开源可用版本，只能视为内部可用或 preview。
+- 已有基础：CLI 主入口、doctor、模板建项、report、export、profile、资源枚举和 CI。
+- 主要缺口：Quickstart 成功证据不足、run 失败 exit code 语义不清、非法配置 traceback、backup/restore 缺失、run bundle 缺失、profile validate/rollback 缺失、release checklist 和 wheel smoke 缺失。
 
-- Task 208 任务书与 DONE 文档落盘。
-- readiness audit Markdown 报告落盘。
-- 后续任务 209-215 的范围、依赖和风险被确认或调整。
-- 不修改核心生成链路、prompt、CED、T9 或 hard gate。
+Task 209 应优先把外部用户最短路径写成可执行命令链，并把无法通过的点明确路由给 Task 210-215。
+
+---
+
+## Task 209 文档闭环结论
+
+Task 209 已完成。任务书见 `tasks/209-v11-quickstart-docs.md`，DONE 见 `tasks/209-v11-quickstart-docs-DONE.md`，命令证据见 `docs/reports/209-quickstart-evidence.md`。
+
+交付：
+
+- `README.md` 的 Quickstart 已改为 `doctor --init-db -> create-project -> run Ch1-3 -> report -> export`。
+- `docs/quickstart.md` 增加详细 Quickstart、10 章教程、成本预算、日志位置、Windows wrapper 和当前限制。
+- `docs/troubleshooting.md` 增加缺 key、DB、run 失败、report、export、Windows wrapper、脱敏分享等故障入口。
+- Task 209 在隔离目录复跑了 help、doctor、init-db、create-project、失败 run、report、export 和 list-projects。
+
+仍需后续实现：
+
+- Task 210/212：`run` 业务失败后 exit code 仍可能为 0；非法 `CHECKPOINTER_MODE` 仍可能导入期 traceback。
+- Task 211：backup/restore。
+- Task 213：run bundle 与脱敏诊断包。
+- Task 214：profile validate、危险项提示、rollback/history。
+- Task 215：真实 Ch1-3 release smoke、wheel smoke、CHANGELOG、CONTRIBUTING、issue templates、release checklist。
 
 ---
 

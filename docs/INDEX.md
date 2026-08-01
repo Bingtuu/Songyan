@@ -9,15 +9,23 @@
 | `README.md` | 对外项目说明、快速开始和能力概览 |
 | `AGENTS.md` | 开发代理短指令与不可违背规则 |
 | `docs/STATUS.md` | 当前状态、下一步和归档状态 |
+| `docs/quickstart.md` | 外部技术用户 Quickstart、10 章教程、成本和日志 |
+| `docs/troubleshooting.md` | 故障排查入口和当前限制 |
 | `tasks/V10-README.md` | V10 阶段总结入口 |
 | `tasks/V11-README.md` | V11 正式阶段入口、开源门槛、Task 208-215 拆分 |
+| `docs/reports/208-v11-readiness-audit.md` | Task 208 readiness audit 报告 |
+| `docs/reports/209-quickstart-evidence.md` | Task 209 Quickstart 命令证据 |
 
 ## 当前开发入口
 
 | 场景 | 文件 |
 |------|------|
 | V11 启动 | `tasks/V11-README.md` |
-| V11 首任务 | Task 208 V11 readiness audit（范围见 `tasks/V11-README.md`） |
+| V11 当前任务 | Task 210 doctor / preflight 增强 |
+| 外部用户 Quickstart | `docs/quickstart.md` |
+| 故障排查 | `docs/troubleshooting.md` |
+| V11 readiness audit | `docs/reports/208-v11-readiness-audit.md` |
+| Quickstart 证据 | `docs/reports/209-quickstart-evidence.md` |
 | 开源门槛 | `tasks/V11-README.md` 的“开源门槛与 V11 目标” |
 | V11 规划备忘 | `tasks/V11-Plan.md` |
 | V10 追溯 | `archive/v10/INDEX.md` |
@@ -54,5 +62,7 @@
 
 - 正式阶段事实入口：`tasks/V11-README.md`。
 - 早期规划备忘：`tasks/V11-Plan.md`，不再作为正式执行入口。
-- 下一步：启动 Task 208 readiness audit，先审计外部用户路径，再按证据推进 Task 209-215。
+- 当前状态：Task 208 readiness audit 已完成，审计报告见 `docs/reports/208-v11-readiness-audit.md`。
+- Task 209 Quickstart 与用户文档闭环已完成，证据见 `docs/reports/209-quickstart-evidence.md`。
+- 下一步：启动 Task 210 doctor / preflight 增强，优先修复 run 业务失败 exit code、非法 checkpointer traceback、日志/预算/路径诊断缺口。
 - 正式开源条件：必须满足 `tasks/V11-README.md` 的开源门槛；未满足时只能内部使用或发 preview。

@@ -196,6 +196,8 @@ songyan/
 
 ## 快速开始
 
+> 当前处于 V11 开源可用化收尾阶段。以下路径面向懂命令行、能配置 LLM API key 的技术用户；在 Task 209-215 全部完成前，本项目仍应视为 preview，而不是正式开源可用版本。
+
 ### 环境要求
 
 - Python >= 3.11
@@ -204,11 +206,12 @@ songyan/
 
 ### 安装
 
-```bash
-pip install -e ".[dev]"
-cp .env.example .env
-# 编辑 .env，填入 LLM_API_KEY
+```powershell
+python -m pip install -e ".[dev]"
+Copy-Item .env.example .env
 ```
+
+编辑 `.env`，至少填入 `LLM_API_KEY`。如使用其他兼容 OpenAI 接口的模型服务，同时调整 `LLM_BASE_URL` 和 `LLM_MODEL`。
 
 ### 配置
 
@@ -224,24 +227,36 @@ cp .env.example .env
 
 ### 创建项目并生成
 
-```bash
-# 检查本地环境、资源和数据库配置
-songyan doctor
+```powershell
+# 检查本地环境、资源和数据库配置；第一次运行建议初始化/迁移 SQLite DB
+songyan doctor --init-db
 
 # 从体裁模板创建项目（支持 scifi/xuanhuan/wuxia/urban 等 7 种）
 songyan create-project --template xuanhuan
 
-# 生成第 1-5 章（自动确认模式）
-songyan run --project-id <id> --chapters 1-5 --auto-confirm
+# 记录输出中的 project_id，然后生成第 1-3 章（自动确认模式）
+songyan run --project-id <project_id> --chapters 1-3 --auto-confirm
 
-# 继续生成更多章节，支持断点续跑
-songyan run --project-id <id> --chapters 1-20 --auto-confirm --resume
+# 记录输出中的 run_id，生成运行报告
+songyan report --run-id <run_id>
 
-# 导出接收版本的书稿
-songyan export --project-id <id> --by arc --format md --output exports/
+# 导出已 accepted 的正文
+songyan export --project-id <project_id> --chapters 1-3 --format md --output exports/
 ```
 
-长跑建议设置 `SONGYAN_RUN_COST_BUDGET`，并在 Windows 下用 `scripts/run_with_timeout.ps1` 包一层硬超时。分段验证和内部爬坡脚本见 [`tasks/V10-README.md`](tasks/V10-README.md)。
+Windows 下长跑建议用硬超时 wrapper：
+
+```powershell
+powershell -File scripts/run_with_timeout.ps1 -TimeoutSec 3600 -- songyan run --project-id <project_id> --chapters 1-3 --auto-confirm
+```
+
+更完整的 10 章教程、成本预算、日志位置和恢复入口见 [`docs/quickstart.md`](docs/quickstart.md)。故障排查见 [`docs/troubleshooting.md`](docs/troubleshooting.md)。
+
+当前已知限制：
+
+- Task 209 只补齐文档和命令证据，不消耗真实 LLM 预算跑 Ch1-3 成功验收。
+- 若 `songyan run` 业务失败，当前进程 exit code 仍可能为 0；请先用 `songyan report --run-id <run_id>` 查看失败原因。该问题路由到 Task 210/212。
+- backup/restore、run bundle、profile validate、release checklist 和 wheel smoke 属于 Task 211-215。
 
 ---
 
@@ -249,13 +264,13 @@ songyan export --project-id <id> --by arc --format md --output exports/
 
 | 命令 | 作用 |
 |------|------|
+| `songyan doctor --init-db` | 检查环境并初始化/迁移 SQLite DB |
 | `songyan create-project --template <id>` | 从体裁模板创建项目 |
 | `songyan list-projects` | 列出所有项目 |
-| `songyan run --project-id <id> --chapters 1-10 --auto-confirm` | 生成指定章节范围 |
-| `songyan run --project-id <id> --chapters 1-20 --auto-confirm --resume` | 从已完成章节继续 |
-| `songyan export --project-id <id> --format md --output exports/` | 导出接收版本的正文 |
-| `songyan report --run-id <id>` | 查看运行报告和成本 |
-| `songyan doctor` | 本地环境自检 |
+| `songyan run --project-id <id> --chapters 1-3 --auto-confirm` | 生成 Quickstart 短窗口 |
+| `songyan run --project-id <id> --chapters 1-10 --auto-confirm --resume` | 扩展到 10 章并支持断点续跑 |
+| `songyan report --run-id <run_id>` | 从运行日志生成报告和成本视图 |
+| `songyan export --project-id <id> --chapters 1-3 --format md --output exports/` | 导出 accepted 正文 |
 | `songyan index --project-id <id> --chapters 1-10 --rebuild` | 重建 RAG 索引 |
 | `songyan metrics` | 质量度量指标 |
 | `songyan mark ...` | 管理人工标记 |
@@ -286,7 +301,7 @@ songyan export --project-id <id> --by arc --format md --output exports/
 | 长篇稳定性 | 科幻 220 章；玄幻、武侠、都市 Ch200 验证完成 |
 | 多体裁运行时 | 已支持按体裁配置上下文预算、质量阈值和伏笔调度 |
 | 生产化工具 | CLI、导出、doctor、成本追踪、质量报告、CI 已接入 |
-| 当前重点 | V10 已完成；下一阶段进入 V11 开源可用化收尾 |
+| 当前重点 | V11 开源可用化收尾；Task 209 已补齐 Quickstart 与用户文档闭环 |
 | V10 收口报告 | [`archive/v10/reports/207-v10-closure-report.md`](archive/v10/reports/207-v10-closure-report.md) |
 | 下一阶段入口 | [`tasks/V11-README.md`](tasks/V11-README.md) |
 
@@ -362,9 +377,12 @@ powershell -File scripts/run_with_timeout.ps1 -TimeoutSec 3600 -- <你的命令>
 
 - [`docs/STATUS.md`](docs/STATUS.md) — 当前状态和最新验证证据。
 - [`docs/INDEX.md`](docs/INDEX.md) — 文档索引。
+- [`docs/quickstart.md`](docs/quickstart.md) — 外部技术用户 Quickstart、10 章教程、成本与日志说明。
+- [`docs/troubleshooting.md`](docs/troubleshooting.md) — 故障排查入口和当前限制。
 - [`tasks/V10-README.md`](tasks/V10-README.md) — V10 阶段规划和完成入口。
 - [`archive/v10/reports/207-v10-closure-report.md`](archive/v10/reports/207-v10-closure-report.md) — V10 收口报告。
 - [`tasks/V11-README.md`](tasks/V11-README.md) — V11 开源可用化正式阶段入口。
+- [`docs/reports/209-quickstart-evidence.md`](docs/reports/209-quickstart-evidence.md) — Task 209 Quickstart 命令证据。
 - [`AGENTS.md`](AGENTS.md) — 开发规范和工程纪律。
 - [`archive/`](archive/) — 历史任务、报告和归档资料。
 

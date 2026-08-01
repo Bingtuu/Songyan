@@ -6,11 +6,11 @@
 
 | 项 | 结论 |
 |----|------|
-| 当前阶段 | V10 已全量闭环，下一步进入 V11 开源可用化收尾 |
+| 当前阶段 | V11 已启动；Task 209 Quickstart 与用户文档闭环已完成，下一步进入 Task 210 doctor / preflight 增强 |
 | V10 长窗口 | sci-fi Ch200 baseline 已冻结；xuanhuan / wuxia / urban 均完成 Ch200，总验收 accepted=200、gap=0、failed=[]、five-gate PASS、segment audit PASS、T9=0 |
 | V10 优秀度信号 | Task 196-203 已完成，严格保持 report-only，不接 Writer / CreativeDirector prompt，不进 CED 或 hard gate |
 | V10 结构 spike | KG diff、FactTrack validity interval、Storyline Tree 均完成，三者 decision=`defer`，不接 runtime / prompt / CED / hard gate |
-| 当前代码面 | V11 之前不扩张生成能力，优先整理安装、配置、doctor、项目创建、导出和发布纪律 |
+| 当前代码面 | V11 只做开源可用化收尾；Task 209 已将外部用户最短路径、10 章教程、成本日志和故障入口文档化 |
 
 ## 当前入口
 
@@ -24,10 +24,18 @@
 | `archive/v10/reports/207-v10-closure-report.md` | V10 closure report |
 | `tasks/V11-README.md` | V11 正式阶段入口 |
 | `tasks/V11-Plan.md` | V11 早期规划备忘 |
+| `tasks/208-v11-readiness-audit.md` | Task 208 任务书 |
+| `tasks/208-v11-readiness-audit-DONE.md` | Task 208 DONE |
+| `docs/reports/208-v11-readiness-audit.md` | V11 readiness audit 报告 |
+| `docs/quickstart.md` | 外部技术用户 Quickstart |
+| `docs/troubleshooting.md` | 故障排查入口 |
+| `tasks/209-v11-quickstart-docs.md` | Task 209 任务书 |
+| `tasks/209-v11-quickstart-docs-DONE.md` | Task 209 DONE |
+| `docs/reports/209-quickstart-evidence.md` | Task 209 命令证据 |
 
 ## 最新归档状态
 
-- `tasks/` 仅保留活跃入口：`TEMPLATE.md`、`V10-README.md`、`V11-README.md`、`V11-Plan.md`。
+- `tasks/` 保留活跃入口：`TEMPLATE.md`、`V10-README.md`、`V11-README.md`、`V11-Plan.md`；Task 208/209 任务书与 DONE 作为 V11 当前审计和文档闭环记录已落盘。
 - V10 单项任务书与 DONE 文档已移至 `archive/v10/tasks/`。
 - V10 JSON artifact 已移至 `archive/v10/artifacts/`。
 - V10 Markdown 报告已移至 `archive/v10/reports/`。
@@ -36,9 +44,9 @@
 
 ## 下一步
 
-1. 启动 Task 208：V11 readiness audit，从外部技术用户视角审计安装、配置、doctor、项目创建、运行、导出和报告路径。
-2. 只做开源可用化收尾，不扩张生成能力。
-3. 若要使用 V10 历史证据，优先读 `archive/v10/INDEX.md`，不要重新扫全量历史目录。
+1. 启动 Task 210：doctor / preflight 增强，优先处理 Task 208/209 暴露的缺 key run exit code、非法 checkpointer traceback、日志/预算/路径诊断缺口。
+2. 后续按证据推进 Task 211 backup/restore、Task 212 失败恢复、Task 213 run bundle、Task 214 profile validate、Task 215 release checklist。
+3. 只做开源可用化收尾，不扩张生成能力；若要使用 V10 历史证据，优先读 `archive/v10/INDEX.md`。
 
 ## 守护项
 
