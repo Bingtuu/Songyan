@@ -17,7 +17,7 @@ from songyan.evals.kg_diff_spike import (
 )
 
 ROOT = Path(__file__).resolve().parents[2]
-REAL_MANIFEST = ROOT / "tasks/204-kg-diff-sample-manifest.json"
+REAL_MANIFEST = ROOT / "archive/v10/artifacts/204-kg-diff-sample-manifest.json"
 
 
 def _sample(

@@ -41,8 +41,8 @@ def _report(chapters: list[LoadedChapter], annotations: list[AnnotationRecord]):
     return build_excellence_signal_report(
         chapters,
         {item.version_id: item for item in annotations},
-        sample_set_path=Path("tasks/196-excellence-sample-set.json"),
-        annotations_path=Path("tasks/196-excellence-annotations.json"),
+        sample_set_path=Path("archive/v10/artifacts/196-excellence-sample-set.json"),
+        annotations_path=Path("archive/v10/artifacts/196-excellence-annotations.json"),
     )
 
 

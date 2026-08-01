@@ -341,7 +341,7 @@ class TestHarnessCostBudget:
             to=125,
             run_id=None,
             dry_run=True,
-            baseline=Path("tasks/189-scifi-ch200-baseline.json"),
+            baseline=Path("archive/v10/artifacts/189-scifi-ch200-baseline.json"),
             cost_budget=3.0,
         )
         plan = HARNESS.build_to_plan(

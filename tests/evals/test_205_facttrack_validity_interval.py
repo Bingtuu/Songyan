@@ -16,8 +16,8 @@ from songyan.evals.facttrack_validity_interval import (
 from songyan.evals.kg_diff_spike import KGDiffManifest, KGDiffSpikeReport
 
 ROOT = Path(__file__).resolve().parents[2]
-REAL_MANIFEST = ROOT / "tasks/204-kg-diff-sample-manifest.json"
-REAL_KG_REPORT = ROOT / "tasks/204-kg-diff-spike-report.json"
+REAL_MANIFEST = ROOT / "archive/v10/artifacts/204-kg-diff-sample-manifest.json"
+REAL_KG_REPORT = ROOT / "archive/v10/artifacts/204-kg-diff-spike-report.json"
 
 
 def _sample(

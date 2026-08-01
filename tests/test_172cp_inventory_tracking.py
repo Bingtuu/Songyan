@@ -391,7 +391,13 @@ class TestInventoryRepairScript:
 def _load_repair_module():
     import sys
 
-    script = Path(__file__).resolve().parents[1] / ".tmp" / "repair_172cp_inventory.py"
+    script = (
+        Path(__file__).resolve().parents[1]
+        / "tests"
+        / "fixtures"
+        / "legacy_inventory_repairs"
+        / "repair_172cp_inventory.py"
+    )
     spec = importlib.util.spec_from_file_location("repair_172cp_inventory", script)
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)

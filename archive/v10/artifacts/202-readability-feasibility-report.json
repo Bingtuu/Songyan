@@ -1,0 +1,3477 @@
+{
+  "generated_at": "2026-08-01T07:28:46.020139+00:00",
+  "sample_set": "archive/v10/artifacts/196-excellence-sample-set.json",
+  "annotations": "archive/v10/artifacts/196-excellence-annotations.json",
+  "excellence_report": "archive/v10/artifacts/197-198-excellence-signals-report.json",
+  "style_card_report": "archive/v10/artifacts/199-style-card-report.json",
+  "voice_anchor_report": "archive/v10/artifacts/200-character-voice-anchor-report.json",
+  "judge_bias_report": "archive/v10/artifacts/201-judge-bias-report.json",
+  "report_only": true,
+  "boundaries": [
+    "report-only / observe-only",
+    "does not call LLMs",
+    "does not download or require external language-model weights",
+    "does not modify Writer or CreativeDirector prompts",
+    "does not enter accept/reject gates",
+    "does not change CED, five-gate, segment audit, or T9"
+  ],
+  "summaries": {
+    "sample_chapters": 60,
+    "chapters_with_any_proxy_hit": 55,
+    "weak_proxy_coverage": "13/15",
+    "strong_proxy_false_positive_pressure": "6/6",
+    "top_flags": [
+      {
+        "flag": "dash_pressure",
+        "count": 44
+      },
+      {
+        "flag": "short_paragraph_staccato",
+        "count": 38
+      },
+      {
+        "flag": "ellipsis_pressure",
+        "count": 11
+      },
+      {
+        "flag": "dialogue_sparse",
+        "count": 11
+      },
+      {
+        "flag": "low_info_term_density",
+        "count": 11
+      },
+      {
+        "flag": "low_lexical_variety",
+        "count": 7
+      },
+      {
+        "flag": "top_bigram_repetition",
+        "count": 2
+      },
+      {
+        "flag": "long_sentence_load",
+        "count": 1
+      }
+    ],
+    "by_signal": {
+      "sentence_readability": {
+        "chapters_with_signal": 1,
+        "sample_chapters": 60,
+        "weak_samples": 15,
+        "weak_with_signal": 1,
+        "decision_basis": "directional proxy over Task 196 sample"
+      },
+      "paragraph_readability": {
+        "chapters_with_signal": 38,
+        "sample_chapters": 60,
+        "weak_samples": 15,
+        "weak_with_signal": 10,
+        "decision_basis": "directional proxy over Task 196 sample"
+      },
+      "dialogue_ratio": {
+        "chapters_with_signal": 12,
+        "sample_chapters": 60,
+        "weak_samples": 15,
+        "weak_with_signal": 3,
+        "decision_basis": "directional proxy over Task 196 sample"
+      },
+      "punctuation_rhythm": {
+        "chapters_with_signal": 45,
+        "sample_chapters": 60,
+        "weak_samples": 15,
+        "weak_with_signal": 11,
+        "decision_basis": "directional proxy over Task 196 sample"
+      },
+      "lexical_repetition_proxy": {
+        "chapters_with_signal": 18,
+        "sample_chapters": 60,
+        "weak_samples": 15,
+        "weak_with_signal": 7,
+        "decision_basis": "directional proxy over Task 196 sample"
+      },
+      "perplexity_feasibility": {
+        "requires_model_weights": true,
+        "requires_tokenizer_policy": true,
+        "reproducible_without_external_model": false,
+        "upstream_reports_consumed": {
+          "task197198_chapters": 60,
+          "style_cards": 3,
+          "voice_anchors": 34,
+          "judge_supported_biases": 6
+        }
+      }
+    }
+  },
+  "decisions": [
+    {
+      "signal_id": "sentence_readability",
+      "definition": "句长均值、长句比例与碎片短句比例。",
+      "decision": "report-only",
+      "sample_summary": {
+        "chapters_with_signal": 1,
+        "sample_chapters": 60,
+        "weak_samples": 15,
+        "weak_with_signal": 1,
+        "decision_basis": "directional proxy over Task 196 sample"
+      },
+      "evidence": [
+        "scifi Ch134: long_sentence_load"
+      ],
+      "limitations": [
+        "长句或短句密集是风格风险，不等于质量缺陷。",
+        "中文网文动作段常天然短句密集。"
+      ],
+      "task203_recommendation": "展示为章节读感 proxy，不参与排序或 hard gate。"
+    },
+    {
+      "signal_id": "paragraph_readability",
+      "definition": "段长均值、超长段比例与连续短段节奏。",
+      "decision": "report-only",
+      "sample_summary": {
+        "chapters_with_signal": 38,
+        "sample_chapters": 60,
+        "weak_samples": 15,
+        "weak_with_signal": 10,
+        "decision_basis": "directional proxy over Task 196 sample"
+      },
+      "evidence": [
+        "scifi Ch1: short_paragraph_staccato",
+        "scifi Ch21: short_paragraph_staccato",
+        "scifi Ch23: short_paragraph_staccato",
+        "scifi Ch32: short_paragraph_staccato",
+        "scifi Ch47: short_paragraph_staccato",
+        "scifi Ch60: short_paragraph_staccato",
+        "scifi Ch61: short_paragraph_staccato",
+        "scifi Ch80: short_paragraph_staccato"
+      ],
+      "limitations": [
+        "段落长度受体裁、战斗密度和对话排版影响大。",
+        "需要结合 Task 197 tension / scene function 解释。"
+      ],
+      "task203_recommendation": "展示为辅助读感维度，并链接 Task 197 张力/场景证据。"
+    },
+    {
+      "signal_id": "dialogue_ratio",
+      "definition": "对白字符占比、对白行数和对白稀疏 / 过密风险。",
+      "decision": "report-only",
+      "sample_summary": {
+        "chapters_with_signal": 12,
+        "sample_chapters": 60,
+        "weak_samples": 15,
+        "weak_with_signal": 3,
+        "decision_basis": "directional proxy over Task 196 sample"
+      },
+      "evidence": [
+        "scifi Ch23: dialogue_sparse",
+        "scifi Ch39: dialogue_sparse",
+        "scifi Ch71: dialogue_sparse",
+        "scifi Ch134: dialogue_sparse",
+        "scifi Ch135: dialogue_sparse",
+        "scifi Ch148: dialogue_sparse",
+        "xuanhuan Ch39: dialogue_sparse",
+        "xuanhuan Ch60: dialogue_heavy"
+      ],
+      "limitations": [
+        "对白稀疏不等于坏章；揭示章和动作章可能需要少对白。",
+        "角色声纹质量仍以 Task 200 为主。"
+      ],
+      "task203_recommendation": "展示为 dialogue context，和 Task 200 voice anchors 并列。"
+    },
+    {
+      "signal_id": "punctuation_rhythm",
+      "definition": "问号、叹号、省略号、破折号每千字密度。",
+      "decision": "report-only",
+      "sample_summary": {
+        "chapters_with_signal": 45,
+        "sample_chapters": 60,
+        "weak_samples": 15,
+        "weak_with_signal": 11,
+        "decision_basis": "directional proxy over Task 196 sample"
+      },
+      "evidence": [
+        "scifi Ch17: dash_pressure",
+        "scifi Ch21: dash_pressure, ellipsis_pressure",
+        "scifi Ch23: dash_pressure",
+        "scifi Ch32: dash_pressure",
+        "scifi Ch39: dash_pressure",
+        "scifi Ch47: dash_pressure",
+        "scifi Ch50: dash_pressure",
+        "scifi Ch53: dash_pressure"
+      ],
+      "limitations": [
+        "标点密度对中文网文节奏有解释力，但误报率高。",
+        "省略号和破折号在悬念章中是正常修辞。"
+      ],
+      "task203_recommendation": "仅作为节奏解释项，默认低权重展示。"
+    },
+    {
+      "signal_id": "lexical_repetition_proxy",
+      "definition": "唯一 bigram 比例、高频 bigram 密度与低信息词密度。",
+      "decision": "report-only",
+      "sample_summary": {
+        "chapters_with_signal": 18,
+        "sample_chapters": 60,
+        "weak_samples": 15,
+        "weak_with_signal": 7,
+        "decision_basis": "directional proxy over Task 196 sample"
+      },
+      "evidence": [
+        "scifi Ch32: low_info_term_density",
+        "scifi Ch39: low_info_term_density",
+        "scifi Ch47: low_lexical_variety",
+        "scifi Ch61: low_info_term_density",
+        "scifi Ch84: low_lexical_variety, top_bigram_repetition",
+        "scifi Ch98: low_lexical_variety",
+        "scifi Ch105: low_info_term_density",
+        "scifi Ch145: low_lexical_variety"
+      ],
+      "limitations": [
+        "轻量 ngram 不能理解设定专有名词的必要重复。",
+        "与 Task 197/198 重复类信号有重叠，不能重复计分。"
+      ],
+      "task203_recommendation": "作为 Task 197/198 的补充证据，不单独评分。"
+    },
+    {
+      "signal_id": "perplexity_feasibility",
+      "definition": "真实 LM perplexity 的可复现性、依赖、成本和中文适配风险。",
+      "decision": "defer",
+      "sample_summary": {
+        "requires_model_weights": true,
+        "requires_tokenizer_policy": true,
+        "reproducible_without_external_model": false,
+        "upstream_reports_consumed": {
+          "task197198_chapters": 60,
+          "style_cards": 3,
+          "voice_anchors": 34,
+          "judge_supported_biases": 6
+        }
+      },
+      "evidence": [
+        "No project-local Chinese language model weights are versioned in the repo.",
+        "Downloading a model would make the spike non-reproducible in offline CI.",
+        "Tokenizer choice changes PPL materially for Chinese webnovel names and invented terms.",
+        "PPL can reward generic fluent prose and punish genre-specific proper nouns.",
+        "Compute cost is not bounded without a fixed local model and batch policy."
+      ],
+      "limitations": [
+        "本轮不下载模型、不联网、不调用 LLM。",
+        "PPL 对中文长篇网文和专名密度存在强 tokenizer 偏差。"
+      ],
+      "task203_recommendation": "Defer true perplexity to a later offline experiment with pinned local model weights, tokenizer policy, and cost budget; use readability proxies as report-only Task 203 context for V10."
+    }
+  ],
+  "perplexity_feasibility": {
+    "decision": "defer",
+    "reproducible_without_external_model": false,
+    "requires_model_weights": true,
+    "requires_tokenizer_policy": true,
+    "risks": [
+      "No project-local Chinese language model weights are versioned in the repo.",
+      "Downloading a model would make the spike non-reproducible in offline CI.",
+      "Tokenizer choice changes PPL materially for Chinese webnovel names and invented terms.",
+      "PPL can reward generic fluent prose and punish genre-specific proper nouns.",
+      "Compute cost is not bounded without a fixed local model and batch policy."
+    ],
+    "recommendation": "Defer true perplexity to a later offline experiment with pinned local model weights, tokenizer policy, and cost budget; use readability proxies as report-only Task 203 context for V10."
+  },
+  "sanity_check": {
+    "truth_records": 24,
+    "weak_samples": 15,
+    "weak_with_proxy_hit": 13,
+    "weak_unexplained": [
+      "xuanhuan Ch17",
+      "xuanhuan Ch50"
+    ],
+    "strong_samples": 6,
+    "strong_with_proxy_hit": 6,
+    "notes": [
+      "weak truth: overall<=2 or ai_tone<=2 or homogeneity<=2 or tension<=2",
+      "proxy hit means any Task 202 readability risk flag",
+      "strong hits are expected false positives and keep signals report-only"
+    ]
+  },
+  "chapters": [
+    {
+      "genre": "scifi",
+      "chapter": 1,
+      "version_id": "clean-1-3-6d5d69ba",
+      "segment": 1,
+      "truth_scores": {
+        "homogeneity": 5,
+        "tension": 5,
+        "ai_tone": 4,
+        "overall": 5
+      },
+      "risk_flags": [
+        "short_paragraph_staccato"
+      ],
+      "sentence_readability": {
+        "sentence_count": 193,
+        "avg_sentence_chars": 18.228,
+        "stdev_sentence_chars": 12.971,
+        "short_sentence_ratio": 0.404,
+        "long_sentence_ratio": 0.057,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 140,
+        "avg_paragraph_chars": 25.129,
+        "stdev_paragraph_chars": 21.265,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 6,
+        "risk_flags": [
+          "short_paragraph_staccato"
+        ]
+      },
+      "dialogue_ratio": {
+        "quote_count": 79,
+        "dialogue_char_ratio": 0.33,
+        "avg_quote_chars": 14.709,
+        "risk_flags": []
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 5.117,
+        "exclamation_per_1k": 0.284,
+        "ellipsis_per_1k": 7.675,
+        "dash_per_1k": 6.822,
+        "risk_flags": []
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.687,
+        "top_bigram": "林渊",
+        "top_bigram_density": 0.0128,
+        "low_info_term_density_per_1k": 15.918,
+        "risk_flags": []
+      }
+    },
+    {
+      "genre": "scifi",
+      "chapter": 17,
+      "version_id": "rev-17-2-85c91acb",
+      "segment": 1,
+      "truth_scores": {
+        "homogeneity": 3,
+        "tension": 4,
+        "ai_tone": 3,
+        "overall": 3
+      },
+      "risk_flags": [
+        "dash_pressure"
+      ],
+      "sentence_readability": {
+        "sentence_count": 265,
+        "avg_sentence_chars": 15.649,
+        "stdev_sentence_chars": 10.928,
+        "short_sentence_ratio": 0.483,
+        "long_sentence_ratio": 0.03,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 113,
+        "avg_paragraph_chars": 36.699,
+        "stdev_paragraph_chars": 29.547,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 4,
+        "risk_flags": []
+      },
+      "dialogue_ratio": {
+        "quote_count": 64,
+        "dialogue_char_ratio": 0.271,
+        "avg_quote_chars": 17.562,
+        "risk_flags": []
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 4.099,
+        "exclamation_per_1k": 0.0,
+        "ellipsis_per_1k": 0.0,
+        "dash_per_1k": 7.234,
+        "risk_flags": [
+          "dash_pressure"
+        ]
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.66,
+        "top_bigram": "林渊",
+        "top_bigram_density": 0.0115,
+        "low_info_term_density_per_1k": 15.915,
+        "risk_flags": []
+      }
+    },
+    {
+      "genre": "scifi",
+      "chapter": 21,
+      "version_id": "rev-21-3-71f464db",
+      "segment": 1,
+      "truth_scores": null,
+      "risk_flags": [
+        "dash_pressure",
+        "ellipsis_pressure",
+        "short_paragraph_staccato"
+      ],
+      "sentence_readability": {
+        "sentence_count": 221,
+        "avg_sentence_chars": 18.995,
+        "stdev_sentence_chars": 14.675,
+        "short_sentence_ratio": 0.427,
+        "long_sentence_ratio": 0.083,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 117,
+        "avg_paragraph_chars": 35.393,
+        "stdev_paragraph_chars": 30.832,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 5,
+        "risk_flags": [
+          "short_paragraph_staccato"
+        ]
+      },
+      "dialogue_ratio": {
+        "quote_count": 61,
+        "dialogue_char_ratio": 0.241,
+        "avg_quote_chars": 16.344,
+        "risk_flags": []
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 2.173,
+        "exclamation_per_1k": 1.69,
+        "ellipsis_per_1k": 14.489,
+        "dash_per_1k": 9.418,
+        "risk_flags": [
+          "ellipsis_pressure",
+          "dash_pressure"
+        ]
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.622,
+        "top_bigram": "方舟",
+        "top_bigram_density": 0.0108,
+        "low_info_term_density_per_1k": 11.35,
+        "risk_flags": []
+      }
+    },
+    {
+      "genre": "scifi",
+      "chapter": 23,
+      "version_id": "rev-23-3-f095d922",
+      "segment": 1,
+      "truth_scores": null,
+      "risk_flags": [
+        "dash_pressure",
+        "dialogue_sparse",
+        "short_paragraph_staccato"
+      ],
+      "sentence_readability": {
+        "sentence_count": 182,
+        "avg_sentence_chars": 22.907,
+        "stdev_sentence_chars": 17.89,
+        "short_sentence_ratio": 0.39,
+        "long_sentence_ratio": 0.132,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 100,
+        "avg_paragraph_chars": 41.69,
+        "stdev_paragraph_chars": 36.667,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 6,
+        "risk_flags": [
+          "short_paragraph_staccato"
+        ]
+      },
+      "dialogue_ratio": {
+        "quote_count": 12,
+        "dialogue_char_ratio": 0.015,
+        "avg_quote_chars": 5.083,
+        "risk_flags": [
+          "dialogue_sparse"
+        ]
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 0.72,
+        "exclamation_per_1k": 0.0,
+        "ellipsis_per_1k": 2.878,
+        "dash_per_1k": 8.395,
+        "risk_flags": [
+          "dash_pressure"
+        ]
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.627,
+        "top_bigram": "林渊",
+        "top_bigram_density": 0.0085,
+        "low_info_term_density_per_1k": 10.554,
+        "risk_flags": []
+      }
+    },
+    {
+      "genre": "scifi",
+      "chapter": 32,
+      "version_id": "clean-32-4-a5a19c4e",
+      "segment": 2,
+      "truth_scores": {
+        "homogeneity": 1,
+        "tension": 2,
+        "ai_tone": 2,
+        "overall": 2
+      },
+      "risk_flags": [
+        "dash_pressure",
+        "low_info_term_density",
+        "short_paragraph_staccato"
+      ],
+      "sentence_readability": {
+        "sentence_count": 180,
+        "avg_sentence_chars": 23.274,
+        "stdev_sentence_chars": 18.262,
+        "short_sentence_ratio": 0.402,
+        "long_sentence_ratio": 0.173,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 102,
+        "avg_paragraph_chars": 41.248,
+        "stdev_paragraph_chars": 35.868,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 6,
+        "risk_flags": [
+          "short_paragraph_staccato"
+        ]
+      },
+      "dialogue_ratio": {
+        "quote_count": 74,
+        "dialogue_char_ratio": 0.336,
+        "avg_quote_chars": 18.932,
+        "risk_flags": []
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 4.321,
+        "exclamation_per_1k": 0.0,
+        "ellipsis_per_1k": 2.16,
+        "dash_per_1k": 9.842,
+        "risk_flags": [
+          "dash_pressure"
+        ]
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.627,
+        "top_bigram": "林渊",
+        "top_bigram_density": 0.0077,
+        "low_info_term_density_per_1k": 19.443,
+        "risk_flags": [
+          "low_info_term_density"
+        ]
+      }
+    },
+    {
+      "genre": "scifi",
+      "chapter": 39,
+      "version_id": "rev-39-5-d7343b44",
+      "segment": 2,
+      "truth_scores": {
+        "homogeneity": 2,
+        "tension": 3,
+        "ai_tone": 2,
+        "overall": 2
+      },
+      "risk_flags": [
+        "dash_pressure",
+        "dialogue_sparse",
+        "low_info_term_density"
+      ],
+      "sentence_readability": {
+        "sentence_count": 179,
+        "avg_sentence_chars": 23.078,
+        "stdev_sentence_chars": 14.614,
+        "short_sentence_ratio": 0.296,
+        "long_sentence_ratio": 0.145,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 89,
+        "avg_paragraph_chars": 46.416,
+        "stdev_paragraph_chars": 40.804,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 3,
+        "risk_flags": []
+      },
+      "dialogue_ratio": {
+        "quote_count": 3,
+        "dialogue_char_ratio": 0.016,
+        "avg_quote_chars": 22.0,
+        "risk_flags": [
+          "dialogue_sparse"
+        ]
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 0.726,
+        "exclamation_per_1k": 0.0,
+        "ellipsis_per_1k": 0.0,
+        "dash_per_1k": 14.766,
+        "risk_flags": [
+          "dash_pressure"
+        ]
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.618,
+        "top_bigram": "不是",
+        "top_bigram_density": 0.0123,
+        "low_info_term_density_per_1k": 22.513,
+        "risk_flags": [
+          "low_info_term_density"
+        ]
+      }
+    },
+    {
+      "genre": "scifi",
+      "chapter": 47,
+      "version_id": "clean-47-5-221d6fbc",
+      "segment": 2,
+      "truth_scores": null,
+      "risk_flags": [
+        "dash_pressure",
+        "low_lexical_variety",
+        "short_paragraph_staccato"
+      ],
+      "sentence_readability": {
+        "sentence_count": 241,
+        "avg_sentence_chars": 15.639,
+        "stdev_sentence_chars": 11.023,
+        "short_sentence_ratio": 0.52,
+        "long_sentence_ratio": 0.018,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 152,
+        "avg_paragraph_chars": 24.653,
+        "stdev_paragraph_chars": 20.095,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 35,
+        "risk_flags": [
+          "short_paragraph_staccato"
+        ]
+      },
+      "dialogue_ratio": {
+        "quote_count": 109,
+        "dialogue_char_ratio": 0.4,
+        "avg_quote_chars": 13.018,
+        "risk_flags": []
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 6.479,
+        "exclamation_per_1k": 0.0,
+        "ellipsis_per_1k": 3.38,
+        "dash_per_1k": 9.296,
+        "risk_flags": [
+          "dash_pressure"
+        ]
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.555,
+        "top_bigram": "声音",
+        "top_bigram_density": 0.0106,
+        "low_info_term_density_per_1k": 12.958,
+        "risk_flags": [
+          "low_lexical_variety"
+        ]
+      }
+    },
+    {
+      "genre": "scifi",
+      "chapter": 50,
+      "version_id": "rev-50-2-d38a99f1",
+      "segment": 2,
+      "truth_scores": null,
+      "risk_flags": [
+        "dash_pressure"
+      ],
+      "sentence_readability": {
+        "sentence_count": 183,
+        "avg_sentence_chars": 22.552,
+        "stdev_sentence_chars": 15.94,
+        "short_sentence_ratio": 0.333,
+        "long_sentence_ratio": 0.131,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 92,
+        "avg_paragraph_chars": 44.859,
+        "stdev_paragraph_chars": 33.085,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 3,
+        "risk_flags": []
+      },
+      "dialogue_ratio": {
+        "quote_count": 74,
+        "dialogue_char_ratio": 0.344,
+        "avg_quote_chars": 19.176,
+        "risk_flags": []
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 3.877,
+        "exclamation_per_1k": 0.242,
+        "ellipsis_per_1k": 5.088,
+        "dash_per_1k": 10.419,
+        "risk_flags": [
+          "dash_pressure"
+        ]
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.615,
+        "top_bigram": "林渊",
+        "top_bigram_density": 0.012,
+        "low_info_term_density_per_1k": 17.931,
+        "risk_flags": []
+      }
+    },
+    {
+      "genre": "scifi",
+      "chapter": 53,
+      "version_id": "v-53-1-7336c8c9",
+      "segment": 3,
+      "truth_scores": {
+        "homogeneity": 3,
+        "tension": 4,
+        "ai_tone": 2,
+        "overall": 3
+      },
+      "risk_flags": [
+        "dash_pressure"
+      ],
+      "sentence_readability": {
+        "sentence_count": 200,
+        "avg_sentence_chars": 20.775,
+        "stdev_sentence_chars": 16.616,
+        "short_sentence_ratio": 0.45,
+        "long_sentence_ratio": 0.16,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 103,
+        "avg_paragraph_chars": 40.34,
+        "stdev_paragraph_chars": 36.139,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 3,
+        "risk_flags": []
+      },
+      "dialogue_ratio": {
+        "quote_count": 29,
+        "dialogue_char_ratio": 0.112,
+        "avg_quote_chars": 16.069,
+        "risk_flags": []
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 2.166,
+        "exclamation_per_1k": 0.0,
+        "ellipsis_per_1k": 7.22,
+        "dash_per_1k": 11.312,
+        "risk_flags": [
+          "dash_pressure"
+        ]
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.612,
+        "top_bigram": "陈曦",
+        "top_bigram_density": 0.0124,
+        "low_info_term_density_per_1k": 8.424,
+        "risk_flags": []
+      }
+    },
+    {
+      "genre": "scifi",
+      "chapter": 60,
+      "version_id": "rev-60-3-d81a5608",
+      "segment": 3,
+      "truth_scores": null,
+      "risk_flags": [
+        "dash_pressure",
+        "ellipsis_pressure",
+        "short_paragraph_staccato"
+      ],
+      "sentence_readability": {
+        "sentence_count": 188,
+        "avg_sentence_chars": 19.811,
+        "stdev_sentence_chars": 15.33,
+        "short_sentence_ratio": 0.389,
+        "long_sentence_ratio": 0.081,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 103,
+        "avg_paragraph_chars": 35.583,
+        "stdev_paragraph_chars": 26.587,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 10,
+        "risk_flags": [
+          "short_paragraph_staccato"
+        ]
+      },
+      "dialogue_ratio": {
+        "quote_count": 71,
+        "dialogue_char_ratio": 0.273,
+        "avg_quote_chars": 14.07,
+        "risk_flags": []
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 2.183,
+        "exclamation_per_1k": 0.273,
+        "ellipsis_per_1k": 26.194,
+        "dash_per_1k": 8.186,
+        "risk_flags": [
+          "ellipsis_pressure",
+          "dash_pressure"
+        ]
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.584,
+        "top_bigram": "林渊",
+        "top_bigram_density": 0.0109,
+        "low_info_term_density_per_1k": 13.097,
+        "risk_flags": []
+      }
+    },
+    {
+      "genre": "scifi",
+      "chapter": 61,
+      "version_id": "rev-61-3-7adec2a6",
+      "segment": 3,
+      "truth_scores": null,
+      "risk_flags": [
+        "dash_pressure",
+        "low_info_term_density",
+        "short_paragraph_staccato"
+      ],
+      "sentence_readability": {
+        "sentence_count": 153,
+        "avg_sentence_chars": 23.366,
+        "stdev_sentence_chars": 18.063,
+        "short_sentence_ratio": 0.392,
+        "long_sentence_ratio": 0.157,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 99,
+        "avg_paragraph_chars": 36.48,
+        "stdev_paragraph_chars": 34.85,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 5,
+        "risk_flags": [
+          "short_paragraph_staccato"
+        ]
+      },
+      "dialogue_ratio": {
+        "quote_count": 39,
+        "dialogue_char_ratio": 0.187,
+        "avg_quote_chars": 17.103,
+        "risk_flags": []
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 1.678,
+        "exclamation_per_1k": 0.0,
+        "ellipsis_per_1k": 0.839,
+        "dash_per_1k": 13.427,
+        "risk_flags": [
+          "dash_pressure"
+        ]
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.629,
+        "top_bigram": "林渊",
+        "top_bigram_density": 0.0107,
+        "low_info_term_density_per_1k": 27.133,
+        "risk_flags": [
+          "low_info_term_density"
+        ]
+      }
+    },
+    {
+      "genre": "scifi",
+      "chapter": 71,
+      "version_id": "rev-71-2-7b30cba0",
+      "segment": 3,
+      "truth_scores": null,
+      "risk_flags": [
+        "dash_pressure",
+        "dialogue_sparse"
+      ],
+      "sentence_readability": {
+        "sentence_count": 178,
+        "avg_sentence_chars": 18.651,
+        "stdev_sentence_chars": 12.508,
+        "short_sentence_ratio": 0.413,
+        "long_sentence_ratio": 0.064,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 75,
+        "avg_paragraph_chars": 43.351,
+        "stdev_paragraph_chars": 31.332,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 4,
+        "risk_flags": []
+      },
+      "dialogue_ratio": {
+        "quote_count": 14,
+        "dialogue_char_ratio": 0.033,
+        "avg_quote_chars": 7.571,
+        "risk_flags": [
+          "dialogue_sparse"
+        ]
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 0.623,
+        "exclamation_per_1k": 0.0,
+        "ellipsis_per_1k": 2.805,
+        "dash_per_1k": 11.222,
+        "risk_flags": [
+          "dash_pressure"
+        ]
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.649,
+        "top_bigram": "林渊",
+        "top_bigram_density": 0.0104,
+        "low_info_term_density_per_1k": 13.716,
+        "risk_flags": []
+      }
+    },
+    {
+      "genre": "scifi",
+      "chapter": 80,
+      "version_id": "rev-80-3-0c6ac775",
+      "segment": 4,
+      "truth_scores": {
+        "homogeneity": 2,
+        "tension": 3,
+        "ai_tone": 2,
+        "overall": 2
+      },
+      "risk_flags": [
+        "dash_pressure",
+        "short_paragraph_staccato"
+      ],
+      "sentence_readability": {
+        "sentence_count": 267,
+        "avg_sentence_chars": 15.506,
+        "stdev_sentence_chars": 12.624,
+        "short_sentence_ratio": 0.528,
+        "long_sentence_ratio": 0.049,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 145,
+        "avg_paragraph_chars": 28.552,
+        "stdev_paragraph_chars": 28.644,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 11,
+        "risk_flags": [
+          "short_paragraph_staccato"
+        ]
+      },
+      "dialogue_ratio": {
+        "quote_count": 96,
+        "dialogue_char_ratio": 0.253,
+        "avg_quote_chars": 10.917,
+        "risk_flags": []
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 3.623,
+        "exclamation_per_1k": 1.932,
+        "ellipsis_per_1k": 0.725,
+        "dash_per_1k": 8.937,
+        "risk_flags": [
+          "dash_pressure"
+        ]
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.585,
+        "top_bigram": "林渊",
+        "top_bigram_density": 0.0114,
+        "low_info_term_density_per_1k": 12.56,
+        "risk_flags": []
+      }
+    },
+    {
+      "genre": "scifi",
+      "chapter": 84,
+      "version_id": "clean-84-4-f08a214f",
+      "segment": 4,
+      "truth_scores": {
+        "homogeneity": 1,
+        "tension": 2,
+        "ai_tone": 1,
+        "overall": 2
+      },
+      "risk_flags": [
+        "dash_pressure",
+        "low_lexical_variety",
+        "short_paragraph_staccato",
+        "top_bigram_repetition"
+      ],
+      "sentence_readability": {
+        "sentence_count": 154,
+        "avg_sentence_chars": 24.895,
+        "stdev_sentence_chars": 16.646,
+        "short_sentence_ratio": 0.307,
+        "long_sentence_ratio": 0.163,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 103,
+        "avg_paragraph_chars": 36.981,
+        "stdev_paragraph_chars": 29.674,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 9,
+        "risk_flags": [
+          "short_paragraph_staccato"
+        ]
+      },
+      "dialogue_ratio": {
+        "quote_count": 23,
+        "dialogue_char_ratio": 0.08,
+        "avg_quote_chars": 13.304,
+        "risk_flags": []
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 1.05,
+        "exclamation_per_1k": 0.0,
+        "ellipsis_per_1k": 6.301,
+        "dash_per_1k": 16.277,
+        "risk_flags": [
+          "dash_pressure"
+        ]
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.503,
+        "top_bigram": "字段",
+        "top_bigram_density": 0.0196,
+        "low_info_term_density_per_1k": 13.914,
+        "risk_flags": [
+          "low_lexical_variety",
+          "top_bigram_repetition"
+        ]
+      }
+    },
+    {
+      "genre": "scifi",
+      "chapter": 92,
+      "version_id": "rev-92-3-dec6aa05",
+      "segment": 4,
+      "truth_scores": null,
+      "risk_flags": [
+        "dash_pressure",
+        "short_paragraph_staccato"
+      ],
+      "sentence_readability": {
+        "sentence_count": 186,
+        "avg_sentence_chars": 22.578,
+        "stdev_sentence_chars": 16.785,
+        "short_sentence_ratio": 0.389,
+        "long_sentence_ratio": 0.168,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 96,
+        "avg_paragraph_chars": 43.51,
+        "stdev_paragraph_chars": 38.138,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 5,
+        "risk_flags": [
+          "short_paragraph_staccato"
+        ]
+      },
+      "dialogue_ratio": {
+        "quote_count": 56,
+        "dialogue_char_ratio": 0.306,
+        "avg_quote_chars": 22.839,
+        "risk_flags": []
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 2.394,
+        "exclamation_per_1k": 0.0,
+        "ellipsis_per_1k": 5.028,
+        "dash_per_1k": 7.661,
+        "risk_flags": [
+          "dash_pressure"
+        ]
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.607,
+        "top_bigram": "林渊",
+        "top_bigram_density": 0.0093,
+        "low_info_term_density_per_1k": 11.252,
+        "risk_flags": []
+      }
+    },
+    {
+      "genre": "scifi",
+      "chapter": 98,
+      "version_id": "rev-98-2-3b1485fe",
+      "segment": 4,
+      "truth_scores": null,
+      "risk_flags": [
+        "dash_pressure",
+        "low_lexical_variety",
+        "short_paragraph_staccato"
+      ],
+      "sentence_readability": {
+        "sentence_count": 268,
+        "avg_sentence_chars": 16.787,
+        "stdev_sentence_chars": 11.157,
+        "short_sentence_ratio": 0.433,
+        "long_sentence_ratio": 0.03,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 152,
+        "avg_paragraph_chars": 29.795,
+        "stdev_paragraph_chars": 24.23,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 9,
+        "risk_flags": [
+          "short_paragraph_staccato"
+        ]
+      },
+      "dialogue_ratio": {
+        "quote_count": 113,
+        "dialogue_char_ratio": 0.299,
+        "avg_quote_chars": 11.92,
+        "risk_flags": []
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 5.335,
+        "exclamation_per_1k": 0.0,
+        "ellipsis_per_1k": 5.335,
+        "dash_per_1k": 8.224,
+        "risk_flags": [
+          "dash_pressure"
+        ]
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.532,
+        "top_bigram": "林渊",
+        "top_bigram_density": 0.0136,
+        "low_info_term_density_per_1k": 16.226,
+        "risk_flags": [
+          "low_lexical_variety"
+        ]
+      }
+    },
+    {
+      "genre": "scifi",
+      "chapter": 104,
+      "version_id": "v-104-8-e962fdb0",
+      "segment": 5,
+      "truth_scores": {
+        "homogeneity": 4,
+        "tension": 5,
+        "ai_tone": 4,
+        "overall": 4
+      },
+      "risk_flags": [
+        "dash_pressure"
+      ],
+      "sentence_readability": {
+        "sentence_count": 142,
+        "avg_sentence_chars": 25.197,
+        "stdev_sentence_chars": 16.572,
+        "short_sentence_ratio": 0.282,
+        "long_sentence_ratio": 0.19,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 96,
+        "avg_paragraph_chars": 37.271,
+        "stdev_paragraph_chars": 29.938,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 4,
+        "risk_flags": []
+      },
+      "dialogue_ratio": {
+        "quote_count": 29,
+        "dialogue_char_ratio": 0.12,
+        "avg_quote_chars": 14.828,
+        "risk_flags": []
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 1.118,
+        "exclamation_per_1k": 0.0,
+        "ellipsis_per_1k": 2.515,
+        "dash_per_1k": 9.503,
+        "risk_flags": [
+          "dash_pressure"
+        ]
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.604,
+        "top_bigram": "林渊",
+        "top_bigram_density": 0.0115,
+        "low_info_term_density_per_1k": 15.092,
+        "risk_flags": []
+      }
+    },
+    {
+      "genre": "scifi",
+      "chapter": 105,
+      "version_id": "v-105-4-5ccc037e",
+      "segment": 5,
+      "truth_scores": {
+        "homogeneity": 3,
+        "tension": 3,
+        "ai_tone": 2,
+        "overall": 3
+      },
+      "risk_flags": [
+        "dash_pressure",
+        "low_info_term_density",
+        "short_paragraph_staccato"
+      ],
+      "sentence_readability": {
+        "sentence_count": 179,
+        "avg_sentence_chars": 23.251,
+        "stdev_sentence_chars": 18.695,
+        "short_sentence_ratio": 0.408,
+        "long_sentence_ratio": 0.19,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 112,
+        "avg_paragraph_chars": 37.161,
+        "stdev_paragraph_chars": 37.809,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 5,
+        "risk_flags": [
+          "short_paragraph_staccato"
+        ]
+      },
+      "dialogue_ratio": {
+        "quote_count": 45,
+        "dialogue_char_ratio": 0.197,
+        "avg_quote_chars": 18.2,
+        "risk_flags": []
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 2.643,
+        "exclamation_per_1k": 0.481,
+        "ellipsis_per_1k": 2.162,
+        "dash_per_1k": 14.416,
+        "risk_flags": [
+          "dash_pressure"
+        ]
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.566,
+        "top_bigram": "不是",
+        "top_bigram_density": 0.0115,
+        "low_info_term_density_per_1k": 19.942,
+        "risk_flags": [
+          "low_info_term_density"
+        ]
+      }
+    },
+    {
+      "genre": "scifi",
+      "chapter": 118,
+      "version_id": "v-118-1-a763b99e",
+      "segment": 5,
+      "truth_scores": null,
+      "risk_flags": [
+        "dash_pressure"
+      ],
+      "sentence_readability": {
+        "sentence_count": 195,
+        "avg_sentence_chars": 20.072,
+        "stdev_sentence_chars": 12.994,
+        "short_sentence_ratio": 0.354,
+        "long_sentence_ratio": 0.062,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 108,
+        "avg_paragraph_chars": 36.241,
+        "stdev_paragraph_chars": 31.042,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 4,
+        "risk_flags": []
+      },
+      "dialogue_ratio": {
+        "quote_count": 53,
+        "dialogue_char_ratio": 0.232,
+        "avg_quote_chars": 17.132,
+        "risk_flags": []
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 2.299,
+        "exclamation_per_1k": 0.255,
+        "ellipsis_per_1k": 5.365,
+        "dash_per_1k": 8.431,
+        "risk_flags": [
+          "dash_pressure"
+        ]
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.628,
+        "top_bigram": "林渊",
+        "top_bigram_density": 0.0111,
+        "low_info_term_density_per_1k": 13.797,
+        "risk_flags": []
+      }
+    },
+    {
+      "genre": "scifi",
+      "chapter": 120,
+      "version_id": "rev-120-3-fb59ff9d",
+      "segment": 5,
+      "truth_scores": null,
+      "risk_flags": [
+        "dash_pressure"
+      ],
+      "sentence_readability": {
+        "sentence_count": 168,
+        "avg_sentence_chars": 24.827,
+        "stdev_sentence_chars": 14.476,
+        "short_sentence_ratio": 0.244,
+        "long_sentence_ratio": 0.149,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 83,
+        "avg_paragraph_chars": 50.253,
+        "stdev_paragraph_chars": 30.324,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 2,
+        "risk_flags": []
+      },
+      "dialogue_ratio": {
+        "quote_count": 18,
+        "dialogue_char_ratio": 0.057,
+        "avg_quote_chars": 13.111,
+        "risk_flags": []
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 0.24,
+        "exclamation_per_1k": 1.439,
+        "ellipsis_per_1k": 0.0,
+        "dash_per_1k": 10.309,
+        "risk_flags": [
+          "dash_pressure"
+        ]
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.603,
+        "top_bigram": "林渊",
+        "top_bigram_density": 0.0092,
+        "low_info_term_density_per_1k": 10.309,
+        "risk_flags": []
+      }
+    },
+    {
+      "genre": "scifi",
+      "chapter": 134,
+      "version_id": "rev-134-2-1bb7553c",
+      "segment": 6,
+      "truth_scores": {
+        "homogeneity": 3,
+        "tension": 4,
+        "ai_tone": 2,
+        "overall": 3
+      },
+      "risk_flags": [
+        "dash_pressure",
+        "dialogue_sparse",
+        "long_sentence_load"
+      ],
+      "sentence_readability": {
+        "sentence_count": 141,
+        "avg_sentence_chars": 29.362,
+        "stdev_sentence_chars": 21.475,
+        "short_sentence_ratio": 0.262,
+        "long_sentence_ratio": 0.277,
+        "risk_flags": [
+          "long_sentence_load"
+        ]
+      },
+      "paragraph_readability": {
+        "paragraph_count": 88,
+        "avg_paragraph_chars": 47.045,
+        "stdev_paragraph_chars": 41.86,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 4,
+        "risk_flags": []
+      },
+      "dialogue_ratio": {
+        "quote_count": 23,
+        "dialogue_char_ratio": 0.027,
+        "avg_quote_chars": 4.913,
+        "risk_flags": [
+          "dialogue_sparse"
+        ]
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 1.449,
+        "exclamation_per_1k": 0.0,
+        "ellipsis_per_1k": 5.797,
+        "dash_per_1k": 12.077,
+        "risk_flags": [
+          "dash_pressure"
+        ]
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.595,
+        "top_bigram": "林渊",
+        "top_bigram_density": 0.0097,
+        "low_info_term_density_per_1k": 14.493,
+        "risk_flags": []
+      }
+    },
+    {
+      "genre": "scifi",
+      "chapter": 135,
+      "version_id": "v-135-4-d1c4c57e",
+      "segment": 6,
+      "truth_scores": null,
+      "risk_flags": [
+        "dash_pressure",
+        "dialogue_sparse",
+        "short_paragraph_staccato"
+      ],
+      "sentence_readability": {
+        "sentence_count": 156,
+        "avg_sentence_chars": 22.788,
+        "stdev_sentence_chars": 16.193,
+        "short_sentence_ratio": 0.385,
+        "long_sentence_ratio": 0.16,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 119,
+        "avg_paragraph_chars": 30.385,
+        "stdev_paragraph_chars": 28.653,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 7,
+        "risk_flags": [
+          "short_paragraph_staccato"
+        ]
+      },
+      "dialogue_ratio": {
+        "quote_count": 9,
+        "dialogue_char_ratio": 0.014,
+        "avg_quote_chars": 5.556,
+        "risk_flags": [
+          "dialogue_sparse"
+        ]
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 0.281,
+        "exclamation_per_1k": 0.0,
+        "ellipsis_per_1k": 0.0,
+        "dash_per_1k": 11.814,
+        "risk_flags": [
+          "dash_pressure"
+        ]
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.589,
+        "top_bigram": "林渊",
+        "top_bigram_density": 0.0133,
+        "low_info_term_density_per_1k": 12.658,
+        "risk_flags": []
+      }
+    },
+    {
+      "genre": "scifi",
+      "chapter": 145,
+      "version_id": "v-145-4-8158ebec",
+      "segment": 6,
+      "truth_scores": null,
+      "risk_flags": [
+        "dash_pressure",
+        "low_lexical_variety"
+      ],
+      "sentence_readability": {
+        "sentence_count": 214,
+        "avg_sentence_chars": 21.294,
+        "stdev_sentence_chars": 14.024,
+        "short_sentence_ratio": 0.36,
+        "long_sentence_ratio": 0.103,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 128,
+        "avg_paragraph_chars": 36.456,
+        "stdev_paragraph_chars": 29.163,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 4,
+        "risk_flags": []
+      },
+      "dialogue_ratio": {
+        "quote_count": 25,
+        "dialogue_char_ratio": 0.059,
+        "avg_quote_chars": 10.68,
+        "risk_flags": []
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 0.219,
+        "exclamation_per_1k": 0.219,
+        "ellipsis_per_1k": 0.0,
+        "dash_per_1k": 9.217,
+        "risk_flags": [
+          "dash_pressure"
+        ]
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.542,
+        "top_bigram": "意识",
+        "top_bigram_density": 0.0127,
+        "low_info_term_density_per_1k": 16.019,
+        "risk_flags": [
+          "low_lexical_variety"
+        ]
+      }
+    },
+    {
+      "genre": "scifi",
+      "chapter": 148,
+      "version_id": "clean-148-5-b09119b8",
+      "segment": 6,
+      "truth_scores": null,
+      "risk_flags": [
+        "dash_pressure",
+        "dialogue_sparse",
+        "low_lexical_variety",
+        "short_paragraph_staccato"
+      ],
+      "sentence_readability": {
+        "sentence_count": 153,
+        "avg_sentence_chars": 21.77,
+        "stdev_sentence_chars": 19.069,
+        "short_sentence_ratio": 0.48,
+        "long_sentence_ratio": 0.191,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 140,
+        "avg_paragraph_chars": 23.636,
+        "stdev_paragraph_chars": 25.054,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 14,
+        "risk_flags": [
+          "short_paragraph_staccato"
+        ]
+      },
+      "dialogue_ratio": {
+        "quote_count": 17,
+        "dialogue_char_ratio": 0.025,
+        "avg_quote_chars": 4.824,
+        "risk_flags": [
+          "dialogue_sparse"
+        ]
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 0.0,
+        "exclamation_per_1k": 0.0,
+        "ellipsis_per_1k": 5.44,
+        "dash_per_1k": 12.39,
+        "risk_flags": [
+          "dash_pressure"
+        ]
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.536,
+        "top_bigram": "林渊",
+        "top_bigram_density": 0.0127,
+        "low_info_term_density_per_1k": 11.786,
+        "risk_flags": [
+          "low_lexical_variety"
+        ]
+      }
+    },
+    {
+      "genre": "scifi",
+      "chapter": 162,
+      "version_id": "v-162-1-9cf8b7ae",
+      "segment": 7,
+      "truth_scores": null,
+      "risk_flags": [
+        "dash_pressure"
+      ],
+      "sentence_readability": {
+        "sentence_count": 188,
+        "avg_sentence_chars": 22.439,
+        "stdev_sentence_chars": 17.48,
+        "short_sentence_ratio": 0.396,
+        "long_sentence_ratio": 0.139,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 74,
+        "avg_paragraph_chars": 56.703,
+        "stdev_paragraph_chars": 35.5,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 2,
+        "risk_flags": []
+      },
+      "dialogue_ratio": {
+        "quote_count": 58,
+        "dialogue_char_ratio": 0.284,
+        "avg_quote_chars": 20.517,
+        "risk_flags": []
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 3.337,
+        "exclamation_per_1k": 0.0,
+        "ellipsis_per_1k": 0.715,
+        "dash_per_1k": 9.056,
+        "risk_flags": [
+          "dash_pressure"
+        ]
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.602,
+        "top_bigram": "林渊",
+        "top_bigram_density": 0.0117,
+        "low_info_term_density_per_1k": 16.444,
+        "risk_flags": []
+      }
+    },
+    {
+      "genre": "scifi",
+      "chapter": 164,
+      "version_id": "clean-164-5-d9c46ef3",
+      "segment": 7,
+      "truth_scores": null,
+      "risk_flags": [
+        "dash_pressure",
+        "low_lexical_variety",
+        "short_paragraph_staccato"
+      ],
+      "sentence_readability": {
+        "sentence_count": 190,
+        "avg_sentence_chars": 21.6,
+        "stdev_sentence_chars": 16.387,
+        "short_sentence_ratio": 0.4,
+        "long_sentence_ratio": 0.105,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 100,
+        "avg_paragraph_chars": 41.04,
+        "stdev_paragraph_chars": 34.783,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 6,
+        "risk_flags": [
+          "short_paragraph_staccato"
+        ]
+      },
+      "dialogue_ratio": {
+        "quote_count": 60,
+        "dialogue_char_ratio": 0.264,
+        "avg_quote_chars": 18.067,
+        "risk_flags": []
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 1.706,
+        "exclamation_per_1k": 1.462,
+        "ellipsis_per_1k": 2.924,
+        "dash_per_1k": 7.797,
+        "risk_flags": [
+          "dash_pressure"
+        ]
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.504,
+        "top_bigram": "方舟",
+        "top_bigram_density": 0.01,
+        "low_info_term_density_per_1k": 11.94,
+        "risk_flags": [
+          "low_lexical_variety"
+        ]
+      }
+    },
+    {
+      "genre": "scifi",
+      "chapter": 169,
+      "version_id": "rev-169-2-c16efded",
+      "segment": 7,
+      "truth_scores": null,
+      "risk_flags": [
+        "dash_pressure",
+        "ellipsis_pressure",
+        "low_info_term_density"
+      ],
+      "sentence_readability": {
+        "sentence_count": 136,
+        "avg_sentence_chars": 25.088,
+        "stdev_sentence_chars": 17.033,
+        "short_sentence_ratio": 0.316,
+        "long_sentence_ratio": 0.199,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 57,
+        "avg_paragraph_chars": 59.86,
+        "stdev_paragraph_chars": 36.392,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 2,
+        "risk_flags": []
+      },
+      "dialogue_ratio": {
+        "quote_count": 24,
+        "dialogue_char_ratio": 0.124,
+        "avg_quote_chars": 17.625,
+        "risk_flags": []
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 1.172,
+        "exclamation_per_1k": 0.879,
+        "ellipsis_per_1k": 12.309,
+        "dash_per_1k": 11.137,
+        "risk_flags": [
+          "ellipsis_pressure",
+          "dash_pressure"
+        ]
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.614,
+        "top_bigram": "林渊",
+        "top_bigram_density": 0.0089,
+        "low_info_term_density_per_1k": 18.171,
+        "risk_flags": [
+          "low_info_term_density"
+        ]
+      }
+    },
+    {
+      "genre": "scifi",
+      "chapter": 178,
+      "version_id": "rev-178-2-d69ff758",
+      "segment": 8,
+      "truth_scores": null,
+      "risk_flags": [
+        "dash_pressure",
+        "short_paragraph_staccato"
+      ],
+      "sentence_readability": {
+        "sentence_count": 210,
+        "avg_sentence_chars": 19.533,
+        "stdev_sentence_chars": 17.71,
+        "short_sentence_ratio": 0.49,
+        "long_sentence_ratio": 0.105,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 124,
+        "avg_paragraph_chars": 33.081,
+        "stdev_paragraph_chars": 30.682,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 7,
+        "risk_flags": [
+          "short_paragraph_staccato"
+        ]
+      },
+      "dialogue_ratio": {
+        "quote_count": 35,
+        "dialogue_char_ratio": 0.064,
+        "avg_quote_chars": 7.543,
+        "risk_flags": []
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 2.438,
+        "exclamation_per_1k": 2.438,
+        "ellipsis_per_1k": 4.388,
+        "dash_per_1k": 11.458,
+        "risk_flags": [
+          "dash_pressure"
+        ]
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.605,
+        "top_bigram": "林渊",
+        "top_bigram_density": 0.0084,
+        "low_info_term_density_per_1k": 10.726,
+        "risk_flags": []
+      }
+    },
+    {
+      "genre": "scifi",
+      "chapter": 194,
+      "version_id": "rev-194-3-acda9f0f",
+      "segment": 8,
+      "truth_scores": {
+        "homogeneity": 1,
+        "tension": 3,
+        "ai_tone": 1,
+        "overall": 2
+      },
+      "risk_flags": [
+        "dash_pressure",
+        "ellipsis_pressure",
+        "low_lexical_variety",
+        "short_paragraph_staccato",
+        "top_bigram_repetition"
+      ],
+      "sentence_readability": {
+        "sentence_count": 198,
+        "avg_sentence_chars": 21.633,
+        "stdev_sentence_chars": 18.739,
+        "short_sentence_ratio": 0.41,
+        "long_sentence_ratio": 0.149,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 114,
+        "avg_paragraph_chars": 35.675,
+        "stdev_paragraph_chars": 32.784,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 7,
+        "risk_flags": [
+          "short_paragraph_staccato"
+        ]
+      },
+      "dialogue_ratio": {
+        "quote_count": 39,
+        "dialogue_char_ratio": 0.143,
+        "avg_quote_chars": 14.949,
+        "risk_flags": []
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 1.229,
+        "exclamation_per_1k": 0.0,
+        "ellipsis_per_1k": 32.456,
+        "dash_per_1k": 7.622,
+        "risk_flags": [
+          "ellipsis_pressure",
+          "dash_pressure"
+        ]
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.454,
+        "top_bigram": "林渊",
+        "top_bigram_density": 0.0158,
+        "low_info_term_density_per_1k": 15.245,
+        "risk_flags": [
+          "low_lexical_variety",
+          "top_bigram_repetition"
+        ]
+      }
+    },
+    {
+      "genre": "scifi",
+      "chapter": 199,
+      "version_id": "rev-199-2-6c431ef1",
+      "segment": 8,
+      "truth_scores": {
+        "homogeneity": 4,
+        "tension": 5,
+        "ai_tone": 4,
+        "overall": 4
+      },
+      "risk_flags": [
+        "dash_pressure",
+        "ellipsis_pressure"
+      ],
+      "sentence_readability": {
+        "sentence_count": 179,
+        "avg_sentence_chars": 21.67,
+        "stdev_sentence_chars": 16.52,
+        "short_sentence_ratio": 0.381,
+        "long_sentence_ratio": 0.136,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 111,
+        "avg_paragraph_chars": 34.36,
+        "stdev_paragraph_chars": 31.059,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 4,
+        "risk_flags": []
+      },
+      "dialogue_ratio": {
+        "quote_count": 26,
+        "dialogue_char_ratio": 0.046,
+        "avg_quote_chars": 6.731,
+        "risk_flags": []
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 1.573,
+        "exclamation_per_1k": 0.0,
+        "ellipsis_per_1k": 12.585,
+        "dash_per_1k": 11.274,
+        "risk_flags": [
+          "ellipsis_pressure",
+          "dash_pressure"
+        ]
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.63,
+        "top_bigram": "林渊",
+        "top_bigram_density": 0.0106,
+        "low_info_term_density_per_1k": 16.256,
+        "risk_flags": []
+      }
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 1,
+      "version_id": "v-7acb08f2",
+      "segment": 1,
+      "truth_scores": {
+        "homogeneity": 4,
+        "tension": 5,
+        "ai_tone": 4,
+        "overall": 5
+      },
+      "risk_flags": [
+        "short_paragraph_staccato"
+      ],
+      "sentence_readability": {
+        "sentence_count": 179,
+        "avg_sentence_chars": 20.061,
+        "stdev_sentence_chars": 15.809,
+        "short_sentence_ratio": 0.419,
+        "long_sentence_ratio": 0.101,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 89,
+        "avg_paragraph_chars": 40.348,
+        "stdev_paragraph_chars": 41.299,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 5,
+        "risk_flags": [
+          "short_paragraph_staccato"
+        ]
+      },
+      "dialogue_ratio": {
+        "quote_count": 25,
+        "dialogue_char_ratio": 0.059,
+        "avg_quote_chars": 8.44,
+        "risk_flags": []
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 3.063,
+        "exclamation_per_1k": 1.114,
+        "ellipsis_per_1k": 1.671,
+        "dash_per_1k": 3.899,
+        "risk_flags": []
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.738,
+        "top_bigram": "陆沉",
+        "top_bigram_density": 0.0104,
+        "low_info_term_density_per_1k": 15.038,
+        "risk_flags": []
+      }
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 17,
+      "version_id": "v-937f42f3",
+      "segment": 1,
+      "truth_scores": {
+        "homogeneity": 3,
+        "tension": 3,
+        "ai_tone": 2,
+        "overall": 3
+      },
+      "risk_flags": [],
+      "sentence_readability": {
+        "sentence_count": 177,
+        "avg_sentence_chars": 21.684,
+        "stdev_sentence_chars": 14.434,
+        "short_sentence_ratio": 0.333,
+        "long_sentence_ratio": 0.113,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 109,
+        "avg_paragraph_chars": 35.211,
+        "stdev_paragraph_chars": 30.843,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 4,
+        "risk_flags": []
+      },
+      "dialogue_ratio": {
+        "quote_count": 32,
+        "dialogue_char_ratio": 0.094,
+        "avg_quote_chars": 11.25,
+        "risk_flags": []
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 2.606,
+        "exclamation_per_1k": 0.521,
+        "ellipsis_per_1k": 3.127,
+        "dash_per_1k": 5.472,
+        "risk_flags": []
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.684,
+        "top_bigram": "陆沉",
+        "top_bigram_density": 0.0103,
+        "low_info_term_density_per_1k": 15.373,
+        "risk_flags": []
+      }
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 21,
+      "version_id": "v-d50378bc",
+      "segment": 1,
+      "truth_scores": null,
+      "risk_flags": [],
+      "sentence_readability": {
+        "sentence_count": 145,
+        "avg_sentence_chars": 21.166,
+        "stdev_sentence_chars": 13.05,
+        "short_sentence_ratio": 0.303,
+        "long_sentence_ratio": 0.083,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 95,
+        "avg_paragraph_chars": 32.305,
+        "stdev_paragraph_chars": 24.673,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 4,
+        "risk_flags": []
+      },
+      "dialogue_ratio": {
+        "quote_count": 23,
+        "dialogue_char_ratio": 0.088,
+        "avg_quote_chars": 11.739,
+        "risk_flags": []
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 3.584,
+        "exclamation_per_1k": 0.0,
+        "ellipsis_per_1k": 4.888,
+        "dash_per_1k": 5.539,
+        "risk_flags": []
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.76,
+        "top_bigram": "陆沉",
+        "top_bigram_density": 0.011,
+        "low_info_term_density_per_1k": 11.079,
+        "risk_flags": []
+      }
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 23,
+      "version_id": "v-909d2d2c",
+      "segment": 1,
+      "truth_scores": null,
+      "risk_flags": [
+        "short_paragraph_staccato"
+      ],
+      "sentence_readability": {
+        "sentence_count": 174,
+        "avg_sentence_chars": 20.626,
+        "stdev_sentence_chars": 13.563,
+        "short_sentence_ratio": 0.374,
+        "long_sentence_ratio": 0.08,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 109,
+        "avg_paragraph_chars": 32.927,
+        "stdev_paragraph_chars": 30.002,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 8,
+        "risk_flags": [
+          "short_paragraph_staccato"
+        ]
+      },
+      "dialogue_ratio": {
+        "quote_count": 31,
+        "dialogue_char_ratio": 0.064,
+        "avg_quote_chars": 7.387,
+        "risk_flags": []
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 0.557,
+        "exclamation_per_1k": 0.279,
+        "ellipsis_per_1k": 0.836,
+        "dash_per_1k": 6.408,
+        "risk_flags": []
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.693,
+        "top_bigram": "陆沉",
+        "top_bigram_density": 0.0111,
+        "low_info_term_density_per_1k": 15.325,
+        "risk_flags": []
+      }
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 32,
+      "version_id": "v-43cd97a4",
+      "segment": 2,
+      "truth_scores": {
+        "homogeneity": 3,
+        "tension": 4,
+        "ai_tone": 3,
+        "overall": 3
+      },
+      "risk_flags": [
+        "short_paragraph_staccato"
+      ],
+      "sentence_readability": {
+        "sentence_count": 195,
+        "avg_sentence_chars": 18.541,
+        "stdev_sentence_chars": 11.229,
+        "short_sentence_ratio": 0.34,
+        "long_sentence_ratio": 0.031,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 120,
+        "avg_paragraph_chars": 29.975,
+        "stdev_paragraph_chars": 25.942,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 9,
+        "risk_flags": [
+          "short_paragraph_staccato"
+        ]
+      },
+      "dialogue_ratio": {
+        "quote_count": 26,
+        "dialogue_char_ratio": 0.058,
+        "avg_quote_chars": 7.962,
+        "risk_flags": []
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 1.668,
+        "exclamation_per_1k": 0.0,
+        "ellipsis_per_1k": 7.506,
+        "dash_per_1k": 4.17,
+        "risk_flags": []
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.751,
+        "top_bigram": "陆沉",
+        "top_bigram_density": 0.0112,
+        "low_info_term_density_per_1k": 14.178,
+        "risk_flags": []
+      }
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 39,
+      "version_id": "v-f1d2c7fa",
+      "segment": 2,
+      "truth_scores": null,
+      "risk_flags": [
+        "dialogue_sparse"
+      ],
+      "sentence_readability": {
+        "sentence_count": 158,
+        "avg_sentence_chars": 24.285,
+        "stdev_sentence_chars": 15.635,
+        "short_sentence_ratio": 0.259,
+        "long_sentence_ratio": 0.146,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 77,
+        "avg_paragraph_chars": 49.831,
+        "stdev_paragraph_chars": 35.09,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 4,
+        "risk_flags": []
+      },
+      "dialogue_ratio": {
+        "quote_count": 12,
+        "dialogue_char_ratio": 0.03,
+        "avg_quote_chars": 9.5,
+        "risk_flags": [
+          "dialogue_sparse"
+        ]
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 0.782,
+        "exclamation_per_1k": 0.0,
+        "ellipsis_per_1k": 0.0,
+        "dash_per_1k": 5.734,
+        "risk_flags": []
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.742,
+        "top_bigram": "陆沉",
+        "top_bigram_density": 0.0086,
+        "low_info_term_density_per_1k": 7.558,
+        "risk_flags": []
+      }
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 47,
+      "version_id": "v-ebff35cf",
+      "segment": 2,
+      "truth_scores": null,
+      "risk_flags": [
+        "short_paragraph_staccato"
+      ],
+      "sentence_readability": {
+        "sentence_count": 162,
+        "avg_sentence_chars": 22.173,
+        "stdev_sentence_chars": 14.713,
+        "short_sentence_ratio": 0.284,
+        "long_sentence_ratio": 0.111,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 98,
+        "avg_paragraph_chars": 36.653,
+        "stdev_paragraph_chars": 32.121,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 5,
+        "risk_flags": [
+          "short_paragraph_staccato"
+        ]
+      },
+      "dialogue_ratio": {
+        "quote_count": 17,
+        "dialogue_char_ratio": 0.038,
+        "avg_quote_chars": 7.941,
+        "risk_flags": []
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 3.062,
+        "exclamation_per_1k": 4.454,
+        "ellipsis_per_1k": 0.557,
+        "dash_per_1k": 3.619,
+        "risk_flags": []
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.705,
+        "top_bigram": "陆沉",
+        "top_bigram_density": 0.0101,
+        "low_info_term_density_per_1k": 11.971,
+        "risk_flags": []
+      }
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 50,
+      "version_id": "v-8ebfcbd7",
+      "segment": 2,
+      "truth_scores": {
+        "homogeneity": 2,
+        "tension": 2,
+        "ai_tone": 1,
+        "overall": 2
+      },
+      "risk_flags": [],
+      "sentence_readability": {
+        "sentence_count": 154,
+        "avg_sentence_chars": 23.279,
+        "stdev_sentence_chars": 14.362,
+        "short_sentence_ratio": 0.26,
+        "long_sentence_ratio": 0.091,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 82,
+        "avg_paragraph_chars": 43.72,
+        "stdev_paragraph_chars": 38.956,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 4,
+        "risk_flags": []
+      },
+      "dialogue_ratio": {
+        "quote_count": 24,
+        "dialogue_char_ratio": 0.086,
+        "avg_quote_chars": 12.917,
+        "risk_flags": []
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 1.674,
+        "exclamation_per_1k": 1.674,
+        "ellipsis_per_1k": 0.0,
+        "dash_per_1k": 6.137,
+        "risk_flags": []
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.702,
+        "top_bigram": "陆沉",
+        "top_bigram_density": 0.0116,
+        "low_info_term_density_per_1k": 10.6,
+        "risk_flags": []
+      }
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 53,
+      "version_id": "v-b3464f24",
+      "segment": 3,
+      "truth_scores": {
+        "homogeneity": 3,
+        "tension": 4,
+        "ai_tone": 3,
+        "overall": 3
+      },
+      "risk_flags": [
+        "dash_pressure",
+        "short_paragraph_staccato"
+      ],
+      "sentence_readability": {
+        "sentence_count": 159,
+        "avg_sentence_chars": 17.316,
+        "stdev_sentence_chars": 12.387,
+        "short_sentence_ratio": 0.411,
+        "long_sentence_ratio": 0.057,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 101,
+        "avg_paragraph_chars": 27.089,
+        "stdev_paragraph_chars": 25.065,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 9,
+        "risk_flags": [
+          "short_paragraph_staccato"
+        ]
+      },
+      "dialogue_ratio": {
+        "quote_count": 33,
+        "dialogue_char_ratio": 0.195,
+        "avg_quote_chars": 16.152,
+        "risk_flags": []
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 0.365,
+        "exclamation_per_1k": 0.731,
+        "ellipsis_per_1k": 4.386,
+        "dash_per_1k": 9.868,
+        "risk_flags": [
+          "dash_pressure"
+        ]
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.735,
+        "top_bigram": "陆沉",
+        "top_bigram_density": 0.0078,
+        "low_info_term_density_per_1k": 10.234,
+        "risk_flags": []
+      }
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 60,
+      "version_id": "v-e13fbd50",
+      "segment": 3,
+      "truth_scores": null,
+      "risk_flags": [
+        "dialogue_heavy",
+        "low_info_term_density",
+        "short_paragraph_staccato"
+      ],
+      "sentence_readability": {
+        "sentence_count": 172,
+        "avg_sentence_chars": 20.205,
+        "stdev_sentence_chars": 15.775,
+        "short_sentence_ratio": 0.428,
+        "long_sentence_ratio": 0.12,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 126,
+        "avg_paragraph_chars": 26.619,
+        "stdev_paragraph_chars": 25.3,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 7,
+        "risk_flags": [
+          "short_paragraph_staccato"
+        ]
+      },
+      "dialogue_ratio": {
+        "quote_count": 91,
+        "dialogue_char_ratio": 0.453,
+        "avg_quote_chars": 16.703,
+        "risk_flags": [
+          "dialogue_heavy"
+        ]
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 5.665,
+        "exclamation_per_1k": 0.0,
+        "ellipsis_per_1k": 5.367,
+        "dash_per_1k": 6.857,
+        "risk_flags": []
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.654,
+        "top_bigram": "灵渊",
+        "top_bigram_density": 0.0124,
+        "low_info_term_density_per_1k": 25.343,
+        "risk_flags": [
+          "low_info_term_density"
+        ]
+      }
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 61,
+      "version_id": "v-96cd512f",
+      "segment": 3,
+      "truth_scores": null,
+      "risk_flags": [
+        "dash_pressure",
+        "low_info_term_density",
+        "short_paragraph_staccato"
+      ],
+      "sentence_readability": {
+        "sentence_count": 176,
+        "avg_sentence_chars": 16.375,
+        "stdev_sentence_chars": 13.003,
+        "short_sentence_ratio": 0.523,
+        "long_sentence_ratio": 0.04,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 136,
+        "avg_paragraph_chars": 21.191,
+        "stdev_paragraph_chars": 20.729,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 28,
+        "risk_flags": [
+          "short_paragraph_staccato"
+        ]
+      },
+      "dialogue_ratio": {
+        "quote_count": 52,
+        "dialogue_char_ratio": 0.235,
+        "avg_quote_chars": 13.019,
+        "risk_flags": []
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 4.511,
+        "exclamation_per_1k": 0.347,
+        "ellipsis_per_1k": 5.205,
+        "dash_per_1k": 15.614,
+        "risk_flags": [
+          "dash_pressure"
+        ]
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.654,
+        "top_bigram": "陆沉",
+        "top_bigram_density": 0.0142,
+        "low_info_term_density_per_1k": 18.39,
+        "risk_flags": [
+          "low_info_term_density"
+        ]
+      }
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 71,
+      "version_id": "v-5cb0b943",
+      "segment": 3,
+      "truth_scores": null,
+      "risk_flags": [
+        "dash_pressure",
+        "dialogue_sparse",
+        "short_paragraph_staccato"
+      ],
+      "sentence_readability": {
+        "sentence_count": 184,
+        "avg_sentence_chars": 17.332,
+        "stdev_sentence_chars": 14.031,
+        "short_sentence_ratio": 0.516,
+        "long_sentence_ratio": 0.065,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 106,
+        "avg_paragraph_chars": 30.085,
+        "stdev_paragraph_chars": 28.15,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 6,
+        "risk_flags": [
+          "short_paragraph_staccato"
+        ]
+      },
+      "dialogue_ratio": {
+        "quote_count": 11,
+        "dialogue_char_ratio": 0.018,
+        "avg_quote_chars": 5.273,
+        "risk_flags": [
+          "dialogue_sparse"
+        ]
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 2.195,
+        "exclamation_per_1k": 0.314,
+        "ellipsis_per_1k": 5.644,
+        "dash_per_1k": 7.839,
+        "risk_flags": [
+          "dash_pressure"
+        ]
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.734,
+        "top_bigram": "妖兽",
+        "top_bigram_density": 0.0067,
+        "low_info_term_density_per_1k": 12.857,
+        "risk_flags": []
+      }
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 80,
+      "version_id": "v-a51dafa8",
+      "segment": 4,
+      "truth_scores": {
+        "homogeneity": 3,
+        "tension": 3,
+        "ai_tone": 2,
+        "overall": 3
+      },
+      "risk_flags": [
+        "short_paragraph_staccato"
+      ],
+      "sentence_readability": {
+        "sentence_count": 138,
+        "avg_sentence_chars": 23.906,
+        "stdev_sentence_chars": 16.783,
+        "short_sentence_ratio": 0.304,
+        "long_sentence_ratio": 0.145,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 83,
+        "avg_paragraph_chars": 39.747,
+        "stdev_paragraph_chars": 34.616,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 5,
+        "risk_flags": [
+          "short_paragraph_staccato"
+        ]
+      },
+      "dialogue_ratio": {
+        "quote_count": 22,
+        "dialogue_char_ratio": 0.038,
+        "avg_quote_chars": 5.636,
+        "risk_flags": []
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 2.728,
+        "exclamation_per_1k": 0.0,
+        "ellipsis_per_1k": 4.547,
+        "dash_per_1k": 6.062,
+        "risk_flags": []
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.732,
+        "top_bigram": "陆沉",
+        "top_bigram_density": 0.0099,
+        "low_info_term_density_per_1k": 14.55,
+        "risk_flags": []
+      }
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 84,
+      "version_id": "v-efaf5591",
+      "segment": 4,
+      "truth_scores": null,
+      "risk_flags": [
+        "dash_pressure",
+        "ellipsis_pressure"
+      ],
+      "sentence_readability": {
+        "sentence_count": 216,
+        "avg_sentence_chars": 16.897,
+        "stdev_sentence_chars": 11.125,
+        "short_sentence_ratio": 0.432,
+        "long_sentence_ratio": 0.028,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 97,
+        "avg_paragraph_chars": 37.103,
+        "stdev_paragraph_chars": 30.96,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 4,
+        "risk_flags": []
+      },
+      "dialogue_ratio": {
+        "quote_count": 21,
+        "dialogue_char_ratio": 0.039,
+        "avg_quote_chars": 6.667,
+        "risk_flags": []
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 1.111,
+        "exclamation_per_1k": 0.0,
+        "ellipsis_per_1k": 20.006,
+        "dash_per_1k": 8.891,
+        "risk_flags": [
+          "ellipsis_pressure",
+          "dash_pressure"
+        ]
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.708,
+        "top_bigram": "陆沉",
+        "top_bigram_density": 0.0134,
+        "low_info_term_density_per_1k": 10.003,
+        "risk_flags": []
+      }
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 92,
+      "version_id": "v-f427f038",
+      "segment": 4,
+      "truth_scores": null,
+      "risk_flags": [
+        "dash_pressure",
+        "short_paragraph_staccato"
+      ],
+      "sentence_readability": {
+        "sentence_count": 196,
+        "avg_sentence_chars": 18.362,
+        "stdev_sentence_chars": 11.917,
+        "short_sentence_ratio": 0.403,
+        "long_sentence_ratio": 0.041,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 152,
+        "avg_paragraph_chars": 23.678,
+        "stdev_paragraph_chars": 21.712,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 8,
+        "risk_flags": [
+          "short_paragraph_staccato"
+        ]
+      },
+      "dialogue_ratio": {
+        "quote_count": 16,
+        "dialogue_char_ratio": 0.051,
+        "avg_quote_chars": 11.375,
+        "risk_flags": []
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 2.501,
+        "exclamation_per_1k": 0.556,
+        "ellipsis_per_1k": 1.667,
+        "dash_per_1k": 10.836,
+        "risk_flags": [
+          "dash_pressure"
+        ]
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.714,
+        "top_bigram": "陆沉",
+        "top_bigram_density": 0.0133,
+        "low_info_term_density_per_1k": 9.447,
+        "risk_flags": []
+      }
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 98,
+      "version_id": "v-6864c4b7",
+      "segment": 4,
+      "truth_scores": null,
+      "risk_flags": [
+        "dialogue_sparse"
+      ],
+      "sentence_readability": {
+        "sentence_count": 168,
+        "avg_sentence_chars": 21.405,
+        "stdev_sentence_chars": 12.959,
+        "short_sentence_ratio": 0.298,
+        "long_sentence_ratio": 0.077,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 101,
+        "avg_paragraph_chars": 35.604,
+        "stdev_paragraph_chars": 29.354,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 4,
+        "risk_flags": []
+      },
+      "dialogue_ratio": {
+        "quote_count": 10,
+        "dialogue_char_ratio": 0.018,
+        "avg_quote_chars": 6.3,
+        "risk_flags": [
+          "dialogue_sparse"
+        ]
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 0.278,
+        "exclamation_per_1k": 0.0,
+        "ellipsis_per_1k": 0.0,
+        "dash_per_1k": 6.674,
+        "risk_flags": []
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.74,
+        "top_bigram": "陆沉",
+        "top_bigram_density": 0.0098,
+        "low_info_term_density_per_1k": 9.733,
+        "risk_flags": []
+      }
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 104,
+      "version_id": "v-473a1683",
+      "segment": 5,
+      "truth_scores": {
+        "homogeneity": 4,
+        "tension": 4,
+        "ai_tone": 4,
+        "overall": 4
+      },
+      "risk_flags": [
+        "dash_pressure"
+      ],
+      "sentence_readability": {
+        "sentence_count": 199,
+        "avg_sentence_chars": 21.035,
+        "stdev_sentence_chars": 13.525,
+        "short_sentence_ratio": 0.296,
+        "long_sentence_ratio": 0.065,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 106,
+        "avg_paragraph_chars": 39.491,
+        "stdev_paragraph_chars": 32.465,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 4,
+        "risk_flags": []
+      },
+      "dialogue_ratio": {
+        "quote_count": 23,
+        "dialogue_char_ratio": 0.045,
+        "avg_quote_chars": 8.13,
+        "risk_flags": []
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 1.194,
+        "exclamation_per_1k": 0.0,
+        "ellipsis_per_1k": 1.433,
+        "dash_per_1k": 8.361,
+        "risk_flags": [
+          "dash_pressure"
+        ]
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.695,
+        "top_bigram": "陆沉",
+        "top_bigram_density": 0.0125,
+        "low_info_term_density_per_1k": 13.856,
+        "risk_flags": []
+      }
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 105,
+      "version_id": "fix-105-6-4cc94f2e",
+      "segment": 5,
+      "truth_scores": {
+        "homogeneity": 3,
+        "tension": 3,
+        "ai_tone": 2,
+        "overall": 2
+      },
+      "risk_flags": [
+        "ellipsis_pressure",
+        "low_info_term_density",
+        "short_paragraph_staccato"
+      ],
+      "sentence_readability": {
+        "sentence_count": 161,
+        "avg_sentence_chars": 20.656,
+        "stdev_sentence_chars": 17.454,
+        "short_sentence_ratio": 0.394,
+        "long_sentence_ratio": 0.113,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 120,
+        "avg_paragraph_chars": 27.773,
+        "stdev_paragraph_chars": 29.994,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 17,
+        "risk_flags": [
+          "short_paragraph_staccato"
+        ]
+      },
+      "dialogue_ratio": {
+        "quote_count": 30,
+        "dialogue_char_ratio": 0.111,
+        "avg_quote_chars": 12.267,
+        "risk_flags": []
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 2.118,
+        "exclamation_per_1k": 0.0,
+        "ellipsis_per_1k": 10.893,
+        "dash_per_1k": 5.446,
+        "risk_flags": [
+          "ellipsis_pressure"
+        ]
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.702,
+        "top_bigram": "碎片",
+        "top_bigram_density": 0.009,
+        "low_info_term_density_per_1k": 25.113,
+        "risk_flags": [
+          "low_info_term_density"
+        ]
+      }
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 118,
+      "version_id": "fix-118-4-9f0ba057",
+      "segment": 5,
+      "truth_scores": {
+        "homogeneity": 2,
+        "tension": 3,
+        "ai_tone": 2,
+        "overall": 2
+      },
+      "risk_flags": [
+        "dash_pressure",
+        "dialogue_sparse",
+        "low_info_term_density",
+        "short_paragraph_staccato"
+      ],
+      "sentence_readability": {
+        "sentence_count": 132,
+        "avg_sentence_chars": 20.909,
+        "stdev_sentence_chars": 15.727,
+        "short_sentence_ratio": 0.371,
+        "long_sentence_ratio": 0.083,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 102,
+        "avg_paragraph_chars": 27.059,
+        "stdev_paragraph_chars": 27.588,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 7,
+        "risk_flags": [
+          "short_paragraph_staccato"
+        ]
+      },
+      "dialogue_ratio": {
+        "quote_count": 10,
+        "dialogue_char_ratio": 0.017,
+        "avg_quote_chars": 4.7,
+        "risk_flags": [
+          "dialogue_sparse"
+        ]
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 0.362,
+        "exclamation_per_1k": 0.0,
+        "ellipsis_per_1k": 2.174,
+        "dash_per_1k": 8.333,
+        "risk_flags": [
+          "dash_pressure"
+        ]
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.667,
+        "top_bigram": "像是",
+        "top_bigram_density": 0.0109,
+        "low_info_term_density_per_1k": 25.725,
+        "risk_flags": [
+          "low_info_term_density"
+        ]
+      }
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 120,
+      "version_id": "fix-120-6-904de5f4",
+      "segment": 5,
+      "truth_scores": null,
+      "risk_flags": [
+        "dash_pressure",
+        "short_paragraph_staccato"
+      ],
+      "sentence_readability": {
+        "sentence_count": 123,
+        "avg_sentence_chars": 19.574,
+        "stdev_sentence_chars": 15.557,
+        "short_sentence_ratio": 0.426,
+        "long_sentence_ratio": 0.09,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 60,
+        "avg_paragraph_chars": 39.8,
+        "stdev_paragraph_chars": 32.207,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 7,
+        "risk_flags": [
+          "short_paragraph_staccato"
+        ]
+      },
+      "dialogue_ratio": {
+        "quote_count": 32,
+        "dialogue_char_ratio": 0.241,
+        "avg_quote_chars": 18.0,
+        "risk_flags": []
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 1.256,
+        "exclamation_per_1k": 0.0,
+        "ellipsis_per_1k": 3.769,
+        "dash_per_1k": 8.794,
+        "risk_flags": [
+          "dash_pressure"
+        ]
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.767,
+        "top_bigram": "陆沉",
+        "top_bigram_density": 0.0091,
+        "low_info_term_density_per_1k": 14.657,
+        "risk_flags": []
+      }
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 134,
+      "version_id": "fix-134-segment-192ai",
+      "segment": 6,
+      "truth_scores": {
+        "homogeneity": 3,
+        "tension": 3,
+        "ai_tone": 2,
+        "overall": 2
+      },
+      "risk_flags": [
+        "dash_pressure",
+        "short_paragraph_staccato"
+      ],
+      "sentence_readability": {
+        "sentence_count": 182,
+        "avg_sentence_chars": 22.78,
+        "stdev_sentence_chars": 20.74,
+        "short_sentence_ratio": 0.434,
+        "long_sentence_ratio": 0.17,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 134,
+        "avg_paragraph_chars": 30.94,
+        "stdev_paragraph_chars": 33.547,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 11,
+        "risk_flags": [
+          "short_paragraph_staccato"
+        ]
+      },
+      "dialogue_ratio": {
+        "quote_count": 78,
+        "dialogue_char_ratio": 0.279,
+        "avg_quote_chars": 14.833,
+        "risk_flags": []
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 2.894,
+        "exclamation_per_1k": 0.965,
+        "ellipsis_per_1k": 0.724,
+        "dash_per_1k": 8.201,
+        "risk_flags": [
+          "dash_pressure"
+        ]
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.688,
+        "top_bigram": "母亲",
+        "top_bigram_density": 0.0095,
+        "low_info_term_density_per_1k": 15.437,
+        "risk_flags": []
+      }
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 135,
+      "version_id": "v-2be94c1b",
+      "segment": 6,
+      "truth_scores": null,
+      "risk_flags": [],
+      "sentence_readability": {
+        "sentence_count": 199,
+        "avg_sentence_chars": 19.166,
+        "stdev_sentence_chars": 13.576,
+        "short_sentence_ratio": 0.402,
+        "long_sentence_ratio": 0.07,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 124,
+        "avg_paragraph_chars": 30.758,
+        "stdev_paragraph_chars": 29.634,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 4,
+        "risk_flags": []
+      },
+      "dialogue_ratio": {
+        "quote_count": 42,
+        "dialogue_char_ratio": 0.181,
+        "avg_quote_chars": 16.429,
+        "risk_flags": []
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 0.787,
+        "exclamation_per_1k": 0.0,
+        "ellipsis_per_1k": 1.573,
+        "dash_per_1k": 6.293,
+        "risk_flags": []
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.688,
+        "top_bigram": "陆沉",
+        "top_bigram_density": 0.0097,
+        "low_info_term_density_per_1k": 10.75,
+        "risk_flags": []
+      }
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 145,
+      "version_id": "v-39e1b2f0",
+      "segment": 6,
+      "truth_scores": null,
+      "risk_flags": [
+        "dash_pressure",
+        "dialogue_sparse",
+        "low_info_term_density",
+        "short_paragraph_staccato"
+      ],
+      "sentence_readability": {
+        "sentence_count": 185,
+        "avg_sentence_chars": 19.449,
+        "stdev_sentence_chars": 14.898,
+        "short_sentence_ratio": 0.432,
+        "long_sentence_ratio": 0.076,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 138,
+        "avg_paragraph_chars": 26.072,
+        "stdev_paragraph_chars": 29.226,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 9,
+        "risk_flags": [
+          "short_paragraph_staccato"
+        ]
+      },
+      "dialogue_ratio": {
+        "quote_count": 19,
+        "dialogue_char_ratio": 0.033,
+        "avg_quote_chars": 6.158,
+        "risk_flags": [
+          "dialogue_sparse"
+        ]
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 4.169,
+        "exclamation_per_1k": 0.556,
+        "ellipsis_per_1k": 5.003,
+        "dash_per_1k": 10.839,
+        "risk_flags": [
+          "dash_pressure"
+        ]
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.653,
+        "top_bigram": "陆沉",
+        "top_bigram_density": 0.0101,
+        "low_info_term_density_per_1k": 20.567,
+        "risk_flags": [
+          "low_info_term_density"
+        ]
+      }
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 148,
+      "version_id": "v-99243d32",
+      "segment": 6,
+      "truth_scores": null,
+      "risk_flags": [
+        "dash_pressure",
+        "ellipsis_pressure",
+        "short_paragraph_staccato"
+      ],
+      "sentence_readability": {
+        "sentence_count": 187,
+        "avg_sentence_chars": 17.726,
+        "stdev_sentence_chars": 14.268,
+        "short_sentence_ratio": 0.452,
+        "long_sentence_ratio": 0.059,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 117,
+        "avg_paragraph_chars": 28.179,
+        "stdev_paragraph_chars": 27.625,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 9,
+        "risk_flags": [
+          "short_paragraph_staccato"
+        ]
+      },
+      "dialogue_ratio": {
+        "quote_count": 68,
+        "dialogue_char_ratio": 0.295,
+        "avg_quote_chars": 14.294,
+        "risk_flags": []
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 3.943,
+        "exclamation_per_1k": 0.303,
+        "ellipsis_per_1k": 22.748,
+        "dash_per_1k": 8.796,
+        "risk_flags": [
+          "ellipsis_pressure",
+          "dash_pressure"
+        ]
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.655,
+        "top_bigram": "封印",
+        "top_bigram_density": 0.0102,
+        "low_info_term_density_per_1k": 13.952,
+        "risk_flags": []
+      }
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 162,
+      "version_id": "fix-162-segment-192ap",
+      "segment": 7,
+      "truth_scores": null,
+      "risk_flags": [],
+      "sentence_readability": {
+        "sentence_count": 149,
+        "avg_sentence_chars": 25.711,
+        "stdev_sentence_chars": 17.082,
+        "short_sentence_ratio": 0.248,
+        "long_sentence_ratio": 0.174,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 82,
+        "avg_paragraph_chars": 46.72,
+        "stdev_paragraph_chars": 37.555,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 4,
+        "risk_flags": []
+      },
+      "dialogue_ratio": {
+        "quote_count": 42,
+        "dialogue_char_ratio": 0.198,
+        "avg_quote_chars": 18.024,
+        "risk_flags": []
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 2.088,
+        "exclamation_per_1k": 0.0,
+        "ellipsis_per_1k": 0.783,
+        "dash_per_1k": 6.265,
+        "risk_flags": []
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.685,
+        "top_bigram": "陆沉",
+        "top_bigram_density": 0.0104,
+        "low_info_term_density_per_1k": 10.441,
+        "risk_flags": []
+      }
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 164,
+      "version_id": "v-c12070fc",
+      "segment": 7,
+      "truth_scores": null,
+      "risk_flags": [
+        "dash_pressure",
+        "ellipsis_pressure",
+        "low_info_term_density",
+        "short_paragraph_staccato"
+      ],
+      "sentence_readability": {
+        "sentence_count": 157,
+        "avg_sentence_chars": 17.519,
+        "stdev_sentence_chars": 14.099,
+        "short_sentence_ratio": 0.532,
+        "long_sentence_ratio": 0.065,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 104,
+        "avg_paragraph_chars": 25.942,
+        "stdev_paragraph_chars": 26.256,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 16,
+        "risk_flags": [
+          "short_paragraph_staccato"
+        ]
+      },
+      "dialogue_ratio": {
+        "quote_count": 39,
+        "dialogue_char_ratio": 0.156,
+        "avg_quote_chars": 10.795,
+        "risk_flags": []
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 1.112,
+        "exclamation_per_1k": 0.0,
+        "ellipsis_per_1k": 16.679,
+        "dash_per_1k": 10.378,
+        "risk_flags": [
+          "ellipsis_pressure",
+          "dash_pressure"
+        ]
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.719,
+        "top_bigram": "陆沉",
+        "top_bigram_density": 0.0116,
+        "low_info_term_density_per_1k": 18.532,
+        "risk_flags": [
+          "low_info_term_density"
+        ]
+      }
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 169,
+      "version_id": "v-319bb8f7",
+      "segment": 7,
+      "truth_scores": {
+        "homogeneity": 4,
+        "tension": 5,
+        "ai_tone": 4,
+        "overall": 4
+      },
+      "risk_flags": [
+        "dash_pressure",
+        "ellipsis_pressure",
+        "short_paragraph_staccato"
+      ],
+      "sentence_readability": {
+        "sentence_count": 200,
+        "avg_sentence_chars": 17.935,
+        "stdev_sentence_chars": 16.354,
+        "short_sentence_ratio": 0.55,
+        "long_sentence_ratio": 0.09,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 134,
+        "avg_paragraph_chars": 26.769,
+        "stdev_paragraph_chars": 28.232,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 9,
+        "risk_flags": [
+          "short_paragraph_staccato"
+        ]
+      },
+      "dialogue_ratio": {
+        "quote_count": 59,
+        "dialogue_char_ratio": 0.287,
+        "avg_quote_chars": 17.424,
+        "risk_flags": []
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 5.018,
+        "exclamation_per_1k": 0.0,
+        "ellipsis_per_1k": 15.054,
+        "dash_per_1k": 9.2,
+        "risk_flags": [
+          "ellipsis_pressure",
+          "dash_pressure"
+        ]
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.664,
+        "top_bigram": "陆沉",
+        "top_bigram_density": 0.0102,
+        "low_info_term_density_per_1k": 10.873,
+        "risk_flags": []
+      }
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 178,
+      "version_id": "v-45e0ef0c",
+      "segment": 8,
+      "truth_scores": null,
+      "risk_flags": [
+        "dash_pressure",
+        "ellipsis_pressure",
+        "short_paragraph_staccato"
+      ],
+      "sentence_readability": {
+        "sentence_count": 179,
+        "avg_sentence_chars": 21.441,
+        "stdev_sentence_chars": 15.057,
+        "short_sentence_ratio": 0.397,
+        "long_sentence_ratio": 0.095,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 112,
+        "avg_paragraph_chars": 34.577,
+        "stdev_paragraph_chars": 28.952,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 7,
+        "risk_flags": [
+          "short_paragraph_staccato"
+        ]
+      },
+      "dialogue_ratio": {
+        "quote_count": 36,
+        "dialogue_char_ratio": 0.115,
+        "avg_quote_chars": 12.278,
+        "risk_flags": []
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 1.824,
+        "exclamation_per_1k": 2.084,
+        "ellipsis_per_1k": 14.07,
+        "dash_per_1k": 8.338,
+        "risk_flags": [
+          "ellipsis_pressure",
+          "dash_pressure"
+        ]
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.715,
+        "top_bigram": "陆沉",
+        "top_bigram_density": 0.0092,
+        "low_info_term_density_per_1k": 12.507,
+        "risk_flags": []
+      }
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 194,
+      "version_id": "v-409402c6",
+      "segment": 8,
+      "truth_scores": {
+        "homogeneity": 2,
+        "tension": 2,
+        "ai_tone": 1,
+        "overall": 2
+      },
+      "risk_flags": [
+        "short_paragraph_staccato"
+      ],
+      "sentence_readability": {
+        "sentence_count": 181,
+        "avg_sentence_chars": 19.769,
+        "stdev_sentence_chars": 13.733,
+        "short_sentence_ratio": 0.41,
+        "long_sentence_ratio": 0.087,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 97,
+        "avg_paragraph_chars": 36.0,
+        "stdev_paragraph_chars": 36.571,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 7,
+        "risk_flags": [
+          "short_paragraph_staccato"
+        ]
+      },
+      "dialogue_ratio": {
+        "quote_count": 38,
+        "dialogue_char_ratio": 0.097,
+        "avg_quote_chars": 8.711,
+        "risk_flags": []
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 0.585,
+        "exclamation_per_1k": 0.0,
+        "ellipsis_per_1k": 7.018,
+        "dash_per_1k": 5.848,
+        "risk_flags": []
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.663,
+        "top_bigram": "陆沉",
+        "top_bigram_density": 0.0104,
+        "low_info_term_density_per_1k": 12.865,
+        "risk_flags": []
+      }
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 199,
+      "version_id": "v-ca567d1e",
+      "segment": 8,
+      "truth_scores": null,
+      "risk_flags": [
+        "dash_pressure",
+        "short_paragraph_staccato"
+      ],
+      "sentence_readability": {
+        "sentence_count": 115,
+        "avg_sentence_chars": 21.043,
+        "stdev_sentence_chars": 11.706,
+        "short_sentence_ratio": 0.287,
+        "long_sentence_ratio": 0.052,
+        "risk_flags": []
+      },
+      "paragraph_readability": {
+        "paragraph_count": 70,
+        "avg_paragraph_chars": 34.571,
+        "stdev_paragraph_chars": 26.237,
+        "overlong_paragraph_ratio": 0.0,
+        "max_short_paragraph_run": 5,
+        "risk_flags": [
+          "short_paragraph_staccato"
+        ]
+      },
+      "dialogue_ratio": {
+        "quote_count": 29,
+        "dialogue_char_ratio": 0.16,
+        "avg_quote_chars": 13.31,
+        "risk_flags": []
+      },
+      "punctuation_rhythm": {
+        "question_per_1k": 1.24,
+        "exclamation_per_1k": 0.0,
+        "ellipsis_per_1k": 6.198,
+        "dash_per_1k": 8.678,
+        "risk_flags": [
+          "dash_pressure"
+        ]
+      },
+      "lexical_repetition_proxy": {
+        "unique_bigram_ratio": 0.726,
+        "top_bigram": "陆沉",
+        "top_bigram_density": 0.012,
+        "low_info_term_density_per_1k": 17.355,
+        "risk_flags": []
+      }
+    }
+  ]
+}

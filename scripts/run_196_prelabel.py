@@ -20,8 +20,8 @@ from songyan.llm.parsing import parse_llm_response
 from songyan.prompts._models import CraftCard
 from songyan.prompts.loader import PromptLoader, get_prompt_loader
 
-SAMPLE_SET = Path("tasks/196-excellence-sample-set.json")
-ANNOTATIONS = Path("tasks/196-excellence-annotations.json")
+SAMPLE_SET = Path("archive/v10/artifacts/196-excellence-sample-set.json")
+ANNOTATIONS = Path("archive/v10/artifacts/196-excellence-annotations.json")
 RAW_DIR = Path(".tmp/196_prelabel_raw")
 
 # 失败占位记录的 disagreement 前缀；带此前缀的记录不进入幂等跳过集，重跑时会重试

@@ -1,314 +1,48 @@
 # Songyan 文档索引
 
-> 短版文档路由。长版索引已归档：`archive/v5/context-docs/INDEX-full-20260621.md`。
+> 短版文档路由。默认只读当前入口；历史细节进入对应 `archive/` 索引。
 
 ## 默认必读
 
 | 文件 | 用途 |
 |------|------|
+| `README.md` | 对外项目说明、快速开始和能力概览 |
 | `AGENTS.md` | 开发代理短指令与不可违背规则 |
-| `docs/STATUS.md` | 当前状态、测试口径、下一步 |
-| `tasks/V10-README.md` | **V10 规划入口（已完成）**：跨体裁 Ch200 + 优秀度信号包 + 结构升级 spike；Task 189-207 全量闭环，下一步路由 V11 |
-| `tasks/V9-README.md` | **V9 历史事实入口（已收尾）**：生产化地基 + urban 第三体裁 Ch100，Task 173-188 扁平编号；V9.1/V9.2/V9.3/V9.4/V9.5/V9.6 全部完成；urban Ch1-Ch100 100/100 accepted，five-gate PASS，segment audit PASS，T9=0；单项任务文档归档 `archive/v9/` |
-| `tasks/V8-README.md` | **V8 历史任务事实入口（已收尾，含 V8.5）**：多体裁可插拔质量 + 章数爬坡；含 Task 编号治理规则；任务文档与报告归档 `archive/v8/` |
-| `tasks/V7-README.md` | **V7 历史任务事实入口（已收尾）**：sci-fi 单一体裁 Ch200 达成 |
-| `tasks/V6-README.md` | V6 历史任务事实入口：叙事骨架 MVP + 度量 + 长跑底盘，Task 141-159 |
-| `tasks/V5-README.md` | V5.0 历史任务事实入口 |
+| `docs/STATUS.md` | 当前状态、下一步和归档状态 |
+| `tasks/V10-README.md` | V10 阶段总结入口 |
+| `tasks/V11-Plan.md` | V11 开源可用化预登记 |
 
-## V8 历史产物（已收尾，保留入口）
-
-V8 已全量闭环（P/C/Q/S/V 五维全绿 + V8.5 遗留清零）。任务文档与报告统一归档至 `archive/v8/`（完整清单见 `archive/v8/INDEX.md`）；`tasks/V8-README.md` 保留为历史事实总索引。
-
-| 文件 | 用途 |
-|------|------|
-| `tasks/V8-README.md` | V8 任务总索引、阶段验收标准、依赖关系、Task 编号治理规则（历史事实入口） |
-| `archive/v8/INDEX.md` | V8 归档索引：全部任务文档与报告的归档清单 |
-| `archive/v8/tasks/172-project-template-plugin-DONE.md` | Task 172：项目模板化与体裁可插拔 |
-| `archive/v8/tasks/172a-v8-genre-runtime-profiles.md` | Task 172a：体裁运行时画像（GenreRuntimeProfile） |
-| `archive/v8/tasks/172d-cross-genre-literary-guardrails-DONE.md` | Task 172d：文学护栏跨体裁化 |
-| `archive/v8/tasks/172b-xuanhuan-ch100-climb.md` | Task 172b：xuanhuan Ch100 爬坡（含冻结终判口径，V9 中篇爬坡参照） |
-| `archive/v8/tasks/172c-wuxia-ch100-clean-rerun-DONE.md` | Task 172c：wuxia Ch100 clean rerun 完成报告（100/100 五门 PASS） |
-| `archive/v8/tasks/172j-budget-pruner-max-shadowing-fix.md` | Task 172j：BudgetPruner max_* 修复（V9 调参前置） |
-| `archive/v8/tasks/172k-c-dimension-evidence-closure.md` | Task 172k：C 判据证据补完 xuanhuan end10 / urban end15 / wuxia end20 |
-| `archive/v8/reports/172b-xuanhuan-ch100-climb.md` | xuanhuan Ch100 验收报告 |
-| `archive/v8/reports/172c-wuxia-ch100-climb.md` | wuxia Ch100 验收报告 |
-| `archive/v8/reports/172a.7-genre-short-window-validation.md` | 多体裁短窗口验证报告 |
-| `docs/reports/v8-literature-and-landscape-review.md` | V8 长调研报告（GenreRuntimeProfile 设计依据，保留活跃入口） |
-
-## V10 阶段产物（已完成）
-
-| 文件 | 用途 |
-|------|------|
-| `tasks/V10-README.md` | V10 总索引、阶段验收判据、任务拆解与执行纪律 |
-| `tasks/189-ch200-baseline-and-checkpoints-DONE.md` | Task 189 DONE：sci-fi Ch200 baseline 与 checkpoint 冻结结果 |
-| `tasks/189-scifi-ch200-baseline.json` | Task 189 冻结 baseline：Ch125/150/175/200 sci-fi Ch200 对照点 |
-| `tasks/189-ch200-baseline-and-checkpoints.md` | Task 189 任务书：Ch200 baseline 与 checkpoint 冻结 |
-| `tasks/190-ch100-terminal-source-inventory.md` | Task 190 任务书：xuanhuan/wuxia/urban Ch100 终点事实源盘点 |
-| `tasks/190-ch100-terminal-source-inventory-DONE.md` | Task 190 DONE：盘点结果与准入结论（xuanhuan=REBUILD_REQUIRED、wuxia=BLOCKED_DIRTY_SAMPLE、urban=CONTINUE_READY） |
-| `tasks/191-ch200-harness-preparation.md` | Task 191 任务书：Ch200 harness 准备与 dry-run 验收 |
-| `tasks/191-ch200-harness-preparation-DONE.md` | Task 191 DONE：V10 Ch200 harness 控制面、dry-run/status/audit/init-from-source 验收 |
-| `scripts/run_v10_ch200_climb.py` | Task 191 产物：V10 Ch200 分段爬坡 harness |
-| `tasks/192-xuanhuan-ch200-climb.md` | Task 192 任务书：xuanhuan clean Ch100 恢复/重建 + Ch200 分段爬坡 |
-| `tasks/192.p-scifi-short-regression-context-emergency-DONE.md` | Task 192.p DONE：scifi 短窗口 ContextEmergency 回归修复与复验 |
-| `tasks/192.q-xuanhuan-ch17-creative-director-json-parse-DONE.md` | Task 192.q DONE：xuanhuan Ch17 CreativeDirector JSON parse 修复 |
-| `tasks/192.r-xuanhuan-ch24-settlement-numerical-validation-DONE.md` | Task 192.r DONE：xuanhuan Ch24 settlement numerical validation 处理 |
-| `tasks/192.s-xuanhuan-ch50-t9-duplicate-clean-DONE.md` | Task 192.s DONE：xuanhuan Ch50 T9 duplicate 清理 |
-| `tasks/192.t-xuanhuan-ch75-segment-audit-critical-orphans.md` | Task 192.t 任务书：xuanhuan Ch75 segment audit critical orphan 修复 |
-| `tasks/192.t-xuanhuan-ch75-segment-audit-critical-orphans-DONE.md` | Task 192.t DONE：Ch75 segment audit critical orphan 修复完成报告 |
-| `tasks/192.u-xuanhuan-ch81-health-low-p1-critical-orphan.md` | Task 192.u 任务书：xuanhuan Ch81 health_low_p1 critical orphan 修复 |
-| `tasks/192.u-xuanhuan-ch81-health-low-p1-critical-orphan-DONE.md` | Task 192.u DONE：Ch81 health_low_p1 critical orphan 修复完成报告 |
-| `tasks/192.v-xuanhuan-ch93-health-low-p1-critical-orphan.md` | Task 192.v 任务书：xuanhuan Ch93 health_low_p1 critical orphan 修复 |
-| `tasks/192.v-xuanhuan-ch93-health-low-p1-critical-orphan-DONE.md` | Task 192.v DONE：Ch93 health_low_p1 critical orphan 修复完成报告 |
-| `tasks/192.w-xuanhuan-ch99-settlement-numerical-validation.md` | Task 192.w 任务书：xuanhuan Ch99 settlement numerical validation 修复 |
-| `tasks/192.w-xuanhuan-ch99-settlement-numerical-validation-DONE.md` | Task 192.w DONE：Ch99 settlement numerical validation 修复完成报告 |
-| `tasks/192.x-xuanhuan-ch99-segment-audit-critical-orphans.md` | Task 192.x 任务书：xuanhuan Ch99 segment audit critical orphan 修复 |
-| `tasks/192.x-xuanhuan-ch99-segment-audit-critical-orphans-DONE.md` | Task 192.x DONE：Ch99 segment audit critical orphan 修复完成报告 |
-| `tasks/192.y-xuanhuan-ch105-health-low-p1-critical-orphan.md` | Task 192.y 任务书：xuanhuan Ch105 health_low_p1 critical orphan 修复 |
-| `tasks/192.y-xuanhuan-ch105-health-low-p1-critical-orphan-DONE.md` | Task 192.y DONE：Ch105 health_low_p1 critical orphan 修复完成报告 |
-| `tasks/192.z-xuanhuan-ch105-segment-audit-critical-orphans.md` | Task 192.z 任务书：xuanhuan Ch105 segment audit critical orphan 修复 |
-| `tasks/192.z-xuanhuan-ch105-segment-audit-critical-orphans-DONE.md` | Task 192.z DONE：Ch105 segment audit critical orphan 修复完成报告 |
-| `tasks/192.aa-xuanhuan-ch106-invalid-model-run-state-cleanup-DONE.md` | Task 192.aa DONE：Ch106 invalid model run-state 清理完成报告 |
-| `tasks/192.ab-xuanhuan-ch108-settlement-numerical-validation.md` | Task 192.ab 任务书：Ch108 settlement numerical validation 修复 |
-| `tasks/192.ab-xuanhuan-ch108-settlement-numerical-validation-DONE.md` | Task 192.ab DONE：Ch108 settlement numerical validation 修复完成报告 |
-| `tasks/192.ac-xuanhuan-ch108-segment-audit-critical-orphans.md` | Task 192.ac 任务书：Ch108 segment audit critical orphan 修复 |
-| `tasks/192.ac-xuanhuan-ch108-segment-audit-critical-orphans-DONE.md` | Task 192.ac DONE：Ch108 segment audit critical orphan 修复完成报告 |
-| `tasks/192.ad-xuanhuan-ch111-health-low-streak-halt.md` | Task 192.ad 任务书：Ch111 health_low_streak_halt 修复 |
-| `tasks/192.ad-xuanhuan-ch111-health-low-streak-halt-DONE.md` | Task 192.ad DONE：Ch111 health_low_streak_halt 修复完成报告 |
-| `tasks/192.ae-xuanhuan-ch120-health-low-p1-halt.md` | Task 192.ae 任务书：Ch120 health_low_p1_halt 修复 |
-| `tasks/192.ae-xuanhuan-ch120-health-low-p1-halt-DONE.md` | Task 192.ae DONE：Ch120 health_low_p1_halt 与 failed head 空洞修复完成报告 |
-| `tasks/192.af-xuanhuan-ch129-settlement-json-parse.md` | Task 192.af 任务书：Ch129 SettlementExtractor JSON parse failure 修复 |
-| `tasks/192.af-xuanhuan-ch129-settlement-json-parse-DONE.md` | Task 192.af DONE：Ch129 SettlementExtractor JSON parse failure 修复完成报告 |
-| `tasks/192.ag-xuanhuan-ch129-segment-audit-critical-orphans.md` | Task 192.ag 任务书：Ch129 segment audit critical orphans 修复 |
-| `tasks/192.ag-xuanhuan-ch129-segment-audit-critical-orphans-DONE.md` | Task 192.ag DONE：Ch129 segment audit critical orphans 修复完成报告 |
-| `tasks/192.ah-xuanhuan-ch131-literary-auditor-json-parse.md` | Task 192.ah 任务书：Ch131 LiteraryAuditor JSON parse failure 修复 |
-| `tasks/192.ah-xuanhuan-ch131-literary-auditor-json-parse-DONE.md` | Task 192.ah DONE：Ch131 LiteraryAuditor JSON parse failure 修复完成报告 |
-| `tasks/192.ai-xuanhuan-ch134-health-low-streak-halt.md` | Task 192.ai 任务书：Ch134 health_low_streak_halt 修复 |
-| `tasks/192.ai-xuanhuan-ch134-health-low-streak-halt-DONE.md` | Task 192.ai DONE：Ch134 health_low_streak_halt 修复完成报告 |
-| `tasks/192.aj-xuanhuan-ch138-health-low-p1-halt.md` | Task 192.aj 任务书：Ch138 health_low_p1_halt 修复 |
-| `tasks/192.aj-xuanhuan-ch138-health-low-p1-halt-DONE.md` | Task 192.aj DONE：Ch138 health_low_p1_halt 修复完成报告 |
-| `tasks/192.ak-xuanhuan-ch144-health-low-streak-halt.md` | Task 192.ak 任务书：Ch144 health_low_streak_halt 修复 |
-| `tasks/192.ak-xuanhuan-ch144-health-low-streak-halt-DONE.md` | Task 192.ak DONE：Ch144 health_low_streak_halt 修复完成报告 |
-| `tasks/192.al-xuanhuan-ch150-health-low-p1-halt.md` | Task 192.al 任务书：Ch150 health_low_p1_halt 修复 |
-| `tasks/192.al-xuanhuan-ch150-health-low-p1-halt-DONE.md` | Task 192.al DONE：Ch150 health_low_p1_halt 修复完成报告 |
-| `tasks/192.am-xuanhuan-ch150-segment-audit-critical-orphans.md` | Task 192.am 任务书：Ch150 segment audit critical orphans 修复 |
-| `tasks/192.am-xuanhuan-ch150-segment-audit-critical-orphans-DONE.md` | Task 192.am DONE：Ch150 segment audit critical orphans 修复完成报告 |
-| `tasks/192.an-xuanhuan-ch150-five-gate-health-stale-report.md` | Task 192.an 任务书：Ch150 five-gate health stale report 修复 |
-| `tasks/192.an-xuanhuan-ch150-five-gate-health-stale-report-DONE.md` | Task 192.an DONE：Ch150 five-gate health stale report 修复完成报告 |
-| `tasks/192.ao-xuanhuan-ch156-health-low-streak-halt.md` | Task 192.ao 任务书：Ch156 health_low_streak_halt 修复 |
-| `tasks/192.ao-xuanhuan-ch156-health-low-streak-halt-DONE.md` | Task 192.ao DONE：Ch156 health_low_streak_halt 修复完成报告 |
-| `tasks/192.ap-xuanhuan-ch162-health-low-p1-halt.md` | Task 192.ap 任务书：Ch162 health_low_p1_halt 修复 |
-| `tasks/192.ap-xuanhuan-ch162-health-low-p1-halt-DONE.md` | Task 192.ap DONE：Ch162 health_low_p1_halt 修复完成报告 |
-| `tasks/192.aq-xuanhuan-ch168-health-low-p1-halt.md` | Task 192.aq 任务书：Ch168 health_low_p1_halt 修复 |
-| `tasks/192.aq-xuanhuan-ch168-health-low-p1-halt-DONE.md` | Task 192.aq DONE：Ch168 health_low_p1_halt 修复完成报告 |
-| `tasks/192.ar-xuanhuan-ch175-segment-t9-hard-gates.md` | Task 192.ar 任务书：Ch175 segment audit + T9 hard gates 修复 |
-| `tasks/192.ar-xuanhuan-ch175-segment-t9-hard-gates-DONE.md` | Task 192.ar DONE：Ch175 segment audit + T9 hard gates 修复完成报告 |
-| `tasks/192.as-xuanhuan-ch180-health-low-p1-halt.md` | Task 192.as 任务书：Ch180 health_low_p1_halt 修复 |
-| `tasks/192.as-xuanhuan-ch180-health-low-p1-halt-DONE.md` | Task 192.as DONE：Ch180 health_low_p1_halt 修复完成报告 |
-| `tasks/192.at-xuanhuan-ch186-health-low-p1-halt.md` | Task 192.at 任务书：Ch186 health_low_p1_halt 修复 |
-| `tasks/192.at-xuanhuan-ch186-health-low-p1-halt-DONE.md` | Task 192.at DONE：Ch186 health_low_p1_halt 修复完成报告 |
-| `tasks/192.au-xuanhuan-ch192-health-low-p1-halt.md` | Task 192.au 任务书：Ch192 health_low_p1_halt 修复 |
-| `tasks/192.au-xuanhuan-ch192-health-low-p1-halt-DONE.md` | Task 192.au DONE：Ch192 health_low_p1_halt 修复完成报告 |
-| `tasks/192.av-xuanhuan-ch198-health-low-p1-halt.md` | Task 192.av 任务书：Ch198 health_low_p1_halt 修复 |
-| `tasks/192.av-xuanhuan-ch198-health-low-p1-halt-DONE.md` | Task 192.av DONE：Ch198 health_low_p1_halt 修复完成报告 |
-| `tasks/192.aw-xuanhuan-ch200-five-gate-health-fail.md` | Task 192.aw 任务书：Ch200 five-gate health fail 修复 |
-| `tasks/192.aw-xuanhuan-ch200-five-gate-health-fail-DONE.md` | Task 192.aw DONE：Ch200 five-gate health fail 修复完成报告 |
-| `tasks/192-xuanhuan-ch200-climb-DONE.md` | Task 192 DONE：xuanhuan Ch200 climb 完成报告 |
-| `docs/reports/192-xuanhuan-ch100-climb.md` | Task 192 执行报告：xuanhuan clean Ch100 rebuild 阶段报告（Ch100 source ready） |
-| `tasks/193-wuxia-ch200-climb.md` | Task 193 任务书：wuxia Ch28 deterministic clean + Ch200 分段爬坡 |
-| `tasks/193.p-wuxia-ch125-missing-checkpoints-table-DONE.md` | Task 193.p DONE：wuxia Ch125 前旧 DB 缺 checkpoint table runtime 修复 |
-| `tasks/193.q-wuxia-ch117-health-low-p1-halt.md` | Task 193.q 任务书：wuxia Ch117 health_low_p1_halt 修复 |
-| `tasks/193.q-wuxia-ch117-health-low-p1-halt-DONE.md` | Task 193.q DONE：wuxia Ch117 health_low_p1_halt 修复完成报告 |
-| `tasks/193.r-eval-gate-caliber-fixes-DONE.md` | Task 193.r DONE：评测口径修复包（人工/质量暂停区分、segment_audit 阈值 Profile 同源、harness 成本预算接线） |
-| `tasks/193.s-setting-tracking-refresh-root-cause-DONE.md` | Task 193.s DONE：setting tracking 刷新漏报根因诊断（漏报 8/8 全落词面匹配层） |
-| `docs/reports/193s-setting-tracking-root-cause.md` | Task 193.s 诊断报告：setting tracking 漏报根因与修复决策 |
-| `tasks/193.t-overdue-operational-lifecycle-filter-DONE.md` | Task 193.t DONE：overdue actionable 口径（dormant/archived 不计入 health/streak P2） |
-| `tasks/193.u-wuxia-ch121-resume-schema-drift-DONE.md` | Task 193.u DONE：Ch121 resume schema drift 修复，Ch121→Ch125 完成、Ch125 审计全 PASS |
-| `tasks/193.v-setting-reference-term-matching-DONE.md` | Task 193.v DONE：setting tracking 正文引用词条匹配修复（Ch126+ 起生效） |
-| `tasks/193.w-segment-audit-verdict-and-stale-health-guard-DONE.md` | Task 193.w DONE：段审计判定消费修复（health_report_chapter + verdict 块 + stale 预警） |
-| `tasks/193.x-wuxia-ch150-segment-audit-critical-orphans-DONE.md` | Task 193.x DONE：wuxia Ch150 segment audit critical orphan 修复（2 条 critical tracking 刷新到 Ch150） |
-| `tasks/193.y-wuxia-ch145-t9-duplicate-clean-DONE.md` | Task 193.y DONE：wuxia Ch145 T9 duplicate 版本化 clean（`clean-145-6-c534f0e7`） |
-| `tasks/194-urban-ch200-climb.md` | Task 194 任务书：urban CONTINUE_READY source + Ch200 分段爬坡 |
-| `tasks/194-urban-ch200-climb-DONE.md` | Task 194 DONE：urban Ch200 climb 完成报告 |
-| `tasks/195-cross-genre-ch200-acceptance.md` | Task 195 任务书：跨体裁 Ch200 总验收 |
-| `tasks/195-cross-genre-ch200-acceptance-DONE.md` | Task 195 DONE：V10.2 跨体裁 Ch200 总验收完成报告 |
-| `tasks/196-excellence-signal-calibration.md` | Task 196 任务书：优秀度样本集与校准协议（V10.3 首任务，提前启动） |
-| `tasks/196-excellence-sample-set.json` | Task 196 样本清单：双冻结库各 30 章，seed=196 可复现，8 弧段全覆盖 |
-| `tasks/196-excellence-annotations.json` | Task 196 标注记录：72 条三层标注（anchor 12 / prelabel 48 / spotcheck 12） |
-| `tasks/196-excellence-calibration-report.md` | Task 196 校准报告：信号边界、judge 宽松偏差、规则试点负结果、197-202 接口约定 |
-| `tasks/196-excellence-signal-calibration-DONE.md` | Task 196 DONE：优秀度样本集与校准协议完成报告 |
-| `tasks/197-cross-chapter-homogeneity-tension-index.md` | Task 197 任务书：跨章同质化 / 多样性 / 叙事张力指数 |
-| `tasks/197-cross-chapter-homogeneity-tension-index-DONE.md` | Task 197 DONE：结构型优秀度离线信号完成报告 |
-| `tasks/198-chinese-ai-tone-rule-pack.md` | Task 198 任务书：中文 AI 腔规则包 |
-| `tasks/198-chinese-ai-tone-rule-pack-DONE.md` | Task 198 DONE：中文 AI 腔 / 生成事故规则包完成报告 |
-| `tasks/197-198-excellence-signals-report.json` | Task 197/198 结构化 report-only 信号报告 |
-| `docs/reports/197-198-excellence-signals-report.md` | Task 197/198 Markdown report-only 信号报告 |
-| `tasks/199-style-extraction-to-style-card.md` | Task 199 任务书：style extraction → style card |
-| `tasks/199-style-extraction-to-style-card-DONE.md` | Task 199 DONE：离线 style card 完成报告 |
-| `tasks/199-style-card-report.json` | Task 199 结构化 report-only style card 报告 |
-| `docs/reports/199-style-card-report.md` | Task 199 Markdown report-only style card 报告 |
-| `tasks/200-character-voice-anchors.md` | Task 200 任务书：角色声纹锚点 |
-| `tasks/200-character-voice-anchors-DONE.md` | Task 200 DONE：离线角色声纹锚点完成报告 |
-| `tasks/200-character-voice-anchor-report.json` | Task 200 结构化 report-only 角色声纹报告 |
-| `docs/reports/200-character-voice-anchor-report.md` | Task 200 Markdown report-only 角色声纹报告 |
-| `tasks/201-judge-bias-countermeasures.md` | Task 201 任务书：judge 偏差对策 |
-| `tasks/201-judge-bias-countermeasures-DONE.md` | Task 201 DONE：离线 judge 偏差分析与对策协议 |
-| `tasks/201-judge-bias-report.json` | Task 201 结构化 report-only judge bias 报告 |
-| `docs/reports/201-judge-bias-report.md` | Task 201 Markdown report-only judge bias 报告 |
-| `tasks/202-perplexity-readability-feasibility-spike.md` | Task 202 任务书：perplexity / 可读性可行性 spike |
-| `tasks/202-perplexity-readability-feasibility-spike-DONE.md` | Task 202 DONE：离线可读性 proxy 与 PPL 可行性完成报告 |
-| `tasks/202-readability-feasibility-report.json` | Task 202 结构化 report-only readability / PPL feasibility 报告 |
-| `docs/reports/202-readability-feasibility-report.md` | Task 202 Markdown report-only readability / PPL feasibility 报告 |
-| `tasks/203-excellence-report-integration.md` | Task 203 任务书：优秀度报告整合 |
-| `tasks/203-excellence-report-integration-DONE.md` | Task 203 DONE：统一优秀度 report-only 视图完成报告 |
-| `tasks/203-excellence-integrated-report.json` | Task 203 结构化统一优秀度 report-only 报告 |
-| `docs/reports/203-excellence-integrated-report.md` | Task 203 Markdown 统一优秀度 report-only 报告 |
-| `tasks/204-kg-graph-diff-spike.md` | Task 204 任务书：KG 图 diff spike |
-| `tasks/204-kg-graph-diff-spike-DONE.md` | Task 204 DONE：只读 KG diff spike 完成报告 |
-| `tasks/204-kg-diff-sample-manifest.json` | Task 204 样本 manifest：6 positive + 3 negative controls |
-| `tasks/204-kg-diff-spike-report.json` | Task 204 结构化 report-only KG diff spike 报告 |
-| `docs/reports/204-kg-diff-spike-report.md` | Task 204 Markdown report-only KG diff spike 报告 |
-| `tasks/205-facttrack-validity-interval-spike.md` | Task 205 任务书：FactTrack validity interval spike |
-| `tasks/205-facttrack-validity-interval-spike-DONE.md` | Task 205 DONE：shadow validity interval 完成报告 |
-| `tasks/205-facttrack-validity-interval-report.json` | Task 205 结构化 report-only validity interval 报告 |
-| `docs/reports/205-facttrack-validity-interval-report.md` | Task 205 Markdown report-only validity interval 报告 |
-| `tasks/206-storyline-tree-spike.md` | Task 206 任务书：Storyline Tree spike |
-| `tasks/206-storyline-tree-spike-DONE.md` | Task 206 DONE：shadow Storyline Tree 完成报告 |
-| `tasks/206-storyline-tree-spike-report.json` | Task 206 结构化 report-only Storyline Tree 报告 |
-| `docs/reports/206-storyline-tree-spike-report.md` | Task 206 Markdown report-only Storyline Tree 报告 |
-| `tasks/207-v10-closure-and-archive.md` | Task 207 任务书：V10 收口与归档 |
-| `tasks/207-v10-closure-and-archive-DONE.md` | Task 207 DONE：V10 收口完成报告 |
-| `docs/reports/207-v10-closure-report.md` | V10 closure report |
-| `archive/v10/INDEX.md` | V10 归档规划入口 |
-
-## V9 历史产物（已收尾，保留入口）
-
-| 文件 | 用途 |
-|------|------|
-| `tasks/V9-README.md` | V9 总索引、A/B/C 验收判据、依赖关系与执行纪律（历史事实入口） |
-| `archive/v9/INDEX.md` | V9 归档索引：Task 173-188 单项任务文档、关键证据、V10 预登记 |
-| `archive/v9/185-urban-short-window-calibration-DONE.md` | Task 185：urban 短窗口标定完成报告 |
-| `archive/v9/186-urban-ch100-climb.md` | Task 186：urban Ch100 爬坡任务书 |
-| `archive/v9/187-urban-ch100-climb-execution.md` | Task 187：urban Ch100 爬坡执行记录 |
-| `archive/v9/187-urban-ch100-climb-execution-DONE.md` | Task 187：urban Ch100 爬坡完成报告（100/100 accepted，T9=0） |
-| `archive/v9/188-v9-closure-and-archive-DONE.md` | Task 188：V9 收口与归档完成报告 |
-
-## V7 历史产物（保留入口）
-
-| 文件 | 用途 |
-|------|------|
-| `docs/reports/v7-literary-framework-review.md` | 文学质量框架级复盘 + V7 阶段验收标准 |
-| `archive/v7/reports/task-171-ch200-long-run-report.md` | Task 171 Ch200 长跑报告 |
-| `archive/v7/reports/task-171-ch200-analysis-and-next-step-report.md` | Task 171 Ch200 分析与 V7→V8 过渡 |
-| `archive/v7/reports/task-171w-ch201-ch220-window-report.md` | 171w Ch201-Ch220 窗口报告 |
-| `archive/v7/reports/task-165-stage-w-exit-report.md` | V7 阶段 W 出口报告 |
-| `archive/v7/reports/task-165-v7-threshold-calibration.md` | V7 阈值标定 |
-| `archive/v7/tasks/171-ch200-long-run.md` | Task 171 Ch200 长跑 |
-| `archive/v7/tasks/171p-ch200-wall-fix-DONE.md` | 171p state_mismatch 构念修正 |
-| `archive/v7/tasks/171p-ch200-wall-fix.md` | 171p 规划稿 |
-| `archive/v7/tasks/171q-ch200-wall-fix-duplicate.md` | 171q T9 重复阈值对齐 |
-| `archive/v7/tasks/171s-critical-setting-reference-refresh.md` | 171s critical setting 同义刷新 |
-| `archive/v7/tasks/171t-ch200-d1-hard-clean.md` | 171t D1 文本洁净量具补强 |
-| `archive/v7/tasks/171u-ch200-d1-clean-application-and-report-refresh.md` | 171u Ch200 清洁应用与报告复算 |
-| `archive/v7/tasks/171v-ch200-plus-literary-readability-guardrails.md` | 171v Ch200+ 文学护栏 |
-| `archive/v7/tasks/171w-171v-hardening-and-ch201-ch220-rerun.md` | 171w hardening 与 Ch201-Ch220 重验 |
-| `archive/v7/tasks/170-literary-quality-remediation-README.md` | 文学提质专项总览（已结束） |
-| `archive/v7/tasks/170-enforce-small-window-validation-and-t12-calibration-DONE.md` | Task 170：enforce 小窗口验证 + T12 冻结 |
-| `archive/v7/tasks/170c-t9-near-duplicate-detection-DONE.md` | Task 170c：T9 近似重复检测 |
-| `archive/v7/tasks/170d-literary-auditor-calibration-DONE.md` | Task 170d：LiteraryAuditor 校准 |
-| `archive/v7/tasks/170p-settlement-new-character-seeding-DONE.md` | Task 170p：新配角证据门禁入库 |
-
-## V6 历史产物
-
-| 文件 | 用途 |
-|------|------|
-| `tasks/V6-README.md` | V6 任务总索引 |
-| `archive/v6/tasks/` | V6 Task 141-159 单项任务文档 |
-| `archive/v6/reports/task-157-ch1-ch50-integration-validation-report.md` | Task 157 Ch1-Ch50 集成验证 |
-| `archive/v6/reports/task-158-ch1-ch100-long-run-validation-report.md` | Task 158 Ch1-Ch100 长跑验证 |
-| `archive/v6/reports/task-158r-kill-resume-drill-report.md` | Task 158r kill-resume 演练 |
-| `archive/v6/reports/task-159-v6-final-acceptance-report.md` | V6 最终验收报告 |
-| `archive/v6/reports/v6-stageA-threshold-calibration.md` | V6 阶段 A 阈值标定 |
-
-## V5 历史产物
-
-| 文件 | 用途 |
-|------|------|
-| `tasks/V5-README.md` | V5.0 任务总索引 |
-| `archive/v5/INDEX.md` | V5 归档索引 |
-| `archive/v5/tasks/` | V5.1/V5.2 Task 121-140 单项任务文档 |
-| `archive/v5/reports/` | Task 124/129/136-139d 等 V5.2 阶段报告 |
-| `archive/v5/plans/` | V5 历史规划稿 |
-| `archive/v5/context-docs/` | AGENTS/STATUS/INDEX 长版快照 |
-
-## 长期规划
-
-| 文件 | 用途 |
-|------|------|
-| `docs/300-chapter-gap-analysis.md` | 300 章卡点与解决路径的代码级分析 |
-| `archive/v6/plans/v6-plan.md` | V6 阶段规划 |
-| `archive/v7/plans/v7-vision.md` | V7 构想 |
-| `archive/v7/plans/v7-plan.md` | V7 阶段规划 |
-| `docs/reports/v7-literary-framework-review.md` | V7 文学质量框架级复盘 |
-
-## V7 代码审查与架构审计
-
-已归档至 `archive/v7/audit/`，入口见 `archive/v7/INDEX.md`。
-
-## 按场景查阅
+## 当前开发入口
 
 | 场景 | 文件 |
 |------|------|
-| V10 规划入口（已完成） | `tasks/V10-README.md` |
-| V10.1 口径与工具任务书 | `tasks/189-ch200-baseline-and-checkpoints.md`、`tasks/190-ch100-terminal-source-inventory.md`、`tasks/191-ch200-harness-preparation.md` |
-| V10.1 已完成证据 | `tasks/189-ch200-baseline-and-checkpoints-DONE.md`、`tasks/189-scifi-ch200-baseline.json`、`tasks/190-ch100-terminal-source-inventory-DONE.md`、`tasks/191-ch200-harness-preparation-DONE.md` |
-| V10.2 跨体裁 Ch200 总验收 | `tasks/195-cross-genre-ch200-acceptance.md`、`tasks/195-cross-genre-ch200-acceptance-DONE.md` |
-| V10.3 优秀度信号包第一批 | `tasks/197-cross-chapter-homogeneity-tension-index-DONE.md`、`tasks/198-chinese-ai-tone-rule-pack-DONE.md`、`docs/reports/197-198-excellence-signals-report.md` |
-| V10.3 style card | `tasks/199-style-extraction-to-style-card-DONE.md`、`docs/reports/199-style-card-report.md` |
-| V10.3 角色声纹锚点 | `tasks/200-character-voice-anchors-DONE.md`、`docs/reports/200-character-voice-anchor-report.md` |
-| V10.3 judge 偏差对策 | `tasks/201-judge-bias-countermeasures-DONE.md`、`docs/reports/201-judge-bias-report.md` |
-| V10.3 可读性 / PPL 可行性 | `tasks/202-perplexity-readability-feasibility-spike-DONE.md`、`docs/reports/202-readability-feasibility-report.md` |
-| V10.3 优秀度报告整合 | `tasks/203-excellence-report-integration-DONE.md`、`docs/reports/203-excellence-integrated-report.md` |
-| V10.4 KG 图 diff spike | `tasks/204-kg-graph-diff-spike-DONE.md`、`docs/reports/204-kg-diff-spike-report.md` |
-| V10.4 FactTrack validity interval spike | `tasks/205-facttrack-validity-interval-spike-DONE.md`、`docs/reports/205-facttrack-validity-interval-report.md` |
-| V10.4 Storyline Tree spike | `tasks/206-storyline-tree-spike-DONE.md`、`docs/reports/206-storyline-tree-spike-report.md` |
-| V10 收口与归档 | `tasks/207-v10-closure-and-archive-DONE.md`、`docs/reports/207-v10-closure-report.md`、`archive/v10/INDEX.md` |
-| V11 预登记入口 | `tasks/V11-Plan.md` |
-| V10.2 Ch200 爬坡任务书与前置修复 | `tasks/192-xuanhuan-ch200-climb.md`、`tasks/192-xuanhuan-ch200-climb-DONE.md`、`tasks/192.p-scifi-short-regression-context-emergency-DONE.md`、`tasks/192.q-xuanhuan-ch17-creative-director-json-parse-DONE.md`、`tasks/192.r-xuanhuan-ch24-settlement-numerical-validation-DONE.md`、`tasks/192.s-xuanhuan-ch50-t9-duplicate-clean-DONE.md`、`tasks/192.t-xuanhuan-ch75-segment-audit-critical-orphans.md`、`tasks/192.t-xuanhuan-ch75-segment-audit-critical-orphans-DONE.md`、`tasks/192.u-xuanhuan-ch81-health-low-p1-critical-orphan.md`、`tasks/192.u-xuanhuan-ch81-health-low-p1-critical-orphan-DONE.md`、`tasks/192.v-xuanhuan-ch93-health-low-p1-critical-orphan.md`、`tasks/192.v-xuanhuan-ch93-health-low-p1-critical-orphan-DONE.md`、`tasks/192.w-xuanhuan-ch99-settlement-numerical-validation.md`、`tasks/192.w-xuanhuan-ch99-settlement-numerical-validation-DONE.md`、`tasks/192.x-xuanhuan-ch99-segment-audit-critical-orphans.md`、`tasks/192.x-xuanhuan-ch99-segment-audit-critical-orphans-DONE.md`、`tasks/192.y-xuanhuan-ch105-health-low-p1-critical-orphan.md`、`tasks/192.y-xuanhuan-ch105-health-low-p1-critical-orphan-DONE.md`、`tasks/192.z-xuanhuan-ch105-segment-audit-critical-orphans.md`、`tasks/192.z-xuanhuan-ch105-segment-audit-critical-orphans-DONE.md`、`tasks/192.aa-xuanhuan-ch106-invalid-model-run-state-cleanup-DONE.md`、`tasks/192.ab-xuanhuan-ch108-settlement-numerical-validation.md`、`tasks/192.ab-xuanhuan-ch108-settlement-numerical-validation-DONE.md`、`tasks/192.ac-xuanhuan-ch108-segment-audit-critical-orphans.md`、`tasks/192.ac-xuanhuan-ch108-segment-audit-critical-orphans-DONE.md`、`tasks/192.ad-xuanhuan-ch111-health-low-streak-halt.md`、`tasks/192.ad-xuanhuan-ch111-health-low-streak-halt-DONE.md`、`tasks/192.ae-xuanhuan-ch120-health-low-p1-halt.md`、`tasks/192.ae-xuanhuan-ch120-health-low-p1-halt-DONE.md`、`tasks/192.af-xuanhuan-ch129-settlement-json-parse.md`、`tasks/192.af-xuanhuan-ch129-settlement-json-parse-DONE.md`、`tasks/192.ag-xuanhuan-ch129-segment-audit-critical-orphans.md`、`tasks/192.ag-xuanhuan-ch129-segment-audit-critical-orphans-DONE.md`、`tasks/192.ah-xuanhuan-ch131-literary-auditor-json-parse.md`、`tasks/192.ah-xuanhuan-ch131-literary-auditor-json-parse-DONE.md`、`tasks/192.ai-xuanhuan-ch134-health-low-streak-halt.md`、`tasks/192.ai-xuanhuan-ch134-health-low-streak-halt-DONE.md`、`tasks/192.aj-xuanhuan-ch138-health-low-p1-halt.md`、`tasks/192.aj-xuanhuan-ch138-health-low-p1-halt-DONE.md`、`tasks/192.ak-xuanhuan-ch144-health-low-streak-halt.md`、`tasks/192.ak-xuanhuan-ch144-health-low-streak-halt-DONE.md`、`tasks/192.al-xuanhuan-ch150-health-low-p1-halt.md`、`tasks/192.al-xuanhuan-ch150-health-low-p1-halt-DONE.md`、`tasks/192.am-xuanhuan-ch150-segment-audit-critical-orphans.md`、`tasks/192.am-xuanhuan-ch150-segment-audit-critical-orphans-DONE.md`、`tasks/192.an-xuanhuan-ch150-five-gate-health-stale-report.md`、`tasks/192.an-xuanhuan-ch150-five-gate-health-stale-report-DONE.md`、`tasks/192.ao-xuanhuan-ch156-health-low-streak-halt.md`、`tasks/192.ao-xuanhuan-ch156-health-low-streak-halt-DONE.md`、`tasks/192.ap-xuanhuan-ch162-health-low-p1-halt.md`、`tasks/192.ap-xuanhuan-ch162-health-low-p1-halt-DONE.md`、`tasks/192.aq-xuanhuan-ch168-health-low-p1-halt.md`、`tasks/192.aq-xuanhuan-ch168-health-low-p1-halt-DONE.md`、`tasks/192.ar-xuanhuan-ch175-segment-t9-hard-gates.md`、`tasks/192.ar-xuanhuan-ch175-segment-t9-hard-gates-DONE.md`、`tasks/192.as-xuanhuan-ch180-health-low-p1-halt.md`、`tasks/192.as-xuanhuan-ch180-health-low-p1-halt-DONE.md`、`tasks/192.at-xuanhuan-ch186-health-low-p1-halt.md`、`tasks/192.at-xuanhuan-ch186-health-low-p1-halt-DONE.md`、`tasks/192.au-xuanhuan-ch192-health-low-p1-halt.md`、`tasks/192.au-xuanhuan-ch192-health-low-p1-halt-DONE.md`、`tasks/192.av-xuanhuan-ch198-health-low-p1-halt.md`、`tasks/192.av-xuanhuan-ch198-health-low-p1-halt-DONE.md`、`tasks/192.aw-xuanhuan-ch200-five-gate-health-fail.md`、`tasks/192.aw-xuanhuan-ch200-five-gate-health-fail-DONE.md`、`docs/reports/192-xuanhuan-ch100-climb.md`、`tasks/193-wuxia-ch200-climb.md`、`tasks/193.p-wuxia-ch125-missing-checkpoints-table-DONE.md`、`tasks/193.q-wuxia-ch117-health-low-p1-halt.md`、`tasks/193.q-wuxia-ch117-health-low-p1-halt-DONE.md`、`tasks/193.r-eval-gate-caliber-fixes-DONE.md`、`tasks/193.s-setting-tracking-refresh-root-cause-DONE.md`、`tasks/193.t-overdue-operational-lifecycle-filter-DONE.md`、`tasks/193.u-wuxia-ch121-resume-schema-drift-DONE.md`、`tasks/193.v-setting-reference-term-matching-DONE.md`、`tasks/193.w-segment-audit-verdict-and-stale-health-guard-DONE.md`、`tasks/194-urban-ch200-climb.md` |
-| V9 任务入口（已收尾） | `tasks/V9-README.md` |
-| V9 归档索引 | `archive/v9/INDEX.md` |
-| V9 长跑可靠性 DONE | `archive/v9/173-interpreter-exit-hang-fix-DONE.md`、`archive/v9/174-logging-system-foundation-DONE.md`、`archive/v9/175-cost-tracking-and-budget-circuit-breaker-DONE.md`、`archive/v9/176-windows-anti-hang-wrapper-DONE.md` |
-| V9 交付发布 DONE | `archive/v9/177-export-book-manuscript-DONE.md`、`archive/v9/178-wheel-packaging-resource-loading-DONE.md`、`archive/v9/179-cli-experience-fixes-DONE.md`、`archive/v9/180-doctor-environment-check-DONE.md`、`archive/v9/181-ci-and-test-cleanup-DONE.md` |
-| V9 工具链收编 DONE | `archive/v9/182-five-gate-and-segment-audit-tools-DONE.md`、`archive/v9/183-profile-tuning-cli-DONE.md`、`archive/v9/184-genres-creative-modes-json-schema-DONE.md` |
-| V9 urban 标定 DONE | `archive/v9/185-urban-short-window-calibration-DONE.md` |
-| V9 urban Ch100 任务书 | `archive/v9/186-urban-ch100-climb.md` |
-| V9 urban Ch100 执行记录 | `archive/v9/187-urban-ch100-climb-execution.md` |
-| V9 urban Ch100 DONE | `archive/v9/187-urban-ch100-climb-execution-DONE.md` |
-| V9 收口 DONE | `archive/v9/188-v9-closure-and-archive-DONE.md` |
-| V8 历史任务入口（已收尾） | `tasks/V8-README.md` |
-| 当前项目状态 | `docs/STATUS.md` |
-| V8 归档索引（任务文档与报告） | `archive/v8/INDEX.md` |
-| V9 中篇爬坡冻结口径参照 | `archive/v8/tasks/172b-xuanhuan-ch100-climb.md` |
-| V7 历史任务入口 | `tasks/V7-README.md` |
-| V6 历史任务入口 | `tasks/V6-README.md` |
-| V5 历史任务入口 | `tasks/V5-README.md` |
-| 开发规范 | `AGENTS.md` |
-| 300 章卡点分析 | `docs/300-chapter-gap-analysis.md` |
+| V11 启动 | `tasks/V11-Plan.md` |
+| V10 追溯 | `archive/v10/INDEX.md` |
+| V10 closure report | `archive/v10/reports/207-v10-closure-report.md` |
 | 架构手册 | `docs/architecture/04-vibe-coding-engineering.md` |
 | 技术参考 | `docs/architecture/05-tech-reference.md` |
-| Code Review | `docs/code-review-plan.md` |
-| Prompt 工艺卡 | `src/songyan/prompts/cards/` |
+| 开发规范 | `AGENTS.md` |
 
 ## 归档入口
 
-归档内容默认不读，仅在追溯历史决策时查阅。
+| 阶段 | 入口 |
+|------|------|
+| V10 | `archive/v10/INDEX.md` |
+| V9 | `archive/v9/INDEX.md` |
+| V8 | `archive/v8/INDEX.md` |
+| V7 | `archive/v7/INDEX.md` |
+| V6 | `archive/v6/INDEX.md` |
+| V5 | `archive/v5/INDEX.md` |
+| V4 | `archive/v4/INDEX.md` |
+| V3 | `archive/v3/INDEX.md` |
+| 早期任务 | `archive/tasks/` |
+| 旧计划/规格 | `archive/superpowers/INDEX.md` |
+| 历史分析文档 | `archive/docs/` |
 
-- `archive/v3/INDEX.md` — V3.x 历史结论
-- `archive/v4/INDEX.md` — V4.x 历史结论
-- `archive/v5/INDEX.md` — V5 归档索引
-- `archive/v6/INDEX.md` — V6 归档索引
-- `archive/v7/INDEX.md` — V7 历史产物归档
-- `archive/v8/INDEX.md` — V8 历史产物归档（任务文档 + 报告）
-- `archive/v9/INDEX.md` — V9 历史产物归档（任务文档 + 证据索引）
-- `archive/v10/INDEX.md` — V10 归档规划入口（Task 189-207，物理归档待后续执行）
-- `archive/superpowers/INDEX.md` — 早期 Superpowers 计划/规格归档
-- `archive/tasks/` — 历史任务规划稿与交接报告
+## 当前目录约定
+
+- `tasks/` 只保留活跃阶段入口、模板和当前/下一阶段计划。
+- `archive/v10/tasks/` 保存 V10 Task 189-207 的任务书和 DONE 文档。
+- `archive/v10/artifacts/` 保存 V10 JSON 样本、manifest 和 report artifact。
+- `archive/v10/reports/` 保存 V10 Markdown 报告。
+- `docs/reports/` 不再作为默认活跃报告目录；新报告若不是 README 直引，应优先进入任务归档或被 `.gitignore` 忽略。

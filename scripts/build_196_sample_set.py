@@ -37,7 +37,7 @@ SOURCES = [
     },
 ]
 
-OUTPUT = Path("tasks/196-excellence-sample-set.json")
+OUTPUT = Path("archive/v10/artifacts/196-excellence-sample-set.json")
 
 
 def _connect_readonly(db_path: Path) -> sqlite3.Connection:

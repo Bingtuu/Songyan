@@ -14,8 +14,8 @@ from songyan.evals.excellence_sampling import load_chapter_content
 from songyan.utils.ai_tells import detect_ai_tells
 from songyan.utils.fatigue_words import detect_fatigue_words
 
-SAMPLE_SET = Path("tasks/196-excellence-sample-set.json")
-ANNOTATIONS = Path("tasks/196-excellence-annotations.json")
+SAMPLE_SET = Path("archive/v10/artifacts/196-excellence-sample-set.json")
+ANNOTATIONS = Path("archive/v10/artifacts/196-excellence-annotations.json")
 GENRE_DATA = Path("src/songyan/genres/data")
 OUTPUT = Path(".tmp/196_rule_pilot.json")
 

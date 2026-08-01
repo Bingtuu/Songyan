@@ -1,6 +1,6 @@
 """Task 193.v tests — setting tracking 正文引用词条匹配修复.
 
-验收用例来自 193.s 诊断报告（docs/reports/193s-setting-tracking-root-cause.md）
+验收用例来自 193.s 诊断报告（archive/v10/reports/193s-setting-tracking-root-cause.md）
 的逐章证据：F1 词条生成（《》拆分 + core phrase 下限）、F2 虚字归一化、
 F3 name 派生 term CJK 后缀放宽；共享 `_term_in_content` 默认行为必须不变。
 """

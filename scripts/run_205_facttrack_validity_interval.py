@@ -20,10 +20,10 @@ from songyan.evals.facttrack_validity_interval import (  # noqa: E402
     render_facttrack_validity_report,
 )
 
-DEFAULT_MANIFEST = Path("tasks/204-kg-diff-sample-manifest.json")
-DEFAULT_KG_REPORT = Path("tasks/204-kg-diff-spike-report.json")
-DEFAULT_JSON = Path("tasks/205-facttrack-validity-interval-report.json")
-DEFAULT_MD = Path("docs/reports/205-facttrack-validity-interval-report.md")
+DEFAULT_MANIFEST = Path("archive/v10/artifacts/204-kg-diff-sample-manifest.json")
+DEFAULT_KG_REPORT = Path("archive/v10/artifacts/204-kg-diff-spike-report.json")
+DEFAULT_JSON = Path("archive/v10/artifacts/205-facttrack-validity-interval-report.json")
+DEFAULT_MD = Path("archive/v10/reports/205-facttrack-validity-interval-report.md")
 
 
 def build_parser() -> argparse.ArgumentParser:

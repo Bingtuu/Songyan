@@ -20,11 +20,11 @@ from songyan.evals.storyline_tree_spike import (  # noqa: E402
     render_storyline_tree_report,
 )
 
-DEFAULT_MANIFEST = Path("tasks/204-kg-diff-sample-manifest.json")
-DEFAULT_KG_REPORT = Path("tasks/204-kg-diff-spike-report.json")
-DEFAULT_FACTTRACK_REPORT = Path("tasks/205-facttrack-validity-interval-report.json")
-DEFAULT_JSON = Path("tasks/206-storyline-tree-spike-report.json")
-DEFAULT_MD = Path("docs/reports/206-storyline-tree-spike-report.md")
+DEFAULT_MANIFEST = Path("archive/v10/artifacts/204-kg-diff-sample-manifest.json")
+DEFAULT_KG_REPORT = Path("archive/v10/artifacts/204-kg-diff-spike-report.json")
+DEFAULT_FACTTRACK_REPORT = Path("archive/v10/artifacts/205-facttrack-validity-interval-report.json")
+DEFAULT_JSON = Path("archive/v10/artifacts/206-storyline-tree-spike-report.json")
+DEFAULT_MD = Path("archive/v10/reports/206-storyline-tree-spike-report.md")
 
 
 def build_parser() -> argparse.ArgumentParser:

@@ -16,13 +16,13 @@ from songyan.evals.excellence_report_integration import (
 )
 
 ROOT = Path(__file__).resolve().parents[2]
-SAMPLE_SET = ROOT / "tasks/196-excellence-sample-set.json"
-ANNOTATIONS = ROOT / "tasks/196-excellence-annotations.json"
-EXCELLENCE_REPORT = ROOT / "tasks/197-198-excellence-signals-report.json"
-STYLE_REPORT = ROOT / "tasks/199-style-card-report.json"
-VOICE_REPORT = ROOT / "tasks/200-character-voice-anchor-report.json"
-JUDGE_REPORT = ROOT / "tasks/201-judge-bias-report.json"
-READABILITY_REPORT = ROOT / "tasks/202-readability-feasibility-report.json"
+SAMPLE_SET = ROOT / "archive/v10/artifacts/196-excellence-sample-set.json"
+ANNOTATIONS = ROOT / "archive/v10/artifacts/196-excellence-annotations.json"
+EXCELLENCE_REPORT = ROOT / "archive/v10/artifacts/197-198-excellence-signals-report.json"
+STYLE_REPORT = ROOT / "archive/v10/artifacts/199-style-card-report.json"
+VOICE_REPORT = ROOT / "archive/v10/artifacts/200-character-voice-anchor-report.json"
+JUDGE_REPORT = ROOT / "archive/v10/artifacts/201-judge-bias-report.json"
+READABILITY_REPORT = ROOT / "archive/v10/artifacts/202-readability-feasibility-report.json"
 
 
 def _load_real_report() -> Any:

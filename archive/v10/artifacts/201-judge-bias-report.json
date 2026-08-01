@@ -1,0 +1,692 @@
+{
+  "generated_at": "2026-08-01T04:53:02.888485+00:00",
+  "sample_set": "archive/v10/artifacts/196-excellence-sample-set.json",
+  "annotations": "archive/v10/artifacts/196-excellence-annotations.json",
+  "excellence_report": "archive/v10/artifacts/197-198-excellence-signals-report.json",
+  "style_card_report": "archive/v10/artifacts/199-style-card-report.json",
+  "voice_anchor_report": "archive/v10/artifacts/200-character-voice-anchor-report.json",
+  "report_only": true,
+  "boundaries": [
+    "report-only / observe-only",
+    "does not call LLM judges",
+    "does not treat prelabel scores as truth",
+    "does not modify Writer or CreativeDirector prompts",
+    "does not enter accept/reject gates",
+    "does not change CED, five-gate, segment audit, or T9"
+  ],
+  "summary": {
+    "truth_records": 24,
+    "prelabel_records": 48,
+    "paired_spotcheck_records": 12,
+    "major_deltas_ge_2": 24,
+    "supported_biases": 6,
+    "prelabel_evidence_fidelity": 0.791
+  },
+  "score_deltas": [
+    {
+      "genre": "xuanhuan",
+      "chapter": 17,
+      "dimension": "homogeneity",
+      "prelabel": 4,
+      "truth": 3,
+      "delta": 1
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 17,
+      "dimension": "tension",
+      "prelabel": 5,
+      "truth": 3,
+      "delta": 2
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 17,
+      "dimension": "ai_tone",
+      "prelabel": 4,
+      "truth": 2,
+      "delta": 2
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 17,
+      "dimension": "overall",
+      "prelabel": 4,
+      "truth": 3,
+      "delta": 1
+    },
+    {
+      "genre": "scifi",
+      "chapter": 17,
+      "dimension": "homogeneity",
+      "prelabel": 4,
+      "truth": 3,
+      "delta": 1
+    },
+    {
+      "genre": "scifi",
+      "chapter": 17,
+      "dimension": "tension",
+      "prelabel": 5,
+      "truth": 4,
+      "delta": 1
+    },
+    {
+      "genre": "scifi",
+      "chapter": 17,
+      "dimension": "ai_tone",
+      "prelabel": 4,
+      "truth": 3,
+      "delta": 1
+    },
+    {
+      "genre": "scifi",
+      "chapter": 17,
+      "dimension": "overall",
+      "prelabel": 4,
+      "truth": 3,
+      "delta": 1
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 32,
+      "dimension": "homogeneity",
+      "prelabel": 3,
+      "truth": 3,
+      "delta": 0
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 32,
+      "dimension": "tension",
+      "prelabel": 5,
+      "truth": 4,
+      "delta": 1
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 32,
+      "dimension": "ai_tone",
+      "prelabel": 4,
+      "truth": 3,
+      "delta": 1
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 32,
+      "dimension": "overall",
+      "prelabel": 4,
+      "truth": 3,
+      "delta": 1
+    },
+    {
+      "genre": "scifi",
+      "chapter": 39,
+      "dimension": "homogeneity",
+      "prelabel": 4,
+      "truth": 2,
+      "delta": 2
+    },
+    {
+      "genre": "scifi",
+      "chapter": 39,
+      "dimension": "tension",
+      "prelabel": 5,
+      "truth": 3,
+      "delta": 2
+    },
+    {
+      "genre": "scifi",
+      "chapter": 39,
+      "dimension": "ai_tone",
+      "prelabel": 4,
+      "truth": 2,
+      "delta": 2
+    },
+    {
+      "genre": "scifi",
+      "chapter": 39,
+      "dimension": "overall",
+      "prelabel": 4,
+      "truth": 2,
+      "delta": 2
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 53,
+      "dimension": "homogeneity",
+      "prelabel": 4,
+      "truth": 3,
+      "delta": 1
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 53,
+      "dimension": "tension",
+      "prelabel": 5,
+      "truth": 4,
+      "delta": 1
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 53,
+      "dimension": "ai_tone",
+      "prelabel": 4,
+      "truth": 3,
+      "delta": 1
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 53,
+      "dimension": "overall",
+      "prelabel": 5,
+      "truth": 3,
+      "delta": 2
+    },
+    {
+      "genre": "scifi",
+      "chapter": 53,
+      "dimension": "homogeneity",
+      "prelabel": 4,
+      "truth": 3,
+      "delta": 1
+    },
+    {
+      "genre": "scifi",
+      "chapter": 53,
+      "dimension": "tension",
+      "prelabel": 5,
+      "truth": 4,
+      "delta": 1
+    },
+    {
+      "genre": "scifi",
+      "chapter": 53,
+      "dimension": "ai_tone",
+      "prelabel": 4,
+      "truth": 2,
+      "delta": 2
+    },
+    {
+      "genre": "scifi",
+      "chapter": 53,
+      "dimension": "overall",
+      "prelabel": 4,
+      "truth": 3,
+      "delta": 1
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 80,
+      "dimension": "homogeneity",
+      "prelabel": 4,
+      "truth": 3,
+      "delta": 1
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 80,
+      "dimension": "tension",
+      "prelabel": 5,
+      "truth": 3,
+      "delta": 2
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 80,
+      "dimension": "ai_tone",
+      "prelabel": 4,
+      "truth": 2,
+      "delta": 2
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 80,
+      "dimension": "overall",
+      "prelabel": 4,
+      "truth": 3,
+      "delta": 1
+    },
+    {
+      "genre": "scifi",
+      "chapter": 80,
+      "dimension": "homogeneity",
+      "prelabel": 4,
+      "truth": 2,
+      "delta": 2
+    },
+    {
+      "genre": "scifi",
+      "chapter": 80,
+      "dimension": "tension",
+      "prelabel": 5,
+      "truth": 3,
+      "delta": 2
+    },
+    {
+      "genre": "scifi",
+      "chapter": 80,
+      "dimension": "ai_tone",
+      "prelabel": 4,
+      "truth": 2,
+      "delta": 2
+    },
+    {
+      "genre": "scifi",
+      "chapter": 80,
+      "dimension": "overall",
+      "prelabel": 4,
+      "truth": 2,
+      "delta": 2
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 105,
+      "dimension": "homogeneity",
+      "prelabel": 4,
+      "truth": 3,
+      "delta": 1
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 105,
+      "dimension": "tension",
+      "prelabel": 5,
+      "truth": 3,
+      "delta": 2
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 105,
+      "dimension": "ai_tone",
+      "prelabel": 4,
+      "truth": 2,
+      "delta": 2
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 105,
+      "dimension": "overall",
+      "prelabel": 4,
+      "truth": 2,
+      "delta": 2
+    },
+    {
+      "genre": "scifi",
+      "chapter": 105,
+      "dimension": "homogeneity",
+      "prelabel": 4,
+      "truth": 3,
+      "delta": 1
+    },
+    {
+      "genre": "scifi",
+      "chapter": 105,
+      "dimension": "tension",
+      "prelabel": 5,
+      "truth": 3,
+      "delta": 2
+    },
+    {
+      "genre": "scifi",
+      "chapter": 105,
+      "dimension": "ai_tone",
+      "prelabel": 4,
+      "truth": 2,
+      "delta": 2
+    },
+    {
+      "genre": "scifi",
+      "chapter": 105,
+      "dimension": "overall",
+      "prelabel": 5,
+      "truth": 3,
+      "delta": 2
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 134,
+      "dimension": "homogeneity",
+      "prelabel": 3,
+      "truth": 3,
+      "delta": 0
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 134,
+      "dimension": "tension",
+      "prelabel": 5,
+      "truth": 3,
+      "delta": 2
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 134,
+      "dimension": "ai_tone",
+      "prelabel": 4,
+      "truth": 2,
+      "delta": 2
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 134,
+      "dimension": "overall",
+      "prelabel": 5,
+      "truth": 2,
+      "delta": 3
+    },
+    {
+      "genre": "scifi",
+      "chapter": 134,
+      "dimension": "homogeneity",
+      "prelabel": 4,
+      "truth": 3,
+      "delta": 1
+    },
+    {
+      "genre": "scifi",
+      "chapter": 134,
+      "dimension": "tension",
+      "prelabel": 5,
+      "truth": 4,
+      "delta": 1
+    },
+    {
+      "genre": "scifi",
+      "chapter": 134,
+      "dimension": "ai_tone",
+      "prelabel": 4,
+      "truth": 2,
+      "delta": 2
+    },
+    {
+      "genre": "scifi",
+      "chapter": 134,
+      "dimension": "overall",
+      "prelabel": 4,
+      "truth": 3,
+      "delta": 1
+    }
+  ],
+  "evidence_fidelity": [
+    {
+      "layer": "anchor",
+      "quote_count": 45,
+      "verbatim_count": 45,
+      "fidelity_ratio": 1.0,
+      "bad_examples": []
+    },
+    {
+      "layer": "prelabel",
+      "quote_count": 134,
+      "verbatim_count": 106,
+      "fidelity_ratio": 0.791,
+      "bad_examples": [
+        "Ch23: 心魔幻境中，唯有亲手斩杀幻象，方能破境。但你不杀，却劈碎虚空——此法从未有人用过。",
+        "Ch53: “别重蹈你爹娘的覆辙。别把自己填进去。”",
+        "Ch60: 她把自己变成了第二道屏障。",
+        "Ch61: “石殿里等你的人——是我。”",
+        "Ch71: 掌心的琥珀色火焰……自主追了上去，沿着气息收缩的轨迹钻进矿石的裂隙里。",
+        "Ch84: 你身上的那股力量……不是你自己的。",
+        "Ch134: “他叫林越。十八岁，炼气七层，天资极好。你父亲让他来救我出去...”",
+        "Ch148: “你父亲……用血肉镇压的，不是东西，”它的声音沙哑得像两块石头在摩擦，“是渊眼的‘核’——灵渊存在的源头。”"
+      ]
+    },
+    {
+      "layer": "spotcheck",
+      "quote_count": 48,
+      "verbatim_count": 48,
+      "fidelity_ratio": 1.0,
+      "bad_examples": []
+    }
+  ],
+  "findings": [
+    {
+      "bias_id": "leniency_bias",
+      "definition": "LLM prelabel scores are systematically higher than agent-deep-read truth.",
+      "status": "supported",
+      "statistics": {
+        "compared_dimensions": 48,
+        "positive_delta": 46,
+        "negative_delta": 0,
+        "major_delta_ge_2": 24,
+        "mean_delta": 1.479
+      },
+      "evidence": [
+        "xuanhuan Ch17 tension: prelabel=5, truth=3",
+        "xuanhuan Ch17 ai_tone: prelabel=4, truth=2",
+        "scifi Ch39 homogeneity: prelabel=4, truth=2",
+        "scifi Ch39 tension: prelabel=5, truth=3",
+        "scifi Ch39 ai_tone: prelabel=4, truth=2",
+        "scifi Ch39 overall: prelabel=4, truth=2",
+        "xuanhuan Ch53 overall: prelabel=5, truth=3",
+        "scifi Ch53 ai_tone: prelabel=4, truth=2"
+      ],
+      "countermeasures": [
+        "anchor_example_injection",
+        "prelabel_downweighting",
+        "blind_review_protocol"
+      ],
+      "limitations": []
+    },
+    {
+      "bias_id": "low_score_blindness",
+      "definition": "The judge avoids or misses the low-score region proven by deep-read labels.",
+      "status": "supported",
+      "statistics": {
+        "prelabel_low_scores_le_2": 0,
+        "truth_low_scores_le_2": 37,
+        "truth_records": 24,
+        "blind_spot_chapters": 10
+      },
+      "evidence": [
+        "xuanhuan Ch50 truth overall=2",
+        "xuanhuan Ch118 truth overall=2",
+        "xuanhuan Ch194 truth overall=2",
+        "scifi Ch32 truth overall=2",
+        "scifi Ch84 truth overall=2",
+        "scifi Ch194 truth overall=2",
+        "xuanhuan Ch105 truth overall=2",
+        "xuanhuan Ch134 truth overall=2"
+      ],
+      "countermeasures": [
+        "force_1_2_score_examples",
+        "require_low_score_checklist_before_scoring"
+      ],
+      "limitations": []
+    },
+    {
+      "bias_id": "evidence_drift",
+      "definition": "Judge evidence quotes may be paraphrased, stitched, or absent from accepted prose.",
+      "status": "supported",
+      "statistics": {
+        "prelabel_quote_count": 134,
+        "prelabel_verbatim_count": 106,
+        "prelabel_fidelity_ratio": 0.791
+      },
+      "evidence": [
+        "Ch23: 心魔幻境中，唯有亲手斩杀幻象，方能破境。但你不杀，却劈碎虚空——此法从未有人用过。",
+        "Ch53: “别重蹈你爹娘的覆辙。别把自己填进去。”",
+        "Ch60: 她把自己变成了第二道屏障。",
+        "Ch61: “石殿里等你的人——是我。”",
+        "Ch71: 掌心的琥珀色火焰……自主追了上去，沿着气息收缩的轨迹钻进矿石的裂隙里。",
+        "Ch84: 你身上的那股力量……不是你自己的。",
+        "Ch134: “他叫林越。十八岁，炼气七层，天资极好。你父亲让他来救我出去...”",
+        "Ch148: “你父亲……用血肉镇压的，不是东西，”它的声音沙哑得像两块石头在摩擦，“是渊眼的‘核’——灵渊存在的源头。”"
+      ],
+      "countermeasures": [
+        "verbatim_evidence_check",
+        "reject_or_downweight_non_verbatim_quotes"
+      ],
+      "limitations": []
+    },
+    {
+      "bias_id": "engineering_artifact_blindness",
+      "definition": "Judge misses generated/procedural artifacts such as self-reference and residue.",
+      "status": "supported",
+      "statistics": {
+        "truth_low_ai_tone_with_engineering_signal": 7,
+        "prelabel_high_despite_engineering_signal": 2
+      },
+      "evidence": [
+        "xuanhuan Ch134: setting_patch_segment",
+        "scifi Ch80: chapter_self_reference, verbatim_sentence_repeat"
+      ],
+      "countermeasures": [
+        "mandatory_engineering_artifact_checklist",
+        "consume_task198_hard_evidence_as_report_context"
+      ],
+      "limitations": []
+    },
+    {
+      "bias_id": "style_vs_quality_confusion",
+      "definition": "Observed style traits and repeated style risks are not equivalent to quality defects.",
+      "status": "supported",
+      "statistics": {
+        "style_cards": 3,
+        "strong_truth_records_with_style_risks": 6,
+        "report_only": true
+      },
+      "evidence": [
+        "xuanhuan Ch1: template_rhetoric_density",
+        "xuanhuan Ch104: not_but_template, template_rhetoric_density",
+        "xuanhuan Ch169: beat_rhythm_repetition, template_rhetoric_density",
+        "scifi Ch1: beat_rhythm_repetition, template_rhetoric_density, tension_flatline",
+        "scifi Ch104: beat_rhythm_repetition, scene_function_homogeneity, template_rhetoric_density, tension_flatline",
+        "scifi Ch199: template_rhetoric_density, tension_flatline"
+      ],
+      "countermeasures": [
+        "separate_style_profile_from_quality_score",
+        "label_style_card_as_observation_only"
+      ],
+      "limitations": [
+        "Style card does not produce per-chapter quality truth."
+      ]
+    },
+    {
+      "bias_id": "voice_homogeneity_blindness",
+      "definition": "Judge under-detects dialogue voice sameness and attribution uncertainty.",
+      "status": "supported",
+      "statistics": {
+        "ai_tone_major_delta_ge_2": 9,
+        "voice_anchor_count": 34,
+        "unknown_attribution_ratio_all": 0.599,
+        "weak_with_voice_evidence": 15,
+        "weak_samples": 15
+      },
+      "evidence": [
+        "xuanhuan Ch17: ai_tone prelabel=4, truth=2",
+        "scifi Ch39: ai_tone prelabel=4, truth=2",
+        "scifi Ch53: ai_tone prelabel=4, truth=2",
+        "xuanhuan Ch80: ai_tone prelabel=4, truth=2",
+        "scifi Ch80: ai_tone prelabel=4, truth=2",
+        "xuanhuan Ch105: ai_tone prelabel=4, truth=2",
+        "scifi Ch105: ai_tone prelabel=4, truth=2",
+        "xuanhuan Ch134: ai_tone prelabel=4, truth=2"
+      ],
+      "countermeasures": [
+        "voice_homogeneity_checklist",
+        "unknown_attribution_warning",
+        "do_not_convert_voice_report_to_dialogue_style_card"
+      ],
+      "limitations": []
+    }
+  ],
+  "protocols": [
+    {
+      "protocol_id": "anchor_example_injection",
+      "title": "Anchor examples for judge calibration",
+      "steps": [
+        "Use Task 196 strong/weak anchor examples as rubric references.",
+        "Include at least one overall=2 and one ai_tone=1 example in offline judge trials.",
+        "Keep examples outside Writer / CreativeDirector prompts unless separately approved."
+      ],
+      "applies_to": [
+        "leniency_bias",
+        "low_score_blindness"
+      ],
+      "status": "recommended",
+      "notes": [
+        "Protocol only; Task 201 does not add or run a new prompt card."
+      ]
+    },
+    {
+      "protocol_id": "forced_checklist",
+      "title": "Mandatory artifact/style/voice checklist",
+      "steps": [
+        "Before scoring ai_tone, check Task 198 engineering artifact classes.",
+        "Before scoring homogeneity, inspect Task 197 structure risks.",
+        "Before scoring voice, inspect Task 200 unknown attribution and voice anchors."
+      ],
+      "applies_to": [
+        "engineering_artifact_blindness",
+        "style_vs_quality_confusion",
+        "voice_homogeneity_blindness"
+      ],
+      "status": "recommended",
+      "notes": []
+    },
+    {
+      "protocol_id": "verbatim_evidence_check",
+      "title": "Evidence quote verification",
+      "steps": [
+        "Every evidence quote must be searched in accepted prose.",
+        "Non-verbatim evidence is rejected or clearly downweighted.",
+        "No automatic revision may consume non-verbatim judge evidence."
+      ],
+      "applies_to": [
+        "evidence_drift"
+      ],
+      "status": "guardrail-only",
+      "notes": []
+    },
+    {
+      "protocol_id": "prelabel_downweighting",
+      "title": "Prelabel is comparison-only",
+      "steps": [
+        "Do not use prelabel scores as truth labels.",
+        "Use prelabel only for broad coverage and disagreement discovery.",
+        "Task 203 should display prelabel as low-confidence context."
+      ],
+      "applies_to": [
+        "leniency_bias",
+        "low_score_blindness"
+      ],
+      "status": "recommended",
+      "notes": []
+    },
+    {
+      "protocol_id": "blind_review_protocol",
+      "title": "Future multi-judge blind review",
+      "steps": [
+        "Run multiple judge cards on the same anchor + spotcheck set.",
+        "Hide provenance labels during scoring.",
+        "Report inter-judge variance and do not convert aggregate score into a gate."
+      ],
+      "applies_to": [
+        "leniency_bias",
+        "low_score_blindness"
+      ],
+      "status": "future-experiment",
+      "notes": [
+        "Not executed in Task 201."
+      ]
+    },
+    {
+      "protocol_id": "goodhart_guardrail",
+      "title": "Goodhart risk statement",
+      "steps": [
+        "Do not optimize generation directly against judge scores.",
+        "Separate observation reports from acceptance criteria.",
+        "Any future gate proposal requires separate calibration and regression."
+      ],
+      "applies_to": [
+        "leniency_bias",
+        "style_vs_quality_confusion",
+        "voice_homogeneity_blindness"
+      ],
+      "status": "guardrail-only",
+      "notes": []
+    }
+  ]
+}

@@ -17,9 +17,9 @@ from songyan.evals.storyline_tree_spike import (
 )
 
 ROOT = Path(__file__).resolve().parents[2]
-REAL_MANIFEST = ROOT / "tasks/204-kg-diff-sample-manifest.json"
-REAL_KG_REPORT = ROOT / "tasks/204-kg-diff-spike-report.json"
-REAL_FACTTRACK_REPORT = ROOT / "tasks/205-facttrack-validity-interval-report.json"
+REAL_MANIFEST = ROOT / "archive/v10/artifacts/204-kg-diff-sample-manifest.json"
+REAL_KG_REPORT = ROOT / "archive/v10/artifacts/204-kg-diff-spike-report.json"
+REAL_FACTTRACK_REPORT = ROOT / "archive/v10/artifacts/205-facttrack-validity-interval-report.json"
 
 
 def _sample(

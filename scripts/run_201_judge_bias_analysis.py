@@ -21,13 +21,13 @@ from songyan.evals.judge_bias_analysis import (  # noqa: E402
     render_judge_bias_report,
 )
 
-DEFAULT_SAMPLE_SET = Path("tasks/196-excellence-sample-set.json")
-DEFAULT_ANNOTATIONS = Path("tasks/196-excellence-annotations.json")
-DEFAULT_EXCELLENCE_REPORT = Path("tasks/197-198-excellence-signals-report.json")
-DEFAULT_STYLE_REPORT = Path("tasks/199-style-card-report.json")
-DEFAULT_VOICE_REPORT = Path("tasks/200-character-voice-anchor-report.json")
-DEFAULT_JSON = Path("tasks/201-judge-bias-report.json")
-DEFAULT_MD = Path("docs/reports/201-judge-bias-report.md")
+DEFAULT_SAMPLE_SET = Path("archive/v10/artifacts/196-excellence-sample-set.json")
+DEFAULT_ANNOTATIONS = Path("archive/v10/artifacts/196-excellence-annotations.json")
+DEFAULT_EXCELLENCE_REPORT = Path("archive/v10/artifacts/197-198-excellence-signals-report.json")
+DEFAULT_STYLE_REPORT = Path("archive/v10/artifacts/199-style-card-report.json")
+DEFAULT_VOICE_REPORT = Path("archive/v10/artifacts/200-character-voice-anchor-report.json")
+DEFAULT_JSON = Path("archive/v10/artifacts/201-judge-bias-report.json")
+DEFAULT_MD = Path("archive/v10/reports/201-judge-bias-report.md")
 
 
 def build_parser() -> argparse.ArgumentParser:

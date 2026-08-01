@@ -372,7 +372,7 @@ def test_audit_dry_run_pins_task189_ch200_baseline(tmp_path: Path) -> None:
             "--up-to",
             "150",
             "--baseline",
-            "tasks/189-scifi-ch200-baseline.json",
+            "archive/v10/artifacts/189-scifi-ch200-baseline.json",
             "--work-dir",
             tmp_path.as_posix(),
             "--dry-run",
@@ -383,7 +383,7 @@ def test_audit_dry_run_pins_task189_ch200_baseline(tmp_path: Path) -> None:
 
     five_gate = payload["commands"]["five_gate"]
     assert "--baseline" in five_gate
-    assert "tasks/189-scifi-ch200-baseline.json" in five_gate
+    assert "archive/v10/artifacts/189-scifi-ch200-baseline.json" in five_gate
     assert "--up-to" in five_gate
     assert "150" in five_gate
     assert payload["environment"]["DATABASE_URL"].endswith("task_v10_urban_ch200.db")

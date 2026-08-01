@@ -1,0 +1,1041 @@
+{
+  "generated_at": "2026-08-01T03:12:41.994120+00:00",
+  "sample_set": "archive/v10/artifacts/196-excellence-sample-set.json",
+  "annotations": "archive/v10/artifacts/196-excellence-annotations.json",
+  "excellence_report": "archive/v10/artifacts/197-198-excellence-signals-report.json",
+  "report_only": true,
+  "boundaries": [
+    "report-only / observe-only",
+    "style card is an observed profile, not a prompt constraint",
+    "does not modify Writer or CreativeDirector prompts",
+    "does not enter accept/reject gates",
+    "does not change CED, five-gate, segment audit, or T9",
+    "does not create character voice anchors; Task 200 owns that scope"
+  ],
+  "cards": [
+    {
+      "scope": "all",
+      "source_chapters": [
+        "scifi Ch1",
+        "scifi Ch17",
+        "scifi Ch21",
+        "scifi Ch23",
+        "scifi Ch32",
+        "scifi Ch39",
+        "scifi Ch47",
+        "scifi Ch50",
+        "scifi Ch53",
+        "scifi Ch60",
+        "scifi Ch61",
+        "scifi Ch71",
+        "scifi Ch80",
+        "scifi Ch84",
+        "scifi Ch92",
+        "scifi Ch98",
+        "scifi Ch104",
+        "scifi Ch105",
+        "scifi Ch118",
+        "scifi Ch120",
+        "scifi Ch134",
+        "scifi Ch135",
+        "scifi Ch145",
+        "scifi Ch148",
+        "scifi Ch162",
+        "scifi Ch164",
+        "scifi Ch169",
+        "scifi Ch178",
+        "scifi Ch194",
+        "scifi Ch199",
+        "xuanhuan Ch1",
+        "xuanhuan Ch17",
+        "xuanhuan Ch21",
+        "xuanhuan Ch23",
+        "xuanhuan Ch32",
+        "xuanhuan Ch39",
+        "xuanhuan Ch47",
+        "xuanhuan Ch50",
+        "xuanhuan Ch53",
+        "xuanhuan Ch60",
+        "xuanhuan Ch61",
+        "xuanhuan Ch71",
+        "xuanhuan Ch80",
+        "xuanhuan Ch84",
+        "xuanhuan Ch92",
+        "xuanhuan Ch98",
+        "xuanhuan Ch104",
+        "xuanhuan Ch105",
+        "xuanhuan Ch118",
+        "xuanhuan Ch120",
+        "xuanhuan Ch134",
+        "xuanhuan Ch135",
+        "xuanhuan Ch145",
+        "xuanhuan Ch148",
+        "xuanhuan Ch162",
+        "xuanhuan Ch164",
+        "xuanhuan Ch169",
+        "xuanhuan Ch178",
+        "xuanhuan Ch194",
+        "xuanhuan Ch199"
+      ],
+      "report_only": true,
+      "usage_note": "观察到的风格画像；V10 内不得默认注入 Writer / CreativeDirector prompt。",
+      "narrative_voice": {
+        "dominant_person": "third",
+        "pov_depth": "shallow",
+        "tone": "restrained-observational",
+        "evidence": [
+          {
+            "chapter": 1,
+            "quote": "“我也觉得不可能，呃，但校准算法跑了三遍，结果一致。”",
+            "detail": "scifi"
+          },
+          {
+            "chapter": 17,
+            "quote": "“你不明白你在做什么。”指挥官的声音平稳，但林渊听出了其中的裂隙——那个停顿，那个本该是陈述句却微微上扬的尾音。",
+            "detail": "scifi"
+          },
+          {
+            "chapter": 21,
+            "quote": "他拼命抓住那段数据流，像溺水的人抓住浮木。意识被拖进记忆深处，时间在神经回路上倒流——回到七年前，回到那个他永远不想再面对的夜晚。",
+            "detail": "scifi"
+          }
+        ]
+      },
+      "sentence_rhythm": {
+        "avg_sentence_chars": 20.4,
+        "avg_paragraph_chars": 39.57,
+        "short_sentence_ratio": 0.551,
+        "long_sentence_ratio": 0.1,
+        "dialogue_ratio": 0.257,
+        "rhythm_label": "short-pulse",
+        "evidence": [
+          {
+            "chapter": 1,
+            "quote": "深空观测站第三十七次轮值，林渊盯着全息屏幕上跳动的数据流，手指无意识地在操作台边缘敲击着——三快两慢，三快两慢。",
+            "detail": "scifi"
+          },
+          {
+            "chapter": 17,
+            "quote": "核心舱室的空气凝滞如固态。",
+            "detail": "scifi"
+          },
+          {
+            "chapter": 21,
+            "quote": "共鸣过载像一把钝刀，正在一寸寸剜开他的神经回路。",
+            "detail": "scifi"
+          }
+        ]
+      },
+      "imagery_lexicon": {
+        "top_terms": [
+          "方舟",
+          "协议",
+          "碎片",
+          "神经",
+          "像是",
+          "意识",
+          "共鸣",
+          "开始",
+          "手指",
+          "表面"
+        ],
+        "genre_terms": [
+          "方舟",
+          "共鸣",
+          "协议",
+          "坐标",
+          "核心",
+          "灵渊",
+          "血脉",
+          "令牌",
+          "守门",
+          "拳"
+        ],
+        "overused_terms": [
+          "陈曦",
+          "协议",
+          "意识",
+          "神经",
+          "老人",
+          "渊老",
+          "灵渊老",
+          "渊老人",
+          "观察",
+          "察者"
+        ],
+        "evidence": [
+          {
+            "chapter": 1,
+            "quote": "那是共鸣。",
+            "detail": "scifi"
+          },
+          {
+            "chapter": 17,
+            "quote": "那张脸林渊见过无数次——在方舟的每个关键节点，在每次危机会议的主席位上，在那些被记录进方舟日志的全息影像中。但现在，那双眼睛里有什么东西不一样了。不是敌意，是某种更复杂的东西，像是被困在玻璃罩里的人，透过透明的壁垒注视着外面的世界。",
+            "detail": "scifi"
+          },
+          {
+            "chapter": 21,
+            "quote": "共鸣过载像一把钝刀，正在一寸寸剜开他的神经回路。",
+            "detail": "scifi"
+          }
+        ]
+      },
+      "exposition_style": {
+        "exposition_density": 0.04,
+        "setting_patch_hits": 2,
+        "style_label": "mixed-exposition",
+        "risks": [
+          "setting_patch_segment"
+        ],
+        "evidence": [
+          {
+            "chapter": 1,
+            "quote": "这组序列的格式，他见过。十年前，在猎户座旋臂边缘的一处古代文明遗址中，他见过完全相同的编码规则。那个遗址距今四十七万年，属于一个早已灭绝的外星种族。",
+            "detail": "scifi"
+          },
+          {
+            "chapter": 17,
+            "quote": "“建造者。”指挥官说，每一个字都像是从牙缝中挤出来的。“你以为方舟是什么？一艘飞船？一个文明备份？不，它是一个信标。共鸣协议是信号发生器，方舟本身是天线。而你们所有人——方舟上的每一个人类——都是电池。”",
+            "detail": "scifi"
+          },
+          {
+            "chapter": 21,
+            "quote": "林渊的意识在数据洪流中浮沉，方舟的底层协议像无数条发光的锁链，从四面八方挤进他的大脑皮层。他试图切断共鸣连接，但每一次尝试都让银色纹路从胸口蔓延得更快——已经爬到了锁骨，正沿着颈动脉向颧骨延伸。",
+            "detail": "scifi"
+          }
+        ]
+      },
+      "tension_pattern": {
+        "average_tension": 0.189,
+        "peak_tension": 3.387,
+        "tension_stdev": 0.274,
+        "pattern": "flatline-risk",
+        "dominant_scene_functions": [
+          "dialogue",
+          "combat",
+          "revelation",
+          "investigation"
+        ]
+      },
+      "dialogue_style": {
+        "dialogue_ratio": 0.257,
+        "dialogue_line_count": 2340,
+        "avg_dialogue_sentence_chars": 16.07,
+        "style_label": "short-exchange",
+        "sample_lines": [
+          "林工，B区深空探测阵列有点异常。",
+          "说具体。",
+          "就是那个……呃，冥王星轨道外侧二十三号节点的数据流，零点三秒内出现了连续十七次相位抖动。",
+          "不可能。",
+          "我也觉得不可能，呃，但校准算法跑了三遍，结果一致。",
+          "把原始数据调给我，别经过降噪滤波。",
+          "那个……原始数据全是噪声，什么都看不见。",
+          "照做。"
+        ]
+      },
+      "anti_patterns": [
+        {
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "count": 53,
+          "max_severity": "medium",
+          "examples": [
+            "scifi Ch1: 不是",
+            "scifi Ch17: 像是",
+            "scifi Ch21: 不是",
+            "scifi Ch23: 不是",
+            "scifi Ch32: 不是"
+          ]
+        },
+        {
+          "signal_id": "beat_rhythm_repetition",
+          "label": "桥段节奏重复",
+          "count": 40,
+          "max_severity": "medium",
+          "examples": [
+            "scifi Ch1: D-D-D-D",
+            "scifi Ch17: D-D-D-D",
+            "scifi Ch23: R-I-R-R",
+            "scifi Ch32: D-D-D-D",
+            "scifi Ch47: D-D-D-D"
+          ]
+        },
+        {
+          "signal_id": "not_but_template",
+          "label": "否定转折模板复用",
+          "count": 28,
+          "max_severity": "medium",
+          "examples": [
+            "scifi Ch21: 不是钥匙本身，而是",
+            "scifi Ch50: 不是来自设备，而是",
+            "scifi Ch53: 不是文字，不是图像，而是",
+            "scifi Ch60: 不是简单的几何证明，而是",
+            "scifi Ch84: 不是追踪单元，而是"
+          ]
+        },
+        {
+          "signal_id": "scene_function_homogeneity",
+          "label": "场景功能同质化",
+          "count": 26,
+          "max_severity": "high",
+          "examples": [
+            "scifi Ch32: scifi segment 2",
+            "scifi Ch47: scifi segment 2",
+            "scifi Ch50: scifi segment 2",
+            "scifi Ch60: scifi segment 3",
+            "scifi Ch61: scifi segment 3"
+          ]
+        },
+        {
+          "signal_id": "tension_flatline",
+          "label": "张力曲线平直",
+          "count": 21,
+          "max_severity": "high",
+          "examples": [
+            "scifi Ch1: avg=0.12, peak=0.79, stdev=0.17",
+            "scifi Ch32: avg=0.16, peak=1.24, stdev=0.22",
+            "scifi Ch47: avg=0.17, peak=1.16, stdev=0.22",
+            "scifi Ch60: avg=0.17, peak=1.16, stdev=0.23",
+            "scifi Ch61: avg=0.13, peak=1.18, stdev=0.21"
+          ]
+        },
+        {
+          "signal_id": "chapter_self_reference",
+          "label": "章节号自指泄漏",
+          "count": 13,
+          "max_severity": "high",
+          "examples": [
+            "scifi Ch80: 会加深共鸣耦合。” “对。” 他想起第74章——不，他想起在方舟核心层的牢笼里，陈曦的半机械",
+            "scifi Ch84: 舟意志的反噬波形在第四秒到达。 林渊在第21章看到过这个协议的设计蓝图——观察者休眠舱上方的核",
+            "scifi Ch84: #0的结构表面扫过，协议骨架的编码模式与第83章中类人文明领袖的波形投影完全一致——它从来都不是",
+            "scifi Ch84: 色锁定标识。 方舟锁死协议。 林渊在第21章看到过这个协议的设计蓝图——观察者休眠舱上方的核",
+            "scifi Ch84: %。 林渊盯着状态栏上跳动的数字，想起第82章中赵铭说过的话——共鸣耦合度每上升一个百分点，他"
+          ]
+        },
+        {
+          "signal_id": "engineering_residue",
+          "label": "工程残留 / 未渲染标记",
+          "count": 12,
+          "max_severity": "high",
+          "examples": [
+            "scifi Ch84: （停顿半秒）",
+            "scifi Ch84: （停顿半秒）",
+            "scifi Ch84: （停顿半秒）",
+            "scifi Ch84: （停顿半秒）",
+            "scifi Ch98: （停顿半秒，压低声音）"
+          ]
+        },
+        {
+          "signal_id": "motif_reuse_density",
+          "label": "意象/冲突词复用密度高",
+          "count": 12,
+          "max_severity": "low",
+          "examples": [
+            "scifi Ch47: 观察, 察者, 一个, 观察者, 的声",
+            "scifi Ch53: 陈曦, 曦的, 陈曦的, 她的, 结构",
+            "scifi Ch84: 字段, 陈曦, 节点, 波形, 曦的",
+            "scifi Ch105: 协议, 议层, 协议层, 文明, 渊的",
+            "scifi Ch134: 意识, 神经, 一个, 渊的, 林渊的"
+          ]
+        },
+        {
+          "signal_id": "verbatim_sentence_repeat",
+          "label": "逐字句子复读",
+          "count": 5,
+          "max_severity": "high",
+          "examples": [
+            "scifi Ch60: 但他们不知道——角膜后门不是用来观察我的，是用来观察他们的。",
+            "scifi Ch80: 你以为那是你破解方舟协议的工具。",
+            "scifi Ch80: 但共鸣频率是方舟用来筛选和操控容器的工具。",
+            "scifi Ch84: 字段#7到#12的波形在衰减至临界点时，突然反向增强。",
+            "scifi Ch92: 她说：‘如果林渊以后问到，告诉他——不是他的错。"
+          ]
+        },
+        {
+          "signal_id": "cross_chapter_verbatim_repeat",
+          "label": "跨章逐字复读",
+          "count": 2,
+          "max_severity": "medium",
+          "examples": [
+            "xuanhuan Ch50: 雾兽的口器突然张开，喷出一团浓稠的白雾。",
+            "xuanhuan Ch98: 雾兽的口器突然张开，喷出一团浓稠的白雾。"
+          ]
+        },
+        {
+          "signal_id": "legacy_ai_tell",
+          "label": "既有 AI 腔词面命中",
+          "count": 2,
+          "max_severity": "low",
+          "examples": [
+            "scifi Ch118: 突然意识到——我已经想",
+            "scifi Ch118: 一瞬间扩散到"
+          ]
+        },
+        {
+          "signal_id": "setting_patch_segment",
+          "label": "设定补丁段 / 说明文重述",
+          "count": 2,
+          "max_severity": "medium",
+          "examples": [
+            "xuanhuan Ch118: 那些记忆碎片终于拼成更清楚的轮廓：灵渊核心令牌本该一分为二，一半被母亲在他出生夜嵌入丹田，另一半留在门后；母亲的血脉觉醒能力，正是以星辰血脉和灵渊血脉的共鸣，…",
+            "xuanhuan Ch134: 父亲留下的金色徽记、灵渊令牌这把核心钥匙，以及灵渊老人气息与陆沉血气之间的牵连，都被母亲的血脉锁解释清楚：徽记不是装饰，是三道封印钥匙的外显烙印；令牌不是单块…"
+          ]
+        }
+      ]
+    },
+    {
+      "scope": "genre:scifi",
+      "source_chapters": [
+        "scifi Ch1",
+        "scifi Ch17",
+        "scifi Ch21",
+        "scifi Ch23",
+        "scifi Ch32",
+        "scifi Ch39",
+        "scifi Ch47",
+        "scifi Ch50",
+        "scifi Ch53",
+        "scifi Ch60",
+        "scifi Ch61",
+        "scifi Ch71",
+        "scifi Ch80",
+        "scifi Ch84",
+        "scifi Ch92",
+        "scifi Ch98",
+        "scifi Ch104",
+        "scifi Ch105",
+        "scifi Ch118",
+        "scifi Ch120",
+        "scifi Ch134",
+        "scifi Ch135",
+        "scifi Ch145",
+        "scifi Ch148",
+        "scifi Ch162",
+        "scifi Ch164",
+        "scifi Ch169",
+        "scifi Ch178",
+        "scifi Ch194",
+        "scifi Ch199"
+      ],
+      "report_only": true,
+      "usage_note": "观察到的风格画像；V10 内不得默认注入 Writer / CreativeDirector prompt。",
+      "narrative_voice": {
+        "dominant_person": "third",
+        "pov_depth": "shallow",
+        "tone": "dialogue-driven",
+        "evidence": [
+          {
+            "chapter": 1,
+            "quote": "“我也觉得不可能，呃，但校准算法跑了三遍，结果一致。”",
+            "detail": "scifi"
+          },
+          {
+            "chapter": 17,
+            "quote": "“你不明白你在做什么。”指挥官的声音平稳，但林渊听出了其中的裂隙——那个停顿，那个本该是陈述句却微微上扬的尾音。",
+            "detail": "scifi"
+          },
+          {
+            "chapter": 21,
+            "quote": "他拼命抓住那段数据流，像溺水的人抓住浮木。意识被拖进记忆深处，时间在神经回路上倒流——回到七年前，回到那个他永远不想再面对的夜晚。",
+            "detail": "scifi"
+          }
+        ]
+      },
+      "sentence_rhythm": {
+        "avg_sentence_chars": 20.69,
+        "avg_paragraph_chars": 42.26,
+        "short_sentence_ratio": 0.557,
+        "long_sentence_ratio": 0.113,
+        "dialogue_ratio": 0.296,
+        "rhythm_label": "short-pulse",
+        "evidence": [
+          {
+            "chapter": 1,
+            "quote": "深空观测站第三十七次轮值，林渊盯着全息屏幕上跳动的数据流，手指无意识地在操作台边缘敲击着——三快两慢，三快两慢。",
+            "detail": "scifi"
+          },
+          {
+            "chapter": 17,
+            "quote": "核心舱室的空气凝滞如固态。",
+            "detail": "scifi"
+          },
+          {
+            "chapter": 21,
+            "quote": "共鸣过载像一把钝刀，正在一寸寸剜开他的神经回路。",
+            "detail": "scifi"
+          }
+        ]
+      },
+      "imagery_lexicon": {
+        "top_terms": [
+          "方舟",
+          "协议",
+          "神经",
+          "意识",
+          "共鸣",
+          "建造",
+          "造者",
+          "核心",
+          "控制",
+          "建造者"
+        ],
+        "genre_terms": [
+          "方舟",
+          "共鸣",
+          "协议",
+          "坐标",
+          "核心",
+          "拳",
+          "刀"
+        ],
+        "overused_terms": [
+          "陈曦",
+          "协议",
+          "意识",
+          "神经",
+          "观察",
+          "察者",
+          "观察者",
+          "结构",
+          "字段",
+          "节点"
+        ],
+        "evidence": [
+          {
+            "chapter": 1,
+            "quote": "“你的神经信号在共振，”他说，“观测站的生物监测系统在十五分钟前发出了警报。你的脑电波出现了异常波动，频率和——”",
+            "detail": "scifi"
+          },
+          {
+            "chapter": 17,
+            "quote": "那张脸林渊见过无数次——在方舟的每个关键节点，在每次危机会议的主席位上，在那些被记录进方舟日志的全息影像中。但现在，那双眼睛里有什么东西不一样了。不是敌意，是某种更复杂的东西，像是被困在玻璃罩里的人，透过透明的壁垒注视着外面的世界。",
+            "detail": "scifi"
+          },
+          {
+            "chapter": 21,
+            "quote": "共鸣过载像一把钝刀，正在一寸寸剜开他的神经回路。",
+            "detail": "scifi"
+          }
+        ]
+      },
+      "exposition_style": {
+        "exposition_density": 0.075,
+        "setting_patch_hits": 0,
+        "style_label": "mixed-exposition",
+        "risks": [],
+        "evidence": [
+          {
+            "chapter": 1,
+            "quote": "这组序列的格式，他见过。十年前，在猎户座旋臂边缘的一处古代文明遗址中，他见过完全相同的编码规则。那个遗址距今四十七万年，属于一个早已灭绝的外星种族。",
+            "detail": "scifi"
+          },
+          {
+            "chapter": 17,
+            "quote": "“建造者。”指挥官说，每一个字都像是从牙缝中挤出来的。“你以为方舟是什么？一艘飞船？一个文明备份？不，它是一个信标。共鸣协议是信号发生器，方舟本身是天线。而你们所有人——方舟上的每一个人类——都是电池。”",
+            "detail": "scifi"
+          },
+          {
+            "chapter": 21,
+            "quote": "林渊的意识在数据洪流中浮沉，方舟的底层协议像无数条发光的锁链，从四面八方挤进他的大脑皮层。他试图切断共鸣连接，但每一次尝试都让银色纹路从胸口蔓延得更快——已经爬到了锁骨，正沿着颈动脉向颧骨延伸。",
+            "detail": "scifi"
+          }
+        ]
+      },
+      "tension_pattern": {
+        "average_tension": 0.17,
+        "peak_tension": 2.314,
+        "tension_stdev": 0.241,
+        "pattern": "flatline-risk",
+        "dominant_scene_functions": [
+          "dialogue",
+          "revelation",
+          "investigation"
+        ]
+      },
+      "dialogue_style": {
+        "dialogue_ratio": 0.296,
+        "dialogue_line_count": 1367,
+        "avg_dialogue_sentence_chars": 16.93,
+        "style_label": "short-exchange",
+        "sample_lines": [
+          "林工，B区深空探测阵列有点异常。",
+          "说具体。",
+          "就是那个……呃，冥王星轨道外侧二十三号节点的数据流，零点三秒内出现了连续十七次相位抖动。",
+          "不可能。",
+          "我也觉得不可能，呃，但校准算法跑了三遍，结果一致。",
+          "把原始数据调给我，别经过降噪滤波。",
+          "那个……原始数据全是噪声，什么都看不见。",
+          "照做。"
+        ]
+      },
+      "anti_patterns": [
+        {
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "count": 30,
+          "max_severity": "medium",
+          "examples": [
+            "scifi Ch1: 不是",
+            "scifi Ch17: 像是",
+            "scifi Ch21: 不是",
+            "scifi Ch23: 不是",
+            "scifi Ch32: 不是"
+          ]
+        },
+        {
+          "signal_id": "beat_rhythm_repetition",
+          "label": "桥段节奏重复",
+          "count": 17,
+          "max_severity": "medium",
+          "examples": [
+            "scifi Ch1: D-D-D-D",
+            "scifi Ch17: D-D-D-D",
+            "scifi Ch23: R-I-R-R",
+            "scifi Ch32: D-D-D-D",
+            "scifi Ch47: D-D-D-D"
+          ]
+        },
+        {
+          "signal_id": "scene_function_homogeneity",
+          "label": "场景功能同质化",
+          "count": 16,
+          "max_severity": "high",
+          "examples": [
+            "scifi Ch32: scifi segment 2",
+            "scifi Ch47: scifi segment 2",
+            "scifi Ch50: scifi segment 2",
+            "scifi Ch60: scifi segment 3",
+            "scifi Ch61: scifi segment 3"
+          ]
+        },
+        {
+          "signal_id": "tension_flatline",
+          "label": "张力曲线平直",
+          "count": 15,
+          "max_severity": "high",
+          "examples": [
+            "scifi Ch1: avg=0.12, peak=0.79, stdev=0.17",
+            "scifi Ch32: avg=0.16, peak=1.24, stdev=0.22",
+            "scifi Ch47: avg=0.17, peak=1.16, stdev=0.22",
+            "scifi Ch60: avg=0.17, peak=1.16, stdev=0.23",
+            "scifi Ch61: avg=0.13, peak=1.18, stdev=0.21"
+          ]
+        },
+        {
+          "signal_id": "chapter_self_reference",
+          "label": "章节号自指泄漏",
+          "count": 13,
+          "max_severity": "high",
+          "examples": [
+            "scifi Ch80: 会加深共鸣耦合。” “对。” 他想起第74章——不，他想起在方舟核心层的牢笼里，陈曦的半机械",
+            "scifi Ch84: 舟意志的反噬波形在第四秒到达。 林渊在第21章看到过这个协议的设计蓝图——观察者休眠舱上方的核",
+            "scifi Ch84: #0的结构表面扫过，协议骨架的编码模式与第83章中类人文明领袖的波形投影完全一致——它从来都不是",
+            "scifi Ch84: 色锁定标识。 方舟锁死协议。 林渊在第21章看到过这个协议的设计蓝图——观察者休眠舱上方的核",
+            "scifi Ch84: %。 林渊盯着状态栏上跳动的数字，想起第82章中赵铭说过的话——共鸣耦合度每上升一个百分点，他"
+          ]
+        },
+        {
+          "signal_id": "not_but_template",
+          "label": "否定转折模板复用",
+          "count": 11,
+          "max_severity": "medium",
+          "examples": [
+            "scifi Ch21: 不是钥匙本身，而是",
+            "scifi Ch50: 不是来自设备，而是",
+            "scifi Ch53: 不是文字，不是图像，而是",
+            "scifi Ch60: 不是简单的几何证明，而是",
+            "scifi Ch84: 不是追踪单元，而是"
+          ]
+        },
+        {
+          "signal_id": "motif_reuse_density",
+          "label": "意象/冲突词复用密度高",
+          "count": 9,
+          "max_severity": "low",
+          "examples": [
+            "scifi Ch47: 观察, 察者, 一个, 观察者, 的声",
+            "scifi Ch53: 陈曦, 曦的, 陈曦的, 她的, 结构",
+            "scifi Ch84: 字段, 陈曦, 节点, 波形, 曦的",
+            "scifi Ch105: 协议, 议层, 协议层, 文明, 渊的",
+            "scifi Ch134: 意识, 神经, 一个, 渊的, 林渊的"
+          ]
+        },
+        {
+          "signal_id": "engineering_residue",
+          "label": "工程残留 / 未渲染标记",
+          "count": 8,
+          "max_severity": "high",
+          "examples": [
+            "scifi Ch84: （停顿半秒）",
+            "scifi Ch84: （停顿半秒）",
+            "scifi Ch84: （停顿半秒）",
+            "scifi Ch84: （停顿半秒）",
+            "scifi Ch98: （停顿半秒，压低声音）"
+          ]
+        },
+        {
+          "signal_id": "verbatim_sentence_repeat",
+          "label": "逐字句子复读",
+          "count": 5,
+          "max_severity": "high",
+          "examples": [
+            "scifi Ch60: 但他们不知道——角膜后门不是用来观察我的，是用来观察他们的。",
+            "scifi Ch80: 你以为那是你破解方舟协议的工具。",
+            "scifi Ch80: 但共鸣频率是方舟用来筛选和操控容器的工具。",
+            "scifi Ch84: 字段#7到#12的波形在衰减至临界点时，突然反向增强。",
+            "scifi Ch92: 她说：‘如果林渊以后问到，告诉他——不是他的错。"
+          ]
+        },
+        {
+          "signal_id": "legacy_ai_tell",
+          "label": "既有 AI 腔词面命中",
+          "count": 2,
+          "max_severity": "low",
+          "examples": [
+            "scifi Ch118: 突然意识到——我已经想",
+            "scifi Ch118: 一瞬间扩散到"
+          ]
+        }
+      ]
+    },
+    {
+      "scope": "genre:xuanhuan",
+      "source_chapters": [
+        "xuanhuan Ch1",
+        "xuanhuan Ch17",
+        "xuanhuan Ch21",
+        "xuanhuan Ch23",
+        "xuanhuan Ch32",
+        "xuanhuan Ch39",
+        "xuanhuan Ch47",
+        "xuanhuan Ch50",
+        "xuanhuan Ch53",
+        "xuanhuan Ch60",
+        "xuanhuan Ch61",
+        "xuanhuan Ch71",
+        "xuanhuan Ch80",
+        "xuanhuan Ch84",
+        "xuanhuan Ch92",
+        "xuanhuan Ch98",
+        "xuanhuan Ch104",
+        "xuanhuan Ch105",
+        "xuanhuan Ch118",
+        "xuanhuan Ch120",
+        "xuanhuan Ch134",
+        "xuanhuan Ch135",
+        "xuanhuan Ch145",
+        "xuanhuan Ch148",
+        "xuanhuan Ch162",
+        "xuanhuan Ch164",
+        "xuanhuan Ch169",
+        "xuanhuan Ch178",
+        "xuanhuan Ch194",
+        "xuanhuan Ch199"
+      ],
+      "report_only": true,
+      "usage_note": "观察到的风格画像；V10 内不得默认注入 Writer / CreativeDirector prompt。",
+      "narrative_voice": {
+        "dominant_person": "third",
+        "pov_depth": "shallow",
+        "tone": "high-pressure",
+        "evidence": [
+          {
+            "chapter": 1,
+            "quote": "他想说的是，这世上能做的事太少。灵气枯竭，修士们像秋天的蝗虫一样往大城里挤，小地方的灵脉早就干成了筛子。青岩镇这破地方，连最次的灵火都引不起来，铁匠铺全靠地火残温撑着。凡人想修炼？拿什么修？灵丹买不起，灵脉被大族占着，功法都在宗门手里攥着…",
+            "detail": "xuanhuan"
+          },
+          {
+            "chapter": 17,
+            "quote": "陆沉脚下一空，整个人仿佛坠入无底深渊。阴源珠炼化后那股牵引力根本没有给他反应的时间，视线被浓稠的灰白雾气填满，耳边只剩下自己越来越急促的心跳声。",
+            "detail": "xuanhuan"
+          },
+          {
+            "chapter": 21,
+            "quote": "小队长拔出腰间弯刀，刀身上血气缭绕，“闻到你的味儿了，新鲜得很，不是我们的人。怎么，想捡便宜？”",
+            "detail": "xuanhuan"
+          }
+        ]
+      },
+      "sentence_rhythm": {
+        "avg_sentence_chars": 20.07,
+        "avg_paragraph_chars": 36.83,
+        "short_sentence_ratio": 0.544,
+        "long_sentence_ratio": 0.086,
+        "dialogue_ratio": 0.211,
+        "rhythm_label": "short-pulse",
+        "evidence": [
+          {
+            "chapter": 1,
+            "quote": "铁砧上的铁胚已经烧了第四遍。",
+            "detail": "xuanhuan"
+          },
+          {
+            "chapter": 17,
+            "quote": "灰雾翻涌，吞没了最后一缕光线。",
+            "detail": "xuanhuan"
+          },
+          {
+            "chapter": 21,
+            "quote": "黑风山脉腹地，雾霭如瘴。",
+            "detail": "xuanhuan"
+          }
+        ]
+      },
+      "imagery_lexicon": {
+        "top_terms": [
+          "像是",
+          "灵渊",
+          "碎片",
+          "母亲",
+          "封印",
+          "符文",
+          "东西",
+          "纹路",
+          "灵力",
+          "金色"
+        ],
+        "genre_terms": [
+          "共鸣",
+          "坐标",
+          "核心",
+          "灵渊",
+          "血脉",
+          "令牌",
+          "守门",
+          "拳",
+          "刀",
+          "剑"
+        ],
+        "overused_terms": [
+          "老人",
+          "渊老",
+          "灵渊老",
+          "渊老人",
+          "灵渊老人",
+          "封印",
+          "符文",
+          "母亲",
+          "金色",
+          "父亲"
+        ],
+        "evidence": [
+          {
+            "chapter": 1,
+            "quote": "锤头落在铁胚上的一瞬间，陆沉感觉不对。力道是平时的力道，角度也是平时的角度，但锤头触及铁面的那一刻，他手掌传来一阵细微的震颤——像是铁砧内部有什么东西在回应这一锤。",
+            "detail": "xuanhuan"
+          },
+          {
+            "chapter": 17,
+            "quote": "九座青铜祭坛错落在灰雾空间里，每一座都有三丈高，坛身爬满暗绿色的铜锈，上面刻着密密麻麻的上古符文。陆沉扫过那些符文——有些和灵渊封印中的纹路相似，有些则完全陌生，笔画圆润扭曲，像是某种活物留下的痕迹。",
+            "detail": "xuanhuan"
+          },
+          {
+            "chapter": 21,
+            "quote": "灵力丝与血丝的末端接触，在接触的瞬间注入阴煞之气。红芒黯淡了一息，随即恢复，但那一息足够让陆沉判断出阵法的核心节点位置——丝线蔓延的速度在接触阴煞之气时出现了一处明显的迟滞。",
+            "detail": "xuanhuan"
+          }
+        ]
+      },
+      "exposition_style": {
+        "exposition_density": 0.001,
+        "setting_patch_hits": 2,
+        "style_label": "mixed-exposition",
+        "risks": [
+          "setting_patch_segment"
+        ],
+        "evidence": [
+          {
+            "chapter": 47,
+            "quote": "陆沉的心脏狠狠撞了一下胸腔。母亲来过这里。而且她不是偶然路过——她在七星禁制的节点上留下了自己的灵力刻痕。这意味着她知道这个禁制的存在，甚至可能参与了它的构建。他闭上眼，深吸一口气，强迫自己冷静下来。",
+            "detail": "xuanhuan"
+          },
+          {
+            "chapter": 98,
+            "quote": "原来，所谓的雾兽只是前兆。真正的大祸，藏在断崖底下。",
+            "detail": "xuanhuan"
+          },
+          {
+            "chapter": 145,
+            "quote": "这意味着什么？",
+            "detail": "xuanhuan"
+          }
+        ]
+      },
+      "tension_pattern": {
+        "average_tension": 0.207,
+        "peak_tension": 3.387,
+        "tension_stdev": 0.307,
+        "pattern": "steady-escalation",
+        "dominant_scene_functions": [
+          "combat",
+          "dialogue"
+        ]
+      },
+      "dialogue_style": {
+        "dialogue_ratio": 0.211,
+        "dialogue_line_count": 973,
+        "avg_dialogue_sentence_chars": 14.86,
+        "style_label": "short-exchange",
+        "sample_lines": [
+          "愣着干啥？",
+          "又废了一块？你小子今天手抖得厉害，昨晚没睡好？",
+          "喂，问你话呢。",
+          "嗯。",
+          "嗯个屁。",
+          "饿了就说饿了，累了就歇会儿，你小子别总是一副要死不活的样子。老子还指望你养老呢。",
+          "再来一锤。",
+          "这他娘的是什么……"
+        ]
+      },
+      "anti_patterns": [
+        {
+          "signal_id": "beat_rhythm_repetition",
+          "label": "桥段节奏重复",
+          "count": 23,
+          "max_severity": "medium",
+          "examples": [
+            "xuanhuan Ch17: D-C-D-D",
+            "xuanhuan Ch21: C-C-C-C",
+            "xuanhuan Ch23: D-C-C-C",
+            "xuanhuan Ch32: C-C-C-C",
+            "xuanhuan Ch47: D-D-T-D"
+          ]
+        },
+        {
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "count": 23,
+          "max_severity": "medium",
+          "examples": [
+            "xuanhuan Ch1: 像是",
+            "xuanhuan Ch17: 像是",
+            "xuanhuan Ch23: 像是",
+            "xuanhuan Ch50: 像是",
+            "xuanhuan Ch60: 像是"
+          ]
+        },
+        {
+          "signal_id": "not_but_template",
+          "label": "否定转折模板复用",
+          "count": 17,
+          "max_severity": "medium",
+          "examples": [
+            "xuanhuan Ch23: 不是恐惧，而是",
+            "xuanhuan Ch32: 不是上方坠落的溪流，而是",
+            "xuanhuan Ch39: 不是强行使灵力与令牌共振，而是",
+            "xuanhuan Ch60: 不是活物，而是",
+            "xuanhuan Ch71: 不是简单的灵力积累，而是"
+          ]
+        },
+        {
+          "signal_id": "scene_function_homogeneity",
+          "label": "场景功能同质化",
+          "count": 10,
+          "max_severity": "high",
+          "examples": [
+            "xuanhuan Ch32: xuanhuan segment 2",
+            "xuanhuan Ch39: xuanhuan segment 2",
+            "xuanhuan Ch50: xuanhuan segment 2",
+            "xuanhuan Ch53: xuanhuan segment 3",
+            "xuanhuan Ch60: xuanhuan segment 3"
+          ]
+        },
+        {
+          "signal_id": "tension_flatline",
+          "label": "张力曲线平直",
+          "count": 6,
+          "max_severity": "high",
+          "examples": [
+            "xuanhuan Ch61: avg=0.13, peak=0.84, stdev=0.21",
+            "xuanhuan Ch71: avg=0.14, peak=1.16, stdev=0.21",
+            "xuanhuan Ch92: avg=0.14, peak=1.28, stdev=0.24",
+            "xuanhuan Ch145: avg=0.12, peak=1.16, stdev=0.20",
+            "xuanhuan Ch148: avg=0.16, peak=1.20, stdev=0.24"
+          ]
+        },
+        {
+          "signal_id": "engineering_residue",
+          "label": "工程残留 / 未渲染标记",
+          "count": 4,
+          "max_severity": "high",
+          "examples": [
+            "xuanhuan Ch50: ## 二",
+            "xuanhuan Ch50: ## 三",
+            "xuanhuan Ch50: ## 四",
+            "xuanhuan Ch194: invisible"
+          ]
+        },
+        {
+          "signal_id": "motif_reuse_density",
+          "label": "意象/冲突词复用密度高",
+          "count": 3,
+          "max_severity": "low",
+          "examples": [
+            "xuanhuan Ch60: 老人, 渊老, 灵渊老, 渊老人, 灵渊老人",
+            "xuanhuan Ch61: 封印, 老人, 渊老, 灵渊老, 渊老人",
+            "xuanhuan Ch199: 符文, 母亲, 亲的, 金色, 父亲"
+          ]
+        },
+        {
+          "signal_id": "cross_chapter_verbatim_repeat",
+          "label": "跨章逐字复读",
+          "count": 2,
+          "max_severity": "medium",
+          "examples": [
+            "xuanhuan Ch50: 雾兽的口器突然张开，喷出一团浓稠的白雾。",
+            "xuanhuan Ch98: 雾兽的口器突然张开，喷出一团浓稠的白雾。"
+          ]
+        },
+        {
+          "signal_id": "setting_patch_segment",
+          "label": "设定补丁段 / 说明文重述",
+          "count": 2,
+          "max_severity": "medium",
+          "examples": [
+            "xuanhuan Ch118: 那些记忆碎片终于拼成更清楚的轮廓：灵渊核心令牌本该一分为二，一半被母亲在他出生夜嵌入丹田，另一半留在门后；母亲的血脉觉醒能力，正是以星辰血脉和灵渊血脉的共鸣，…",
+            "xuanhuan Ch134: 父亲留下的金色徽记、灵渊令牌这把核心钥匙，以及灵渊老人气息与陆沉血气之间的牵连，都被母亲的血脉锁解释清楚：徽记不是装饰，是三道封印钥匙的外显烙印；令牌不是单块…"
+          ]
+        }
+      ]
+    }
+  ],
+  "sanity_checks": [
+    {
+      "scope": "all",
+      "strong_count": 6,
+      "strong_with_style_traits": 6,
+      "weak_count": 15,
+      "weak_with_anti_patterns": 15,
+      "weak_unexplained": [],
+      "notes": [
+        "strong_with_style_traits uses non-empty extracted traits as a smoke check",
+        "weak_with_anti_patterns requires at least one Task 197/198 hit"
+      ]
+    },
+    {
+      "scope": "genre:scifi",
+      "strong_count": 3,
+      "strong_with_style_traits": 3,
+      "weak_count": 8,
+      "weak_with_anti_patterns": 8,
+      "weak_unexplained": [],
+      "notes": [
+        "strong_with_style_traits uses non-empty extracted traits as a smoke check",
+        "weak_with_anti_patterns requires at least one Task 197/198 hit"
+      ]
+    },
+    {
+      "scope": "genre:xuanhuan",
+      "strong_count": 3,
+      "strong_with_style_traits": 3,
+      "weak_count": 7,
+      "weak_with_anti_patterns": 7,
+      "weak_unexplained": [],
+      "notes": [
+        "strong_with_style_traits uses non-empty extracted traits as a smoke check",
+        "weak_with_anti_patterns requires at least one Task 197/198 hit"
+      ]
+    }
+  ]
+}

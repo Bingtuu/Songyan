@@ -31,9 +31,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 TASK_ID = "191"
 CHECKPOINTS = (125, 150, 175, 200)
-DEFAULT_BASELINE = Path("tasks/189-scifi-ch200-baseline.json")
+DEFAULT_BASELINE = Path("archive/v10/artifacts/189-scifi-ch200-baseline.json")
 DEFAULT_INVENTORY = Path(".tmp/190_ch100_source_inventory.json")
-DEFAULT_CANONICAL_INVENTORY = Path("tasks/190-ch100-terminal-source-inventory-DONE.md")
+DEFAULT_CANONICAL_INVENTORY = Path("archive/v10/tasks/190-ch100-terminal-source-inventory-DONE.md")
 DEFAULT_WORK_DIR = Path(".tmp")
 READY = "CONTINUE_READY"
 

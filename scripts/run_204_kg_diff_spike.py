@@ -22,9 +22,9 @@ from songyan.evals.kg_diff_spike import (  # noqa: E402
     render_kg_diff_spike_report,
 )
 
-DEFAULT_MANIFEST = Path("tasks/204-kg-diff-sample-manifest.json")
-DEFAULT_JSON = Path("tasks/204-kg-diff-spike-report.json")
-DEFAULT_MD = Path("docs/reports/204-kg-diff-spike-report.md")
+DEFAULT_MANIFEST = Path("archive/v10/artifacts/204-kg-diff-sample-manifest.json")
+DEFAULT_JSON = Path("archive/v10/artifacts/204-kg-diff-spike-report.json")
+DEFAULT_MD = Path("archive/v10/reports/204-kg-diff-spike-report.md")
 
 
 def build_parser() -> argparse.ArgumentParser:
