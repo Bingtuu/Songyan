@@ -1,0 +1,6227 @@
+{
+  "generated_at": "2026-08-01T01:41:56.971979+00:00",
+  "sample_set": "tasks/196-excellence-sample-set.json",
+  "annotations": "tasks/196-excellence-annotations.json",
+  "report_only": true,
+  "boundaries": [
+    "report-only / observe-only",
+    "does not modify Writer or CreativeDirector prompts",
+    "does not enter accept/reject gates",
+    "does not change CED, five-gate, segment audit, or T9",
+    "Task 196 prelabel is comparison-only; anchor + spotcheck are calibration truth"
+  ],
+  "summaries": {
+    "sample_count": 60,
+    "by_task": {
+      "197": {
+        "chapters_with_hits": 54,
+        "hit_count": 99,
+        "top_signals": [
+          {
+            "signal_id": "beat_rhythm_repetition",
+            "count": 40
+          },
+          {
+            "signal_id": "scene_function_homogeneity",
+            "count": 26
+          },
+          {
+            "signal_id": "tension_flatline",
+            "count": 21
+          },
+          {
+            "signal_id": "motif_reuse_density",
+            "count": 12
+          }
+        ]
+      },
+      "198": {
+        "chapters_with_hits": 57,
+        "hit_count": 117,
+        "top_signals": [
+          {
+            "signal_id": "template_rhetoric_density",
+            "count": 53
+          },
+          {
+            "signal_id": "not_but_template",
+            "count": 28
+          },
+          {
+            "signal_id": "chapter_self_reference",
+            "count": 13
+          },
+          {
+            "signal_id": "engineering_residue",
+            "count": 12
+          },
+          {
+            "signal_id": "verbatim_sentence_repeat",
+            "count": 5
+          },
+          {
+            "signal_id": "legacy_ai_tell",
+            "count": 2
+          },
+          {
+            "signal_id": "cross_chapter_verbatim_repeat",
+            "count": 2
+          },
+          {
+            "signal_id": "setting_patch_segment",
+            "count": 2
+          }
+        ]
+      }
+    },
+    "by_genre": {
+      "scifi": {
+        "chapters": 30,
+        "task197_hits": 57,
+        "task198_hits": 69
+      },
+      "xuanhuan": {
+        "chapters": 30,
+        "task197_hits": 42,
+        "task198_hits": 48
+      }
+    }
+  },
+  "calibration": [
+    {
+      "task": "197",
+      "truth_rule": "homogeneity<=2 or tension<=2 or overall<=2",
+      "evaluated": 24,
+      "truth_positive": 10,
+      "detected_positive": 20,
+      "true_positive": 8,
+      "false_positive": 12,
+      "false_negative": 2,
+      "precision": 0.4,
+      "recall": 0.8,
+      "examples": {
+        "true_positive": [
+          "scifi Ch32",
+          "scifi Ch80",
+          "scifi Ch84",
+          "scifi Ch194",
+          "xuanhuan Ch50",
+          "xuanhuan Ch118",
+          "xuanhuan Ch134",
+          "xuanhuan Ch194"
+        ],
+        "false_positive": [
+          "scifi Ch1",
+          "scifi Ch17",
+          "scifi Ch53",
+          "scifi Ch104",
+          "scifi Ch105",
+          "scifi Ch134",
+          "scifi Ch199",
+          "xuanhuan Ch17"
+        ],
+        "false_negative": [
+          "scifi Ch39",
+          "xuanhuan Ch105"
+        ]
+      }
+    },
+    {
+      "task": "198",
+      "truth_rule": "ai_tone<=2 or overall<=2",
+      "evaluated": 24,
+      "truth_positive": 15,
+      "detected_positive": 23,
+      "true_positive": 15,
+      "false_positive": 8,
+      "false_negative": 0,
+      "precision": 0.652,
+      "recall": 1.0,
+      "examples": {
+        "true_positive": [
+          "scifi Ch32",
+          "scifi Ch39",
+          "scifi Ch53",
+          "scifi Ch80",
+          "scifi Ch84",
+          "scifi Ch105",
+          "scifi Ch134",
+          "scifi Ch194"
+        ],
+        "false_positive": [
+          "scifi Ch1",
+          "scifi Ch17",
+          "scifi Ch104",
+          "scifi Ch199",
+          "xuanhuan Ch1",
+          "xuanhuan Ch32",
+          "xuanhuan Ch104",
+          "xuanhuan Ch169"
+        ],
+        "false_negative": []
+      }
+    }
+  ],
+  "chapters": [
+    {
+      "genre": "scifi",
+      "chapter": 1,
+      "version_id": "clean-1-3-6d5d69ba",
+      "segment": 1,
+      "annotation": {
+        "sample_layer": "anchor",
+        "annotator": "agent-deep-read",
+        "scores": {
+          "homogeneity": 5,
+          "tension": 5,
+          "ai_tone": 4,
+          "overall": 5
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "dialogue",
+        "scene_function_score": 0.444,
+        "beat_signature": "D-D-D-D",
+        "tension_average": 0.124,
+        "tension_peak": 0.794,
+        "tension_stdev": 0.172,
+        "dominant_terms": [
+          "东西",
+          "一个",
+          "了一",
+          "然后",
+          "结构",
+          "三快",
+          "快两",
+          "两慢"
+        ],
+        "segment_function_ratio": 0.5
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 1,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "beat_rhythm_repetition",
+          "label": "桥段节奏重复",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 1,
+              "location": "chapter beat signature",
+              "quote": "D-D-D-D",
+              "detail": "四段 beat 中重复功能过多"
+            }
+          ],
+          "detail": "beat signature `D-D-D-D` 重复度偏高"
+        },
+        {
+          "task": "197",
+          "signal_id": "tension_flatline",
+          "label": "张力曲线平直",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 1,
+              "location": "paragraph tension",
+              "quote": "avg=0.12, peak=0.79, stdev=0.17",
+              "detail": "low average + low peak + low variance"
+            }
+          ],
+          "detail": "段落张力均值、峰值与波动均偏低"
+        },
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "low",
+          "evidence": [
+            {
+              "chapter": 1,
+              "location": "第17段第1句",
+              "quote": "不是",
+              "detail": "不是 count=10"
+            }
+          ],
+          "detail": "`不是` 等模板连接词密度偏高"
+        }
+      ]
+    },
+    {
+      "genre": "scifi",
+      "chapter": 17,
+      "version_id": "rev-17-2-85c91acb",
+      "segment": 1,
+      "annotation": {
+        "sample_layer": "spotcheck",
+        "annotator": "agent-deep-read",
+        "scores": {
+          "homogeneity": 3,
+          "tension": 4,
+          "ai_tone": 3,
+          "overall": 3
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "dialogue",
+        "scene_function_score": 0.375,
+        "beat_signature": "D-D-D-D",
+        "tension_average": 0.191,
+        "tension_peak": 1.165,
+        "tension_stdev": 0.227,
+        "dominant_terms": [
+          "像是",
+          "一个",
+          "渊的",
+          "老雷",
+          "林渊的",
+          "观察",
+          "舱室",
+          "雷的"
+        ],
+        "segment_function_ratio": 0.5
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 1,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "beat_rhythm_repetition",
+          "label": "桥段节奏重复",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 17,
+              "location": "chapter beat signature",
+              "quote": "D-D-D-D",
+              "detail": "四段 beat 中重复功能过多"
+            }
+          ],
+          "detail": "beat signature `D-D-D-D` 重复度偏高"
+        },
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 17,
+              "location": "第4段第3句",
+              "quote": "像是",
+              "detail": "像是 count=18"
+            }
+          ],
+          "detail": "`像是` 等模板连接词密度偏高"
+        }
+      ]
+    },
+    {
+      "genre": "scifi",
+      "chapter": 21,
+      "version_id": "rev-21-3-71f464db",
+      "segment": 1,
+      "annotation": {
+        "sample_layer": "prelabel",
+        "annotator": "llm-prelabel",
+        "scores": {
+          "homogeneity": 4,
+          "tension": 5,
+          "ai_tone": 4,
+          "overall": 4
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "revelation",
+        "scene_function_score": 0.343,
+        "beat_signature": "D-R-D-R",
+        "tension_average": 0.244,
+        "tension_peak": 1.55,
+        "tension_stdev": 0.327,
+        "dominant_terms": [
+          "共鸣",
+          "钥匙",
+          "神经",
+          "舟的",
+          "方舟的",
+          "观察",
+          "察者",
+          "观察者"
+        ],
+        "segment_function_ratio": 0.5
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 2,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 21,
+              "location": "第4段第1句",
+              "quote": "不是",
+              "detail": "不是 count=14"
+            }
+          ],
+          "detail": "`不是` 等模板连接词密度偏高"
+        },
+        {
+          "task": "198",
+          "signal_id": "not_but_template",
+          "label": "否定转折模板复用",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 21,
+              "location": "第44段第1句",
+              "quote": "不是钥匙本身，而是",
+              "detail": "not-but count=4"
+            }
+          ],
+          "detail": "`不是...而是...` 模板复用过多"
+        }
+      ]
+    },
+    {
+      "genre": "scifi",
+      "chapter": 23,
+      "version_id": "rev-23-3-f095d922",
+      "segment": 1,
+      "annotation": {
+        "sample_layer": "prelabel",
+        "annotator": "llm-prelabel",
+        "scores": {
+          "homogeneity": 4,
+          "tension": 5,
+          "ai_tone": 4,
+          "overall": 4
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "revelation",
+        "scene_function_score": 0.252,
+        "beat_signature": "R-I-R-R",
+        "tension_average": 0.236,
+        "tension_peak": 1.549,
+        "tension_stdev": 0.319,
+        "dominant_terms": [
+          "左臂",
+          "控制",
+          "信号",
+          "右手",
+          "神经",
+          "正在",
+          "核心",
+          "像一"
+        ],
+        "segment_function_ratio": 0.5
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 1,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "beat_rhythm_repetition",
+          "label": "桥段节奏重复",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 23,
+              "location": "chapter beat signature",
+              "quote": "R-I-R-R",
+              "detail": "四段 beat 中重复功能过多"
+            }
+          ],
+          "detail": "beat signature `R-I-R-R` 重复度偏高"
+        },
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 23,
+              "location": "第2段第1句",
+              "quote": "不是",
+              "detail": "不是 count=22"
+            }
+          ],
+          "detail": "`不是` 等模板连接词密度偏高"
+        }
+      ]
+    },
+    {
+      "genre": "scifi",
+      "chapter": 32,
+      "version_id": "clean-32-4-a5a19c4e",
+      "segment": 2,
+      "annotation": {
+        "sample_layer": "anchor",
+        "annotator": "agent-deep-read",
+        "scores": {
+          "homogeneity": 1,
+          "tension": 2,
+          "ai_tone": 2,
+          "overall": 2
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "dialogue",
+        "scene_function_score": 0.521,
+        "beat_signature": "D-D-D-D",
+        "tension_average": 0.156,
+        "tension_peak": 1.235,
+        "tension_stdev": 0.223,
+        "dominant_terms": [
+          "意识",
+          "母星",
+          "渊的",
+          "林渊的",
+          "共鸣",
+          "星意",
+          "母星意",
+          "星意识"
+        ],
+        "segment_function_ratio": 0.75
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 1,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "scene_function_homogeneity",
+          "label": "场景功能同质化",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 32,
+              "location": "弧段统计",
+              "quote": "scifi segment 2",
+              "detail": "dialogue ratio=0.75"
+            }
+          ],
+          "detail": "弧段 2 内 `dialogue` 场景占比 75%"
+        },
+        {
+          "task": "197",
+          "signal_id": "beat_rhythm_repetition",
+          "label": "桥段节奏重复",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 32,
+              "location": "chapter beat signature",
+              "quote": "D-D-D-D",
+              "detail": "四段 beat 中重复功能过多"
+            }
+          ],
+          "detail": "beat signature `D-D-D-D` 重复度偏高"
+        },
+        {
+          "task": "197",
+          "signal_id": "tension_flatline",
+          "label": "张力曲线平直",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 32,
+              "location": "paragraph tension",
+              "quote": "avg=0.16, peak=1.24, stdev=0.22",
+              "detail": "low average + low peak + low variance"
+            }
+          ],
+          "detail": "段落张力均值、峰值与波动均偏低"
+        },
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 32,
+              "location": "第3段第1句",
+              "quote": "不是",
+              "detail": "不是 count=28"
+            }
+          ],
+          "detail": "`不是` 等模板连接词密度偏高"
+        }
+      ]
+    },
+    {
+      "genre": "scifi",
+      "chapter": 39,
+      "version_id": "rev-39-5-d7343b44",
+      "segment": 2,
+      "annotation": {
+        "sample_layer": "spotcheck",
+        "annotator": "agent-deep-read",
+        "scores": {
+          "homogeneity": 2,
+          "tension": 3,
+          "ai_tone": 2,
+          "overall": 2
+        },
+        "disagreement": "prelabel_vs_spotcheck: homogeneity 4->2; tension 5->3; ai_tone 4->2; overall 4->2"
+      },
+      "task197": {
+        "scene_function": "investigation",
+        "scene_function_score": 0.265,
+        "beat_signature": "T-R-I-I",
+        "tension_average": 0.183,
+        "tension_peak": 1.312,
+        "tension_stdev": 0.292,
+        "dominant_terms": [
+          "立方",
+          "方体",
+          "立方体",
+          "频率",
+          "共鸣",
+          "感知",
+          "一个",
+          "渊的"
+        ],
+        "segment_function_ratio": 0.75
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 1,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 39,
+              "location": "第2段第1句",
+              "quote": "不是",
+              "detail": "不是 count=46"
+            }
+          ],
+          "detail": "`不是` 等模板连接词密度偏高"
+        }
+      ]
+    },
+    {
+      "genre": "scifi",
+      "chapter": 47,
+      "version_id": "clean-47-5-221d6fbc",
+      "segment": 2,
+      "annotation": {
+        "sample_layer": "prelabel",
+        "annotator": "llm-prelabel",
+        "scores": {
+          "homogeneity": 4,
+          "tension": 5,
+          "ai_tone": 4,
+          "overall": 4
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "dialogue",
+        "scene_function_score": 0.5,
+        "beat_signature": "D-D-D-D",
+        "tension_average": 0.165,
+        "tension_peak": 1.156,
+        "tension_stdev": 0.222,
+        "dominant_terms": [
+          "观察",
+          "察者",
+          "一个",
+          "观察者",
+          "的声",
+          "的声音",
+          "控制",
+          "全息"
+        ],
+        "segment_function_ratio": 0.75
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 1,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "scene_function_homogeneity",
+          "label": "场景功能同质化",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 47,
+              "location": "弧段统计",
+              "quote": "scifi segment 2",
+              "detail": "dialogue ratio=0.75"
+            }
+          ],
+          "detail": "弧段 2 内 `dialogue` 场景占比 75%"
+        },
+        {
+          "task": "197",
+          "signal_id": "beat_rhythm_repetition",
+          "label": "桥段节奏重复",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 47,
+              "location": "chapter beat signature",
+              "quote": "D-D-D-D",
+              "detail": "四段 beat 中重复功能过多"
+            }
+          ],
+          "detail": "beat signature `D-D-D-D` 重复度偏高"
+        },
+        {
+          "task": "197",
+          "signal_id": "tension_flatline",
+          "label": "张力曲线平直",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 47,
+              "location": "paragraph tension",
+              "quote": "avg=0.17, peak=1.16, stdev=0.22",
+              "detail": "low average + low peak + low variance"
+            }
+          ],
+          "detail": "段落张力均值、峰值与波动均偏低"
+        },
+        {
+          "task": "197",
+          "signal_id": "motif_reuse_density",
+          "label": "意象/冲突词复用密度高",
+          "severity": "low",
+          "evidence": [
+            {
+              "chapter": 47,
+              "location": "chapter lexical motifs",
+              "quote": "观察, 察者, 一个, 观察者, 的声",
+              "detail": "dominant terms repeated unusually often"
+            }
+          ],
+          "detail": "高频核心词：观察, 察者, 一个, 观察者, 的声"
+        },
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 47,
+              "location": "第14段第3句",
+              "quote": "不是",
+              "detail": "不是 count=14"
+            }
+          ],
+          "detail": "`不是` 等模板连接词密度偏高"
+        }
+      ]
+    },
+    {
+      "genre": "scifi",
+      "chapter": 50,
+      "version_id": "rev-50-2-d38a99f1",
+      "segment": 2,
+      "annotation": {
+        "sample_layer": "prelabel",
+        "annotator": "llm-prelabel",
+        "scores": {
+          "homogeneity": 4,
+          "tension": 5,
+          "ai_tone": 4,
+          "overall": 4
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "dialogue",
+        "scene_function_score": 0.401,
+        "beat_signature": "D-D-D-D",
+        "tension_average": 0.191,
+        "tension_peak": 1.521,
+        "tension_stdev": 0.233,
+        "dominant_terms": [
+          "协议",
+          "观察",
+          "察者",
+          "观察者",
+          "接口",
+          "陈曦",
+          "渊的",
+          "的声"
+        ],
+        "segment_function_ratio": 0.75
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 2,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "scene_function_homogeneity",
+          "label": "场景功能同质化",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 50,
+              "location": "弧段统计",
+              "quote": "scifi segment 2",
+              "detail": "dialogue ratio=0.75"
+            }
+          ],
+          "detail": "弧段 2 内 `dialogue` 场景占比 75%"
+        },
+        {
+          "task": "197",
+          "signal_id": "beat_rhythm_repetition",
+          "label": "桥段节奏重复",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 50,
+              "location": "chapter beat signature",
+              "quote": "D-D-D-D",
+              "detail": "四段 beat 中重复功能过多"
+            }
+          ],
+          "detail": "beat signature `D-D-D-D` 重复度偏高"
+        },
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 50,
+              "location": "第2段第1句",
+              "quote": "不是",
+              "detail": "不是 count=26"
+            }
+          ],
+          "detail": "`不是` 等模板连接词密度偏高"
+        },
+        {
+          "task": "198",
+          "signal_id": "not_but_template",
+          "label": "否定转折模板复用",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 50,
+              "location": "第2段第1句",
+              "quote": "不是来自设备，而是",
+              "detail": "not-but count=13"
+            }
+          ],
+          "detail": "`不是...而是...` 模板复用过多"
+        }
+      ]
+    },
+    {
+      "genre": "scifi",
+      "chapter": 53,
+      "version_id": "v-53-1-7336c8c9",
+      "segment": 3,
+      "annotation": {
+        "sample_layer": "spotcheck",
+        "annotator": "agent-deep-read",
+        "scores": {
+          "homogeneity": 3,
+          "tension": 4,
+          "ai_tone": 2,
+          "overall": 3
+        },
+        "disagreement": "prelabel_vs_spotcheck: ai_tone 4->2"
+      },
+      "task197": {
+        "scene_function": "revelation",
+        "scene_function_score": 0.351,
+        "beat_signature": "R-R-R-D",
+        "tension_average": 0.235,
+        "tension_peak": 1.58,
+        "tension_stdev": 0.363,
+        "dominant_terms": [
+          "陈曦",
+          "曦的",
+          "陈曦的",
+          "她的",
+          "结构",
+          "渊的",
+          "林渊的",
+          "协议"
+        ],
+        "segment_function_ratio": 0.75
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 2,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "beat_rhythm_repetition",
+          "label": "桥段节奏重复",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 53,
+              "location": "chapter beat signature",
+              "quote": "R-R-R-D",
+              "detail": "四段 beat 中重复功能过多"
+            }
+          ],
+          "detail": "beat signature `R-R-R-D` 重复度偏高"
+        },
+        {
+          "task": "197",
+          "signal_id": "motif_reuse_density",
+          "label": "意象/冲突词复用密度高",
+          "severity": "low",
+          "evidence": [
+            {
+              "chapter": 53,
+              "location": "chapter lexical motifs",
+              "quote": "陈曦, 曦的, 陈曦的, 她的, 结构",
+              "detail": "dominant terms repeated unusually often"
+            }
+          ],
+          "detail": "高频核心词：陈曦, 曦的, 陈曦的, 她的, 结构"
+        },
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 53,
+              "location": "第2段第1句",
+              "quote": "不是",
+              "detail": "不是 count=18"
+            }
+          ],
+          "detail": "`不是` 等模板连接词密度偏高"
+        },
+        {
+          "task": "198",
+          "signal_id": "not_but_template",
+          "label": "否定转折模板复用",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 53,
+              "location": "第2段第1句",
+              "quote": "不是文字，不是图像，而是",
+              "detail": "not-but count=3"
+            }
+          ],
+          "detail": "`不是...而是...` 模板复用过多"
+        }
+      ]
+    },
+    {
+      "genre": "scifi",
+      "chapter": 60,
+      "version_id": "rev-60-3-d81a5608",
+      "segment": 3,
+      "annotation": {
+        "sample_layer": "prelabel",
+        "annotator": "llm-prelabel",
+        "scores": {
+          "homogeneity": 4,
+          "tension": 5,
+          "ai_tone": 4,
+          "overall": 4
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "dialogue",
+        "scene_function_score": 0.351,
+        "beat_signature": "D-D-R-R",
+        "tension_average": 0.17,
+        "tension_peak": 1.159,
+        "tension_stdev": 0.233,
+        "dominant_terms": [
+          "一个",
+          "核心",
+          "的声",
+          "的声音",
+          "建造",
+          "造者",
+          "陈曦",
+          "建造者"
+        ],
+        "segment_function_ratio": 0.75
+      },
+      "task198": {
+        "repeated_sentence_count": 1,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 2,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "scene_function_homogeneity",
+          "label": "场景功能同质化",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 60,
+              "location": "弧段统计",
+              "quote": "scifi segment 3",
+              "detail": "dialogue ratio=0.75"
+            }
+          ],
+          "detail": "弧段 3 内 `dialogue` 场景占比 75%"
+        },
+        {
+          "task": "197",
+          "signal_id": "tension_flatline",
+          "label": "张力曲线平直",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 60,
+              "location": "paragraph tension",
+              "quote": "avg=0.17, peak=1.16, stdev=0.23",
+              "detail": "low average + low peak + low variance"
+            }
+          ],
+          "detail": "段落张力均值、峰值与波动均偏低"
+        },
+        {
+          "task": "198",
+          "signal_id": "verbatim_sentence_repeat",
+          "label": "逐字句子复读",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 60,
+              "location": "第11段第1句",
+              "quote": "但他们不知道——角膜后门不是用来观察我的，是用来观察他们的。",
+              "detail": "same sentence repeated 4 times"
+            }
+          ],
+          "detail": "同一句式逐字重复 4 次"
+        },
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 60,
+              "location": "第11段第1句",
+              "quote": "不是",
+              "detail": "不是 count=17"
+            }
+          ],
+          "detail": "`不是` 等模板连接词密度偏高"
+        },
+        {
+          "task": "198",
+          "signal_id": "not_but_template",
+          "label": "否定转折模板复用",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 60,
+              "location": "第16段第2句",
+              "quote": "不是简单的几何证明，而是",
+              "detail": "not-but count=3"
+            }
+          ],
+          "detail": "`不是...而是...` 模板复用过多"
+        }
+      ]
+    },
+    {
+      "genre": "scifi",
+      "chapter": 61,
+      "version_id": "rev-61-3-7adec2a6",
+      "segment": 3,
+      "annotation": {
+        "sample_layer": "prelabel",
+        "annotator": "llm-prelabel",
+        "scores": {
+          "homogeneity": 4,
+          "tension": 5,
+          "ai_tone": 4,
+          "overall": 4
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "dialogue",
+        "scene_function_score": 0.304,
+        "beat_signature": "D-D-I-R",
+        "tension_average": 0.13,
+        "tension_peak": 1.181,
+        "tension_stdev": 0.21,
+        "dominant_terms": [
+          "陈曦",
+          "像是",
+          "一个",
+          "她的",
+          "曦的",
+          "陈曦的",
+          "核心",
+          "某种"
+        ],
+        "segment_function_ratio": 0.75
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 1,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "scene_function_homogeneity",
+          "label": "场景功能同质化",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 61,
+              "location": "弧段统计",
+              "quote": "scifi segment 3",
+              "detail": "dialogue ratio=0.75"
+            }
+          ],
+          "detail": "弧段 3 内 `dialogue` 场景占比 75%"
+        },
+        {
+          "task": "197",
+          "signal_id": "tension_flatline",
+          "label": "张力曲线平直",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 61,
+              "location": "paragraph tension",
+              "quote": "avg=0.13, peak=1.18, stdev=0.21",
+              "detail": "low average + low peak + low variance"
+            }
+          ],
+          "detail": "段落张力均值、峰值与波动均偏低"
+        },
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 61,
+              "location": "第2段第1句",
+              "quote": "不是",
+              "detail": "不是 count=31"
+            }
+          ],
+          "detail": "`不是` 等模板连接词密度偏高"
+        }
+      ]
+    },
+    {
+      "genre": "scifi",
+      "chapter": 71,
+      "version_id": "rev-71-2-7b30cba0",
+      "segment": 3,
+      "annotation": {
+        "sample_layer": "prelabel",
+        "annotator": "llm-prelabel",
+        "scores": {
+          "homogeneity": 4,
+          "tension": 5,
+          "ai_tone": 4,
+          "overall": 4
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "dialogue",
+        "scene_function_score": 0.439,
+        "beat_signature": "D-D-D-D",
+        "tension_average": 0.16,
+        "tension_peak": 1.256,
+        "tension_stdev": 0.228,
+        "dominant_terms": [
+          "频率",
+          "模块",
+          "相位",
+          "一个",
+          "逃生",
+          "生舱",
+          "渊的",
+          "需要"
+        ],
+        "segment_function_ratio": 0.75
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 1,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "scene_function_homogeneity",
+          "label": "场景功能同质化",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 71,
+              "location": "弧段统计",
+              "quote": "scifi segment 3",
+              "detail": "dialogue ratio=0.75"
+            }
+          ],
+          "detail": "弧段 3 内 `dialogue` 场景占比 75%"
+        },
+        {
+          "task": "197",
+          "signal_id": "beat_rhythm_repetition",
+          "label": "桥段节奏重复",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 71,
+              "location": "chapter beat signature",
+              "quote": "D-D-D-D",
+              "detail": "四段 beat 中重复功能过多"
+            }
+          ],
+          "detail": "beat signature `D-D-D-D` 重复度偏高"
+        },
+        {
+          "task": "197",
+          "signal_id": "tension_flatline",
+          "label": "张力曲线平直",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 71,
+              "location": "paragraph tension",
+              "quote": "avg=0.16, peak=1.26, stdev=0.23",
+              "detail": "low average + low peak + low variance"
+            }
+          ],
+          "detail": "段落张力均值、峰值与波动均偏低"
+        },
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 71,
+              "location": "第1段第2句",
+              "quote": "不是",
+              "detail": "不是 count=23"
+            }
+          ],
+          "detail": "`不是` 等模板连接词密度偏高"
+        }
+      ]
+    },
+    {
+      "genre": "scifi",
+      "chapter": 80,
+      "version_id": "rev-80-3-0c6ac775",
+      "segment": 4,
+      "annotation": {
+        "sample_layer": "spotcheck",
+        "annotator": "agent-deep-read",
+        "scores": {
+          "homogeneity": 2,
+          "tension": 3,
+          "ai_tone": 2,
+          "overall": 2
+        },
+        "disagreement": "prelabel_vs_spotcheck: homogeneity 4->2; tension 5->3; ai_tone 4->2; overall 4->2"
+      },
+      "task197": {
+        "scene_function": "dialogue",
+        "scene_function_score": 0.48,
+        "beat_signature": "D-D-D-D",
+        "tension_average": 0.121,
+        "tension_peak": 1.256,
+        "tension_stdev": 0.223,
+        "dominant_terms": [
+          "协议",
+          "陈曦",
+          "神经",
+          "容器",
+          "频率",
+          "签名",
+          "共鸣",
+          "节点"
+        ],
+        "segment_function_ratio": 1.0
+      },
+      "task198": {
+        "repeated_sentence_count": 2,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 1,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 1,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "scene_function_homogeneity",
+          "label": "场景功能同质化",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 80,
+              "location": "弧段统计",
+              "quote": "scifi segment 4",
+              "detail": "dialogue ratio=1.00"
+            }
+          ],
+          "detail": "弧段 4 内 `dialogue` 场景占比 100%"
+        },
+        {
+          "task": "197",
+          "signal_id": "beat_rhythm_repetition",
+          "label": "桥段节奏重复",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 80,
+              "location": "chapter beat signature",
+              "quote": "D-D-D-D",
+              "detail": "四段 beat 中重复功能过多"
+            }
+          ],
+          "detail": "beat signature `D-D-D-D` 重复度偏高"
+        },
+        {
+          "task": "197",
+          "signal_id": "tension_flatline",
+          "label": "张力曲线平直",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 80,
+              "location": "paragraph tension",
+              "quote": "avg=0.12, peak=1.26, stdev=0.22",
+              "detail": "low average + low peak + low variance"
+            }
+          ],
+          "detail": "段落张力均值、峰值与波动均偏低"
+        },
+        {
+          "task": "198",
+          "signal_id": "verbatim_sentence_repeat",
+          "label": "逐字句子复读",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 80,
+              "location": "第22段第2句",
+              "quote": "你以为那是你破解方舟协议的工具。",
+              "detail": "same sentence repeated 3 times"
+            }
+          ],
+          "detail": "同一句式逐字重复 3 次"
+        },
+        {
+          "task": "198",
+          "signal_id": "verbatim_sentence_repeat",
+          "label": "逐字句子复读",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 80,
+              "location": "第22段第3句",
+              "quote": "但共鸣频率是方舟用来筛选和操控容器的工具。",
+              "detail": "same sentence repeated 3 times"
+            }
+          ],
+          "detail": "同一句式逐字重复 3 次"
+        },
+        {
+          "task": "198",
+          "signal_id": "chapter_self_reference",
+          "label": "章节号自指泄漏",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 80,
+              "location": "第30段第1句",
+              "quote": "会加深共鸣耦合。”\n\n“对。”\n\n他想起第74章——不，他想起在方舟核心层的牢笼里，陈曦的半机械",
+              "detail": "chapter number appears inside accepted prose"
+            }
+          ],
+          "detail": "正文出现 `第74章`，疑似用章节号作记忆索引"
+        },
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 80,
+              "location": "第13段第2句",
+              "quote": "不是",
+              "detail": "不是 count=17"
+            }
+          ],
+          "detail": "`不是` 等模板连接词密度偏高"
+        }
+      ]
+    },
+    {
+      "genre": "scifi",
+      "chapter": 84,
+      "version_id": "clean-84-4-f08a214f",
+      "segment": 4,
+      "annotation": {
+        "sample_layer": "anchor",
+        "annotator": "agent-deep-read",
+        "scores": {
+          "homogeneity": 1,
+          "tension": 2,
+          "ai_tone": 1,
+          "overall": 2
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "dialogue",
+        "scene_function_score": 0.364,
+        "beat_signature": "R-D-I-I",
+        "tension_average": 0.13,
+        "tension_peak": 1.181,
+        "tension_stdev": 0.193,
+        "dominant_terms": [
+          "字段",
+          "陈曦",
+          "节点",
+          "波形",
+          "曦的",
+          "陈曦的",
+          "到字",
+          "到字段"
+        ],
+        "segment_function_ratio": 1.0
+      },
+      "task198": {
+        "repeated_sentence_count": 1,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 5,
+        "engineering_residue_count": 4,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 2,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "scene_function_homogeneity",
+          "label": "场景功能同质化",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 84,
+              "location": "弧段统计",
+              "quote": "scifi segment 4",
+              "detail": "dialogue ratio=1.00"
+            }
+          ],
+          "detail": "弧段 4 内 `dialogue` 场景占比 100%"
+        },
+        {
+          "task": "197",
+          "signal_id": "tension_flatline",
+          "label": "张力曲线平直",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 84,
+              "location": "paragraph tension",
+              "quote": "avg=0.13, peak=1.18, stdev=0.19",
+              "detail": "low average + low peak + low variance"
+            }
+          ],
+          "detail": "段落张力均值、峰值与波动均偏低"
+        },
+        {
+          "task": "197",
+          "signal_id": "motif_reuse_density",
+          "label": "意象/冲突词复用密度高",
+          "severity": "low",
+          "evidence": [
+            {
+              "chapter": 84,
+              "location": "chapter lexical motifs",
+              "quote": "字段, 陈曦, 节点, 波形, 曦的",
+              "detail": "dominant terms repeated unusually often"
+            }
+          ],
+          "detail": "高频核心词：字段, 陈曦, 节点, 波形, 曦的"
+        },
+        {
+          "task": "198",
+          "signal_id": "verbatim_sentence_repeat",
+          "label": "逐字句子复读",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 84,
+              "location": "第6段第2句",
+              "quote": "字段#7到#12的波形在衰减至临界点时，突然反向增强。",
+              "detail": "same sentence repeated 3 times"
+            }
+          ],
+          "detail": "同一句式逐字重复 3 次"
+        },
+        {
+          "task": "198",
+          "signal_id": "chapter_self_reference",
+          "label": "章节号自指泄漏",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 84,
+              "location": "第6段第1句",
+              "quote": "舟意志的反噬波形在第四秒到达。\n\n林渊在第21章看到过这个协议的设计蓝图——观察者休眠舱上方的核",
+              "detail": "chapter number appears inside accepted prose"
+            }
+          ],
+          "detail": "正文出现 `第21章`，疑似用章节号作记忆索引"
+        },
+        {
+          "task": "198",
+          "signal_id": "chapter_self_reference",
+          "label": "章节号自指泄漏",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 84,
+              "location": "第8段第1句",
+              "quote": "#0的结构表面扫过，协议骨架的编码模式与第83章中类人文明领袖的波形投影完全一致——它从来都不是",
+              "detail": "chapter number appears inside accepted prose"
+            }
+          ],
+          "detail": "正文出现 `第83章`，疑似用章节号作记忆索引"
+        },
+        {
+          "task": "198",
+          "signal_id": "chapter_self_reference",
+          "label": "章节号自指泄漏",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 84,
+              "location": "第12段第1句",
+              "quote": "色锁定标识。\n\n方舟锁死协议。\n\n林渊在第21章看到过这个协议的设计蓝图——观察者休眠舱上方的核",
+              "detail": "chapter number appears inside accepted prose"
+            }
+          ],
+          "detail": "正文出现 `第21章`，疑似用章节号作记忆索引"
+        },
+        {
+          "task": "198",
+          "signal_id": "chapter_self_reference",
+          "label": "章节号自指泄漏",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 84,
+              "location": "第23段第1句",
+              "quote": "%。\n\n林渊盯着状态栏上跳动的数字，想起第82章中赵铭说过的话——共鸣耦合度每上升一个百分点，他",
+              "detail": "chapter number appears inside accepted prose"
+            }
+          ],
+          "detail": "正文出现 `第82章`，疑似用章节号作记忆索引"
+        },
+        {
+          "task": "198",
+          "signal_id": "chapter_self_reference",
+          "label": "章节号自指泄漏",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 84,
+              "location": "第38段第3句",
+              "quote": "#0的结构表面扫过，协议骨架的编码模式与第83章中类人文明领袖的波形投影完全一致——它从来都不是",
+              "detail": "chapter number appears inside accepted prose"
+            }
+          ],
+          "detail": "正文出现 `第83章`，疑似用章节号作记忆索引"
+        },
+        {
+          "task": "198",
+          "signal_id": "engineering_residue",
+          "label": "工程残留 / 未渲染标记",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 84,
+              "location": "第15段第1句",
+              "quote": "（停顿半秒）",
+              "detail": "stage direction"
+            }
+          ],
+          "detail": "stage direction"
+        },
+        {
+          "task": "198",
+          "signal_id": "engineering_residue",
+          "label": "工程残留 / 未渲染标记",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 84,
+              "location": "第28段第1句",
+              "quote": "（停顿半秒）",
+              "detail": "stage direction"
+            }
+          ],
+          "detail": "stage direction"
+        },
+        {
+          "task": "198",
+          "signal_id": "engineering_residue",
+          "label": "工程残留 / 未渲染标记",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 84,
+              "location": "第40段第1句",
+              "quote": "（停顿半秒）",
+              "detail": "stage direction"
+            }
+          ],
+          "detail": "stage direction"
+        },
+        {
+          "task": "198",
+          "signal_id": "engineering_residue",
+          "label": "工程残留 / 未渲染标记",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 84,
+              "location": "第51段第1句",
+              "quote": "（停顿半秒）",
+              "detail": "stage direction"
+            }
+          ],
+          "detail": "stage direction"
+        },
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 84,
+              "location": "第8段第1句",
+              "quote": "不是",
+              "detail": "不是 count=28"
+            }
+          ],
+          "detail": "`不是` 等模板连接词密度偏高"
+        },
+        {
+          "task": "198",
+          "signal_id": "not_but_template",
+          "label": "否定转折模板复用",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 84,
+              "location": "第8段第1句",
+              "quote": "不是追踪单元，而是",
+              "detail": "not-but count=7"
+            }
+          ],
+          "detail": "`不是...而是...` 模板复用过多"
+        }
+      ]
+    },
+    {
+      "genre": "scifi",
+      "chapter": 92,
+      "version_id": "rev-92-3-dec6aa05",
+      "segment": 4,
+      "annotation": {
+        "sample_layer": "prelabel",
+        "annotator": "llm-prelabel",
+        "scores": {
+          "homogeneity": 4,
+          "tension": 5,
+          "ai_tone": 4,
+          "overall": 5
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "dialogue",
+        "scene_function_score": 0.345,
+        "beat_signature": "I-D-D-D",
+        "tension_average": 0.186,
+        "tension_peak": 1.215,
+        "tension_stdev": 0.243,
+        "dominant_terms": [
+          "共鸣",
+          "神经",
+          "协议",
+          "陈曦",
+          "实验",
+          "一个",
+          "数据",
+          "门人"
+        ],
+        "segment_function_ratio": 1.0
+      },
+      "task198": {
+        "repeated_sentence_count": 1,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 2,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "scene_function_homogeneity",
+          "label": "场景功能同质化",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 92,
+              "location": "弧段统计",
+              "quote": "scifi segment 4",
+              "detail": "dialogue ratio=1.00"
+            }
+          ],
+          "detail": "弧段 4 内 `dialogue` 场景占比 100%"
+        },
+        {
+          "task": "197",
+          "signal_id": "beat_rhythm_repetition",
+          "label": "桥段节奏重复",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 92,
+              "location": "chapter beat signature",
+              "quote": "I-D-D-D",
+              "detail": "四段 beat 中重复功能过多"
+            }
+          ],
+          "detail": "beat signature `I-D-D-D` 重复度偏高"
+        },
+        {
+          "task": "198",
+          "signal_id": "verbatim_sentence_repeat",
+          "label": "逐字句子复读",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 92,
+              "location": "第54段第3句",
+              "quote": "她说：‘如果林渊以后问到，告诉他——不是他的错。",
+              "detail": "same sentence repeated 3 times"
+            }
+          ],
+          "detail": "同一句式逐字重复 3 次"
+        },
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 92,
+              "location": "第9段第1句",
+              "quote": "不是",
+              "detail": "不是 count=21"
+            }
+          ],
+          "detail": "`不是` 等模板连接词密度偏高"
+        },
+        {
+          "task": "198",
+          "signal_id": "not_but_template",
+          "label": "否定转折模板复用",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 92,
+              "location": "第9段第1句",
+              "quote": "不是他之前在协议层中遇到的那些碎片，而是",
+              "detail": "not-but count=3"
+            }
+          ],
+          "detail": "`不是...而是...` 模板复用过多"
+        }
+      ]
+    },
+    {
+      "genre": "scifi",
+      "chapter": 98,
+      "version_id": "rev-98-2-3b1485fe",
+      "segment": 4,
+      "annotation": {
+        "sample_layer": "prelabel",
+        "annotator": "llm-prelabel",
+        "scores": {
+          "homogeneity": 4,
+          "tension": 5,
+          "ai_tone": 4,
+          "overall": 4
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "dialogue",
+        "scene_function_score": 0.41,
+        "beat_signature": "D-D-D-D",
+        "tension_average": 0.13,
+        "tension_peak": 1.162,
+        "tension_stdev": 0.175,
+        "dominant_terms": [
+          "信号",
+          "赵铭",
+          "表面",
+          "渊的",
+          "林渊的",
+          "手指",
+          "的手",
+          "号源"
+        ],
+        "segment_function_ratio": 1.0
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 2,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 1,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "scene_function_homogeneity",
+          "label": "场景功能同质化",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 98,
+              "location": "弧段统计",
+              "quote": "scifi segment 4",
+              "detail": "dialogue ratio=1.00"
+            }
+          ],
+          "detail": "弧段 4 内 `dialogue` 场景占比 100%"
+        },
+        {
+          "task": "197",
+          "signal_id": "beat_rhythm_repetition",
+          "label": "桥段节奏重复",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 98,
+              "location": "chapter beat signature",
+              "quote": "D-D-D-D",
+              "detail": "四段 beat 中重复功能过多"
+            }
+          ],
+          "detail": "beat signature `D-D-D-D` 重复度偏高"
+        },
+        {
+          "task": "197",
+          "signal_id": "tension_flatline",
+          "label": "张力曲线平直",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 98,
+              "location": "paragraph tension",
+              "quote": "avg=0.13, peak=1.16, stdev=0.17",
+              "detail": "low average + low peak + low variance"
+            }
+          ],
+          "detail": "段落张力均值、峰值与波动均偏低"
+        },
+        {
+          "task": "198",
+          "signal_id": "engineering_residue",
+          "label": "工程残留 / 未渲染标记",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 98,
+              "location": "第140段第1句",
+              "quote": "（停顿半秒，压低声音）",
+              "detail": "stage direction"
+            }
+          ],
+          "detail": "stage direction"
+        },
+        {
+          "task": "198",
+          "signal_id": "engineering_residue",
+          "label": "工程残留 / 未渲染标记",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 98,
+              "location": "第142段第1句",
+              "quote": "（停顿2秒，压低声音）",
+              "detail": "stage direction"
+            }
+          ],
+          "detail": "stage direction"
+        },
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 98,
+              "location": "第2段第2句",
+              "quote": "不是",
+              "detail": "不是 count=35"
+            }
+          ],
+          "detail": "`不是` 等模板连接词密度偏高"
+        }
+      ]
+    },
+    {
+      "genre": "scifi",
+      "chapter": 104,
+      "version_id": "v-104-8-e962fdb0",
+      "segment": 5,
+      "annotation": {
+        "sample_layer": "anchor",
+        "annotator": "agent-deep-read",
+        "scores": {
+          "homogeneity": 4,
+          "tension": 5,
+          "ai_tone": 4,
+          "overall": 4
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "revelation",
+        "scene_function_score": 0.372,
+        "beat_signature": "R-R-R-R",
+        "tension_average": 0.158,
+        "tension_peak": 0.832,
+        "tension_stdev": 0.215,
+        "dominant_terms": [
+          "核心",
+          "渊的",
+          "林渊的",
+          "壁面",
+          "金属",
+          "陈薇",
+          "神经",
+          "能量"
+        ],
+        "segment_function_ratio": 0.75
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 1,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "scene_function_homogeneity",
+          "label": "场景功能同质化",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 104,
+              "location": "弧段统计",
+              "quote": "scifi segment 5",
+              "detail": "revelation ratio=0.75"
+            }
+          ],
+          "detail": "弧段 5 内 `revelation` 场景占比 75%"
+        },
+        {
+          "task": "197",
+          "signal_id": "beat_rhythm_repetition",
+          "label": "桥段节奏重复",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 104,
+              "location": "chapter beat signature",
+              "quote": "R-R-R-R",
+              "detail": "四段 beat 中重复功能过多"
+            }
+          ],
+          "detail": "beat signature `R-R-R-R` 重复度偏高"
+        },
+        {
+          "task": "197",
+          "signal_id": "tension_flatline",
+          "label": "张力曲线平直",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 104,
+              "location": "paragraph tension",
+              "quote": "avg=0.16, peak=0.83, stdev=0.21",
+              "detail": "low average + low peak + low variance"
+            }
+          ],
+          "detail": "段落张力均值、峰值与波动均偏低"
+        },
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 104,
+              "location": "第2段第1句",
+              "quote": "不是",
+              "detail": "不是 count=24"
+            }
+          ],
+          "detail": "`不是` 等模板连接词密度偏高"
+        }
+      ]
+    },
+    {
+      "genre": "scifi",
+      "chapter": 105,
+      "version_id": "v-105-4-5ccc037e",
+      "segment": 5,
+      "annotation": {
+        "sample_layer": "spotcheck",
+        "annotator": "agent-deep-read",
+        "scores": {
+          "homogeneity": 3,
+          "tension": 3,
+          "ai_tone": 2,
+          "overall": 3
+        },
+        "disagreement": "prelabel_vs_spotcheck: tension 5->3; ai_tone 4->2; overall 5->3"
+      },
+      "task197": {
+        "scene_function": "revelation",
+        "scene_function_score": 0.38,
+        "beat_signature": "R-R-R-R",
+        "tension_average": 0.18,
+        "tension_peak": 2.314,
+        "tension_stdev": 0.316,
+        "dominant_terms": [
+          "协议",
+          "议层",
+          "协议层",
+          "文明",
+          "渊的",
+          "林渊的",
+          "神经",
+          "者的"
+        ],
+        "segment_function_ratio": 0.75
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 1,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "scene_function_homogeneity",
+          "label": "场景功能同质化",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 105,
+              "location": "弧段统计",
+              "quote": "scifi segment 5",
+              "detail": "revelation ratio=0.75"
+            }
+          ],
+          "detail": "弧段 5 内 `revelation` 场景占比 75%"
+        },
+        {
+          "task": "197",
+          "signal_id": "beat_rhythm_repetition",
+          "label": "桥段节奏重复",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 105,
+              "location": "chapter beat signature",
+              "quote": "R-R-R-R",
+              "detail": "四段 beat 中重复功能过多"
+            }
+          ],
+          "detail": "beat signature `R-R-R-R` 重复度偏高"
+        },
+        {
+          "task": "197",
+          "signal_id": "motif_reuse_density",
+          "label": "意象/冲突词复用密度高",
+          "severity": "low",
+          "evidence": [
+            {
+              "chapter": 105,
+              "location": "chapter lexical motifs",
+              "quote": "协议, 议层, 协议层, 文明, 渊的",
+              "detail": "dominant terms repeated unusually often"
+            }
+          ],
+          "detail": "高频核心词：协议, 议层, 协议层, 文明, 渊的"
+        },
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 105,
+              "location": "第2段第1句",
+              "quote": "不是",
+              "detail": "不是 count=44"
+            }
+          ],
+          "detail": "`不是` 等模板连接词密度偏高"
+        }
+      ]
+    },
+    {
+      "genre": "scifi",
+      "chapter": 118,
+      "version_id": "v-118-1-a763b99e",
+      "segment": 5,
+      "annotation": {
+        "sample_layer": "prelabel",
+        "annotator": "llm-prelabel",
+        "scores": {
+          "homogeneity": 4,
+          "tension": 5,
+          "ai_tone": 5,
+          "overall": 5
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "dialogue",
+        "scene_function_score": 0.404,
+        "beat_signature": "D-R-D-D",
+        "tension_average": 0.204,
+        "tension_peak": 1.185,
+        "tension_stdev": 0.276,
+        "dominant_terms": [
+          "张远",
+          "远的",
+          "张远的",
+          "渊的",
+          "林渊的",
+          "左臂",
+          "黑色",
+          "开始"
+        ],
+        "segment_function_ratio": 0.75
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 1,
+        "legacy_ai_tell_count": 2
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "beat_rhythm_repetition",
+          "label": "桥段节奏重复",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 118,
+              "location": "chapter beat signature",
+              "quote": "D-R-D-D",
+              "detail": "四段 beat 中重复功能过多"
+            }
+          ],
+          "detail": "beat signature `D-R-D-D` 重复度偏高"
+        },
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 118,
+              "location": "第5段第2句",
+              "quote": "不是",
+              "detail": "不是 count=18"
+            }
+          ],
+          "detail": "`不是` 等模板连接词密度偏高"
+        },
+        {
+          "task": "198",
+          "signal_id": "legacy_ai_tell",
+          "label": "既有 AI 腔词面命中",
+          "severity": "low",
+          "evidence": [
+            {
+              "chapter": 118,
+              "location": "第13段第5句",
+              "quote": "突然意识到——我已经想",
+              "detail": "机械意识触发: (?:突然|猛然|陡然|刹那间|一瞬间).{0,10}(?:意识|想|觉|发现|明白|察觉|悟|到)"
+            }
+          ],
+          "detail": "机械意识触发: (?:突然|猛然|陡然|刹那间|一瞬间).{0,10}(?:意识|想|觉|发现|明白|察觉|悟|到)"
+        },
+        {
+          "task": "198",
+          "signal_id": "legacy_ai_tell",
+          "label": "既有 AI 腔词面命中",
+          "severity": "low",
+          "evidence": [
+            {
+              "chapter": 118,
+              "location": "第62段第1句",
+              "quote": "一瞬间扩散到",
+              "detail": "机械意识触发: (?:突然|猛然|陡然|刹那间|一瞬间).{0,10}(?:意识|想|觉|发现|明白|察觉|悟|到)"
+            }
+          ],
+          "detail": "机械意识触发: (?:突然|猛然|陡然|刹那间|一瞬间).{0,10}(?:意识|想|觉|发现|明白|察觉|悟|到)"
+        }
+      ]
+    },
+    {
+      "genre": "scifi",
+      "chapter": 120,
+      "version_id": "rev-120-3-fb59ff9d",
+      "segment": 5,
+      "annotation": {
+        "sample_layer": "prelabel",
+        "annotator": "llm-prelabel",
+        "scores": {
+          "homogeneity": 4,
+          "tension": 5,
+          "ai_tone": 4,
+          "overall": 4
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "revelation",
+        "scene_function_score": 0.378,
+        "beat_signature": "R-D-R-D",
+        "tension_average": 0.198,
+        "tension_peak": 1.17,
+        "tension_stdev": 0.241,
+        "dominant_terms": [
+          "管道",
+          "接口",
+          "协议",
+          "能量",
+          "护盾",
+          "左臂",
+          "武器",
+          "器接"
+        ],
+        "segment_function_ratio": 0.75
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 2,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "scene_function_homogeneity",
+          "label": "场景功能同质化",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 120,
+              "location": "弧段统计",
+              "quote": "scifi segment 5",
+              "detail": "revelation ratio=0.75"
+            }
+          ],
+          "detail": "弧段 5 内 `revelation` 场景占比 75%"
+        },
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "low",
+          "evidence": [
+            {
+              "chapter": 120,
+              "location": "第14段第2句",
+              "quote": "不是",
+              "detail": "不是 count=11"
+            }
+          ],
+          "detail": "`不是` 等模板连接词密度偏高"
+        },
+        {
+          "task": "198",
+          "signal_id": "not_but_template",
+          "label": "否定转折模板复用",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 120,
+              "location": "第14段第2句",
+              "quote": "不是他主动选择的，而是",
+              "detail": "not-but count=10"
+            }
+          ],
+          "detail": "`不是...而是...` 模板复用过多"
+        }
+      ]
+    },
+    {
+      "genre": "scifi",
+      "chapter": 134,
+      "version_id": "rev-134-2-1bb7553c",
+      "segment": 6,
+      "annotation": {
+        "sample_layer": "spotcheck",
+        "annotator": "agent-deep-read",
+        "scores": {
+          "homogeneity": 3,
+          "tension": 4,
+          "ai_tone": 2,
+          "overall": 3
+        },
+        "disagreement": "prelabel_vs_spotcheck: ai_tone 4->2"
+      },
+      "task197": {
+        "scene_function": "investigation",
+        "scene_function_score": 0.295,
+        "beat_signature": "I-R-D-I",
+        "tension_average": 0.249,
+        "tension_peak": 1.523,
+        "tension_stdev": 0.316,
+        "dominant_terms": [
+          "意识",
+          "神经",
+          "一个",
+          "渊的",
+          "林渊的",
+          "螺旋",
+          "张远",
+          "经签"
+        ],
+        "segment_function_ratio": 0.5
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 2,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "motif_reuse_density",
+          "label": "意象/冲突词复用密度高",
+          "severity": "low",
+          "evidence": [
+            {
+              "chapter": 134,
+              "location": "chapter lexical motifs",
+              "quote": "意识, 神经, 一个, 渊的, 林渊的",
+              "detail": "dominant terms repeated unusually often"
+            }
+          ],
+          "detail": "高频核心词：意识, 神经, 一个, 渊的, 林渊的"
+        },
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 134,
+              "location": "第2段第2句",
+              "quote": "不是",
+              "detail": "不是 count=25"
+            }
+          ],
+          "detail": "`不是` 等模板连接词密度偏高"
+        },
+        {
+          "task": "198",
+          "signal_id": "not_but_template",
+          "label": "否定转折模板复用",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 134,
+              "location": "第2段第2句",
+              "quote": "不是金属的坚硬，而是",
+              "detail": "not-but count=10"
+            }
+          ],
+          "detail": "`不是...而是...` 模板复用过多"
+        }
+      ]
+    },
+    {
+      "genre": "scifi",
+      "chapter": 135,
+      "version_id": "v-135-4-d1c4c57e",
+      "segment": 6,
+      "annotation": {
+        "sample_layer": "prelabel",
+        "annotator": "llm-prelabel",
+        "scores": {
+          "homogeneity": 4,
+          "tension": 5,
+          "ai_tone": 4,
+          "overall": 5
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "dialogue",
+        "scene_function_score": 0.276,
+        "beat_signature": "I-I-D-D",
+        "tension_average": 0.138,
+        "tension_peak": 1.545,
+        "tension_stdev": 0.267,
+        "dominant_terms": [
+          "神经",
+          "成功",
+          "频率",
+          "功者",
+          "成功者",
+          "感知",
+          "经签",
+          "签名"
+        ],
+        "segment_function_ratio": 0.5
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 3,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 1,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "motif_reuse_density",
+          "label": "意象/冲突词复用密度高",
+          "severity": "low",
+          "evidence": [
+            {
+              "chapter": 135,
+              "location": "chapter lexical motifs",
+              "quote": "神经, 成功, 频率, 功者, 成功者",
+              "detail": "dominant terms repeated unusually often"
+            }
+          ],
+          "detail": "高频核心词：神经, 成功, 频率, 功者, 成功者"
+        },
+        {
+          "task": "198",
+          "signal_id": "chapter_self_reference",
+          "label": "章节号自指泄漏",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 135,
+              "location": "第21段第3句",
+              "quote": "率的生成任务分配给不同的神经簇。这是他在第109章中从陈薇坐标的稳定点学到的技巧：将信号分散到多个",
+              "detail": "chapter number appears inside accepted prose"
+            }
+          ],
+          "detail": "正文出现 `第109章`，疑似用章节号作记忆索引"
+        },
+        {
+          "task": "198",
+          "signal_id": "chapter_self_reference",
+          "label": "章节号自指泄漏",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 135,
+              "location": "第71段第1句",
+              "quote": "器接口中传出，用的是张远的声线——林渊在第129章中听过这个声音，一模一样，连语气中的宽慰感都完全",
+              "detail": "chapter number appears inside accepted prose"
+            }
+          ],
+          "detail": "正文出现 `第129章`，疑似用章节号作记忆索引"
+        },
+        {
+          "task": "198",
+          "signal_id": "chapter_self_reference",
+          "label": "章节号自指泄漏",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 135,
+              "location": "第80段第1句",
+              "quote": "神经脉冲，刻在了晶体的内壁上。\n\n林渊在第134章中读取到的坐标和警告，就是成功者在被活活封入晶体",
+              "detail": "chapter number appears inside accepted prose"
+            }
+          ],
+          "detail": "正文出现 `第134章`，疑似用章节号作记忆索引"
+        },
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 135,
+              "location": "第2段第1句",
+              "quote": "不是",
+              "detail": "不是 count=25"
+            }
+          ],
+          "detail": "`不是` 等模板连接词密度偏高"
+        }
+      ]
+    },
+    {
+      "genre": "scifi",
+      "chapter": 145,
+      "version_id": "v-145-4-8158ebec",
+      "segment": 6,
+      "annotation": {
+        "sample_layer": "prelabel",
+        "annotator": "llm-prelabel",
+        "scores": {
+          "homogeneity": 4,
+          "tension": 5,
+          "ai_tone": 4,
+          "overall": 5
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "dialogue",
+        "scene_function_score": 0.326,
+        "beat_signature": "D-I-D-R",
+        "tension_average": 0.134,
+        "tension_peak": 1.132,
+        "tension_stdev": 0.207,
+        "dominant_terms": [
+          "一个",
+          "意识",
+          "建造",
+          "造者",
+          "建造者",
+          "的意",
+          "的意识",
+          "文明"
+        ],
+        "segment_function_ratio": 0.5
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 1,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "tension_flatline",
+          "label": "张力曲线平直",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 145,
+              "location": "paragraph tension",
+              "quote": "avg=0.13, peak=1.13, stdev=0.21",
+              "detail": "low average + low peak + low variance"
+            }
+          ],
+          "detail": "段落张力均值、峰值与波动均偏低"
+        },
+        {
+          "task": "197",
+          "signal_id": "motif_reuse_density",
+          "label": "意象/冲突词复用密度高",
+          "severity": "low",
+          "evidence": [
+            {
+              "chapter": 145,
+              "location": "chapter lexical motifs",
+              "quote": "一个, 意识, 建造, 造者, 建造者",
+              "detail": "dominant terms repeated unusually often"
+            }
+          ],
+          "detail": "高频核心词：一个, 意识, 建造, 造者, 建造者"
+        },
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 145,
+              "location": "第2段第1句",
+              "quote": "不是",
+              "detail": "不是 count=47"
+            }
+          ],
+          "detail": "`不是` 等模板连接词密度偏高"
+        }
+      ]
+    },
+    {
+      "genre": "scifi",
+      "chapter": 148,
+      "version_id": "clean-148-5-b09119b8",
+      "segment": 6,
+      "annotation": {
+        "sample_layer": "prelabel",
+        "annotator": "llm-prelabel",
+        "scores": {
+          "homogeneity": 4,
+          "tension": 5,
+          "ai_tone": 4,
+          "overall": 5
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "revelation",
+        "scene_function_score": 0.32,
+        "beat_signature": "R-R-D-I",
+        "tension_average": 0.085,
+        "tension_peak": 0.8,
+        "tension_stdev": 0.158,
+        "dominant_terms": [
+          "签名",
+          "渊的",
+          "接口",
+          "林渊的",
+          "协议",
+          "控制",
+          "收割",
+          "割者"
+        ],
+        "segment_function_ratio": 0.5
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 2,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "tension_flatline",
+          "label": "张力曲线平直",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 148,
+              "location": "paragraph tension",
+              "quote": "avg=0.09, peak=0.80, stdev=0.16",
+              "detail": "low average + low peak + low variance"
+            }
+          ],
+          "detail": "段落张力均值、峰值与波动均偏低"
+        },
+        {
+          "task": "197",
+          "signal_id": "motif_reuse_density",
+          "label": "意象/冲突词复用密度高",
+          "severity": "low",
+          "evidence": [
+            {
+              "chapter": 148,
+              "location": "chapter lexical motifs",
+              "quote": "签名, 渊的, 接口, 林渊的, 协议",
+              "detail": "dominant terms repeated unusually often"
+            }
+          ],
+          "detail": "高频核心词：签名, 渊的, 接口, 林渊的, 协议"
+        },
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 148,
+              "location": "第27段第1句",
+              "quote": "不是",
+              "detail": "不是 count=16"
+            }
+          ],
+          "detail": "`不是` 等模板连接词密度偏高"
+        },
+        {
+          "task": "198",
+          "signal_id": "not_but_template",
+          "label": "否定转折模板复用",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 148,
+              "location": "第27段第1句",
+              "quote": "不是建造者系统的标准音效，而是",
+              "detail": "not-but count=3"
+            }
+          ],
+          "detail": "`不是...而是...` 模板复用过多"
+        }
+      ]
+    },
+    {
+      "genre": "scifi",
+      "chapter": 162,
+      "version_id": "v-162-1-9cf8b7ae",
+      "segment": 7,
+      "annotation": {
+        "sample_layer": "prelabel",
+        "annotator": "llm-prelabel",
+        "scores": {
+          "homogeneity": 3,
+          "tension": 4,
+          "ai_tone": 4,
+          "overall": 4
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "dialogue",
+        "scene_function_score": 0.41,
+        "beat_signature": "D-D-D-R",
+        "tension_average": 0.216,
+        "tension_peak": 1.133,
+        "tension_stdev": 0.248,
+        "dominant_terms": [
+          "渊的",
+          "林渊的",
+          "因果",
+          "意识",
+          "残影",
+          "能量",
+          "一个",
+          "的意"
+        ],
+        "segment_function_ratio": 1.0
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 2,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "scene_function_homogeneity",
+          "label": "场景功能同质化",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 162,
+              "location": "弧段统计",
+              "quote": "scifi segment 7",
+              "detail": "dialogue ratio=1.00"
+            }
+          ],
+          "detail": "弧段 7 内 `dialogue` 场景占比 100%"
+        },
+        {
+          "task": "197",
+          "signal_id": "beat_rhythm_repetition",
+          "label": "桥段节奏重复",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 162,
+              "location": "chapter beat signature",
+              "quote": "D-D-D-R",
+              "detail": "四段 beat 中重复功能过多"
+            }
+          ],
+          "detail": "beat signature `D-D-D-R` 重复度偏高"
+        },
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 162,
+              "location": "第1段第1句",
+              "quote": "不是",
+              "detail": "不是 count=28"
+            }
+          ],
+          "detail": "`不是` 等模板连接词密度偏高"
+        },
+        {
+          "task": "198",
+          "signal_id": "not_but_template",
+          "label": "否定转折模板复用",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 162,
+              "location": "第1段第1句",
+              "quote": "不是从胸腔里传来的，而是",
+              "detail": "not-but count=5"
+            }
+          ],
+          "detail": "`不是...而是...` 模板复用过多"
+        }
+      ]
+    },
+    {
+      "genre": "scifi",
+      "chapter": 164,
+      "version_id": "clean-164-5-d9c46ef3",
+      "segment": 7,
+      "annotation": {
+        "sample_layer": "prelabel",
+        "annotator": "llm-prelabel",
+        "scores": {
+          "homogeneity": 4,
+          "tension": 5,
+          "ai_tone": 4,
+          "overall": 4
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "dialogue",
+        "scene_function_score": 0.377,
+        "beat_signature": "D-D-D-I",
+        "tension_average": 0.137,
+        "tension_peak": 1.178,
+        "tension_stdev": 0.206,
+        "dominant_terms": [
+          "手指",
+          "一个",
+          "渊的",
+          "节点",
+          "建造",
+          "林渊的",
+          "骨架",
+          "金属"
+        ],
+        "segment_function_ratio": 1.0
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 2,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 1,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "scene_function_homogeneity",
+          "label": "场景功能同质化",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 164,
+              "location": "弧段统计",
+              "quote": "scifi segment 7",
+              "detail": "dialogue ratio=1.00"
+            }
+          ],
+          "detail": "弧段 7 内 `dialogue` 场景占比 100%"
+        },
+        {
+          "task": "197",
+          "signal_id": "beat_rhythm_repetition",
+          "label": "桥段节奏重复",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 164,
+              "location": "chapter beat signature",
+              "quote": "D-D-D-I",
+              "detail": "四段 beat 中重复功能过多"
+            }
+          ],
+          "detail": "beat signature `D-D-D-I` 重复度偏高"
+        },
+        {
+          "task": "197",
+          "signal_id": "tension_flatline",
+          "label": "张力曲线平直",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 164,
+              "location": "paragraph tension",
+              "quote": "avg=0.14, peak=1.18, stdev=0.21",
+              "detail": "low average + low peak + low variance"
+            }
+          ],
+          "detail": "段落张力均值、峰值与波动均偏低"
+        },
+        {
+          "task": "198",
+          "signal_id": "engineering_residue",
+          "label": "工程残留 / 未渲染标记",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 164,
+              "location": "第44段第3句",
+              "quote": "（停顿2秒，面部切换成专注的表情）",
+              "detail": "stage direction"
+            }
+          ],
+          "detail": "stage direction"
+        },
+        {
+          "task": "198",
+          "signal_id": "engineering_residue",
+          "label": "工程残留 / 未渲染标记",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 164,
+              "location": "第44段第6句",
+              "quote": "（停顿2秒，面部切换成确认的表情）",
+              "detail": "stage direction"
+            }
+          ],
+          "detail": "stage direction"
+        },
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 164,
+              "location": "第5段第1句",
+              "quote": "不是",
+              "detail": "不是 count=21"
+            }
+          ],
+          "detail": "`不是` 等模板连接词密度偏高"
+        }
+      ]
+    },
+    {
+      "genre": "scifi",
+      "chapter": 169,
+      "version_id": "rev-169-2-c16efded",
+      "segment": 7,
+      "annotation": {
+        "sample_layer": "prelabel",
+        "annotator": "llm-prelabel",
+        "scores": {
+          "homogeneity": 4,
+          "tension": 5,
+          "ai_tone": 4,
+          "overall": 4
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "dialogue",
+        "scene_function_score": 0.408,
+        "beat_signature": "D-D-I-I",
+        "tension_average": 0.276,
+        "tension_peak": 1.538,
+        "tension_stdev": 0.327,
+        "dominant_terms": [
+          "共鸣",
+          "鸣环",
+          "共鸣环",
+          "通道",
+          "意识",
+          "渊的",
+          "影像",
+          "林渊的"
+        ],
+        "segment_function_ratio": 1.0
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 2,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "scene_function_homogeneity",
+          "label": "场景功能同质化",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 169,
+              "location": "弧段统计",
+              "quote": "scifi segment 7",
+              "detail": "dialogue ratio=1.00"
+            }
+          ],
+          "detail": "弧段 7 内 `dialogue` 场景占比 100%"
+        },
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 169,
+              "location": "第6段第2句",
+              "quote": "不是",
+              "detail": "不是 count=25"
+            }
+          ],
+          "detail": "`不是` 等模板连接词密度偏高"
+        },
+        {
+          "task": "198",
+          "signal_id": "not_but_template",
+          "label": "否定转折模板复用",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 169,
+              "location": "第6段第2句",
+              "quote": "不是通道入口，而是",
+              "detail": "not-but count=12"
+            }
+          ],
+          "detail": "`不是...而是...` 模板复用过多"
+        }
+      ]
+    },
+    {
+      "genre": "scifi",
+      "chapter": 178,
+      "version_id": "rev-178-2-d69ff758",
+      "segment": 8,
+      "annotation": {
+        "sample_layer": "prelabel",
+        "annotator": "llm-prelabel",
+        "scores": {
+          "homogeneity": 4,
+          "tension": 5,
+          "ai_tone": 4,
+          "overall": 4
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "dialogue",
+        "scene_function_score": 0.505,
+        "beat_signature": "D-D-D-D",
+        "tension_average": 0.157,
+        "tension_peak": 1.719,
+        "tension_stdev": 0.241,
+        "dominant_terms": [
+          "信使",
+          "表面",
+          "神经",
+          "渊的",
+          "波形",
+          "锁的",
+          "通道",
+          "陈薇"
+        ],
+        "segment_function_ratio": 0.667
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 1,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "beat_rhythm_repetition",
+          "label": "桥段节奏重复",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 178,
+              "location": "chapter beat signature",
+              "quote": "D-D-D-D",
+              "detail": "四段 beat 中重复功能过多"
+            }
+          ],
+          "detail": "beat signature `D-D-D-D` 重复度偏高"
+        },
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 178,
+              "location": "第22段第1句",
+              "quote": "不是",
+              "detail": "不是 count=17"
+            }
+          ],
+          "detail": "`不是` 等模板连接词密度偏高"
+        }
+      ]
+    },
+    {
+      "genre": "scifi",
+      "chapter": 194,
+      "version_id": "rev-194-3-acda9f0f",
+      "segment": 8,
+      "annotation": {
+        "sample_layer": "anchor",
+        "annotator": "agent-deep-read",
+        "scores": {
+          "homogeneity": 1,
+          "tension": 3,
+          "ai_tone": 1,
+          "overall": 2
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "revelation",
+        "scene_function_score": 0.351,
+        "beat_signature": "R-R-D-I",
+        "tension_average": 0.13,
+        "tension_peak": 1.17,
+        "tension_stdev": 0.192,
+        "dominant_terms": [
+          "渊的",
+          "林渊的",
+          "立方",
+          "方体",
+          "立方体",
+          "协议",
+          "表面",
+          "体表"
+        ],
+        "segment_function_ratio": 0.667
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 4,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 1,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "tension_flatline",
+          "label": "张力曲线平直",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 194,
+              "location": "paragraph tension",
+              "quote": "avg=0.13, peak=1.17, stdev=0.19",
+              "detail": "low average + low peak + low variance"
+            }
+          ],
+          "detail": "段落张力均值、峰值与波动均偏低"
+        },
+        {
+          "task": "197",
+          "signal_id": "motif_reuse_density",
+          "label": "意象/冲突词复用密度高",
+          "severity": "low",
+          "evidence": [
+            {
+              "chapter": 194,
+              "location": "chapter lexical motifs",
+              "quote": "渊的, 林渊的, 立方, 方体, 立方体",
+              "detail": "dominant terms repeated unusually often"
+            }
+          ],
+          "detail": "高频核心词：渊的, 林渊的, 立方, 方体, 立方体"
+        },
+        {
+          "task": "198",
+          "signal_id": "chapter_self_reference",
+          "label": "章节号自指泄漏",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 194,
+              "location": "第17段第2句",
+              "quote": "密信息的碎片中浮现——那个算法他见过，在第162章的老雷留下的线索中，是建造者文明的基础问候协议格",
+              "detail": "chapter number appears inside accepted prose"
+            }
+          ],
+          "detail": "正文出现 `第162章`，疑似用章节号作记忆索引"
+        },
+        {
+          "task": "198",
+          "signal_id": "chapter_self_reference",
+          "label": "章节号自指泄漏",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 194,
+              "location": "第33段第1句",
+              "quote": "抽搐了一下。\n\n逻辑闭环防御系统——他在第186章的协议日志中看到过这个设定，那是方舟核心意识用来",
+              "detail": "chapter number appears inside accepted prose"
+            }
+          ],
+          "detail": "正文出现 `第186章`，疑似用章节号作记忆索引"
+        },
+        {
+          "task": "198",
+          "signal_id": "chapter_self_reference",
+          "label": "章节号自指泄漏",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 194,
+              "location": "第67段第2句",
+              "quote": "渊的瞳孔在急剧收缩——那个算法他见过，在第162章的老雷留下的线索中，是建造者文明的基础问候协议格",
+              "detail": "chapter number appears inside accepted prose"
+            }
+          ],
+          "detail": "正文出现 `第162章`，疑似用章节号作记忆索引"
+        },
+        {
+          "task": "198",
+          "signal_id": "chapter_self_reference",
+          "label": "章节号自指泄漏",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 194,
+              "location": "第100段第2句",
+              "quote": "渊的瞳孔在急剧收缩——那个星图他见过，在第192章的通信端口中，是倒悬黑色城市崩塌的画面中浮现的那",
+              "detail": "chapter number appears inside accepted prose"
+            }
+          ],
+          "detail": "正文出现 `第192章`，疑似用章节号作记忆索引"
+        },
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 194,
+              "location": "第15段第4句",
+              "quote": "某种",
+              "detail": "某种 count=16"
+            }
+          ],
+          "detail": "`某种` 等模板连接词密度偏高"
+        }
+      ]
+    },
+    {
+      "genre": "scifi",
+      "chapter": 199,
+      "version_id": "rev-199-2-6c431ef1",
+      "segment": 8,
+      "annotation": {
+        "sample_layer": "anchor",
+        "annotator": "agent-deep-read",
+        "scores": {
+          "homogeneity": 4,
+          "tension": 5,
+          "ai_tone": 4,
+          "overall": 4
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "dialogue",
+        "scene_function_score": 0.252,
+        "beat_signature": "R-D-I-I",
+        "tension_average": 0.09,
+        "tension_peak": 0.873,
+        "tension_stdev": 0.13,
+        "dominant_terms": [
+          "渊的",
+          "林渊的",
+          "一个",
+          "的手",
+          "手指",
+          "重力",
+          "协议",
+          "的手指"
+        ],
+        "segment_function_ratio": 0.667
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 1,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "tension_flatline",
+          "label": "张力曲线平直",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 199,
+              "location": "paragraph tension",
+              "quote": "avg=0.09, peak=0.87, stdev=0.13",
+              "detail": "low average + low peak + low variance"
+            }
+          ],
+          "detail": "段落张力均值、峰值与波动均偏低"
+        },
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 199,
+              "location": "第4段第2句",
+              "quote": "不是",
+              "detail": "不是 count=30"
+            }
+          ],
+          "detail": "`不是` 等模板连接词密度偏高"
+        }
+      ]
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 1,
+      "version_id": "v-7acb08f2",
+      "segment": 1,
+      "annotation": {
+        "sample_layer": "anchor",
+        "annotator": "agent-deep-read",
+        "scores": {
+          "homogeneity": 4,
+          "tension": 5,
+          "ai_tone": 4,
+          "overall": 5
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "dialogue",
+        "scene_function_score": 0.391,
+        "beat_signature": "D-D-T-T",
+        "tension_average": 0.203,
+        "tension_peak": 1.927,
+        "tension_stdev": 0.342,
+        "dominant_terms": [
+          "老周",
+          "周头",
+          "老周头",
+          "像是",
+          "一个",
+          "灵气",
+          "了一",
+          "石碑"
+        ],
+        "segment_function_ratio": 0.5
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 1,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 1,
+              "location": "第15段第2句",
+              "quote": "像是",
+              "detail": "像是 count=16"
+            }
+          ],
+          "detail": "`像是` 等模板连接词密度偏高"
+        }
+      ]
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 17,
+      "version_id": "v-937f42f3",
+      "segment": 1,
+      "annotation": {
+        "sample_layer": "spotcheck",
+        "annotator": "agent-deep-read",
+        "scores": {
+          "homogeneity": 3,
+          "tension": 3,
+          "ai_tone": 2,
+          "overall": 3
+        },
+        "disagreement": "prelabel_vs_spotcheck: tension 5->3; ai_tone 4->2"
+      },
+      "task197": {
+        "scene_function": "dialogue",
+        "scene_function_score": 0.404,
+        "beat_signature": "D-C-D-D",
+        "tension_average": 0.172,
+        "tension_peak": 1.182,
+        "tension_stdev": 0.255,
+        "dominant_terms": [
+          "那些",
+          "像是",
+          "灰雾",
+          "符文",
+          "考验",
+          "验之",
+          "之灵",
+          "考验之"
+        ],
+        "segment_function_ratio": 0.5
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 1,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "beat_rhythm_repetition",
+          "label": "桥段节奏重复",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 17,
+              "location": "chapter beat signature",
+              "quote": "D-C-D-D",
+              "detail": "四段 beat 中重复功能过多"
+            }
+          ],
+          "detail": "beat signature `D-C-D-D` 重复度偏高"
+        },
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 17,
+              "location": "第5段第2句",
+              "quote": "像是",
+              "detail": "像是 count=18"
+            }
+          ],
+          "detail": "`像是` 等模板连接词密度偏高"
+        }
+      ]
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 21,
+      "version_id": "v-d50378bc",
+      "segment": 1,
+      "annotation": {
+        "sample_layer": "prelabel",
+        "annotator": "llm-prelabel",
+        "scores": {
+          "homogeneity": 3,
+          "tension": 4,
+          "ai_tone": 4,
+          "overall": 4
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "combat",
+        "scene_function_score": 0.648,
+        "beat_signature": "C-C-C-C",
+        "tension_average": 0.362,
+        "tension_peak": 1.953,
+        "tension_stdev": 0.44,
+        "dominant_terms": [
+          "小队",
+          "队长",
+          "小队长",
+          "的血",
+          "血色",
+          "灵力",
+          "符文",
+          "血气"
+        ],
+        "segment_function_ratio": 0.5
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 0,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "beat_rhythm_repetition",
+          "label": "桥段节奏重复",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 21,
+              "location": "chapter beat signature",
+              "quote": "C-C-C-C",
+              "detail": "四段 beat 中重复功能过多"
+            }
+          ],
+          "detail": "beat signature `C-C-C-C` 重复度偏高"
+        }
+      ]
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 23,
+      "version_id": "v-909d2d2c",
+      "segment": 1,
+      "annotation": {
+        "sample_layer": "prelabel",
+        "annotator": "llm-prelabel",
+        "scores": {
+          "homogeneity": 4,
+          "tension": 5,
+          "ai_tone": 4,
+          "overall": 4
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "combat",
+        "scene_function_score": 0.417,
+        "beat_signature": "D-C-C-C",
+        "tension_average": 0.177,
+        "tension_peak": 1.538,
+        "tension_stdev": 0.277,
+        "dominant_terms": [
+          "金色",
+          "身体",
+          "光团",
+          "像是",
+          "沉的",
+          "星辰",
+          "灵火",
+          "发出"
+        ],
+        "segment_function_ratio": 0.5
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 2,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "beat_rhythm_repetition",
+          "label": "桥段节奏重复",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 23,
+              "location": "chapter beat signature",
+              "quote": "D-C-C-C",
+              "detail": "四段 beat 中重复功能过多"
+            }
+          ],
+          "detail": "beat signature `D-C-C-C` 重复度偏高"
+        },
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "low",
+          "evidence": [
+            {
+              "chapter": 23,
+              "location": "第3段第1句",
+              "quote": "像是",
+              "detail": "像是 count=13"
+            }
+          ],
+          "detail": "`像是` 等模板连接词密度偏高"
+        },
+        {
+          "task": "198",
+          "signal_id": "not_but_template",
+          "label": "否定转折模板复用",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 23,
+              "location": "第8段第1句",
+              "quote": "不是恐惧，而是",
+              "detail": "not-but count=4"
+            }
+          ],
+          "detail": "`不是...而是...` 模板复用过多"
+        }
+      ]
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 32,
+      "version_id": "v-43cd97a4",
+      "segment": 2,
+      "annotation": {
+        "sample_layer": "spotcheck",
+        "annotator": "agent-deep-read",
+        "scores": {
+          "homogeneity": 3,
+          "tension": 4,
+          "ai_tone": 3,
+          "overall": 3
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "combat",
+        "scene_function_score": 0.561,
+        "beat_signature": "C-C-C-C",
+        "tension_average": 0.215,
+        "tension_peak": 1.19,
+        "tension_stdev": 0.308,
+        "dominant_terms": [
+          "祭坛",
+          "修士",
+          "了一",
+          "一个",
+          "暗河",
+          "符文",
+          "雾气",
+          "着一"
+        ],
+        "segment_function_ratio": 0.75
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 1,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "scene_function_homogeneity",
+          "label": "场景功能同质化",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 32,
+              "location": "弧段统计",
+              "quote": "xuanhuan segment 2",
+              "detail": "combat ratio=0.75"
+            }
+          ],
+          "detail": "弧段 2 内 `combat` 场景占比 75%"
+        },
+        {
+          "task": "197",
+          "signal_id": "beat_rhythm_repetition",
+          "label": "桥段节奏重复",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 32,
+              "location": "chapter beat signature",
+              "quote": "C-C-C-C",
+              "detail": "四段 beat 中重复功能过多"
+            }
+          ],
+          "detail": "beat signature `C-C-C-C` 重复度偏高"
+        },
+        {
+          "task": "198",
+          "signal_id": "not_but_template",
+          "label": "否定转折模板复用",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 32,
+              "location": "第16段第1句",
+              "quote": "不是上方坠落的溪流，而是",
+              "detail": "not-but count=4"
+            }
+          ],
+          "detail": "`不是...而是...` 模板复用过多"
+        }
+      ]
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 39,
+      "version_id": "v-f1d2c7fa",
+      "segment": 2,
+      "annotation": {
+        "sample_layer": "prelabel",
+        "annotator": "llm-prelabel",
+        "scores": {
+          "homogeneity": 3,
+          "tension": 4,
+          "ai_tone": 4,
+          "overall": 4
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "combat",
+        "scene_function_score": 0.343,
+        "beat_signature": "C-D-T-D",
+        "tension_average": 0.223,
+        "tension_peak": 1.513,
+        "tension_stdev": 0.295,
+        "dominant_terms": [
+          "令牌",
+          "灵力",
+          "另一",
+          "方向",
+          "一半",
+          "半令",
+          "秘术",
+          "另一半"
+        ],
+        "segment_function_ratio": 0.75
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 1,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "scene_function_homogeneity",
+          "label": "场景功能同质化",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 39,
+              "location": "弧段统计",
+              "quote": "xuanhuan segment 2",
+              "detail": "combat ratio=0.75"
+            }
+          ],
+          "detail": "弧段 2 内 `combat` 场景占比 75%"
+        },
+        {
+          "task": "198",
+          "signal_id": "not_but_template",
+          "label": "否定转折模板复用",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 39,
+              "location": "第8段第2句",
+              "quote": "不是强行使灵力与令牌共振，而是",
+              "detail": "not-but count=3"
+            }
+          ],
+          "detail": "`不是...而是...` 模板复用过多"
+        }
+      ]
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 47,
+      "version_id": "v-ebff35cf",
+      "segment": 2,
+      "annotation": {
+        "sample_layer": "prelabel",
+        "annotator": "llm-prelabel",
+        "scores": {
+          "homogeneity": 3,
+          "tension": 4,
+          "ai_tone": 4,
+          "overall": 4
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "dialogue",
+        "scene_function_score": 0.405,
+        "beat_signature": "D-D-T-D",
+        "tension_average": 0.206,
+        "tension_peak": 1.566,
+        "tension_stdev": 0.285,
+        "dominant_terms": [
+          "灵力",
+          "的灵",
+          "碎片",
+          "石台",
+          "刻痕",
+          "符文",
+          "禁制",
+          "节点"
+        ],
+        "segment_function_ratio": 0.75
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 0,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "beat_rhythm_repetition",
+          "label": "桥段节奏重复",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 47,
+              "location": "chapter beat signature",
+              "quote": "D-D-T-D",
+              "detail": "四段 beat 中重复功能过多"
+            }
+          ],
+          "detail": "beat signature `D-D-T-D` 重复度偏高"
+        }
+      ]
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 50,
+      "version_id": "v-8ebfcbd7",
+      "segment": 2,
+      "annotation": {
+        "sample_layer": "anchor",
+        "annotator": "agent-deep-read",
+        "scores": {
+          "homogeneity": 2,
+          "tension": 2,
+          "ai_tone": 1,
+          "overall": 2
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "combat",
+        "scene_function_score": 0.365,
+        "beat_signature": "C-C-D-C",
+        "tension_average": 0.242,
+        "tension_peak": 1.35,
+        "tension_stdev": 0.299,
+        "dominant_terms": [
+          "雾兽",
+          "雾气",
+          "兽的",
+          "雾兽的",
+          "像是",
+          "老猎",
+          "猎手",
+          "老猎手"
+        ],
+        "segment_function_ratio": 0.75
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 1,
+        "self_reference_count": 0,
+        "engineering_residue_count": 3,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 1,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "scene_function_homogeneity",
+          "label": "场景功能同质化",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 50,
+              "location": "弧段统计",
+              "quote": "xuanhuan segment 2",
+              "detail": "combat ratio=0.75"
+            }
+          ],
+          "detail": "弧段 2 内 `combat` 场景占比 75%"
+        },
+        {
+          "task": "197",
+          "signal_id": "beat_rhythm_repetition",
+          "label": "桥段节奏重复",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 50,
+              "location": "chapter beat signature",
+              "quote": "C-C-D-C",
+              "detail": "四段 beat 中重复功能过多"
+            }
+          ],
+          "detail": "beat signature `C-C-D-C` 重复度偏高"
+        },
+        {
+          "task": "198",
+          "signal_id": "cross_chapter_verbatim_repeat",
+          "label": "跨章逐字复读",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 50,
+              "location": "未知位置",
+              "quote": "雾兽的口器突然张开，喷出一团浓稠的白雾。",
+              "detail": "also appears in Ch98"
+            }
+          ],
+          "detail": "同体裁样本中跨章复用句子，另见 1 处"
+        },
+        {
+          "task": "198",
+          "signal_id": "engineering_residue",
+          "label": "工程残留 / 未渲染标记",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 50,
+              "location": "未知位置",
+              "quote": "## 二",
+              "detail": "Markdown heading"
+            }
+          ],
+          "detail": "Markdown heading"
+        },
+        {
+          "task": "198",
+          "signal_id": "engineering_residue",
+          "label": "工程残留 / 未渲染标记",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 50,
+              "location": "未知位置",
+              "quote": "## 三",
+              "detail": "Markdown heading"
+            }
+          ],
+          "detail": "Markdown heading"
+        },
+        {
+          "task": "198",
+          "signal_id": "engineering_residue",
+          "label": "工程残留 / 未渲染标记",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 50,
+              "location": "未知位置",
+              "quote": "## 四",
+              "detail": "Markdown heading"
+            }
+          ],
+          "detail": "Markdown heading"
+        },
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 50,
+              "location": "第2段第1句",
+              "quote": "像是",
+              "detail": "像是 count=16"
+            }
+          ],
+          "detail": "`像是` 等模板连接词密度偏高"
+        }
+      ]
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 53,
+      "version_id": "v-b3464f24",
+      "segment": 3,
+      "annotation": {
+        "sample_layer": "spotcheck",
+        "annotator": "agent-deep-read",
+        "scores": {
+          "homogeneity": 3,
+          "tension": 4,
+          "ai_tone": 3,
+          "overall": 3
+        },
+        "disagreement": "prelabel_vs_spotcheck: overall 5->3"
+      },
+      "task197": {
+        "scene_function": "dialogue",
+        "scene_function_score": 0.405,
+        "beat_signature": "D-D-C-D",
+        "tension_average": 0.156,
+        "tension_peak": 1.211,
+        "tension_stdev": 0.259,
+        "dominant_terms": [
+          "石室",
+          "渊老",
+          "老人",
+          "灵渊老",
+          "渊老人",
+          "灵渊老人",
+          "封印",
+          "令牌"
+        ],
+        "segment_function_ratio": 0.75
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 0,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "scene_function_homogeneity",
+          "label": "场景功能同质化",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 53,
+              "location": "弧段统计",
+              "quote": "xuanhuan segment 3",
+              "detail": "dialogue ratio=0.75"
+            }
+          ],
+          "detail": "弧段 3 内 `dialogue` 场景占比 75%"
+        },
+        {
+          "task": "197",
+          "signal_id": "beat_rhythm_repetition",
+          "label": "桥段节奏重复",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 53,
+              "location": "chapter beat signature",
+              "quote": "D-D-C-D",
+              "detail": "四段 beat 中重复功能过多"
+            }
+          ],
+          "detail": "beat signature `D-D-C-D` 重复度偏高"
+        }
+      ]
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 60,
+      "version_id": "v-e13fbd50",
+      "segment": 3,
+      "annotation": {
+        "sample_layer": "prelabel",
+        "annotator": "llm-prelabel",
+        "scores": {
+          "homogeneity": 4,
+          "tension": 5,
+          "ai_tone": 5,
+          "overall": 5
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "dialogue",
+        "scene_function_score": 0.533,
+        "beat_signature": "D-D-D-D",
+        "tension_average": 0.157,
+        "tension_peak": 1.525,
+        "tension_stdev": 0.214,
+        "dominant_terms": [
+          "老人",
+          "渊老",
+          "灵渊老",
+          "渊老人",
+          "灵渊老人",
+          "碎片",
+          "像是",
+          "封印"
+        ],
+        "segment_function_ratio": 0.75
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 2,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "scene_function_homogeneity",
+          "label": "场景功能同质化",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 60,
+              "location": "弧段统计",
+              "quote": "xuanhuan segment 3",
+              "detail": "dialogue ratio=0.75"
+            }
+          ],
+          "detail": "弧段 3 内 `dialogue` 场景占比 75%"
+        },
+        {
+          "task": "197",
+          "signal_id": "beat_rhythm_repetition",
+          "label": "桥段节奏重复",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 60,
+              "location": "chapter beat signature",
+              "quote": "D-D-D-D",
+              "detail": "四段 beat 中重复功能过多"
+            }
+          ],
+          "detail": "beat signature `D-D-D-D` 重复度偏高"
+        },
+        {
+          "task": "197",
+          "signal_id": "motif_reuse_density",
+          "label": "意象/冲突词复用密度高",
+          "severity": "low",
+          "evidence": [
+            {
+              "chapter": 60,
+              "location": "chapter lexical motifs",
+              "quote": "老人, 渊老, 灵渊老, 渊老人, 灵渊老人",
+              "detail": "dominant terms repeated unusually often"
+            }
+          ],
+          "detail": "高频核心词：老人, 渊老, 灵渊老, 渊老人, 灵渊老人"
+        },
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 60,
+              "location": "第2段第2句",
+              "quote": "像是",
+              "detail": "像是 count=23"
+            }
+          ],
+          "detail": "`像是` 等模板连接词密度偏高"
+        },
+        {
+          "task": "198",
+          "signal_id": "not_but_template",
+          "label": "否定转折模板复用",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 60,
+              "location": "第2段第2句",
+              "quote": "不是活物，而是",
+              "detail": "not-but count=4"
+            }
+          ],
+          "detail": "`不是...而是...` 模板复用过多"
+        }
+      ]
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 61,
+      "version_id": "v-96cd512f",
+      "segment": 3,
+      "annotation": {
+        "sample_layer": "prelabel",
+        "annotator": "llm-prelabel",
+        "scores": {
+          "homogeneity": 4,
+          "tension": 5,
+          "ai_tone": 4,
+          "overall": 4
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "dialogue",
+        "scene_function_score": 0.56,
+        "beat_signature": "D-D-D-D",
+        "tension_average": 0.128,
+        "tension_peak": 0.843,
+        "tension_stdev": 0.207,
+        "dominant_terms": [
+          "封印",
+          "老人",
+          "渊老",
+          "灵渊老",
+          "渊老人",
+          "灵渊老人",
+          "人的",
+          "老人的"
+        ],
+        "segment_function_ratio": 0.75
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 1,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "scene_function_homogeneity",
+          "label": "场景功能同质化",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 61,
+              "location": "弧段统计",
+              "quote": "xuanhuan segment 3",
+              "detail": "dialogue ratio=0.75"
+            }
+          ],
+          "detail": "弧段 3 内 `dialogue` 场景占比 75%"
+        },
+        {
+          "task": "197",
+          "signal_id": "beat_rhythm_repetition",
+          "label": "桥段节奏重复",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 61,
+              "location": "chapter beat signature",
+              "quote": "D-D-D-D",
+              "detail": "四段 beat 中重复功能过多"
+            }
+          ],
+          "detail": "beat signature `D-D-D-D` 重复度偏高"
+        },
+        {
+          "task": "197",
+          "signal_id": "tension_flatline",
+          "label": "张力曲线平直",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 61,
+              "location": "paragraph tension",
+              "quote": "avg=0.13, peak=0.84, stdev=0.21",
+              "detail": "low average + low peak + low variance"
+            }
+          ],
+          "detail": "段落张力均值、峰值与波动均偏低"
+        },
+        {
+          "task": "197",
+          "signal_id": "motif_reuse_density",
+          "label": "意象/冲突词复用密度高",
+          "severity": "low",
+          "evidence": [
+            {
+              "chapter": 61,
+              "location": "chapter lexical motifs",
+              "quote": "封印, 老人, 渊老, 灵渊老, 渊老人",
+              "detail": "dominant terms repeated unusually often"
+            }
+          ],
+          "detail": "高频核心词：封印, 老人, 渊老, 灵渊老, 渊老人"
+        },
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 61,
+              "location": "第2段第2句",
+              "quote": "不是",
+              "detail": "不是 count=16"
+            }
+          ],
+          "detail": "`不是` 等模板连接词密度偏高"
+        }
+      ]
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 71,
+      "version_id": "v-5cb0b943",
+      "segment": 3,
+      "annotation": {
+        "sample_layer": "prelabel",
+        "annotator": "llm-prelabel",
+        "scores": {
+          "homogeneity": 4,
+          "tension": 5,
+          "ai_tone": 5,
+          "overall": 5
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "combat",
+        "scene_function_score": 0.468,
+        "beat_signature": "I-C-C-C",
+        "tension_average": 0.145,
+        "tension_peak": 1.162,
+        "tension_stdev": 0.215,
+        "dominant_terms": [
+          "妖兽",
+          "火焰",
+          "石门",
+          "掌心",
+          "守灵",
+          "一个",
+          "气息",
+          "画面"
+        ],
+        "segment_function_ratio": 0.75
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 2,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "beat_rhythm_repetition",
+          "label": "桥段节奏重复",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 71,
+              "location": "chapter beat signature",
+              "quote": "I-C-C-C",
+              "detail": "四段 beat 中重复功能过多"
+            }
+          ],
+          "detail": "beat signature `I-C-C-C` 重复度偏高"
+        },
+        {
+          "task": "197",
+          "signal_id": "tension_flatline",
+          "label": "张力曲线平直",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 71,
+              "location": "paragraph tension",
+              "quote": "avg=0.14, peak=1.16, stdev=0.21",
+              "detail": "low average + low peak + low variance"
+            }
+          ],
+          "detail": "段落张力均值、峰值与波动均偏低"
+        },
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "low",
+          "evidence": [
+            {
+              "chapter": 71,
+              "location": "第2段第4句",
+              "quote": "不是",
+              "detail": "不是 count=13"
+            }
+          ],
+          "detail": "`不是` 等模板连接词密度偏高"
+        },
+        {
+          "task": "198",
+          "signal_id": "not_but_template",
+          "label": "否定转折模板复用",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 71,
+              "location": "第2段第4句",
+              "quote": "不是简单的灵力积累，而是",
+              "detail": "not-but count=6"
+            }
+          ],
+          "detail": "`不是...而是...` 模板复用过多"
+        }
+      ]
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 80,
+      "version_id": "v-a51dafa8",
+      "segment": 4,
+      "annotation": {
+        "sample_layer": "spotcheck",
+        "annotator": "agent-deep-read",
+        "scores": {
+          "homogeneity": 3,
+          "tension": 3,
+          "ai_tone": 2,
+          "overall": 3
+        },
+        "disagreement": "prelabel_vs_spotcheck: tension 5->3; ai_tone 4->2"
+      },
+      "task197": {
+        "scene_function": "combat",
+        "scene_function_score": 0.639,
+        "beat_signature": "C-C-C-C",
+        "tension_average": 0.192,
+        "tension_peak": 1.542,
+        "tension_stdev": 0.254,
+        "dominant_terms": [
+          "短剑",
+          "玉简",
+          "像是",
+          "领头",
+          "上的",
+          "的灵",
+          "修士",
+          "两件"
+        ],
+        "segment_function_ratio": 1.0
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 2,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "scene_function_homogeneity",
+          "label": "场景功能同质化",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 80,
+              "location": "弧段统计",
+              "quote": "xuanhuan segment 4",
+              "detail": "combat ratio=1.00"
+            }
+          ],
+          "detail": "弧段 4 内 `combat` 场景占比 100%"
+        },
+        {
+          "task": "197",
+          "signal_id": "beat_rhythm_repetition",
+          "label": "桥段节奏重复",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 80,
+              "location": "chapter beat signature",
+              "quote": "C-C-C-C",
+              "detail": "四段 beat 中重复功能过多"
+            }
+          ],
+          "detail": "beat signature `C-C-C-C` 重复度偏高"
+        },
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "low",
+          "evidence": [
+            {
+              "chapter": 80,
+              "location": "第4段第3句",
+              "quote": "像是",
+              "detail": "像是 count=13"
+            }
+          ],
+          "detail": "`像是` 等模板连接词密度偏高"
+        },
+        {
+          "task": "198",
+          "signal_id": "not_but_template",
+          "label": "否定转折模板复用",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 80,
+              "location": "第22段第1句",
+              "quote": "不是恐惧，而是",
+              "detail": "not-but count=4"
+            }
+          ],
+          "detail": "`不是...而是...` 模板复用过多"
+        }
+      ]
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 84,
+      "version_id": "v-efaf5591",
+      "segment": 4,
+      "annotation": {
+        "sample_layer": "prelabel",
+        "annotator": "llm-prelabel",
+        "scores": {
+          "homogeneity": 3,
+          "tension": 5,
+          "ai_tone": 4,
+          "overall": 4
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "combat",
+        "scene_function_score": 0.545,
+        "beat_signature": "C-C-C-D",
+        "tension_average": 0.23,
+        "tension_peak": 1.547,
+        "tension_stdev": 0.304,
+        "dominant_terms": [
+          "执事",
+          "沉的",
+          "陆沉的",
+          "色的",
+          "金色",
+          "一只",
+          "一道",
+          "祭坛"
+        ],
+        "segment_function_ratio": 1.0
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 1,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "scene_function_homogeneity",
+          "label": "场景功能同质化",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 84,
+              "location": "弧段统计",
+              "quote": "xuanhuan segment 4",
+              "detail": "combat ratio=1.00"
+            }
+          ],
+          "detail": "弧段 4 内 `combat` 场景占比 100%"
+        },
+        {
+          "task": "197",
+          "signal_id": "beat_rhythm_repetition",
+          "label": "桥段节奏重复",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 84,
+              "location": "chapter beat signature",
+              "quote": "C-C-C-D",
+              "detail": "四段 beat 中重复功能过多"
+            }
+          ],
+          "detail": "beat signature `C-C-C-D` 重复度偏高"
+        },
+        {
+          "task": "198",
+          "signal_id": "not_but_template",
+          "label": "否定转折模板复用",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 84,
+              "location": "第49段第3句",
+              "quote": "不是灵力，不是功法，而是",
+              "detail": "not-but count=3"
+            }
+          ],
+          "detail": "`不是...而是...` 模板复用过多"
+        }
+      ]
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 92,
+      "version_id": "v-f427f038",
+      "segment": 4,
+      "annotation": {
+        "sample_layer": "prelabel",
+        "annotator": "llm-prelabel",
+        "scores": {
+          "homogeneity": 3,
+          "tension": 4,
+          "ai_tone": 4,
+          "overall": 4
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "combat",
+        "scene_function_score": 0.407,
+        "beat_signature": "C-C-C-D",
+        "tension_average": 0.143,
+        "tension_peak": 1.278,
+        "tension_stdev": 0.245,
+        "dominant_terms": [
+          "碎片",
+          "了一",
+          "哨站",
+          "一个",
+          "修士",
+          "金色",
+          "色的",
+          "大汉"
+        ],
+        "segment_function_ratio": 1.0
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 1,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "scene_function_homogeneity",
+          "label": "场景功能同质化",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 92,
+              "location": "弧段统计",
+              "quote": "xuanhuan segment 4",
+              "detail": "combat ratio=1.00"
+            }
+          ],
+          "detail": "弧段 4 内 `combat` 场景占比 100%"
+        },
+        {
+          "task": "197",
+          "signal_id": "beat_rhythm_repetition",
+          "label": "桥段节奏重复",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 92,
+              "location": "chapter beat signature",
+              "quote": "C-C-C-D",
+              "detail": "四段 beat 中重复功能过多"
+            }
+          ],
+          "detail": "beat signature `C-C-C-D` 重复度偏高"
+        },
+        {
+          "task": "197",
+          "signal_id": "tension_flatline",
+          "label": "张力曲线平直",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 92,
+              "location": "paragraph tension",
+              "quote": "avg=0.14, peak=1.28, stdev=0.24",
+              "detail": "low average + low peak + low variance"
+            }
+          ],
+          "detail": "段落张力均值、峰值与波动均偏低"
+        },
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "low",
+          "evidence": [
+            {
+              "chapter": 92,
+              "location": "第6段第2句",
+              "quote": "不是",
+              "detail": "不是 count=12"
+            }
+          ],
+          "detail": "`不是` 等模板连接词密度偏高"
+        }
+      ]
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 98,
+      "version_id": "v-6864c4b7",
+      "segment": 4,
+      "annotation": {
+        "sample_layer": "prelabel",
+        "annotator": "llm-prelabel",
+        "scores": {
+          "homogeneity": 4,
+          "tension": 5,
+          "ai_tone": 4,
+          "overall": 4
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "combat",
+        "scene_function_score": 0.505,
+        "beat_signature": "C-C-C-D",
+        "tension_average": 0.208,
+        "tension_peak": 1.15,
+        "tension_stdev": 0.264,
+        "dominant_terms": [
+          "雾兽",
+          "碎片",
+          "令牌",
+          "牌碎",
+          "令牌碎",
+          "牌碎片",
+          "令牌碎片",
+          "雾气"
+        ],
+        "segment_function_ratio": 1.0
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 1,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 0,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "scene_function_homogeneity",
+          "label": "场景功能同质化",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 98,
+              "location": "弧段统计",
+              "quote": "xuanhuan segment 4",
+              "detail": "combat ratio=1.00"
+            }
+          ],
+          "detail": "弧段 4 内 `combat` 场景占比 100%"
+        },
+        {
+          "task": "197",
+          "signal_id": "beat_rhythm_repetition",
+          "label": "桥段节奏重复",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 98,
+              "location": "chapter beat signature",
+              "quote": "C-C-C-D",
+              "detail": "四段 beat 中重复功能过多"
+            }
+          ],
+          "detail": "beat signature `C-C-C-D` 重复度偏高"
+        },
+        {
+          "task": "198",
+          "signal_id": "cross_chapter_verbatim_repeat",
+          "label": "跨章逐字复读",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 98,
+              "location": "未知位置",
+              "quote": "雾兽的口器突然张开，喷出一团浓稠的白雾。",
+              "detail": "also appears in Ch50"
+            }
+          ],
+          "detail": "同体裁样本中跨章复用句子，另见 1 处"
+        }
+      ]
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 104,
+      "version_id": "v-473a1683",
+      "segment": 5,
+      "annotation": {
+        "sample_layer": "anchor",
+        "annotator": "agent-deep-read",
+        "scores": {
+          "homogeneity": 4,
+          "tension": 4,
+          "ai_tone": 4,
+          "overall": 4
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "combat",
+        "scene_function_score": 0.42,
+        "beat_signature": "D-C-C-I",
+        "tension_average": 0.216,
+        "tension_peak": 1.22,
+        "tension_stdev": 0.299,
+        "dominant_terms": [
+          "探子",
+          "碎片",
+          "金色",
+          "毒鳞",
+          "像是",
+          "铜戒",
+          "纹路",
+          "了一"
+        ],
+        "segment_function_ratio": 0.5
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 2,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "low",
+          "evidence": [
+            {
+              "chapter": 104,
+              "location": "第2段第2句",
+              "quote": "不是",
+              "detail": "不是 count=13"
+            }
+          ],
+          "detail": "`不是` 等模板连接词密度偏高"
+        },
+        {
+          "task": "198",
+          "signal_id": "not_but_template",
+          "label": "否定转折模板复用",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 104,
+              "location": "第34段第2句",
+              "quote": "不是朝前冲，而是",
+              "detail": "not-but count=4"
+            }
+          ],
+          "detail": "`不是...而是...` 模板复用过多"
+        }
+      ]
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 105,
+      "version_id": "fix-105-6-4cc94f2e",
+      "segment": 5,
+      "annotation": {
+        "sample_layer": "spotcheck",
+        "annotator": "agent-deep-read",
+        "scores": {
+          "homogeneity": 3,
+          "tension": 3,
+          "ai_tone": 2,
+          "overall": 2
+        },
+        "disagreement": "prelabel_vs_spotcheck: tension 5->3; ai_tone 4->2; overall 4->2"
+      },
+      "task197": {
+        "scene_function": "dialogue",
+        "scene_function_score": 0.365,
+        "beat_signature": "C-D-C-D",
+        "tension_average": 0.18,
+        "tension_peak": 2.008,
+        "tension_stdev": 0.316,
+        "dominant_terms": [
+          "碎片",
+          "像是",
+          "母亲",
+          "东西",
+          "了一",
+          "印记",
+          "封印",
+          "记忆"
+        ],
+        "segment_function_ratio": 0.5
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 2,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 105,
+              "location": "第3段第1句",
+              "quote": "像是",
+              "detail": "像是 count=21"
+            }
+          ],
+          "detail": "`像是` 等模板连接词密度偏高"
+        },
+        {
+          "task": "198",
+          "signal_id": "not_but_template",
+          "label": "否定转折模板复用",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 105,
+              "location": "第11段第1句",
+              "quote": "不是灵气燃烧的光芒，而是",
+              "detail": "not-but count=3"
+            }
+          ],
+          "detail": "`不是...而是...` 模板复用过多"
+        }
+      ]
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 118,
+      "version_id": "fix-118-4-9f0ba057",
+      "segment": 5,
+      "annotation": {
+        "sample_layer": "anchor",
+        "annotator": "agent-deep-read",
+        "scores": {
+          "homogeneity": 2,
+          "tension": 3,
+          "ai_tone": 2,
+          "overall": 2
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "combat",
+        "scene_function_score": 0.391,
+        "beat_signature": "C-C-D-C",
+        "tension_average": 0.208,
+        "tension_peak": 1.87,
+        "tension_stdev": 0.349,
+        "dominant_terms": [
+          "像是",
+          "右臂",
+          "那些",
+          "纹路",
+          "沉的",
+          "的右",
+          "矿道",
+          "陆沉的"
+        ],
+        "segment_function_ratio": 0.5
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 1,
+        "template_rhetoric_count": 1,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "beat_rhythm_repetition",
+          "label": "桥段节奏重复",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 118,
+              "location": "chapter beat signature",
+              "quote": "C-C-D-C",
+              "detail": "四段 beat 中重复功能过多"
+            }
+          ],
+          "detail": "beat signature `C-C-D-C` 重复度偏高"
+        },
+        {
+          "task": "198",
+          "signal_id": "setting_patch_segment",
+          "label": "设定补丁段 / 说明文重述",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 118,
+              "location": "第92段第1句",
+              "quote": "那些记忆碎片终于拼成更清楚的轮廓：灵渊核心令牌本该一分为二，一半被母亲在他出生夜嵌入丹田，另一半留在门后；母亲的血脉觉醒能力，正是以星辰血脉和灵渊血脉的共鸣，把七个守门者家族的手印压进碎片。若他真是第八代守门者的钥匙，那么此刻右臂上亮起的…",
+              "detail": "patch_terms=5, separators=2"
+            }
+          ],
+          "detail": "段落解释性连接词与设定词密度较高"
+        },
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 118,
+              "location": "第1段第1句",
+              "quote": "像是",
+              "detail": "像是 count=28"
+            }
+          ],
+          "detail": "`像是` 等模板连接词密度偏高"
+        }
+      ]
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 120,
+      "version_id": "fix-120-6-904de5f4",
+      "segment": 5,
+      "annotation": {
+        "sample_layer": "prelabel",
+        "annotator": "llm-prelabel",
+        "scores": {
+          "homogeneity": 4,
+          "tension": 5,
+          "ai_tone": 4,
+          "overall": 5
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "dialogue",
+        "scene_function_score": 0.527,
+        "beat_signature": "D-D-D-D",
+        "tension_average": 0.227,
+        "tension_peak": 1.591,
+        "tension_stdev": 0.353,
+        "dominant_terms": [
+          "守灵",
+          "矿道",
+          "了一",
+          "的血",
+          "沉的",
+          "陆沉的",
+          "灵的",
+          "一个"
+        ],
+        "segment_function_ratio": 0.5
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 2,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "beat_rhythm_repetition",
+          "label": "桥段节奏重复",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 120,
+              "location": "chapter beat signature",
+              "quote": "D-D-D-D",
+              "detail": "四段 beat 中重复功能过多"
+            }
+          ],
+          "detail": "beat signature `D-D-D-D` 重复度偏高"
+        },
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "low",
+          "evidence": [
+            {
+              "chapter": 120,
+              "location": "第4段第3句",
+              "quote": "不是",
+              "detail": "不是 count=11"
+            }
+          ],
+          "detail": "`不是` 等模板连接词密度偏高"
+        },
+        {
+          "task": "198",
+          "signal_id": "not_but_template",
+          "label": "否定转折模板复用",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 120,
+              "location": "第15段第2句",
+              "quote": "不是麻木，不是回避，而是",
+              "detail": "not-but count=3"
+            }
+          ],
+          "detail": "`不是...而是...` 模板复用过多"
+        }
+      ]
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 134,
+      "version_id": "fix-134-segment-192ai",
+      "segment": 6,
+      "annotation": {
+        "sample_layer": "spotcheck",
+        "annotator": "agent-deep-read",
+        "scores": {
+          "homogeneity": 3,
+          "tension": 3,
+          "ai_tone": 2,
+          "overall": 2
+        },
+        "disagreement": "prelabel_vs_spotcheck: tension 5->3; ai_tone 4->2; overall 5->2"
+      },
+      "task197": {
+        "scene_function": "dialogue",
+        "scene_function_score": 0.447,
+        "beat_signature": "D-D-D-C",
+        "tension_average": 0.266,
+        "tension_peak": 3.387,
+        "tension_stdev": 0.515,
+        "dominant_terms": [
+          "母亲",
+          "碎片",
+          "封印",
+          "亲的",
+          "母亲的",
+          "寒气",
+          "幻影",
+          "的幻"
+        ],
+        "segment_function_ratio": 0.5
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 1,
+        "template_rhetoric_count": 2,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "beat_rhythm_repetition",
+          "label": "桥段节奏重复",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 134,
+              "location": "chapter beat signature",
+              "quote": "D-D-D-C",
+              "detail": "四段 beat 中重复功能过多"
+            }
+          ],
+          "detail": "beat signature `D-D-D-C` 重复度偏高"
+        },
+        {
+          "task": "198",
+          "signal_id": "setting_patch_segment",
+          "label": "设定补丁段 / 说明文重述",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 134,
+              "location": "第132段第1句",
+              "quote": "父亲留下的金色徽记、灵渊令牌这把核心钥匙，以及灵渊老人气息与陆沉血气之间的牵连，都被母亲的血脉锁解释清楚：徽记不是装饰，是三道封印钥匙的外显烙印；令牌不是单块碎片，而是能把父亲、母亲、陆沉三处血脉封印重新接在一起的钥匙；灵渊老人当年能借陆…",
+              "detail": "patch_terms=5, separators=6"
+            }
+          ],
+          "detail": "段落解释性连接词与设定词密度较高"
+        },
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 134,
+              "location": "第7段第1句",
+              "quote": "不是",
+              "detail": "不是 count=17"
+            }
+          ],
+          "detail": "`不是` 等模板连接词密度偏高"
+        },
+        {
+          "task": "198",
+          "signal_id": "not_but_template",
+          "label": "否定转折模板复用",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 134,
+              "location": "第15段第1句",
+              "quote": "不是软弱，而是",
+              "detail": "not-but count=5"
+            }
+          ],
+          "detail": "`不是...而是...` 模板复用过多"
+        }
+      ]
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 135,
+      "version_id": "v-2be94c1b",
+      "segment": 6,
+      "annotation": {
+        "sample_layer": "prelabel",
+        "annotator": "llm-prelabel",
+        "scores": {
+          "homogeneity": 4,
+          "tension": 5,
+          "ai_tone": 4,
+          "overall": 4
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "combat",
+        "scene_function_score": 0.432,
+        "beat_signature": "C-C-D-D",
+        "tension_average": 0.298,
+        "tension_peak": 2.958,
+        "tension_stdev": 0.506,
+        "dominant_terms": [
+          "碎片",
+          "血脉",
+          "母亲",
+          "像是",
+          "幻影",
+          "亲幻",
+          "母亲幻",
+          "亲幻影"
+        ],
+        "segment_function_ratio": 0.5
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 1,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 135,
+              "location": "第3段第3句",
+              "quote": "像是",
+              "detail": "像是 count=17"
+            }
+          ],
+          "detail": "`像是` 等模板连接词密度偏高"
+        }
+      ]
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 145,
+      "version_id": "v-39e1b2f0",
+      "segment": 6,
+      "annotation": {
+        "sample_layer": "prelabel",
+        "annotator": "llm-prelabel",
+        "scores": {
+          "homogeneity": 3,
+          "tension": 4,
+          "ai_tone": 4,
+          "overall": 4
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "combat",
+        "scene_function_score": 0.387,
+        "beat_signature": "D-C-I-C",
+        "tension_average": 0.119,
+        "tension_peak": 1.155,
+        "tension_stdev": 0.198,
+        "dominant_terms": [
+          "石棺",
+          "像是",
+          "气息",
+          "老人",
+          "一个",
+          "母亲",
+          "寒气",
+          "人的"
+        ],
+        "segment_function_ratio": 0.5
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 2,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "tension_flatline",
+          "label": "张力曲线平直",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 145,
+              "location": "paragraph tension",
+              "quote": "avg=0.12, peak=1.16, stdev=0.20",
+              "detail": "low average + low peak + low variance"
+            }
+          ],
+          "detail": "段落张力均值、峰值与波动均偏低"
+        },
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 145,
+              "location": "第4段第1句",
+              "quote": "像是",
+              "detail": "像是 count=22"
+            }
+          ],
+          "detail": "`像是` 等模板连接词密度偏高"
+        },
+        {
+          "task": "198",
+          "signal_id": "not_but_template",
+          "label": "否定转折模板复用",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 145,
+              "location": "第2段第1句",
+              "quote": "不是像之前那样缓慢消散，而是",
+              "detail": "not-but count=7"
+            }
+          ],
+          "detail": "`不是...而是...` 模板复用过多"
+        }
+      ]
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 148,
+      "version_id": "v-99243d32",
+      "segment": 6,
+      "annotation": {
+        "sample_layer": "prelabel",
+        "annotator": "llm-prelabel",
+        "scores": {
+          "homogeneity": 4,
+          "tension": 5,
+          "ai_tone": 4,
+          "overall": 4
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "dialogue",
+        "scene_function_score": 0.447,
+        "beat_signature": "D-D-D-D",
+        "tension_average": 0.16,
+        "tension_peak": 1.199,
+        "tension_stdev": 0.242,
+        "dominant_terms": [
+          "封印",
+          "裂缝",
+          "虚影",
+          "裂纹",
+          "的声",
+          "渊眼",
+          "的声音",
+          "正在"
+        ],
+        "segment_function_ratio": 0.5
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 2,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "beat_rhythm_repetition",
+          "label": "桥段节奏重复",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 148,
+              "location": "chapter beat signature",
+              "quote": "D-D-D-D",
+              "detail": "四段 beat 中重复功能过多"
+            }
+          ],
+          "detail": "beat signature `D-D-D-D` 重复度偏高"
+        },
+        {
+          "task": "197",
+          "signal_id": "tension_flatline",
+          "label": "张力曲线平直",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 148,
+              "location": "paragraph tension",
+              "quote": "avg=0.16, peak=1.20, stdev=0.24",
+              "detail": "low average + low peak + low variance"
+            }
+          ],
+          "detail": "段落张力均值、峰值与波动均偏低"
+        },
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "low",
+          "evidence": [
+            {
+              "chapter": 148,
+              "location": "第6段第2句",
+              "quote": "不是",
+              "detail": "不是 count=12"
+            }
+          ],
+          "detail": "`不是` 等模板连接词密度偏高"
+        },
+        {
+          "task": "198",
+          "signal_id": "not_but_template",
+          "label": "否定转折模板复用",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 148,
+              "location": "第6段第2句",
+              "quote": "不是因为他刚才那一掌，而是",
+              "detail": "not-but count=6"
+            }
+          ],
+          "detail": "`不是...而是...` 模板复用过多"
+        }
+      ]
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 162,
+      "version_id": "fix-162-segment-192ap",
+      "segment": 7,
+      "annotation": {
+        "sample_layer": "prelabel",
+        "annotator": "llm-prelabel",
+        "scores": {
+          "homogeneity": 4,
+          "tension": 5,
+          "ai_tone": 4,
+          "overall": 4
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "combat",
+        "scene_function_score": 0.417,
+        "beat_signature": "D-C-C-C",
+        "tension_average": 0.373,
+        "tension_peak": 2.249,
+        "tension_stdev": 0.487,
+        "dominant_terms": [
+          "封印",
+          "老人",
+          "渊老",
+          "灵渊老",
+          "渊老人",
+          "灵渊老人",
+          "人的",
+          "老人的"
+        ],
+        "segment_function_ratio": 0.667
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 2,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "beat_rhythm_repetition",
+          "label": "桥段节奏重复",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 162,
+              "location": "chapter beat signature",
+              "quote": "D-C-C-C",
+              "detail": "四段 beat 中重复功能过多"
+            }
+          ],
+          "detail": "beat signature `D-C-C-C` 重复度偏高"
+        },
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 162,
+              "location": "第9段第1句",
+              "quote": "像是",
+              "detail": "像是 count=14"
+            }
+          ],
+          "detail": "`像是` 等模板连接词密度偏高"
+        },
+        {
+          "task": "198",
+          "signal_id": "not_but_template",
+          "label": "否定转折模板复用",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 162,
+              "location": "第79段第2句",
+              "quote": "不是门后有什么，而是",
+              "detail": "not-but count=4"
+            }
+          ],
+          "detail": "`不是...而是...` 模板复用过多"
+        }
+      ]
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 164,
+      "version_id": "v-c12070fc",
+      "segment": 7,
+      "annotation": {
+        "sample_layer": "prelabel",
+        "annotator": "llm-prelabel",
+        "scores": {
+          "homogeneity": 4,
+          "tension": 5,
+          "ai_tone": 5,
+          "overall": 5
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "dialogue",
+        "scene_function_score": 0.375,
+        "beat_signature": "D-C-D-C",
+        "tension_average": 0.167,
+        "tension_peak": 1.21,
+        "tension_stdev": 0.248,
+        "dominant_terms": [
+          "像是",
+          "沉的",
+          "陆沉的",
+          "的血",
+          "那些",
+          "了一",
+          "纹路",
+          "守灵"
+        ],
+        "segment_function_ratio": 0.667
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 2,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "tension_flatline",
+          "label": "张力曲线平直",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 164,
+              "location": "paragraph tension",
+              "quote": "avg=0.17, peak=1.21, stdev=0.25",
+              "detail": "low average + low peak + low variance"
+            }
+          ],
+          "detail": "段落张力均值、峰值与波动均偏低"
+        },
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 164,
+              "location": "第2段第3句",
+              "quote": "像是",
+              "detail": "像是 count=17"
+            }
+          ],
+          "detail": "`像是` 等模板连接词密度偏高"
+        },
+        {
+          "task": "198",
+          "signal_id": "not_but_template",
+          "label": "否定转折模板复用",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 164,
+              "location": "第25段第1句",
+              "quote": "不是人形的，而是",
+              "detail": "not-but count=4"
+            }
+          ],
+          "detail": "`不是...而是...` 模板复用过多"
+        }
+      ]
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 169,
+      "version_id": "v-319bb8f7",
+      "segment": 7,
+      "annotation": {
+        "sample_layer": "anchor",
+        "annotator": "agent-deep-read",
+        "scores": {
+          "homogeneity": 4,
+          "tension": 5,
+          "ai_tone": 4,
+          "overall": 4
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "dialogue",
+        "scene_function_score": 0.469,
+        "beat_signature": "D-D-D-C",
+        "tension_average": 0.203,
+        "tension_peak": 2.607,
+        "tension_stdev": 0.353,
+        "dominant_terms": [
+          "铜牌",
+          "沉的",
+          "陆沉的",
+          "祭坛",
+          "符文",
+          "血线",
+          "影子",
+          "了一"
+        ],
+        "segment_function_ratio": 0.667
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 1,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "beat_rhythm_repetition",
+          "label": "桥段节奏重复",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 169,
+              "location": "chapter beat signature",
+              "quote": "D-D-D-C",
+              "detail": "四段 beat 中重复功能过多"
+            }
+          ],
+          "detail": "beat signature `D-D-D-C` 重复度偏高"
+        },
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "low",
+          "evidence": [
+            {
+              "chapter": 169,
+              "location": "第5段第1句",
+              "quote": "不是",
+              "detail": "不是 count=13"
+            }
+          ],
+          "detail": "`不是` 等模板连接词密度偏高"
+        }
+      ]
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 178,
+      "version_id": "v-45e0ef0c",
+      "segment": 8,
+      "annotation": {
+        "sample_layer": "prelabel",
+        "annotator": "llm-prelabel",
+        "scores": {
+          "homogeneity": 4,
+          "tension": 5,
+          "ai_tone": 5,
+          "overall": 5
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "combat",
+        "scene_function_score": 0.562,
+        "beat_signature": "C-C-C-C",
+        "tension_average": 0.256,
+        "tension_peak": 1.52,
+        "tension_stdev": 0.325,
+        "dominant_terms": [
+          "符文",
+          "修士",
+          "沉的",
+          "陆沉的",
+          "老三",
+          "丹田",
+          "高个",
+          "个修"
+        ],
+        "segment_function_ratio": 0.667
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 2,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "beat_rhythm_repetition",
+          "label": "桥段节奏重复",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 178,
+              "location": "chapter beat signature",
+              "quote": "C-C-C-C",
+              "detail": "四段 beat 中重复功能过多"
+            }
+          ],
+          "detail": "beat signature `C-C-C-C` 重复度偏高"
+        },
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 178,
+              "location": "第20段第1句",
+              "quote": "不是",
+              "detail": "不是 count=18"
+            }
+          ],
+          "detail": "`不是` 等模板连接词密度偏高"
+        },
+        {
+          "task": "198",
+          "signal_id": "not_but_template",
+          "label": "否定转折模板复用",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 178,
+              "location": "第26段第1句",
+              "quote": "不是简单地相叠，而是",
+              "detail": "not-but count=5"
+            }
+          ],
+          "detail": "`不是...而是...` 模板复用过多"
+        }
+      ]
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 194,
+      "version_id": "v-409402c6",
+      "segment": 8,
+      "annotation": {
+        "sample_layer": "anchor",
+        "annotator": "agent-deep-read",
+        "scores": {
+          "homogeneity": 2,
+          "tension": 2,
+          "ai_tone": 1,
+          "overall": 2
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "dialogue",
+        "scene_function_score": 0.381,
+        "beat_signature": "C-D-D-D",
+        "tension_average": 0.171,
+        "tension_peak": 1.263,
+        "tension_stdev": 0.283,
+        "dominant_terms": [
+          "掌心",
+          "存在",
+          "古老",
+          "老存",
+          "古老存",
+          "老存在",
+          "古老存在",
+          "沉的"
+        ],
+        "segment_function_ratio": 0.667
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 1,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 1,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "beat_rhythm_repetition",
+          "label": "桥段节奏重复",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 194,
+              "location": "chapter beat signature",
+              "quote": "C-D-D-D",
+              "detail": "四段 beat 中重复功能过多"
+            }
+          ],
+          "detail": "beat signature `C-D-D-D` 重复度偏高"
+        },
+        {
+          "task": "198",
+          "signal_id": "engineering_residue",
+          "label": "工程残留 / 未渲染标记",
+          "severity": "high",
+          "evidence": [
+            {
+              "chapter": 194,
+              "location": "第7段第2句",
+              "quote": "invisible",
+              "detail": "ASCII residue"
+            }
+          ],
+          "detail": "ASCII residue"
+        },
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 194,
+              "location": "第2段第2句",
+              "quote": "不是",
+              "detail": "不是 count=19"
+            }
+          ],
+          "detail": "`不是` 等模板连接词密度偏高"
+        }
+      ]
+    },
+    {
+      "genre": "xuanhuan",
+      "chapter": 199,
+      "version_id": "v-ca567d1e",
+      "segment": 8,
+      "annotation": {
+        "sample_layer": "prelabel",
+        "annotator": "llm-prelabel",
+        "scores": {
+          "homogeneity": 4,
+          "tension": 5,
+          "ai_tone": 5,
+          "overall": 5
+        },
+        "disagreement": null
+      },
+      "task197": {
+        "scene_function": "dialogue",
+        "scene_function_score": 0.382,
+        "beat_signature": "D-D-D-C",
+        "tension_average": 0.211,
+        "tension_peak": 1.14,
+        "tension_stdev": 0.273,
+        "dominant_terms": [
+          "符文",
+          "母亲",
+          "亲的",
+          "金色",
+          "父亲",
+          "母亲的",
+          "像是",
+          "的声"
+        ],
+        "segment_function_ratio": 0.667
+      },
+      "task198": {
+        "repeated_sentence_count": 0,
+        "cross_chapter_repetition_count": 0,
+        "self_reference_count": 0,
+        "engineering_residue_count": 0,
+        "setting_patch_count": 0,
+        "template_rhetoric_count": 2,
+        "legacy_ai_tell_count": 0
+      },
+      "hits": [
+        {
+          "task": "197",
+          "signal_id": "beat_rhythm_repetition",
+          "label": "桥段节奏重复",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 199,
+              "location": "chapter beat signature",
+              "quote": "D-D-D-C",
+              "detail": "四段 beat 中重复功能过多"
+            }
+          ],
+          "detail": "beat signature `D-D-D-C` 重复度偏高"
+        },
+        {
+          "task": "197",
+          "signal_id": "motif_reuse_density",
+          "label": "意象/冲突词复用密度高",
+          "severity": "low",
+          "evidence": [
+            {
+              "chapter": 199,
+              "location": "chapter lexical motifs",
+              "quote": "符文, 母亲, 亲的, 金色, 父亲",
+              "detail": "dominant terms repeated unusually often"
+            }
+          ],
+          "detail": "高频核心词：符文, 母亲, 亲的, 金色, 父亲"
+        },
+        {
+          "task": "198",
+          "signal_id": "template_rhetoric_density",
+          "label": "模板修辞 / 说明文腔密度高",
+          "severity": "low",
+          "evidence": [
+            {
+              "chapter": 199,
+              "location": "第1段第2句",
+              "quote": "像是",
+              "detail": "像是 count=12"
+            }
+          ],
+          "detail": "`像是` 等模板连接词密度偏高"
+        },
+        {
+          "task": "198",
+          "signal_id": "not_but_template",
+          "label": "否定转折模板复用",
+          "severity": "medium",
+          "evidence": [
+            {
+              "chapter": 199,
+              "location": "第6段第3句",
+              "quote": "不是阳光，不是灵光，而是",
+              "detail": "not-but count=5"
+            }
+          ],
+          "detail": "`不是...而是...` 模板复用过多"
+        }
+      ]
+    }
+  ]
+}

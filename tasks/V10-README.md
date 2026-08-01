@@ -2,9 +2,9 @@
 
 > **阶段**: 跨体裁 Ch200 + 优秀度信号包 + 结构升级 spike
 > **定位**: V10 不是开源交付体验阶段，而是工程版 1.0 前的质量与长度再验证阶段：证明多体裁长窗口仍稳定，并把“好不好看/是否有 AI 腔/是否同质化”从主观讨论推进到可复核信号。
-> **当前口径**: V9 已全量闭环；Task 189/190/191 已完成；Task 192 xuanhuan Ch200 已完成（Ch200 accepted/current head=`v-5659d486`，five-gate @200 PASS、segment audit PASS、T9 hard hits=0）；Task 193 wuxia Ch200 已完成（Ch200 accepted/current head=`v-1ecab81e`，five-gate @200 PASS、segment audit PASS、T9 hard hits=0，total_cost=17.187324）；Task 194 urban Ch200 已完成（Ch200 accepted/current head=`clean-200-t9-194k`，run completed @200、failed=[]、total_cost=14.91622；five-gate @200 PASS、segment audit @200 PASS、T9 hard hits=0；timeline=3 report-only）。Task 195 跨体裁 Ch200 总验收已完成，三体裁均 accepted=200/gap=0、failed=[]、five-gate PASS、segment audit PASS、T9 hard hits=0；Task 196 优秀度样本集与校准协议已提前完成。下一步进入 Task 197。V10 不再补 V9 生产化地基，也不做 V11 的外部用户可用化收尾。
+> **当前口径**: V9 已全量闭环；V10 Task 189-207 已全部完成。Task 192 xuanhuan Ch200、Task 193 wuxia Ch200、Task 194 urban Ch200 与 Task 195 跨体裁 Ch200 总验收均已完成，三体裁均 accepted=200/gap=0、failed=[]、five-gate PASS、segment audit PASS、T9 hard hits=0；Task 196-203 优秀度信号包完成并保持 report-only；Task 204 KG 图 diff、Task 205 FactTrack validity interval、Task 206 Storyline Tree 三个结构 spike 均完成且 decision=`defer`；Task 207 收口与归档规划已完成，closure report 为 `docs/reports/207-v10-closure-report.md`，归档规划入口为 `archive/v10/INDEX.md`。下一步进入 V11 开源可用化收尾，入口 `tasks/V11-Plan.md`。
 > **任务编号**: V10 预计从 Task 189 开始；本文不占任务号。只有可独立执行、独立验收、独立出 DONE 文档的工作项才编号；撞墙修复继续按父任务字母后缀登记（如 `192.p`）。
-> **状态**: ◐ V10.3 Task 197 待启动（Task 189/190/191/192/193/194/195 ✅；Task 196 ✅）
+> **状态**: ✅ V10 全量闭环（Task 189-207 ✅）；下一阶段路由 V11
 
 本文是 V10 阶段任务规划入口。V9 历史事实入口见 `tasks/V9-README.md`，V9 单项任务归档见 `archive/v9/INDEX.md`。
 
@@ -72,7 +72,7 @@ V10 的硬目标建议是 xuanhuan / wuxia / urban 三个非 sci-fi 体裁均完
 | C1 | 优秀度信号与一致性 CED 明确分层，不把文学 craft、同质化或 AI 腔计入 CED。 |
 | C2 | 至少覆盖：跨章同质化/多样性、叙事张力/节奏、中文 AI 腔、style extraction → style card、角色声纹锚点、perplexity/可读性可行性评估。 |
 | C3 | 每个信号都有样本校准与误报记录；报告能解释命中证据，而不是只给分数。 |
-| C4 | `songyan metrics` 或 `songyan report` 可展示优秀度视图，并能按章节/窗口定位问题。 |
+| C4 | 独立 JSON / Markdown 报告可展示优秀度视图，并能按章节/窗口定位问题；`songyan report` 接入登记到 V11+，不在 V10 内强接。 |
 | C5 | 优秀度信号包在 V10 内默认不改变生成链路；若任何任务要把信号注入 prompt 或 gate，必须单独立项并先完成 scifi/短窗口回归。 |
 
 ### D 组 · 结构升级 spike
@@ -185,27 +185,27 @@ V10 不把结构升级强行并入主流程。spike 的目标是形成取舍结�
 | Task | 名称 | 状态 | 内容要点 | 验收要点 |
 |------|------|:----:|----------|----------|
 | 196 | 优秀度样本集与校准协议 | ✅ | 定义信号边界、样本抽样、人工/自动标注协议；区分 report-only 与候选 gate | DONE：`tasks/196-excellence-signal-calibration-DONE.md`；样本清单：`tasks/196-excellence-sample-set.json`（60 章，seed=196）；标注记录：`tasks/196-excellence-annotations.json`（72 条三层）；校准报告：`tasks/196-excellence-calibration-report.md`（judge 单向宽松偏差 + 规则试点负结果） |
-| 197 | 跨章同质化/多样性/叙事张力指数 | ◻ | 检测重复冲突结构、重复场景功能、重复桥段节奏、张力曲线塌陷 | report-only 输出；有章节证据与误报记录 |
-| 198 | 中文 AI 腔规则包 | ◻ | 从词表升级到规则包：套话、保护性表达、说明文腔、抽象空转 | `songyan metrics/report` 可定位命中段落 |
-| 199 | style extraction → style card | ◻ | 从 accepted 正文抽取项目风格卡；V10 内先生成与报告，不默认注入 Writer/CreativeDirector | style card 生成可复现；不改变历史样本判定 |
-| 200 | 角色声纹锚点 | ◻ | 为主要角色建立声纹特征与偏离检测；先 observe，不自动改写 | 声纹报告可按角色/章节定位 |
-| 201 | judge 偏差对策 | ◻ | 多样本、多 judge、盲评/对照协议；避免单一 judge Goodhart | 校准报告说明偏差与适用范围 |
-| 202 | perplexity / 可读性可行性 spike | ◻ | 评估 perplexity、可读性统计、句段节奏等信号在中文长篇上的稳定性 | 给出采用/放弃/后置结论；不作为硬 gate |
-| 203 | 优秀度报告整合 | ◻ | 将 197-202 输出整合到 metrics/report；分层展示不混入五门 | V10 总报告可引用统一优秀度视图 |
+| 197 | 跨章同质化/多样性/叙事张力指数 | ✅ | 已实现场景功能同质化、桥段节奏重复、张力曲线平直、意象/冲突词复用密度等离线信号 | DONE：`tasks/197-cross-chapter-homogeneity-tension-index-DONE.md`；report-only；precision=0.40、recall=0.80；全量 pytest/ruff/scifi end10 回归通过 |
+| 198 | 中文 AI 腔规则包 | ✅ | 已实现逐字复读、章节号自指、工程残留、设定补丁段、模板修辞等离线规则包 | DONE：`tasks/198-chinese-ai-tone-rule-pack-DONE.md`；report-only；precision=0.65、recall=1.00；全量 pytest/ruff/scifi end10 回归通过 |
+| 199 | style extraction → style card | ✅ | 从 accepted 正文抽取 report-only style card；默认输出 all / scifi / xuanhuan 三张观察卡，不默认注入 Writer/CreativeDirector | DONE：`tasks/199-style-extraction-to-style-card-DONE.md`；JSON：`tasks/199-style-card-report.json`；sanity check strong traits 6/6、weak explained 15/15 |
+| 200 | 角色声纹锚点 | ✅ | 为主要角色建立 report-only 声纹特征与 unknown 归因报告；不自动改写，不写回角色档案 | DONE：`tasks/200-character-voice-anchors-DONE.md`；JSON：`tasks/200-character-voice-anchor-report.json`；34 个锚点，unknown ratio=0.599，weak explained=15/15 |
+| 201 | judge 偏差对策 | ✅ | 已完成 prelabel leniency / low-score blindness / evidence drift / 工程事故漏判 / style-quality 混淆 / voice 同质化漏判分析与对策协议 | DONE：`tasks/201-judge-bias-countermeasures-DONE.md`；JSON：`tasks/201-judge-bias-report.json`；paired=12、major_delta≥2=24、supported_biases=6 |
+| 202 | perplexity / 可读性可行性 spike | ✅ | 已完成中文可读性 proxy 与真实 PPL 可行性评估；真实 PPL 在 V10 defer，可读性信号仅 report-only | DONE：`tasks/202-perplexity-readability-feasibility-spike-DONE.md`；JSON：`tasks/202-readability-feasibility-report.json`；proxy 55/60 命中，weak coverage=13/15，strong FP pressure=6/6 |
+| 203 | 优秀度报告整合 | ✅ | 已将 197-202 输出整合为独立 report-only 优秀度视图；不接 `songyan report`，不生成综合硬分 | DONE：`tasks/203-excellence-report-integration-DONE.md`；JSON：`tasks/203-excellence-integrated-report.json`；chapter view=60、signal view=50 |
 
 ### V10.4 结构升级 spike
 
 | Task | 名称 | 状态 | 内容要点 | 验收要点 |
 |------|------|:----:|----------|----------|
-| 204 | KG 图 diff spike | ◻ | 用少量已知热点章验证事实图 diff 的发现能力 | 给出继续/放弃/后置结论 |
-| 205 | FactTrack validity interval spike | ◻ | 验证事实有效期建模是否降低过期事实误用 | 给出数据模型影响与迁移成本 |
-| 206 | Storyline Tree spike | ◻ | 验证主线/支线树对长程伏笔和弧级收束的价值 | 给出是否进入 V11/V12 的决策 |
+| 204 | KG 图 diff spike | ✅ | 已用 6 个历史 positive + 3 个 Ch200 clean negative 验证只读事实图快照与章级 diff；positive 6/6 高置信复现、negative 3/3 无高置信误报；decision=`defer`，说明有可解释信号但需要 validity interval / alias 策略支撑 | DONE：`tasks/204-kg-graph-diff-spike-DONE.md`；JSON：`tasks/204-kg-diff-spike-report.json` |
+| 205 | FactTrack validity interval spike | ✅ | 已基于 Task 204 的 6 positive + 3 negative 样本构建 shadow interval；interval_explained=6、false_positive=0；decision=`defer`，说明 interval 可解释 DB 状态边界，但仍需 alias policy 与 Storyline Tree 处理 open thread 语义 | DONE：`tasks/205-facttrack-validity-interval-spike-DONE.md`；JSON：`tasks/205-facttrack-validity-interval-report.json` |
+| 206 | Storyline Tree spike | ✅ | 已基于 Task 204/205 的 6 positive + 3 negative 样本构建 shadow tree；needs_storyline_tree=3、tree_explained=5、false_positive=0；decision=`defer`，说明 tree 可解释 open-thread 语义，但生产化仍需 alias / validity 集成 | DONE：`tasks/206-storyline-tree-spike-DONE.md`；JSON：`tasks/206-storyline-tree-spike-report.json` |
 
 ### V10.5 收口
 
 | Task | 名称 | 状态 | 内容要点 | 验收要点 |
 |------|------|:----:|----------|----------|
-| 207 | V10 收口与归档 | ◻ | STATUS / README / INDEX / AGENTS / 本文更新；任务归档到 `archive/v10/`；V11 前置确认；**登记项一并处理**：metrics 慢路径修复（189 遗留，`songyan metrics --chapters 1-200` 历史库卡死）、评测工具次要清理（baseline `min_up_to` 字段未消费、five_gate `final>=100` 过时语义、harness inventory 的 DONE markdown 正则兜底、`_genre_from_db_path` 文件名反推、`DATABASE_URL cleanup` 提示误导、`_create_v10_project_run` 裸写 repository 评估）；alias/命名漂移与 settlement 持久化按 193.s/v 决策路由 V11 | V10 全量闭环；V11 可按 `tasks/V11-Plan.md` 进入开源可用化收尾 |
+| 207 | V10 收口与归档 | ✅ | STATUS / README / INDEX / AGENTS / 本文更新；建立 `archive/v10/INDEX.md` 归档规划入口；生成 V10 closure report；V11 前置确认；**登记项一并处理**：metrics 慢路径修复（189 遗留，`songyan metrics --chapters 1-200` 历史库卡死）、评测工具次要清理（baseline `min_up_to` 字段未消费、five_gate `final>=100` 过时语义、harness inventory 的 DONE markdown 正则兜底、`_genre_from_db_path` 文件名反推、`DATABASE_URL cleanup` 提示误导、`_create_v10_project_run` 裸写 repository 评估）；alias/命名漂移与 settlement 持久化按 193.s/v 决策路由 V11 | DONE：`tasks/207-v10-closure-and-archive-DONE.md`；closure report：`docs/reports/207-v10-closure-report.md`；V10 全量闭环，V11 可按 `tasks/V11-Plan.md` 启动 |
 
 ---
 
@@ -238,7 +238,8 @@ V10 不把结构升级强行并入主流程。spike 的目标是形成取舍结�
 - V10 规划入口：`tasks/V10-README.md`（本文）
 - V9 历史事实：`tasks/V9-README.md`
 - V9 归档索引：`archive/v9/INDEX.md`
-- V10 未来归档位置：`archive/v10/`
+- V10 归档规划入口：`archive/v10/INDEX.md`
+- V10 closure report：`docs/reports/207-v10-closure-report.md`
+- V11 预登记备忘：`tasks/V11-Plan.md`
 - V8 长调研报告（优秀度/结构升级储备）：`docs/reports/v8-literature-and-landscape-review.md`
 - V9 中篇爬坡冻结口径参照：`archive/v8/tasks/172b-xuanhuan-ch100-climb.md` §1.1
-- V11 预登记备忘：`tasks/V11-Plan.md`

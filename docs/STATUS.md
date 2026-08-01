@@ -6,7 +6,7 @@
 
 | 项 | 结论 |
 |----|------|
-| 当前阶段 | **V10.2 Task 195 跨体裁 Ch200 总验收已完成；下一步进入 V10.3 Task 197**：Task 189/190/191/192/193/194/195 均完成，Task 196 优秀度样本集与校准协议已提前完成。Task 195 以 `tasks/189-scifi-ch200-baseline.json` 为冻结标尺复核三体裁 Ch200：xuanhuan / wuxia / urban 均 run completed @200、failed=[]、accepted=200/gap=0、five-gate PASS、segment audit PASS（critical_orphans=0、halt_would_fire=false）、T9 hard hits=0；urban Ch200 accepted/current head=`clean-200-t9-194k`，194.j 使用 fallback model `deepseek/deepseek-chat` 完成 Ch199/200，不能记为 flash clean sample。Task 195 不混入优秀度或结构 spike |
+| 当前阶段 | **V10 已全量闭环；下一步进入 V11 开源可用化收尾**：Task 189-207 均已完成。Task 207 完成 V10 收口与归档规划，新增 `tasks/207-v10-closure-and-archive.md`、`tasks/207-v10-closure-and-archive-DONE.md`、`docs/reports/207-v10-closure-report.md` 与 `archive/v10/INDEX.md`；V10 阶段结论为跨体裁 Ch200 全通过、优秀度信号包 report-only 闭环、KG diff / FactTrack validity interval / Storyline Tree 三个结构 spike 均 decision=`defer` 且不接 runtime / prompt / CED / hard gate |
 | V7 收尾 | **已完成**。sci-fi/space_opera + webnovel_intense 单一体裁稳定跑到 Ch200，200/200 accepted，D1 hard clean pass；Ch201-Ch220 20/20 accepted |
 | V8.1 运行时画像 | **已完成**（Task 172a + 172a.p）。`GenreRuntimeProfile` 把 Context Diet 2.0 运行时契约从 sci-fi 默认值解耦；xuanhuan Ch8 halt 已消除（base_budget=15000） |
 | V8.3 文学护栏 | **已完成**（Task 172d）。`literary_guardrail_observe` 去科幻硬编码，lexicon/主角名参数化到 `GenreProfile`，三体裁各配一套；DONE 文档已补齐 |
@@ -33,6 +33,16 @@
 | V10.1 Ch100 盘点 | **Task 190 已完成（2026-07-24）**：xuanhuan=REBUILD_REQUIRED（DB 被覆盖，仅 1 章 0 accepted，project_id 已变）、wuxia=BLOCKED_DIRTY_SAMPLE（100/100、five-gate PASS、T9=1 meta Ch28 省略号占位，需 pre-Ch200 clean）、urban=CONTINUE_READY（100/100、five-gate PASS、T9=0）；统一盘点文件 `tasks/190-ch100-terminal-source-inventory-DONE.md` + `.tmp/190_ch100_source_inventory.json` |
 | V10.1 Ch200 harness | **Task 191 已完成（2026-07-24）**：新增 `scripts/run_v10_ch200_climb.py`，冻结 V10 Ch200 DB/project/segment/audit/metrics 路径；支持 `--init`、`--init-from-source`、`--status`、`--audit`、`--to` 与 `--dry-run`；强制 Task 190 三态准入（urban allowed，wuxia/xuanhuan blocked），复制前校验 source DB 为 clean Ch100、source 与 Task 190 inventory 匹配、source `genre_id` 匹配、T9 meta/duplicate/timeline clean，并在目标 DB 创建 V10 `project_runs`；Ch125+ five-gate 显式绑定 `tasks/189-scifi-ch200-baseline.json`；聚焦测试 `tests/test_191_ch200_harness.py` **10 passed**，全量 pytest **2993 passed, 2 skipped, 1 xfailed**，ruff 通过；未启动 Ch101 |
 | V10.2 跨体裁 Ch200 总验收 | **Task 195 已完成（2026-08-01）**：Task 192 xuanhuan、Task 193 wuxia、Task 194 urban 三体裁 Ch200 均通过总验收；本轮复核 status / five-gate / segment audit / T9 hard hits，三体裁均 accepted=200、gap=0、failed=[]、five-gate PASS、segment audit PASS、T9 hard hits=0；DONE：`tasks/195-cross-genre-ch200-acceptance-DONE.md` |
+| V10.3 Task 197/198 | **已完成（2026-08-01）**：Task 197 跨章同质化/多样性/叙事张力指数与 Task 198 中文 AI 腔规则包第一批 report-only 落地；JSON/Markdown 报告可供 Task 203 消费；聚焦测试 46 passed，全量 pytest 3063 passed、2 skipped、1 xfailed，ruff 全绿；因修复 harness dry-run 兼容，补 scifi end10 回归 PASS（10/10、failed=[]、T9=0）；DONE：`tasks/197-cross-chapter-homogeneity-tension-index-DONE.md`、`tasks/198-chinese-ai-tone-rule-pack-DONE.md` |
+| V10.3 Task 199 | **已完成（2026-08-01）**：style extraction → style card 离线流程落地；JSON/Markdown 报告可供 Task 203 消费；聚焦测试 23 passed，全量 pytest 3063 passed、2 skipped、1 xfailed，ruff 全绿；未触碰 prompt / runtime / gate，因此不触发 scifi 短窗口回归；DONE：`tasks/199-style-extraction-to-style-card-DONE.md` |
+| V10.3 Task 200 | **已完成（2026-08-01）**：角色声纹锚点离线流程落地；JSON/Markdown 报告可供 Task 203 消费；聚焦测试 27 passed，全量 pytest 3063 passed、2 skipped、1 xfailed，ruff 全绿；未触碰 prompt / runtime / gate，因此不触发 scifi 短窗口回归；DONE：`tasks/200-character-voice-anchors-DONE.md` |
+| V10.3 Task 201 | **已完成（2026-08-01）**：judge 偏差分析与对策协议离线流程落地；JSON/Markdown 报告可供 Task 203 消费；聚焦测试 30 passed，全量 pytest 3063 passed、2 skipped、1 xfailed，ruff 全绿；未触碰 prompt / runtime / gate，因此不触发 scifi 短窗口回归；DONE：`tasks/201-judge-bias-countermeasures-DONE.md` |
+| V10.3 Task 202 | **已完成（2026-08-01）**：perplexity / 可读性可行性 spike 离线流程落地；JSON/Markdown 报告可供 Task 203 消费；真实 PPL defer；聚焦测试 34 passed，全量 pytest 3063 passed、2 skipped、1 xfailed，ruff 全绿；未触碰 prompt / runtime / gate，因此不触发 scifi 短窗口回归；DONE：`tasks/202-perplexity-readability-feasibility-spike-DONE.md` |
+| V10.3 Task 203 | **已完成（2026-08-01）**：优秀度报告整合离线流程落地；统一 JSON/Markdown 报告可供 V10 总结与 Task 207 收口引用；聚焦测试 40 passed，全量 pytest 3063 passed、2 skipped、1 xfailed，ruff 全绿；未触碰 prompt / runtime / gate，因此不触发 scifi 短窗口回归；DONE：`tasks/203-excellence-report-integration-DONE.md` |
+| V10.4 Task 204 | **已完成（2026-08-01）**：KG 图 diff spike 离线流程落地；只读 SQLite `mode=ro`，不写 DB、不调用 LLM、不接 hard gate；样本 manifest 覆盖 xuanhuan/wuxia/urban，6 positive + 3 negative；报告 decision=`defer`，positive 6/6 高置信复现、negative 3/3 无高置信误报；KG diff 有信号但主要依赖 validity interval / alias 进一步建模，路由 Task 205；DONE：`tasks/204-kg-graph-diff-spike-DONE.md` |
+| V10.4 Task 205 | **已完成（2026-08-01）**：FactTrack validity interval shadow model 离线流程落地；只读 SQLite `mode=ro`，不改 schema、不写 DB、不调用 LLM、不接 hard gate；复用 Task 204 的 9 个样本，interval_explained=6、false_positive=0；报告 decision=`defer`，说明 interval 可解释 DB 状态边界，但仍需 alias policy 与 Storyline Tree 判断 open thread；DONE：`tasks/205-facttrack-validity-interval-spike-DONE.md` |
+| V10.4 Task 206 | **已完成（2026-08-01）**：Storyline Tree shadow model 离线流程落地；只读 SQLite `mode=ro`，不改 schema、不写 DB、不调用 LLM、不接 hard gate；复用 Task 204/205 的 9 个样本，needs_storyline_tree=3、tree_explained=5、false_positive=0；报告 decision=`defer`，说明 tree 可解释 open-thread 语义但生产化仍需 alias / validity 集成；DONE：`tasks/206-storyline-tree-spike-DONE.md` |
+| V10.5 Task 207 | **已完成（2026-08-01）**：V10 收口与归档规划完成；Task 189-206 完成证据已汇总，closure report 落盘 `docs/reports/207-v10-closure-report.md`，归档规划入口 `archive/v10/INDEX.md`；V10 标记全量闭环并路由 V11；未改代码、未改 runtime、未接任何 report-only 信号到 prompt / CED / hard gate；DONE：`tasks/207-v10-closure-and-archive-DONE.md` |
 | V10.2 Task 192.p | **已完成（2026-07-25）**：冻结原 scifi 失败现场 `.tmp/backups/192_scifi_short_regression_failed_20260725-120940/`；定位 Ch8 settlement JSON 输出 4096 token 截断导致 parse failure；`SettlementExtractor` 结构化输出预算提升到 8192；`RUN_ID=192` Ch100 rebuild 默认 `ON_FAILURE=abort`，历史 172b/172c 默认 isolate 不变；scifi end10 复跑 `run-e71bccd8` 10/10 completed、failed=[]、wrapper `PASS_NORMAL_EXIT`；全量 pytest **3004 passed, 2 skipped, 1 xfailed**，ruff 全绿；DONE：`tasks/192.p-scifi-short-regression-context-emergency-DONE.md` |
 | V10.2 Task 192.q/r + Ch25 | **192.q/192.r 已完成，Task 192 第一段到 Ch25（2026-07-25）**：192.q 修复 CreativeDirector 未转义内部英文引号导致的 JSON parse failure，同时保持多 JSON 对象拒绝语义；bits-code-guard 最终 review 0 P0/P1/P2；最终全量 pytest **3006 passed, 2 skipped, 1 xfailed**，ruff 全绿；scifi end10 回归 10/10 completed、failed=[]、T9=0、budget_peak 0.979、wrapper PASS_NORMAL_EXIT；192.r 冻结 Ch24 settlement numerical validation failure，resume 后未复现；最终 Ch25 报告 `docs/reports/192-xuanhuan-ch100-climb.md`：25/25 accepted、failed=[]、budget_peak 0.8632、emergency=0、overdue=0、health=9.1、CED/1k=2.0874；wrapper `run-20260725-162600836` PASS_NORMAL_EXIT |
 | V10.2 Task 192 Ch50 / 192.s | **Ch50 已完成并清到 T9=0（2026-07-25）**：wrapper `run-20260725-183118441` PASS_NORMAL_EXIT；run `run-2f42e276` completed，Ch1-Ch50 completed，failed=[]，accepted heads 50/50，cost 6.740467；初判 DB SHA256 `5422A2234F1965CD07DEBA1B20CF834E91BA920287203C927B74A467274E90CA`，T9 duplicate=1（Ch8 paragraph 37 duplicates paragraph 22），冻结 `.tmp/backups/192s_xuanhuan_ch50_t9_duplicate_20260725-2132/`；192.s 使用版本化 deterministic clean 创建 Ch8 `clean-8-6-cd06a7b7`（parent `v-d62aa178`），修复后 DB SHA256 `E375918948D8467987FE25138DAD7D16A47EEB82D0E95D7FA22370B34D641926`；复判 T9=0、five-gate PASS、segment audit `critical_orphans=0` / `halt_would_fire=false`；DONE：`tasks/192.s-xuanhuan-ch50-t9-duplicate-clean-DONE.md` |
@@ -119,6 +129,7 @@
 
 | 命令 / 证据 | 结果 |
 |-------------|------|
+| Task 207 文档-only 收口验证 | `git diff --check` 通过；仅 Windows 行尾提示，无 whitespace error |
 | `python scripts/run_172a7_genre_validation.py --templates scifi wuxia urban --end 10` | 三体裁各 10/10、0 halt；CED 见上（`archive/v8/reports/172a.7-regression-end10.json`） |
 | xuanhuan `--end 15`（floor=12） | overdue@<15=2（DB 严证）；Ch1-13 accepted（Ch11 isolate 瞬时） |
 | `python -m pytest tests/ -q` | 2691 passed, 2 skipped, 1 xfailed（含 172a.p 13 新测试） |
@@ -166,17 +177,18 @@
 - **V8 后续技术债**：172e-172i 已全部完成，覆盖 `GenreRuntimeProfile` 字段接线、回退语义澄清、占位字段移除与文档修复。
 - V9 已全量闭环并归档（2026-07-23）：单项任务文档 173-188 迁移至 `archive/v9/`（索引 `archive/v9/INDEX.md`）；`tasks/V9-README.md` 保留为 V9 历史事实总索引。
 - 工作区目录已整理（2026-07-23）：`tasks/` 仅保留阶段 README、`TEMPLATE.md` 与未来规划；V5/V6/V7/V9 单项任务文档分别归档到 `archive/v5/tasks/`、`archive/v6/tasks/`、`archive/v7/tasks/`、`archive/v9/`；早期 Superpowers 计划/规格归档到 `archive/superpowers/`。
+- V10 已全量闭环（2026-08-01）：`archive/v10/INDEX.md` 已建立为归档规划入口；当前不移动 `tasks/` 与 `docs/reports/` 中的 V10 活跃产物，避免破坏现有引用；后续物理归档按该索引执行。
 
 ## 下一步
 
-1. **Task 197 启动**：进入 V10.3 优秀度信号包实现，优先做跨章同质化 / 多样性 / 叙事张力指数，沿用 Task 196 样本集与校准协议。
-2. **优秀度边界**：197-203 仍保持 report/observe，默认不注入 Writer / CreativeDirector prompt，不进入自动 hard gate。
+1. **V11 启动**：进入开源可用化收尾，入口 `tasks/V11-Plan.md`；重点是外部技术用户安装、初始化、诊断、恢复、导出与发布纪律。
+2. **V10 边界保持**：V10.3 report-only 优秀度信号包、Task 204 KG diff、Task 205 validity interval 与 Task 206 Storyline Tree 均已闭环，但不得回写 Ch200 主线或 hard gate。
 3. **守护项**：CED 仍使用 consistency-only、merged/source、正文证据口径；不得把文学 craft、同质化、AI 腔或 `rule-mr-*` 聚合工作项计入 CED；T9 仍不接受解释性豁免。
-4. **后续排队**：KG diff / FactTrack validity interval / Storyline Tree 仍为 Task 204-206 spike；Task 207 负责 V10 收口与归档。
+4. **后续排队**：metrics Ch200 慢路径、评测工具次要清理、alias / 命名漂移策略、KG diff / FactTrack / Storyline Tree derived view 生产化候选均登记到 V11+。
 
 ## 入口
 
-- **V10 规划入口（V10.3 Task 197 待启动）：`tasks/V10-README.md`**
+- **V10 规划入口（已完成）：`tasks/V10-README.md`**
 - V10 Task 189 DONE：`tasks/189-ch200-baseline-and-checkpoints-DONE.md`
 - V10 Task 189 baseline：`tasks/189-scifi-ch200-baseline.json`
 - V10 Task 189 任务书：`tasks/189-ch200-baseline-and-checkpoints.md`
@@ -256,6 +268,50 @@
 - V10 Task 194 DONE：`tasks/194-urban-ch200-climb-DONE.md`
 - V10 Task 195 任务书：`tasks/195-cross-genre-ch200-acceptance.md`
 - V10 Task 195 DONE：`tasks/195-cross-genre-ch200-acceptance-DONE.md`
+- V10 Task 197 任务书：`tasks/197-cross-chapter-homogeneity-tension-index.md`
+- V10 Task 197 DONE：`tasks/197-cross-chapter-homogeneity-tension-index-DONE.md`
+- V10 Task 198 任务书：`tasks/198-chinese-ai-tone-rule-pack.md`
+- V10 Task 198 DONE：`tasks/198-chinese-ai-tone-rule-pack-DONE.md`
+- V10 Task 197/198 报告 JSON：`tasks/197-198-excellence-signals-report.json`
+- V10 Task 197/198 报告 Markdown：`docs/reports/197-198-excellence-signals-report.md`
+- V10 Task 199 任务书：`tasks/199-style-extraction-to-style-card.md`
+- V10 Task 199 DONE：`tasks/199-style-extraction-to-style-card-DONE.md`
+- V10 Task 199 报告 JSON：`tasks/199-style-card-report.json`
+- V10 Task 199 报告 Markdown：`docs/reports/199-style-card-report.md`
+- V10 Task 200 任务书：`tasks/200-character-voice-anchors.md`
+- V10 Task 200 DONE：`tasks/200-character-voice-anchors-DONE.md`
+- V10 Task 200 报告 JSON：`tasks/200-character-voice-anchor-report.json`
+- V10 Task 200 报告 Markdown：`docs/reports/200-character-voice-anchor-report.md`
+- V10 Task 201 任务书：`tasks/201-judge-bias-countermeasures.md`
+- V10 Task 201 DONE：`tasks/201-judge-bias-countermeasures-DONE.md`
+- V10 Task 201 报告 JSON：`tasks/201-judge-bias-report.json`
+- V10 Task 201 报告 Markdown：`docs/reports/201-judge-bias-report.md`
+- V10 Task 202 任务书：`tasks/202-perplexity-readability-feasibility-spike.md`
+- V10 Task 202 DONE：`tasks/202-perplexity-readability-feasibility-spike-DONE.md`
+- V10 Task 202 报告 JSON：`tasks/202-readability-feasibility-report.json`
+- V10 Task 202 报告 Markdown：`docs/reports/202-readability-feasibility-report.md`
+- V10 Task 203 任务书：`tasks/203-excellence-report-integration.md`
+- V10 Task 203 DONE：`tasks/203-excellence-report-integration-DONE.md`
+- V10 Task 203 报告 JSON：`tasks/203-excellence-integrated-report.json`
+- V10 Task 203 报告 Markdown：`docs/reports/203-excellence-integrated-report.md`
+- V10 Task 204 任务书：`tasks/204-kg-graph-diff-spike.md`
+- V10 Task 204 DONE：`tasks/204-kg-graph-diff-spike-DONE.md`
+- V10 Task 204 manifest：`tasks/204-kg-diff-sample-manifest.json`
+- V10 Task 204 报告 JSON：`tasks/204-kg-diff-spike-report.json`
+- V10 Task 204 报告 Markdown：`docs/reports/204-kg-diff-spike-report.md`
+- V10 Task 205 任务书：`tasks/205-facttrack-validity-interval-spike.md`
+- V10 Task 205 DONE：`tasks/205-facttrack-validity-interval-spike-DONE.md`
+- V10 Task 205 报告 JSON：`tasks/205-facttrack-validity-interval-report.json`
+- V10 Task 205 报告 Markdown：`docs/reports/205-facttrack-validity-interval-report.md`
+- V10 Task 206 任务书：`tasks/206-storyline-tree-spike.md`
+- V10 Task 206 DONE：`tasks/206-storyline-tree-spike-DONE.md`
+- V10 Task 206 报告 JSON：`tasks/206-storyline-tree-spike-report.json`
+- V10 Task 206 报告 Markdown：`docs/reports/206-storyline-tree-spike-report.md`
+- V10 Task 207 任务书：`tasks/207-v10-closure-and-archive.md`
+- V10 Task 207 DONE：`tasks/207-v10-closure-and-archive-DONE.md`
+- V10 Task 207 closure report：`docs/reports/207-v10-closure-report.md`
+- V10 归档规划入口：`archive/v10/INDEX.md`
+- V11 预登记入口：`tasks/V11-Plan.md`
 - V9 任务事实入口（已完成）：`tasks/V9-README.md`
 - V9 归档索引：`archive/v9/INDEX.md`
 - V9 Task 173-188 单项任务文档：`archive/v9/`

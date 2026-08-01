@@ -965,6 +965,7 @@ def build_to_plan(
     project_id = project_info.get("project_id")
     run_id = args.run_id or project_info.get("run_id") or f"run-v10-{genre}-{uuid.uuid4().hex[:8]}"
     cost_budget = resolve_cost_budget(args)
+    on_failure = str(getattr(args, "on_failure", "isolate") or "isolate")
     wrapper_command = [
         "powershell",
         "-File",
@@ -983,8 +984,8 @@ def build_to_plan(
         "--cost-budget",
         str(cost_budget) if cost_budget is not None else "<required>",
     ]
-    if args.on_failure != "isolate":
-        wrapper_command.extend(["--on-failure", args.on_failure])
+    if on_failure != "isolate":
+        wrapper_command.extend(["--on-failure", on_failure])
     return {
         "task": TASK_ID,
         "action": "to",
@@ -994,7 +995,7 @@ def build_to_plan(
         "project_id": project_id,
         "run_id": run_id,
         "cost_budget": cost_budget,
-        "on_failure": args.on_failure,
+        "on_failure": on_failure,
         "paths": paths.to_dict(target),
         "baseline": args.baseline.as_posix(),
         "wrapper_command": wrapper_command,

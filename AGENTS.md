@@ -14,8 +14,8 @@
 
 - 项目状态：`docs/STATUS.md`
 - 文档路由：`docs/INDEX.md`
-- 当前阶段：V10.2 Task 195 跨体裁 Ch200 总验收已完成，下一步进入 V10.3 Task 197；Task 189/190/191/192/193/194/195 已完成，Task 196 优秀度样本集与校准协议已提前完成；Task 195 以 `tasks/189-scifi-ch200-baseline.json` 为冻结标尺复核三体裁 Ch200，xuanhuan / wuxia / urban 均 run completed @200、failed=[]、accepted=200/gap=0、five-gate PASS、segment audit PASS（critical_orphans=0、halt_would_fire=false）、T9 hard hits=0；urban Ch199/200 使用 fallback model `deepseek/deepseek-chat` 完成，不能记为 flash clean sample；优秀度信号仍只做 report/observe，不得混入 CED 或 Ch200 hard gate；V9 已全量闭环（Task 173-188）
-- V10 规划入口：`tasks/V10-README.md`；README 本身不占任务号；Task 189 DONE：`tasks/189-ch200-baseline-and-checkpoints-DONE.md`；冻结 baseline：`tasks/189-scifi-ch200-baseline.json`；Task 190 DONE：`tasks/190-ch100-terminal-source-inventory-DONE.md`；Task 191 DONE：`tasks/191-ch200-harness-preparation-DONE.md`；Task 192/193/194/195 DONE：`tasks/192-xuanhuan-ch200-climb-DONE.md`、`tasks/193-wuxia-ch200-climb-DONE.md`、`tasks/194-urban-ch200-climb-DONE.md`、`tasks/195-cross-genre-ch200-acceptance-DONE.md`；Task 195 任务书：`tasks/195-cross-genre-ch200-acceptance.md`；Task 196 DONE：`tasks/196-excellence-signal-calibration-DONE.md`
+- 当前阶段：V10 已全量闭环，下一步进入 V11 开源可用化收尾；Task 189-207 均已完成。Task 207 完成 V10 收口与归档规划，新增 `tasks/207-v10-closure-and-archive.md`、`tasks/207-v10-closure-and-archive-DONE.md`、`docs/reports/207-v10-closure-report.md` 与 `archive/v10/INDEX.md`；Task 197-206 的优秀度与结构信号仍保持 report-only / spike，不接 prompt、CED 或 hard gate；V9 已全量闭环（Task 173-188）
+- V10 规划入口：`tasks/V10-README.md`；README 本身不占任务号；Task 189 DONE：`tasks/189-ch200-baseline-and-checkpoints-DONE.md`；冻结 baseline：`tasks/189-scifi-ch200-baseline.json`；Task 190 DONE：`tasks/190-ch100-terminal-source-inventory-DONE.md`；Task 191 DONE：`tasks/191-ch200-harness-preparation-DONE.md`；Task 192/193/194/195 DONE：`tasks/192-xuanhuan-ch200-climb-DONE.md`、`tasks/193-wuxia-ch200-climb-DONE.md`、`tasks/194-urban-ch200-climb-DONE.md`、`tasks/195-cross-genre-ch200-acceptance-DONE.md`；Task 196 DONE：`tasks/196-excellence-signal-calibration-DONE.md`；Task 197 DONE：`tasks/197-cross-chapter-homogeneity-tension-index-DONE.md`；Task 198 DONE：`tasks/198-chinese-ai-tone-rule-pack-DONE.md`；Task 199 DONE：`tasks/199-style-extraction-to-style-card-DONE.md`；Task 200 DONE：`tasks/200-character-voice-anchors-DONE.md`；Task 201 DONE：`tasks/201-judge-bias-countermeasures-DONE.md`；Task 202 DONE：`tasks/202-perplexity-readability-feasibility-spike-DONE.md`；Task 203 DONE：`tasks/203-excellence-report-integration-DONE.md`；Task 204 DONE：`tasks/204-kg-graph-diff-spike-DONE.md`；Task 205 DONE：`tasks/205-facttrack-validity-interval-spike-DONE.md`；Task 206 DONE：`tasks/206-storyline-tree-spike-DONE.md`；Task 207 DONE：`tasks/207-v10-closure-and-archive-DONE.md`
 - V9 任务事实（已收尾）：`tasks/V9-README.md`；单项任务文档归档 `archive/v9/`（索引 `archive/v9/INDEX.md`）
 - V8 历史任务事实（已收尾）：`tasks/V8-README.md`；任务文档与报告归档 `archive/v8/`（索引 `archive/v8/INDEX.md`）
 - V7 历史任务事实（已收尾）：`tasks/V7-README.md`
@@ -36,7 +36,7 @@ V8（Task 172-172l）已全量闭环：**多体裁可插拔质量 + 章数爬坡
 
 V9（Task 173-188）已全量闭环：生产化地基（V9.1 长跑可靠性 173-176 / V9.2 交付发布 177-181 / V9.3 工具链收编 182-184）+ urban 标定（185）与 Ch100 爬坡（186 任务书 → 187 执行）+ 收口（188）全部完成；A 组地基 8 条、B 组 urban Ch100 六条、C 组守护项均 PASS。V9 事实入口 `tasks/V9-README.md`，归档入口 `archive/v9/INDEX.md`。
 
-V10 规划入口已建立（`tasks/V10-README.md`），目标为**跨体裁 Ch200 + 优秀度信号包 + 结构升级 spike**。Task 189 已完成 sci-fi Ch200 baseline/checkpoint 冻结；Task 190 已完成 Ch100 终点事实源盘点；Task 191 已完成 Ch200 harness；Task 192 xuanhuan Ch200、Task 193 wuxia Ch200、Task 194 urban Ch200 与 Task 195 跨体裁 Ch200 总验收均已完成。Task 196 优秀度样本集与校准协议已提前完成。当前按编号进入 Task 197。V10 不补 V9 地基，也不做 V11 的开源用户可用化收尾。后续启动任何非 sci-fi Ch200 长跑前，必须使用 Task 191 harness，并遵守 Task 190 三态准入与 Task 189 baseline。
+V10 规划入口已建立（`tasks/V10-README.md`），目标为**跨体裁 Ch200 + 优秀度信号包 + 结构升级 spike**。Task 189 已完成 sci-fi Ch200 baseline/checkpoint 冻结；Task 190 已完成 Ch100 终点事实源盘点；Task 191 已完成 Ch200 harness；Task 192 xuanhuan Ch200、Task 193 wuxia Ch200、Task 194 urban Ch200 与 Task 195 跨体裁 Ch200 总验收均已完成。Task 196 优秀度样本集与校准协议、Task 197/198 优秀度信号包第一批、Task 199 style card、Task 200 角色声纹锚点、Task 201 judge 偏差对策、Task 202 可读性/PPL 可行性 spike、Task 203 优秀度报告整合、Task 204 KG 图 diff spike、Task 205 FactTrack validity interval spike、Task 206 Storyline Tree spike、Task 207 V10 收口与归档均已完成。当前路由 V11 开源可用化收尾。V10 不补 V9 地基，也不做 V11 的开源用户可用化实现。后续启动任何非 sci-fi Ch200 长跑前，必须使用 Task 191 harness，并遵守 Task 190 三态准入与 Task 189 baseline。
 
 ## 不可违背规则
 
@@ -129,4 +129,4 @@ Windows 下长跑或 pytest 卡住时，使用防卡 wrapper（Task 176 已工�
 - 不用 `git reset --hard` 或 `git checkout --` 覆盖用户改动。
 - 当前入口保持短；长历史、旧规划、旧报告放入 `archive/`。
 - 归档内容默认不读，除非用户要求追溯历史决策。
-- 历史产物已归档至 `archive/v5/`、`archive/v6/`、`archive/v7/`、`archive/v8/`、`archive/v9/` 与 `archive/superpowers/`，入口见各 `INDEX.md`；V10 完成后归档到 `archive/v10/`。
+- 历史产物已归档至 `archive/v5/`、`archive/v6/`、`archive/v7/`、`archive/v8/`、`archive/v9/` 与 `archive/superpowers/`，入口见各 `INDEX.md`；V10 归档规划入口为 `archive/v10/INDEX.md`。

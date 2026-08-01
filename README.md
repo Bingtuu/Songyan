@@ -225,6 +225,9 @@ cp .env.example .env
 ### 创建项目并生成
 
 ```bash
+# 检查本地环境、资源和数据库配置
+songyan doctor
+
 # 从体裁模板创建项目（支持 scifi/xuanhuan/wuxia/urban 等 7 种）
 songyan create-project --template xuanhuan
 
@@ -283,7 +286,9 @@ songyan export --project-id <id> --by arc --format md --output exports/
 | 长篇稳定性 | 科幻 220 章；玄幻、武侠、都市 Ch200 验证完成 |
 | 多体裁运行时 | 已支持按体裁配置上下文预算、质量阈值和伏笔调度 |
 | 生产化工具 | CLI、导出、doctor、成本追踪、质量报告、CI 已接入 |
-| 当前重点 | 跨体裁 Ch200 总验收已完成，继续完善优秀度信号包 |
+| 当前重点 | V10 已完成；下一阶段进入 V11 开源可用化收尾 |
+| V10 收口报告 | [`docs/reports/207-v10-closure-report.md`](docs/reports/207-v10-closure-report.md) |
+| 下一阶段入口 | [`tasks/V11-Plan.md`](tasks/V11-Plan.md) |
 
 详细阶段记录见 [`docs/STATUS.md`](docs/STATUS.md) 和 [`tasks/V10-README.md`](tasks/V10-README.md)。
 
@@ -357,7 +362,9 @@ powershell -File scripts/run_with_timeout.ps1 -TimeoutSec 3600 -- <你的命令>
 
 - [`docs/STATUS.md`](docs/STATUS.md) — 当前状态和最新验证证据。
 - [`docs/INDEX.md`](docs/INDEX.md) — 文档索引。
-- [`tasks/V10-README.md`](tasks/V10-README.md) — 当前阶段规划和任务入口。
+- [`tasks/V10-README.md`](tasks/V10-README.md) — V10 阶段规划和完成入口。
+- [`docs/reports/207-v10-closure-report.md`](docs/reports/207-v10-closure-report.md) — V10 收口报告。
+- [`tasks/V11-Plan.md`](tasks/V11-Plan.md) — V11 开源可用化预登记。
 - [`AGENTS.md`](AGENTS.md) — 开发规范和工程纪律。
 - [`archive/`](archive/) — 历史任务、报告和归档资料。
 

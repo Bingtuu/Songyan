@@ -8,7 +8,7 @@
 |------|------|
 | `AGENTS.md` | 开发代理短指令与不可违背规则 |
 | `docs/STATUS.md` | 当前状态、测试口径、下一步 |
-| `tasks/V10-README.md` | **V10 规划入口（V10.3 Task 197 待启动）**：跨体裁 Ch200 + 优秀度信号包 + 结构升级 spike；Task 189/190/191/192/193/194/195 已完成，Task 196 已提前完成；下一步进入优秀度信号包实现 |
+| `tasks/V10-README.md` | **V10 规划入口（已完成）**：跨体裁 Ch200 + 优秀度信号包 + 结构升级 spike；Task 189-207 全量闭环，下一步路由 V11 |
 | `tasks/V9-README.md` | **V9 历史事实入口（已收尾）**：生产化地基 + urban 第三体裁 Ch100，Task 173-188 扁平编号；V9.1/V9.2/V9.3/V9.4/V9.5/V9.6 全部完成；urban Ch1-Ch100 100/100 accepted，five-gate PASS，segment audit PASS，T9=0；单项任务文档归档 `archive/v9/` |
 | `tasks/V8-README.md` | **V8 历史任务事实入口（已收尾，含 V8.5）**：多体裁可插拔质量 + 章数爬坡；含 Task 编号治理规则；任务文档与报告归档 `archive/v8/` |
 | `tasks/V7-README.md` | **V7 历史任务事实入口（已收尾）**：sci-fi 单一体裁 Ch200 达成 |
@@ -35,7 +35,7 @@ V8 已全量闭环（P/C/Q/S/V 五维全绿 + V8.5 遗留清零）。任务文�
 | `archive/v8/reports/172a.7-genre-short-window-validation.md` | 多体裁短窗口验证报告 |
 | `docs/reports/v8-literature-and-landscape-review.md` | V8 长调研报告（GenreRuntimeProfile 设计依据，保留活跃入口） |
 
-## V10 当前任务（规划中）
+## V10 阶段产物（已完成）
 
 | 文件 | 用途 |
 |------|------|
@@ -136,6 +136,49 @@ V8 已全量闭环（P/C/Q/S/V 五维全绿 + V8.5 遗留清零）。任务文�
 | `tasks/196-excellence-annotations.json` | Task 196 标注记录：72 条三层标注（anchor 12 / prelabel 48 / spotcheck 12） |
 | `tasks/196-excellence-calibration-report.md` | Task 196 校准报告：信号边界、judge 宽松偏差、规则试点负结果、197-202 接口约定 |
 | `tasks/196-excellence-signal-calibration-DONE.md` | Task 196 DONE：优秀度样本集与校准协议完成报告 |
+| `tasks/197-cross-chapter-homogeneity-tension-index.md` | Task 197 任务书：跨章同质化 / 多样性 / 叙事张力指数 |
+| `tasks/197-cross-chapter-homogeneity-tension-index-DONE.md` | Task 197 DONE：结构型优秀度离线信号完成报告 |
+| `tasks/198-chinese-ai-tone-rule-pack.md` | Task 198 任务书：中文 AI 腔规则包 |
+| `tasks/198-chinese-ai-tone-rule-pack-DONE.md` | Task 198 DONE：中文 AI 腔 / 生成事故规则包完成报告 |
+| `tasks/197-198-excellence-signals-report.json` | Task 197/198 结构化 report-only 信号报告 |
+| `docs/reports/197-198-excellence-signals-report.md` | Task 197/198 Markdown report-only 信号报告 |
+| `tasks/199-style-extraction-to-style-card.md` | Task 199 任务书：style extraction → style card |
+| `tasks/199-style-extraction-to-style-card-DONE.md` | Task 199 DONE：离线 style card 完成报告 |
+| `tasks/199-style-card-report.json` | Task 199 结构化 report-only style card 报告 |
+| `docs/reports/199-style-card-report.md` | Task 199 Markdown report-only style card 报告 |
+| `tasks/200-character-voice-anchors.md` | Task 200 任务书：角色声纹锚点 |
+| `tasks/200-character-voice-anchors-DONE.md` | Task 200 DONE：离线角色声纹锚点完成报告 |
+| `tasks/200-character-voice-anchor-report.json` | Task 200 结构化 report-only 角色声纹报告 |
+| `docs/reports/200-character-voice-anchor-report.md` | Task 200 Markdown report-only 角色声纹报告 |
+| `tasks/201-judge-bias-countermeasures.md` | Task 201 任务书：judge 偏差对策 |
+| `tasks/201-judge-bias-countermeasures-DONE.md` | Task 201 DONE：离线 judge 偏差分析与对策协议 |
+| `tasks/201-judge-bias-report.json` | Task 201 结构化 report-only judge bias 报告 |
+| `docs/reports/201-judge-bias-report.md` | Task 201 Markdown report-only judge bias 报告 |
+| `tasks/202-perplexity-readability-feasibility-spike.md` | Task 202 任务书：perplexity / 可读性可行性 spike |
+| `tasks/202-perplexity-readability-feasibility-spike-DONE.md` | Task 202 DONE：离线可读性 proxy 与 PPL 可行性完成报告 |
+| `tasks/202-readability-feasibility-report.json` | Task 202 结构化 report-only readability / PPL feasibility 报告 |
+| `docs/reports/202-readability-feasibility-report.md` | Task 202 Markdown report-only readability / PPL feasibility 报告 |
+| `tasks/203-excellence-report-integration.md` | Task 203 任务书：优秀度报告整合 |
+| `tasks/203-excellence-report-integration-DONE.md` | Task 203 DONE：统一优秀度 report-only 视图完成报告 |
+| `tasks/203-excellence-integrated-report.json` | Task 203 结构化统一优秀度 report-only 报告 |
+| `docs/reports/203-excellence-integrated-report.md` | Task 203 Markdown 统一优秀度 report-only 报告 |
+| `tasks/204-kg-graph-diff-spike.md` | Task 204 任务书：KG 图 diff spike |
+| `tasks/204-kg-graph-diff-spike-DONE.md` | Task 204 DONE：只读 KG diff spike 完成报告 |
+| `tasks/204-kg-diff-sample-manifest.json` | Task 204 样本 manifest：6 positive + 3 negative controls |
+| `tasks/204-kg-diff-spike-report.json` | Task 204 结构化 report-only KG diff spike 报告 |
+| `docs/reports/204-kg-diff-spike-report.md` | Task 204 Markdown report-only KG diff spike 报告 |
+| `tasks/205-facttrack-validity-interval-spike.md` | Task 205 任务书：FactTrack validity interval spike |
+| `tasks/205-facttrack-validity-interval-spike-DONE.md` | Task 205 DONE：shadow validity interval 完成报告 |
+| `tasks/205-facttrack-validity-interval-report.json` | Task 205 结构化 report-only validity interval 报告 |
+| `docs/reports/205-facttrack-validity-interval-report.md` | Task 205 Markdown report-only validity interval 报告 |
+| `tasks/206-storyline-tree-spike.md` | Task 206 任务书：Storyline Tree spike |
+| `tasks/206-storyline-tree-spike-DONE.md` | Task 206 DONE：shadow Storyline Tree 完成报告 |
+| `tasks/206-storyline-tree-spike-report.json` | Task 206 结构化 report-only Storyline Tree 报告 |
+| `docs/reports/206-storyline-tree-spike-report.md` | Task 206 Markdown report-only Storyline Tree 报告 |
+| `tasks/207-v10-closure-and-archive.md` | Task 207 任务书：V10 收口与归档 |
+| `tasks/207-v10-closure-and-archive-DONE.md` | Task 207 DONE：V10 收口完成报告 |
+| `docs/reports/207-v10-closure-report.md` | V10 closure report |
+| `archive/v10/INDEX.md` | V10 归档规划入口 |
 
 ## V9 历史产物（已收尾，保留入口）
 
@@ -215,10 +258,21 @@ V8 已全量闭环（P/C/Q/S/V 五维全绿 + V8.5 遗留清零）。任务文�
 
 | 场景 | 文件 |
 |------|------|
-| V10 规划入口（V10.3 Task 197 待启动） | `tasks/V10-README.md` |
+| V10 规划入口（已完成） | `tasks/V10-README.md` |
 | V10.1 口径与工具任务书 | `tasks/189-ch200-baseline-and-checkpoints.md`、`tasks/190-ch100-terminal-source-inventory.md`、`tasks/191-ch200-harness-preparation.md` |
 | V10.1 已完成证据 | `tasks/189-ch200-baseline-and-checkpoints-DONE.md`、`tasks/189-scifi-ch200-baseline.json`、`tasks/190-ch100-terminal-source-inventory-DONE.md`、`tasks/191-ch200-harness-preparation-DONE.md` |
 | V10.2 跨体裁 Ch200 总验收 | `tasks/195-cross-genre-ch200-acceptance.md`、`tasks/195-cross-genre-ch200-acceptance-DONE.md` |
+| V10.3 优秀度信号包第一批 | `tasks/197-cross-chapter-homogeneity-tension-index-DONE.md`、`tasks/198-chinese-ai-tone-rule-pack-DONE.md`、`docs/reports/197-198-excellence-signals-report.md` |
+| V10.3 style card | `tasks/199-style-extraction-to-style-card-DONE.md`、`docs/reports/199-style-card-report.md` |
+| V10.3 角色声纹锚点 | `tasks/200-character-voice-anchors-DONE.md`、`docs/reports/200-character-voice-anchor-report.md` |
+| V10.3 judge 偏差对策 | `tasks/201-judge-bias-countermeasures-DONE.md`、`docs/reports/201-judge-bias-report.md` |
+| V10.3 可读性 / PPL 可行性 | `tasks/202-perplexity-readability-feasibility-spike-DONE.md`、`docs/reports/202-readability-feasibility-report.md` |
+| V10.3 优秀度报告整合 | `tasks/203-excellence-report-integration-DONE.md`、`docs/reports/203-excellence-integrated-report.md` |
+| V10.4 KG 图 diff spike | `tasks/204-kg-graph-diff-spike-DONE.md`、`docs/reports/204-kg-diff-spike-report.md` |
+| V10.4 FactTrack validity interval spike | `tasks/205-facttrack-validity-interval-spike-DONE.md`、`docs/reports/205-facttrack-validity-interval-report.md` |
+| V10.4 Storyline Tree spike | `tasks/206-storyline-tree-spike-DONE.md`、`docs/reports/206-storyline-tree-spike-report.md` |
+| V10 收口与归档 | `tasks/207-v10-closure-and-archive-DONE.md`、`docs/reports/207-v10-closure-report.md`、`archive/v10/INDEX.md` |
+| V11 预登记入口 | `tasks/V11-Plan.md` |
 | V10.2 Ch200 爬坡任务书与前置修复 | `tasks/192-xuanhuan-ch200-climb.md`、`tasks/192-xuanhuan-ch200-climb-DONE.md`、`tasks/192.p-scifi-short-regression-context-emergency-DONE.md`、`tasks/192.q-xuanhuan-ch17-creative-director-json-parse-DONE.md`、`tasks/192.r-xuanhuan-ch24-settlement-numerical-validation-DONE.md`、`tasks/192.s-xuanhuan-ch50-t9-duplicate-clean-DONE.md`、`tasks/192.t-xuanhuan-ch75-segment-audit-critical-orphans.md`、`tasks/192.t-xuanhuan-ch75-segment-audit-critical-orphans-DONE.md`、`tasks/192.u-xuanhuan-ch81-health-low-p1-critical-orphan.md`、`tasks/192.u-xuanhuan-ch81-health-low-p1-critical-orphan-DONE.md`、`tasks/192.v-xuanhuan-ch93-health-low-p1-critical-orphan.md`、`tasks/192.v-xuanhuan-ch93-health-low-p1-critical-orphan-DONE.md`、`tasks/192.w-xuanhuan-ch99-settlement-numerical-validation.md`、`tasks/192.w-xuanhuan-ch99-settlement-numerical-validation-DONE.md`、`tasks/192.x-xuanhuan-ch99-segment-audit-critical-orphans.md`、`tasks/192.x-xuanhuan-ch99-segment-audit-critical-orphans-DONE.md`、`tasks/192.y-xuanhuan-ch105-health-low-p1-critical-orphan.md`、`tasks/192.y-xuanhuan-ch105-health-low-p1-critical-orphan-DONE.md`、`tasks/192.z-xuanhuan-ch105-segment-audit-critical-orphans.md`、`tasks/192.z-xuanhuan-ch105-segment-audit-critical-orphans-DONE.md`、`tasks/192.aa-xuanhuan-ch106-invalid-model-run-state-cleanup-DONE.md`、`tasks/192.ab-xuanhuan-ch108-settlement-numerical-validation.md`、`tasks/192.ab-xuanhuan-ch108-settlement-numerical-validation-DONE.md`、`tasks/192.ac-xuanhuan-ch108-segment-audit-critical-orphans.md`、`tasks/192.ac-xuanhuan-ch108-segment-audit-critical-orphans-DONE.md`、`tasks/192.ad-xuanhuan-ch111-health-low-streak-halt.md`、`tasks/192.ad-xuanhuan-ch111-health-low-streak-halt-DONE.md`、`tasks/192.ae-xuanhuan-ch120-health-low-p1-halt.md`、`tasks/192.ae-xuanhuan-ch120-health-low-p1-halt-DONE.md`、`tasks/192.af-xuanhuan-ch129-settlement-json-parse.md`、`tasks/192.af-xuanhuan-ch129-settlement-json-parse-DONE.md`、`tasks/192.ag-xuanhuan-ch129-segment-audit-critical-orphans.md`、`tasks/192.ag-xuanhuan-ch129-segment-audit-critical-orphans-DONE.md`、`tasks/192.ah-xuanhuan-ch131-literary-auditor-json-parse.md`、`tasks/192.ah-xuanhuan-ch131-literary-auditor-json-parse-DONE.md`、`tasks/192.ai-xuanhuan-ch134-health-low-streak-halt.md`、`tasks/192.ai-xuanhuan-ch134-health-low-streak-halt-DONE.md`、`tasks/192.aj-xuanhuan-ch138-health-low-p1-halt.md`、`tasks/192.aj-xuanhuan-ch138-health-low-p1-halt-DONE.md`、`tasks/192.ak-xuanhuan-ch144-health-low-streak-halt.md`、`tasks/192.ak-xuanhuan-ch144-health-low-streak-halt-DONE.md`、`tasks/192.al-xuanhuan-ch150-health-low-p1-halt.md`、`tasks/192.al-xuanhuan-ch150-health-low-p1-halt-DONE.md`、`tasks/192.am-xuanhuan-ch150-segment-audit-critical-orphans.md`、`tasks/192.am-xuanhuan-ch150-segment-audit-critical-orphans-DONE.md`、`tasks/192.an-xuanhuan-ch150-five-gate-health-stale-report.md`、`tasks/192.an-xuanhuan-ch150-five-gate-health-stale-report-DONE.md`、`tasks/192.ao-xuanhuan-ch156-health-low-streak-halt.md`、`tasks/192.ao-xuanhuan-ch156-health-low-streak-halt-DONE.md`、`tasks/192.ap-xuanhuan-ch162-health-low-p1-halt.md`、`tasks/192.ap-xuanhuan-ch162-health-low-p1-halt-DONE.md`、`tasks/192.aq-xuanhuan-ch168-health-low-p1-halt.md`、`tasks/192.aq-xuanhuan-ch168-health-low-p1-halt-DONE.md`、`tasks/192.ar-xuanhuan-ch175-segment-t9-hard-gates.md`、`tasks/192.ar-xuanhuan-ch175-segment-t9-hard-gates-DONE.md`、`tasks/192.as-xuanhuan-ch180-health-low-p1-halt.md`、`tasks/192.as-xuanhuan-ch180-health-low-p1-halt-DONE.md`、`tasks/192.at-xuanhuan-ch186-health-low-p1-halt.md`、`tasks/192.at-xuanhuan-ch186-health-low-p1-halt-DONE.md`、`tasks/192.au-xuanhuan-ch192-health-low-p1-halt.md`、`tasks/192.au-xuanhuan-ch192-health-low-p1-halt-DONE.md`、`tasks/192.av-xuanhuan-ch198-health-low-p1-halt.md`、`tasks/192.av-xuanhuan-ch198-health-low-p1-halt-DONE.md`、`tasks/192.aw-xuanhuan-ch200-five-gate-health-fail.md`、`tasks/192.aw-xuanhuan-ch200-five-gate-health-fail-DONE.md`、`docs/reports/192-xuanhuan-ch100-climb.md`、`tasks/193-wuxia-ch200-climb.md`、`tasks/193.p-wuxia-ch125-missing-checkpoints-table-DONE.md`、`tasks/193.q-wuxia-ch117-health-low-p1-halt.md`、`tasks/193.q-wuxia-ch117-health-low-p1-halt-DONE.md`、`tasks/193.r-eval-gate-caliber-fixes-DONE.md`、`tasks/193.s-setting-tracking-refresh-root-cause-DONE.md`、`tasks/193.t-overdue-operational-lifecycle-filter-DONE.md`、`tasks/193.u-wuxia-ch121-resume-schema-drift-DONE.md`、`tasks/193.v-setting-reference-term-matching-DONE.md`、`tasks/193.w-segment-audit-verdict-and-stale-health-guard-DONE.md`、`tasks/194-urban-ch200-climb.md` |
 | V9 任务入口（已收尾） | `tasks/V9-README.md` |
 | V9 归档索引 | `archive/v9/INDEX.md` |
@@ -255,5 +309,6 @@ V8 已全量闭环（P/C/Q/S/V 五维全绿 + V8.5 遗留清零）。任务文�
 - `archive/v7/INDEX.md` — V7 历史产物归档
 - `archive/v8/INDEX.md` — V8 历史产物归档（任务文档 + 报告）
 - `archive/v9/INDEX.md` — V9 历史产物归档（任务文档 + 证据索引）
+- `archive/v10/INDEX.md` — V10 归档规划入口（Task 189-207，物理归档待后续执行）
 - `archive/superpowers/INDEX.md` — 早期 Superpowers 计划/规格归档
 - `archive/tasks/` — 历史任务规划稿与交接报告
