@@ -260,7 +260,7 @@ powershell -File "$songyanRepo\scripts\run_with_timeout.ps1" -TimeoutSec 3600 --
 当前已知限制：
 
 - Task 209 只补齐文档和命令证据，不消耗真实 LLM 预算跑 Ch1-3 成功验收。
-- 若 `songyan run` 业务失败，当前进程 exit code 仍可能为 0；请先用 `songyan report --run-id <run_id>` 查看失败原因。该问题路由到 Task 210/212。
+- `songyan run` 已接入 preflight；缺 key、非法配置、DB/schema 等问题会在进入生成前 exit 1。若 pipeline 启动后业务失败，命令会保留 `run_id` 并返回非 0 exit code，请用 `songyan report --run-id <run_id>` 查看失败原因。
 - backup/restore、run bundle、profile validate、release checklist 和 wheel smoke 属于 Task 211-215。
 
 ---
@@ -306,7 +306,7 @@ powershell -File "$songyanRepo\scripts\run_with_timeout.ps1" -TimeoutSec 3600 --
 | 长篇稳定性 | 科幻 220 章；玄幻、武侠、都市 Ch200 验证完成 |
 | 多体裁运行时 | 已支持按体裁配置上下文预算、质量阈值和伏笔调度 |
 | 生产化工具 | CLI、导出、doctor、成本追踪、质量报告、CI 已接入 |
-| 当前重点 | V11 开源可用化收尾；Task 209 已补齐 Quickstart 与用户文档闭环 |
+| 当前重点 | V11 开源可用化收尾；Task 210 已完成 doctor / preflight 增强，下一步 Task 211 backup / restore / schema ledger |
 | V10 收口报告 | [`archive/v10/reports/207-v10-closure-report.md`](archive/v10/reports/207-v10-closure-report.md) |
 | 下一阶段入口 | [`tasks/V11-README.md`](tasks/V11-README.md) |
 
@@ -391,6 +391,7 @@ powershell -File "$songyanRepo\scripts\run_with_timeout.ps1" -TimeoutSec 3600 --
 - [`archive/v10/reports/207-v10-closure-report.md`](archive/v10/reports/207-v10-closure-report.md) — V10 收口报告。
 - [`tasks/V11-README.md`](tasks/V11-README.md) — V11 开源可用化正式阶段入口。
 - [`docs/reports/209-quickstart-evidence.md`](docs/reports/209-quickstart-evidence.md) — Task 209 Quickstart 命令证据。
+- [`docs/reports/210-doctor-preflight-evidence.md`](docs/reports/210-doctor-preflight-evidence.md) — Task 210 doctor / preflight 命令证据。
 - [`AGENTS.md`](AGENTS.md) — 开发规范和工程纪律。
 - [`archive/`](archive/) — 历史任务、报告和归档资料。
 

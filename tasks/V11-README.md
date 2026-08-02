@@ -3,7 +3,7 @@
 > **阶段**: 开源可用化收尾
 > **定位**: V11 是正式开源前最后一个工程阶段，目标是把已有能力交付给外部技术用户，而不是继续扩张生成能力。
 > **当前口径**: V10 已全量闭环并归档；V11 从 Task 208 启动。`tasks/V11-Plan.md` 是早期备忘，本文是 V11 正式阶段入口。
-> **状态**: 已启动；Task 208 readiness audit 与 Task 209 Quickstart 文档闭环已完成，下一步进入 Task 210 doctor / preflight 增强。
+> **状态**: 已启动；Task 208 readiness audit、Task 209 Quickstart 文档闭环、Task 210 doctor / preflight 增强已完成，下一步进入 Task 211 backup / restore / schema ledger。
 
 ---
 
@@ -100,7 +100,7 @@ V11 只服务以下外部技术用户路径：
 |------|------|:----:|------|------|
 | 208 | V11 readiness audit | DONE | 从外部技术用户视角只读审计 README、CLI、doctor、create-project、run、export、report 路径，产出缺口清单和后续任务拆分 | V10 closure |
 | 209 | Quickstart 与用户文档闭环 | DONE | 把 README/docs 改成可执行最短路径，覆盖 Ch1-3、10 章教程、成本、日志、导出和故障入口 | 208 |
-| 210 | doctor / preflight 增强 | 待启动 | 强化本地环境、资源、schema、LLM、写权限、预算和日志检查，输出机器可读 JSON 与人类可读建议 | 208/209 |
+| 210 | doctor / preflight 增强 | DONE | 强化本地环境、资源、schema、LLM、写权限、预算和日志检查，输出机器可读 JSON 与人类可读建议 | 208/209 |
 | 211 | backup / restore / schema ledger | 待定 | 建立项目资产生命周期：备份、恢复、schema 版本/迁移状态校验，明确 export 与 backup 边界 | 208 |
 | 212 | 失败恢复体验 | 待定 | 标准化常见失败分类、提示和恢复动作，覆盖 retry/resume/isolate/提额/诊断包路径 | 208/210 |
 | 213 | run bundle 诊断包 | 待定 | 输出 run 元信息、章节状态、成本、五门/T9/CED/overdue/health、日志索引和脱敏报告 | 208/210 |
@@ -135,13 +135,37 @@ Task 209 已完成。任务书见 `tasks/209-v11-quickstart-docs.md`，DONE 见 
 - `docs/troubleshooting.md` 增加缺 key、DB、run 失败、report、export、Windows wrapper、脱敏分享等故障入口。
 - Task 209 在隔离目录复跑了 help、doctor、init-db、create-project、失败 run、report、export 和 list-projects。
 
+Task 209 留给后续实现的 runtime 缺口中，非法 `CHECKPOINTER_MODE` traceback 与 `run` 业务失败 exit code 语义已由 Task 210 收口。
+
 仍需后续实现：
 
-- Task 210/212：`run` 业务失败后 exit code 仍可能为 0；非法 `CHECKPOINTER_MODE` 仍可能导入期 traceback。
 - Task 211：backup/restore。
+- Task 212：失败恢复分类、提示和 retry/resume/isolate 体验。
 - Task 213：run bundle 与脱敏诊断包。
 - Task 214：profile validate、危险项提示、rollback/history。
 - Task 215：真实 Ch1-3 release smoke、wheel smoke、CHANGELOG、CONTRIBUTING、issue templates、release checklist。
+
+---
+
+## Task 210 doctor / preflight 结论
+
+Task 210 已完成。任务书见 `tasks/210-v11-doctor-preflight.md`，DONE 见 `tasks/210-v11-doctor-preflight-DONE.md`，命令证据见 `docs/reports/210-doctor-preflight-evidence.md`。
+
+交付：
+
+- 非法 `CHECKPOINTER_MODE` 不再导致 CLI 导入期 traceback，改由 `runtime.checkpointer` 结构化诊断。
+- 非法 `SONGYAN_RUN_COST_BUDGET` / `RUN_COST_BUDGET` 不再导致导入期 traceback，改由 `runtime.budget` 结构化诊断。
+- `songyan doctor` 增加 `config.load`、`logs.path`、`runtime.budget` 等检查。
+- `songyan run` 增加 strict preflight，覆盖 LLM key/config、DB/schema、资源、日志路径、预算、runtime checkpointer 和项目存在性。
+- `songyan run` 在 preflight fail 时 exit 1，不进入 pipeline；pipeline 返回 `partial` / `failed` 或存在失败章节时保留 `run_id` 并 exit 1。
+
+仍需后续实现：
+
+- Task 211：项目资产 backup/restore 或等价资产包。
+- Task 212：常见失败分类、恢复命令和演练证据。
+- Task 213：run bundle 与脱敏诊断包。
+- Task 214：profile validate、危险项提示、rollback/history。
+- Task 215：真实 Ch1-3 release smoke、wheel smoke、发布文档和总验收。
 
 ---
 

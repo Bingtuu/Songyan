@@ -10,6 +10,7 @@ from click.testing import CliRunner
 from songyan.cli.main import cli
 from songyan.models.gate_config import GateConfig
 from songyan.models.project_run import ProjectRunResult
+from songyan.services.doctor_service import DoctorReport
 
 
 @pytest.fixture
@@ -28,6 +29,14 @@ def _mock_pipeline_result() -> ProjectRunResult:
         final_status="completed",
         total_duration_sec=1.0,
     )
+
+
+def _install_preflight_pass(monkeypatch: pytest.MonkeyPatch) -> None:
+    async def fake_preflight(project_id: str) -> DoctorReport:
+        assert project_id == "proj-test"
+        return DoctorReport("pass", tuple(), {"pass": 0, "warn": 0, "fail": 0})
+
+    monkeypatch.setattr("songyan.cli.main.run_run_preflight", fake_preflight)
 
 
 class TestGateModeHelp:
@@ -49,7 +58,9 @@ class TestGateModeDefault:
         self,
         mock_pipeline: AsyncMock,
         runner: CliRunner,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        _install_preflight_pass(monkeypatch)
         mock_pipeline.return_value = _mock_pipeline_result()
         result = runner.invoke(
             cli,
@@ -88,7 +99,9 @@ class TestGateModeObserve:
         self,
         mock_pipeline: AsyncMock,
         runner: CliRunner,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        _install_preflight_pass(monkeypatch)
         mock_pipeline.return_value = _mock_pipeline_result()
         result = runner.invoke(
             cli,
@@ -119,7 +132,9 @@ class TestGateModeEnforce:
         self,
         mock_pipeline: AsyncMock,
         runner: CliRunner,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        _install_preflight_pass(monkeypatch)
         mock_pipeline.return_value = _mock_pipeline_result()
         result = runner.invoke(
             cli,

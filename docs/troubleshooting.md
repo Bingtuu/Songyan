@@ -28,11 +28,13 @@ songyan doctor --json --check-llm
 
 | 现象 | 当前判断 | 先做什么 | 后续任务 |
 |------|----------|----------|----------|
-| `LLM API key is not configured` | 没有配置 `LLM_API_KEY` | 编辑 `.env` 或设置环境变量，再运行 `songyan doctor --init-db` | 210 |
+| `LLM API key is not configured` | 没有配置 `LLM_API_KEY` | 编辑 `.env` 或设置环境变量，再运行 `songyan doctor --init-db` | 210 已完成 |
 | `database does not exist` | DB 尚未初始化 | 运行 `songyan doctor --init-db` | 210 |
-| `Unsupported database_url` | 当前只支持 `sqlite:///...` | 修改 `DATABASE_URL=sqlite:///songyan.db` | 210 |
-| 非法 `CHECKPOINTER_MODE` traceback | 当前配置加载阶段尚未被 doctor 捕获 | 改为 `sqlite` 或 `memory` | 210 |
-| `songyan run` 输出失败但进程 exit code 为 0 | 已知 runtime 语义缺口 | 以 `run_id` 生成 report，按失败原因处理 | 210/212 |
+| `Unsupported database_url` | 当前只支持 `sqlite:///...` | 修改 `DATABASE_URL=sqlite:///songyan.db` | 210 已完成 |
+| 非法 `CHECKPOINTER_MODE` | doctor / preflight 会结构化报告 `runtime.checkpointer` fail | 改为 `sqlite` 或 `memory` | 210 已完成 |
+| 非法 `SONGYAN_RUN_COST_BUDGET` | doctor / preflight 会结构化报告 `runtime.budget` fail | 改为 `0` 或正数 | 210 已完成 |
+| `songyan run` preflight fail | run 前置条件未满足，pipeline 未启动 | 按 preflight 输出修正配置、DB 或 project_id | 210 已完成 |
+| `songyan run` 输出 `run_id` 后 exit code 非 0 | pipeline 已启动但业务失败、partial 或 failed | 以 `run_id` 生成 report，按失败原因处理 | 212 |
 | `report` 提示没有 JSONL | run log 不存在或 run_id 错误 | 检查 `logs/chapter_runs/` 和 run 输出 | 213 |
 | `export` 提示没有 accepted 章节 | 项目还没有通过接收门槛的正文 | 先完成至少一章 accepted | 209 |
 | 单章失败 | 可能是 LLM、成本、上下文、质量门或 settlement 问题 | `songyan report --run-id <run_id>` | 212 |
@@ -68,7 +70,9 @@ songyan doctor --json --init-db
 
 ## 运行失败后的最短处理
 
-如果 `songyan run` 输出了 `run_id`，先生成报告：
+`songyan run` 会先执行 preflight。若输出 `Songyan run preflight`，说明 pipeline 尚未启动，请先修正配置、DB/schema、预算、资源或 project_id。
+
+如果 `songyan run` 输出了 `run_id`，说明 pipeline 已启动；即使命令 exit code 非 0，也可以先生成报告：
 
 ```powershell
 songyan report --run-id <run_id>

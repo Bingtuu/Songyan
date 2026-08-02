@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-Songyan 处于 V11 开源可用化收尾阶段。当前版本可以作为 preview 或内部可用版本验证，不应标记为正式开源可用版本。Task 208 已确认 Quickstart 骨架可用，但真实 Ch1-3 成功运行、wheel smoke、backup/restore、run bundle 和 profile validate 仍在 V11 后续任务中补齐。
+Songyan 处于 V11 开源可用化收尾阶段。当前版本可以作为 preview 或内部可用版本验证，不应标记为正式开源可用版本。Task 208 已确认 Quickstart 骨架可用，Task 210 已补齐 doctor / run preflight 与失败 exit code；真实 Ch1-3 成功运行、wheel smoke、backup/restore、run bundle 和 profile validate 仍在 V11 后续任务中补齐。
 
 ## 环境要求
 
@@ -84,11 +84,13 @@ songyan doctor --json --init-db
 - SQLite `DATABASE_URL` 和 DB 父目录写权限。
 - DB schema 完整性。
 - `CHECKPOINTER_MODE`。
+- `logs/` 路径可写性。
+- `SONGYAN_RUN_COST_BUDGET` / `RUN_COST_BUDGET` 合法性。
 - 体裁、模式、项目模板、prompt card、schema 等 package resources。
 
 已知限制：
 
-- 非法 `CHECKPOINTER_MODE` 目前可能在配置加载阶段 traceback，Task 210 会修成结构化诊断。
+- 非法 `CHECKPOINTER_MODE`、非法预算、缺 key、DB/schema 等问题会输出结构化诊断。
 - `--check-llm` 只做显式 LLM client 初始化探针，不默认发送生成请求。
 
 ## 创建项目
@@ -142,8 +144,9 @@ run_id: <run_id>
 
 已知限制：
 
-- 如果缺少 `LLM_API_KEY`，当前 `run` 会在业务层失败并写入 run log，但进程 exit code 仍可能为 0。Task 210/212 会修复这类误导性退出语义。
-- Task 209 未执行真实 LLM Ch1-3 成功验收，避免在文档任务中消耗 API 预算。正式开源前必须在 Task 210/215 补齐真实或明确替代的 smoke 证据。
+- `songyan run` 会先执行 preflight；缺少 `LLM_API_KEY`、非法配置、DB/schema 不可用或项目不存在时会在进入 pipeline 前 exit 1。
+- 如果 pipeline 已启动后业务失败，命令会保留 `run_id` 并返回非 0 exit code。请用 `songyan report --run-id <run_id>` 查看失败原因。
+- Task 209/210 未执行真实 LLM Ch1-3 成功验收，避免在文档与 preflight 任务中消耗 API 预算。正式开源前必须在 Task 215 补齐真实或明确替代的 smoke 证据。
 
 ## 生成报告
 
@@ -226,8 +229,8 @@ songyan run --project-id <project_id> --chapters 1-3 --auto-confirm
 
 | 场景 | 当前动作 | 后续任务 |
 |------|----------|----------|
-| 缺 API key | 设置 `LLM_API_KEY` 后重新运行 `doctor --init-db` | 210 |
-| Ch1 生成失败 | 先运行 `songyan report --run-id <run_id>` 看失败原因 | 212 |
+| 缺 API key | 设置 `LLM_API_KEY` 后重新运行 `doctor --init-db`；run preflight 会在进入 pipeline 前阻断 | 210 已完成 |
+| Ch1 生成失败 | 若输出了 `run_id`，先运行 `songyan report --run-id <run_id>` 看失败原因 | 212 |
 | 中断或超时 | 使用 `--resume` 继续 | 212 |
 | 无 accepted 可导出 | 先完成至少一章 accepted，再运行 `export` | 209 |
 | 需要分享问题现场 | 当前只能分享 report 和必要日志片段；run bundle 待 Task 213 | 213 |
@@ -236,8 +239,7 @@ songyan run --project-id <project_id> --chapters 1-3 --auto-confirm
 ## 当前限制
 
 - 还没有正式 release checklist 和 wheel smoke。
-- `run` 的业务失败 exit code 仍需 Task 210/212 修正。
-- 非法配置的错误体验仍需 Task 210 收口。
+- 失败恢复分类、恢复命令和演练证据仍需 Task 212 完善。
 - backup/restore 属于 Task 211。
 - run bundle 和脱敏诊断包属于 Task 213。
 - profile validate、危险项提示和 rollback/history 属于 Task 214。

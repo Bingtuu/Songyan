@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import json
+import os
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -158,6 +161,58 @@ def test_doctor_json_output(
     assert payload["status"] == "warn"
     assert payload["summary"]["fail"] == 0
     assert any(item["id"] == "llm.key" for item in payload["checks"])
+
+
+def test_doctor_subprocess_reports_invalid_checkpointer_without_traceback(
+    tmp_path: Path,
+) -> None:
+    repo_root = Path(__file__).resolve().parents[2]
+    env = os.environ.copy()
+    env["PYTHONPATH"] = str(repo_root / "src") + os.pathsep + env.get("PYTHONPATH", "")
+    env["CHECKPOINTER_MODE"] = "invalid"
+    env["LLM_API_KEY"] = "task210-dummy-key"
+    env["DATABASE_URL"] = f"sqlite:///{tmp_path / 'doctor.db'}"
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "from songyan.cli.main import cli; cli()",
+            "doctor",
+            "--json",
+        ],
+        cwd=tmp_path,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 1
+    assert "Traceback" not in result.stdout
+    assert "Traceback" not in result.stderr
+    payload = json.loads(result.stdout)
+    checks = {item["id"]: item for item in payload["checks"]}
+    assert payload["status"] == "fail"
+    assert checks["config.load"]["status"] == "pass"
+    assert checks["db.url"]["message"] == f"sqlite:///{tmp_path / 'doctor.db'}"
+    assert checks["runtime.checkpointer"]["status"] == "fail"
+
+
+def test_doctor_fails_for_invalid_run_cost_budget(
+    runner: CliRunner,
+    doctor_env: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("SONGYAN_RUN_COST_BUDGET", "not-a-number")
+
+    result = runner.invoke(cli, ["doctor", "--json"])
+
+    assert result.exit_code == 1
+    payload = json.loads(result.output)
+    checks = {item["id"]: item for item in payload["checks"]}
+    assert checks["runtime.budget"]["status"] == "fail"
+    assert "not-a-number" in checks["runtime.budget"]["message"]
 
 
 def test_doctor_does_not_probe_llm_by_default(

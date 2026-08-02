@@ -31,7 +31,7 @@ from songyan.models.gate_config import GateConfig
 from songyan.models.human_mark import HumanMark
 from songyan.models.project import ProjectSetting, derive_arc_boundaries
 from songyan.project_templates import ProjectInitializer, ProjectTemplateLoader
-from songyan.services.doctor_service import DoctorReport, run_doctor
+from songyan.services.doctor_service import DoctorReport, run_doctor, run_run_preflight
 from songyan.services.export_service import (
     ExportFormat,
     ExportResult,
@@ -142,6 +142,23 @@ def _render_doctor_report(report: DoctorReport) -> str:
     """Render doctor report as human-readable text."""
     lines = ["Songyan doctor", ""]
     for check in report.checks:
+        lines.append(f"[{check.status.upper()}] {check.id}: {check.message}")
+        if check.hint:
+            lines.append(f"  hint: {check.hint}")
+    summary = report.summary
+    lines.append("")
+    lines.append(
+        f"Summary: {summary['pass']} PASS, {summary['warn']} WARN, {summary['fail']} FAIL"
+    )
+    return "\n".join(lines)
+
+
+def _render_preflight_report(report: DoctorReport) -> str:
+    """Render run preflight failures as human-readable text."""
+    lines = ["Songyan run preflight", ""]
+    for check in report.checks:
+        if check.status == "pass":
+            continue
         lines.append(f"[{check.status.upper()}] {check.id}: {check.message}")
         if check.hint:
             lines.append(f"  hint: {check.hint}")
@@ -773,6 +790,11 @@ def run(
 
         gate_config = GateConfig.for_mode(cast(Literal["observe", "enforce"], gate_mode))
         click.echo(f"门禁模式: {gate_mode}")
+        preflight = asyncio.run(run_run_preflight(project_id=project_id))
+        if preflight.status == "fail":
+            click.echo(_render_preflight_report(preflight))
+            raise click.exceptions.Exit(1)
+
         effective_mode_id = asyncio.run(_resolve_run_mode_id(project_id, mode_id))
 
         result = asyncio.run(
@@ -794,9 +816,18 @@ def run(
             click.echo(f"失败: {result.chapters_failed}")  # 列出失败章号清单
         click.echo(f"耗时: {result.total_duration_sec:.1f} 秒")
         click.echo(f"run_id: {result.run_id}")
-        force_exit_after_run_if_requested()
+        exit_code = (
+            0
+            if result.final_status == "completed" and not result.chapters_failed
+            else 1
+        )
+        force_exit_after_run_if_requested(exit_code=exit_code)
+        if exit_code:
+            raise click.exceptions.Exit(exit_code)
 
     except click.Abort:
+        raise
+    except click.exceptions.Exit:
         raise
     except _CLI_CATCHABLE as exc:
         raise click.ClickException(str(exc)) from exc

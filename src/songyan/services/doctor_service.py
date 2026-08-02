@@ -8,9 +8,10 @@ from importlib.resources import files
 from pathlib import Path
 from typing import Any, Literal
 
-from songyan.config import Settings, settings
+from songyan.config import Settings, get_settings_load_error, settings
 from songyan.creative_modes.registry import list_creative_mode_profiles
 from songyan.db.migrations import init_schema, verify_schema
+from songyan.db.repository import ProjectRepository
 from songyan.genres.loader import list_genre_profiles
 from songyan.literary_optimization.plugin_loader import load_strategy_plugins
 from songyan.llm.client import aclose_llm_clients, get_llm
@@ -84,6 +85,24 @@ def _summarize(checks: list[DoctorCheck]) -> DoctorReport:
     return DoctorReport(status=status, checks=tuple(checks), summary=summary)
 
 
+def _check_settings_load() -> DoctorCheck:
+    error = get_settings_load_error()
+    if error is None:
+        return DoctorCheck("config.load", "pass", "settings loaded")
+
+    details: list[str] = []
+    for item in error.errors(include_url=False, include_input=False):
+        loc = ".".join(str(part) for part in item.get("loc", ())) or "settings"
+        details.append(f"{loc}: {item.get('msg', 'invalid value')}")
+    message = "settings validation failed: " + "; ".join(details[:5])
+    return DoctorCheck(
+        "config.load",
+        "fail",
+        message,
+        "请检查 .env 或环境变量中的配置值；修正后重新运行 songyan doctor --json。",
+    )
+
+
 def _sqlite_path_from_url(database_url: str) -> Path:
     prefix = "sqlite:///"
     if not database_url.startswith(prefix):
@@ -154,7 +173,12 @@ def _check_llm_config(config: Settings) -> list[DoctorCheck]:
     return checks
 
 
-async def _check_database(config: Settings, *, init_db: bool) -> list[DoctorCheck]:
+async def _check_database(
+    config: Settings,
+    *,
+    init_db: bool,
+    strict_schema: bool = False,
+) -> list[DoctorCheck]:
     checks: list[DoctorCheck] = []
     try:
         db_path = _sqlite_path_from_url(config.database_url)
@@ -199,7 +223,7 @@ async def _check_database(config: Settings, *, init_db: bool) -> list[DoctorChec
         checks.append(
             DoctorCheck(
                 "db.schema",
-                "warn",
+                "fail" if strict_schema else "warn",
                 "database does not exist",
                 "运行 songyan doctor --init-db 可初始化当前 DATABASE_URL 指向的库。",
             )
@@ -220,7 +244,7 @@ async def _check_database(config: Settings, *, init_db: bool) -> list[DoctorChec
         checks.append(
             DoctorCheck(
                 "db.schema",
-                "warn",
+                "fail" if strict_schema else "warn",
                 f"schema missing {len(missing)} tables",
                 "运行 songyan doctor --init-db 可初始化或迁移当前数据库。",
             )
@@ -230,7 +254,7 @@ async def _check_database(config: Settings, *, init_db: bool) -> list[DoctorChec
             checks.append(
                 DoctorCheck(
                     "db.schema",
-                    "warn",
+                    "fail" if strict_schema else "warn",
                     f"schema drift detected: {', '.join(drift[:5])}",
                     "运行 songyan doctor --init-db 可补齐缺失迁移。",
                 )
@@ -258,17 +282,86 @@ async def _schema_drift(conn: Any) -> list[str]:
 
 
 def _check_runtime_mode(config: Settings) -> DoctorCheck:
-    if config.checkpointer_mode in {"memory", "sqlite"}:
+    raw_mode = os.getenv("CHECKPOINTER_MODE")
+    mode = raw_mode if raw_mode is not None else config.checkpointer_mode
+    if mode in {"memory", "sqlite"}:
         return DoctorCheck(
             "runtime.checkpointer",
             "pass",
-            f"checkpointer_mode={config.checkpointer_mode}",
+            f"checkpointer_mode={mode}",
         )
     return DoctorCheck(
         "runtime.checkpointer",
         "fail",
-        f"unsupported checkpointer_mode: {config.checkpointer_mode}",
+        f"unsupported checkpointer_mode: {mode}",
+        "请设置 CHECKPOINTER_MODE=sqlite 或 CHECKPOINTER_MODE=memory。",
     )
+
+
+def _check_log_path(log_root: Path = Path("logs")) -> DoctorCheck:
+    if log_root.exists():
+        if not log_root.is_dir():
+            return DoctorCheck(
+                "logs.path",
+                "fail",
+                f"log path exists but is not a directory: {log_root}",
+            )
+        if _is_directory_writable(log_root):
+            return DoctorCheck("logs.path", "pass", f"writable log directory: {log_root}")
+        return DoctorCheck(
+            "logs.path",
+            "fail",
+            f"log directory is not writable: {log_root}",
+        )
+
+    existing_parent = _nearest_existing_parent(log_root)
+    if existing_parent is not None and _is_directory_writable(existing_parent):
+        return DoctorCheck(
+            "logs.path",
+            "pass",
+            f"log directory can be created under: {existing_parent}",
+        )
+    return DoctorCheck(
+        "logs.path",
+        "fail",
+        f"log directory parent is not writable: {log_root.parent}",
+        "请切换到可写目录，或修正当前工作目录权限。",
+    )
+
+
+def _read_raw_run_cost_budget() -> tuple[str | None, str | None]:
+    for env_name in ("SONGYAN_RUN_COST_BUDGET", "RUN_COST_BUDGET"):
+        if env_name in os.environ:
+            return os.environ[env_name], env_name
+    return None, None
+
+
+def _check_run_cost_budget(config: Settings) -> DoctorCheck:
+    raw_value, source = _read_raw_run_cost_budget()
+    if raw_value is not None:
+        try:
+            budget = float(raw_value)
+        except ValueError:
+            return DoctorCheck(
+                "runtime.budget",
+                "fail",
+                f"{source} must be a non-negative number: {raw_value}",
+                "请设置为 0 或正数，例如 SONGYAN_RUN_COST_BUDGET=10。",
+            )
+    else:
+        budget = config.run_cost_budget
+        source = "settings.run_cost_budget"
+
+    if budget < 0:
+        return DoctorCheck(
+            "runtime.budget",
+            "fail",
+            f"{source} must be non-negative: {budget}",
+            "0 表示不启用单次运行成本预算；正数表示预算上限。",
+        )
+    if budget == 0:
+        return DoctorCheck("runtime.budget", "pass", "run cost budget disabled")
+    return DoctorCheck("runtime.budget", "pass", f"run cost budget=¥{budget:g}")
 
 
 def _check_package_resources() -> DoctorCheck:
@@ -342,11 +435,59 @@ async def run_doctor(
 ) -> DoctorReport:
     """Run Songyan environment diagnostics."""
     checks: list[DoctorCheck] = []
+    checks.append(_check_settings_load())
     checks.append(_check_env_file())
     checks.extend(_check_llm_config(config))
     checks.extend(await _check_database(config, init_db=init_db))
     checks.append(_check_runtime_mode(config))
+    checks.append(_check_log_path())
+    checks.append(_check_run_cost_budget(config))
     checks.append(_check_package_resources())
     if check_llm:
         checks.append(await _probe_llm_connectivity())
+    return _summarize(checks)
+
+
+async def _check_project_exists(project_id: str) -> DoctorCheck:
+    try:
+        project = await ProjectRepository().get(project_id)
+    except Exception as exc:  # noqa: BLE001 - preflight should report, not crash
+        return DoctorCheck(
+            "project.exists",
+            "fail",
+            f"project lookup failed: {exc}",
+            "请先运行 songyan doctor --init-db，并确认 DATABASE_URL 指向正确数据库。",
+        )
+    if project is None:
+        return DoctorCheck(
+            "project.exists",
+            "fail",
+            f"project not found: {project_id}",
+            "请检查 project_id，或使用 songyan list-projects 找回项目 ID。",
+        )
+    return DoctorCheck(
+        "project.exists",
+        "pass",
+        f"project found: {project_id}",
+    )
+
+
+async def run_run_preflight(
+    project_id: str,
+    *,
+    config: Settings = settings,
+) -> DoctorReport:
+    """Run strict preflight checks before starting ``songyan run``."""
+    checks: list[DoctorCheck] = []
+    checks.append(_check_settings_load())
+    checks.extend(_check_llm_config(config))
+    checks.extend(await _check_database(config, init_db=False, strict_schema=True))
+    checks.append(_check_runtime_mode(config))
+    checks.append(_check_log_path())
+    checks.append(_check_run_cost_budget(config))
+    checks.append(_check_package_resources())
+
+    db_failed = any(check.status == "fail" and check.id.startswith("db.") for check in checks)
+    if not db_failed:
+        checks.append(await _check_project_exists(project_id))
     return _summarize(checks)

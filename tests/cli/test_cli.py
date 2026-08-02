@@ -12,6 +12,7 @@ from click.testing import CliRunner
 
 from songyan.cli.main import cli
 from songyan.models.project_run import ProjectRunResult
+from songyan.services.doctor_service import DoctorCheck, DoctorReport
 
 # ---------------------------------------------------------------------------
 #  fixtures
@@ -232,6 +233,10 @@ def _task179_result(project_id: str = "proj-179") -> ProjectRunResult:
     )
 
 
+def _preflight_pass() -> DoctorReport:
+    return DoctorReport("pass", tuple(), {"pass": 0, "warn": 0, "fail": 0})
+
+
 class TestRunCommandExperience:
     def test_run_outputs_run_id(
         self,
@@ -246,7 +251,12 @@ class TestRunCommandExperience:
         async def fake_run_project_pipeline(**kwargs):
             return _task179_result(project_id=kwargs["project_id"])
 
+        async def fake_preflight(project_id: str) -> DoctorReport:
+            assert project_id == "proj-179"
+            return _preflight_pass()
+
         monkeypatch.setattr("songyan.cli.main._resolve_run_mode_id", fake_resolve_mode)
+        monkeypatch.setattr("songyan.cli.main.run_run_preflight", fake_preflight)
         monkeypatch.setattr("songyan.cli.main.run_project_pipeline", fake_run_project_pipeline)
 
         result = runner.invoke(
@@ -280,7 +290,12 @@ class TestRunCommandExperience:
             calls["pipeline"] = kwargs
             return _task179_result(project_id=kwargs["project_id"])
 
+        async def fake_preflight(project_id: str) -> DoctorReport:
+            calls["preflight_project_id"] = project_id
+            return _preflight_pass()
+
         monkeypatch.setattr("songyan.cli.main.ProjectRepository", FakeProjectRepository)
+        monkeypatch.setattr("songyan.cli.main.run_run_preflight", fake_preflight)
         monkeypatch.setattr("songyan.cli.main.run_project_pipeline", fake_run_project_pipeline)
 
         result = runner.invoke(
@@ -296,6 +311,7 @@ class TestRunCommandExperience:
         )
 
         assert result.exit_code == 0, result.output
+        assert calls["preflight_project_id"] == "proj-179"
         assert calls["repo_project_id"] == "proj-179"
         pipeline = calls["pipeline"]
         assert isinstance(pipeline, dict)
@@ -317,7 +333,12 @@ class TestRunCommandExperience:
             calls["pipeline"] = kwargs
             return _task179_result(project_id=kwargs["project_id"])
 
+        async def fake_preflight(project_id: str) -> DoctorReport:
+            calls["preflight_project_id"] = project_id
+            return _preflight_pass()
+
         monkeypatch.setattr("songyan.cli.main.ProjectRepository", FakeProjectRepository)
+        monkeypatch.setattr("songyan.cli.main.run_run_preflight", fake_preflight)
         monkeypatch.setattr("songyan.cli.main.run_project_pipeline", fake_run_project_pipeline)
 
         result = runner.invoke(
@@ -335,6 +356,7 @@ class TestRunCommandExperience:
         )
 
         assert result.exit_code == 0, result.output
+        assert calls["preflight_project_id"] == "proj-179"
         assert "repo_called" not in calls
         pipeline = calls["pipeline"]
         assert isinstance(pipeline, dict)
@@ -352,7 +374,12 @@ class TestRunCommandExperience:
         async def fake_run_project_pipeline(**kwargs):
             raise AssertionError("pipeline should not run")
 
+        async def fake_preflight(project_id: str) -> DoctorReport:
+            assert project_id == "missing"
+            return _preflight_pass()
+
         monkeypatch.setattr("songyan.cli.main.ProjectRepository", FakeProjectRepository)
+        monkeypatch.setattr("songyan.cli.main.run_run_preflight", fake_preflight)
         monkeypatch.setattr("songyan.cli.main.run_project_pipeline", fake_run_project_pipeline)
 
         result = runner.invoke(
@@ -369,6 +396,100 @@ class TestRunCommandExperience:
 
         assert result.exit_code != 0
         assert "无法读取项目 mode_id" in result.output
+
+    def test_run_preflight_failure_exits_before_pipeline(
+        self,
+        runner: CliRunner,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        calls: dict[str, object] = {}
+
+        async def fake_preflight(project_id: str) -> DoctorReport:
+            calls["preflight_project_id"] = project_id
+            return DoctorReport(
+                "fail",
+                (
+                    DoctorCheck(
+                        "llm.key",
+                        "fail",
+                        "LLM API key is not configured",
+                        "请设置 LLM_API_KEY。",
+                    ),
+                ),
+                {"pass": 0, "warn": 0, "fail": 1},
+            )
+
+        async def fake_resolve_mode(project_id: str, explicit_mode_id: str | None) -> str:
+            raise AssertionError("mode should not be resolved after preflight fail")
+
+        async def fake_run_project_pipeline(**kwargs):
+            raise AssertionError("pipeline should not run after preflight fail")
+
+        monkeypatch.setattr("songyan.cli.main.run_run_preflight", fake_preflight)
+        monkeypatch.setattr("songyan.cli.main._resolve_run_mode_id", fake_resolve_mode)
+        monkeypatch.setattr("songyan.cli.main.run_project_pipeline", fake_run_project_pipeline)
+
+        result = runner.invoke(
+            cli,
+            [
+                "run",
+                "--project-id",
+                "proj-preflight",
+                "--chapters",
+                "1",
+                "--auto-confirm",
+            ],
+        )
+
+        assert result.exit_code == 1
+        assert calls["preflight_project_id"] == "proj-preflight"
+        assert "Songyan run preflight" in result.output
+        assert "[FAIL] llm.key" in result.output
+
+    def test_run_partial_result_exits_nonzero_but_keeps_run_id(
+        self,
+        runner: CliRunner,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        async def fake_preflight(project_id: str) -> DoctorReport:
+            assert project_id == "proj-partial"
+            return _preflight_pass()
+
+        async def fake_resolve_mode(project_id: str, explicit_mode_id: str | None) -> str:
+            assert project_id == "proj-partial"
+            assert explicit_mode_id is None
+            return "webnovel_intense"
+
+        async def fake_run_project_pipeline(**kwargs):
+            return ProjectRunResult(
+                project_id=kwargs["project_id"],
+                run_id="run-partial",
+                chapters_completed=[1],
+                chapters_failed=[2],
+                total_duration_sec=2.0,
+                final_status="partial",
+            )
+
+        monkeypatch.setattr("songyan.cli.main.run_run_preflight", fake_preflight)
+        monkeypatch.setattr("songyan.cli.main._resolve_run_mode_id", fake_resolve_mode)
+        monkeypatch.setattr("songyan.cli.main.run_project_pipeline", fake_run_project_pipeline)
+
+        result = runner.invoke(
+            cli,
+            [
+                "run",
+                "--project-id",
+                "proj-partial",
+                "--chapters",
+                "1-2",
+                "--auto-confirm",
+            ],
+        )
+
+        assert result.exit_code == 1
+        assert "运行完成: 1/2 章成功" in result.output
+        assert "失败: [2]" in result.output
+        assert "run_id: run-partial" in result.output
 
 
 # ---------------------------------------------------------------------------

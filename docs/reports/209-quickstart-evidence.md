@@ -4,6 +4,8 @@
 > **范围**: help、doctor、init-db、create-project、run failure、report、export
 > **结论**: Quickstart 文档链路已绑定命令证据；真实 LLM Ch1-3 成功验收仍路由至 Task 210/215。
 
+> **后续状态**: Task 210 已完成 doctor / preflight 增强。本文保留 Task 209 当时的原始命令证据；其中 `run` 业务失败 exit code 0 与非法 `CHECKPOINTER_MODE` traceback 缺口已由 Task 210 收口。真实 LLM Ch1-3 release smoke 仍路由至 Task 215。
+
 ## 环境
 
 | 项 | 值 |
