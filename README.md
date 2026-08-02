@@ -240,6 +240,9 @@ songyan run --project-id <project_id> --chapters 1-3 --auto-confirm
 # 记录输出中的 run_id，生成运行报告
 songyan report --run-id <run_id>
 
+# 生成可分享的脱敏诊断包
+songyan bundle-run --run-id <run_id> --output bundles/
+
 # 导出已 accepted 的正文
 songyan export --project-id <project_id> --chapters 1-3 --format md --output exports/
 
@@ -264,7 +267,7 @@ powershell -File "$songyanRepo\scripts\run_with_timeout.ps1" -TimeoutSec 3600 --
 
 - Task 209 只补齐文档和命令证据，不消耗真实 LLM 预算跑 Ch1-3 成功验收。
 - `songyan run` 已接入 preflight；缺 key、非法配置、DB/schema 等问题会在进入生成前 exit 1。若 pipeline 启动后业务失败，命令会保留 `run_id` 并返回非 0 exit code，请用 `songyan report --run-id <run_id>` 查看失败原因。
-- run bundle、profile validate、release checklist 和 wheel smoke 属于 Task 213-215。
+- profile validate、release checklist 和 wheel smoke 属于 Task 214-215。
 
 ---
 
@@ -278,6 +281,7 @@ powershell -File "$songyanRepo\scripts\run_with_timeout.ps1" -TimeoutSec 3600 --
 | `songyan run --project-id <id> --chapters 1-3 --auto-confirm` | 生成 Quickstart 短窗口 |
 | `songyan run --project-id <id> --chapters 1-10 --auto-confirm --resume` | 扩展到 10 章并支持断点续跑 |
 | `songyan report --run-id <run_id>` | 从运行日志生成报告和成本视图 |
+| `songyan bundle-run --run-id <run_id> --output bundles/` | 生成可分享的脱敏 run 诊断包 |
 | `songyan export --project-id <id> --chapters 1-3 --format md --output exports/` | 导出 accepted 正文 |
 | `songyan backup --project-id <id> --output backups/` | 备份可恢复项目资产 |
 | `songyan restore --backup <zip> --database-url sqlite:///restored.db` | 从资产包恢复 SQLite 事实库 |
@@ -311,7 +315,7 @@ powershell -File "$songyanRepo\scripts\run_with_timeout.ps1" -TimeoutSec 3600 --
 | 长篇稳定性 | 科幻 220 章；玄幻、武侠、都市 Ch200 验证完成 |
 | 多体裁运行时 | 已支持按体裁配置上下文预算、质量阈值和伏笔调度 |
 | 生产化工具 | CLI、导出、doctor、成本追踪、质量报告、CI 已接入 |
-| 当前重点 | V11 开源可用化收尾；Task 212 已完成失败恢复体验，下一步 Task 213 run bundle 诊断包 |
+| 当前重点 | V11 开源可用化收尾；Task 213 已完成 run bundle 诊断包，下一步 Task 214 配置安全与 profile validate |
 | V10 收口报告 | [`archive/v10/reports/207-v10-closure-report.md`](archive/v10/reports/207-v10-closure-report.md) |
 | 下一阶段入口 | [`tasks/V11-README.md`](tasks/V11-README.md) |
 
@@ -399,6 +403,7 @@ powershell -File "$songyanRepo\scripts\run_with_timeout.ps1" -TimeoutSec 3600 --
 - [`docs/reports/210-doctor-preflight-evidence.md`](docs/reports/210-doctor-preflight-evidence.md) — Task 210 doctor / preflight 命令证据。
 - [`docs/reports/211-backup-restore-evidence.md`](docs/reports/211-backup-restore-evidence.md) — Task 211 backup / restore 命令证据。
 - [`docs/reports/212-failure-recovery-evidence.md`](docs/reports/212-failure-recovery-evidence.md) — Task 212 失败恢复命令证据。
+- [`docs/reports/213-run-bundle-evidence.md`](docs/reports/213-run-bundle-evidence.md) — Task 213 run bundle 命令证据。
 - [`AGENTS.md`](AGENTS.md) — 开发规范和工程纪律。
 - [`archive/`](archive/) — 历史任务、报告和归档资料。
 

@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-Songyan 处于 V11 开源可用化收尾阶段。当前版本可以作为 preview 或内部可用版本验证，不应标记为正式开源可用版本。Task 208 已确认 Quickstart 骨架可用，Task 210 已补齐 doctor / run preflight 与失败 exit code，Task 211 已补齐 backup / restore / schema ledger，Task 212 已补齐常见失败分类和恢复建议；真实 Ch1-3 成功运行、wheel smoke、run bundle 和 profile validate 仍在 V11 后续任务中补齐。
+Songyan 处于 V11 开源可用化收尾阶段。当前版本可以作为 preview 或内部可用版本验证，不应标记为正式开源可用版本。Task 208 已确认 Quickstart 骨架可用，Task 210 已补齐 doctor / run preflight 与失败 exit code，Task 211 已补齐 backup / restore / schema ledger，Task 212 已补齐常见失败分类和恢复建议，Task 213 已补齐 run bundle 诊断包；真实 Ch1-3 成功运行、wheel smoke 和 profile validate 仍在 V11 后续任务中补齐。
 
 ## 环境要求
 
@@ -162,7 +162,13 @@ songyan report --run-id <run_id>
 logs/reports/report-<run_id>.md
 ```
 
-报告会包含章节成功率、失败章节、上下文预算、候选硬门禁、成本视图和失败原因。当前 `report` 只输出 Markdown；JSON + Markdown 诊断包和脱敏分享能力属于 Task 213。
+报告会包含章节成功率、失败章节、上下文预算、候选硬门禁、成本视图和失败原因。需要分享可复现问题时，使用 run bundle：
+
+```powershell
+songyan bundle-run --run-id <run_id> --output bundles/
+```
+
+该命令生成 zip，包含 `bundle.json`、`bundle.md` 和 `logs/index.json`，默认不包含 `.env`、API key、日志正文或书稿正文。
 
 ## 导出正文
 
@@ -252,6 +258,7 @@ songyan run --project-id <project_id> --chapters 1-3 --auto-confirm
 | `logs/wrapper/` | Windows timeout wrapper 输出；路径相对执行 wrapper 时的 cwd |
 | `exports/` | 导出的 accepted 正文 |
 | `backups/` | `songyan backup` 生成的项目资产包 |
+| `bundles/` | `songyan bundle-run` 生成的脱敏 run 诊断包 |
 
 常见恢复入口：
 
@@ -261,13 +268,12 @@ songyan run --project-id <project_id> --chapters 1-3 --auto-confirm
 | Ch1 生成失败 | 若输出了 `run_id`，先运行 `songyan report --run-id <run_id>` 看失败原因 | 212 已完成 |
 | 中断或超时 | 使用 `--resume` 继续；长跑用 timeout wrapper | 212 已完成 |
 | 无 accepted 可导出 | 先完成至少一章 accepted，再运行 `export` | 212 已完成 |
-| 需要分享问题现场 | 当前只能分享 report 和必要日志片段；run bundle 待 Task 213 | 213 |
+| 需要分享问题现场 | 使用 `songyan bundle-run --run-id <run_id> --output bundles/` | 213 已完成 |
 | 需要备份项目资产 | 使用 `songyan backup --project-id <project_id> --output backups/` | 211 已完成 |
 | 需要恢复项目资产 | 使用 `songyan restore --backup <zip> --database-url sqlite:///restored.db` | 211 已完成 |
 
 ## 当前限制
 
 - 还没有正式 release checklist 和 wheel smoke。
-- run bundle 和脱敏诊断包属于 Task 213。
 - profile validate、危险项提示和 rollback/history 属于 Task 214。
 - 在 Task 209-215 全部完成前，项目只能标记为 preview 或内部可用，不应标记为正式开源可用版本。

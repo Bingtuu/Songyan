@@ -58,6 +58,7 @@ from songyan.services.recovery_service import (
     render_recovery_advice,
     run_failed_advice,
 )
+from songyan.services.run_bundle_service import bundle_run
 from songyan.utils.logging_setup import configure_logging
 from songyan.utils.process_exit import force_exit_after_run_if_requested
 from songyan.workflows.phase2_graph import run_project_pipeline
@@ -796,6 +797,41 @@ def restore_cmd(backup_path: Path, database_url: str, force: bool) -> None:
     click.echo(f"  $env:DATABASE_URL = \"{database_url}\"")
     click.echo("  songyan doctor --json")
     click.echo("  songyan list-projects")
+
+
+@cli.command(name="bundle-run")
+@click.option("--run-id", required=True, help="要打包诊断信息的 run_id")
+@click.option("--project-id", default=None, help="可选：校验 run 所属 project_id")
+@click.option(
+    "--output",
+    "output_path",
+    default=Path("bundles"),
+    show_default=True,
+    type=click.Path(path_type=Path),
+    help="输出目录或 .zip 文件路径",
+)
+def bundle_run_cmd(run_id: str, project_id: str | None, output_path: Path) -> None:
+    """生成可分享的 run 诊断包（JSON + Markdown + 日志索引）."""
+    try:
+        result = asyncio.run(
+            bundle_run(run_id, project_id=project_id, output=output_path)
+        )
+    except click.Abort:
+        raise
+    except SongyanError as exc:
+        message = str(exc)
+        if "run log not found" in message:
+            recovery = render_recovery_advice([missing_artifact_advice(run_id)])
+            message += recovery if recovery else ""
+        raise click.ClickException(message) from exc
+    except _CLI_CATCHABLE as exc:
+        raise click.ClickException(str(exc)) from exc
+
+    click.echo(f"诊断包已生成: {result.bundle_path}")
+    click.echo(f"  run_id: {result.bundle['run']['run_id']}")
+    click.echo(f"  project_id: {result.bundle['run']['project_id']}")
+    click.echo(f"  files: {', '.join(['bundle.json', 'bundle.md', 'logs/index.json'])}")
+    click.echo("  sensitive: api_key/env/log_content/manuscript_content not included")
 
 
 async def _resolve_run_mode_id(project_id: str, explicit_mode_id: str | None) -> str:

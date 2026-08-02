@@ -1,6 +1,6 @@
 # Songyan Troubleshooting
 
-> 当前文档是 V11 preview 阶段的故障入口。它记录现有可操作步骤，也明确哪些问题仍要进入 Task 213-215 修复。
+> 当前文档是 V11 preview 阶段的故障入口。它记录现有可操作步骤，也明确哪些问题仍要进入 Task 214-215 修复。
 
 ## 先跑 doctor
 
@@ -35,7 +35,7 @@ songyan doctor --json --check-llm
 | `missing_artifact` | `report` 找不到 JSONL / run log | 检查 `logs/chapter_runs/` 和 run 输出中的 run_id | 212 已完成 |
 | `no_accepted_content` | `export` 提示没有 accepted 章节 | 先生成并 accepted 至少一章，再运行 `export` | 212 已完成 |
 | `asset_restore_error` | backup project 不存在、restore 坏包、restore 目标 DB 已存在 | `songyan list-projects`、重新 backup，或确认后用 `restore --force` | 212 已完成 |
-| 提交可复现问题 | 当前无自动脱敏 run bundle | 先提供 report、run_id、命令、必要日志片段，注意脱敏 | 213 |
+| 提交可复现问题 | 使用自动脱敏 run bundle | `songyan bundle-run --run-id <run_id> --output bundles/` | 213 已完成 |
 
 CLI 的 human 输出会在常见失败后追加 `恢复建议:` 段，包含上述分类和可执行命令。`--json` 输出保持机器可读，恢复说明看对应 check 的 `hint` 和本文档。
 
@@ -152,7 +152,15 @@ logs/wrapper/
 
 ## 分享问题时需要的信息
 
-当前没有自动脱敏 run bundle。手动提交问题时建议提供：
+需要提交可复现问题时，优先生成自动脱敏 run bundle：
+
+```powershell
+songyan bundle-run --run-id <run_id> --output bundles/
+```
+
+bundle zip 包含 `bundle.json`、`bundle.md` 和 `logs/index.json`。默认不包含 `.env`、API key、日志正文或书稿正文。
+
+手动补充问题时建议提供：
 
 - 使用的命令。
 - `project_id` 和 `run_id`。
@@ -168,4 +176,4 @@ logs/wrapper/
 - 完整私密书稿。
 - 未脱敏的绝对路径或私密本地目录。
 
-自动 run bundle、脱敏规则和 issue 模板会在 Task 213/215 收口。
+Issue 模板会在 Task 215 收口。

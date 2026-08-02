@@ -6,11 +6,11 @@
 
 | 项 | 结论 |
 |----|------|
-| 当前阶段 | V11 已启动；Task 212 失败恢复体验已完成，下一步进入 Task 213 run bundle 诊断包 |
+| 当前阶段 | V11 已启动；Task 213 run bundle 诊断包已完成，下一步进入 Task 214 配置安全与 profile validate |
 | V10 长窗口 | sci-fi Ch200 baseline 已冻结；xuanhuan / wuxia / urban 均完成 Ch200，总验收 accepted=200、gap=0、failed=[]、five-gate PASS、segment audit PASS、T9=0 |
 | V10 优秀度信号 | Task 196-203 已完成，严格保持 report-only，不接 Writer / CreativeDirector prompt，不进 CED 或 hard gate |
 | V10 结构 spike | KG diff、FactTrack validity interval、Storyline Tree 均完成，三者 decision=`defer`，不接 runtime / prompt / CED / hard gate |
-| 当前代码面 | V11 只做开源可用化收尾；Task 212 已为 config/database/preflight/run/report/export/asset 失败补充分类和恢复建议 |
+| 当前代码面 | V11 只做开源可用化收尾；Task 213 已提供可分享、可脱敏的 run bundle JSON + Markdown 诊断包 |
 
 ## 当前入口
 
@@ -41,10 +41,13 @@
 | `tasks/212-v11-failure-recovery.md` | Task 212 任务书 |
 | `tasks/212-v11-failure-recovery-DONE.md` | Task 212 DONE |
 | `docs/reports/212-failure-recovery-evidence.md` | Task 212 命令证据 |
+| `tasks/213-v11-run-bundle.md` | Task 213 任务书 |
+| `tasks/213-v11-run-bundle-DONE.md` | Task 213 DONE |
+| `docs/reports/213-run-bundle-evidence.md` | Task 213 命令证据 |
 
 ## 最新归档状态
 
-- `tasks/` 保留活跃入口：`TEMPLATE.md`、`V10-README.md`、`V11-README.md`、`V11-Plan.md`；Task 208-212 任务书与 DONE 作为 V11 当前审计、文档闭环、preflight、资产生命周期和失败恢复记录已落盘。
+- `tasks/` 保留活跃入口：`TEMPLATE.md`、`V10-README.md`、`V11-README.md`、`V11-Plan.md`；Task 208-213 任务书与 DONE 作为 V11 当前审计、文档闭环、preflight、资产生命周期、失败恢复和 run bundle 记录已落盘。
 - V10 单项任务书与 DONE 文档已移至 `archive/v10/tasks/`。
 - V10 JSON artifact 已移至 `archive/v10/artifacts/`。
 - V10 Markdown 报告已移至 `archive/v10/reports/`。
@@ -53,8 +56,8 @@
 
 ## 下一步
 
-1. 启动 Task 213：run bundle 诊断包，输出可分享 JSON + Markdown 诊断包并完成脱敏。
-2. 后续按证据推进 Task 214 profile validate、Task 215 release checklist。
+1. 启动 Task 214：配置安全与 profile validate，增加推荐范围、危险项提示、rollback/history 或等价机制。
+2. 后续按证据推进 Task 215 release checklist。
 3. 只做开源可用化收尾，不扩张生成能力；若要使用 V10 历史证据，优先读 `archive/v10/INDEX.md`。
 
 ## 守护项

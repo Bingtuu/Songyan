@@ -3,7 +3,7 @@
 > **阶段**: 开源可用化收尾
 > **定位**: V11 是正式开源前最后一个工程阶段，目标是把已有能力交付给外部技术用户，而不是继续扩张生成能力。
 > **当前口径**: V10 已全量闭环并归档；V11 从 Task 208 启动。`tasks/V11-Plan.md` 是早期备忘，本文是 V11 正式阶段入口。
-> **状态**: 已启动；Task 208 readiness audit、Task 209 Quickstart 文档闭环、Task 210 doctor / preflight 增强、Task 211 backup / restore / schema ledger、Task 212 失败恢复体验已完成，下一步进入 Task 213 run bundle 诊断包。
+> **状态**: 已启动；Task 208 readiness audit、Task 209 Quickstart 文档闭环、Task 210 doctor / preflight 增强、Task 211 backup / restore / schema ledger、Task 212 失败恢复体验、Task 213 run bundle 诊断包已完成，下一步进入 Task 214 配置安全与 profile validate。
 
 ---
 
@@ -103,7 +103,7 @@ V11 只服务以下外部技术用户路径：
 | 210 | doctor / preflight 增强 | DONE | 强化本地环境、资源、schema、LLM、写权限、预算和日志检查，输出机器可读 JSON 与人类可读建议 | 208/209 |
 | 211 | backup / restore / schema ledger | DONE | 建立项目资产生命周期：备份、恢复、schema 版本/迁移状态校验，明确 export 与 backup 边界 | 208 |
 | 212 | 失败恢复体验 | DONE | 标准化常见失败分类、提示和恢复动作，覆盖 retry/resume/isolate/提额/诊断包路径 | 208/210 |
-| 213 | run bundle 诊断包 | 待定 | 输出 run 元信息、章节状态、成本、五门/T9/CED/overdue/health、日志索引和脱敏报告 | 208/210 |
+| 213 | run bundle 诊断包 | DONE | 输出 run 元信息、章节状态、成本、五门/T9/CED/overdue/health、日志索引和脱敏报告 | 208/210 |
 | 214 | 配置安全与 profile validate | 待定 | 增加推荐范围、危险项提示、validate、rollback/history 或等价安全机制 | 208/210 |
 | 215 | Release checklist 与开源前总验收 | 待定 | wheel、非仓库 cwd、Windows、CI、CHANGELOG、license/contributing/issue templates、最小复现指南总验收 | 209-214 |
 
@@ -139,7 +139,6 @@ Task 209 留给后续实现的 runtime 缺口中，非法 `CHECKPOINTER_MODE` tr
 
 仍需后续实现：
 
-- Task 213：run bundle 与脱敏诊断包。
 - Task 214：profile validate、危险项提示、rollback/history。
 - Task 215：真实 Ch1-3 release smoke、wheel smoke、CHANGELOG、CONTRIBUTING、issue templates、release checklist。
 
@@ -161,7 +160,6 @@ Task 210 留给后续实现的项目资产缺口已由 Task 211 收口。
 
 仍需后续实现：
 
-- Task 213：run bundle 与脱敏诊断包。
 - Task 214：profile validate、危险项提示、rollback/history。
 - Task 215：真实 Ch1-3 release smoke、wheel smoke、发布文档和总验收。
 
@@ -182,7 +180,6 @@ Task 211 已完成。任务书见 `tasks/211-v11-backup-restore-schema-ledger.md
 
 仍需后续实现：
 
-- Task 213：run bundle 与脱敏诊断包。
 - Task 214：profile validate、危险项提示、rollback/history。
 - Task 215：真实 Ch1-3 release smoke、wheel smoke、发布文档和总验收。
 
@@ -204,7 +201,26 @@ Task 212 已完成。任务书见 `tasks/212-v11-failure-recovery.md`，DONE 见
 
 仍需后续实现：
 
-- Task 213：run bundle 与脱敏诊断包。
+- Task 214：profile validate、危险项提示、rollback/history。
+- Task 215：真实 Ch1-3 release smoke、wheel smoke、发布文档和总验收。
+
+---
+
+## Task 213 run bundle 结论
+
+Task 213 已完成。任务书见 `tasks/213-v11-run-bundle.md`，DONE 见 `tasks/213-v11-run-bundle-DONE.md`，命令证据见 `docs/reports/213-run-bundle-evidence.md`。
+
+交付：
+
+- 新增 `songyan bundle-run --run-id <run_id> --output bundles/`。
+- 输出 zip 诊断包，包含 `bundle.json`、`bundle.md` 和 `logs/index.json`。
+- bundle 汇总 run 元信息、project 摘要、章节状态、失败分类、成本聚合、report / run log 路径索引和 quality signals。
+- 记录 CED / T9 / five-gate 为外部既有信号，不改变其口径或 hard gate。
+- 默认不包含 `.env` 原文、API key、敏感 env、绝对路径、日志正文或书稿正文。
+- 缺 run log 时 exit 1，并输出 Task 212 的 `missing_artifact` 恢复建议。
+
+仍需后续实现：
+
 - Task 214：profile validate、危险项提示、rollback/history。
 - Task 215：真实 Ch1-3 release smoke、wheel smoke、发布文档和总验收。
 
