@@ -16,18 +16,20 @@
 | `docs/reports/208-v11-readiness-audit.md` | Task 208 readiness audit 报告 |
 | `docs/reports/209-quickstart-evidence.md` | Task 209 Quickstart 命令证据 |
 | `docs/reports/210-doctor-preflight-evidence.md` | Task 210 doctor / preflight 命令证据 |
+| `docs/reports/211-backup-restore-evidence.md` | Task 211 backup / restore 命令证据 |
 
 ## 当前开发入口
 
 | 场景 | 文件 |
 |------|------|
 | V11 启动 | `tasks/V11-README.md` |
-| V11 当前任务 | Task 211 backup / restore / schema ledger |
+| V11 当前任务 | Task 212 失败恢复体验 |
 | 外部用户 Quickstart | `docs/quickstart.md` |
 | 故障排查 | `docs/troubleshooting.md` |
 | V11 readiness audit | `docs/reports/208-v11-readiness-audit.md` |
 | Quickstart 证据 | `docs/reports/209-quickstart-evidence.md` |
 | doctor / preflight 证据 | `docs/reports/210-doctor-preflight-evidence.md` |
+| backup / restore 证据 | `docs/reports/211-backup-restore-evidence.md` |
 | 开源门槛 | `tasks/V11-README.md` 的“开源门槛与 V11 目标” |
 | V11 规划备忘 | `tasks/V11-Plan.md` |
 | V10 追溯 | `archive/v10/INDEX.md` |
@@ -67,5 +69,6 @@
 - 当前状态：Task 208 readiness audit 已完成，审计报告见 `docs/reports/208-v11-readiness-audit.md`。
 - Task 209 Quickstart 与用户文档闭环已完成，证据见 `docs/reports/209-quickstart-evidence.md`。
 - Task 210 doctor / preflight 增强已完成，证据见 `docs/reports/210-doctor-preflight-evidence.md`。
-- 下一步：启动 Task 211 backup / restore / schema ledger，建立项目资产保护与恢复路径。
+- Task 211 backup / restore / schema ledger 已完成，证据见 `docs/reports/211-backup-restore-evidence.md`。
+- 下一步：启动 Task 212 失败恢复体验，标准化常见失败分类、提示和恢复动作。
 - 正式开源条件：必须满足 `tasks/V11-README.md` 的开源门槛；未满足时只能内部使用或发 preview。

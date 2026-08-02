@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-Songyan 处于 V11 开源可用化收尾阶段。当前版本可以作为 preview 或内部可用版本验证，不应标记为正式开源可用版本。Task 208 已确认 Quickstart 骨架可用，Task 210 已补齐 doctor / run preflight 与失败 exit code；真实 Ch1-3 成功运行、wheel smoke、backup/restore、run bundle 和 profile validate 仍在 V11 后续任务中补齐。
+Songyan 处于 V11 开源可用化收尾阶段。当前版本可以作为 preview 或内部可用版本验证，不应标记为正式开源可用版本。Task 208 已确认 Quickstart 骨架可用，Task 210 已补齐 doctor / run preflight 与失败 exit code，Task 211 已补齐 backup / restore / schema ledger；真实 Ch1-3 成功运行、wheel smoke、run bundle 和 profile validate 仍在 V11 后续任务中补齐。
 
 ## 环境要求
 
@@ -182,6 +182,33 @@ songyan export --project-id <project_id> --by volume --format txt --output expor
 
 如果没有 accepted 章节，`export` 会失败并提示没有可导出的 accepted 章节。这不是数据丢失，而是说明项目还没有通过接收门槛的正文。
 
+## 备份与恢复
+
+`export` 只导出 accepted 正文，不保存可续跑状态。需要迁移或保护项目资产时，使用 `backup`：
+
+```powershell
+songyan backup --project-id <project_id> --output backups/
+```
+
+资产包是 zip，默认包含：
+
+- `manifest.json`
+- `db/songyan.db`
+- `config/config.summary.json`
+- `runs/project_runs.json`
+- `logs/index.json`
+
+默认不包含 `.env` 原文、API key 或日志正文。恢复到新 DB 路径：
+
+```powershell
+songyan restore --backup backups/songyan-backup-<project_id>-<timestamp>.zip --database-url sqlite:///restored.db
+$env:DATABASE_URL = "sqlite:///restored.db"
+songyan doctor --json
+songyan list-projects
+```
+
+restore 默认拒绝覆盖已有 DB；确实需要覆盖时显式加 `--force`。
+
 ## 10 章教程
 
 前三章通过后，可以扩展到 10 章：
@@ -224,6 +251,7 @@ songyan run --project-id <project_id> --chapters 1-3 --auto-confirm
 | `logs/app/` | 应用结构化日志 |
 | `logs/wrapper/` | Windows timeout wrapper 输出；路径相对执行 wrapper 时的 cwd |
 | `exports/` | 导出的 accepted 正文 |
+| `backups/` | `songyan backup` 生成的项目资产包 |
 
 常见恢复入口：
 
@@ -234,13 +262,13 @@ songyan run --project-id <project_id> --chapters 1-3 --auto-confirm
 | 中断或超时 | 使用 `--resume` 继续 | 212 |
 | 无 accepted 可导出 | 先完成至少一章 accepted，再运行 `export` | 209 |
 | 需要分享问题现场 | 当前只能分享 report 和必要日志片段；run bundle 待 Task 213 | 213 |
-| 需要备份项目资产 | 当前无 backup/restore 命令，先手动保护 DB 和 `.env` | 211 |
+| 需要备份项目资产 | 使用 `songyan backup --project-id <project_id> --output backups/` | 211 已完成 |
+| 需要恢复项目资产 | 使用 `songyan restore --backup <zip> --database-url sqlite:///restored.db` | 211 已完成 |
 
 ## 当前限制
 
 - 还没有正式 release checklist 和 wheel smoke。
 - 失败恢复分类、恢复命令和演练证据仍需 Task 212 完善。
-- backup/restore 属于 Task 211。
 - run bundle 和脱敏诊断包属于 Task 213。
 - profile validate、危险项提示和 rollback/history 属于 Task 214。
 - 在 Task 209-215 全部完成前，项目只能标记为 preview 或内部可用，不应标记为正式开源可用版本。

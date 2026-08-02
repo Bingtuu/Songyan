@@ -31,6 +31,7 @@ from songyan.models.gate_config import GateConfig
 from songyan.models.human_mark import HumanMark
 from songyan.models.project import ProjectSetting, derive_arc_boundaries
 from songyan.project_templates import ProjectInitializer, ProjectTemplateLoader
+from songyan.services.backup_service import backup_project, restore_backup
 from songyan.services.doctor_service import DoctorReport, run_doctor, run_run_preflight
 from songyan.services.export_service import (
     ExportFormat,
@@ -696,6 +697,78 @@ def export_cmd(
         )
     for item in exported.files:
         click.echo(f"  {item.path} ({item.chapter_count} 章)")
+
+
+@cli.command(name="backup")
+@click.option("--project-id", required=True, help="要备份的项目 ID")
+@click.option(
+    "--output",
+    "output_path",
+    default=Path("backups"),
+    show_default=True,
+    type=click.Path(path_type=Path),
+    help="输出目录或 .zip 文件路径",
+)
+def backup_cmd(project_id: str, output_path: Path) -> None:
+    """备份项目资产为 zip 包（DB 快照 + manifest + 运行摘要 + 日志索引）."""
+    try:
+        result = asyncio.run(backup_project(project_id, output=output_path))
+    except click.Abort:
+        raise
+    except SongyanError as exc:
+        raise click.ClickException(str(exc)) from exc
+    except _CLI_CATCHABLE as exc:
+        raise click.ClickException(str(exc)) from exc
+
+    manifest = result.manifest
+    project = manifest["project"]
+    schema = manifest["schema"]
+    click.echo(f"备份已生成: {result.backup_path}")
+    click.echo(f"  project_id: {project['project_id']}")
+    click.echo(f"  标题: {project.get('title') or '(未命名)'}")
+    click.echo(f"  schema: {schema['status']} (version={schema['schema_version']})")
+    click.echo(f"  runs: {manifest['runs']['count']}")
+    click.echo("  sensitive: .env/api_key/log_content not included")
+
+
+@cli.command(name="restore")
+@click.option(
+    "--backup",
+    "backup_path",
+    required=True,
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    help="由 songyan backup 生成的 zip 文件",
+)
+@click.option(
+    "--database-url",
+    required=True,
+    help="恢复目标 SQLite URL，例如 sqlite:///restored.db",
+)
+@click.option("--force", is_flag=True, help="允许覆盖已存在的目标 DB")
+def restore_cmd(backup_path: Path, database_url: str, force: bool) -> None:
+    """从备份资产包恢复 SQLite DB，并执行 schema 校验."""
+    try:
+        result = asyncio.run(
+            restore_backup(backup_path, database_url=database_url, force=force)
+        )
+    except click.Abort:
+        raise
+    except SongyanError as exc:
+        raise click.ClickException(str(exc)) from exc
+    except _CLI_CATCHABLE as exc:
+        raise click.ClickException(str(exc)) from exc
+
+    project = result.manifest["project"]
+    schema = result.schema
+    click.echo(f"恢复完成: {result.database_path}")
+    click.echo(f"  project_id: {project['project_id']}")
+    click.echo(f"  标题: {project.get('title') or '(未命名)'}")
+    click.echo(f"  schema: {schema['status']} (version={schema['schema_version']})")
+    click.echo("")
+    click.echo("下一步:")
+    click.echo(f"  $env:DATABASE_URL = \"{database_url}\"")
+    click.echo("  songyan doctor --json")
+    click.echo("  songyan list-projects")
 
 
 async def _resolve_run_mode_id(project_id: str, explicit_mode_id: str | None) -> str:

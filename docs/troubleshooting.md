@@ -39,7 +39,7 @@ songyan doctor --json --check-llm
 | `export` 提示没有 accepted 章节 | 项目还没有通过接收门槛的正文 | 先完成至少一章 accepted | 209 |
 | 单章失败 | 可能是 LLM、成本、上下文、质量门或 settlement 问题 | `songyan report --run-id <run_id>` | 212 |
 | 长跑卡住 | Windows 文件锁、网络或模型响应问题 | 用 timeout wrapper 包裹命令 | 212 |
-| 需要迁移项目资产 | 当前无 backup/restore 命令 | 手动保护 DB、`.env`、关键 logs | 211 |
+| 需要迁移项目资产 | 使用 backup/restore 资产包 | `songyan backup --project-id <id> --output backups/`，再 `songyan restore --backup <zip> --database-url sqlite:///restored.db` | 211 已完成 |
 | 需要提交可复现问题 | 当前无 run bundle | 先提供 report、run_id、命令、必要日志片段，注意脱敏 | 213 |
 
 ## 缺 key 的最小验证
@@ -102,6 +102,29 @@ songyan run --project-id <project_id> --chapters 1-10 --auto-confirm --on-failur
 ```powershell
 songyan run --project-id <project_id> --chapters 1-10 --auto-confirm --on-failure abort
 ```
+
+## 备份与恢复
+
+需要保护或迁移项目资产时：
+
+```powershell
+songyan backup --project-id <project_id> --output backups/
+```
+
+该命令生成 zip 资产包，包含 SQLite 快照、schema ledger、项目配置摘要、运行摘要和关键日志索引。默认不包含 `.env` 原文、API key 或日志正文。
+
+恢复到新 DB 路径：
+
+```powershell
+songyan restore --backup backups/songyan-backup-<project_id>-<timestamp>.zip --database-url sqlite:///restored.db
+$env:DATABASE_URL = "sqlite:///restored.db"
+songyan doctor --json
+songyan list-projects
+```
+
+restore 默认拒绝覆盖已有 DB；确实要覆盖时加 `--force`。
+
+`songyan export` 只导出 accepted 正文，不保存可续跑状态；不要把 export 当作项目备份。
 
 ## Windows timeout wrapper
 

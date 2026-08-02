@@ -6,11 +6,11 @@
 
 | 项 | 结论 |
 |----|------|
-| 当前阶段 | V11 已启动；Task 210 doctor / preflight 增强已完成，下一步进入 Task 211 backup / restore / schema ledger |
+| 当前阶段 | V11 已启动；Task 211 backup / restore / schema ledger 已完成，下一步进入 Task 212 失败恢复体验 |
 | V10 长窗口 | sci-fi Ch200 baseline 已冻结；xuanhuan / wuxia / urban 均完成 Ch200，总验收 accepted=200、gap=0、failed=[]、five-gate PASS、segment audit PASS、T9=0 |
 | V10 优秀度信号 | Task 196-203 已完成，严格保持 report-only，不接 Writer / CreativeDirector prompt，不进 CED 或 hard gate |
 | V10 结构 spike | KG diff、FactTrack validity interval、Storyline Tree 均完成，三者 decision=`defer`，不接 runtime / prompt / CED / hard gate |
-| 当前代码面 | V11 只做开源可用化收尾；Task 210 已将非法配置、日志路径、预算、DB/schema、LLM key 和 run 业务失败 exit code 纳入结构化诊断/preflight |
+| 当前代码面 | V11 只做开源可用化收尾；Task 211 已提供 backup / restore 资产包、schema ledger、配置摘要、运行摘要和日志索引 |
 
 ## 当前入口
 
@@ -35,10 +35,13 @@
 | `tasks/210-v11-doctor-preflight.md` | Task 210 任务书 |
 | `tasks/210-v11-doctor-preflight-DONE.md` | Task 210 DONE |
 | `docs/reports/210-doctor-preflight-evidence.md` | Task 210 命令证据 |
+| `tasks/211-v11-backup-restore-schema-ledger.md` | Task 211 任务书 |
+| `tasks/211-v11-backup-restore-schema-ledger-DONE.md` | Task 211 DONE |
+| `docs/reports/211-backup-restore-evidence.md` | Task 211 命令证据 |
 
 ## 最新归档状态
 
-- `tasks/` 保留活跃入口：`TEMPLATE.md`、`V10-README.md`、`V11-README.md`、`V11-Plan.md`；Task 208/209/210 任务书与 DONE 作为 V11 当前审计、文档闭环和 preflight 记录已落盘。
+- `tasks/` 保留活跃入口：`TEMPLATE.md`、`V10-README.md`、`V11-README.md`、`V11-Plan.md`；Task 208/209/210/211 任务书与 DONE 作为 V11 当前审计、文档闭环、preflight 和资产生命周期记录已落盘。
 - V10 单项任务书与 DONE 文档已移至 `archive/v10/tasks/`。
 - V10 JSON artifact 已移至 `archive/v10/artifacts/`。
 - V10 Markdown 报告已移至 `archive/v10/reports/`。
@@ -47,8 +50,8 @@
 
 ## 下一步
 
-1. 启动 Task 211：backup / restore / schema ledger，建立 DB、配置、运行摘要和关键日志索引的资产保护路径。
-2. 后续按证据推进 Task 212 失败恢复、Task 213 run bundle、Task 214 profile validate、Task 215 release checklist。
+1. 启动 Task 212：失败恢复体验，标准化常见失败分类、提示和恢复动作。
+2. 后续按证据推进 Task 213 run bundle、Task 214 profile validate、Task 215 release checklist。
 3. 只做开源可用化收尾，不扩张生成能力；若要使用 V10 历史证据，优先读 `archive/v10/INDEX.md`。
 
 ## 守护项
