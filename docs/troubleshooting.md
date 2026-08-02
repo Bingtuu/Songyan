@@ -101,13 +101,18 @@ songyan run --project-id <project_id> --chapters 1-10 --auto-confirm --on-failur
 
 ## Windows timeout wrapper
 
-长跑或测试卡住时：
+长跑或测试卡住时，可以用仓库脚本包一层硬超时。该 wrapper 目前不是已安装的 `songyan` 子命令；如果当前目录不是仓库根目录，请用仓库绝对路径调用。
 
 ```powershell
-powershell -File scripts/run_with_timeout.ps1 -TimeoutSec 3600 -- songyan run --project-id <project_id> --chapters 1-3 --auto-confirm
+# 在仓库根目录下
+powershell -File .\scripts\run_with_timeout.ps1 -TimeoutSec 3600 -- songyan run --project-id <project_id> --chapters 1-3 --auto-confirm
+
+# 在任意 cwd 下
+$songyanRepo = "C:\path\to\Songyan"
+powershell -File "$songyanRepo\scripts\run_with_timeout.ps1" -TimeoutSec 3600 -- songyan run --project-id <project_id> --chapters 1-3 --auto-confirm
 ```
 
-wrapper 输出会写入：
+wrapper 输出会写入执行 wrapper 时 cwd 下的：
 
 ```text
 logs/wrapper/

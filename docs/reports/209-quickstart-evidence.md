@@ -16,6 +16,8 @@
 | run_id | `run-0781e756` |
 | 真实 LLM Ch1-3 | 未执行；Task 209 不消耗真实 API 预算，后续由 Task 210/215 做 release smoke |
 
+说明：下文涉及 `scripts/run_with_timeout.ps1` 的命令应从仓库 cwd 执行；如果当前目录是隔离 cwd 或其他非仓库目录，请使用仓库绝对路径调用该脚本。该 wrapper 目前不是已安装的 `songyan` 子命令，wheel / 非仓库 cwd 的正式 smoke 仍路由至 Task 215。
+
 ## 命令证据
 
 ### 1. CLI help

@@ -11,7 +11,7 @@ Songyan 处于 V11 开源可用化收尾阶段。当前版本可以作为 previe
 - Python >= 3.11。
 - 一个兼容 OpenAI 接口的 LLM endpoint。默认配置使用 DeepSeek。
 - 可写的本地目录，用于 SQLite DB、日志和导出文件。
-- Windows 用户建议先使用 PowerShell，并在长跑时使用 `scripts/run_with_timeout.ps1`。
+- Windows 用户建议先使用 PowerShell，并在长跑时使用仓库脚本 `scripts/run_with_timeout.ps1`。如果当前目录不是仓库根目录，请用仓库绝对路径调用该脚本。
 
 ## 安装
 
@@ -121,10 +121,15 @@ songyan list-projects
 songyan run --project-id <project_id> --chapters 1-3 --auto-confirm
 ```
 
-Windows 下建议用硬超时 wrapper：
+Windows 下建议用硬超时 wrapper。该 wrapper 目前是仓库脚本，不是已安装的 `songyan` 子命令；如果当前目录不是仓库根目录，请改用仓库绝对路径。
 
 ```powershell
-powershell -File scripts/run_with_timeout.ps1 -TimeoutSec 3600 -- songyan run --project-id <project_id> --chapters 1-3 --auto-confirm
+# 在仓库根目录下
+powershell -File .\scripts\run_with_timeout.ps1 -TimeoutSec 3600 -- songyan run --project-id <project_id> --chapters 1-3 --auto-confirm
+
+# 在任意 cwd 下
+$songyanRepo = "C:\path\to\Songyan"
+powershell -File "$songyanRepo\scripts\run_with_timeout.ps1" -TimeoutSec 3600 -- songyan run --project-id <project_id> --chapters 1-3 --auto-confirm
 ```
 
 运行完成后记录输出里的：
@@ -214,7 +219,7 @@ songyan run --project-id <project_id> --chapters 1-3 --auto-confirm
 | `logs/chapter_runs/<run_id>.jsonl` | 逐章运行结构化日志 |
 | `logs/reports/report-<run_id>.md` | 人类可读运行报告 |
 | `logs/app/` | 应用结构化日志 |
-| `logs/wrapper/` | Windows timeout wrapper 输出 |
+| `logs/wrapper/` | Windows timeout wrapper 输出；路径相对执行 wrapper 时的 cwd |
 | `exports/` | 导出的 accepted 正文 |
 
 常见恢复入口：

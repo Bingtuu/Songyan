@@ -244,10 +244,15 @@ songyan report --run-id <run_id>
 songyan export --project-id <project_id> --chapters 1-3 --format md --output exports/
 ```
 
-Windows 下长跑建议用硬超时 wrapper：
+Windows 下长跑建议用硬超时 wrapper。该 wrapper 目前是仓库脚本，不是已安装的 `songyan` 子命令；若当前目录不是仓库根目录，请使用仓库绝对路径调用：
 
 ```powershell
-powershell -File scripts/run_with_timeout.ps1 -TimeoutSec 3600 -- songyan run --project-id <project_id> --chapters 1-3 --auto-confirm
+# 在仓库根目录下
+powershell -File .\scripts\run_with_timeout.ps1 -TimeoutSec 3600 -- songyan run --project-id <project_id> --chapters 1-3 --auto-confirm
+
+# 在任意 cwd 下
+$songyanRepo = "C:\path\to\Songyan"
+powershell -File "$songyanRepo\scripts\run_with_timeout.ps1" -TimeoutSec 3600 -- songyan run --project-id <project_id> --chapters 1-3 --auto-confirm
 ```
 
 更完整的 10 章教程、成本预算、日志位置和恢复入口见 [`docs/quickstart.md`](docs/quickstart.md)。故障排查见 [`docs/troubleshooting.md`](docs/troubleshooting.md)。
@@ -363,10 +368,13 @@ mypy src/
 不会。isolate 模式下单章失败被隔离记录，后续章节继续；检测到真实质量退化时才自动暂停，人工判断后可 `--resume` 继续。
 
 **Q: Windows 下测试/长跑卡住怎么办？**
-用防卡 wrapper 包一层硬超时：
+用防卡 wrapper 包一层硬超时。当前 wrapper 位于仓库 `scripts/` 目录；非仓库 cwd 下请用绝对路径：
 
 ```powershell
-powershell -File scripts/run_with_timeout.ps1 -TimeoutSec 3600 -- <你的命令>
+powershell -File .\scripts\run_with_timeout.ps1 -TimeoutSec 3600 -- <你的命令>
+
+$songyanRepo = "C:\path\to\Songyan"
+powershell -File "$songyanRepo\scripts\run_with_timeout.ps1" -TimeoutSec 3600 -- <你的命令>
 ```
 
 测试环境下也可以把 `CHECKPOINTER_MODE` 设为 `memory`，减少本地 checkpoint 持久化带来的干扰。
