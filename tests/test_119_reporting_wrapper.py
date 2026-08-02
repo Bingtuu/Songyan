@@ -67,15 +67,16 @@ class TestReportCli:
         assert "Missing option" in result.output or "Required" in result.output
 
     def test_report_cli_no_jsonl_warns(self, runner: CliRunner) -> None:
-        """JSONL 不存在时 read_run_logs 返回 []，CLI 警告但返回 0（生成空报告）。"""
+        """JSONL 不存在时应返回非 0，并提示恢复路径。"""
         with patch(
             "songyan.cli.main.read_run_logs",
             return_value=[],
         ):
             result = runner.invoke(cli, ["report", "--run-id", "nonexistent-run-id"])
-        # 返回 0（空报告），但输出警告
-        assert result.exit_code == 0
-        assert "警告" in result.output or "无" in result.output
+        assert result.exit_code == 1
+        assert "未找到运行日志" in result.output
+        assert "[missing_artifact]" in result.output
+        assert "Get-ChildItem logs/chapter_runs" in result.output
 
     def test_report_cli_generates_report(self, runner: CliRunner, tmp_path: Path) -> None:
         """传入有效的 run-id（mock read_run_logs）时应生成报告。"""
@@ -104,7 +105,8 @@ class TestReportCli:
             return_value=[],
         ):
             result = runner.invoke(cli, ["report", "--run-id", "empty-run"])
-            assert "警告" in result.output or "无" in result.output
+            assert result.exit_code == 1
+            assert "[missing_artifact]" in result.output
 
 
 class TestValidateReportConsistency:

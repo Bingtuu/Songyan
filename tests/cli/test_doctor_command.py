@@ -67,6 +67,8 @@ def test_doctor_fails_when_llm_key_missing(
     assert result.exit_code == 1
     assert "[FAIL] llm.key" in result.output
     assert "LLM_API_KEY" in result.output
+    assert "[config_error]" in result.output
+    assert "songyan doctor --json --init-db" in result.output
 
 
 def test_doctor_fails_on_non_sqlite_database_url(

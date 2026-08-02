@@ -1,6 +1,6 @@
 # Songyan Troubleshooting
 
-> 当前文档是 V11 preview 阶段的故障入口。它记录现有可操作步骤，也明确哪些问题仍要进入 Task 210-215 修复。
+> 当前文档是 V11 preview 阶段的故障入口。它记录现有可操作步骤，也明确哪些问题仍要进入 Task 213-215 修复。
 
 ## 先跑 doctor
 
@@ -26,21 +26,18 @@ songyan doctor --json --check-llm
 
 ## 常见问题路由
 
-| 现象 | 当前判断 | 先做什么 | 后续任务 |
-|------|----------|----------|----------|
-| `LLM API key is not configured` | 没有配置 `LLM_API_KEY` | 编辑 `.env` 或设置环境变量，再运行 `songyan doctor --init-db` | 210 已完成 |
-| `database does not exist` | DB 尚未初始化 | 运行 `songyan doctor --init-db` | 210 |
-| `Unsupported database_url` | 当前只支持 `sqlite:///...` | 修改 `DATABASE_URL=sqlite:///songyan.db` | 210 已完成 |
-| 非法 `CHECKPOINTER_MODE` | doctor / preflight 会结构化报告 `runtime.checkpointer` fail | 改为 `sqlite` 或 `memory` | 210 已完成 |
-| 非法 `SONGYAN_RUN_COST_BUDGET` | doctor / preflight 会结构化报告 `runtime.budget` fail | 改为 `0` 或正数 | 210 已完成 |
-| `songyan run` preflight fail | run 前置条件未满足，pipeline 未启动 | 按 preflight 输出修正配置、DB 或 project_id | 210 已完成 |
-| `songyan run` 输出 `run_id` 后 exit code 非 0 | pipeline 已启动但业务失败、partial 或 failed | 以 `run_id` 生成 report，按失败原因处理 | 212 |
-| `report` 提示没有 JSONL | run log 不存在或 run_id 错误 | 检查 `logs/chapter_runs/` 和 run 输出 | 213 |
-| `export` 提示没有 accepted 章节 | 项目还没有通过接收门槛的正文 | 先完成至少一章 accepted | 209 |
-| 单章失败 | 可能是 LLM、成本、上下文、质量门或 settlement 问题 | `songyan report --run-id <run_id>` | 212 |
-| 长跑卡住 | Windows 文件锁、网络或模型响应问题 | 用 timeout wrapper 包裹命令 | 212 |
-| 需要迁移项目资产 | 使用 backup/restore 资产包 | `songyan backup --project-id <id> --output backups/`，再 `songyan restore --backup <zip> --database-url sqlite:///restored.db` | 211 已完成 |
-| 需要提交可复现问题 | 当前无 run bundle | 先提供 report、run_id、命令、必要日志片段，注意脱敏 | 213 |
+| 分类 | 现象 | 先做什么 | 状态 |
+|------|------|----------|------|
+| `config_error` | 缺 `LLM_API_KEY`、非法 `CHECKPOINTER_MODE`、非法预算或 LLM 配置 | 修正 `.env` / 环境变量，再运行 `songyan doctor --json --init-db` | 212 已完成 |
+| `database_error` | DB 不存在、schema 缺失、非法 `DATABASE_URL` | 设置 `DATABASE_URL=sqlite:///songyan.db`，运行 `songyan doctor --json --init-db` | 212 已完成 |
+| `preflight_failed` | `songyan run` 输出 `Songyan run preflight` | 按 FAIL 项修正配置、DB、资源或 project_id | 212 已完成 |
+| `run_failed` | `songyan run` 输出 `run_id` 后 exit code 非 0 | 运行 `songyan report --run-id <run_id>` | 212 已完成 |
+| `missing_artifact` | `report` 找不到 JSONL / run log | 检查 `logs/chapter_runs/` 和 run 输出中的 run_id | 212 已完成 |
+| `no_accepted_content` | `export` 提示没有 accepted 章节 | 先生成并 accepted 至少一章，再运行 `export` | 212 已完成 |
+| `asset_restore_error` | backup project 不存在、restore 坏包、restore 目标 DB 已存在 | `songyan list-projects`、重新 backup，或确认后用 `restore --force` | 212 已完成 |
+| 提交可复现问题 | 当前无自动脱敏 run bundle | 先提供 report、run_id、命令、必要日志片段，注意脱敏 | 213 |
+
+CLI 的 human 输出会在常见失败后追加 `恢复建议:` 段，包含上述分类和可执行命令。`--json` 输出保持机器可读，恢复说明看对应 check 的 `hint` 和本文档。
 
 ## 缺 key 的最小验证
 
@@ -84,6 +81,14 @@ songyan report --run-id <run_id>
 - 失败原因是否指向缺 key、endpoint、成本、上下文、质量门或 settlement。
 - `logs/chapter_runs/<run_id>.jsonl` 是否存在。
 - `logs/app/` 中是否有同一时间段的错误。
+
+若 `songyan report --run-id <run_id>` 输出 `missing_artifact`，说明 run log 不存在或 run_id 写错。先运行：
+
+```powershell
+Get-ChildItem logs/chapter_runs
+```
+
+再用实际存在的 `<run_id>.jsonl` 文件名重试。
 
 如果是中断或超时，尝试：
 

@@ -445,6 +445,9 @@ class TestRunCommandExperience:
         assert calls["preflight_project_id"] == "proj-preflight"
         assert "Songyan run preflight" in result.output
         assert "[FAIL] llm.key" in result.output
+        assert "[preflight_failed]" in result.output
+        assert "[config_error]" in result.output
+        assert "songyan doctor --json --init-db" in result.output
 
     def test_run_partial_result_exits_nonzero_but_keeps_run_id(
         self,
@@ -490,6 +493,8 @@ class TestRunCommandExperience:
         assert "运行完成: 1/2 章成功" in result.output
         assert "失败: [2]" in result.output
         assert "run_id: run-partial" in result.output
+        assert "[run_failed]" in result.output
+        assert "songyan report --run-id run-partial" in result.output
 
 
 # ---------------------------------------------------------------------------

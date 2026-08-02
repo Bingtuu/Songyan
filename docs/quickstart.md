@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-Songyan 处于 V11 开源可用化收尾阶段。当前版本可以作为 preview 或内部可用版本验证，不应标记为正式开源可用版本。Task 208 已确认 Quickstart 骨架可用，Task 210 已补齐 doctor / run preflight 与失败 exit code，Task 211 已补齐 backup / restore / schema ledger；真实 Ch1-3 成功运行、wheel smoke、run bundle 和 profile validate 仍在 V11 后续任务中补齐。
+Songyan 处于 V11 开源可用化收尾阶段。当前版本可以作为 preview 或内部可用版本验证，不应标记为正式开源可用版本。Task 208 已确认 Quickstart 骨架可用，Task 210 已补齐 doctor / run preflight 与失败 exit code，Task 211 已补齐 backup / restore / schema ledger，Task 212 已补齐常见失败分类和恢复建议；真实 Ch1-3 成功运行、wheel smoke、run bundle 和 profile validate 仍在 V11 后续任务中补齐。
 
 ## 环境要求
 
@@ -61,7 +61,7 @@ CHECKPOINTER_MODE=memory
 SONGYAN_RUN_COST_BUDGET=10
 ```
 
-`0` 表示不启用单次运行成本预算。预算触发后的恢复体验将在 Task 212 继续完善。
+`0` 表示不启用单次运行成本预算。预算相关失败会通过 `doctor` / preflight / report 输出恢复建议。
 
 ## 自检
 
@@ -257,10 +257,10 @@ songyan run --project-id <project_id> --chapters 1-3 --auto-confirm
 
 | 场景 | 当前动作 | 后续任务 |
 |------|----------|----------|
-| 缺 API key | 设置 `LLM_API_KEY` 后重新运行 `doctor --init-db`；run preflight 会在进入 pipeline 前阻断 | 210 已完成 |
-| Ch1 生成失败 | 若输出了 `run_id`，先运行 `songyan report --run-id <run_id>` 看失败原因 | 212 |
-| 中断或超时 | 使用 `--resume` 继续 | 212 |
-| 无 accepted 可导出 | 先完成至少一章 accepted，再运行 `export` | 209 |
+| 缺 API key | 设置 `LLM_API_KEY` 后重新运行 `doctor --init-db`；run preflight 会在进入 pipeline 前阻断 | 212 已完成 |
+| Ch1 生成失败 | 若输出了 `run_id`，先运行 `songyan report --run-id <run_id>` 看失败原因 | 212 已完成 |
+| 中断或超时 | 使用 `--resume` 继续；长跑用 timeout wrapper | 212 已完成 |
+| 无 accepted 可导出 | 先完成至少一章 accepted，再运行 `export` | 212 已完成 |
 | 需要分享问题现场 | 当前只能分享 report 和必要日志片段；run bundle 待 Task 213 | 213 |
 | 需要备份项目资产 | 使用 `songyan backup --project-id <project_id> --output backups/` | 211 已完成 |
 | 需要恢复项目资产 | 使用 `songyan restore --backup <zip> --database-url sqlite:///restored.db` | 211 已完成 |
@@ -268,7 +268,6 @@ songyan run --project-id <project_id> --chapters 1-3 --auto-confirm
 ## 当前限制
 
 - 还没有正式 release checklist 和 wheel smoke。
-- 失败恢复分类、恢复命令和演练证据仍需 Task 212 完善。
 - run bundle 和脱敏诊断包属于 Task 213。
 - profile validate、危险项提示和 rollback/history 属于 Task 214。
 - 在 Task 209-215 全部完成前，项目只能标记为 preview 或内部可用，不应标记为正式开源可用版本。

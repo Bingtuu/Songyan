@@ -127,6 +127,8 @@ def test_restore_refuses_existing_database_without_force(
 
     assert restore_result.exit_code != 0
     assert "already exists" in restore_result.output or "已存在" in restore_result.output
+    assert "[asset_restore_error]" in restore_result.output
+    assert "--force" in restore_result.output
 
 
 def test_backup_missing_project_fails(
@@ -147,6 +149,8 @@ def test_backup_missing_project_fails(
 
     assert result.exit_code != 0
     assert "project not found" in result.output
+    assert "[asset_restore_error]" in result.output
+    assert "songyan list-projects" in result.output
 
 
 def test_restore_bad_zip_fails(runner: CliRunner, tmp_path: Path) -> None:
@@ -166,3 +170,5 @@ def test_restore_bad_zip_fails(runner: CliRunner, tmp_path: Path) -> None:
 
     assert result.exit_code != 0
     assert "not a valid zip" in result.output
+    assert "[asset_restore_error]" in result.output
+    assert "songyan backup --project-id <project_id> --output backups/" in result.output

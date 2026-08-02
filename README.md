@@ -311,7 +311,7 @@ powershell -File "$songyanRepo\scripts\run_with_timeout.ps1" -TimeoutSec 3600 --
 | 长篇稳定性 | 科幻 220 章；玄幻、武侠、都市 Ch200 验证完成 |
 | 多体裁运行时 | 已支持按体裁配置上下文预算、质量阈值和伏笔调度 |
 | 生产化工具 | CLI、导出、doctor、成本追踪、质量报告、CI 已接入 |
-| 当前重点 | V11 开源可用化收尾；Task 211 已完成 backup / restore / schema ledger，下一步 Task 212 失败恢复体验 |
+| 当前重点 | V11 开源可用化收尾；Task 212 已完成失败恢复体验，下一步 Task 213 run bundle 诊断包 |
 | V10 收口报告 | [`archive/v10/reports/207-v10-closure-report.md`](archive/v10/reports/207-v10-closure-report.md) |
 | 下一阶段入口 | [`tasks/V11-README.md`](tasks/V11-README.md) |
 
@@ -398,6 +398,7 @@ powershell -File "$songyanRepo\scripts\run_with_timeout.ps1" -TimeoutSec 3600 --
 - [`docs/reports/209-quickstart-evidence.md`](docs/reports/209-quickstart-evidence.md) — Task 209 Quickstart 命令证据。
 - [`docs/reports/210-doctor-preflight-evidence.md`](docs/reports/210-doctor-preflight-evidence.md) — Task 210 doctor / preflight 命令证据。
 - [`docs/reports/211-backup-restore-evidence.md`](docs/reports/211-backup-restore-evidence.md) — Task 211 backup / restore 命令证据。
+- [`docs/reports/212-failure-recovery-evidence.md`](docs/reports/212-failure-recovery-evidence.md) — Task 212 失败恢复命令证据。
 - [`AGENTS.md`](AGENTS.md) — 开发规范和工程纪律。
 - [`archive/`](archive/) — 历史任务、报告和归档资料。
 

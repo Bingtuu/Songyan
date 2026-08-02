@@ -48,6 +48,16 @@ from songyan.services.profile_service import (
     render_profile_view,
     upsert_profile_overrides,
 )
+from songyan.services.recovery_service import (
+    advice_for_backup_error,
+    advice_for_doctor_checks,
+    advice_for_export_error,
+    advice_for_restore_error,
+    missing_artifact_advice,
+    preflight_failed_advice,
+    render_recovery_advice,
+    run_failed_advice,
+)
 from songyan.utils.logging_setup import configure_logging
 from songyan.utils.process_exit import force_exit_after_run_if_requested
 from songyan.workflows.phase2_graph import run_project_pipeline
@@ -151,6 +161,10 @@ def _render_doctor_report(report: DoctorReport) -> str:
     lines.append(
         f"Summary: {summary['pass']} PASS, {summary['warn']} WARN, {summary['fail']} FAIL"
     )
+    if report.status == "fail":
+        recovery = render_recovery_advice(advice_for_doctor_checks(report.checks))
+        if recovery:
+            lines.append(recovery)
     return "\n".join(lines)
 
 
@@ -168,6 +182,11 @@ def _render_preflight_report(report: DoctorReport) -> str:
     lines.append(
         f"Summary: {summary['pass']} PASS, {summary['warn']} WARN, {summary['fail']} FAIL"
     )
+    recovery_advices = advice_for_doctor_checks(report.checks)
+    if recovery_advices:
+        lines.append(
+            render_recovery_advice([preflight_failed_advice(), *recovery_advices])
+        )
     return "\n".join(lines)
 
 
@@ -685,7 +704,11 @@ def export_cmd(
     except click.Abort:
         raise
     except SongyanError as exc:
-        raise click.ClickException(str(exc)) from exc
+        recovery = render_recovery_advice(
+            advice_for_export_error(str(exc), project_id)
+        )
+        message = str(exc) + (recovery if recovery else "")
+        raise click.ClickException(message) from exc
     except _CLI_CATCHABLE as exc:
         raise click.ClickException(str(exc)) from exc
 
@@ -716,7 +739,9 @@ def backup_cmd(project_id: str, output_path: Path) -> None:
     except click.Abort:
         raise
     except SongyanError as exc:
-        raise click.ClickException(str(exc)) from exc
+        recovery = render_recovery_advice(advice_for_backup_error(str(exc)))
+        message = str(exc) + (recovery if recovery else "")
+        raise click.ClickException(message) from exc
     except _CLI_CATCHABLE as exc:
         raise click.ClickException(str(exc)) from exc
 
@@ -754,7 +779,9 @@ def restore_cmd(backup_path: Path, database_url: str, force: bool) -> None:
     except click.Abort:
         raise
     except SongyanError as exc:
-        raise click.ClickException(str(exc)) from exc
+        recovery = render_recovery_advice(advice_for_restore_error(str(exc)))
+        message = str(exc) + (recovery if recovery else "")
+        raise click.ClickException(message) from exc
     except _CLI_CATCHABLE as exc:
         raise click.ClickException(str(exc)) from exc
 
@@ -894,6 +921,8 @@ def run(
             if result.final_status == "completed" and not result.chapters_failed
             else 1
         )
+        if exit_code:
+            click.echo(render_recovery_advice([run_failed_advice(result.run_id)]))
         force_exit_after_run_if_requested(exit_code=exit_code)
         if exit_code:
             raise click.exceptions.Exit(exit_code)
@@ -982,8 +1011,9 @@ def report_cmd(
     try:
         logs = read_run_logs(run_id)
         if not logs:
-            click.echo("警告: 未从 JSONL 中读取到任何日志记录")
-            return
+            click.echo(f"错误: 未找到运行日志 logs/chapter_runs/{run_id}.jsonl")
+            click.echo(render_recovery_advice([missing_artifact_advice(run_id)]))
+            raise click.exceptions.Exit(1)
 
         # 确定章节范围
         chapter_range: tuple[int, int] | None = None
@@ -1026,6 +1056,8 @@ def report_cmd(
         click.echo(f"报告已生成: {output_path}")
 
     except click.Abort:
+        raise
+    except click.exceptions.Exit:
         raise
     except _CLI_CATCHABLE as exc:
         raise click.ClickException(str(exc)) from exc
