@@ -1,6 +1,6 @@
 # Songyan Troubleshooting
 
-> 当前文档是 V11 preview 阶段的故障入口。它记录现有可操作步骤，也明确哪些问题仍要进入 Task 214-215 修复。
+> 当前文档是 Songyan 故障入口。提交问题前请优先生成脱敏 run bundle，或按 `docs/minimal-repro.md` 准备最小复现。
 
 ## 先跑 doctor
 
@@ -36,6 +36,7 @@ songyan doctor --json --check-llm
 | `no_accepted_content` | `export` 提示没有 accepted 章节 | 先生成并 accepted 至少一章，再运行 `export` | 212 已完成 |
 | `asset_restore_error` | backup project 不存在、restore 坏包、restore 目标 DB 已存在 | `songyan list-projects`、重新 backup，或确认后用 `restore --force` | 212 已完成 |
 | 提交可复现问题 | 使用自动脱敏 run bundle | `songyan bundle-run --run-id <run_id> --output bundles/` | 213 已完成 |
+| profile 配置风险 | 运行时 profile 待修改、预算/连续性参数可疑或疑似误改 | 先 `profile validate` / `upsert --dry-run`，误改后用 `profile history` + `profile rollback` | 214 已完成 |
 
 CLI 的 human 输出会在常见失败后追加 `恢复建议:` 段，包含上述分类和可执行命令。`--json` 输出保持机器可读，恢复说明看对应 check 的 `hint` 和本文档。
 
@@ -131,6 +132,32 @@ restore 默认拒绝覆盖已有 DB；确实要覆盖时加 `--force`。
 
 `songyan export` 只导出 accepted 正文，不保存可续跑状态；不要把 export 当作项目备份。
 
+## Profile 配置误改
+
+修改 `GenreRuntimeProfile` 前先校验当前 effective profile：
+
+```powershell
+songyan profile validate --genre <genre> --json
+```
+
+校验待写入 override：
+
+```powershell
+songyan profile validate --genre <genre> --set base_budget=15000 --json
+songyan profile upsert --genre <genre> --set base_budget=15000 --dry-run --json
+```
+
+如果 `status=fail`，不要写入；按 `issues[].recommendation` 修正字段名、类型或范围。如果 `status=warn`，表示仍可写入，但需要确认预算、上下文裁剪或连续性敏感度风险。
+
+查看历史并回滚：
+
+```powershell
+songyan profile history --genre <genre>
+songyan profile rollback --genre <genre> --history-id <history_id>
+```
+
+`rollback` 会恢复到指定 history 记录变更前的 override 状态，并追加一条新的 rollback history。
+
 ## Windows timeout wrapper
 
 长跑或测试卡住时，可以用仓库脚本包一层硬超时。该 wrapper 目前不是已安装的 `songyan` 子命令；如果当前目录不是仓库根目录，请用仓库绝对路径调用。
@@ -176,4 +203,4 @@ bundle zip 包含 `bundle.json`、`bundle.md` 和 `logs/index.json`。默认不�
 - 完整私密书稿。
 - 未脱敏的绝对路径或私密本地目录。
 
-Issue 模板会在 Task 215 收口。
+更多 issue 格式要求见 `docs/minimal-repro.md`。

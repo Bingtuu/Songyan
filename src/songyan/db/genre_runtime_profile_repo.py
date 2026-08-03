@@ -18,6 +18,12 @@ continuity）按子模型整体替换：DB 提供则整体替换，不提供则�
 
 from __future__ import annotations
 
+import uuid
+from dataclasses import dataclass
+from datetime import datetime
+from sqlite3 import Row
+from typing import TYPE_CHECKING, Any
+
 import structlog
 
 from songyan.db.connection import get_db
@@ -25,6 +31,9 @@ from songyan.exceptions import SongyanError
 from songyan.models.genre_runtime_profile import GenreRuntimeProfile
 from songyan.utils.json_helpers import from_json as _from_json
 from songyan.utils.json_helpers import to_json as _to_json
+
+if TYPE_CHECKING:
+    import aiosqlite
 
 logger = structlog.get_logger(__name__)
 
@@ -118,6 +127,41 @@ class GenreRuntimeProfileError(SongyanError):
     """Genre runtime profile repository error."""
 
 
+@dataclass(frozen=True)
+class GenreRuntimeProfileHistoryRow:
+    """One append-only profile history row."""
+
+    history_id: str
+    genre: str
+    action: str
+    before_profile: GenreRuntimeProfile | None
+    after_profile: GenreRuntimeProfile | None
+    diff: dict[str, Any]
+    validation: dict[str, Any]
+    created_at: str
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a JSON-serializable representation."""
+        return {
+            "history_id": self.history_id,
+            "genre": self.genre,
+            "action": self.action,
+            "before_profile": (
+                self.before_profile.model_dump(mode="json")
+                if self.before_profile is not None
+                else None
+            ),
+            "after_profile": (
+                self.after_profile.model_dump(mode="json")
+                if self.after_profile is not None
+                else None
+            ),
+            "diff": self.diff,
+            "validation": self.validation,
+            "created_at": self.created_at,
+        }
+
+
 class GenreRuntimeProfileRepository:
     """DB 读写 genre_runtime_profiles 表."""
 
@@ -169,6 +213,137 @@ class GenreRuntimeProfileRepository:
             if data:
                 out.append(GenreRuntimeProfile.model_validate(data))
         return out
+
+    async def append_history(
+        self,
+        *,
+        genre: str,
+        action: str,
+        before_profile: GenreRuntimeProfile | None,
+        after_profile: GenreRuntimeProfile | None,
+        diff: dict[str, Any],
+        validation: dict[str, Any],
+    ) -> GenreRuntimeProfileHistoryRow:
+        """Append one profile change history row."""
+        history_id = f"ph-{uuid.uuid4().hex[:12]}"
+        before_json = (
+            _to_json(before_profile.model_dump(mode="json"))
+            if before_profile is not None
+            else None
+        )
+        after_json = (
+            _to_json(after_profile.model_dump(mode="json"))
+            if after_profile is not None
+            else None
+        )
+        diff_json = _to_json(diff)
+        validation_json = _to_json(validation)
+        created_at = datetime.now().isoformat()
+        async with get_db() as conn:
+            await conn.execute(
+                """INSERT INTO genre_runtime_profile_history (
+                    history_id, genre, action, before_profile_json,
+                    after_profile_json, diff_json, validation_json, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    history_id,
+                    genre,
+                    action,
+                    before_json,
+                    after_json,
+                    diff_json,
+                    validation_json,
+                    created_at,
+                ),
+            )
+            await conn.commit()
+        return GenreRuntimeProfileHistoryRow(
+            history_id=history_id,
+            genre=genre,
+            action=action,
+            before_profile=before_profile,
+            after_profile=after_profile,
+            diff=diff,
+            validation=validation,
+            created_at=created_at,
+        )
+
+    async def upsert_with_history(
+        self,
+        profile: GenreRuntimeProfile,
+        *,
+        action: str,
+        diff: dict[str, Any],
+        validation: dict[str, Any],
+    ) -> GenreRuntimeProfileHistoryRow:
+        """Atomically write a profile override and its append-only history row."""
+        payload = _to_json(profile.model_dump(mode="json"))
+        async with get_db() as conn:
+            try:
+                await conn.execute("BEGIN IMMEDIATE")
+                cursor = await conn.execute(
+                    "SELECT profile_json FROM genre_runtime_profiles WHERE genre = ?",
+                    (profile.genre,),
+                )
+                row = await cursor.fetchone()
+                before_profile = _profile_from_json(row[0]) if row and row[0] else None
+                history = _make_history_row(
+                    genre=profile.genre,
+                    action=action,
+                    before_profile=before_profile,
+                    after_profile=profile,
+                    diff=diff,
+                    validation=validation,
+                )
+                await conn.execute(
+                    """INSERT INTO genre_runtime_profiles (genre, version, profile_json)
+                       VALUES (?, ?, ?)
+                       ON CONFLICT(genre) DO UPDATE SET
+                           version = excluded.version,
+                           profile_json = excluded.profile_json,
+                           updated_at = datetime('now')""",
+                    (profile.genre, profile.version, payload),
+                )
+                await _insert_history(conn, history)
+                await conn.commit()
+            except Exception as exc:  # noqa: BLE001 - 归一化为领域异常并保持原子回滚
+                await conn.rollback()
+                msg = f"failed to upsert genre runtime profile with history: {profile.genre}"
+                raise GenreRuntimeProfileError(msg) from exc
+        return history
+
+    async def list_history(
+        self,
+        genre: str,
+        *,
+        limit: int = 20,
+    ) -> list[GenreRuntimeProfileHistoryRow]:
+        """List recent profile history rows for one genre."""
+        async with get_db() as conn:
+            conn.row_factory = Row
+            cursor = await conn.execute(
+                """SELECT * FROM genre_runtime_profile_history
+                   WHERE genre = ?
+                   ORDER BY datetime(created_at) DESC, history_id DESC
+                   LIMIT ?""",
+                (genre, limit),
+            )
+            rows = await cursor.fetchall()
+        return [_history_from_row(row) for row in rows]
+
+    async def get_history(
+        self,
+        history_id: str,
+    ) -> GenreRuntimeProfileHistoryRow | None:
+        """Get one profile history row by id."""
+        async with get_db() as conn:
+            conn.row_factory = Row
+            cursor = await conn.execute(
+                "SELECT * FROM genre_runtime_profile_history WHERE history_id = ?",
+                (history_id,),
+            )
+            row = await cursor.fetchone()
+        return _history_from_row(row) if row else None
 
 
 def load_profile_from_registry(genre: str | None) -> GenreRuntimeProfile:
@@ -234,3 +409,78 @@ async def load_profile(genre: str | None) -> GenreRuntimeProfile:
     }
     merged = {**base_data, **diff}
     return GenreRuntimeProfile.model_validate(merged)
+
+
+def _profile_from_json(raw: str | None) -> GenreRuntimeProfile | None:
+    if not raw:
+        return None
+    data = _from_json(raw, default=None)
+    if not data:
+        return None
+    return GenreRuntimeProfile.model_validate(data)
+
+
+def _make_history_row(
+    *,
+    genre: str,
+    action: str,
+    before_profile: GenreRuntimeProfile | None,
+    after_profile: GenreRuntimeProfile | None,
+    diff: dict[str, Any],
+    validation: dict[str, Any],
+) -> GenreRuntimeProfileHistoryRow:
+    return GenreRuntimeProfileHistoryRow(
+        history_id=f"ph-{uuid.uuid4().hex[:12]}",
+        genre=genre,
+        action=action,
+        before_profile=before_profile,
+        after_profile=after_profile,
+        diff=diff,
+        validation=validation,
+        created_at=datetime.now().isoformat(),
+    )
+
+
+async def _insert_history(
+    conn: aiosqlite.Connection,
+    row: GenreRuntimeProfileHistoryRow,
+) -> None:
+    before_json = (
+        _to_json(row.before_profile.model_dump(mode="json"))
+        if row.before_profile is not None
+        else None
+    )
+    after_json = (
+        _to_json(row.after_profile.model_dump(mode="json"))
+        if row.after_profile is not None
+        else None
+    )
+    await conn.execute(
+        """INSERT INTO genre_runtime_profile_history (
+            history_id, genre, action, before_profile_json,
+            after_profile_json, diff_json, validation_json, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+        (
+            row.history_id,
+            row.genre,
+            row.action,
+            before_json,
+            after_json,
+            _to_json(row.diff),
+            _to_json(row.validation),
+            row.created_at,
+        ),
+    )
+
+
+def _history_from_row(row: Row) -> GenreRuntimeProfileHistoryRow:
+    return GenreRuntimeProfileHistoryRow(
+        history_id=row["history_id"],
+        genre=row["genre"],
+        action=row["action"],
+        before_profile=_profile_from_json(row["before_profile_json"]),
+        after_profile=_profile_from_json(row["after_profile_json"]),
+        diff=_from_json(row["diff_json"], default={}) or {},
+        validation=_from_json(row["validation_json"], default={}) or {},
+        created_at=row["created_at"],
+    )

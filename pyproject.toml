@@ -39,6 +39,11 @@ dependencies = [
     "numpy>=1.24",
 ]
 
+[project.urls]
+Homepage = "https://github.com/Bingtuu/Songyan"
+Documentation = "https://github.com/Bingtuu/Songyan#readme"
+Issues = "https://github.com/Bingtuu/Songyan/issues"
+
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0",
@@ -87,4 +92,6 @@ strict = true
 warn_return_any = true
 warn_unused_configs = true
 ignore_missing_imports = true
+# Research / report-only eval modules are not part of the runtime release gate.
+exclude = ["^src/songyan/evals/"]
 

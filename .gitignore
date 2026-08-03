@@ -19,10 +19,11 @@ pytest-report.xml
 
 # Generated task/report records. Track intentionally with git add -f only when
 # the artifact becomes a public entry point such as README-linked documentation.
-tasks/[0-9]*.md
-tasks/[0-9]*.json
-docs/reports/*.md
-docs/reports/*.json
+tasks/
+archive/
+docs/reports/
+docs/memos/
+AGENTS.md
 
 # Environment
 .env

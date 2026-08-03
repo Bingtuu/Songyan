@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from songyan.db.migrations import get_schema_version, init_schema, verify_schema
+from songyan.db.migrations import get_schema_version, init_schema, run_migrations, verify_schema
 
 
 @pytest.mark.asyncio
@@ -63,3 +63,23 @@ async def test_get_schema_version(tmp_path: Path) -> None:
 
         version = await get_schema_version(conn)
         assert version == len(_EXPECTED_TABLES) - 1
+
+
+@pytest.mark.asyncio
+async def test_run_migrations_creates_profile_history_table(tmp_path: Path) -> None:
+    """run_migrations 应补齐 profile history 表."""
+    import aiosqlite
+
+    db_path = tmp_path / "test_profile_history_migration.db"
+    await init_schema(str(db_path))
+
+    async with aiosqlite.connect(str(db_path)) as conn:
+        await conn.execute("DROP TABLE genre_runtime_profile_history")
+        await conn.commit()
+        missing = await verify_schema(conn)
+        assert "genre_runtime_profile_history" in missing
+
+        await run_migrations(conn)
+        await conn.commit()
+
+        assert await verify_schema(conn) == []

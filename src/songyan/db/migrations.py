@@ -72,6 +72,8 @@ _EXPECTED_TABLES: list[str] = [
     "adaptive_halt_decisions",
     # V8 Task 172a.2: 体裁运行时画像
     "genre_runtime_profiles",
+    # V11 Task 214: profile 修改历史
+    "genre_runtime_profile_history",
     # V9 Task 175: LLM 调用成本遥测
     "llm_call_usage",
 ]
@@ -984,6 +986,7 @@ async def init_schema(db_path: str | Path | None = None) -> None:
         await _migrate_adaptive_gate_signals(conn)
         await _migrate_adaptive_halt_decisions(conn)
         await _migrate_genre_runtime_profiles(conn)
+        await _migrate_genre_runtime_profile_history(conn)
         await _migrate_llm_call_usage(conn)
         await _migrate_project_runs_pause_reason(conn)
         await conn.commit()
@@ -1003,6 +1006,26 @@ async def _migrate_genre_runtime_profiles(conn: aiosqlite.Connection) -> None:
             created_at   TEXT DEFAULT (datetime('now')),
             updated_at   TEXT DEFAULT (datetime('now'))
         )"""
+    )
+
+
+async def _migrate_genre_runtime_profile_history(conn: aiosqlite.Connection) -> None:
+    """创建 profile 修改历史表（V11 Task 214）."""
+    await conn.execute(
+        """CREATE TABLE IF NOT EXISTS genre_runtime_profile_history (
+            history_id          TEXT PRIMARY KEY,
+            genre               TEXT NOT NULL,
+            action              TEXT NOT NULL,
+            before_profile_json TEXT,
+            after_profile_json  TEXT,
+            diff_json           TEXT NOT NULL DEFAULT '{}',
+            validation_json     TEXT NOT NULL DEFAULT '{}',
+            created_at          TEXT DEFAULT (datetime('now'))
+        )"""
+    )
+    await conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_profile_history_genre "
+        "ON genre_runtime_profile_history(genre, created_at)"
     )
 
 
@@ -1105,6 +1128,7 @@ async def run_migrations(conn: aiosqlite.Connection) -> None:
     await _migrate_adaptive_gate_signals(conn)
     await _migrate_adaptive_halt_decisions(conn)
     await _migrate_genre_runtime_profiles(conn)
+    await _migrate_genre_runtime_profile_history(conn)
     await _migrate_llm_call_usage(conn)
     await _migrate_project_runs_pause_reason(conn)
     logger.info("migrations.run_all", status="complete")

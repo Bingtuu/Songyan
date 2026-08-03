@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Minimal reproduction guide
+    url: https://github.com/Bingtuu/Songyan/blob/main/docs/minimal-repro.md
+    about: Read this before opening a bug report.

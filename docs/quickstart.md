@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-Songyan 处于 V11 开源可用化收尾阶段。当前版本可以作为 preview 或内部可用版本验证，不应标记为正式开源可用版本。Task 208 已确认 Quickstart 骨架可用，Task 210 已补齐 doctor / run preflight 与失败 exit code，Task 211 已补齐 backup / restore / schema ledger，Task 212 已补齐常见失败分类和恢复建议，Task 213 已补齐 run bundle 诊断包；真实 Ch1-3 成功运行、wheel smoke 和 profile validate 仍在 V11 后续任务中补齐。
+Songyan 当前可作为面向外部技术用户的 technical preview / release-candidate 使用。正式发布标签前，维护者仍应按 `docs/release-checklist.md` 在目标 release commit 上复验真实 LLM Ch1-3 smoke。
 
 ## 环境要求
 
@@ -21,7 +21,7 @@ Songyan 处于 V11 开源可用化收尾阶段。当前版本可以作为 previe
 python -m pip install -e ".[dev]"
 ```
 
-未来 release 包应支持 wheel 安装。wheel smoke 属于 Task 215 的验收项，当前 Quickstart 仍以开发安装为准。
+项目已验证 wheel 构建和 wheel 安装后的非仓库 cwd smoke。当前 Quickstart 仍以开发安装为准；正式发布包以 release notes 为准。
 
 确认 CLI 可用：
 
@@ -146,7 +146,7 @@ run_id: <run_id>
 
 - `songyan run` 会先执行 preflight；缺少 `LLM_API_KEY`、非法配置、DB/schema 不可用或项目不存在时会在进入 pipeline 前 exit 1。
 - 如果 pipeline 已启动后业务失败，命令会保留 `run_id` 并返回非 0 exit code。请用 `songyan report --run-id <run_id>` 查看失败原因。
-- Task 209/210 未执行真实 LLM Ch1-3 成功验收，避免在文档与 preflight 任务中消耗 API 预算。正式开源前必须在 Task 215 补齐真实或明确替代的 smoke 证据。
+- 本地 release smoke 验证了 wheel、非仓库 cwd、doctor、模板建项和构造 accepted 章导出。真实 LLM Ch1-3 会消耗 API 预算，正式发布标签前应由维护者按 `docs/release-checklist.md` 重新执行并记录结果。
 
 ## 生成报告
 
@@ -215,6 +215,34 @@ songyan list-projects
 
 restore 默认拒绝覆盖已有 DB；确实需要覆盖时显式加 `--force`。
 
+## Profile 配置安全
+
+`GenreRuntimeProfile` 控制体裁运行时预算、上下文裁剪和连续性敏感度。修改前先 validate：
+
+```powershell
+songyan profile validate --genre urban --json
+songyan profile validate --genre wuxia --set continuity.health_overdue_weight=0.8 --json
+```
+
+写入前建议先 dry-run：
+
+```powershell
+songyan profile upsert --genre urban --set base_budget=15000 --dry-run --json
+```
+
+确认后再写入，写入会追加 history：
+
+```powershell
+songyan profile upsert --genre urban --set base_budget=15000
+songyan profile history --genre urban
+```
+
+如果发现误改，使用 history id 回滚到该记录变更前状态：
+
+```powershell
+songyan profile rollback --genre urban --history-id <history_id>
+```
+
 ## 10 章教程
 
 前三章通过后，可以扩展到 10 章：
@@ -262,18 +290,19 @@ songyan run --project-id <project_id> --chapters 1-3 --auto-confirm
 
 常见恢复入口：
 
-| 场景 | 当前动作 | 后续任务 |
-|------|----------|----------|
-| 缺 API key | 设置 `LLM_API_KEY` 后重新运行 `doctor --init-db`；run preflight 会在进入 pipeline 前阻断 | 212 已完成 |
-| Ch1 生成失败 | 若输出了 `run_id`，先运行 `songyan report --run-id <run_id>` 看失败原因 | 212 已完成 |
-| 中断或超时 | 使用 `--resume` 继续；长跑用 timeout wrapper | 212 已完成 |
-| 无 accepted 可导出 | 先完成至少一章 accepted，再运行 `export` | 212 已完成 |
-| 需要分享问题现场 | 使用 `songyan bundle-run --run-id <run_id> --output bundles/` | 213 已完成 |
-| 需要备份项目资产 | 使用 `songyan backup --project-id <project_id> --output backups/` | 211 已完成 |
-| 需要恢复项目资产 | 使用 `songyan restore --backup <zip> --database-url sqlite:///restored.db` | 211 已完成 |
+| 场景 | 当前动作 |
+|------|----------|
+| 缺 API key | 设置 `LLM_API_KEY` 后重新运行 `doctor --init-db`；run preflight 会在进入 pipeline 前阻断 |
+| Ch1 生成失败 | 若输出了 `run_id`，先运行 `songyan report --run-id <run_id>` 看失败原因 |
+| 中断或超时 | 使用 `--resume` 继续；长跑用 timeout wrapper |
+| 无 accepted 可导出 | 先完成至少一章 accepted，再运行 `export` |
+| 需要分享问题现场 | 使用 `songyan bundle-run --run-id <run_id> --output bundles/` |
+| 需要备份项目资产 | 使用 `songyan backup --project-id <project_id> --output backups/` |
+| 需要恢复项目资产 | 使用 `songyan restore --backup <zip> --database-url sqlite:///restored.db` |
+| 修改 profile 前 | 先运行 `songyan profile validate --genre <genre> --set key=value --json`，必要时用 `--dry-run` |
+| profile 误改 | 用 `songyan profile history --genre <genre>` 找到 history id，再运行 `songyan profile rollback --genre <genre> --history-id <id>` |
 
 ## 当前限制
 
-- 还没有正式 release checklist 和 wheel smoke。
-- profile validate、危险项提示和 rollback/history 属于 Task 214。
-- 在 Task 209-215 全部完成前，项目只能标记为 preview 或内部可用，不应标记为正式开源可用版本。
+- 正式发布前仍需维护者在目标 release commit 上确认 CI 绿线、真实 LLM Ch1-3 smoke、CHANGELOG 日期和版本号。
+- 若没有真实 LLM smoke 证据，只应标记为 preview 或 release candidate，不应标记为正式开源可用版本。

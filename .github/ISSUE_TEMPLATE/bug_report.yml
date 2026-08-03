@@ -1,0 +1,81 @@
+name: Bug report
+description: Report a reproducible Songyan failure
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please read `docs/minimal-repro.md` first. Do not paste API keys, `.env` contents, private manuscripts, raw DB files, or unredacted logs.
+  - type: input
+    id: version
+    attributes:
+      label: Songyan version or commit
+      description: "Example: 2.0.0 or a git commit hash."
+    validations:
+      required: true
+  - type: dropdown
+    id: install_method
+    attributes:
+      label: Install method
+      options:
+        - wheel
+        - editable install
+        - source checkout
+        - other
+    validations:
+      required: true
+  - type: input
+    id: os_python
+    attributes:
+      label: OS and Python version
+      description: "Example: Windows 11, Python 3.11.9."
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Command and exit code
+      description: Paste the exact command and exit code.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: expected_actual
+    attributes:
+      label: Expected vs actual behavior
+      description: State what you expected and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: doctor
+    attributes:
+      label: doctor output
+      description: Paste `songyan doctor --json --init-db` output after removing private paths or secrets.
+      render: json
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproduction steps
+      description: Provide the shortest command sequence that reproduces the issue.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: bundle
+    attributes:
+      label: Run bundle or diagnostic artifact
+      description: Attach `songyan bundle-run --run-id <run_id> --output bundles/` zip when applicable, or explain why no run_id exists.
+    validations:
+      required: false
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety checklist
+      options:
+        - label: I removed API keys, tokens, `.env` contents and private manuscript text.
+          required: true
+        - label: I included either a run bundle or a minimal reproduction path.
+          required: true

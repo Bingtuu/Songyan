@@ -8,7 +8,7 @@ import zipfile
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from songyan.db.connection import get_db
 from songyan.db.llm_call_usage_repo import LlmCallUsageRepository
@@ -150,23 +150,26 @@ def _logs_index(run_id: str) -> dict[str, Any]:
 
 def _chapter_status(log: ChapterRunLog) -> dict[str, Any]:
     failure_category = None if log.success else _classify_failure(log)
-    return _sanitize(
-        {
-            "chapter_number": log.chapter_number,
-            "success": log.success,
-            "failure_category": failure_category,
-            "error_stage": log.error_stage,
-            "error": log.error,
-            "word_count": log.word_count,
-            "budget_used": log.budget_used,
-            "context_emergency": log.context_emergency,
-            "quality_gate_passed": log.quality_gate_passed,
-            "gate_triggered": log.gate_triggered,
-            "gate_reasons": log.gate_reasons,
-            "settlement_success": log.settlement_success,
-            "summary_success": log.summary_success,
-            "duration_sec": log.duration_sec,
-        }
+    return cast(
+        dict[str, Any],
+        _sanitize(
+            {
+                "chapter_number": log.chapter_number,
+                "success": log.success,
+                "failure_category": failure_category,
+                "error_stage": log.error_stage,
+                "error": log.error,
+                "word_count": log.word_count,
+                "budget_used": log.budget_used,
+                "context_emergency": log.context_emergency,
+                "quality_gate_passed": log.quality_gate_passed,
+                "gate_triggered": log.gate_triggered,
+                "gate_reasons": log.gate_reasons,
+                "settlement_success": log.settlement_success,
+                "summary_success": log.summary_success,
+                "duration_sec": log.duration_sec,
+            }
+        ),
     )
 
 

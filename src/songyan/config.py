@@ -51,6 +51,8 @@ class Settings(BaseSettings):
     def _coerce_run_cost_budget(cls, value: object) -> float:
         if value in (None, ""):
             return 0.0
+        if not isinstance(value, str | int | float):
+            return 0.0
         try:
             return float(value)
         except (TypeError, ValueError):

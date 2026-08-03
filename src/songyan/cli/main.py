@@ -42,11 +42,16 @@ from songyan.services.export_service import (
 )
 from songyan.services.profile_service import (
     get_profile_view,
+    list_profile_history,
     load_override_json,
     merge_override_inputs,
     parse_set_expression,
+    render_profile_history,
+    render_profile_validation,
     render_profile_view,
+    rollback_profile_override,
     upsert_profile_overrides,
+    validate_profile_overrides,
 )
 from songyan.services.recovery_service import (
     advice_for_backup_error,
@@ -252,6 +257,63 @@ def profile_diff(genre: str, json_output: bool) -> None:
         click.echo(render_profile_view(view, diff_only=True))
 
 
+@profile_cli.command(name="validate")
+@click.option("--genre", required=True, help="体裁 ID（必须是注册表已知体裁）")
+@click.option(
+    "--set",
+    "set_values",
+    multiple=True,
+    help="待校验覆盖字段，格式 key=value；支持 dot path",
+)
+@click.option(
+    "--from-json",
+    "json_path",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    default=None,
+    help="待校验覆盖意图 JSON 文件",
+)
+@click.option("--reset", is_flag=True, help="按清空 DB override 的结果校验")
+@click.option("--json", "json_output", is_flag=True, help="输出机器可读 JSON")
+def profile_validate(
+    genre: str,
+    set_values: tuple[str, ...],
+    json_path: Path | None,
+    reset: bool,
+    json_output: bool,
+) -> None:
+    """校验 GenreRuntimeProfile 当前值或待写入 override."""
+    try:
+        if reset and (set_values or json_path):
+            raise click.ClickException("--reset 不能与 --set / --from-json 同时使用")
+        json_overrides = load_override_json(json_path) if json_path else None
+        set_items = [parse_set_expression(item) for item in set_values]
+        overrides = (
+            merge_override_inputs(json_overrides, set_items)
+            if (json_overrides is not None or set_items)
+            else None
+        )
+        report = asyncio.run(
+            validate_profile_overrides(
+                genre,
+                overrides,
+                reset=reset,
+            )
+        )
+    except click.Abort:
+        raise
+    except SongyanError as exc:
+        raise click.ClickException(str(exc)) from exc
+    except _CLI_CATCHABLE as exc:
+        raise click.ClickException(str(exc)) from exc
+
+    if json_output:
+        click.echo(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
+    else:
+        click.echo(render_profile_validation(report))
+    if report.status == "fail":
+        raise click.exceptions.Exit(1)
+
+
 @profile_cli.command(name="upsert")
 @click.option("--genre", required=True, help="体裁 ID（必须是注册表已知体裁）")
 @click.option(
@@ -268,12 +330,14 @@ def profile_diff(genre: str, json_output: bool) -> None:
     help="覆盖意图 JSON 文件（不是 effective profile 全量 JSON）",
 )
 @click.option("--reset", is_flag=True, help="清空 DB override 意图，effective 回到 registry")
+@click.option("--dry-run", is_flag=True, help="只预览和校验，不写入 DB")
 @click.option("--json", "json_output", is_flag=True, help="输出机器可读 JSON")
 def profile_upsert(
     genre: str,
     set_values: tuple[str, ...],
     json_path: Path | None,
     reset: bool,
+    dry_run: bool,
     json_output: bool,
 ) -> None:
     """写入 GenreRuntimeProfile DB override."""
@@ -283,12 +347,14 @@ def profile_upsert(
         json_overrides = load_override_json(json_path) if json_path else None
         set_items = [parse_set_expression(item) for item in set_values]
         overrides = merge_override_inputs(json_overrides, set_items)
-        asyncio.run(init_schema())
+        if not dry_run:
+            asyncio.run(init_schema())
         view = asyncio.run(
             upsert_profile_overrides(
                 genre,
                 overrides,
                 reset=reset,
+                dry_run=dry_run,
             )
         )
     except click.Abort:
@@ -301,8 +367,66 @@ def profile_upsert(
     if json_output:
         click.echo(json.dumps(view.to_dict(diff_only=True), ensure_ascii=False, indent=2))
     else:
-        click.echo(f"profile override updated: {genre}")
-        click.echo(render_profile_view(view, diff_only=True))
+        action = "dry-run" if view.dry_run else "updated"
+        click.echo(f"profile override {action}: {genre}")
+        click.echo(render_profile_validation(view.validation))
+        click.echo(render_profile_view(view.view, diff_only=True))
+        if view.history:
+            click.echo(f"history_id: {view.history.history_id}")
+
+
+@profile_cli.command(name="history")
+@click.option("--genre", required=True, help="体裁 ID（必须是注册表已知体裁）")
+@click.option("--limit", default=20, show_default=True, type=int, help="最多显示条数")
+@click.option("--json", "json_output", is_flag=True, help="输出机器可读 JSON")
+def profile_history(genre: str, limit: int, json_output: bool) -> None:
+    """查看 GenreRuntimeProfile 修改历史."""
+    try:
+        asyncio.run(init_schema())
+        rows = asyncio.run(list_profile_history(genre, limit=limit))
+    except click.Abort:
+        raise
+    except SongyanError as exc:
+        raise click.ClickException(str(exc)) from exc
+    except _CLI_CATCHABLE as exc:
+        raise click.ClickException(str(exc)) from exc
+
+    if json_output:
+        click.echo(
+            json.dumps(
+                {"genre": genre, "rows": [row.to_dict() for row in rows]},
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
+    else:
+        click.echo(render_profile_history(rows))
+
+
+@profile_cli.command(name="rollback")
+@click.option("--genre", required=True, help="体裁 ID（必须是注册表已知体裁）")
+@click.option("--history-id", required=True, help="回滚目标 history_id")
+@click.option("--json", "json_output", is_flag=True, help="输出机器可读 JSON")
+def profile_rollback(genre: str, history_id: str, json_output: bool) -> None:
+    """回滚到指定 history 记录变更前的 Profile override."""
+    try:
+        asyncio.run(init_schema())
+        result = asyncio.run(rollback_profile_override(genre, history_id))
+    except click.Abort:
+        raise
+    except SongyanError as exc:
+        raise click.ClickException(str(exc)) from exc
+    except _CLI_CATCHABLE as exc:
+        raise click.ClickException(str(exc)) from exc
+
+    if json_output:
+        click.echo(json.dumps(result.to_dict(diff_only=True), ensure_ascii=False, indent=2))
+    else:
+        click.echo(f"profile rollback applied: {genre}")
+        click.echo(render_profile_validation(result.validation))
+        click.echo(render_profile_view(result.view, diff_only=True))
+        if result.history:
+            click.echo(f"history_id: {result.history.history_id}")
 
 
 async def _create_project_async(outline_file: str | None = None) -> tuple[str, ProjectSetting]:

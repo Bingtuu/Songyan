@@ -14,7 +14,7 @@ from datetime import UTC, datetime
 from importlib.resources import files
 from pathlib import Path
 from sqlite3 import Row
-from typing import Any
+from typing import Any, cast
 
 from songyan.config import Settings, settings
 from songyan.creative_modes.registry import list_creative_mode_profiles
@@ -362,7 +362,7 @@ def _read_manifest(archive: zipfile.ZipFile) -> dict[str, Any]:
         raise BackupServiceError(
             f"unsupported backup format_version: {manifest.get('format_version')}"
         )
-    return manifest
+    return cast(dict[str, Any], manifest)
 
 
 async def restore_backup(

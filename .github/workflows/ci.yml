@@ -36,3 +36,21 @@ jobs:
 
       - name: Pytest CLI suite
         run: python -m pytest tests/cli -q
+
+      - name: Build wheel
+        run: python -m pip wheel . --no-deps -w dist
+
+      - name: Wheel smoke
+        shell: bash
+        run: |
+          python -m venv --system-site-packages /tmp/songyan-wheel-smoke
+          /tmp/songyan-wheel-smoke/bin/python -m pip install --no-deps --force-reinstall dist/songyan-*.whl
+          smoke_dir="$(mktemp -d)"
+          cd "$smoke_dir"
+          export DATABASE_URL="sqlite:///$smoke_dir/smoke.db"
+          export CHECKPOINTER_MODE=memory
+          export LLM_API_KEY=ci-dummy-key
+          /tmp/songyan-wheel-smoke/bin/songyan --help
+          /tmp/songyan-wheel-smoke/bin/songyan doctor --json --init-db
+          /tmp/songyan-wheel-smoke/bin/songyan create-project --template scifi
+          /tmp/songyan-wheel-smoke/bin/songyan profile validate --genre scifi --json
