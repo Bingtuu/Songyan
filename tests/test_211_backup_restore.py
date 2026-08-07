@@ -169,3 +169,39 @@ async def test_backup_rejects_missing_project(
 ) -> None:
     with pytest.raises(SongyanError, match="project not found"):
         await backup_project("missing", output=tmp_path / "backups")
+
+
+@pytest.mark.asyncio
+async def test_restore_rejects_schema_drift(
+    backup_db: Path,
+    tmp_path: Path,
+) -> None:
+    with sqlite3.connect(backup_db) as conn:
+        conn.execute("DROP TABLE human_marks")
+        conn.execute(
+            """CREATE TABLE human_marks (
+                mark_id TEXT PRIMARY KEY,
+                project_id TEXT NOT NULL,
+                mark_type TEXT NOT NULL,
+                target_key TEXT NOT NULL,
+                note TEXT DEFAULT '',
+                priority INTEGER DEFAULT 5,
+                created_at_chapter INTEGER,
+                resolved_at TEXT,
+                lifecycle_status TEXT DEFAULT 'active',
+                created_at TEXT DEFAULT (datetime('now')),
+                source TEXT DEFAULT 'human'
+            )"""
+        )
+        conn.commit()
+
+    backup = await backup_project("proj-backup", output=tmp_path / "drift.zip")
+    assert backup.manifest["schema"]["status"] == "fail"
+    assert "human_marks.version_id" in backup.manifest["schema"]["schema_drift"]
+    assert "human_marks.severity" in backup.manifest["schema"]["schema_drift"]
+
+    with pytest.raises(SongyanError, match="human_marks.version_id"):
+        await restore_backup(
+            backup.backup_path,
+            database_url=f"sqlite:///{tmp_path / 'restored-drift.db'}",
+        )

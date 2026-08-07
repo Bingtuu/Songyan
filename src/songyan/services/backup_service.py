@@ -21,6 +21,10 @@ from songyan.creative_modes.registry import list_creative_mode_profiles
 from songyan.db.migrations import _EXPECTED_TABLES
 from songyan.exceptions import SongyanError
 from songyan.genres.loader import list_genre_profiles
+from songyan.services.doctor_service import (
+    _REQUIRED_SCHEMA_COLUMNS,
+    _REQUIRED_SCHEMA_INDEXES,
+)
 
 BACKUP_FORMAT = "songyan_project_backup"
 BACKUP_FORMAT_VERSION = 1
@@ -155,17 +159,44 @@ def _schema_ledger(db_path: Path) -> dict[str, Any]:
         rows = conn.execute("SELECT name FROM sqlite_master WHERE type = 'table'").fetchall()
         existing = {str(row[0]) for row in rows}
         missing = [table for table in _EXPECTED_TABLES if table not in existing]
+        drift = _schema_drift(conn, existing)
         version = len(_EXPECTED_TABLES) - len(missing)
         quick_check = conn.execute("PRAGMA quick_check").fetchone()
     finally:
         conn.close()
     quick_check_value = str(quick_check[0]) if quick_check else "unknown"
     return {
-        "status": "pass" if not missing and quick_check_value == "ok" else "fail",
+        "status": (
+            "pass"
+            if not missing and not drift and quick_check_value == "ok"
+            else "fail"
+        ),
         "schema_version": version,
         "missing_tables": missing,
+        "schema_drift": drift,
         "quick_check": quick_check_value,
     }
+
+
+def _schema_drift(conn: sqlite3.Connection, existing_tables: set[str]) -> list[str]:
+    """Return missing required columns/indexes for table-complete databases."""
+    drift: list[str] = []
+    for table, required_columns in _REQUIRED_SCHEMA_COLUMNS.items():
+        if table not in existing_tables:
+            continue
+        rows = conn.execute(f"PRAGMA table_info({table})").fetchall()
+        columns = {str(row[1]) for row in rows}
+        for column in sorted(required_columns - columns):
+            drift.append(f"{table}.{column}")
+
+    for table, required_indexes in _REQUIRED_SCHEMA_INDEXES.items():
+        if table not in existing_tables:
+            continue
+        rows = conn.execute(f"PRAGMA index_list({table})").fetchall()
+        indexes = {str(row[1]) for row in rows}
+        for index in sorted(required_indexes - indexes):
+            drift.append(f"{table}.{index}")
+    return drift
 
 
 def _resource_summary() -> dict[str, Any]:
@@ -406,9 +437,11 @@ async def restore_backup(
 
         schema = _schema_ledger(temp_target)
         if schema["status"] != "pass":
+            schema_errors = list(schema.get("missing_tables", []))
+            schema_errors.extend(schema.get("schema_drift", []))
             raise BackupServiceError(
                 "restored database schema check failed: "
-                + ", ".join(schema.get("missing_tables", []))
+                + ", ".join(schema_errors)
             )
 
         os.replace(temp_target, target_db)
