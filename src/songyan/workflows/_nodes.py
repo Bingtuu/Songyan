@@ -2390,7 +2390,15 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
             chapter_number=state["chapter_number"],
             version_id=version.version_id,
         )
+        accepted_version_id = await accept_with_settlement_boundary(
+            project_id=state["project_id"],
+            chapter_number=state["chapter_number"],
+            version_id=version.version_id,
+            settlement=None,
+            content=version.content,
+        )
         return {
+            "current_version_id": accepted_version_id,
             "settlement_id": None,
             "summary_id": None,
             "status": "done",

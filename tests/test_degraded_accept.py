@@ -270,6 +270,11 @@ async def test_settlement_extractor_skips_settlement_for_degraded_accept() -> No
 
     with (
         patch("songyan.workflows._nodes.load_version", new_callable=AsyncMock) as mock_ver,
+        patch(
+            "songyan.workflows._nodes.accept_with_settlement_boundary",
+            new_callable=AsyncMock,
+            return_value="v-accepted",
+        ) as mock_accept,
     ):
         mock_ver.return_value = version
 
@@ -283,10 +288,18 @@ async def test_settlement_extractor_skips_settlement_for_degraded_accept() -> No
         })
 
     assert result.get("status") == "done"
+    assert result.get("current_version_id") == "v-accepted"
     assert result.get("_degraded_accept") is True
     assert result.get("_settlement_needs_human_review") is False
     assert result.get("settlement_id") is None
     assert result.get("summary_id") is None
+    mock_accept.assert_awaited_once_with(
+        project_id="p1",
+        chapter_number=1,
+        version_id="v-1",
+        settlement=None,
+        content="test content",
+    )
 
 
 @pytest.mark.asyncio
@@ -298,6 +311,11 @@ async def test_settlement_extractor_degrades_qg_false_without_degraded_accept() 
 
     with (
         patch("songyan.workflows._nodes.load_version", new_callable=AsyncMock) as mock_ver,
+        patch(
+            "songyan.workflows._nodes.accept_with_settlement_boundary",
+            new_callable=AsyncMock,
+            return_value="v-accepted",
+        ) as mock_accept,
     ):
         mock_ver.return_value = version
 
@@ -311,7 +329,15 @@ async def test_settlement_extractor_degrades_qg_false_without_degraded_accept() 
         })
 
     assert result.get("status") == "done"
+    assert result.get("current_version_id") == "v-accepted"
     assert result.get("_degraded_accept") is True
     assert result.get("_settlement_needs_human_review") is False
     assert result.get("settlement_id") is None
     assert result.get("summary_id") is None
+    mock_accept.assert_awaited_once_with(
+        project_id="p1",
+        chapter_number=1,
+        version_id="v-1",
+        settlement=None,
+        content="test content",
+    )
