@@ -83,3 +83,40 @@ async def test_run_migrations_creates_profile_history_table(tmp_path: Path) -> N
         await conn.commit()
 
         assert await verify_schema(conn) == []
+
+
+@pytest.mark.asyncio
+async def test_run_migrations_adds_human_mark_extra_fields(tmp_path: Path) -> None:
+    """旧库已有 human_marks 表时，run_migrations 应补 version_id / severity 列."""
+    import aiosqlite
+
+    db_path = tmp_path / "test_human_marks_extra_fields.db"
+    await init_schema(str(db_path))
+
+    async with aiosqlite.connect(str(db_path)) as conn:
+        await conn.execute("DROP TABLE human_marks")
+        await conn.execute(
+            """CREATE TABLE human_marks (
+                mark_id TEXT PRIMARY KEY,
+                project_id TEXT NOT NULL,
+                mark_type TEXT NOT NULL,
+                target_key TEXT NOT NULL,
+                note TEXT DEFAULT '',
+                priority INTEGER DEFAULT 5,
+                created_at_chapter INTEGER,
+                resolved_at TEXT,
+                lifecycle_status TEXT DEFAULT 'active',
+                created_at TEXT DEFAULT (datetime('now')),
+                source TEXT DEFAULT 'human'
+            )"""
+        )
+        await conn.commit()
+
+        await run_migrations(conn)
+        await conn.commit()
+
+        cursor = await conn.execute("PRAGMA table_info(human_marks)")
+        columns = {row[1] for row in await cursor.fetchall()}
+
+    assert "version_id" in columns
+    assert "severity" in columns

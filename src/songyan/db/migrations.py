@@ -1109,6 +1109,7 @@ async def run_migrations(conn: aiosqlite.Connection) -> None:
     await _migrate_layered_context_tables(conn)
     await _migrate_continuity_suggested_marks(conn)
     await _migrate_human_marks(conn)
+    await _migrate_human_marks_extra_fields(conn)
     await _migrate_project_seed_config(conn)
     await _migrate_dialogue_style_card(conn)
     await _migrate_chapter_chunks(conn)
