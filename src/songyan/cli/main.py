@@ -66,6 +66,7 @@ from songyan.services.recovery_service import (
 from songyan.services.run_bundle_service import bundle_run
 from songyan.utils.logging_setup import configure_logging
 from songyan.utils.process_exit import force_exit_after_run_if_requested
+from songyan.utils.run_id import validate_run_id
 from songyan.workflows.phase2_graph import run_project_pipeline
 
 # CLI 层可捕获的异常类型（排除 KeyboardInterrupt / SystemExit）
@@ -1027,6 +1028,9 @@ def run(
 ) -> None:
     """运行多章流水线."""
     try:
+        if run_id is not None:
+            run_id = validate_run_id(run_id)
+
         # 解析章节范围
         if "-" in chapters:
             start, end = chapters.split("-")

@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from songyan.models.run_log import ChapterRunLog
+from songyan.utils.run_id import validate_run_id
 
 _LOGS_DIR = Path("logs/chapter_runs")
 
@@ -32,6 +33,7 @@ class DecisionGateResult:
 
 def read_run_logs(run_id: str) -> list[ChapterRunLog]:
     """从 JSONL 读取指定 run_id 的运行日志."""
+    run_id = validate_run_id(run_id)
     filepath = _LOGS_DIR / f"{run_id}.jsonl"
     logs: list[ChapterRunLog] = []
     if not filepath.exists():
@@ -473,6 +475,7 @@ def run_decision_gate_dg2(
 
 def write_report(report_md: str, run_id: str, output_dir: Path | None = None) -> Path:
     """将报告写入文件."""
+    run_id = validate_run_id(run_id)
     out = output_dir or Path("logs/reports")
     out.mkdir(parents=True, exist_ok=True)
     filepath = out / f"report-{run_id}.md"

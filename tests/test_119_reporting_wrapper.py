@@ -108,6 +108,13 @@ class TestReportCli:
             assert result.exit_code == 1
             assert "[missing_artifact]" in result.output
 
+    def test_report_cli_rejects_path_like_run_id(self, runner: CliRunner) -> None:
+        """run_id 不允许参与路径拼接。"""
+        result = runner.invoke(cli, ["report", "--run-id", "../outside"])
+
+        assert result.exit_code != 0
+        assert "invalid run_id" in result.output
+
 
 class TestValidateReportConsistency:
     """Layer 2: 一致性检查测试."""

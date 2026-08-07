@@ -119,3 +119,23 @@ def test_bundle_run_missing_log_shows_recovery_advice(
     assert "run log not found" in result.output
     assert "[missing_artifact]" in result.output
     assert "Get-ChildItem logs/chapter_runs" in result.output
+
+
+def test_bundle_run_rejects_path_like_run_id(
+    runner: CliRunner,
+    bundle_cli_db: Path,
+    tmp_path: Path,
+) -> None:
+    result = runner.invoke(
+        cli,
+        [
+            "bundle-run",
+            "--run-id",
+            "../outside",
+            "--output",
+            str(tmp_path / "bundles"),
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "invalid run_id" in result.output

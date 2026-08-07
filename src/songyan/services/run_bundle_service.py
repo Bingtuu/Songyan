@@ -18,6 +18,7 @@ from songyan.evals.streaming_report import read_run_logs
 from songyan.exceptions import SongyanError
 from songyan.models.project_run import ProjectRunState
 from songyan.models.run_log import ChapterRunLog
+from songyan.utils.run_id import validate_run_id
 
 RUN_BUNDLE_FORMAT = "songyan_run_bundle"
 RUN_BUNDLE_FORMAT_VERSION = 1
@@ -476,6 +477,7 @@ async def bundle_run(
     project_id: str | None = None,
 ) -> RunBundleResult:
     """Build a shareable diagnostic bundle for one run."""
+    run_id = validate_run_id(run_id)
     logs = read_run_logs(run_id)
     if not logs:
         raise RunBundleServiceError(
