@@ -2,7 +2,7 @@
 
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from songyan.models.chapter import ChapterGoal
 
@@ -161,6 +161,17 @@ class RAGConfig(BaseModel):
     embedding_model: str = "shibing624/text2vec-base-chinese"
     vector_store: str = "sqlite_numpy"
 
+    @model_validator(mode="after")
+    def validate_chunk_window(self) -> "RAGConfig":
+        """Prevent non-advancing chunk windows during long paragraph splitting."""
+        if self.chunk_size <= 0:
+            raise ValueError("chunk_size must be > 0")
+        if self.chunk_overlap < 0:
+            raise ValueError("chunk_overlap must be >= 0")
+        if self.chunk_overlap >= self.chunk_size:
+            raise ValueError("chunk_overlap must be < chunk_size")
+        return self
+
 
 class CreativeModeProfile(BaseModel):
     """创作模式配置文件 — 决定 Agent 组合与参数."""
@@ -209,4 +220,3 @@ class CreativeModeProfile(BaseModel):
     def from_dict(cls, data: dict[str, Any]) -> "CreativeModeProfile":
         """从 dict 加载（JSON 反序列化后调用）."""
         return cls(**data)
-

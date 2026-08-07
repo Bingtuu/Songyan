@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import pytest
+
+from songyan.models.rag import RAGConfig
 from songyan.rag.chunker import Chunker
 
 
@@ -125,3 +128,11 @@ class TestChunkerBasics:
         assert "---" not in chunks[0].text
         assert "# 第一章" not in chunks[0].text
         assert "正文内容" in chunks[0].text
+
+    def test_rejects_non_advancing_overlap(self) -> None:
+        """chunk_overlap >= chunk_size 会让长段落切分窗口不前进，必须拒绝."""
+        with pytest.raises(ValueError, match="chunk_overlap must be < chunk_size"):
+            Chunker(chunk_size=50, chunk_overlap=50)
+
+        with pytest.raises(ValueError, match="chunk_overlap must be < chunk_size"):
+            RAGConfig(chunk_size=50, chunk_overlap=50)

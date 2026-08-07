@@ -99,6 +99,12 @@ class Chunker:
     """章节文本切分器 — 生产版本."""
 
     def __init__(self, chunk_size: int = 500, chunk_overlap: int = 100) -> None:
+        if chunk_size <= 0:
+            raise ValueError("chunk_size must be > 0")
+        if chunk_overlap < 0:
+            raise ValueError("chunk_overlap must be >= 0")
+        if chunk_overlap >= chunk_size:
+            raise ValueError("chunk_overlap must be < chunk_size")
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
 
@@ -182,7 +188,8 @@ class Chunker:
                         end = _find_sentence_boundary(para, end)
                     piece = para[p_start:end]
                     start_char = _flush(piece, start_char)
-                    p_start = end - self.chunk_overlap if end < len(para) else end
+                    next_start = end - self.chunk_overlap if end < len(para) else end
+                    p_start = max(next_start, p_start + 1)
                 continue
 
             current_text += "\n" + para if current_text else para

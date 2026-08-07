@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class ChunkMetadata(BaseModel):
@@ -51,3 +51,14 @@ class RAGConfig(BaseModel):
     min_similarity: float = 0.3
     embedding_model: str = "shibing624/text2vec-base-chinese"
     vector_store: str = "sqlite_numpy"
+
+    @model_validator(mode="after")
+    def validate_chunk_window(self) -> RAGConfig:
+        """Prevent non-advancing chunk windows during long paragraph splitting."""
+        if self.chunk_size <= 0:
+            raise ValueError("chunk_size must be > 0")
+        if self.chunk_overlap < 0:
+            raise ValueError("chunk_overlap must be >= 0")
+        if self.chunk_overlap >= self.chunk_size:
+            raise ValueError("chunk_overlap must be < chunk_size")
+        return self
