@@ -78,11 +78,53 @@ class TestRunRuleAudit:
         assert result.fatigue_word_count > 0
         assert len(result.fatigue_word_matches) > 0
 
+    async def test_forbidden_pattern_detection(self) -> None:
+        text = "沈砚解码出东经121.47，北纬31.23。沈弥的ID随后亮起。"
+        result = run_rule_audit(
+            text,
+            forbidden_terms=["具体经纬度", "沈弥的声音"],
+        )
+
+        patterns = [match.pattern for match in result.forbidden_term_matches]
+        assert any("forbidden_pattern:经纬度坐标" in item for item in patterns)
+        assert any("forbidden_pattern:沈弥身份化线索" in item for item in patterns)
+        assert result.forbidden_term_count == 3
+
+    async def test_relative_time_forbidden_pattern_detection(self) -> None:
+        text = "舱壁参数和昨天、前天一样。三年前的旧记录仍在缓存。"
+        result = run_rule_audit(text, forbidden_terms=["三天前"])
+
+        patterns = [match.pattern for match in result.forbidden_term_matches]
+        assert patterns == [
+            "forbidden_pattern:前三章禁用回溯时间",
+            "forbidden_pattern:前三章禁用回溯时间",
+            "forbidden_pattern:前三章禁用回溯时间",
+        ]
+        assert result.forbidden_term_count == 3
+
+    async def test_mixed_clock_forbidden_pattern_detection(self) -> None:
+        text = (
+            "终端显示当前时间是04:32。沈砚继续复核当前责任栏。"
+            "他再次打开操作日志，开始查看14:32之后的系统访问记录。"
+        )
+        result = run_rule_audit(text, forbidden_terms=["三天前"])
+
+        patterns = [match.pattern for match in result.forbidden_term_matches]
+        assert patterns == ["forbidden_pattern:章内时间格式冲突"]
+        assert result.forbidden_term_count == 1
+
     async def test_no_fatigue_words_when_genre_none(self) -> None:
         text = _make_fatigue_text()
         result = run_rule_audit(text, genre_rules=None)
         assert result.fatigue_word_count == 0
         assert result.fatigue_word_matches == []
+
+    def test_forbidden_terms_detection(self) -> None:
+        text = "沈砚看见木星大红斑的旧坐标在终端上闪烁。"
+        result = run_rule_audit(text, forbidden_terms=["木星", "阮星河"])
+        assert result.forbidden_term_count == 1
+        assert "木星" in result.forbidden_term_matches[0].pattern
+        assert "木星大红斑" in result.forbidden_term_matches[0].matched_text
 
     async def test_opening_hook_present(self) -> None:
         text = _make_good_hook_text()
@@ -116,6 +158,53 @@ class TestRunRuleAudit:
         result = run_rule_audit(text, word_count_target=1000)
         assert result.word_count < 1000
         assert result.word_count_ok is False
+
+    async def test_ch1_3_calibration_word_count_window(self) -> None:
+        text = "正文" * 1335  # 2670 字，通用 0.8x 通过，但前三章 2700 下限失败
+        result = run_rule_audit(
+            text,
+            word_count_target=3000,
+            chapter_number=2,
+        )
+
+        assert result.word_count == 2670
+        assert result.word_count_ok is False
+
+    async def test_ch1_3_calibration_upper_window(self) -> None:
+        text = "正文" * 2060  # 4120 字，目标 3500 的 1.2x 内，但前三章 3300 上限失败
+        result = run_rule_audit(
+            text,
+            word_count_target=3500,
+            chapter_number=3,
+        )
+
+        assert result.word_count == 4120
+        assert result.word_count_ok is False
+
+    async def test_required_phrase_missing(self) -> None:
+        text = "沈砚记录了规则残片。"
+        result = run_rule_audit(
+            text,
+            required_phrases=["不要第一个确认"],
+        )
+
+        assert result.required_phrase_check_passed is False
+        assert result.required_phrase_issues == [
+            {
+                "phrase": "不要第一个确认",
+                "message": "必须出现的短语未回收：不要第一个确认",
+            }
+        ]
+
+    async def test_required_phrase_present(self) -> None:
+        text = "规则残片只有一句：不要第一个确认。"
+        result = run_rule_audit(
+            text,
+            required_phrases=["不要第一个确认"],
+        )
+
+        assert result.required_phrase_check_passed is True
+        assert result.required_phrase_issues == []
 
     async def test_paragraph_rhythm(self) -> None:
         text = _make_clean_text()

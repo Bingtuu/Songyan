@@ -124,11 +124,11 @@ class TestSettlementExtractorNodeSkipSettlement:
 
 
 class TestSettlementExtractorNodeQGFalseBlock:
-    """settlement_extractor_node _quality_gate_passed=False Task 128a 降级测试."""
+    """settlement_extractor_node _quality_gate_passed=False review routing tests."""
 
     @pytest.mark.asyncio
-    async def test_qg_false_degrades_accept_and_returns_done(self) -> None:
-        """Task 128a: QG false 时自动降级接受，不提取/应用 settlement，不生成 summary，返回 done."""
+    async def test_qg_false_requires_settlement_review(self) -> None:
+        """QG false must not be silently accepted without explicit degraded_accept."""
         mock_version = MagicMock()
         mock_version.version_id = "v-qg-false-001"
         mock_version.content = "A" * 500
@@ -221,9 +221,9 @@ class TestSettlementExtractorNodeQGFalseBlock:
 
         assert result["settlement_id"] is None
         assert result["summary_id"] is None
-        assert result["status"] == "done"
-        assert result["_degraded_accept"] is True
-        assert result["_settlement_needs_human_review"] is False
+        assert result["status"] == "settlement_review"
+        assert result["_settlement_needs_human_review"] is True
+        assert result["_skip_settlement"] is True
 
 
 class TestRewriteNodeSuccessPath:
@@ -628,6 +628,135 @@ class TestReviewMergerNodeRevisionSignals:
         mock_ver_repo.mark_abandoned.assert_awaited_once_with("v-rewrite")
         mock_head_repo.update.assert_awaited_once()
 
+    @pytest.mark.asyncio
+    async def test_low_quality_rewrite_does_not_roll_back_to_short_best(self) -> None:
+        """Ch1-Ch3 rollback best 也必须满足 2700 字校准下限."""
+        mock_version = MagicMock()
+        mock_version.version_id = "v-rewrite"
+        mock_version.content = "正文"
+
+        best_version = MagicMock()
+        best_version.version_id = "v-best"
+        best_version.project_id = "p1"
+        best_version.chapter_number = 1
+        best_version.word_count = 2698
+        best_version.is_abandoned = False
+        best_version.score_card = None
+
+        best_score_card = {
+            "version_id": "v-best",
+            "overall_score": 0.8776,
+            "length": {"score": 0.90},
+            "budget": {"score": 0.90},
+            "coherence": {"score": 0.90},
+            "momentum": {"score": 0.90},
+            "readability": {"score": 0.90},
+            "flags": {
+                "length_ok": True,
+                "budget_ok": True,
+                "coherence_critical": False,
+                "coherence_major": False,
+                "momentum_present": True,
+                "readability_ok": True,
+            },
+        }
+
+        current_score_card = {
+            "version_id": "v-rewrite",
+            "overall_score": 0.7335,
+            "length": {"score": 0.80},
+            "budget": {"score": 0.80},
+            "coherence": {"score": 0.85},
+            "momentum": {"score": 0.80},
+            "readability": {"score": 0.70},
+            "flags": {
+                "length_ok": True,
+                "budget_ok": True,
+                "coherence_critical": False,
+                "coherence_major": False,
+                "momentum_present": True,
+                "readability_ok": True,
+            },
+        }
+
+        mock_score_card = MagicMock()
+        mock_score_card.flags.needs_revision = False
+        mock_score_card.flags.coherence_critical = False
+        mock_score_card.flags.coherence_major = False
+        mock_score_card.overall_score = 0.7335
+        mock_score_card.model_dump.return_value = current_score_card
+        for dim_name in ("length", "budget", "coherence", "momentum", "readability"):
+            dim_mock = MagicMock()
+            dim_mock.score = current_score_card[dim_name]["score"]
+            setattr(mock_score_card, dim_name, dim_mock)
+
+        merged_mock = MagicMock()
+        merged_mock.has_critical = False
+        merged_mock.issues = []
+
+        goal = MagicMock()
+        goal.word_count_target = 3000
+
+        with (
+            patch(
+                "songyan.workflows._nodes.load_version",
+                new_callable=AsyncMock,
+                return_value=mock_version,
+            ),
+            patch(
+                "songyan.workflows._nodes.load_chapter_goal",
+                new_callable=AsyncMock,
+                return_value=goal,
+            ),
+            patch(
+                "songyan.workflows._nodes.load_latest_audits",
+                new_callable=AsyncMock,
+                return_value=(MagicMock(), MagicMock()),
+            ),
+            patch(
+                "songyan.workflows._nodes.merge_reviews",
+                new_callable=AsyncMock,
+                return_value=merged_mock,
+            ),
+            patch(
+                "songyan.workflows._nodes.ScoreAggregator.aggregate",
+                return_value=mock_score_card,
+            ),
+            patch(
+                "songyan.workflows._nodes._load_chapter_repair_state",
+                new_callable=AsyncMock,
+                return_value=(2, True),
+            ),
+            patch("songyan.workflows._nodes.ChapterVersionRepository") as mock_ver_repo_cls,
+            patch("songyan.workflows._nodes.ChapterHeadRepository") as mock_head_repo_cls,
+        ):
+            mock_ver_repo = AsyncMock()
+            mock_ver_repo.update_score_card = AsyncMock()
+            mock_ver_repo.get = AsyncMock(return_value=best_version)
+            mock_ver_repo.mark_abandoned = AsyncMock()
+            mock_ver_repo_cls.return_value = mock_ver_repo
+            mock_head_repo = AsyncMock()
+            mock_head_repo.update = AsyncMock()
+            mock_head_repo_cls.return_value = mock_head_repo
+
+            result = await review_merger_node({
+                "project_id": "p1",
+                "chapter_number": 1,
+                "current_version_id": "v-rewrite",
+                "revision_round": 0,
+                "_was_rewritten": True,
+                "_best_version_id": "v-best",
+                "_best_report_id": "rr-best",
+                "_best_issues_count": 0,
+                "_best_overall_score": 0.8776,
+                "_best_score_card": best_score_card,
+                "_new_issues_introduced": [],
+            })
+
+        assert result.get("current_version_id") != "v-best"
+        mock_ver_repo.mark_abandoned.assert_not_awaited()
+        mock_head_repo.update.assert_not_awaited()
+
 
 class TestLiteraryAuditorNodeNonBlocking:
     """literary_auditor_node 只输出诊断，不改变修订决策."""
@@ -710,6 +839,44 @@ class TestLiteraryAuditorNodeNonBlocking:
         mock_context.assert_not_called()
         mock_audit.assert_not_called()
         assert "_needs_revision" not in result
+
+    @pytest.mark.asyncio
+    async def test_literary_audit_failure_does_not_block_pipeline(self) -> None:
+        """LiteraryAuditor 是诊断层；LLM 失败只标记诊断缺失，不阻断章节。"""
+        from songyan.exceptions import LLMError
+
+        mock_version = MagicMock()
+        mock_version.version_id = "v1"
+        mock_version.content = "正文"
+
+        with (
+            patch(
+                "songyan.workflows._nodes.load_version",
+                new_callable=AsyncMock,
+                return_value=mock_version,
+            ),
+            patch(
+                "songyan.workflows._nodes._get_context_package",
+                new_callable=AsyncMock,
+                return_value=None,
+            ),
+            patch(
+                "songyan.workflows._nodes.run_literary_audit",
+                new_callable=AsyncMock,
+                side_effect=LLMError("timeout"),
+            ),
+            patch(
+                "songyan.workflows._nodes.save_literary_audit",
+                new_callable=AsyncMock,
+            ) as save_mock,
+        ):
+            result = await literary_auditor_node({"current_version_id": "v1"})
+
+        assert result["status"] == "revision_routing"
+        assert result["literary_observation_id"] is None
+        assert result["_literary_observation_unavailable"] is True
+        assert "timeout" in result["_literary_observation_error"]
+        save_mock.assert_not_awaited()
 
 
 class TestLoadChapterRepairStateExcludesAbandoned:

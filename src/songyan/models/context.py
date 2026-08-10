@@ -10,6 +10,7 @@ from songyan.models.character import DialogueStyleCard
 from songyan.models.creative_mode import CreativeBrief, CreativeModeProfile
 from songyan.models.genre import StyleBaseline
 from songyan.models.human_mark import HumanMark
+from songyan.models.supervision import BeatSpec
 
 
 class HardConstraint(BaseModel):
@@ -208,6 +209,9 @@ class ContextPackage(BaseModel):
 
     # === 人类指令（HITL）===
     human_instructions: list[dict[str, Any]] = Field(default_factory=list)
+
+    # === V12 startup beat sheet（Writer 正向施工单）===
+    startup_beat_sheet: list[BeatSpec] = Field(default_factory=list)
 
     # === Phase 4 新增：分层上下文 ===
     arc_context: ArcSummary | None = None

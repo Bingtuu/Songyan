@@ -61,6 +61,9 @@ def _make_log(
     settlement_success: bool = True,
     settlement_needs_human_review: bool = False,
     summary_success: bool | None = True,
+    summary_fact_check_available: bool | None = None,
+    summary_missing_facts: list[str] | None = None,
+    continuity_health_severity: dict[str, int] | None = None,
     revision_rounds: int = 0,
     word_count: int = 3000,
     context_pressure: dict | None = None,
@@ -69,6 +72,7 @@ def _make_log(
     gate_triggered: bool = False,
     gate_mode: str = "observe",
     gate_reasons: list[str] | None = None,
+    startup_validation_findings: list[dict] | None = None,
 ) -> ChapterRunLog:
     return ChapterRunLog(
         log_id=f"log-{chapter_number}",
@@ -86,13 +90,21 @@ def _make_log(
         quality_gate_passed=quality_gate_passed,
         settlement_success=settlement_success,
         settlement_needs_human_review=settlement_needs_human_review,
+        continuity_health_severity=continuity_health_severity,
         summary_success=summary_success,
+        summary_fact_check_available=(
+            bool(summary_missing_facts)
+            if summary_fact_check_available is None
+            else summary_fact_check_available
+        ),
+        summary_missing_facts=summary_missing_facts or [],
         revision_rounds=revision_rounds,
         word_count=word_count,
         context_pressure=context_pressure or {},
         gate_triggered=gate_triggered,
         gate_mode=gate_mode,
         gate_reasons=gate_reasons or [],
+        startup_validation_findings=startup_validation_findings or [],
     )
 
 
@@ -187,6 +199,98 @@ def test_generate_report_with_emergency() -> None:
     ]
     report = generate_report(logs)
     assert "**context_emergency 次数**: 1" in report
+    assert "**ContextEmergency 章节**: Ch1" in report
+
+
+def test_generate_report_with_summary_missing_facts() -> None:
+    logs = [
+        _make_log(chapter_number=1, summary_missing_facts=["缺少主角决策"]),
+        _make_log(chapter_number=2, summary_missing_facts=[]),
+        _make_log(
+            chapter_number=3,
+            summary_missing_facts=["新设定未记录: 协议0003", "缺少主角决策"],
+        ),
+    ]
+    report = generate_report(logs)
+    assert "**summary missing facts**: 3 (Ch1, Ch3)" in report
+    assert "**Summary missing facts 章节**: Ch1, Ch3" in report
+
+
+def test_generate_report_with_startup_validation_findings() -> None:
+    logs = [
+        _make_log(
+            chapter_number=1,
+            success=False,
+            error_stage="settlement_review",
+            startup_validation_findings=[
+                {
+                    "chapter_number": 1,
+                    "code": "new_character",
+                    "message": "settlement introduces a new named character",
+                    "evidence": "李维: 入职时间两年零四个月",
+                    "severity": "blocker",
+                }
+            ],
+        )
+    ]
+
+    report = generate_report(logs)
+
+    assert "**startup validation findings**: 1 (Ch1)" in report
+    assert "## Startup Runtime Validation" in report
+    assert "`new_character`" in report
+    assert "李维: 入职时间两年零四个月" in report
+    assert "| Ch1 | N | 0.800 | 5 | 3 | N | 0 | Y | Y | Y | - | 1 |" in report
+
+
+def test_generate_report_ch1_3_calibration_gate() -> None:
+    logs = [
+        _make_log(
+            chapter_number=1,
+            word_count=2621,
+            revision_rounds=2,
+            summary_fact_check_available=True,
+            summary_missing_facts=["缺少主角决策"],
+        ),
+        _make_log(
+            chapter_number=2,
+            word_count=3506,
+            revision_rounds=2,
+            summary_fact_check_available=True,
+        ),
+        _make_log(
+            chapter_number=3,
+            success=False,
+            quality_gate_passed=False,
+            word_count=2583,
+            revision_rounds=2,
+            summary_fact_check_available=True,
+            continuity_health_severity={"P1": 0, "P2": 0, "P3": 2},
+            error_stage="settlement_review",
+            error="unknown_error",
+        ),
+    ]
+
+    report = generate_report(logs, chapter_range=(1, 3))
+
+    assert "## Ch1-Ch3 人工校准门" in report
+    assert "**字数窗口**: 2700-3300" in report
+    assert "**短章**: Ch1, Ch3" in report
+    assert "**超长章节**: Ch2" in report
+    assert "**未成功章节**: Ch3" in report
+    assert "**summary missing facts 章节**: Ch1" in report
+    assert "**revision_rounds > 1 章节**: Ch1, Ch2, Ch3" in report
+    assert "**continuity mismatch 章节**: Ch3" in report
+
+
+def test_generate_report_marks_legacy_summary_fact_check_unavailable() -> None:
+    logs = [
+        _make_log(chapter_number=1, summary_fact_check_available=False),
+        _make_log(chapter_number=2, summary_fact_check_available=True),
+    ]
+    report = generate_report(logs)
+    assert "**summary fact-check unavailable**: Ch1" in report
+    assert "| Ch1 | Y | 0.800 | 5 | 3 | N | 0 | Y | Y | Y | - | 0 | - |" in report
 
 
 def test_generate_report_word_count_ratios() -> None:

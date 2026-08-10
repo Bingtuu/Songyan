@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from songyan.models.run_log import ChapterRunLog
+from songyan.utils.calibration import max_word_count_for_chapter
 from songyan.utils.run_id import validate_run_id
 
 _LOGS_DIR = Path("logs/chapter_runs")
@@ -104,6 +105,89 @@ def _failure_reason(log: ChapterRunLog) -> str:
     return f"Ch{log.chapter_number}: {stage} / {error}"
 
 
+def _is_ch1_3_calibration(chapter_range: tuple[int, int], total: int) -> bool:
+    """Return whether this report is the Ch1-Ch3 calibration window."""
+    return chapter_range == (1, 3) and total == 3
+
+
+def _run_ch1_3_calibration_gate(
+    logs: list[ChapterRunLog],
+    *,
+    min_word_count: int = 2700,
+    max_word_count: int = 3300,
+) -> DecisionGateResult:
+    """Run the human supervision gate for the Ch1-Ch3 calibration window."""
+    missing_accepted = [log.chapter_number for log in logs if not log.success]
+    short_chapters = [
+        log.chapter_number
+        for log in logs
+        if log.word_count > 0 and log.word_count < min_word_count
+    ]
+    overlong_chapters = [
+        log.chapter_number
+        for log in logs
+        if log.word_count > max_word_count
+    ]
+    emergency_chapters = [
+        log.chapter_number for log in logs if log.context_emergency
+    ]
+    summary_missing_chapters = [
+        log.chapter_number
+        for log in logs
+        if log.summary_fact_check_available and log.summary_missing_fact_count > 0
+    ]
+    summary_unavailable_chapters = [
+        log.chapter_number
+        for log in logs
+        if log.summary_success and not log.summary_fact_check_available
+    ]
+    high_revision_chapters = [
+        log.chapter_number for log in logs if log.revision_rounds > 1
+    ]
+    continuity_mismatch_chapters = [
+        log.chapter_number
+        for log in logs
+        if (log.continuity_health_severity or {}).get("P3", 0) > 0
+    ]
+
+    checks = {
+        "Ch1-Ch3 全部成功 accepted": not missing_accepted,
+        f"每章字数 {min_word_count}-{max_word_count}": (
+            not short_chapters and not overlong_chapters
+        ),
+        "ContextEmergency == 0": not emergency_chapters,
+        "summary missing facts == 0": not summary_missing_chapters,
+        "summary fact-check 100% 采集": not summary_unavailable_chapters,
+        "每章 revision_rounds <= 1": not high_revision_chapters,
+        "continuity mismatch == 0": not continuity_mismatch_chapters,
+    }
+    metrics: dict[str, Any] = {
+        "checks": checks,
+        "min_word_count": min_word_count,
+        "max_word_count": max_word_count,
+        "missing_accepted_chapters": missing_accepted,
+        "short_chapters": short_chapters,
+        "overlong_chapters": overlong_chapters,
+        "context_emergency_chapters": emergency_chapters,
+        "summary_missing_chapters": summary_missing_chapters,
+        "summary_unavailable_chapters": summary_unavailable_chapters,
+        "high_revision_chapters": high_revision_chapters,
+        "continuity_mismatch_chapters": continuity_mismatch_chapters,
+    }
+    failed_checks = [name for name, ok in checks.items() if not ok]
+    if not failed_checks:
+        return DecisionGateResult(
+            passed=True,
+            reason="Ch1-Ch3 人工校准门全部通过，可提交人工审读决定是否进入 Ch1-Ch10。",
+            metrics=metrics,
+        )
+    return DecisionGateResult(
+        passed=False,
+        reason="未达标项: " + ", ".join(failed_checks),
+        metrics=metrics,
+    )
+
+
 def generate_report(
     logs: list[ChapterRunLog],
     chapter_range: tuple[int, int] | None = None,
@@ -156,6 +240,30 @@ def generate_report(
 
     # emergency 统计
     emergency_count = sum(1 for log in successes if log.context_emergency)
+    emergency_chapters = [
+        log.chapter_number for log in logs if log.context_emergency
+    ]
+    summary_missing_fact_chapters = [
+        log.chapter_number
+        for log in logs
+        if log.summary_fact_check_available and log.summary_missing_fact_count > 0
+    ]
+    summary_fact_check_unavailable_chapters = [
+        log.chapter_number
+        for log in logs
+        if log.summary_success and not log.summary_fact_check_available
+    ]
+    summary_missing_fact_count = sum(
+        log.summary_missing_fact_count
+        for log in logs
+        if log.summary_fact_check_available
+    )
+    startup_validation_chapters = [
+        log.chapter_number
+        for log in logs
+        if log.startup_validation_finding_count > 0
+    ]
+    startup_validation_count = sum(log.startup_validation_finding_count for log in logs)
 
     # Task 130: 候选硬门禁汇总
     gate_triggered_count = sum(1 for log in logs if log.gate_triggered)
@@ -177,6 +285,7 @@ def generate_report(
 
     # 决策门选择
     start_ch, end_ch = chapter_range or (logs[0].chapter_number, logs[-1].chapter_number)
+    effective_range = (start_ch, end_ch)
     if end_ch >= 101:
         dg = run_decision_gate_dg2(
             pass_rate=pass_rate,
@@ -197,6 +306,14 @@ def generate_report(
             total=total,
         )
         dg_label = "DG-1"
+    calibration_gate = (
+        _run_ch1_3_calibration_gate(
+            logs,
+            max_word_count=max_word_count_for_chapter(1, 3000),
+        )
+        if _is_ch1_3_calibration(effective_range, total)
+        else None
+    )
 
     gate_mode_distribution = ", ".join(
         f"{k}={v}" for k, v in sorted(gate_mode_counts.items())
@@ -216,6 +333,12 @@ def generate_report(
         f"- **character_states 均值**: {avg_char:.1f}",
         f"- **soft_refs 均值**: {avg_soft:.1f}",
         f"- **context_emergency 次数**: {emergency_count}",
+        f"- **summary missing facts**: {summary_missing_fact_count} "
+        f"({_format_chapters(summary_missing_fact_chapters)})",
+        f"- **summary fact-check unavailable**: "
+        f"{_format_chapters(summary_fact_check_unavailable_chapters)}",
+        f"- **startup validation findings**: {startup_validation_count} "
+        f"({_format_chapters(startup_validation_chapters)})",
         f"- **候选硬门禁触发**: {gate_triggered_count} 章",
         f"- **gate_mode 分布**: {gate_mode_distribution}",
         f"- **平均 revision 轮数**: {avg_rev:.1f}",
@@ -228,6 +351,34 @@ def generate_report(
         f"- **判定理由**: {dg.reason}",
         "",
     ]
+
+    if calibration_gate is not None:
+        metrics = calibration_gate.metrics
+        lines.extend(
+            [
+                "## Ch1-Ch3 人工校准门",
+                "",
+                f"- **结果**: {_decision_label(calibration_gate)}",
+                f"- **判定理由**: {calibration_gate.reason}",
+                f"- **字数窗口**: {metrics.get('min_word_count', 2700)}"
+                f"-{metrics.get('max_word_count', 3300)}",
+                f"- **未成功章节**: "
+                f"{_format_chapters(metrics.get('missing_accepted_chapters', []))}",
+                f"- **短章**: {_format_chapters(metrics.get('short_chapters', []))}",
+                f"- **超长章节**: {_format_chapters(metrics.get('overlong_chapters', []))}",
+                f"- **ContextEmergency 章节**: "
+                f"{_format_chapters(metrics.get('context_emergency_chapters', []))}",
+                f"- **summary missing facts 章节**: "
+                f"{_format_chapters(metrics.get('summary_missing_chapters', []))}",
+                f"- **summary fact-check 未采集章节**: "
+                f"{_format_chapters(metrics.get('summary_unavailable_chapters', []))}",
+                f"- **revision_rounds > 1 章节**: "
+                f"{_format_chapters(metrics.get('high_revision_chapters', []))}",
+                f"- **continuity mismatch 章节**: "
+                f"{_format_chapters(metrics.get('continuity_mismatch_chapters', []))}",
+                "",
+            ]
+        )
 
     if dg_label == "DG-2":
         metrics = dg.metrics
@@ -255,13 +406,18 @@ def generate_report(
         )
 
     # Task 130: 候选硬门禁明细
-    if gate_triggered_count > 0 or gate_mode_counts:
+    if gate_triggered_count > 0 or gate_mode_counts or emergency_chapters:
         lines.extend(
             [
                 "## 候选硬门禁明细",
                 "",
                 f"- **触发章节数**: {gate_triggered_count}/{total}",
                 f"- **模式分布**: {gate_mode_distribution}",
+                f"- **ContextEmergency 章节**: {_format_chapters(emergency_chapters)}",
+                f"- **Summary missing facts 章节**: "
+                f"{_format_chapters(summary_missing_fact_chapters)}",
+                f"- **Summary fact-check 未采集章节**: "
+                f"{_format_chapters(summary_fact_check_unavailable_chapters)}",
             ]
         )
         if gate_reason_counts:
@@ -274,14 +430,33 @@ def generate_report(
             lines.append("- **触发原因**: （未记录具体原因）")
         lines.append("")
 
+    if startup_validation_count > 0:
+        lines.extend(
+            [
+                "## Startup Runtime Validation",
+                "",
+                f"- **finding count**: {startup_validation_count}",
+                f"- **chapters**: {_format_chapters(startup_validation_chapters)}",
+                "",
+                "| 章节 | code | evidence |",
+                "|------|------|----------|",
+            ]
+        )
+        for log in logs:
+            for finding in log.startup_validation_findings:
+                code = str(finding.get("code", "-"))
+                evidence = str(finding.get("evidence", "")).replace("|", "\\|")
+                lines.append(f"| Ch{log.chapter_number} | `{code}` | {evidence} |")
+        lines.append("")
+
     lines.extend(
         [
         "## 详细指标",
         "",
             "| 章节 | 成功 | budget_used | char_states | soft_refs | emergency | "
-            "revision | QG通过 | settlement | summary | 失败原因 |",
+            "revision | QG通过 | settlement | summary | summary缺事实 | startup | 失败原因 |",
             "|------|------|-------------|-------------|-----------|-----------|"
-            "----------|--------|------------|---------|----------|",
+            "----------|--------|------------|---------|-------------|---------|----------|",
         ]
     )
 
@@ -292,6 +467,8 @@ def generate_report(
             f"{_format_int(log.soft_refs_loaded)} | {_format_bool(log.context_emergency)} | "
             f"{log.revision_rounds} | {_format_bool(log.quality_gate_passed)} | "
             f"{_format_bool(log.settlement_success)} | {_format_bool(log.summary_success)} | "
+            f"{log.summary_missing_fact_count if log.summary_fact_check_available else '-'} | "
+            f"{log.startup_validation_finding_count} | "
             f"{'-' if log.success else _failure_reason(log)} |"
         )
 

@@ -145,6 +145,12 @@ def build_chapter_run_log(
     # Task 105: 提取 V5.0 上下文指标
     _ctx_metrics = state.get("_context_metrics") or m.get("_context_metrics", {})
     summary_id = state.get("summary_id")
+    summary_missing_facts = state.get("_summary_missing_facts") or []
+    if not isinstance(summary_missing_facts, list):
+        summary_missing_facts = []
+    startup_validation_findings = state.get("_startup_validation_findings") or []
+    if not isinstance(startup_validation_findings, list):
+        startup_validation_findings = []
 
     # Task 106: 提取 score_card（含 details 子指标）
     _score_card_raw = state.get("_score_card")
@@ -226,6 +232,14 @@ def build_chapter_run_log(
         settlement_validation_errors=state.get("_settlement_validation_errors") or [],
         summary_id=summary_id,
         summary_success=summary_id is not None,
+        summary_fact_check_available=bool(state.get("_summary_fact_check_available", False)),
+        summary_missing_facts=[str(item) for item in summary_missing_facts],
+        summary_missing_fact_count=len(summary_missing_facts),
+        startup_validation_findings=[
+            item if isinstance(item, dict) else {"code": "invalid_finding", "evidence": str(item)}
+            for item in startup_validation_findings
+        ],
+        startup_validation_finding_count=len(startup_validation_findings),
         budget_used=_ctx_metrics.get("budget_used"),
         character_states_loaded=_ctx_metrics.get("character_states_loaded"),
         soft_refs_loaded=_ctx_metrics.get("soft_refs_loaded"),

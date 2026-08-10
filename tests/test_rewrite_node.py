@@ -280,8 +280,8 @@ class TestRewriteNode:
             h for h in mock_ctx.human_instructions if h["type"] == "word_count_constraint"
         )
         assert "3000" in wc_instr["content"]
-        assert "2400" in wc_instr["content"]  # 093: 收紧到 0.80x
-        assert "3600" in wc_instr["content"]  # 093: 收紧到 1.20x
+        assert "2700" in wc_instr["content"]  # Ch1-Ch3 calibration lower bound
+        assert "3300" in wc_instr["content"]  # Ch1-Ch3 calibration upper bound
         scene_instr = next(
             h
             for h in mock_ctx.human_instructions

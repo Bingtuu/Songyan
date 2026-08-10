@@ -24,6 +24,10 @@ from songyan.db.migrations import init_schema
 from songyan.db.narrative_repo import NarrativeRepository
 from songyan.db.repository import ProjectRepository
 from songyan.evals.cost_report import render_cost_section
+from songyan.evals.forbidden_scan import (
+    render_forbidden_scan_section,
+    scan_accepted_forbidden_terms,
+)
 from songyan.evals.streaming_report import generate_report, read_run_logs, write_report
 from songyan.exceptions import SongyanError
 from songyan.genres.loader import list_genre_profiles, load_genre_profile
@@ -1135,6 +1139,35 @@ def _render_cost_section(run_id: str) -> str:
     return "\n" + render_cost_section(aggregate, source_stats)
 
 
+def _render_forbidden_scan_section(logs: list[Any]) -> str:
+    """Render per-chapter forbidden scan from accepted manuscript if possible."""
+    project_ids = {getattr(log, "project_id", "") for log in logs if getattr(log, "project_id", "")}
+    if len(project_ids) != 1:
+        return (
+            "\n## 章节禁用词扫描\n\n"
+            "- **状态**: skipped\n"
+            "- **原因**: run log 未指向单一 project_id。\n"
+        )
+    project_id = next(iter(project_ids))
+    chapter_numbers = sorted({int(log.chapter_number) for log in logs})
+
+    async def _scan() -> str:
+        result = await scan_accepted_forbidden_terms(
+            project_id=project_id,
+            chapter_numbers=chapter_numbers,
+        )
+        return render_forbidden_scan_section(result)
+
+    try:
+        return "\n" + asyncio.run(_scan())
+    except _CLI_CATCHABLE as exc:
+        return (
+            "\n## 章节禁用词扫描\n\n"
+            "- **状态**: degraded\n"
+            f"- **原因**: {exc}\n"
+        )
+
+
 @cli.command(name="report")
 @click.option(
     "--run-id",
@@ -1190,6 +1223,7 @@ def report_cmd(
             )
 
         report_md = generate_report(logs, chapter_range=chapter_range)
+        report_md += _render_forbidden_scan_section(logs)
 
         # Task 175 阶段 C: 追加 LLM 成本视图段（SQLite usage 遥测；取数失败降级，不阻断报告）
         report_md += _render_cost_section(run_id)

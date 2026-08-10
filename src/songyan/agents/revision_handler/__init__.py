@@ -870,6 +870,7 @@ async def run_revision(
     revised_rule_result: RuleAuditResult | None = None,
     previous_issues: list[ReviewIssue] | None = None,
     word_count_target: int = 3000,
+    chapter_number: int = 0,
     score_card: dict[str, Any] | None = None,
     mode_profile: CreativeModeProfile | None = None,
 ) -> tuple[RevisionOutput, str]:
@@ -1009,6 +1010,7 @@ async def run_revision(
                 original_rule_result=original_rule_result,
                 revised_rule_result=revised_rule_result,
                 target_word_count=word_count_target,
+                chapter_number=chapter_number,
             )
             if segmented_output.segmented and segmented_content:
                 logger.info(
@@ -1130,7 +1132,11 @@ async def run_revision(
     revised_scenes_parsed = _parse_scenes(revised_content)
     constrained_content, constrained_scenes, constrained_wc, adjusted, reason = (
         _enforce_revision_word_count(
-            revised_content, revised_scenes_parsed, content, word_count_target
+            revised_content,
+            revised_scenes_parsed,
+            content,
+            word_count_target,
+            chapter_number=chapter_number,
         )
     )
     if adjusted:

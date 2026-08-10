@@ -135,3 +135,96 @@ class TestEnforceRevisionWordCount:
         assert wc <= upper
         assert count_chinese_words(result_content) == wc
 
+    def test_short_original_keeps_truncated_expansion(self) -> None:
+        """短原文扩写达标时，不因截断保留率低回退到短章."""
+        target = 3000
+        lower = int(target * 0.80)
+        upper = int(target * 1.20)
+        original = "正文" * 900  # 1800 字，低于 lower=2400
+        revision = "\n\n".join(["正文" * 250 for _ in range(10)])  # 5000 字，超上限
+        scenes = [{"content": revision}]
+
+        result_content, _result_scenes, wc, adjusted, reason = (
+            _enforce_revision_word_count(revision, scenes, original, target)
+        )
+
+        assert adjusted is True
+        assert reason == "revision_truncated_short_original_expansion_kept"
+        assert result_content != original
+        assert lower <= wc <= upper
+        assert count_chinese_words(result_content) == wc
+
+    def test_ch1_3_calibration_upper_is_3300(self) -> None:
+        """前三章校准窗口截断上限使用 3300，而不是通用 1.20x."""
+        target = 3000
+        original = "正文" * 1500
+        revision = "\n\n".join(["正文" * 190 for _ in range(10)])  # 3800 字
+        scenes = [{"content": revision}]
+
+        result_content, _result_scenes, wc, adjusted, reason = (
+            _enforce_revision_word_count(
+                revision,
+                scenes,
+                original,
+                target,
+                min_preserve_ratio=0.5,
+                chapter_number=1,
+            )
+        )
+
+        assert adjusted is True
+        assert reason in {
+            "revision_hard_truncated_at_boundary",
+            "revision_truncated_preservation_too_low_fallback",
+        }
+        assert wc <= 3300
+        assert count_chinese_words(result_content) == wc
+
+    def test_short_original_expansion_keeps_calibration_truncated_result(self) -> None:
+        """短原文扩写保留时也不能超过前三章 3300 上限."""
+        target = 3000
+        original = "正文" * 1182  # 2364 字，低于 calibration lower=2700
+        revision = "\n\n".join(["正文" * 245 for _ in range(10)])  # 4900 字
+        scenes = [{"content": revision}]
+
+        result_content, _result_scenes, wc, adjusted, reason = (
+            _enforce_revision_word_count(
+                revision,
+                scenes,
+                original,
+                target,
+                chapter_number=3,
+            )
+        )
+
+        assert adjusted is True
+        assert reason == "revision_truncated_short_original_expansion_kept"
+        assert result_content != original
+        assert 2700 <= wc <= 3300
+        assert count_chinese_words(result_content) == wc
+
+    def test_scene_truncation_result_is_clamped_to_calibration_upper(self) -> None:
+        """scene 边界截断后仍超过 3300 时，继续硬截断到校准上限."""
+        target = 3000
+        original = "正" * 1000
+        revision = "\n\n".join(
+            f"### Scene {idx}\n" + ("正" * 1150)
+            for idx in range(1, 5)
+        )
+        scenes = [{"content": revision}]
+
+        result_content, _result_scenes, wc, adjusted, reason = (
+            _enforce_revision_word_count(
+                revision,
+                scenes,
+                original,
+                target,
+                min_preserve_ratio=0.5,
+                chapter_number=1,
+            )
+        )
+
+        assert adjusted is True
+        assert "calibration_hard_truncated" in reason
+        assert wc <= 3300
+        assert count_chinese_words(result_content) == wc

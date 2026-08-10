@@ -15,6 +15,10 @@ from songyan.llm.client import call_llm
 from songyan.models import ChapterHead, ChapterVersion, ContextPackage
 from songyan.models.human_instruction import normalize_human_instruction
 from songyan.prompts import get_prompt_loader
+from songyan.utils.calibration import (
+    max_word_count_for_chapter,
+    min_word_count_for_chapter,
+)
 from songyan.utils.scene_parser import parse_scenes as _parse_scenes
 from songyan.utils.truncation import enforce_word_count as _enforce_word_count
 from songyan.utils.truncation import hard_truncate_at_boundary
@@ -47,27 +51,43 @@ def _strip_scene_marker_lines(text: str) -> str:
     return re.sub(r"\n{3,}", "\n\n", text)
 
 
-def _compute_scene_budget(word_count_target: int, chapter_type: str) -> str:
+def _compute_scene_budget(
+    word_count_target: int,
+    chapter_type: str,
+    chapter_number: int = 0,
+) -> str:
     """Task 092+093: 场景字数预算 — 只给场景数量建议和篇幅比例指导，不给具体数字.
 
     避免 LLM 被具体数字束缚导致系统性偏差（要么全部取低值，要么全部超标）。
     返回格式化的场景分配文本，注入 Writer Prompt。
     """
     w = word_count_target
+    lower_bound = min_word_count_for_chapter(chapter_number, word_count_target)
+    upper_bound = max_word_count_for_chapter(chapter_number, word_count_target)
+    calibration_note = ""
+    if 1 <= chapter_number <= 3 and lower_bound > int(word_count_target * 0.80):
+        calibration_note = (
+            f"前三章校准窗口硬字数范围为 {lower_bound}-{upper_bound} 字；"
+            "低于下限会被视为失败，超过上限会被视为校准失控。"
+            "必须用可见动作、交互、环境反应和调查步骤自然控制篇幅。"
+        )
     if chapter_type in ("conflict", "climax", "tech_revelation"):
-        return (
+        text = (
             f"本章目标 {w} 字，建议 2-3 个场景。核心场景应占主要篇幅，"
             f"转折场景承上启下，收尾场景简洁有力、留下钩子。"
         )
     elif chapter_type in ("transition", "exposition"):
-        return (
+        text = (
             f"本章目标 {w} 字，建议 2 个场景。第一场景铺陈引入，第二场景推进或收束。"
         )
     else:
-        return (
+        text = (
             f"本章目标 {w} 字，建议 2-3 个场景。引入场景建立情境，"
             f"发展场景推进冲突，收尾场景落下钩子。"
         )
+    if calibration_note:
+        text += "\n" + calibration_note
+    return text
 
 
 def _render_prompt(ctx: ContextPackage) -> str:
@@ -84,6 +104,7 @@ def _render_prompt(ctx: ContextPackage) -> str:
     target_events = "\n".join(f"- {e}" for e in goal.target_events) or "（无）"
     hooks = "\n".join(f"- {h}" for h in goal.hooks) or "（无）"
     obligations = "\n".join(f"- {o}" for o in goal.obligations) or "（无）"
+    startup_beat_sheet = _render_startup_beat_sheet(ctx)
 
     creative_intent = brief.creative_intent if brief else "（无）"
 
@@ -116,6 +137,27 @@ def _render_prompt(ctx: ContextPackage) -> str:
         for hc in ctx.hard_constraints:
             lines.append(f"- [{hc.type}] {hc.description}")
         hard_constraints = "\n".join(lines)
+    calibration_min_words = min_word_count_for_chapter(
+        goal.chapter_number,
+        goal.word_count_target,
+    )
+    if calibration_min_words > int(goal.word_count_target * 0.80):
+        calibration_max_words = max_word_count_for_chapter(
+            goal.chapter_number,
+            goal.word_count_target,
+        )
+        if hard_constraints == "（无）":
+            hard_constraints = ""
+        hard_constraints = (
+            hard_constraints.rstrip()
+            + "\n"
+            + (
+                f"- [calibration_word_count] Ch1-Ch3 校准窗口要求本章正文"
+                f"必须在 {calibration_min_words}-{calibration_max_words} 字之间；"
+                "若核心事件较少，必须通过工程动作、交互场景、环境反应和因果细节自然扩写；"
+                "若接近上限，压缩重复日志、模板字段和机械查询。"
+            )
+        ).strip()
 
     character_states = "（无）"
     if ctx.character_states:
@@ -408,6 +450,7 @@ def _render_prompt(ctx: ContextPackage) -> str:
     scene_budget_text = _compute_scene_budget(
         goal.word_count_target,
         goal.chapter_type or "",
+        goal.chapter_number,
     )
 
     variables = {
@@ -419,6 +462,7 @@ def _render_prompt(ctx: ContextPackage) -> str:
         "emotional_arc": goal.emotional_arc or "（未指定）",
         "hooks": hooks,
         "obligations": obligations,
+        "startup_beat_sheet": startup_beat_sheet,
         "creative_intent": creative_intent,
         "required_tensions": tensions,
         "forbidden_patterns": forbidden,
@@ -461,6 +505,25 @@ def _render_prompt(ctx: ContextPackage) -> str:
 
     rendered = loader.render_card(card, variables, tags=tags)
     return rendered.full_prompt
+
+
+def _render_startup_beat_sheet(ctx: ContextPackage) -> str:
+    """Render V12 startup beats as positive Writer instructions."""
+    if not ctx.startup_beat_sheet:
+        return "（无）"
+
+    lines = [
+        "以下是本章已通过规划审查的正文施工单。必须按顺序展开成自然场景；"
+        "只能扩写当前动作、阻力、反馈和主角微决策，不用旧案、新角色、坐标或跨区追踪补字数。"
+    ]
+    for idx, beat in enumerate(ctx.startup_beat_sheet, start=1):
+        lines.append(f"### Beat {idx}")
+        lines.append(f"- 可见动作：{beat.visible_action}")
+        lines.append(f"- 当前阻力：{beat.current_friction}")
+        lines.append(f"- 仪器/环境反馈：{beat.feedback}")
+        lines.append(f"- 主角微决策：{beat.micro_decision}")
+        lines.append(f"- 落点：{beat.landing}")
+    return "\n".join(lines)
 
 
 def _extract_body(llm_response: str, strip_scene_markers: bool = True) -> str:
@@ -739,9 +802,12 @@ async def write_chapter(
             new_word_count=word_count,
             truncation_reason=_trunc_reason,
         )
-    elif word_count_target > 0 and word_count > int(word_count_target * 1.20):
+    elif word_count_target > 0 and word_count > max_word_count_for_chapter(
+        chapter_number,
+        word_count_target,
+    ):
         # 修复 A: scene 边界截断失败时，追加硬截断回退
-        _hard_max = int(word_count_target * 1.20)
+        _hard_max = max_word_count_for_chapter(chapter_number, word_count_target)
         _hard_content = _hard_truncate_at_boundary(content, _hard_max)
         if _hard_content != content:
             content = _hard_content

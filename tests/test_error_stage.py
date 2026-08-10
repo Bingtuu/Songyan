@@ -254,7 +254,7 @@ async def test_literary_auditor_error_stage() -> None:
 
 @pytest.mark.asyncio
 async def test_literary_auditor_llm_error_returns_diagnostic_state() -> None:
-    """literary_auditor_node catches LLM failures instead of raising."""
+    """literary_auditor_node records diagnostic unavailability without blocking."""
     version = MagicMock()
     version.version_id = "v-1"
     version.content = "正文"
@@ -267,8 +267,10 @@ async def test_literary_auditor_llm_error_returns_diagnostic_state() -> None:
         mock_ctx.return_value = None
         mock_audit.side_effect = LLMError("api failed")
         result = await literary_auditor_node({"current_version_id": "v-1"})
-    assert result["status"] == "literary_auditor"
-    assert result["error"] is not None
+    assert result["status"] == "revision_routing"
+    assert result["literary_observation_id"] is None
+    assert result["_literary_observation_unavailable"] is True
+    assert result["_literary_observation_error"] == "api failed"
 
 
 # ---------------------------------------------------------------------------

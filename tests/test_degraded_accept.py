@@ -303,8 +303,8 @@ async def test_settlement_extractor_skips_settlement_for_degraded_accept() -> No
 
 
 @pytest.mark.asyncio
-async def test_settlement_extractor_degrades_qg_false_without_degraded_accept() -> None:
-    """Task 128a: QG false without degraded_accept → 自动降级，跳过 settlement，返回 done."""
+async def test_settlement_extractor_requires_review_for_qg_false_without_degraded_accept() -> None:
+    """QG false without explicit degraded_accept should require review, not accepted head."""
     version = MagicMock()
     version.version_id = "v-1"
     version.content = "test content"
@@ -328,16 +328,10 @@ async def test_settlement_extractor_degrades_qg_false_without_degraded_accept() 
             "_skip_settlement": False,
         })
 
-    assert result.get("status") == "done"
-    assert result.get("current_version_id") == "v-accepted"
-    assert result.get("_degraded_accept") is True
-    assert result.get("_settlement_needs_human_review") is False
+    assert result.get("status") == "settlement_review"
+    assert result.get("_degraded_accept") is None
+    assert result.get("_settlement_needs_human_review") is True
+    assert result.get("_skip_settlement") is True
     assert result.get("settlement_id") is None
     assert result.get("summary_id") is None
-    mock_accept.assert_awaited_once_with(
-        project_id="p1",
-        chapter_number=1,
-        version_id="v-1",
-        settlement=None,
-        content="test content",
-    )
+    mock_accept.assert_not_awaited()

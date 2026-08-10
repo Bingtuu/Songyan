@@ -341,6 +341,63 @@ def test_build_chapter_run_log_degraded_accept() -> None:
     assert log.skip_settlement is False
 
 
+def test_build_chapter_run_log_records_summary_missing_facts() -> None:
+    """Summary fact-check misses should be persisted into chapter run logs."""
+    started = datetime(2024, 1, 1, 12, 0, 0)
+    finished = datetime(2024, 1, 1, 12, 3, 0)
+
+    log = build_chapter_run_log(
+        run_id="run-1",
+        project_id="proj-1",
+        chapter_number=3,
+        started_at=started,
+        finished_at=finished,
+        success=True,
+        final_state={
+            "status": "done",
+            "settlement_id": "st-3",
+            "summary_id": "sum-3",
+            "_summary_fact_check_available": True,
+            "_summary_missing_facts": ["缺少主角决策", "新设定未记录: 协议0003"],
+        },
+    )
+
+    assert log.summary_fact_check_available is True
+    assert log.summary_missing_fact_count == 2
+    assert log.summary_missing_facts == ["缺少主角决策", "新设定未记录: 协议0003"]
+
+
+def test_build_chapter_run_log_records_startup_validation_findings() -> None:
+    """Startup runtime validation findings should be persisted into run logs."""
+    started = datetime(2024, 1, 1, 12, 0, 0)
+    finished = datetime(2024, 1, 1, 12, 3, 0)
+
+    finding = {
+        "chapter_number": 1,
+        "code": "new_character",
+        "message": "settlement introduces a new named character",
+        "evidence": "李维: 入职时间两年零四个月",
+        "severity": "blocker",
+    }
+    log = build_chapter_run_log(
+        run_id="run-1",
+        project_id="proj-1",
+        chapter_number=1,
+        started_at=started,
+        finished_at=finished,
+        success=False,
+        error_stage="settlement_review",
+        final_state={
+            "status": "settlement_review",
+            "_settlement_needs_human_review": True,
+            "_startup_validation_findings": [finding],
+        },
+    )
+
+    assert log.startup_validation_finding_count == 1
+    assert log.startup_validation_findings == [finding]
+
+
 def test_build_chapter_run_log_persists_settlement_review_diagnostics() -> None:
     """Task 4E: settlement_review 失败诊断进入 JSONL 可查询字段."""
     started = datetime(2024, 1, 1, 12, 0, 0)

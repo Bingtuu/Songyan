@@ -13,6 +13,7 @@ data/
 .tmp/
 docs/superpowers/
 projects/*/logs/
+projects/hard-sf-new-weird/
 test-results/
 junit.xml
 pytest-report.xml

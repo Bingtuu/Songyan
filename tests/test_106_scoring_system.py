@@ -9,6 +9,7 @@ from songyan.models import (
     DimensionScore,
     FatigueWordMatch,
     LLMAuditResult,
+    MetaTagLeakMatch,
     PunchCheck,
     ReviewCategory,
     ReviewIssue,
@@ -54,6 +55,9 @@ class TestChapterScoreCard:
         flags2 = ScoreFlags(coherence_major=True)
         assert flags2.needs_revision is True
 
+        flags_length = ScoreFlags(length_ok=False)
+        assert flags_length.needs_revision is True
+
         flags3 = ScoreFlags()
         assert flags3.needs_revision is False
 
@@ -74,6 +78,9 @@ def _make_rule_result(
     paragraph_rhythm_score: float = 7.0,
     scene_count: int = 3,
     punch_check: PunchCheck | None = None,
+    forbidden_term_count: int = 0,
+    mandatory_reference_check_passed: bool = True,
+    required_phrase_check_passed: bool = True,
 ) -> RuleAuditResult:
     return RuleAuditResult(
         word_count=word_count,
@@ -90,6 +97,27 @@ def _make_rule_result(
         paragraph_rhythm_score=paragraph_rhythm_score,
         scene_count=scene_count,
         punch_check=punch_check or PunchCheck(expected_punch_count=0),
+        forbidden_term_count=forbidden_term_count,
+        forbidden_term_matches=[
+            MetaTagLeakMatch(
+                pattern="forbidden_term:三天前",
+                matched_text="三天前",
+                location="第1段",
+                artifact_type="forbidden_term",
+            )
+        ] * forbidden_term_count,
+        mandatory_reference_check_passed=mandatory_reference_check_passed,
+        mandatory_reference_issues=(
+            []
+            if mandatory_reference_check_passed
+            else [{"setting_key": "critical.setting", "setting_name": "关键设定"}]
+        ),
+        required_phrase_check_passed=required_phrase_check_passed,
+        required_phrase_issues=(
+            []
+            if required_phrase_check_passed
+            else [{"phrase": "不要第一个确认"}]
+        ),
     )
 
 
@@ -115,6 +143,25 @@ class TestScoreLength:
         card = ScoreAggregator.aggregate("v1", rule, _make_llm_result())
         assert 0.0 < card.length.score < 1.0
         assert card.flags.length_ok is True
+
+    def test_ch1_3_above_calibration_ceiling_fails_length_ok(self):
+        rule = _make_rule_result(word_count=3436, word_count_target=3000)
+        card = ScoreAggregator.aggregate(
+            "v1",
+            rule,
+            _make_llm_result(),
+            chapter_number=1,
+        )
+        assert card.length.score >= 0.5
+        assert card.flags.length_ok is False
+        assert card.flags.needs_revision is True
+
+    def test_below_0_8x_fails_length_ok_even_if_score_above_half(self):
+        rule = _make_rule_result(word_count=2294, word_count_target=3000)
+        card = ScoreAggregator.aggregate("v1", rule, _make_llm_result())
+        assert card.length.score >= 0.5
+        assert card.flags.length_ok is False
+        assert card.flags.needs_revision is True
 
     def test_way_too_long(self):
         rule = _make_rule_result(word_count=5000, word_count_target=3000)
@@ -172,6 +219,27 @@ class TestScoreCoherence:
         assert card.coherence.score == 0.6
         assert card.flags.coherence_critical is True
         assert card.flags.needs_revision is True
+
+    def test_forbidden_term_count_triggers_coherence_critical(self):
+        rule = _make_rule_result(forbidden_term_count=1)
+        card = ScoreAggregator.aggregate("v1", rule, _make_llm_result())
+        assert card.flags.coherence_critical is True
+        assert card.flags.needs_revision is True
+        assert card.coherence.details["forbidden_term_count"] == 1.0
+
+    def test_mandatory_reference_failure_triggers_coherence_critical(self):
+        rule = _make_rule_result(mandatory_reference_check_passed=False)
+        card = ScoreAggregator.aggregate("v1", rule, _make_llm_result())
+        assert card.flags.coherence_critical is True
+        assert card.flags.needs_revision is True
+        assert card.coherence.details["mandatory_reference_missing"] == 1.0
+
+    def test_required_phrase_failure_triggers_coherence_critical(self):
+        rule = _make_rule_result(required_phrase_check_passed=False)
+        card = ScoreAggregator.aggregate("v1", rule, _make_llm_result())
+        assert card.flags.coherence_critical is True
+        assert card.flags.needs_revision is True
+        assert card.coherence.details["required_phrase_missing"] == 1.0
 
     def test_single_major_not_coherence_major(self):
         """Task 110e: 单个 major 不再触发 coherence_major."""

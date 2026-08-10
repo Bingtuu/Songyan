@@ -11,13 +11,15 @@ from songyan.agents.goal_planner import (
     MAX_WORD_COUNT,
     MIN_WORD_COUNT,
     _build_chapter_goal,
+    _extract_forbidden_terms_for_chapter,
     define_chapter_goal,
 )
-from songyan.exceptions import LLMResponseParseError
+from songyan.exceptions import GoalPlanningError, LLMResponseParseError
 from songyan.models.chapter import ChapterGoal
 from songyan.models.creative_mode import CreativeModeProfile
 from songyan.models.genre import GenreProfile
 from songyan.models.project import ProjectSetting
+from songyan.workflows._narrative_context import NarrativeGoalContext
 
 
 # ---------------------------------------------------------------------------
@@ -96,6 +98,39 @@ class TestBuildChapterGoal:
         assert goal.word_count_target == 3000
         assert goal.chapter_type == "开篇"
 
+
+class TestForbiddenTerms:
+    """Tests for explicit chapter forbidden term extraction."""
+
+    def test_extract_range_forbidden_terms(self) -> None:
+        arc_goal = (
+            "硬禁用：Ch1-Ch3 全部不得出现阮星河；"
+            "Ch1-Ch2 不得出现 V-0003；"
+            "Ch1-Ch3 不得出现静海站、节点九、继承程序。"
+        )
+
+        assert _extract_forbidden_terms_for_chapter(arc_goal, 1) == [
+            "阮星河",
+            "V-0003",
+            "静海站",
+            "节点九",
+            "继承程序",
+        ]
+        assert _extract_forbidden_terms_for_chapter(arc_goal, 3) == [
+            "阮星河",
+            "静海站",
+            "节点九",
+            "继承程序",
+        ]
+
+    def test_extract_forbidden_terms_preserves_time_colon(self) -> None:
+        arc_goal = "Ch2 不得出现 14:、下午两点。"
+
+        assert _extract_forbidden_terms_for_chapter(arc_goal, 2) == [
+            "14:",
+            "下午两点",
+        ]
+
     def test_word_count_clamp_high(self) -> None:
         """字数超过上限时 clamp."""
         data = json.loads(_make_valid_llm_response(word_count_target=10000))
@@ -113,6 +148,21 @@ class TestBuildChapterGoal:
         goal = _build_chapter_goal(data, 1, genre)
 
         assert goal.word_count_target == MIN_WORD_COUNT
+
+    def test_ch1_3_do_not_type_adjust_above_calibration_window(self) -> None:
+        """前三章校准窗口不因章节类型自动调高到 3500."""
+        data = json.loads(
+            _make_valid_llm_response(
+                word_count_target=3000,
+                chapter_type="tech_revelation",
+            )
+        )
+        genre = _make_genre()
+        genre.chapter_types.append("tech_revelation")
+
+        goal = _build_chapter_goal(data, 3, genre)
+
+        assert goal.word_count_target == 3000
 
     def test_invalid_chapter_type_fallback(self) -> None:
         """无效章节类型回退到第一个允许值."""
@@ -268,6 +318,75 @@ class TestDefineChapterGoal:
                         mode_profile=mode,
                         chapter_number=1,
                     )
+
+    async def test_forbidden_term_in_goal_raises(self) -> None:
+        """叙事骨架显式禁用实体被 GoalPlanner 输出引用时，直接失败。"""
+        project = _make_project()
+        genre = _make_genre()
+        mode = _make_mode()
+        llm_response = _make_valid_llm_response(
+            target_events=["沈砚遇见 V-0003 并追问货舱"],
+        )
+        narrative_ctx = NarrativeGoalContext(
+            has_skeleton=True,
+            arc_index=0,
+            arc_goal="硬禁用：Ch1-Ch2 不得出现 V-0003。",
+        )
+
+        with patch(
+            "songyan.agents.goal_planner.call_llm",
+            new_callable=AsyncMock,
+            return_value=llm_response,
+        ):
+            with pytest.raises(GoalPlanningError):
+                await define_chapter_goal(
+                    project_id="proj_123",
+                    project=project,
+                    genre_profile=genre,
+                    mode_profile=mode,
+                    chapter_number=1,
+                    narrative_ctx=narrative_ctx,
+                )
+
+    async def test_forbidden_term_retries_once_and_returns_clean_goal(self) -> None:
+        """首次输出命中禁用词时，带违规词重试一次并返回修正结果。"""
+        project = _make_project()
+        genre = _make_genre()
+        mode = _make_mode()
+        bad_response = _make_valid_llm_response(
+            target_events=["沈砚遇见 V-0003 并追问货舱"],
+        )
+        clean_response = _make_valid_llm_response(
+            target_events=["沈砚追踪匿名校验接口留下的货舱异常"],
+        )
+        narrative_ctx = NarrativeGoalContext(
+            has_skeleton=True,
+            arc_index=0,
+            arc_goal="硬禁用：Ch1-Ch2 不得出现 V-0003。",
+        )
+        calls: list[str] = []
+
+        async def _call(prompt: str, **kwargs: object) -> str:
+            calls.append(prompt)
+            return bad_response if len(calls) == 1 else clean_response
+
+        with patch(
+            "songyan.agents.goal_planner.call_llm",
+            new_callable=AsyncMock,
+            side_effect=_call,
+        ):
+            goal = await define_chapter_goal(
+                project_id="proj_123",
+                project=project,
+                genre_profile=genre,
+                mode_profile=mode,
+                chapter_number=1,
+                narrative_ctx=narrative_ctx,
+            )
+
+        assert len(calls) == 2
+        assert "违规词：V-0003" in calls[1]
+        assert "V-0003" not in "\n".join(goal.target_events + goal.hooks + goal.obligations)
 
     async def test_llm_call_error(self) -> None:
         """LLM 调用失败时抛出 LLMError."""

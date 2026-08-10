@@ -277,7 +277,68 @@ def _convert_rule_to_issues(
                 )
             )
 
-    # 0b. Task 160: 元标记 / Markdown 场景标题泄漏 (major) — 保护项，不计入普通 cap
+    # 0a. 显式章节禁用词命中 (critical) — 项目/大纲阶段边界必须硬阻断
+    if rule_result.forbidden_term_matches:
+        quotes = [
+            m.matched_text.strip()
+            for m in rule_result.forbidden_term_matches
+            if m.matched_text.strip()
+        ]
+        locations = [m.location for m in rule_result.forbidden_term_matches if m.location]
+        terms = [
+            m.pattern.split("forbidden_term:", 1)[-1]
+            for m in rule_result.forbidden_term_matches
+            if m.pattern.startswith("forbidden_term:")
+        ]
+        issues.append(
+            ReviewIssue(
+                issue_id=f"rule-forbidden-{version_id}",
+                category=ReviewCategory.WORLD_CONSISTENCY,
+                severity="critical",
+                evidence_quote=_clamp("; ".join(quotes[:10])),
+                evidence_location="; ".join(locations[:10]) or "全章",
+                issue_description=(
+                    "显式章节禁用词命中 — 正文违反了当前章节大纲中的阶段边界。"
+                ),
+                expected="正文不得出现当前章节 arc_goal 明确禁止的实体、地点、设定或短语。",
+                actual="正文命中禁用词：" + "、".join(terms[:20]),
+                suggested_fix=(
+                    "删除或替换命中禁用词的段落；若该内容承担关键剧情功能，"
+                    "改为当前章节允许的匿名编号、接口提示或间接线索。"
+                ),
+                fix_type="patch",
+                confidence=1.0,
+            )
+        )
+
+    # 0b. 必须出现的短语未回收 (critical) — 明确章节义务必须硬阻断
+    if not rule_result.required_phrase_check_passed:
+        phrases = [
+            str(item.get("phrase") or "")
+            for item in rule_result.required_phrase_issues
+            if isinstance(item, dict)
+        ]
+        phrases = [phrase for phrase in phrases if phrase]
+        if phrases:
+            issues.append(
+                ReviewIssue(
+                    issue_id=f"rule-required-phrase-{version_id}",
+                    category=ReviewCategory.WORLD_CONSISTENCY,
+                    severity="critical",
+                    evidence_quote="; ".join(phrases[:10]),
+                    evidence_location="全章",
+                    issue_description=(
+                        "必须章节短语未回收 — 正文没有完成当前章节的明确结尾/规则义务。"
+                    ),
+                    expected="正文必须自然包含指定短语：" + "、".join(phrases[:10]),
+                    actual="正文未出现上述短语。",
+                    suggested_fix="在章末或对应规则残片位置自然补入指定短语，不要重写整章。",
+                    fix_type="patch",
+                    confidence=1.0,
+                )
+            )
+
+    # 0c. Task 160: 元标记 / Markdown 场景标题泄漏 (major) — 保护项，不计入普通 cap
     meta_issue = _meta_issue(
         f"rule-meta-{version_id}",
         rule_result.meta_tag_matches,
@@ -435,9 +496,40 @@ def _convert_rule_to_issues(
                 )
             )
 
-    # 5. 字数严重超标 (major) — > 120% 目标字数（Task 056：从 130% 收紧到 120%）
-    if rule_result.word_count_target > 0:
-        excess_ratio = rule_result.word_count / rule_result.word_count_target
+    # 5. 字数严重不足 / 超标 (major)
+    if rule_result.word_count_target > 0 and rule_result.word_count > 0:
+        word_count_ratio = rule_result.word_count / rule_result.word_count_target
+        if word_count_ratio < 0.8:
+            missing_percent = round((1 - word_count_ratio) * 100)
+            issues.append(
+                ReviewIssue(
+                    issue_id=_next_id(),
+                    category=ReviewCategory.NARRATIVE_PACING,
+                    severity="major",
+                    evidence_quote=(
+                        f"实际字数 {rule_result.word_count}，"
+                        f"目标 {rule_result.word_count_target}，不足 {missing_percent}%"
+                    ),
+                    evidence_location="全章",
+                    issue_description=(
+                        f"字数严重不足 — 章节长度低于目标 {missing_percent}%，"
+                        "调查、行动或冲突很可能被压缩成梗概。"
+                    ),
+                    expected=(
+                        f"至少达到目标字数的 80%"
+                        f"（约 {int(rule_result.word_count_target * 0.8)} 字）。"
+                    ),
+                    actual=f"实际 {rule_result.word_count} 字，仅为目标的 {word_count_ratio:.0%}。",
+                    suggested_fix=(
+                        "扩写核心场景，增加具体行动、对话、物理验证、环境反应和因果细节；"
+                        "不要复制已有段落，不要只补解释性摘要。"
+                    ),
+                    fix_type="patch",
+                    confidence=1.0,
+                )
+            )
+
+        excess_ratio = word_count_ratio
         if excess_ratio >= 1.2:
             excess_percent = round((excess_ratio - 1) * 100)
             issues.append(

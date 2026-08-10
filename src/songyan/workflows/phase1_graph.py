@@ -90,6 +90,11 @@ class Phase1State(TypedDict):
     _settlement_version_id: str | None
     _settlement_validation_status: str | None
     _settlement_validation_errors: list[str]
+    # SummaryWriter 关键事实覆盖检查（非正文/非业务对象，仅指标）
+    _summary_fact_check_available: bool
+    _summary_missing_facts: list[str]
+    # V12 startup runtime validation findings（非正文，仅指标）
+    _startup_validation_findings: list[dict[str, Any]]
     # 073: 截断重写标记
     _was_rewritten: bool
     _rewrite_reason: str | None
@@ -153,8 +158,11 @@ def revision_router(state: Phase1State) -> str:
     rround = int(state.get("revision_round", 0))
     was_rewritten = state.get("_was_rewritten", False)
 
-    # rewrite 是最后一次自动修复；重写后不再进入 revision，避免同章循环生成。
+    # rewrite 是最后一次自动修复；重写后默认不再进入 revision，避免同章循环生成。
+    # 但 rewrite 已解决字数/场景，仅缺 ending hook 时，允许一次局部 hook patch。
     if was_rewritten:
+        if state.get("_allow_post_rewrite_revision") and needs and rround < 1:
+            return "revise"
         return "pass"
     # 修订反弹后也不再进入 revision，避免无限循环（如 Ch100）。
     # Task 139f: 但若回滚目标版本仍存在 mandatory reference 未通过，必须强制重写，
@@ -449,6 +457,9 @@ async def run_chapter_pipeline(
         "_settlement_version_id": None,
         "_settlement_validation_status": None,
         "_settlement_validation_errors": [],
+        "_summary_fact_check_available": False,
+        "_summary_missing_facts": [],
+        "_startup_validation_findings": [],
         "_was_rewritten": False,
         "_rewrite_reason": None,
         "_budget_was_enforced": False,

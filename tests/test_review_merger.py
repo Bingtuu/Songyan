@@ -7,6 +7,7 @@ import pytest
 from songyan.models import (
     DuplicateParagraphMatch,
     LLMAuditResult,
+    MetaTagLeakMatch,
     ReviewCategory,
     ReviewIssue,
     RuleAuditResult,
@@ -171,6 +172,20 @@ class TestCrossGenreCognitiveExemption:
 class TestWordCountThreshold:
     """Tests for word_count_ratio >= 1.20 triggering violation — Task 060."""
 
+    def test_word_count_ratio_0_79_triggers_underflow_violation(self) -> None:
+        """低于 80% 目标字数触发字数不足 violation."""
+        rule_result = RuleAuditResult(
+            word_count=2370,
+            word_count_target=3000,
+            word_count_ratio=0.79,
+            word_count_ok=False,
+        )
+        issues = _convert_rule_to_issues("正文", rule_result, "v1")
+        word_count_issues = [i for i in issues if "字数严重不足" in i.issue_description]
+        assert len(word_count_issues) == 1
+        assert word_count_issues[0].severity == "major"
+        assert word_count_issues[0].fix_type == "patch"
+
     def test_word_count_ratio_1_19_no_violation(self) -> None:
         """119% 不触发字数 violation."""
         rule_result = RuleAuditResult(
@@ -222,6 +237,49 @@ class TestWordCountThreshold:
         issues = _convert_rule_to_issues("正文", rule_result, "v1")
         # 不抛异常即通过
         assert isinstance(issues, list)
+
+    def test_forbidden_term_match_triggers_critical_issue(self) -> None:
+        """显式章节禁用词命中必须转成 critical issue."""
+        rule_result = RuleAuditResult(
+            forbidden_term_matches=[
+                MetaTagLeakMatch(
+                    pattern="forbidden_term:木星",
+                    matched_text="沈弥的旧终端坠入了木星的大红斑。",
+                    location="第10段",
+                    artifact_type="forbidden_term",
+                )
+            ],
+            forbidden_term_count=1,
+        )
+        issues = _convert_rule_to_issues("正文", rule_result, "v1")
+        forbidden_issues = [
+            i for i in issues if "显式章节禁用词命中" in i.issue_description
+        ]
+        assert len(forbidden_issues) == 1
+        assert forbidden_issues[0].severity == "critical"
+        assert forbidden_issues[0].category == ReviewCategory.WORLD_CONSISTENCY
+
+    def test_required_phrase_missing_triggers_critical_issue(self) -> None:
+        """必须短语缺失必须转成 critical issue."""
+        rule_result = RuleAuditResult(
+            required_phrase_check_passed=False,
+            required_phrase_issues=[
+                {
+                    "phrase": "不要第一个确认",
+                    "message": "必须出现的短语未回收：不要第一个确认",
+                }
+            ],
+        )
+
+        issues = _convert_rule_to_issues("正文", rule_result, "v1")
+
+        required_issues = [
+            i for i in issues if "必须章节短语未回收" in i.issue_description
+        ]
+        assert len(required_issues) == 1
+        assert required_issues[0].severity == "critical"
+        assert required_issues[0].category == ReviewCategory.WORLD_CONSISTENCY
+        assert "不要第一个确认" in required_issues[0].expected
 
     def test_word_count_ratio_1_20_with_other_issues(self) -> None:
         """120% + 其他 violation 时合并正确."""

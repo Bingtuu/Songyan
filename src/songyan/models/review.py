@@ -258,6 +258,14 @@ class RuleAuditResult(BaseModel):
     mandatory_reference_issues: list[dict[str, Any]] = Field(default_factory=list)
     mandatory_reference_check_passed: bool = True
 
+    # 显式章节禁用词检查
+    forbidden_term_matches: list[MetaTagLeakMatch] = Field(default_factory=list)
+    forbidden_term_count: int = 0
+
+    # 必须出现的短语检查
+    required_phrase_issues: list[dict[str, Any]] = Field(default_factory=list)
+    required_phrase_check_passed: bool = True
+
     # 处理时长
     duration_ms: int = 0
 

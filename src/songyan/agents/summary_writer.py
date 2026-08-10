@@ -31,6 +31,15 @@ _PROTAGONIST_DECISION_KEYWORDS = [
     "决定", "选择", "意识到", "明白", "决心", "立志", "发誓", "承诺",
     "accept", "decide", "realize", "choose", "determine", "resolve",
 ]
+_PROTAGONIST_DECISION_SUBJECTS = (
+    "主角",
+    "主人公",
+    "沈砚",
+    "他",
+    "她",
+    "我",
+)
+_PROTAGONIST_DECISION_CONTEXT_NAMES = ("沈砚", "主角", "主人公")
 
 
 def _build_prompt(content: str, settlement: StateSettlement) -> str:
@@ -179,21 +188,33 @@ def _normalize_summary(
 def _validate_summary_facts(
     summary: ChapterSummary,
     settlement: StateSettlement,
+    *,
+    content: str = "",
 ) -> list[str]:
     """检查 summary 是否覆盖了关键事实.
 
-    返回缺失项列表，仅用于日志，不阻塞 accept。
+    返回缺失项列表，由 workflow 决定是否进入人工复核。
     """
     missing: list[str] = []
+    fact_text = "\n".join(
+        [
+            summary.summary,
+            summary.emotional_tone,
+            *summary.key_events,
+            *summary.characters_appeared,
+        ]
+    )
 
     # 1. 是否包含 protagonist 决策变化
-    has_decision = any(kw in summary.summary for kw in _PROTAGONIST_DECISION_KEYWORDS)
+    has_decision = _has_decision_signal(fact_text) or _has_protagonist_decision_in_content(
+        content
+    )
     if not has_decision:
         missing.append("缺少主角决策/认知变化")
 
     # 2. 新设定是否被记录
     for setting in settlement.new_settings:
-        if setting.setting_name and setting.setting_name not in summary.summary:
+        if setting.setting_name and setting.setting_name not in fact_text:
             missing.append(f"新设定未记录: {setting.setting_name}")
 
     # 3. 新伏笔是否被记录（简化：检查 description 关键词）
@@ -201,10 +222,49 @@ def _validate_summary_facts(
         if fs.operation == "plant" and fs.description:
             # 取前 6 个字符作为关键词
             keyword = fs.description[:6]
-            if keyword and keyword not in summary.summary:
+            if keyword and keyword not in fact_text:
                 missing.append(f"新伏笔未记录: {fs.description[:20]}")
 
     return missing
+
+
+def _has_decision_signal(text: str) -> bool:
+    """Return whether structured summary text contains a decision/cognition signal."""
+    return any(kw in text for kw in _PROTAGONIST_DECISION_KEYWORDS)
+
+
+def _has_protagonist_decision_in_content(content: str) -> bool:
+    """Return whether chapter content itself contains protagonist decision evidence."""
+    if not content:
+        return False
+
+    for keyword in _PROTAGONIST_DECISION_KEYWORDS:
+        start = 0
+        while True:
+            idx = content.find(keyword, start)
+            if idx < 0:
+                break
+            if _content_decision_has_protagonist_context(content, idx):
+                return True
+            start = idx + len(keyword)
+    return False
+
+
+def _content_decision_has_protagonist_context(content: str, keyword_index: int) -> bool:
+    """Check the local subject around a decision keyword without using LLM judgment."""
+    local_start = max(0, keyword_index - 8)
+    local_subject = content[local_start:keyword_index]
+    if any(subject in local_subject for subject in _PROTAGONIST_DECISION_SUBJECTS):
+        return True
+
+    context_start = max(0, keyword_index - 80)
+    context = content[context_start:keyword_index]
+    has_protagonist_context = any(name in context for name in _PROTAGONIST_DECISION_CONTEXT_NAMES)
+    has_pronoun_subject = any(
+        pronoun in local_subject
+        for pronoun in ("他", "她", "我")
+    )
+    return has_protagonist_context and has_pronoun_subject
 
 
 def _extract_key_events_from_settlement(settlement: StateSettlement) -> list[str]:
@@ -245,6 +305,52 @@ async def write_chapter_summary(
     Returns:
         真实落库的 summary_id 与 ChapterSummary
     """
+    summary_id, summary, _missing_facts = await write_chapter_summary_with_fact_check(
+        content=content,
+        settlement=settlement,
+        project_id=project_id,
+        chapter_number=chapter_number,
+        db=db,
+        temperature=temperature,
+    )
+    return summary_id, summary
+
+
+async def write_chapter_summary_with_fact_check(
+    content: str,
+    settlement: StateSettlement,
+    project_id: str,
+    chapter_number: int,
+    db: SummaryRepository,
+    *,
+    temperature: float = 0.3,
+) -> tuple[str, ChapterSummary, list[str]]:
+    """Generate a chapter summary and return non-blocking fact-check misses."""
+    summary, missing_facts = await generate_chapter_summary_with_fact_check(
+        content=content,
+        settlement=settlement,
+        project_id=project_id,
+        chapter_number=chapter_number,
+        temperature=temperature,
+    )
+    summary_id = await save_chapter_summary(
+        db=db,
+        summary=summary,
+        project_id=project_id,
+        chapter_number=chapter_number,
+    )
+    return summary_id, summary, missing_facts
+
+
+async def generate_chapter_summary_with_fact_check(
+    content: str,
+    settlement: StateSettlement,
+    project_id: str,
+    chapter_number: int,
+    *,
+    temperature: float = 0.3,
+) -> tuple[ChapterSummary, list[str]]:
+    """Generate a chapter summary and fact-check misses without saving it."""
     bind_contextvars(agent="summary_writer")
     prompt = _build_prompt(content, settlement)
 
@@ -286,7 +392,7 @@ async def write_chapter_summary(
     )
 
     # Task 110b: 关键事实验证（在模板化之前检查原始 LLM 输出，不阻塞，仅日志）
-    missing_facts = _validate_summary_facts(summary, settlement)
+    missing_facts = _validate_summary_facts(summary, settlement, content=content)
     if missing_facts:
         logger.warning(
             "summary_writer.missing_facts",
@@ -297,7 +403,16 @@ async def write_chapter_summary(
 
     # Task 110b: 生产端后处理 — 模板化 + 长度控制
     summary = _normalize_summary(summary, settlement)
+    return summary, missing_facts
 
+
+async def save_chapter_summary(
+    db: SummaryRepository,
+    summary: ChapterSummary,
+    project_id: str,
+    chapter_number: int,
+) -> str:
+    """Save a precomputed chapter summary to summaries table."""
     # 保存到 summaries 表
     summary_id = f"sum-{project_id}-{chapter_number}-{uuid.uuid4().hex[:8]}"
     await _save_summary(db, summary_id, project_id, chapter_number, summary)
@@ -307,12 +422,12 @@ async def write_chapter_summary(
         summary_id=summary_id,
         project_id=project_id,
         chapter_number=chapter_number,
-        key_event_count=len(key_events),
-        character_count=len(characters_appeared),
+        key_event_count=len(summary.key_events),
+        character_count=len(summary.characters_appeared),
         summary_length=len(summary.summary),
         emotional_tone_length=len(summary.emotional_tone),
     )
-    return summary_id, summary
+    return summary_id
 
 
 async def _save_summary(

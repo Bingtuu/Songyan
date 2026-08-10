@@ -19,8 +19,8 @@ class TestPromptLoaderBasics:
         loader = get_prompt_loader()
         card = loader.load_card("writer")
         assert card.metadata.agent == "writer"
-        # # Writer 当前默认版本为 1.1.0（Task 121r），但 1.2.0 已注册。
-        assert card.metadata.version in ("1.0.7", "1.0.8", "1.0.9", "1.1.0", "1.2.0")
+        # Writer 1.1.1 (V12-224d 5-layer beat contract) 已注册为默认版本
+        assert card.metadata.version in ("1.0.7", "1.0.8", "1.0.9", "1.1.0", "1.1.1")
         assert len(card.sections) == 10  # 1.1.0: 9 original + scene_interaction (170f)
 
     def test_load_goal_planner_card(self) -> None:
@@ -41,7 +41,7 @@ class TestPromptLoaderBasics:
         reset_prompt_loader()
         loader = get_prompt_loader()
         versions = loader.list_versions("writer")
-        # # Writer 当前保留 7 个版本（1.0.5 ~ 1.2.0）
+        # Writer 当前保留 7 个版本（1.0.5 ~ 1.1.1，含 V12-224d 5-layer beat contract）
         assert len(versions) == 7
         assert versions[0].version == "1.0.5"
         assert versions[1].version == "1.0.6"
@@ -49,7 +49,7 @@ class TestPromptLoaderBasics:
         assert versions[3].version == "1.0.8"
         assert versions[4].version == "1.0.9"
         assert versions[5].version == "1.1.0"
-        assert versions[6].version == "1.2.0"
+        assert versions[6].version == "1.1.1"
 
     def test_list_versions_nonexistent_agent_raises(self) -> None:
         reset_prompt_loader()

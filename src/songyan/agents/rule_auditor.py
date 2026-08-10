@@ -11,6 +11,7 @@ from typing import Any
 import structlog
 
 from songyan.db.review_repo import ReviewReportRepository
+from songyan.evals.forbidden_patterns import detect_forbidden_patterns
 from songyan.models import (
     DuplicateParagraphMatch,
     ExpositionCarrierMatch,
@@ -31,6 +32,10 @@ from songyan.utils import (
     detect_fatigue_words,
 )
 from songyan.utils._helpers import locate_position, split_paragraphs
+from songyan.utils.calibration import (
+    max_word_count_for_chapter,
+    min_word_count_for_chapter,
+)
 from songyan.utils.generic_names import detect_generic_names
 from songyan.utils.numerical_validator import (
     NumericalContext,
@@ -1514,6 +1519,78 @@ def _check_mandatory_references(
     return len(issues) == 0, issues
 
 
+def _check_forbidden_terms(
+    content: str,
+    forbidden_terms: list[str] | None,
+) -> list[MetaTagLeakMatch]:
+    """Detect explicit per-chapter forbidden terms in chapter content."""
+    if not forbidden_terms:
+        return []
+
+    matches: list[MetaTagLeakMatch] = []
+    seen: set[str] = set()
+    for raw_term in forbidden_terms:
+        term = str(raw_term).strip()
+        if not term or term in seen:
+            continue
+        seen.add(term)
+        pos = content.find(term)
+        if pos < 0:
+            continue
+        start, end = _line_span_at(content, pos)
+        evidence = content[start:end].strip() or term
+        matches.append(
+            MetaTagLeakMatch(
+                pattern=f"forbidden_term:{term}",
+                matched_text=evidence,
+                location=locate_position(content, pos),
+                severity="major",
+                message=f"检测到显式章节禁用词：{term}",
+                artifact_type="forbidden_term",
+            )
+        )
+    for pattern_match in detect_forbidden_patterns(content, forbidden_terms):
+        start, end = _line_span_at(content, pattern_match.start)
+        evidence = content[start:end].strip() or pattern_match.matched_text
+        matches.append(
+            MetaTagLeakMatch(
+                pattern=f"forbidden_pattern:{pattern_match.label}",
+                matched_text=evidence,
+                location=locate_position(content, pattern_match.start),
+                severity="major",
+                message=f"检测到显式章节禁用模式：{pattern_match.label}",
+                artifact_type="forbidden_term",
+            )
+        )
+    return matches
+
+
+def _check_required_phrases(
+    content: str,
+    required_phrases: list[str] | None,
+) -> tuple[bool, list[dict[str, str]]]:
+    """Check whether required short phrases appear in chapter content."""
+    if not required_phrases:
+        return True, []
+
+    issues: list[dict[str, str]] = []
+    seen: set[str] = set()
+    for raw_phrase in required_phrases:
+        phrase = str(raw_phrase).strip()
+        if not phrase or phrase in seen:
+            continue
+        seen.add(phrase)
+        if phrase in content:
+            continue
+        issues.append(
+            {
+                "phrase": phrase,
+                "message": f"必须出现的短语未回收：{phrase}",
+            }
+        )
+    return len(issues) == 0, issues
+
+
 def run_rule_audit(
     content: str,
     genre_rules: GenreRules | None = None,
@@ -1523,6 +1600,9 @@ def run_rule_audit(
     numerical_contexts: list[NumericalContext] | None = None,
     punch_points: list[PunchPoint] | None = None,
     mandatory_references: list[dict[str, Any]] | None = None,
+    forbidden_terms: list[str] | None = None,
+    required_phrases: list[str] | None = None,
+    chapter_number: int = 0,
     *,
     character_names: set[str] | None = None,
     non_character_keywords: set[str] | None = None,
@@ -1568,6 +1648,13 @@ def run_rule_audit(
     # 5. 字数统计
     word_count = _count_chinese_words(content)
     lower_bound, upper_bound = word_count_bounds(word_count_target, chapter_type)
+    if 1 <= chapter_number <= 3:
+        calibration_lower = min_word_count_for_chapter(chapter_number, word_count_target)
+        calibration_upper = max_word_count_for_chapter(chapter_number, word_count_target)
+        if calibration_lower > lower_bound:
+            lower_bound = calibration_lower
+        if calibration_upper < upper_bound:
+            upper_bound = calibration_upper
     word_count_ok = lower_bound <= word_count <= upper_bound
     word_count_ratio = round(word_count / word_count_target, 2) if word_count_target > 0 else 0.0
 
@@ -1632,6 +1719,16 @@ def run_rule_audit(
     # 17. Task 138h: 强制连续性约束检查
     mr_passed, mr_issues = _check_mandatory_references(content, mandatory_references)
 
+    # 18. 显式章节禁用词检查
+    forbidden_term_matches = _check_forbidden_terms(content, forbidden_terms)
+    forbidden_term_count = len(forbidden_term_matches)
+
+    # 19. 必须出现的短语检查
+    required_phrase_passed, required_phrase_issues = _check_required_phrases(
+        content,
+        required_phrases,
+    )
+
     duration_ms = int((time.perf_counter() - start_time) * 1000)
 
     result = RuleAuditResult(
@@ -1670,6 +1767,10 @@ def run_rule_audit(
         punch_check=punch_check,
         mandatory_reference_issues=mr_issues,
         mandatory_reference_check_passed=mr_passed,
+        forbidden_term_matches=forbidden_term_matches,
+        forbidden_term_count=forbidden_term_count,
+        required_phrase_issues=required_phrase_issues,
+        required_phrase_check_passed=required_phrase_passed,
         duration_ms=duration_ms,
     )
 
@@ -1686,6 +1787,9 @@ def run_rule_audit(
         emotion_switch_ok=punch_check.emotion_switch_ok,
         mandatory_reference_check_passed=mr_passed,
         mandatory_reference_issue_count=len(mr_issues),
+        forbidden_term_count=forbidden_term_count,
+        required_phrase_check_passed=required_phrase_passed,
+        required_phrase_issue_count=len(required_phrase_issues),
         exposition_carrier_count=exposition_carrier_count,
         text_artifact_count=text_artifact_count,
         motif_fatigue_count=motif_fatigue_count,
@@ -1785,6 +1889,8 @@ def _compute_overall_score(result: RuleAuditResult) -> float:
     # Task 138h: 强制连续性约束扣分 — 每个缺失 -1.5，最多 -3
     if not result.mandatory_reference_check_passed:
         score -= min(len(result.mandatory_reference_issues) * 1.5, 3.0)
+    if not result.required_phrase_check_passed:
+        score -= min(len(result.required_phrase_issues) * 1.5, 3.0)
 
     return max(0.0, round(score, 1))
 
@@ -1845,6 +1951,13 @@ def _generate_summary(result: RuleAuditResult) -> str:
         parts.append(
             f"强制连续性约束未回收：{len(result.mandatory_reference_issues)} 项"
         )
+    if not result.required_phrase_check_passed:
+        phrases = "、".join(
+            str(item.get("phrase", ""))
+            for item in result.required_phrase_issues
+            if isinstance(item, dict)
+        )
+        parts.append(f"必须短语未回收：{phrases}")
 
     if not parts:
         return "规则检测通过，未发现明显问题。"

@@ -2,18 +2,20 @@
 
 from __future__ import annotations
 
+import re
 from typing import TYPE_CHECKING, Any
 
 import structlog
 from structlog.contextvars import bind_contextvars
 
-from songyan.exceptions import LLMError, LLMResponseParseError
+from songyan.exceptions import GoalPlanningError, LLMError, LLMResponseParseError
 from songyan.llm.client import call_llm
 from songyan.llm.parsing import parse_llm_response
 from songyan.models.chapter import ChapterGoal
 from songyan.models.creative_mode import CreativeModeProfile
 from songyan.models.genre import GenreProfile
 from songyan.models.project import ProjectSetting
+from songyan.utils.calibration import max_word_count_for_chapter
 
 if TYPE_CHECKING:
     from songyan.workflows._narrative_context import NarrativeGoalContext
@@ -24,6 +26,11 @@ logger = structlog.get_logger(__name__)
 MIN_WORD_COUNT = 2000
 MAX_WORD_COUNT = 5000
 DEFAULT_WORD_COUNT = 3000
+_FORBIDDEN_CLAUSE_RE = re.compile(
+    r"(?:Ch(?P<start>\d+)(?:\s*-\s*Ch?(?P<end>\d+))?|第(?P<single_cn>\d+)章|前三章)"
+    r"[^。；;]*?(?:不得出现|不出现|禁止出现|禁用)"
+    r"(?P<terms>[^。；;]+)"
+)
 
 # Task 092: 章节类型到字数目标的映射
 CHAPTER_TYPE_WORD_TARGETS: dict[str, int] = {
@@ -39,6 +46,7 @@ CHAPTER_TYPE_WORD_TARGETS: dict[str, int] = {
 def _load_prompt_template() -> str:
     """加载 GoalPlanner Prompt 模板 — 已迁移到工艺卡系统."""
     from songyan.prompts import get_prompt_loader
+
     return get_prompt_loader().load_card("goal_planner").system_prompt
 
 
@@ -70,6 +78,107 @@ def _format_foreshadowing_lines(items: list[dict[str, Any]]) -> str:
         suffix = f"，原因：{rationale}" if rationale else ""
         lines.append(f"- {prefix}{description}（预计第 {expected} 章兑现{suffix}）")
     return "\n".join(lines)
+
+
+def _split_forbidden_terms(raw_terms: str) -> list[str]:
+    """Split a Chinese forbidden term list into normalized terms."""
+    cleaned = re.sub(r"^\s*(?:全部|任何|以下)?\s*[：:]\s*", "", raw_terms)
+    cleaned = re.sub(r"^\s*(?:全部|任何|以下)\s*", "", cleaned)
+    parts = re.split(r"[、,，/]|以及|和|或", cleaned)
+    terms: list[str] = []
+    for part in parts:
+        term = part.strip(" 。“”\"'`[]（）()")
+        if not term:
+            continue
+        # Drop trailing explanatory clauses that are not entity names.
+        term = re.split(r"等|这类|这种|作为|正面|姓名|字段", term, maxsplit=1)[0].strip()
+        if term and len(term) <= 20:
+            terms.append(term)
+    return terms
+
+
+def _extract_forbidden_terms_for_chapter(
+    arc_goal: str, chapter_number: int
+) -> list[str]:
+    """Extract explicit per-chapter forbidden terms from an ArcPlan goal.
+
+    This intentionally handles only explicit, local wording such as
+    ``Ch1-Ch3 不得出现阮星河`` or ``前三章不出现静海站、节点九``.
+    Ambiguous literary guidance is left to prompts instead of hard blocking.
+    """
+    if not arc_goal:
+        return []
+
+    terms: list[str] = []
+    for match in _FORBIDDEN_CLAUSE_RE.finditer(arc_goal):
+        if match.group(0).startswith("前三章"):
+            start, end = 1, 3
+        elif match.group("single_cn"):
+            start = end = int(match.group("single_cn"))
+        else:
+            start = int(match.group("start") or 0)
+            end = int(match.group("end") or start)
+        if start <= chapter_number <= end:
+            terms.extend(_split_forbidden_terms(match.group("terms") or ""))
+
+    # Preserve order while deduplicating.
+    seen: set[str] = set()
+    result: list[str] = []
+    for term in terms:
+        if term not in seen:
+            seen.add(term)
+            result.append(term)
+    return result
+
+
+def _validate_goal_forbidden_terms(
+    goal: ChapterGoal,
+    *,
+    arc_goal: str,
+) -> None:
+    """Fail fast when GoalPlanner output violates explicit chapter forbiddens."""
+    violations = _find_goal_forbidden_terms(goal, arc_goal=arc_goal)
+    if not violations:
+        return
+    raise GoalPlanningError(
+        "GoalPlanner output contains forbidden chapter terms: "
+        + ", ".join(violations)
+    )
+
+
+def _find_goal_forbidden_terms(
+    goal: ChapterGoal,
+    *,
+    arc_goal: str,
+) -> list[str]:
+    """Return explicit forbidden terms present in GoalPlanner output."""
+    forbidden_terms = _extract_forbidden_terms_for_chapter(
+        arc_goal, goal.chapter_number
+    )
+    if not forbidden_terms:
+        return []
+
+    texts = [*goal.target_events, *goal.hooks, *goal.obligations]
+    combined = "\n".join(texts)
+    return [term for term in forbidden_terms if term and term in combined]
+
+
+def _append_forbidden_retry_instruction(
+    prompt: str,
+    *,
+    violations: list[str],
+) -> str:
+    """Append a compact repair instruction for one forbidden-term retry."""
+    terms = "、".join(violations)
+    return (
+        f"{prompt}\n\n"
+        "【上一次输出违反了显式章节禁用词，必须重写 ChapterGoal JSON】\n"
+        f"- 违规词：{terms}\n"
+        "- 这些词不得出现在 target_events、hooks、obligations 的任何字段中。\n"
+        "- 不要复述禁用词清单，不要写“不得出现/禁止/禁用”等约束说明。\n"
+        "- 只写正向剧情目标：匿名接口、未命名日志片段、工程现象、程序化临时见证人、间接线索。\n"
+        "- 只输出修正后的 JSON，不要解释。"
+    )
 
 
 def _render_prompt(
@@ -205,7 +314,21 @@ def _build_chapter_goal(
     if chapter_type in CHAPTER_TYPE_WORD_TARGETS:
         type_target = CHAPTER_TYPE_WORD_TARGETS[chapter_type]
         # 仅当 LLM 返回的是默认值或接近默认值时，使用类型特定目标
-        if abs(clamped_word_count - DEFAULT_WORD_COUNT) < 300:
+        if 1 <= chapter_number <= 3:
+            max_calibration_words = max_word_count_for_chapter(
+                chapter_number,
+                DEFAULT_WORD_COUNT,
+            )
+            if clamped_word_count > max_calibration_words:
+                clamped_word_count = max_calibration_words
+                logger.info(
+                    "goal_planner.calibration_word_count_clamped",
+                    chapter_number=chapter_number,
+                    chapter_type=chapter_type,
+                    original=word_count,
+                    adjusted=clamped_word_count,
+                )
+        elif abs(clamped_word_count - DEFAULT_WORD_COUNT) < 300:
             clamped_word_count = _clamp_word_count(type_target)
             logger.info(
                 "goal_planner.type_adjusted_word_count",
@@ -288,31 +411,64 @@ async def define_chapter_goal(
         narrative_ctx=narrative_ctx,
     )
 
-    # 调用 LLM
-    try:
-        response_text = await call_llm(prompt, temperature=temperature, max_retries=3)
-    except LLMError:
-        logger.error("goal_planner.llm_failed", chapter_number=chapter_number)
-        raise
+    active_prompt = prompt
+    max_attempts = 2 if narrative_ctx is not None and narrative_ctx.has_skeleton else 1
+    goal: ChapterGoal | None = None
+    for attempt in range(max_attempts):
+        # 调用 LLM
+        try:
+            response_text = await call_llm(
+                active_prompt,
+                temperature=temperature,
+                max_retries=3,
+            )
+        except LLMError:
+            logger.error("goal_planner.llm_failed", chapter_number=chapter_number)
+            raise
 
-    # 解析响应
-    try:
-        data = parse_llm_response(response_text)
-    except LLMResponseParseError:
-        logger.error(
-            "goal_planner.parse_failed",
-            chapter_number=chapter_number,
-            raw_response=response_text[:500],
-        )
-        raise
+        # 解析响应
+        try:
+            data = parse_llm_response(response_text)
+        except LLMResponseParseError:
+            logger.error(
+                "goal_planner.parse_failed",
+                chapter_number=chapter_number,
+                raw_response=response_text[:500],
+            )
+            raise
 
-    # 构建 ChapterGoal（含字段验证和修正）
-    goal = _build_chapter_goal(data, chapter_number, genre_profile)
-    # 注入 previous_summary（LLM 可能不返回此字段）
-    goal.previous_summary = previous_summary
-    # V6 Task 143：有骨架时回填派生来源弧，供 report 追溯"章节目标→ArcPlan"
-    if narrative_ctx is not None and narrative_ctx.has_skeleton:
-        goal.derived_from_arc = narrative_ctx.arc_index
+        # 构建 ChapterGoal（含字段验证和修正）
+        goal = _build_chapter_goal(data, chapter_number, genre_profile)
+        # 注入 previous_summary（LLM 可能不返回此字段）
+        goal.previous_summary = previous_summary
+        # V6 Task 143：有骨架时回填派生来源弧，供 report 追溯"章节目标→ArcPlan"
+        if narrative_ctx is not None and narrative_ctx.has_skeleton:
+            goal.derived_from_arc = narrative_ctx.arc_index
+            violations = _find_goal_forbidden_terms(
+                goal,
+                arc_goal=narrative_ctx.arc_goal,
+            )
+            if violations:
+                if attempt + 1 >= max_attempts:
+                    raise GoalPlanningError(
+                        "GoalPlanner output contains forbidden chapter terms: "
+                        + ", ".join(violations)
+                    )
+                logger.warning(
+                    "goal_planner.forbidden_terms_retry",
+                    chapter_number=chapter_number,
+                    violations=violations,
+                    attempt=attempt + 1,
+                )
+                active_prompt = _append_forbidden_retry_instruction(
+                    prompt,
+                    violations=violations,
+                )
+                continue
+        break
+
+    if goal is None:
+        raise GoalPlanningError("GoalPlanner did not produce a chapter goal")
 
     logger.info(
         "goal_planner.complete",

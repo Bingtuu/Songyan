@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class ChapterRunLog(BaseModel):
@@ -55,6 +55,13 @@ class ChapterRunLog(BaseModel):
     settlement_validation_errors: list[str] = Field(default_factory=list)
     summary_id: str | None = None
     summary_success: bool | None = None
+    summary_fact_check_available: bool = False
+    summary_missing_facts: list[str] = Field(default_factory=list)
+    summary_missing_fact_count: int = 0
+
+    # V12 startup runtime validation
+    startup_validation_findings: list[dict[str, Any]] = Field(default_factory=list)
+    startup_validation_finding_count: int = 0
 
     # V5.0 Context Diet 2.0 指标（Task 105）
     budget_used: float | None = None
@@ -80,6 +87,15 @@ class ChapterRunLog(BaseModel):
 
     # 指标采集版本号，用于区分字段词义变化（"版本不支持" vs "采集失败"）
     metrics_version: str = Field(default="v5.0", alias="_metrics_version")
+
+    @model_validator(mode="after")
+    def _sync_summary_missing_fact_count(self) -> ChapterRunLog:
+        """Keep derived counts consistent when old callers only pass lists."""
+        if self.summary_missing_facts and self.summary_missing_fact_count == 0:
+            self.summary_missing_fact_count = len(self.summary_missing_facts)
+        if self.startup_validation_findings and self.startup_validation_finding_count == 0:
+            self.startup_validation_finding_count = len(self.startup_validation_findings)
+        return self
 
     def to_jsonl(self) -> str:
         """序列化为单行 JSON（用于 JSONL 写入）."""

@@ -13,12 +13,35 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from songyan.workflows._nodes import human_gate_node, quality_gate_node, rewrite_node
+from songyan.workflows._nodes import (
+    _load_required_phrases_for_chapter,
+    human_gate_node,
+    quality_gate_node,
+    rewrite_node,
+)
 from songyan.workflows.phase1_graph import human_confirm_router
 
 # ---------------------------------------------------------------------------
 # rewrite_node 结构完整性校验
 # ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_required_phrase_only_applies_to_ch3() -> None:
+    """Ch3 required phrase 不应污染 Ch1/Ch2."""
+    narrative_ctx = MagicMock()
+    narrative_ctx.arc_goal = "Ch3 章尾必须自然包含原句：不要第一个确认。"
+
+    with patch(
+        "songyan.workflows._nodes.load_narrative_goal_context",
+        new_callable=AsyncMock,
+        return_value=narrative_ctx,
+    ):
+        assert await _load_required_phrases_for_chapter("p1", 1) == []
+        assert await _load_required_phrases_for_chapter("p1", 2) == []
+        assert await _load_required_phrases_for_chapter("p1", 3) == [
+            "不要第一个确认"
+        ]
 
 
 @pytest.mark.asyncio
@@ -127,8 +150,8 @@ async def test_rewrite_scene_count_too_low_without_best_rolls_back_previous() ->
 
 
 @pytest.mark.asyncio
-async def test_rewrite_missing_hooks_triggers_rollback() -> None:
-    """rewrite 后缺失 ending_hook → 回滚 best，accept 后仍执行 settlement."""
+async def test_rewrite_missing_ending_hook_allows_one_patch_round() -> None:
+    """rewrite 后仅缺 ending_hook → 保留 rewrite 版本，允许一轮局部 hook patch."""
     version = MagicMock()
     version.version_id = "v-rewrite"
     version.scenes = [{"scene_id": "s1"}, {"scene_id": "s2"}]
@@ -174,9 +197,142 @@ async def test_rewrite_missing_hooks_triggers_rollback() -> None:
             }
         )
 
+    assert result["status"] == "rule_auditing"
+    assert result["current_version_id"] == "v-rewrite"
+    assert result["_was_rewritten"] is True
+    assert result["_allow_post_rewrite_revision"] is True
+    assert "missing_ending_hook" in result["_rewrite_reason"]
+    mock_ver_repo.return_value.mark_abandoned.assert_not_awaited()
+    mock_head_repo.return_value.update.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_rewrite_word_count_underflow_rolls_back_best() -> None:
+    """rewrite 字数不足时废弃短 rewrite，回滚 active best."""
+    version = MagicMock()
+    version.version_id = "v-rewrite"
+    version.scenes = [{"scene_id": "s1"}, {"scene_id": "s2"}]
+    version.content = "content"
+    version.word_count = 2065
+    best_version = MagicMock()
+    best_version.version_id = "v-best"
+    best_version.score_card = {}
+
+    goal = MagicMock()
+    goal.word_count_target = 3000
+    goal.chapter_type = "opening"
+
+    score_card = {
+        "version_id": "v-best",
+        "length": {"score": 1.0, "details": {"word_count_ratio": 0.94}},
+        "budget": {"score": 0.9, "details": {}},
+        "coherence": {"score": 1.0, "details": {}},
+        "momentum": {"score": 1.0, "details": {}},
+        "readability": {"score": 1.0, "details": {}},
+        "flags": {
+            "length_ok": True,
+            "budget_ok": True,
+            "coherence_critical": False,
+            "coherence_major": False,
+            "momentum_present": True,
+            "readability_ok": True,
+        },
+        "overall_score": 0.9,
+    }
+
+    with (
+        patch("songyan.workflows._nodes.write_chapter", new_callable=AsyncMock) as mock_write,
+        patch("songyan.workflows._nodes._get_context_package", new_callable=AsyncMock) as mock_ctx,
+        patch("songyan.workflows._nodes.load_chapter_goal", new_callable=AsyncMock) as mock_goal,
+        patch(
+            "songyan.workflows._nodes._load_active_best_version",
+            new_callable=AsyncMock,
+            return_value=best_version,
+        ),
+        patch("songyan.workflows._nodes.ChapterVersionRepository") as mock_ver_repo,
+        patch("songyan.workflows._nodes.ChapterHeadRepository") as mock_head_repo,
+    ):
+        mock_write.return_value = version
+        mock_ctx.return_value = MagicMock()
+        mock_goal.return_value = goal
+        mock_ver_repo.return_value.mark_abandoned = AsyncMock()
+        mock_head_repo.return_value.update = AsyncMock()
+
+        result = await rewrite_node(
+            {
+                "project_id": "p1",
+                "chapter_number": 1,
+                "current_version_id": "v-prev",
+                "chapter_goal_id": "g1",
+                "_best_version_id": "v-best",
+                "_best_score_card": score_card,
+                "revision_round": 2,
+                "_total_revision_count": 2,
+            }
+        )
+
+    assert result["current_version_id"] == "v-best"
+    assert result["_quality_gate_passed"] is True
+    assert result["_convergence_failed"] is False
+    assert result["status"] == "human_confirm"
+    assert result["_rewrite_reason"] == "word_count_underflow"
+    mock_ver_repo.return_value.mark_abandoned.assert_awaited_once_with("v-rewrite")
+    mock_head_repo.return_value.update.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_rewrite_missing_opening_hook_triggers_rollback() -> None:
+    """rewrite 后缺失 opening_hook → 回滚 best，accept 后仍执行 settlement."""
+    version = MagicMock()
+    version.version_id = "v-rewrite"
+    version.scenes = [{"scene_id": "s1"}, {"scene_id": "s2"}]
+    version.content = "content"
+    version.word_count = 3000
+    best_version = MagicMock()
+    best_version.version_id = "v-best"
+
+    rule_result = MagicMock()
+    rule_result.has_opening_hook = False
+    rule_result.has_ending_hook = True
+
+    with (
+        patch("songyan.workflows._nodes.write_chapter", new_callable=AsyncMock) as mock_write,
+        patch("songyan.workflows._nodes._get_context_package", new_callable=AsyncMock) as mock_ctx,
+        patch("songyan.workflows._nodes.load_project", new_callable=AsyncMock) as mock_proj,
+        patch("songyan.workflows._nodes.load_genre_profile", return_value=None),
+        patch("songyan.workflows._nodes.load_chapter_goal", new_callable=AsyncMock) as mock_goal,
+        patch("songyan.workflows._nodes.run_rule_audit", return_value=rule_result),
+        patch(
+            "songyan.workflows._nodes._load_active_best_version",
+            new_callable=AsyncMock,
+            return_value=best_version,
+        ),
+        patch("songyan.workflows._nodes.ChapterVersionRepository") as mock_ver_repo,
+        patch("songyan.workflows._nodes.ChapterHeadRepository") as mock_head_repo,
+    ):
+        mock_write.return_value = version
+        mock_ctx.return_value = MagicMock()
+        mock_proj.return_value = MagicMock(genre_id="g1")
+        mock_goal.return_value = MagicMock(word_count_target=3000)
+        mock_ver_repo.return_value.mark_abandoned = AsyncMock()
+        mock_head_repo.return_value.update = AsyncMock()
+
+        result = await rewrite_node(
+            {
+                "project_id": "p1",
+                "chapter_number": 1,
+                "current_version_id": "v-prev",
+                "chapter_goal_id": "g1",
+                "_best_version_id": "v-best",
+                "revision_round": 2,
+            }
+        )
+
     assert result["_convergence_failed"] is True
     assert result["_skip_settlement"] is False
-    assert "missing_ending_hook" in result["_rewrite_reason"]
+    assert "missing_opening_hook" in result["_rewrite_reason"]
+    mock_ver_repo.return_value.mark_abandoned.assert_awaited_once_with("v-rewrite")
+    mock_head_repo.return_value.update.assert_awaited_once()
 
 
 @pytest.mark.asyncio
@@ -341,7 +497,7 @@ async def test_qg_convergence_recovers_with_qg_pass_best_version() -> None:
     version = MagicMock()
     version.version_id = "v-current"
     version.version_type = "revision"
-    version.word_count = 4100
+    version.word_count = 3000
     best_version = MagicMock()
     best_version.version_id = "v-best"
     best_version.score_card = None

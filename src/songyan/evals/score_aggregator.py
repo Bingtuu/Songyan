@@ -17,6 +17,10 @@ from songyan.models import (
     RuleAuditResult,
     ScoreFlags,
 )
+from songyan.utils.calibration import (
+    max_word_count_for_chapter,
+    min_word_count_for_chapter,
+)
 
 logger = structlog.get_logger(__name__)
 
@@ -226,6 +230,26 @@ class ScoreAggregator:
 
         # 3. 一致性
         coherence_score, coherence_details, has_critical, has_major = _score_coherence(llm_result)
+        rule_coherence_critical = (
+            rule_result.forbidden_term_count > 0
+            or not rule_result.mandatory_reference_check_passed
+            or not rule_result.required_phrase_check_passed
+        )
+        if rule_result.forbidden_term_count > 0:
+            coherence_details["forbidden_term_count"] = float(
+                rule_result.forbidden_term_count
+            )
+        if not rule_result.mandatory_reference_check_passed:
+            coherence_details["mandatory_reference_missing"] = float(
+                len(rule_result.mandatory_reference_issues)
+            )
+        if not rule_result.required_phrase_check_passed:
+            coherence_details["required_phrase_missing"] = float(
+                len(rule_result.required_phrase_issues)
+            )
+        has_critical = has_critical or rule_coherence_critical
+        if rule_coherence_critical:
+            coherence_score = min(coherence_score, 0.5)
         major_count = coherence_details.get("major", 0)
 
         # 4. 推动力
@@ -242,6 +266,21 @@ class ScoreAggregator:
         readability_threshold, momentum_threshold = _quality_ramp_thresholds(
             chapter_number, quality_ramp_chapters
         )
+        length_ratio = length_details.get("word_count_ratio", 1.0)
+        passes_calibration_window = True
+        if chapter_number > 0:
+            min_word_count = min_word_count_for_chapter(
+                chapter_number,
+                rule_result.word_count_target,
+            )
+            max_word_count = max_word_count_for_chapter(
+                chapter_number,
+                rule_result.word_count_target,
+            )
+            passes_calibration_window = (
+                (min_word_count <= 0 or rule_result.word_count >= min_word_count)
+                and (max_word_count <= 0 or rule_result.word_count <= max_word_count)
+            )
 
         card = ChapterScoreCard(
             version_id=version_id,
@@ -261,7 +300,11 @@ class ScoreAggregator:
                 score=round(readability_score, 4), details=readability_details
             ),
             flags=ScoreFlags(
-                length_ok=length_score_rounded >= 0.5,
+                length_ok=(
+                    length_score_rounded >= 0.5
+                    and length_ratio >= 0.8
+                    and passes_calibration_window
+                ),
                 budget_ok=(budget_used is None or budget_used <= 1.0),
                 coherence_critical=has_critical,
                 coherence_major=(

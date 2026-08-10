@@ -33,7 +33,7 @@ class ScoreFlags(BaseModel):
     @property
     def needs_revision(self) -> bool:
         """是否需要自动修订."""
-        return self.coherence_critical or self.coherence_major
+        return (not self.length_ok) or self.coherence_critical or self.coherence_major
 
 
 class ChapterScoreCard(BaseModel):

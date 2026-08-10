@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -276,6 +278,28 @@ class TestRevisionRouter:
             _needs_revision=True,
             _has_critical=True,
             _was_rewritten=True,
+        )
+        assert revision_router(state) == "pass"
+
+    def test_was_rewritten_missing_hook_allows_one_revision(self) -> None:
+        """rewrite 后仅缺 ending hook 时，允许一轮局部修复。"""
+        state = _base_revision_state(
+            revision_round=0,
+            _needs_revision=True,
+            _has_critical=True,
+            _was_rewritten=True,
+            _allow_post_rewrite_revision=True,
+        )
+        assert revision_router(state) == "revise"
+
+    def test_was_rewritten_missing_hook_after_one_revision_passes(self) -> None:
+        """post-rewrite hook patch 最多一轮，避免循环。"""
+        state = _base_revision_state(
+            revision_round=1,
+            _needs_revision=True,
+            _has_critical=True,
+            _was_rewritten=True,
+            _allow_post_rewrite_revision=True,
         )
         assert revision_router(state) == "pass"
 
@@ -668,6 +692,93 @@ class TestContextManagerNode:
         assert snapshot.payload["human_instructions"][0]["content"] == "保留黑匣子"
 
     @pytest.mark.asyncio
+    async def test_context_manager_injects_runtime_approved_startup_beats(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """V12 startup beat sheet comes from approved runtime artifacts, not state."""
+        from songyan.models import ApprovedPlan, ChapterGoal, ContextPackage
+        from songyan.workflows._nodes import context_manager_node
+
+        spec_path = tmp_path / "supervision_spec.json"
+        spec_path.write_text(
+            json.dumps(
+                {
+                    "version": "v12.1",
+                    "stage": "startup_ch1_3",
+                    "word_count": {"target": 3000, "hard_min": 2700, "hard_max": 3300},
+                    "chapters": {
+                        "1": {
+                            "allowed_beats": [
+                                {
+                                    "visible_action": "沈砚复核当前数值链。",
+                                    "current_friction": "责任质量归属与实测质量不一致。",
+                                    "feedback": "终端只返回当前数值链。",
+                                    "micro_decision": "沈砚决定先保存离线记录。",
+                                    "landing": "缺口被写入本地记录。",
+                                }
+                            ],
+                            "required_phrases": [],
+                            "forbidden_literals": [],
+                            "forbidden_patterns": [],
+                            "stage_policy": {},
+                        }
+                    },
+                },
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+        approval_path = tmp_path / "approved-plan.json"
+        approval_path.write_text(
+            ApprovedPlan(
+                project_id="proj-test",
+                chapters=[1],
+                artifact_token="test-token",
+            ).model_dump_json(),
+            encoding="utf-8",
+        )
+        monkeypatch.setenv("SONGYAN_STARTUP_SUPERVISION_SPEC", str(spec_path))
+        monkeypatch.setenv("SONGYAN_STARTUP_APPROVED_PLAN", str(approval_path))
+
+        goal = ChapterGoal(chapter_number=1, word_count_target=3000)
+        ctx = ContextPackage(chapter_goal=goal)
+        snapshot_repo = AsyncMock()
+        snapshot_repo.create = AsyncMock()
+
+        with patch(
+            "songyan.workflows._nodes.load_chapter_goal",
+            new_callable=AsyncMock,
+            return_value=goal,
+        ), patch(
+            "songyan.workflows._nodes.load_creative_brief",
+            new_callable=AsyncMock,
+            return_value=None,
+        ), patch(
+            "songyan.workflows._nodes.assemble_context_package",
+            new_callable=AsyncMock,
+            return_value=ctx,
+        ), patch(
+            "songyan.workflows._nodes.ContextSnapshotRepository",
+            return_value=snapshot_repo,
+        ):
+            result = await context_manager_node(
+                {
+                    "project_id": "proj-test",
+                    "chapter_number": 1,
+                    "chapter_goal_id": "goal-1",
+                    "human_instructions": [],
+                }
+            )
+
+        assert result["status"] == "writing"
+        snapshot = snapshot_repo.create.await_args.args[0]
+        assert snapshot.payload["startup_beat_sheet"][0]["visible_action"] == (
+            "沈砚复核当前数值链。"
+        )
+
+    @pytest.mark.asyncio
     async def test_get_context_package_loads_snapshot(self) -> None:
         """Writer/Auditor 通过 context_snapshot_id 复用同一份上下文."""
         from songyan.models import ChapterGoal, ContextPackage, ContextSnapshot
@@ -997,7 +1108,7 @@ class TestSettlementExtractorNode:
                 return_value="v-accepted",
             ) as mock_accept,
             patch(
-                "songyan.workflows._nodes.write_chapter_summary",
+                "songyan.workflows._nodes.write_chapter_summary_with_fact_check",
                 new_callable=AsyncMock,
             ) as mock_summary,
         ):
@@ -1017,6 +1128,122 @@ class TestSettlementExtractorNode:
         assert result["_settlement_validation_errors"] == ["bad quote"]
         assert result["settlement_id"] is None
         assert result["summary_id"] is None
+        mock_accept.assert_not_called()
+        mock_summary.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_startup_runtime_validation_blocks_new_character_before_accept(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        from songyan.models.settlement import NewCharacter
+        from songyan.workflows._nodes import settlement_extractor_node
+
+        spec_path = tmp_path / "supervision_spec.json"
+        spec_path.write_text(
+            json.dumps(
+                {
+                    "version": "v12.1",
+                    "stage": "startup_ch1_3",
+                    "word_count": {"target": 3000, "hard_min": 2700, "hard_max": 3300},
+                    "chapters": {
+                        "1": {
+                            "allowed_beats": [
+                                {
+                                    "visible_action": "沈砚复核当前数值链。",
+                                    "current_friction": "责任质量归属与实测质量不一致。",
+                                    "feedback": "终端只返回当前数值链。",
+                                    "micro_decision": "沈砚决定保存离线记录。",
+                                    "landing": "当前缺口被保存。",
+                                }
+                            ],
+                            "stage_policy": {
+                                "allow_new_characters": False,
+                                "allow_past_backstory": False,
+                                "allow_cross_location_chase": False,
+                                "allow_identity_secret_reveal": False,
+                                "allow_relative_time": False,
+                                "allow_coordinates": False,
+                            },
+                        }
+                    },
+                },
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+        monkeypatch.setenv("SONGYAN_STARTUP_SUPERVISION_SPEC", str(spec_path))
+
+        version = MagicMock(
+            version_id="v-startup",
+            content="系统记录显示确认人签名是李维。沈砚决定保存当前数值链。",
+            version_type="draft",
+        )
+        project = MagicMock(
+            mode_id="webnovel",
+            genre_id="scifi",
+            protagonist_name="沈砚",
+        )
+        settlement = StateSettlement(
+            new_characters=[
+                NewCharacter(
+                    name="李维",
+                    role_type="supporting",
+                    source_quote="确认人签名是李维",
+                    background="入职时间两年零四个月。",
+                )
+            ]
+        )
+
+        with (
+            patch(
+                "songyan.workflows._nodes.load_version",
+                new_callable=AsyncMock,
+                return_value=version,
+            ),
+            patch(
+                "songyan.workflows._nodes.load_project",
+                new_callable=AsyncMock,
+                return_value=project,
+            ),
+            patch(
+                "songyan.workflows._nodes.load_chapter_goal",
+                new_callable=AsyncMock,
+                return_value=None,
+            ),
+            patch("songyan.workflows._nodes.load_genre_profile", return_value=None),
+            patch(
+                "songyan.workflows._nodes.extract_settlement",
+                new_callable=AsyncMock,
+                return_value=settlement,
+            ),
+            patch(
+                "songyan.workflows._nodes.accept_with_settlement_boundary",
+                new_callable=AsyncMock,
+                return_value="v-accepted",
+            ) as mock_accept,
+            patch(
+                "songyan.workflows._nodes.write_chapter_summary_with_fact_check",
+                new_callable=AsyncMock,
+            ) as mock_summary,
+        ):
+            result = await settlement_extractor_node(
+                {
+                    "project_id": "p1",
+                    "chapter_number": 1,
+                    "current_version_id": "v-startup",
+                    "chapter_goal_id": "goal-1",
+                }
+            )
+
+        assert result["status"] == "settlement_review"
+        assert result["_settlement_needs_human_review"] is True
+        assert result["settlement_id"] is None
+        assert result["summary_id"] is None
+        assert result["_settlement_version_id"] == "v-startup"
+        codes = {finding["code"] for finding in result["_startup_validation_findings"]}
+        assert {"new_character", "character_background"} <= codes
         mock_accept.assert_not_called()
         mock_summary.assert_not_called()
 
@@ -1064,9 +1291,9 @@ class TestSettlementExtractorNode:
                 return_value="v-accepted",
             ) as mock_accept,
             patch(
-                "songyan.workflows._nodes.write_chapter_summary",
+                "songyan.workflows._nodes.write_chapter_summary_with_fact_check",
                 new_callable=AsyncMock,
-                return_value=("sum-real", summary),
+                return_value=("sum-real", summary, ["新设定未记录: 测试"]),
             ),
             patch(
                 "songyan.workflows._nodes._run_lifecycle_cleanup",
@@ -1092,7 +1319,88 @@ class TestSettlementExtractorNode:
         assert result["_settlement_needs_human_review"] is False
         assert result["settlement_id"] is not None
         assert result["summary_id"] == "sum-real"
+        assert result["_summary_fact_check_available"] is True
+        assert result["_summary_missing_facts"] == ["新设定未记录: 测试"]
         mock_accept.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_summary_missing_facts_blocks_calibration_window(self) -> None:
+        from songyan.workflows._nodes import settlement_extractor_node
+
+        version = MagicMock(version_id="v-valid", content="A" * 500, version_type="draft")
+        version.model_copy.return_value = MagicMock(
+            version_id="v-accepted", content="A" * 500, version_type="accepted"
+        )
+        project = MagicMock(mode_id="webnovel", genre_id="scifi")
+        goal = MagicMock(word_count_target=3000)
+        settlement = StateSettlement()
+        summary = ChapterSummary(
+            chapter_number=2,
+            summary="摘要",
+            key_events=[],
+            characters_appeared=[],
+            emotional_tone="中性",
+            impact_score=0.0,
+        )
+
+        with (
+            patch(
+                "songyan.workflows._nodes.load_version",
+                new_callable=AsyncMock,
+                return_value=version,
+            ),
+            patch(
+                "songyan.workflows._nodes.load_project",
+                new_callable=AsyncMock,
+                return_value=project,
+            ),
+            patch(
+                "songyan.workflows._nodes.load_chapter_goal",
+                new_callable=AsyncMock,
+                return_value=goal,
+            ),
+            patch("songyan.workflows._nodes.load_genre_profile", return_value=None),
+            patch(
+                "songyan.workflows._nodes.extract_settlement",
+                new_callable=AsyncMock,
+                return_value=settlement,
+            ),
+            patch(
+                "songyan.workflows._nodes.accept_with_settlement_boundary",
+                new_callable=AsyncMock,
+                return_value="v-accepted",
+            ) as accept_mock,
+            patch(
+                "songyan.workflows._nodes.generate_chapter_summary_with_fact_check",
+                new_callable=AsyncMock,
+                return_value=(summary, ["缺少主角决策/认知变化"]),
+            ),
+            patch(
+                "songyan.workflows._nodes._run_lifecycle_cleanup",
+                new_callable=AsyncMock,
+            ),
+            patch(
+                "songyan.workflows._nodes.load_creative_mode_profile",
+                return_value=MagicMock(rag_config={}),
+            ),
+            patch("songyan.workflows._nodes._index_accepted_chapter", new_callable=AsyncMock),
+            patch("songyan.workflows._nodes.trigger_layered_summaries", new_callable=AsyncMock),
+        ):
+            result = await settlement_extractor_node(
+                {
+                    "project_id": "p1",
+                    "chapter_number": 2,
+                    "current_version_id": "v-valid",
+                    "chapter_goal_id": "goal-1",
+                }
+            )
+
+        assert result["status"] == "settlement_review"
+        assert result["_settlement_needs_human_review"] is True
+        assert result["settlement_id"] is None
+        assert result["summary_id"] is None
+        assert result["_summary_missing_facts"] == ["缺少主角决策/认知变化"]
+        accept_mock.assert_not_awaited()
 
     @pytest.mark.asyncio
     async def test_summary_failure_writes_fallback_summary(self) -> None:
@@ -1136,7 +1444,7 @@ class TestSettlementExtractorNode:
                 return_value="v-accepted",
             ),
             patch(
-                "songyan.workflows._nodes.write_chapter_summary",
+                "songyan.workflows._nodes.write_chapter_summary_with_fact_check",
                 new_callable=AsyncMock,
                 side_effect=LLMError("summary failed"),
             ),
@@ -1209,7 +1517,7 @@ class TestSettlementExtractorNode:
                 return_value="v-accepted",
             ),
             patch(
-                "songyan.workflows._nodes.write_chapter_summary",
+                "songyan.workflows._nodes.write_chapter_summary_with_fact_check",
                 new_callable=AsyncMock,
                 side_effect=LLMResponseParseError("bad json"),
             ),

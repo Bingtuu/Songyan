@@ -39,6 +39,7 @@ from songyan.models import (
     NumericalUpdate,
     StateSettlement,
 )
+from songyan.models.settlement import Decrement
 
 
 # ---------------------------------------------------------------------------
@@ -525,6 +526,33 @@ class TestValidateSettlement:
         errors = await _validate_settlement(settlement, content, [], [])
         assert len(errors) == 1
         assert "closing_value" in errors[0]
+
+    async def test_numerical_formula_rounding_noise_autocorrected(self) -> None:
+        """0.001 量级舍入差自动归一，避免误入 settlement_review."""
+        content = "正文"
+        settlement = StateSettlement(
+            numerical_updates=[
+                NumericalUpdate(
+                    character_id="c1",
+                    attribute_name="missing_mass",
+                    opening_value=0.620,
+                    increments=[],
+                    decrements=[
+                        Decrement(
+                            amount=0.001,
+                            usage="rounding",
+                            source_quote="缺失质量差额为0.001",
+                        )
+                    ],
+                    closing_value=0.618,
+                )
+            ]
+        )
+
+        errors = await _validate_settlement(settlement, content, [], [])
+
+        assert errors == []
+        assert settlement.numerical_updates[0].closing_value == pytest.approx(0.619)
 
     async def test_numerical_formula_wrong_no_evidence_still_errors(self) -> None:
         """无 opening/increments/decrements 证据时，closing_value 不匹配仍报错."""

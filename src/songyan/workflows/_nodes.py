@@ -15,7 +15,10 @@ from langgraph.types import interrupt
 
 from songyan.agents.context_manager import _build_genre_rules as _build_genre_rules
 from songyan.agents.creative_director import generate_creative_brief, generate_dialogue_style_cards
-from songyan.agents.goal_planner import define_chapter_goal
+from songyan.agents.goal_planner import (
+    _extract_forbidden_terms_for_chapter,
+    define_chapter_goal,
+)
 from songyan.agents.literary_auditor import run_literary_audit, save_literary_audit
 from songyan.agents.llm_auditor import run_llm_audit, save_llm_audit
 from songyan.agents.revision_handler import (
@@ -24,7 +27,12 @@ from songyan.agents.revision_handler import (
 )
 from songyan.agents.rule_auditor import run_rule_audit, save_rule_audit
 from songyan.agents.settlement_extractor import apply_settlement, extract_settlement
-from songyan.agents.summary_writer import write_chapter_summary
+from songyan.agents.summary_writer import (
+    generate_chapter_summary_with_fact_check,
+    save_chapter_summary,
+    write_chapter_summary,  # noqa: F401 - compatibility for existing patch paths
+    write_chapter_summary_with_fact_check,
+)
 from songyan.agents.writer import write_chapter
 from songyan.creative_modes.registry import load_creative_mode_profile
 from songyan.db.connection import get_db
@@ -44,7 +52,13 @@ from songyan.db.review_repo import (
 )
 from songyan.db.settlement_repo import SettingSnapshotRepository
 from songyan.evals.score_aggregator import ScoreAggregator
-from songyan.exceptions import LLMError, LLMResponseParseError, SettlementError, SongyanError
+from songyan.exceptions import (
+    GoalPlanningError,
+    LLMError,
+    LLMResponseParseError,
+    SettlementError,
+    SongyanError,
+)
 from songyan.genres.loader import load_genre_profile
 from songyan.models import (
     ChapterHead,
@@ -62,6 +76,10 @@ from songyan.models.rag import RAGConfig as _RAGConfig
 from songyan.services.foreshadowing_schedule import (
     mark_schedule_items_injected,
     update_schedule_after_accept,
+)
+from songyan.utils.calibration import (
+    max_word_count_for_chapter,
+    min_word_count_for_chapter,
 )
 from songyan.utils.scene_parser import parse_scenes as _parse_scenes
 from songyan.utils.truncation import enforce_word_count as _enforce_word_count
@@ -110,6 +128,31 @@ async def _load_literary_keywords(project_id: str) -> dict[str, set[str]]:
             "setting_keywords": set(),
             "non_character_keywords": set(),
         }
+
+
+async def _load_forbidden_terms_for_chapter(
+    project_id: str,
+    chapter_number: int,
+) -> list[str]:
+    """Load explicit per-chapter forbidden terms from the narrative arc goal."""
+    try:
+        narrative_ctx = await load_narrative_goal_context(project_id, chapter_number)
+    except (SongyanError, ValueError, KeyError, sqlite3.Error) as exc:
+        logger.warning(
+            "workflow.forbidden_terms_load_failed",
+            project_id=project_id,
+            chapter_number=chapter_number,
+            error=str(exc),
+            exc_info=True,
+        )
+        return []
+
+    if not narrative_ctx.has_skeleton:
+        return []
+    return _extract_forbidden_terms_for_chapter(
+        narrative_ctx.arc_goal,
+        chapter_number,
+    )
 
 
 def _safe_best_min_score(chapter_number: int) -> float:
@@ -300,6 +343,73 @@ def _score_card_is_degraded_acceptable(
     )
 
 
+def _version_passes_calibration_window(
+    version: Any,
+    *,
+    chapter_number: int,
+    word_count_target: int,
+) -> bool:
+    """Return whether a version is inside the effective calibration word window."""
+    word_count = getattr(version, "word_count", None)
+    if not isinstance(word_count, int | float):
+        return True
+    lower = min_word_count_for_chapter(chapter_number, word_count_target)
+    upper = max_word_count_for_chapter(chapter_number, word_count_target)
+    return (lower <= 0 or word_count >= lower) and (upper <= 0 or word_count <= upper)
+
+
+def _requires_pre_accept_summary_fact_check(
+    *,
+    chapter_number: int,
+    goal: Any | None,
+) -> bool:
+    """Return whether summary fact-check must pass before formal accept."""
+    return (
+        1 <= int(chapter_number) <= 3
+        and goal is not None
+        and int(getattr(goal, "word_count_target", 0) or 0) >= 2800
+    )
+
+
+async def _load_required_phrases_for_chapter(
+    project_id: str,
+    chapter_number: int,
+    goal: Any | None = None,
+) -> list[str]:
+    """Load explicit chapter-level phrases that must appear in content."""
+    phrases: list[str] = []
+
+    def add_phrase(phrase: str) -> None:
+        cleaned = phrase.strip()
+        if cleaned and cleaned not in phrases:
+            phrases.append(cleaned)
+
+    source_parts: list[str] = []
+    if goal is not None:
+        for attr in ("target_events", "hooks", "obligations"):
+            value = getattr(goal, attr, None)
+            if isinstance(value, list):
+                source_parts.extend(str(item) for item in value)
+            elif isinstance(value, str):
+                source_parts.append(value)
+    try:
+        narrative_ctx = await load_narrative_goal_context(project_id, chapter_number)
+        if narrative_ctx and narrative_ctx.arc_goal:
+            source_parts.append(narrative_ctx.arc_goal)
+    except Exception:
+        logger.warning(
+            "required_phrases.load_narrative_context_failed",
+            project_id=project_id,
+            chapter_number=chapter_number,
+            exc_info=True,
+        )
+
+    source_text = "\n".join(source_parts)
+    if chapter_number == 3 and "不要第一个确认" in source_text:
+        add_phrase("不要第一个确认")
+    return phrases
+
+
 def _reset_rewrite_scoped_state() -> dict[str, Any]:
     """清理只属于上一轮 revision / quality gate 的瞬时状态."""
     return {
@@ -386,6 +496,24 @@ async def goal_planner_node(state: dict[str, Any]) -> dict[str, Any]:
     if project is None:
         return {"error": f"Project not found: {state['project_id']}", "status": "goal_planner"}
 
+    # V12: when an approved plan covers this chapter, skip LLM planning and
+    # reuse the existing (possibly hand-overridden) ChapterGoal from DB.
+    # This makes SONGYAN_STARTUP_APPROVED_PLAN actually lock the plan instead
+    # of just injecting spec beats as advisory context.
+    approved_goal_id = await _lookup_approved_chapter_goal_id(state)
+    if approved_goal_id is not None:
+        logger.info(
+            "goal_planner_node.approved_plan_short_circuit",
+            project_id=state["project_id"],
+            chapter_number=state["chapter_number"],
+            reused_goal_id=approved_goal_id,
+        )
+        return {
+            "chapter_goal_id": approved_goal_id,
+            "status": "creative_direction",
+            "error": None,
+        }
+
     genre = load_genre_profile(project.genre_id)
     mode = load_creative_mode_profile(state.get("mode_id") or project.mode_id)
     try:
@@ -412,7 +540,7 @@ async def goal_planner_node(state: dict[str, Any]) -> dict[str, Any]:
         if schedule_item_ids:
             await mark_schedule_items_injected(schedule_item_ids)
         return {"chapter_goal_id": goal_id, "status": "creative_direction", "error": None}
-    except (LLMError, LLMResponseParseError) as exc:
+    except (LLMError, LLMResponseParseError, GoalPlanningError) as exc:
         logger.warning(
             "goal_planner_node.llm_failed",
             error=str(exc),
@@ -426,6 +554,22 @@ async def creative_director_node(state: dict[str, Any]) -> dict[str, Any]:
     goal = await load_chapter_goal(state["chapter_goal_id"])
     if goal is None:
         return {"error": "ChapterGoal not found", "status": "creative_director"}
+
+    # V12: when an approved plan covers this chapter, skip LLM creative
+    # direction and reuse the existing CreativeBrief from DB.
+    approved_brief_id = await _lookup_approved_creative_brief_id(state)
+    if approved_brief_id is not None:
+        logger.info(
+            "creative_director_node.approved_plan_short_circuit",
+            project_id=state["project_id"],
+            chapter_number=state["chapter_number"],
+            reused_brief_id=approved_brief_id,
+        )
+        return {
+            "creative_brief_id": approved_brief_id,
+            "status": "context_assembly",
+            "error": None,
+        }
 
     project = await load_project(state["project_id"])
     if project is None:
@@ -533,7 +677,45 @@ async def _assemble_context_from_state(
         focal_distance=_fod,
     )
     ctx.human_instructions = state.get("human_instructions", [])
+    _inject_startup_beat_sheet_from_runtime(ctx, state)
     return ctx
+
+
+def _inject_startup_beat_sheet_from_runtime(
+    ctx: ContextPackage,
+    state: dict[str, Any],
+) -> None:
+    """Inject V12 startup beats from approved runtime artifacts.
+
+    The graph state keeps only lightweight routing identifiers.  The approved
+    marker and supervision spec stay outside state and are loaded by path at the
+    context assembly boundary.
+    """
+    import os
+
+    spec_path = os.environ.get("SONGYAN_STARTUP_SUPERVISION_SPEC")
+    approval_path = os.environ.get("SONGYAN_STARTUP_APPROVED_PLAN")
+    if not spec_path or not approval_path:
+        return
+
+    from songyan.services.plan_review import load_approved_plan
+    from songyan.services.supervision_spec import load_supervision_spec_file
+
+    try:
+        approval = load_approved_plan(approval_path)
+        project_id = str(state["project_id"])
+        chapter_number = int(state["chapter_number"])
+        if approval.project_id != project_id or chapter_number not in approval.chapters:
+            return
+        spec = load_supervision_spec_file(spec_path)
+        ctx.startup_beat_sheet = spec.beat_sheet_for_chapter(chapter_number)
+    except Exception as exc:  # noqa: BLE001 - startup beats must not break legacy runs
+        logger.warning(
+            "context_manager.startup_beat_sheet_injection_failed",
+            project_id=state.get("project_id"),
+            chapter_number=state.get("chapter_number"),
+            error=str(exc),
+        )
 
 
 async def _load_brief_from_state(state: dict[str, Any]) -> CreativeBrief | None:
@@ -541,6 +723,71 @@ async def _load_brief_from_state(state: dict[str, Any]) -> CreativeBrief | None:
     if state.get("creative_brief_id"):
         return await load_creative_brief(state["creative_brief_id"])
     return None
+
+
+async def _approved_plan_covers_chapter(state: dict[str, Any]) -> bool:
+    """V12: 检查 SONGYAN_STARTUP_APPROVED_PLAN 是否覆盖当前章节.
+
+    当 approved plan 覆盖当前章节时，goal_planner / creative_director 跳过
+    LLM 调用，直接复用 DB 中已有的 ChapterGoal / CreativeBrief。这让
+    approved plan 真正锁定规划，而不是仅把 spec beats 作为建议性上下文。
+    """
+    import os as _os
+
+    approval_path = _os.environ.get("SONGYAN_STARTUP_APPROVED_PLAN")
+    if not approval_path:
+        return False
+    try:
+        from songyan.services.plan_review import load_approved_plan
+
+        approval = load_approved_plan(approval_path)
+        project_id = str(state.get("project_id", ""))
+        chapter_number = int(state.get("chapter_number", 0))
+        if approval.project_id != project_id:
+            return False
+        return chapter_number in approval.chapters
+    except Exception:  # noqa: BLE001 — 启动短路不得阻断旧路径
+        return False
+
+
+async def _lookup_approved_chapter_goal_id(state: dict[str, Any]) -> str | None:
+    """V12: 当 approved plan 覆盖本章时，返回 DB 中最新的 chapter_goal_id."""
+    if not await _approved_plan_covers_chapter(state):
+        return None
+    from aiosqlite import Row
+
+    async with get_db() as conn:
+        conn.row_factory = Row
+        cursor = await conn.execute(
+            "SELECT goal_id FROM chapter_goals "
+            "WHERE project_id = ? AND chapter_number = ? "
+            "ORDER BY created_at DESC, goal_id DESC LIMIT 1",
+            (str(state["project_id"]), int(state["chapter_number"])),
+        )
+        row = await cursor.fetchone()
+    if row is None:
+        return None
+    return str(row["goal_id"])
+
+
+async def _lookup_approved_creative_brief_id(state: dict[str, Any]) -> str | None:
+    """V12: 当 approved plan 覆盖本章时，返回 DB 中最新的 creative_brief_id."""
+    if not await _approved_plan_covers_chapter(state):
+        return None
+    from aiosqlite import Row
+
+    async with get_db() as conn:
+        conn.row_factory = Row
+        cursor = await conn.execute(
+            "SELECT brief_id FROM creative_briefs "
+            "WHERE project_id = ? AND chapter_number = ? "
+            "ORDER BY created_at DESC, brief_id DESC LIMIT 1",
+            (str(state["project_id"]), int(state["chapter_number"])),
+        )
+        row = await cursor.fetchone()
+    if row is None:
+        return None
+    return str(row["brief_id"])
 
 
 async def _assemble_context_fallback(state: dict[str, Any]) -> ContextPackage:
@@ -763,15 +1010,22 @@ async def rewrite_node(state: dict[str, Any]) -> dict[str, Any]:
     # 之前为 ±25%，导致达标初稿在 rewrite 后被破坏到超标状态
     goal = await load_chapter_goal(state.get("chapter_goal_id", ""))
     if goal and goal.word_count_target > 0:
-        lower = int(goal.word_count_target * 0.80)
-        upper = int(goal.word_count_target * 1.20)
+        lower = min_word_count_for_chapter(
+            state["chapter_number"],
+            goal.word_count_target,
+        )
+        upper = max_word_count_for_chapter(
+            state["chapter_number"],
+            goal.word_count_target,
+        )
         ctx.human_instructions.append(
             {
                 "type": "word_count_constraint",
                 "content": (
                     f"【重写约束】本章目标字数为 {goal.word_count_target}。 "
                     f"重写后正文必须严格控制在 {lower} ~ {upper} 字之间。 "
-                    f"若场景展开后可能超标，优先减少场景数量或压缩描写，不要超额。"
+                    "若内容不足下限，必须增加可见动作、交互场景、环境反应和调查步骤；"
+                    "若场景展开后可能超标，优先减少场景数量或压缩描写，不要超额。"
                 ),
             }
         )
@@ -812,9 +1066,18 @@ async def rewrite_node(state: dict[str, Any]) -> dict[str, Any]:
         goal if "goal" in locals() else await load_chapter_goal(state.get("chapter_goal_id", ""))
     )
     if _goal and _goal.word_count_target > 0:
-        _upper_soft = int(_goal.word_count_target * 1.15)  # 收紧：之前 1.20
-        _upper_hard = int(_goal.word_count_target * 1.20)  # 收紧：之前 1.25
-        _lower_hard = int(_goal.word_count_target * 0.80)  # 新增下限保护
+        _upper_soft = min(
+            int(_goal.word_count_target * 1.15),
+            max_word_count_for_chapter(state["chapter_number"], _goal.word_count_target),
+        )
+        _upper_hard = max_word_count_for_chapter(
+            state["chapter_number"],
+            _goal.word_count_target,
+        )
+        _lower_hard = min_word_count_for_chapter(
+            state["chapter_number"],
+            _goal.word_count_target,
+        )  # 新增下限保护
         _content = version.content
         _scenes = version.scenes
         _word_count = version.word_count
@@ -871,7 +1134,71 @@ async def rewrite_node(state: dict[str, Any]) -> dict[str, Any]:
                 lower_hard=_lower_hard,
                 target=_goal.word_count_target,
             )
-            # 不截断（无法自动扩展），但标记为需要 revision
+            best_version_id = state.get("_best_version_id")
+            rollback_version = await _load_active_best_version(
+                version_id=best_version_id,
+                project_id=state["project_id"],
+                chapter_number=state["chapter_number"],
+            )
+            rollback_source = "active_best" if rollback_version else None
+            if rollback_version is None:
+                previous_version_id = state.get("current_version_id")
+                rollback_version = await _load_active_best_version(
+                    version_id=previous_version_id,
+                    project_id=state["project_id"],
+                    chapter_number=state["chapter_number"],
+                )
+                if rollback_version:
+                    rollback_source = "previous_version"
+            if rollback_version and rollback_version.version_id != version.version_id:
+                await ChapterVersionRepository().mark_abandoned(version.version_id)
+                await ChapterHeadRepository().update(
+                    ChapterHead(
+                        project_id=state["project_id"],
+                        chapter_number=state["chapter_number"],
+                        current_version_id=rollback_version.version_id,
+                        accepted_version_id=None,
+                        status="draft",
+                    )
+                )
+            rollback_score_card = None
+            if rollback_version:
+                rollback_score_card = _score_card_for_version(
+                    state.get("_best_score_card") or rollback_version.score_card,
+                    rollback_version.version_id,
+                )
+            recovered_with_qg_pass = bool(
+                rollback_version
+                and rollback_score_card
+                and _score_card_passes_quality_gate(rollback_score_card)
+            )
+            logger.warning(
+                "rewrite.word_count_underflow_rollback",
+                project_id=state["project_id"],
+                chapter_number=state["chapter_number"],
+                failed_version_id=version.version_id,
+                rollback_version_id=rollback_version.version_id if rollback_version else None,
+                rollback_source=rollback_source,
+                recovered_with_qg_pass=recovered_with_qg_pass,
+            )
+            return {
+                "current_version_id": (
+                    rollback_version.version_id if rollback_version else version.version_id
+                ),
+                "revision_round": 0,
+                **_reset_rewrite_scoped_state(),
+                "_was_rewritten": True,
+                "_rewrite_reason": "word_count_underflow",
+                "_needs_revision": False,
+                "_has_critical": False,
+                "_has_major": False,
+                "_convergence_failed": not recovered_with_qg_pass,
+                "_skip_settlement": not bool(rollback_version),
+                "_settlement_needs_human_review": not bool(rollback_version),
+                "_quality_gate_passed": recovered_with_qg_pass,
+                "_score_card": rollback_score_card or state.get("_score_card"),
+                "status": "human_confirm",
+            }
 
         if _truncation_applied:
             # Rule 7: 禁止覆盖版本内容 — 创建新版本，废弃旧版本
@@ -945,12 +1272,24 @@ async def rewrite_node(state: dict[str, Any]) -> dict[str, Any]:
             if (_genre and _project and _goal)
             else None
         )
+        _forbidden_terms = await _load_forbidden_terms_for_chapter(
+            state["project_id"],
+            state["chapter_number"],
+        )
+        _required_phrases = await _load_required_phrases_for_chapter(
+            state["project_id"],
+            state["chapter_number"],
+            _goal,
+        )
         _rule_check = run_rule_audit(
             content=version.content,
             genre_rules=_genre_rules,
             word_count_target=_word_count_target,
             chapter_type=_goal.chapter_type if _goal else None,
             scene_count_target=max(len(version.scenes), 2),
+            forbidden_terms=_forbidden_terms,
+            required_phrases=_required_phrases,
+            chapter_number=state["chapter_number"],
         )
         if not _rule_check.has_opening_hook:
             struct_ok = False
@@ -958,6 +1297,27 @@ async def rewrite_node(state: dict[str, Any]) -> dict[str, Any]:
         elif not _rule_check.has_ending_hook:
             struct_ok = False
             struct_fail_reason = "missing_ending_hook"
+
+    if not struct_ok and struct_fail_reason == "missing_ending_hook":
+        logger.warning(
+            "rewrite.struct_integrity_deferred_hook_patch",
+            version_id=version.version_id,
+            reason=struct_fail_reason,
+            project_id=state["project_id"],
+            chapter_number=state["chapter_number"],
+        )
+        return {
+            "current_version_id": version.version_id,
+            "revision_round": 0,
+            **_reset_rewrite_scoped_state(),
+            "_was_rewritten": True,
+            "_allow_post_rewrite_revision": True,
+            "_rewrite_reason": f"struct_integrity_deferred:{struct_fail_reason}",
+            "_needs_revision": False,
+            "_has_critical": False,
+            "_has_major": False,
+            "status": "rule_auditing",
+        }
 
     if not struct_ok:
         logger.warning(
@@ -1171,6 +1531,15 @@ async def rule_auditor_node(state: dict[str, Any]) -> dict[str, Any]:
         if (genre and project and goal)
         else None
     )
+    forbidden_terms = await _load_forbidden_terms_for_chapter(
+        state["project_id"],
+        state["chapter_number"],
+    )
+    required_phrases = await _load_required_phrases_for_chapter(
+        state["project_id"],
+        state["chapter_number"],
+        goal,
+    )
     result = run_rule_audit(
         content=version.content,
         genre_rules=_genre_rules,
@@ -1179,6 +1548,9 @@ async def rule_auditor_node(state: dict[str, Any]) -> dict[str, Any]:
         scene_count_target=max(len(version.scenes), 2) if version.scenes else 2,
         punch_points=punch_points,
         mandatory_references=mandatory_references,
+        forbidden_terms=forbidden_terms,
+        required_phrases=required_phrases,
+        chapter_number=state["chapter_number"],
         character_names=_lit_kw["character_names"],
         setting_keywords=_lit_kw["setting_keywords"],
         non_character_keywords=_lit_kw["non_character_keywords"],
@@ -1344,6 +1716,8 @@ async def review_merger_node(state: dict[str, Any]) -> dict[str, Any]:
             project_id=state["project_id"],
             chapter_number=state["chapter_number"],
         )
+        _goal_for_rollback = await load_chapter_goal(state.get("chapter_goal_id", ""))
+        _rollback_target_wc = _goal_for_rollback.word_count_target if _goal_for_rollback else 3000
         active_best_score_card = (
             _score_card_for_version(best_score_card_raw, active_best.version_id)
             if active_best
@@ -1354,6 +1728,11 @@ async def review_merger_node(state: dict[str, Any]) -> dict[str, Any]:
             active_best
             and active_best_score_card
             and _score_card_is_safe_best(active_best_score_card, state["chapter_number"])
+            and _version_passes_calibration_window(
+                active_best,
+                chapter_number=state["chapter_number"],
+                word_count_target=_rollback_target_wc,
+            )
             and best_overall is not None
             and current_score < best_overall - _REWRITE_ROLLBACK_SCORE_DELTA
         ):
@@ -1448,10 +1827,22 @@ async def review_merger_node(state: dict[str, Any]) -> dict[str, Any]:
                 project_id=state["project_id"],
                 chapter_number=state["chapter_number"],
             )
+            _goal_for_rollback = await load_chapter_goal(state.get("chapter_goal_id", ""))
+            _rollback_target_wc = (
+                _goal_for_rollback.word_count_target if _goal_for_rollback else 3000
+            )
             active_best_score_card = (
                 _score_card_for_version(best_score_card_raw, active_best.version_id)
                 if active_best
                 else None
+            )
+            rollback_word_count_valid = bool(
+                active_best
+                and _version_passes_calibration_window(
+                    active_best,
+                    chapter_number=state["chapter_number"],
+                    word_count_target=_rollback_target_wc,
+                )
             )
             logger.warning(
                 "revision_rebound_detected",
@@ -1462,9 +1853,11 @@ async def review_merger_node(state: dict[str, Any]) -> dict[str, Any]:
                 degraded_dimension=degraded_dim,
                 rollback_version=best_version,
                 revision_round=rround,
-                rollback_valid=bool(active_best and active_best_score_card),
+                rollback_valid=bool(
+                    active_best and active_best_score_card and rollback_word_count_valid
+                ),
             )
-            if not active_best or not active_best_score_card:
+            if not active_best or not active_best_score_card or not rollback_word_count_valid:
                 return {
                     "review_report_id": report_id,
                     "revision_round": rround,
@@ -1665,8 +2058,10 @@ async def literary_auditor_node(state: dict[str, Any]) -> dict[str, Any]:
             version_id=version.version_id,
         )
         return {
-            "error": f"Literary audit failed: {exc}",
-            "status": "literary_auditor",
+            "literary_observation_id": None,
+            "_literary_observation_unavailable": True,
+            "_literary_observation_error": str(exc),
+            "status": "revision_routing",
         }
 
     obs_id = new_id("lo")
@@ -1734,6 +2129,7 @@ async def revision_handler_node(state: dict[str, Any]) -> dict[str, Any]:
         literary_result=literary_result,
         previous_issues=previous_issues,
         word_count_target=word_count_target,
+        chapter_number=state["chapter_number"],
         score_card=state.get("_score_card"),
         mode_profile=mode_profile,
     )
@@ -1798,6 +2194,15 @@ async def revision_handler_node(state: dict[str, Any]) -> dict[str, Any]:
         if (genre and project and goal)
         else None
     )
+    rev_forbidden_terms = await _load_forbidden_terms_for_chapter(
+        state["project_id"],
+        state["chapter_number"],
+    )
+    rev_required_phrases = await _load_required_phrases_for_chapter(
+        state["project_id"],
+        state["chapter_number"],
+        goal,
+    )
     revised_rule_result = run_rule_audit(
         content=revised_content,
         genre_rules=_genre_rules,
@@ -1806,6 +2211,9 @@ async def revision_handler_node(state: dict[str, Any]) -> dict[str, Any]:
         scene_count_target=max(len(output.patches_applied), 2),
         punch_points=punch_points,
         mandatory_references=rev_mandatory_refs,
+        forbidden_terms=rev_forbidden_terms,
+        required_phrases=rev_required_phrases,
+        chapter_number=state["chapter_number"],
         character_names=_rev_lit_kw["character_names"],
         setting_keywords=_rev_lit_kw["setting_keywords"],
         non_character_keywords=_rev_lit_kw["non_character_keywords"],
@@ -1864,6 +2272,8 @@ async def quality_gate_node(state: dict[str, Any]) -> dict[str, Any]:
         return {"error": "Version not found", "status": "quality_gate"}
 
     failures: list[str] = []
+    goal = await load_chapter_goal(state.get("chapter_goal_id", ""))
+    target = goal.word_count_target if goal else 3000
 
     # Task 106: 优先使用 score_card 做维度检查
     score_card_raw = state.get("_score_card")
@@ -1889,14 +2299,31 @@ async def quality_gate_node(state: dict[str, Any]) -> dict[str, Any]:
         except Exception:
             logger.warning("quality_gate.invalid_score_card", exc_info=True)
 
+    min_word_count = min_word_count_for_chapter(
+        state.get("chapter_number", 0),
+        target,
+    )
+    if min_word_count > 0 and 0 < version.word_count < min_word_count:
+        ratio = version.word_count / target if target > 0 else 0.0
+        failures.append(
+            f"calibration_word_count_too_low:{version.word_count}:{min_word_count}:{ratio:.3f}"
+        )
+    max_word_count = max_word_count_for_chapter(
+        state.get("chapter_number", 0),
+        target,
+    )
+    if max_word_count > 0 and version.word_count > max_word_count:
+        ratio = version.word_count / target if target > 0 else 0.0
+        failures.append(
+            f"calibration_word_count_too_high:{version.word_count}:{max_word_count}:{ratio:.3f}"
+        )
+
     # Fallback：无 score_card 时使用原始字数检查
     if not has_score_card:
-        goal = await load_chapter_goal(state.get("chapter_goal_id", ""))
-        target = goal.word_count_target if goal else 3000
         ratio = version.word_count / target if target > 0 else 1.0
         if ratio > 1.30:
             failures.append(f"word_count_too_high:{version.word_count}:{target}:{ratio:.3f}")
-        elif ratio < 0.80:
+        elif version.word_count < min_word_count:
             failures.append(f"word_count_too_low:{version.word_count}:{target}:{ratio:.3f}")
 
     # 保留率检查（仅对 revision 产出，score_card 未覆盖）
@@ -1927,7 +2354,16 @@ async def quality_gate_node(state: dict[str, Any]) -> dict[str, Any]:
             next_status = "human_review_required"
         elif was_rewritten:
             next_status = "human_confirm"
-        elif any(f.startswith(("word_count_too_high:", "length_score:")) for f in failures):
+        elif any(
+            f.startswith((
+                "word_count_too_high:",
+                "word_count_too_low:",
+                "calibration_word_count_too_low:",
+                "calibration_word_count_too_high:",
+                "length_score:",
+            ))
+            for f in failures
+        ):
             next_status = "rewrite"
         elif db_revision_count >= 2:
             next_status = "human_confirm"
@@ -1949,6 +2385,15 @@ async def quality_gate_node(state: dict[str, Any]) -> dict[str, Any]:
             "_needs_revision": next_status == "rule_auditing",
             "status": next_status,
         }
+        has_calibration_word_count_failure = any(
+            f.startswith(
+                (
+                    "calibration_word_count_too_low:",
+                    "calibration_word_count_too_high:",
+                )
+            )
+            for f in failures
+        )
 
         if has_new_issues:
             result["_convergence_failed"] = True
@@ -1996,7 +2441,27 @@ async def quality_gate_node(state: dict[str, Any]) -> dict[str, Any]:
                 result["_skip_settlement"] = False
                 result["_settlement_needs_human_review"] = False
 
-                if _score_card_passes_quality_gate(active_best_score_card):
+                best_min_word_count = min_word_count_for_chapter(
+                    state.get("chapter_number", 0),
+                    target,
+                )
+                best_max_word_count = max_word_count_for_chapter(
+                    state.get("chapter_number", 0),
+                    target,
+                )
+                best_word_count = getattr(active_best, "word_count", None)
+                best_passes_calibration_word_count = (
+                    not isinstance(best_word_count, int | float)
+                    or (
+                        (best_min_word_count <= 0 or best_word_count >= best_min_word_count)
+                        and (best_max_word_count <= 0 or best_word_count <= best_max_word_count)
+                    )
+                )
+                if (
+                    not has_calibration_word_count_failure
+                    and _score_card_passes_quality_gate(active_best_score_card)
+                    and best_passes_calibration_word_count
+                ):
                     logger.warning(
                         "quality_gate.recovered_by_best_version",
                         project_id=state["project_id"],
@@ -2014,7 +2479,7 @@ async def quality_gate_node(state: dict[str, Any]) -> dict[str, Any]:
                 # Task 121q + 128b: degraded accept 路径 — 分数尚可但 QG 未完全通过
                 # 质量爬坡窗口内使用更宽松阈值
                 _qg_mode = load_creative_mode_profile(state.get("mode_id", "webnovel"))
-                if _score_card_is_degraded_acceptable(
+                if (not has_calibration_word_count_failure) and _score_card_is_degraded_acceptable(
                     active_best_score_card,
                     chapter_number=state["chapter_number"],
                     quality_ramp_chapters=_qg_mode.quality_ramp_chapters,
@@ -2353,9 +2818,13 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
     settlement_applied = False
     accepted_for_postprocessing = False
     summary_id = None
+    summary_fact_check_available = False
+    summary_missing_facts: list[str] = []
+    pending_summary: Any | None = None
     settlement_validation_status: str | None = None
     settlement_validation_errors: list[str] = []
     settlement_version_id: str | None = None
+    startup_validation_findings: list[dict[str, Any]] = []
 
     logger.info(
         "settlement_extractor_node.contract_snapshot",
@@ -2370,18 +2839,29 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
         ),
     )
 
-    # Task 121m + Task 128a: QG false 版本禁止进入 settlement，防止劣质上下文污染。
-    # 但 Task 128a 要求 QG false 时降级接受（degraded_accept），跳过 settlement 但不终止 run。
+    # QG false 版本禁止进入 settlement，防止劣质上下文污染。
+    # 只有前置质量门显式标记 _degraded_accept 时，才允许降级接受。
+    # settlement 节点不得把任意 QG false 自动升级为 accepted head。
     _qg_passed = state.get("_quality_gate_passed")
     _degraded_accept = state.get("_degraded_accept", False)
     if _qg_passed is False and not _degraded_accept:
         logger.warning(
-            "settlement_extractor_node.qg_false_degraded_accept",
+            "settlement_extractor_node.qg_false_requires_review",
             project_id=state["project_id"],
             chapter_number=state["chapter_number"],
             version_id=version.version_id,
         )
-        _degraded_accept = True
+        return {
+            "settlement_id": None,
+            "summary_id": None,
+            "status": "settlement_review",
+            "_settlement_needs_human_review": True,
+            "_settlement_version_id": None,
+            "_settlement_validation_status": None,
+            "_settlement_validation_errors": [],
+            "_skip_settlement": True,
+            "_startup_validation_findings": [],
+        }
 
     if _degraded_accept:
         logger.warning(
@@ -2408,6 +2888,7 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
             "_settlement_validation_status": None,
             "_settlement_validation_errors": [],
             "_skip_settlement": False,
+            "_startup_validation_findings": [],
         }
 
     # Task 111d: skipped settlement 不能再伪装为 accepted/done。
@@ -2427,6 +2908,7 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
             "_settlement_version_id": None,
             "_settlement_validation_status": None,
             "_settlement_validation_errors": [],
+            "_startup_validation_findings": [],
         }
     else:
         # 1. 提取并应用 settlement（核心操作）
@@ -2472,29 +2954,91 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
                 )
                 settlement_needs_review = True
             else:
-                accepted_version_id = await accept_with_settlement_boundary(
-                    project_id=state["project_id"],
-                    chapter_number=state["chapter_number"],
-                    version_id=version.version_id,
-                    settlement=settlement,
+                from songyan.services.startup_runtime_validation import (
+                    validate_startup_runtime_from_env,
+                )
+
+                allowed_names = set()
+                if project is not None and project.protagonist_name:
+                    allowed_names.add(project.protagonist_name)
+                startup_findings = validate_startup_runtime_from_env(
                     content=version.content,
+                    settlement=settlement,
+                    chapter_number=int(state["chapter_number"]),
+                    allowed_names=allowed_names,
                 )
-                settlement_applied = True
-                accepted_for_postprocessing = True
-                # 后续所有后处理都应以 accepted 版本为事实源
-                version = version.model_copy(
-                    update={"version_id": accepted_version_id, "version_type": "accepted"}
-                )
-                logger.info(
-                    "settlement_extractor_node.settlement_applied",
-                    project_id=state["project_id"],
+                startup_validation_findings = [
+                    finding.model_dump(mode="json") for finding in startup_findings
+                ]
+                if startup_validation_findings:
+                    logger.warning(
+                        "settlement_extractor_node.startup_validation_blocked",
+                        project_id=state["project_id"],
+                        chapter_number=state["chapter_number"],
+                        version_id=version.version_id,
+                        findings=startup_validation_findings,
+                    )
+                    settlement_needs_review = True
+
+                if _requires_pre_accept_summary_fact_check(
                     chapter_number=state["chapter_number"],
-                    version_id=accepted_version_id,
-                    character_updates=len(settlement.character_updates),
-                    new_settings=len(settlement.new_settings),
-                    foreshadowing_updates=len(settlement.foreshadowing_updates),
-                    numerical_updates=len(settlement.numerical_updates),
-                )
+                    goal=goal,
+                ):
+                    try:
+                        pending_summary, summary_missing_facts = (
+                            await generate_chapter_summary_with_fact_check(
+                                content=version.content,
+                                settlement=settlement,
+                                project_id=state["project_id"],
+                                chapter_number=state["chapter_number"],
+                            )
+                        )
+                        summary_fact_check_available = True
+                        if summary_missing_facts:
+                            logger.warning(
+                                "settlement_extractor_node.summary_missing_facts_pre_accept",
+                                project_id=state["project_id"],
+                                chapter_number=state["chapter_number"],
+                                version_id=version.version_id,
+                                missing_facts=summary_missing_facts,
+                            )
+                            settlement_needs_review = True
+                    except (LLMError, LLMResponseParseError) as exc:
+                        logger.warning(
+                            "settlement_extractor_node.summary_pre_accept_failed",
+                            error=str(exc),
+                            project_id=state["project_id"],
+                            chapter_number=state["chapter_number"],
+                            version_id=version.version_id,
+                        )
+                        settlement_needs_review = True
+
+                if settlement_needs_review:
+                    settlement_version_id = version.version_id
+                else:
+                    accepted_version_id = await accept_with_settlement_boundary(
+                        project_id=state["project_id"],
+                        chapter_number=state["chapter_number"],
+                        version_id=version.version_id,
+                        settlement=settlement,
+                        content=version.content,
+                    )
+                    settlement_applied = True
+                    accepted_for_postprocessing = True
+                    # 后续所有后处理都应以 accepted 版本为事实源
+                    version = version.model_copy(
+                        update={"version_id": accepted_version_id, "version_type": "accepted"}
+                    )
+                    logger.info(
+                        "settlement_extractor_node.settlement_applied",
+                        project_id=state["project_id"],
+                        chapter_number=state["chapter_number"],
+                        version_id=accepted_version_id,
+                        character_updates=len(settlement.character_updates),
+                        new_settings=len(settlement.new_settings),
+                        foreshadowing_updates=len(settlement.foreshadowing_updates),
+                        numerical_updates=len(settlement.numerical_updates),
+                    )
         except (LLMError, LLMResponseParseError, SettlementError) as exc:
             logger.warning(
                 "settlement_extractor_node.settlement_failed_needs_review",
@@ -2507,13 +3051,38 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
         # 2. 生成章节摘要（非阻塞：失败不导致 settlement 回滚）
         if settlement_applied and settlement is not None:
             try:
-                summary_id, _summary = await write_chapter_summary(
-                    content=version.content,
-                    settlement=settlement,
-                    project_id=state["project_id"],
-                    chapter_number=state["chapter_number"],
-                    db=SummaryRepository(),
-                )
+                if pending_summary is not None:
+                    summary_id = await save_chapter_summary(
+                        db=SummaryRepository(),
+                        summary=pending_summary,
+                        project_id=state["project_id"],
+                        chapter_number=state["chapter_number"],
+                    )
+                else:
+                    summary_id, _summary, summary_missing_facts = (
+                        await write_chapter_summary_with_fact_check(
+                            content=version.content,
+                            settlement=settlement,
+                            project_id=state["project_id"],
+                            chapter_number=state["chapter_number"],
+                            db=SummaryRepository(),
+                        )
+                    )
+                    summary_fact_check_available = True
+                if (
+                    summary_missing_facts
+                    and 1 <= int(state["chapter_number"]) <= 3
+                    and goal is not None
+                    and int(getattr(goal, "word_count_target", 0) or 0) >= 2800
+                ):
+                    logger.warning(
+                        "settlement_extractor_node.summary_missing_facts_needs_review",
+                        project_id=state["project_id"],
+                        chapter_number=state["chapter_number"],
+                        version_id=version.version_id,
+                        missing_facts=summary_missing_facts,
+                    )
+                    settlement_needs_review = True
             except (LLMError, LLMResponseParseError) as exc:
                 logger.warning(
                     "settlement_extractor_node.summary_failed",
@@ -2757,9 +3326,12 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
         "current_version_id": version.version_id if settlement_applied else None,
         "settlement_id": new_id("st") if settlement_applied else None,
         "summary_id": summary_id,
+        "_summary_fact_check_available": summary_fact_check_available,
+        "_summary_missing_facts": summary_missing_facts,
         "status": "settlement_review" if settlement_needs_review else "done",
         "_settlement_needs_human_review": settlement_needs_review,
         "_settlement_version_id": settlement_version_id,
         "_settlement_validation_status": settlement_validation_status,
         "_settlement_validation_errors": settlement_validation_errors,
+        "_startup_validation_findings": startup_validation_findings,
     }

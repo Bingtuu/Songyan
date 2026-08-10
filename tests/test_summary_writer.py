@@ -12,6 +12,7 @@ from songyan.agents.summary_writer import (
     _normalize_summary,
     _validate_summary_facts,
     write_chapter_summary,
+    write_chapter_summary_with_fact_check,
 )
 from songyan.models import ChapterSummary, StateSettlement
 from songyan.models.settlement import ForeshadowingUpdate, NewSetting
@@ -210,6 +211,33 @@ class TestValidateSummaryFacts:
         missing = _validate_summary_facts(summary, settlement)
         assert any("决策" in m for m in missing)
 
+    def test_content_protagonist_decision_counts_as_fact_coverage(self) -> None:
+        summary = ChapterSummary(chapter_number=1, summary="环境描写", emotional_tone="平静")
+        settlement = StateSettlement()
+        content = "沈砚复核完当前数值链。沈砚决定先保存离线记录，再关闭外部同步。"
+
+        missing = _validate_summary_facts(summary, settlement, content=content)
+
+        assert missing == []
+
+    def test_pronoun_decision_counts_when_protagonist_context_is_clear(self) -> None:
+        summary = ChapterSummary(chapter_number=1, summary="环境描写", emotional_tone="平静")
+        settlement = StateSettlement()
+        content = "沈砚把终端转到本地模式，反复确认责任质量缺口。他决定先保存当前数值链。"
+
+        missing = _validate_summary_facts(summary, settlement, content=content)
+
+        assert missing == []
+
+    def test_non_protagonist_decision_in_content_does_not_count(self) -> None:
+        summary = ChapterSummary(chapter_number=1, summary="环境描写", emotional_tone="平静")
+        settlement = StateSettlement()
+        content = "系统决定延迟刷新缓存。走廊里的提示灯保持静止，没有人改变行动。"
+
+        missing = _validate_summary_facts(summary, settlement, content=content)
+
+        assert missing == ["缺少主角决策/认知变化"]
+
     def test_new_setting_not_recorded(self) -> None:
         summary = ChapterSummary(chapter_number=1, summary="主角决定离开", emotional_tone="紧张")
         settlement = StateSettlement(
@@ -239,6 +267,52 @@ class TestValidateSummaryFacts:
         )
         missing = _validate_summary_facts(summary, settlement)
         assert any("伏笔" in m for m in missing)
+
+    def test_structured_key_events_count_as_fact_coverage(self) -> None:
+        summary = ChapterSummary(
+            chapter_number=1,
+            summary="主角决定继续调查",
+            key_events=[
+                "揭示新设定：协议0003",
+                "埋下伏笔：沈弥留下的校验尾标",
+            ],
+            emotional_tone="紧张",
+        )
+        settlement = StateSettlement(
+            new_settings=[
+                NewSetting(
+                    setting_name="协议0003",
+                    description="临时见证人机制",
+                    source_quote="协议0003启动",
+                    setting_key="protocol.0003",
+                )
+            ],
+            foreshadowing_updates=[
+                ForeshadowingUpdate(
+                    operation="plant",
+                    description="沈弥留下的校验尾标",
+                    expected_resolve_chapter=10,
+                    source_version_id="v1",
+                )
+            ],
+        )
+
+        missing = _validate_summary_facts(summary, settlement)
+
+        assert missing == []
+
+    def test_key_events_decision_counts_as_fact_coverage(self) -> None:
+        summary = ChapterSummary(
+            chapter_number=1,
+            summary="环境描写",
+            key_events=["沈砚决定保存当前数值链"],
+            emotional_tone="克制",
+        )
+        settlement = StateSettlement()
+
+        missing = _validate_summary_facts(summary, settlement)
+
+        assert missing == []
 
 
 class TestWriteChapterSummary:
@@ -319,3 +393,70 @@ class TestWriteChapterSummary:
                     chapter_number=1,
                     db=mock_db,
                 )
+
+    @pytest.mark.anyio
+    async def test_fact_check_result_returned(self) -> None:
+        llm_response = json.dumps(
+            {
+                "plot_summary": "主角观察环境",
+                "emotional_tone": "紧张",
+                "key_events": ["观察"],
+                "characters_appeared": ["主角"],
+            }
+        )
+        settlement = StateSettlement(
+            new_settings=[
+                NewSetting(
+                    setting_name="协议0003",
+                    description="临时见证人机制",
+                    source_quote="协议0003启动",
+                    setting_key="protocol.0003",
+                )
+            ]
+        )
+
+        with patch(
+            "songyan.agents.summary_writer.call_llm",
+            new_callable=AsyncMock,
+            return_value=llm_response,
+        ):
+            with patch("songyan.agents.summary_writer._save_summary"):
+                mock_db = AsyncMock()
+                summary_id, _summary, missing = await write_chapter_summary_with_fact_check(
+                    content="沈砚复核完当前数值链。沈砚决定先保存离线记录。",
+                    settlement=settlement,
+                    project_id="proj_123",
+                    chapter_number=1,
+                    db=mock_db,
+                )
+
+        assert summary_id.startswith("sum-proj_123-1-")
+        assert missing == []
+
+    @pytest.mark.anyio
+    async def test_fact_check_still_reports_missing_decision_when_content_lacks_it(self) -> None:
+        llm_response = json.dumps(
+            {
+                "plot_summary": "主角观察环境",
+                "emotional_tone": "紧张",
+                "key_events": ["观察"],
+                "characters_appeared": ["主角"],
+            }
+        )
+
+        with patch(
+            "songyan.agents.summary_writer.call_llm",
+            new_callable=AsyncMock,
+            return_value=llm_response,
+        ):
+            with patch("songyan.agents.summary_writer._save_summary"):
+                mock_db = AsyncMock()
+                _summary_id, _summary, missing = await write_chapter_summary_with_fact_check(
+                    content="终端持续刷新，沈砚站在门边观察。",
+                    settlement=StateSettlement(),
+                    project_id="proj_123",
+                    chapter_number=1,
+                    db=mock_db,
+                )
+
+        assert missing == ["缺少主角决策/认知变化"]

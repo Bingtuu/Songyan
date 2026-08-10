@@ -152,7 +152,7 @@ async def test_quality_gate_non_word_failure_after_two_revisions_stops_loop() ->
 
 @pytest.mark.asyncio
 async def test_quality_gate_word_count_too_low() -> None:
-    """字数 < 0.80x → 标记 revision_needed."""
+    """字数低于 Ch1-Ch3 calibration 下限 → 路由到 rewrite."""
     version = MagicMock()
     version.word_count = 1500
     goal = MagicMock()
@@ -175,8 +175,112 @@ async def test_quality_gate_word_count_too_low() -> None:
         })
     assert result["_quality_gate_passed"] is False
     assert any("word_count_too_low" in f for f in result["_quality_gate_failures"])
-    assert result["status"] == "rule_auditing"
-    assert result["_needs_revision"] is True
+    assert result["status"] == "rewrite"
+    assert result["_needs_revision"] is False
+
+
+@pytest.mark.asyncio
+async def test_quality_gate_ch1_3_calibration_floor_overrides_score_card_pass() -> None:
+    """Ch1-Ch3 低于 2700 即使 score_card length_ok 也不能通过."""
+    version = MagicMock()
+    version.version_id = "v-1"
+    version.word_count = 2605
+    goal = MagicMock()
+    goal.word_count_target = 3000
+    score_card = {
+        "version_id": "v-1",
+        "length": {"score": 0.88, "details": {"word_count_ratio": 0.87}},
+        "budget": {"score": 0.8, "details": {}},
+        "coherence": {"score": 1.0, "details": {}},
+        "momentum": {"score": 1.0, "details": {}},
+        "readability": {"score": 1.0, "details": {}},
+        "flags": {
+            "length_ok": True,
+            "budget_ok": True,
+            "coherence_critical": False,
+            "coherence_major": False,
+            "momentum_present": True,
+            "readability_ok": True,
+        },
+        "overall_score": 0.8,
+    }
+    with (
+        patch("songyan.workflows._nodes.load_version", new_callable=AsyncMock) as mock_ver,
+        patch("songyan.workflows._nodes.load_chapter_goal", new_callable=AsyncMock) as mock_goal,
+        patch(
+            "songyan.workflows._nodes._load_chapter_repair_state",
+            new_callable=AsyncMock,
+            return_value=(0, False),
+        ),
+    ):
+        mock_ver.return_value = version
+        mock_goal.return_value = goal
+        result = await quality_gate_node({
+            "project_id": "p1",
+            "chapter_number": 2,
+            "chapter_goal_id": "g1",
+            "current_version_id": "v-1",
+            "_score_card": score_card,
+        })
+
+    assert result["_quality_gate_passed"] is False
+    assert any(
+        item.startswith("calibration_word_count_too_low:2605:2700")
+        for item in result["_quality_gate_failures"]
+    )
+    assert result["status"] == "rewrite"
+
+
+@pytest.mark.asyncio
+async def test_quality_gate_ch1_3_calibration_ceiling_overrides_score_card_pass() -> None:
+    """Ch1-Ch3 高于 3300 即使 score_card length_ok 也不能通过."""
+    version = MagicMock()
+    version.version_id = "v-1"
+    version.word_count = 3533
+    goal = MagicMock()
+    goal.word_count_target = 3000
+    score_card = {
+        "version_id": "v-1",
+        "length": {"score": 0.68, "details": {"word_count_ratio": 1.18}},
+        "budget": {"score": 0.8, "details": {}},
+        "coherence": {"score": 1.0, "details": {}},
+        "momentum": {"score": 1.0, "details": {}},
+        "readability": {"score": 1.0, "details": {}},
+        "flags": {
+            "length_ok": True,
+            "budget_ok": True,
+            "coherence_critical": False,
+            "coherence_major": False,
+            "momentum_present": True,
+            "readability_ok": True,
+        },
+        "overall_score": 0.8,
+    }
+    with (
+        patch("songyan.workflows._nodes.load_version", new_callable=AsyncMock) as mock_ver,
+        patch("songyan.workflows._nodes.load_chapter_goal", new_callable=AsyncMock) as mock_goal,
+        patch(
+            "songyan.workflows._nodes._load_chapter_repair_state",
+            new_callable=AsyncMock,
+            return_value=(0, False),
+        ),
+    ):
+        mock_ver.return_value = version
+        mock_goal.return_value = goal
+        result = await quality_gate_node({
+            "project_id": "p1",
+            "chapter_number": 1,
+            "chapter_goal_id": "g1",
+            "current_version_id": "v-1",
+            "_score_card": score_card,
+        })
+
+    assert result["_quality_gate_passed"] is False
+    assert any(
+        item.startswith("calibration_word_count_too_high:3533:3300")
+        for item in result["_quality_gate_failures"]
+    )
+    assert result["status"] == "rewrite"
 
 
 @pytest.mark.asyncio

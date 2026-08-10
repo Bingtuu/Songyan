@@ -609,6 +609,11 @@ def _is_formula_mismatch(num: NumericalUpdate) -> bool:
     return abs(num.closing_value - expected) > NUMERICAL_TOLERANCE
 
 
+def _is_rounding_mismatch(actual: float, expected: float) -> bool:
+    """Return whether a formula mismatch is only decimal rounding noise."""
+    return NUMERICAL_TOLERANCE < abs(actual - expected) <= 0.0015
+
+
 def _should_filter_unevidenced_numerical_update(
     num: NumericalUpdate,
     content: str,
@@ -815,7 +820,22 @@ async def _validate_settlement(
             has_ledger_evidence = bool(
                 num.increments or num.decrements or num.opening_value != 0.0
             )
-            if closing_is_default and has_ledger_evidence:
+            if (
+                has_ledger_evidence
+                and not closing_is_default
+                and _is_rounding_mismatch(num.closing_value, expected)
+            ):
+                logger.info(
+                    "settlement.numerical_closing_rounding_autocorrected",
+                    character_id=num.character_id,
+                    attribute_name=num.attribute_name,
+                    llm_closing_value=num.closing_value,
+                    computed_closing=expected,
+                    project_id=project_id,
+                    chapter_number=chapter_number,
+                )
+                num.closing_value = expected
+            elif closing_is_default and has_ledger_evidence:
                 logger.info(
                     "settlement.numerical_closing_autocorrected",
                     character_id=num.character_id,

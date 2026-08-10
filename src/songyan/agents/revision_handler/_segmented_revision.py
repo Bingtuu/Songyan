@@ -269,6 +269,7 @@ async def run_segmented_revision(
     original_rule_result: RuleAuditResult | None = None,
     revised_rule_result: RuleAuditResult | None = None,
     target_word_count: int = 3000,
+    chapter_number: int = 0,
 ) -> tuple[RevisionOutput, str]:
     """按 scene 分段修订主入口.
 
@@ -359,9 +360,19 @@ async def run_segmented_revision(
     content_preservation_ratio = _compute_preservation_ratio(
         clean_original_content, full_revised
     )
+    original_wc = count_chinese_words(clean_original_content)
+    revised_wc = count_chinese_words(full_revised)
+    lower_wc = int(target_word_count * 0.80)
+    from songyan.utils.calibration import max_word_count_for_chapter
+
+    upper_wc = max_word_count_for_chapter(chapter_number, target_word_count)
+    short_chapter_expansion = (
+        original_wc < lower_wc
+        and lower_wc <= revised_wc <= upper_wc
+    )
 
     # Task 100a: 全局字数下限守卫 — 拼接后若保留率 < 0.85，直接回退到原始内容
-    if content_preservation_ratio < MIN_PRESERVATION_RATIO:
+    if content_preservation_ratio < MIN_PRESERVATION_RATIO and not short_chapter_expansion:
         logger.warning(
             "revision_handler.segmented_global_floor_guard",
             preservation_ratio=content_preservation_ratio,
@@ -380,6 +391,16 @@ async def run_segmented_revision(
             scenes_fallback_count=len(scenes),
         )
         return output, clean_original_content
+    if short_chapter_expansion and content_preservation_ratio < MIN_PRESERVATION_RATIO:
+        logger.info(
+            "revision_handler.short_chapter_expansion_kept",
+            preservation_ratio=content_preservation_ratio,
+            original_wc=original_wc,
+            revised_wc=revised_wc,
+            lower=lower_wc,
+            upper=upper_wc,
+            target=target_word_count,
+        )
 
     # 全局 issues 计入 remaining
     remaining_ids = [i.issue_id for i in global_issues]
@@ -399,6 +420,7 @@ async def run_segmented_revision(
             revised_scenes_parsed,
             clean_original_content,
             target_word_count,
+            chapter_number=chapter_number,
         )
     )
     if adjusted:
@@ -541,6 +563,7 @@ def _enforce_revision_word_count(
     original_content: str,
     target_word_count: int,
     min_preserve_ratio: float = 0.85,
+    chapter_number: int = 0,
 ) -> tuple[str, list[dict[str, Any]], int, bool, str]:
     """Revision 后字数硬约束 (Task 093 → V4.0 收紧到 ±20% → Task 100a 下限保护).
 
@@ -555,13 +578,18 @@ def _enforce_revision_word_count(
     Returns:
         content, scenes, word_count, was_adjusted, reason
     """
+    from songyan.utils.calibration import (
+        max_word_count_for_chapter,
+        min_word_count_for_chapter,
+    )
     from songyan.utils.scene_parser import parse_scenes as _parse_scenes
     from songyan.utils.truncation import enforce_word_count as _enforce_word_count
     from songyan.utils.word_count import count_chinese_words
 
-    upper = int(target_word_count * 1.20)
-    lower = int(target_word_count * 0.80)
+    upper = max_word_count_for_chapter(chapter_number, target_word_count)
+    lower = min_word_count_for_chapter(chapter_number, target_word_count)
     current = count_chinese_words(revision_content)
+    original_wc = count_chinese_words(original_content)
 
     if current > upper:
         # 二次截断（复用 Writer 的截断逻辑）
@@ -584,8 +612,23 @@ def _enforce_revision_word_count(
             wc = count_chinese_words(content)
             preservation = len(content) / len(revision_content) if revision_content else 1.0
             if preservation < min_preserve_ratio:
+                if original_wc < lower and wc >= lower:
+                    logger.info(
+                        "revision_handler.short_original_truncated_expansion_kept",
+                        preservation=round(preservation, 4),
+                        original_wc=original_wc,
+                        adjusted_wc=wc,
+                        lower=lower,
+                        target=target_word_count,
+                    )
+                    return (
+                        content,
+                        scenes,
+                        wc,
+                        True,
+                        "revision_truncated_short_original_expansion_kept",
+                    )
                 original_scenes = _parse_scenes(original_content)
-                original_wc = count_chinese_words(original_content)
                 return (
                     original_content,
                     original_scenes,
@@ -595,12 +638,35 @@ def _enforce_revision_word_count(
                 )
             return content, scenes, wc, True, "revision_hard_truncated_at_boundary"
 
+        if wc > upper:
+            from songyan.utils.truncation import hard_truncate_at_boundary
+
+            content = hard_truncate_at_boundary(content, upper)
+            scenes = _parse_scenes(content)
+            wc = count_chinese_words(content)
+            reason = f"{reason}:calibration_hard_truncated"
+
         # 保留率验证：二次截断后保留率仍 ≥ min_preserve_ratio (0.85)
         preservation = len(content) / len(revision_content) if revision_content else 1.0
         if preservation < min_preserve_ratio:
+            if original_wc < lower and wc >= lower:
+                logger.info(
+                    "revision_handler.short_original_truncated_expansion_kept",
+                    preservation=round(preservation, 4),
+                    original_wc=original_wc,
+                    adjusted_wc=wc,
+                    lower=lower,
+                    target=target_word_count,
+                )
+                return (
+                    content,
+                    scenes,
+                    wc,
+                    True,
+                    "revision_truncated_short_original_expansion_kept",
+                )
             # 保留率过低 → 回退到原始 draft
             original_scenes = _parse_scenes(original_content)
-            original_wc = count_chinese_words(original_content)
             return (
                 original_content,
                 original_scenes,
@@ -611,7 +677,6 @@ def _enforce_revision_word_count(
         return content, scenes, wc, True, f"revision_truncated:{reason}"
 
     if current < lower:
-        original_wc = count_chinese_words(original_content)
         # 若原始内容本身就不足下限，说明是测试/短内容场景，不强制 fallback
         if original_wc < lower:
             return (

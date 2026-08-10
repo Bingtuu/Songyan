@@ -126,6 +126,12 @@ class TestRenderPrompt:
         prompt = _render_prompt(ctx)
         assert "第 1 章" in prompt or "1" in prompt
 
+    def test_ch1_prompt_includes_calibration_word_count_floor(self) -> None:
+        ctx = _make_context_package()
+        prompt = _render_prompt(ctx)
+        assert "校准窗口硬字数范围为 2700-3300 字" in prompt
+        assert "必须在 2700-3300 字之间" in prompt
+
     def test_renders_target_events(self) -> None:
         ctx = _make_context_package()
         prompt = _render_prompt(ctx)

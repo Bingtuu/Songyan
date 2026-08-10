@@ -145,6 +145,19 @@ from songyan.models.settlement import (
     StateSettlement,
 )
 from songyan.models.style_mimicry import StyleSample
+from songyan.models.supervision import (
+    ApprovedPlan,
+    BeatSpec,
+    ChapterSupervisionSpec,
+    PlanOnlyArtifact,
+    PlanOnlyResult,
+    PlanReviewFinding,
+    PlanReviewResult,
+    ReviewPolicy,
+    StagePolicy,
+    SupervisionSpec,
+    WordCountPolicy,
+)
 
 __all__ = [
     # project
@@ -267,6 +280,18 @@ __all__ = [
     "Decrement",
     # Phase 5 新增
     "StyleSample",
+    # V12 startup supervision spec
+    "ApprovedPlan",
+    "BeatSpec",
+    "ChapterSupervisionSpec",
+    "PlanOnlyArtifact",
+    "PlanOnlyResult",
+    "PlanReviewFinding",
+    "PlanReviewResult",
+    "ReviewPolicy",
+    "StagePolicy",
+    "SupervisionSpec",
+    "WordCountPolicy",
     # Phase 7 新增
     "HumanMark",
     "SuggestedMark",
