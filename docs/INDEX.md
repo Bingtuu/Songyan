@@ -21,6 +21,14 @@ Public documentation map for users and contributors.
 | [Changelog](../CHANGELOG.md) | Release notes |
 | [License](../LICENSE) | AGPL-3.0 license |
 
+## Roadmap
+
+| Document | Purpose |
+|----------|---------|
+| [V13 质量方法论公开化](roadmap/v13-quality-methodology.md) | 公开 CED / T9 / 五门口径与脱敏 baseline（已规划，Task 226-229） |
+| [V14 成本与按角色模型路由](roadmap/v14-model-routing.md) | per-role LLM 配置与成本拆分（已规划，Task 230-233） |
+| [V15 导入已有小说续写](roadmap/v15-import-continue.md) | ingest → segment → replay → synthesize → publish（已规划，Task 234-238） |
+
 ## Architecture References
 
 | Document | Purpose |
