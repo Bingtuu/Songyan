@@ -188,6 +188,86 @@ def test_review_plan_documents_ignores_negated_policy_mentions() -> None:
     assert findings == []
 
 
+def _spec_data_with(
+    *,
+    forbidden_literals: list[str] | None = None,
+    forbidden_patterns: list[str] | None = None,
+) -> dict[str, object]:
+    data = _spec_data()
+    chapters = data["chapters"]
+    assert isinstance(chapters, dict)
+    chapter1 = chapters["1"]
+    assert isinstance(chapter1, dict)
+    if forbidden_literals is not None:
+        chapter1["forbidden_literals"] = forbidden_literals
+    if forbidden_patterns is not None:
+        chapter1["forbidden_patterns"] = forbidden_patterns
+    return data
+
+
+def test_review_plan_documents_ignores_negated_forbidden_pattern() -> None:
+    spec = SupervisionSpec.model_validate(
+        _spec_data_with(forbidden_literals=[], forbidden_patterns=[r"旧(案|事故|记录)"])
+    )
+    goal = _clean_goal()
+    brief = CreativeBrief(
+        mode_id="webnovel",
+        chapter_goal=goal,
+        creative_intent="只写当前工程反馈，不引入外部解释或旧事故。",
+        reader_contract="当前动作推进。",
+    )
+
+    findings = review_plan_documents(goal=goal, brief=brief, spec=spec)
+
+    assert findings == []
+
+
+def test_review_plan_documents_ignores_negated_forbidden_literal() -> None:
+    goal = _clean_goal()
+    brief = CreativeBrief(
+        mode_id="webnovel",
+        chapter_goal=goal,
+        creative_intent="禁止陈屿出场，只写当前责任质量链。",
+        reader_contract="当前动作推进。",
+    )
+
+    findings = review_plan_documents(goal=goal, brief=brief, spec=_spec())
+
+    assert findings == []
+
+
+def test_review_plan_documents_ignores_bushi_negated_policy_mentions() -> None:
+    goal = _clean_goal()
+    brief = CreativeBrief(
+        mode_id="webnovel",
+        chapter_goal=goal,
+        creative_intent="责任质量差值缓慢漂移，暗示异常仍在持续，不是历史记录的问题。",
+        reader_contract="当前动作推进。",
+    )
+
+    findings = review_plan_documents(goal=goal, brief=brief, spec=_spec())
+
+    assert findings == []
+
+
+def test_review_plan_documents_flags_unnegated_forbidden_pattern_alongside_negated() -> None:
+    spec = SupervisionSpec.model_validate(
+        _spec_data_with(forbidden_literals=[], forbidden_patterns=[r"旧(案|事故|记录)"])
+    )
+    goal = _clean_goal()
+    brief = CreativeBrief(
+        mode_id="webnovel",
+        chapter_goal=goal,
+        creative_intent="不引入外部解释或旧事故。",
+        reader_contract="当前动作推进到封口阶段，此处直接搬出旧事故记录来解释异常来源。",
+    )
+
+    findings = review_plan_documents(goal=goal, brief=brief, spec=spec)
+    codes = {finding.code for finding in findings}
+
+    assert "forbidden_pattern" in codes
+
+
 def test_review_plan_documents_allows_professional_identity_wording() -> None:
     goal = ChapterGoal(
         chapter_number=1,

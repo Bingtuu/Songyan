@@ -194,28 +194,37 @@ def review_plan_documents(
 
     plan_text = _plan_text(goal, brief)
     for literal in chapter_spec.forbidden_literals:
-        if literal in plan_text:
-            findings.append(
-                PlanReviewFinding(
-                    chapter_number=chapter_number,
-                    code="forbidden_literal",
-                    message=f"plan contains forbidden literal: {literal}",
-                    evidence=_evidence(plan_text, literal),
+        start = 0
+        while True:
+            pos = plan_text.find(literal, start)
+            if pos < 0:
+                break
+            if not _is_negated_policy_match(plan_text, pos, pos + len(literal)):
+                findings.append(
+                    PlanReviewFinding(
+                        chapter_number=chapter_number,
+                        code="forbidden_literal",
+                        message=f"plan contains forbidden literal: {literal}",
+                        evidence=_evidence_at(plan_text, pos, pos + len(literal)),
+                    )
                 )
-            )
+                break
+            start = pos + len(literal)
 
     for pattern in chapter_spec.forbidden_patterns:
         compiled = re.compile(pattern)
-        match = compiled.search(plan_text)
-        if match:
+        for match in compiled.finditer(plan_text):
+            if _is_negated_policy_match(plan_text, match.start(), match.end()):
+                continue
             findings.append(
                 PlanReviewFinding(
                     chapter_number=chapter_number,
                     code="forbidden_pattern",
                     message=f"plan contains forbidden pattern: {pattern}",
-                    evidence=_evidence(plan_text, match.group(0)),
+                    evidence=_evidence_at(plan_text, match.start(), match.end()),
                 )
             )
+            break
 
     policy = chapter_spec.stage_policy
     if not policy.allow_new_characters:
@@ -407,8 +416,12 @@ def _evidence(text: str, needle: str) -> str:
     pos = text.find(needle)
     if pos < 0:
         return needle
-    start = max(0, pos - 40)
-    end = min(len(text), pos + len(needle) + 40)
+    return _evidence_at(text, pos, pos + len(needle))
+
+
+def _evidence_at(text: str, start_pos: int, end_pos: int) -> str:
+    start = max(0, start_pos - 40)
+    end = min(len(text), end_pos + 40)
     return text[start:end].replace("\n", " ").strip()
 
 
@@ -421,6 +434,8 @@ def _is_negated_policy_match(text: str, start: int, end: int) -> bool:
         "不展开",
         "不使用",
         "不引入",
+        "不是",
+        "并非",
         "避免",
         "禁止",
         "不得",
