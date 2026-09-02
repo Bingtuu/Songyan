@@ -212,20 +212,34 @@ def _validate_summary_facts(
     if not has_decision:
         missing.append("缺少主角决策/认知变化")
 
-    # 2. 新设定是否被记录
+    # 2. 新设定是否被记录（summary 未记录时回查正文，正文已含则不算缺失）
     for setting in settlement.new_settings:
         if setting.setting_name and setting.setting_name not in fact_text:
+            if _has_setting_in_content(setting.setting_name, content):
+                continue
             missing.append(f"新设定未记录: {setting.setting_name}")
 
-    # 3. 新伏笔是否被记录（简化：检查 description 关键词）
+    # 3. 新伏笔是否被记录（简化：检查 description 关键词；summary 未记录时回查正文）
     for fs in settlement.foreshadowing_updates:
         if fs.operation == "plant" and fs.description:
             # 取前 6 个字符作为关键词
             keyword = fs.description[:6]
             if keyword and keyword not in fact_text:
+                if _has_foreshadowing_in_content(keyword, content):
+                    continue
                 missing.append(f"新伏笔未记录: {fs.description[:20]}")
 
     return missing
+
+
+def _has_setting_in_content(setting_name: str, content: str) -> bool:
+    """Return whether chapter content itself mentions the setting name."""
+    return bool(content) and setting_name in content
+
+
+def _has_foreshadowing_in_content(keyword: str, content: str) -> bool:
+    """Return whether chapter content itself contains the foreshadowing keyword."""
+    return bool(content) and keyword in content
 
 
 def _has_decision_signal(text: str) -> bool:

@@ -301,6 +301,82 @@ class TestValidateSummaryFacts:
 
         assert missing == []
 
+    def test_new_setting_in_content_counts_as_fact_coverage(self) -> None:
+        """summary 漏写 setting_name 但正文包含时，不应误报缺失."""
+        summary = ChapterSummary(chapter_number=1, summary="主角决定离开", emotional_tone="紧张")
+        settlement = StateSettlement(
+            new_settings=[
+                NewSetting(
+                    setting_name="青铜大门",
+                    description="古老门户",
+                    source_quote="出现大门",
+                    setting_key="bronze_gate",
+                )
+            ]
+        )
+        content = "沈砚决定离开。他推开青铜大门，走入漆黑的通道。"
+
+        missing = _validate_summary_facts(summary, settlement, content=content)
+
+        assert missing == []
+
+    def test_new_setting_missing_from_summary_and_content_is_reported(self) -> None:
+        """summary 和正文都不含 setting_name 时，仍应报缺失."""
+        summary = ChapterSummary(chapter_number=1, summary="主角决定离开", emotional_tone="紧张")
+        settlement = StateSettlement(
+            new_settings=[
+                NewSetting(
+                    setting_name="青铜大门",
+                    description="古老门户",
+                    source_quote="出现大门",
+                    setting_key="bronze_gate",
+                )
+            ]
+        )
+        content = "沈砚决定离开。走廊里的提示灯保持静止。"
+
+        missing = _validate_summary_facts(summary, settlement, content=content)
+
+        assert any("青铜大门" in m for m in missing)
+
+    def test_foreshadowing_in_content_counts_as_fact_coverage(self) -> None:
+        """summary 漏写伏笔关键词但正文包含时，不应误报缺失."""
+        summary = ChapterSummary(chapter_number=1, summary="主角决定离开", emotional_tone="紧张")
+        settlement = StateSettlement(
+            foreshadowing_updates=[
+                ForeshadowingUpdate(
+                    operation="plant",
+                    description="古老符文的秘密",
+                    expected_resolve_chapter=10,
+                    source_version_id="v1",
+                )
+            ]
+        )
+        content = "沈砚决定离开。他无意间触碰到古老符文的秘密，指尖一麻。"
+
+        missing = _validate_summary_facts(summary, settlement, content=content)
+
+        assert missing == []
+
+    def test_foreshadowing_missing_from_summary_and_content_is_reported(self) -> None:
+        """summary 和正文都不含伏笔关键词时，仍应报缺失."""
+        summary = ChapterSummary(chapter_number=1, summary="主角决定离开", emotional_tone="紧张")
+        settlement = StateSettlement(
+            foreshadowing_updates=[
+                ForeshadowingUpdate(
+                    operation="plant",
+                    description="古老符文的秘密",
+                    expected_resolve_chapter=10,
+                    source_version_id="v1",
+                )
+            ]
+        )
+        content = "沈砚决定离开。走廊里的提示灯保持静止。"
+
+        missing = _validate_summary_facts(summary, settlement, content=content)
+
+        assert any("伏笔" in m for m in missing)
+
     def test_key_events_decision_counts_as_fact_coverage(self) -> None:
         summary = ChapterSummary(
             chapter_number=1,
