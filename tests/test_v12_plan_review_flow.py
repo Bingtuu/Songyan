@@ -319,6 +319,71 @@ def test_review_plan_documents_blocks_object_identity_wording() -> None:
     assert "identity_secret_reveal" in {finding.code for finding in findings}
 
 
+def test_review_plan_documents_ignores_previous_summary_recap() -> None:
+    """previous_summary 是已 accepted 章节的系统摘要回顾，不计入 forbidden 扫描。
+
+    V12-225 scanner 校准：Ch2 plan-only 的 goal.previous_summary 含 Ch1 摘要原文
+    "他前往交接廊实地复核"（已 accepted 内容），命中 cross_location_chase /
+    forbidden_pattern 造成误报。摘要不是新规划内容，扫描它只会产生假阳性。
+    brief.chapter_goal 是 goal 的冗余拷贝，一并排除（goal 本体已直接扫描）。
+    """
+    spec = SupervisionSpec.model_validate(
+        _spec_data_with(forbidden_literals=[], forbidden_patterns=[r"跨区|追踪到|前往"])
+    )
+    goal = ChapterGoal(
+        chapter_number=1,
+        previous_summary="他前往交接廊实地复核，发现地面磁锁显示承重27公斤。",
+        target_events=["沈砚复核当前责任质量通知"],
+        hooks=["责任质量归属与实测质量不一致"],
+        obligations=["沈砚决定先保存当前数值链。"],
+        word_count_target=3000,
+        chapter_type="opening",
+    )
+    brief = _clean_brief(goal)
+
+    findings = review_plan_documents(goal=goal, brief=brief, spec=spec)
+
+    assert findings == []
+
+
+def test_review_plan_documents_still_flags_plan_own_forbidden_pattern() -> None:
+    """plan 自身内容（target_events 等）命中 forbidden pattern 仍然拦截."""
+    spec = SupervisionSpec.model_validate(
+        _spec_data_with(forbidden_literals=[], forbidden_patterns=[r"跨区|追踪到|前往"])
+    )
+    goal = ChapterGoal(
+        chapter_number=1,
+        previous_summary="",
+        target_events=["沈砚前往交接廊复核当前责任质量通知"],
+        hooks=["责任质量归属与实测质量不一致"],
+        word_count_target=3000,
+        chapter_type="opening",
+    )
+    brief = _clean_brief(goal)
+
+    findings = review_plan_documents(goal=goal, brief=brief, spec=spec)
+    codes = {finding.code for finding in findings}
+
+    assert "forbidden_pattern" in codes
+    assert "cross_location_chase" in codes
+
+
+def test_review_plan_documents_ignores_negated_buqueren_identity() -> None:
+    """"不确认对象身份" 是 spec required_phrase 要求的禁令措辞，不应误报（V12-225）."""
+    goal = ChapterGoal(
+        chapter_number=1,
+        target_events=["沈砚只确认测试结果，不确认对象身份。"],
+        hooks=["责任质量归属与实测质量不一致"],
+        word_count_target=3000,
+        chapter_type="opening",
+    )
+    brief = _clean_brief(goal)
+
+    findings = review_plan_documents(goal=goal, brief=brief, spec=_spec())
+
+    assert findings == []
+
+
 def test_review_plan_documents_blocks_missing_chapter_spec() -> None:
     goal = ChapterGoal(chapter_number=2, target_events=["当前动作"], word_count_target=3000)
     brief = _clean_brief(goal)

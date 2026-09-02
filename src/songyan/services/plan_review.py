@@ -407,8 +407,15 @@ def _plan_text(goal: ChapterGoal, brief: CreativeBrief) -> str:
             return
         parts.append(str(value))
 
-    add(goal.model_dump(mode="json"))
-    add(brief.model_dump(mode="json"))
+    # V12-225 scanner 校准：
+    # - goal.previous_summary 是已 accepted 章节的系统摘要回顾，内容已过验收门，
+    #   扫描它只会对回顾文本产生误报（如 Ch1 摘要里的"前往交接廊"命中
+    #   cross_location_chase），不属于新规划内容，排除。
+    # - brief.chapter_goal 是 creative_director 嵌入的 goal 冗余拷贝（含
+    #   previous_summary），goal 本体已在上一行直接扫描，排除避免重复与
+    #   摘要噪声回流。
+    add(goal.model_dump(mode="json", exclude={"previous_summary"}))
+    add(brief.model_dump(mode="json", exclude={"chapter_goal"}))
     return "\n".join(parts)
 
 
@@ -434,6 +441,7 @@ def _is_negated_policy_match(text: str, start: int, end: int) -> bool:
         "不展开",
         "不使用",
         "不引入",
+        "不确认",
         "不是",
         "并非",
         "避免",
