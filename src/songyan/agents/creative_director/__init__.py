@@ -672,7 +672,9 @@ async def generate_creative_brief(
         raise
 
     # 构建 CreativeBrief（含字段验证和修正）
-    brief = _build_creative_brief(data, mode_profile.id, chapter_goal)
+    brief = _build_creative_brief(
+        data, mode_profile.id, chapter_goal, project_taboos=project.taboos
+    )
     active_settings = await _load_active_settings_to_recycle(
         project_id, chapter_goal.chapter_number
     )

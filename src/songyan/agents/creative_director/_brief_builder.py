@@ -68,6 +68,13 @@ _SETTING_CONSISTENCY_PATTERN = (
     "（如种子设定中没有的机构名称，就不能凭空出现）"
 )
 
+# V12-224f: 项目 taboos 禁止人名时注入的半具名人物禁令
+_HALF_NAMED_PERSON_PATTERN = (
+    "【可执行约束】禁止出现姓氏+职称的半具名人物（如'陈工''王师傅'）："
+    "检修、维护、操作等记录只写编号与时间戳，签名栏/创建人栏保持空白或仅写编号"
+)
+_NAME_TABOO_KEYWORDS = ("人名", "具名", "姓名")
+
 
 def _extract_json(text: str) -> str:
     """从 LLM 响应中提取 JSON 字符串."""
@@ -185,13 +192,27 @@ def _validate_emotion_arc_item(data: dict[str, Any]) -> EmotionArcItem | None:
     )
 
 
-def _ensure_forbidden_patterns(patterns: list[Any]) -> list[str]:
-    """确保 forbidden_patterns 至少 MIN_FORBIDDEN_PATTERNS 个具体条目，并包含设定连续性约束."""
+def _ensure_forbidden_patterns(
+    patterns: list[Any],
+    project_taboos: list[str] | None = None,
+) -> list[str]:
+    """确保 forbidden_patterns 至少 MIN_FORBIDDEN_PATTERNS 个具体条目，并包含设定连续性约束.
+
+    V12-224f: 项目 taboos 包含人名类禁忌（人名/具名/姓名）时，额外注入
+    半具名人物禁令，把「姓氏+职称」式人物红线前置到 plan 层。
+    """
     valid = [str(p) for p in patterns if isinstance(p, str) and p.strip()]
 
     # 自动注入设定连续性约束（如果 LLM 没有提供）
     if not any("种子设定" in p or "逻辑推导" in p for p in valid):
         valid.append(_SETTING_CONSISTENCY_PATTERN)
+
+    # 项目禁止人名且 LLM 未提供具名禁令时，注入半具名人物禁令
+    taboos = project_taboos or []
+    if any(any(k in t for k in _NAME_TABOO_KEYWORDS) for t in taboos) and not any(
+        "具名" in p for p in valid
+    ):
+        valid.append(_HALF_NAMED_PERSON_PATTERN)
 
     if len(valid) < MIN_FORBIDDEN_PATTERNS:
         needed = MIN_FORBIDDEN_PATTERNS - len(valid)
@@ -333,6 +354,7 @@ def _build_creative_brief(
     data: dict[str, Any],
     mode_id: str,
     chapter_goal: ChapterGoal,
+    project_taboos: list[str] | None = None,
 ) -> CreativeBrief:
     """从解析后的字典构建 CreativeBrief，处理缺失字段和越界值."""
     # 解析 required_tensions
@@ -348,7 +370,9 @@ def _build_creative_brief(
     # 解析 forbidden_patterns
     raw_patterns = data.get("forbidden_patterns", [])
     if isinstance(raw_patterns, list):
-        forbidden_patterns = _ensure_forbidden_patterns(raw_patterns)
+        forbidden_patterns = _ensure_forbidden_patterns(
+            raw_patterns, project_taboos=project_taboos
+        )
     else:
         forbidden_patterns = DEFAULT_FORBIDDEN_PATTERNS.copy()
 

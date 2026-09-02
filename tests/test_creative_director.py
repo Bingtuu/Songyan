@@ -806,3 +806,50 @@ class TestLiteraryPlugins:
             )
 
         assert "极简声纹锚定" not in captured_prompt
+
+
+# ---------------------------------------------------------------------------
+# V12-224f: 半具名人物禁令注入（taboos 驱动）
+# ---------------------------------------------------------------------------
+class TestHalfNamedPersonPatternInjection:
+    """项目 taboos 包含人名类禁忌时，forbidden_patterns 必须带半具名人物禁令."""
+
+    def test_injected_when_taboos_forbid_names(self) -> None:
+        result = _ensure_forbidden_patterns(
+            ["a", "b", "c"],
+            project_taboos=["新增具名角色", "人名", "工牌"],
+        )
+        assert any("姓氏+职称" in p for p in result)
+
+    def test_not_injected_without_name_taboos(self) -> None:
+        result = _ensure_forbidden_patterns(["a", "b", "c"])
+        assert not any("姓氏+职称" in p for p in result)
+
+    def test_not_injected_when_taboos_unrelated(self) -> None:
+        result = _ensure_forbidden_patterns(
+            ["a", "b", "c"],
+            project_taboos=["血腥描写", "政治隐喻"],
+        )
+        assert not any("姓氏+职称" in p for p in result)
+
+    def test_not_duplicated_when_llm_already_provided(self) -> None:
+        result = _ensure_forbidden_patterns(
+            ["a", "b", "c", "禁止任何具名或半具名人物出场"],
+            project_taboos=["人名"],
+        )
+        matches = [p for p in result if "姓氏+职称" in p]
+        assert len(matches) == 0  # LLM 已提供具名禁令，不再注入
+
+    def test_build_creative_brief_passes_taboos(self) -> None:
+        data = json.loads(_make_valid_llm_response())
+        goal = _make_chapter_goal()
+        brief = _build_creative_brief(
+            data, "webnovel", goal, project_taboos=["人名", "新增具名角色"]
+        )
+        assert any("姓氏+职称" in p for p in brief.forbidden_patterns)
+
+    def test_build_creative_brief_default_no_injection(self) -> None:
+        data = json.loads(_make_valid_llm_response())
+        goal = _make_chapter_goal()
+        brief = _build_creative_brief(data, "webnovel", goal)
+        assert not any("姓氏+职称" in p for p in brief.forbidden_patterns)
