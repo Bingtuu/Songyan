@@ -43,7 +43,7 @@ _POLICY_PATTERNS: dict[str, tuple[str, re.Pattern[str]]] = {
     ),
     "identity_secret_reveal": (
         "规划提前揭示身份秘密、账号或权限",
-        re.compile(r"身份秘密|货舱身份|对象身份|自然人身份|自然人|账号|权限|沈弥账号|系统底层配置"),
+        re.compile(r"身份秘密|货舱身份|对象身份|自然人身份|自然人|账号|权限秘密|沈弥账号|系统底层配置"),
     ),
     "relative_time": (
         "规划包含相对时间或未来时间",

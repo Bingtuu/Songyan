@@ -250,6 +250,21 @@ def test_review_plan_documents_ignores_bushi_negated_policy_mentions() -> None:
     assert findings == []
 
 
+def test_review_plan_documents_allows_operational_permission_wording() -> None:
+    """离港权限等操作性权限不属于身份秘密揭示（V12-224f scanner 校准）."""
+    goal = _clean_goal()
+    brief = CreativeBrief(
+        mode_id="webnovel",
+        chapter_goal=goal,
+        creative_intent="沈砚决定手动锁定货舱C-227的离港权限，等待下一轮复核。",
+        reader_contract="当前动作推进。",
+    )
+
+    findings = review_plan_documents(goal=goal, brief=brief, spec=_spec())
+
+    assert findings == []
+
+
 def test_review_plan_documents_flags_unnegated_forbidden_pattern_alongside_negated() -> None:
     spec = SupervisionSpec.model_validate(
         _spec_data_with(forbidden_literals=[], forbidden_patterns=[r"旧(案|事故|记录)"])
