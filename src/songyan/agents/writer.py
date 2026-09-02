@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 import re
 import uuid
 from typing import Any
@@ -512,12 +513,25 @@ def _render_startup_beat_sheet(ctx: ContextPackage) -> str:
     if not ctx.startup_beat_sheet:
         return "（无）"
 
+    goal = ctx.chapter_goal
+    beat_count = len(ctx.startup_beat_sheet)
+    chapter_min = min_word_count_for_chapter(goal.chapter_number, goal.word_count_target)
+    per_beat_min = math.ceil(chapter_min / beat_count) if chapter_min > 0 else 0
+
     lines = [
         "以下是本章已通过规划审查的正文施工单。必须按顺序展开成自然场景；"
         "只能扩写当前动作、阻力、反馈和主角微决策，不用旧案、新角色、坐标或跨区追踪补字数。"
     ]
+    if per_beat_min:
+        lines.append(
+            f"字数分配：本章校准下限 {chapter_min} 字，共 {beat_count} 个 Beat，"
+            f"每个 Beat 展开不得少于 {per_beat_min} 字；不足时必须增加当前动作、"
+            "阻力细节、仪器/环境反馈和主角微决策来补足，禁止压缩成摘要式段落。"
+        )
     for idx, beat in enumerate(ctx.startup_beat_sheet, start=1):
         lines.append(f"### Beat {idx}")
+        if per_beat_min:
+            lines.append(f"- 字数下限：本 Beat 不得少于 {per_beat_min} 字")
         lines.append(f"- 可见动作：{beat.visible_action}")
         lines.append(f"- 当前阻力：{beat.current_friction}")
         lines.append(f"- 仪器/环境反馈：{beat.feedback}")

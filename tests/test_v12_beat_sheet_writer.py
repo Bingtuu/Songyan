@@ -105,6 +105,31 @@ def test_writer_prompt_does_not_render_supervision_forbidden_terms() -> None:
     assert r"\d+\.\d+" not in prompt
 
 
+def test_startup_beat_sheet_includes_per_beat_word_floor() -> None:
+    """V12-224d: 施工单注入按校准下限均摊的单 Beat 字数下限."""
+    ctx = _context([_beat()] * 6)
+
+    prompt = _render_prompt(ctx)
+
+    # Ch1 target=3000 → 校准下限 2700；6 个 Beat → 每个 Beat ≥ 450 字
+    assert "每个 Beat 展开不得少于 450 字" in prompt
+    assert "本 Beat 不得少于 450 字" in prompt
+
+
+def test_startup_beat_sheet_word_floor_rounds_up() -> None:
+    """V12-224d: 不能整除时单 Beat 下限向上取整，保证总和覆盖校准下限."""
+    ctx = _context([_beat()] * 5)
+
+    prompt = _render_prompt(ctx)
+
+    # 2700 / 5 = 540，恰好整除；再验证 4 beats 时 675
+    assert "每个 Beat 展开不得少于 540 字" in prompt
+
+    ctx4 = _context([_beat()] * 4)
+    prompt4 = _render_prompt(ctx4)
+    assert "每个 Beat 展开不得少于 675 字" in prompt4
+
+
 def test_approved_beat_sheet_for_writer_requires_matching_approval() -> None:
     result = PlanOnlyResult(
         project_id="p1",
