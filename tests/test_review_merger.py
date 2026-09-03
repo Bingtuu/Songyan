@@ -447,3 +447,33 @@ class TestMandatoryReferenceIssues:
         issues = _convert_rule_to_issues("正文", rule_result, "v1")
         mr_issues = [i for i in issues if i.category == ReviewCategory.WORLD_CONSISTENCY]
         assert len(mr_issues) == 0
+
+
+class TestSentenceLevelDuplicateConversion:
+    """Task 225: 句子级逐字重复命中复用 DuplicateParagraphMatch 转换路径."""
+
+    def test_sentence_level_duplicate_converts_to_major_pacing_issue(self) -> None:
+        match = DuplicateParagraphMatch(
+            paragraph_index=48,
+            duplicate_of_index=44,
+            matched_text="对话框关闭后，8.0kg的缺口没有扩大，反而被固定成一个可复测的间隔。",
+            original_text="对话框关闭后，8.0kg的缺口没有扩大，反而被固定成一个可复测的间隔。",
+            location="第48段第2句",
+            original_location="第44段第3句",
+            similarity=1.0,
+        )
+        rule_result = RuleAuditResult(
+            has_opening_hook=True,
+            has_ending_hook=True,
+            duplicate_paragraph_count=1,
+            duplicate_paragraph_matches=[match],
+        )
+
+        issues = _convert_rule_to_issues("正文", rule_result, "v1")
+
+        dup_issues = [i for i in issues if i.issue_id.startswith("rule-dup-")]
+        assert len(dup_issues) == 1
+        assert dup_issues[0].severity == "major"
+        assert dup_issues[0].category == ReviewCategory.NARRATIVE_PACING
+        assert dup_issues[0].fix_type == "patch"
+        assert dup_issues[0].evidence_location == "第48段第2句"

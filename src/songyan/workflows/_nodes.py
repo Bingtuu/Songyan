@@ -25,7 +25,7 @@ from songyan.agents.revision_handler import (
     run_revision,
     save_revision_output,
 )
-from songyan.agents.rule_auditor import run_rule_audit, save_rule_audit
+from songyan.agents.rule_auditor import detect_duplicate_paragraphs, run_rule_audit, save_rule_audit
 from songyan.agents.settlement_extractor import apply_settlement, extract_settlement
 from songyan.agents.summary_writer import (
     generate_chapter_summary_with_fact_check,
@@ -236,6 +236,14 @@ async def _load_active_best_version(
         return None
 
     return version
+
+
+def _version_has_duplicate_content(version: ChapterVersion | None) -> bool:
+    """正文存在段落/句子级逐字重复（Task 225）时，版本不得作为 best/rollback 目标."""
+    content = getattr(version, "content", None)
+    if not isinstance(content, str) or not content.strip():
+        return False
+    return bool(detect_duplicate_paragraphs(content))
 
 
 def _score_card_for_version(
@@ -1141,6 +1149,16 @@ async def rewrite_node(state: dict[str, Any]) -> dict[str, Any]:
                 chapter_number=state["chapter_number"],
             )
             rollback_source = "active_best" if rollback_version else None
+            if rollback_version is not None and _version_has_duplicate_content(rollback_version):
+                logger.warning(
+                    "rewrite.rollback_target_duplicate_skipped",
+                    project_id=state["project_id"],
+                    chapter_number=state["chapter_number"],
+                    rollback_version_id=rollback_version.version_id,
+                    rollback_source=rollback_source,
+                )
+                rollback_version = None
+                rollback_source = None
             if rollback_version is None:
                 previous_version_id = state.get("current_version_id")
                 rollback_version = await _load_active_best_version(
@@ -1148,6 +1166,17 @@ async def rewrite_node(state: dict[str, Any]) -> dict[str, Any]:
                     project_id=state["project_id"],
                     chapter_number=state["chapter_number"],
                 )
+                if rollback_version is not None and _version_has_duplicate_content(
+                    rollback_version
+                ):
+                    logger.warning(
+                        "rewrite.rollback_target_duplicate_skipped",
+                        project_id=state["project_id"],
+                        chapter_number=state["chapter_number"],
+                        rollback_version_id=rollback_version.version_id,
+                        rollback_source="previous_version",
+                    )
+                    rollback_version = None
                 if rollback_version:
                     rollback_source = "previous_version"
             if rollback_version and rollback_version.version_id != version.version_id:
@@ -1335,6 +1364,15 @@ async def rewrite_node(state: dict[str, Any]) -> dict[str, Any]:
             project_id=state["project_id"],
             chapter_number=state["chapter_number"],
         )
+        if best_version is not None and _version_has_duplicate_content(best_version):
+            logger.warning(
+                "rewrite.rollback_target_duplicate_skipped",
+                project_id=state["project_id"],
+                chapter_number=state["chapter_number"],
+                rollback_version_id=best_version.version_id,
+                rollback_source="active_best",
+            )
+            best_version = None
         best_score_card = (
             _score_card_for_version(
                 state.get("_best_score_card") or best_version.score_card,
@@ -1352,6 +1390,15 @@ async def rewrite_node(state: dict[str, Any]) -> dict[str, Any]:
                 project_id=state["project_id"],
                 chapter_number=state["chapter_number"],
             )
+            if rollback_version is not None and _version_has_duplicate_content(rollback_version):
+                logger.warning(
+                    "rewrite.rollback_target_duplicate_skipped",
+                    project_id=state["project_id"],
+                    chapter_number=state["chapter_number"],
+                    rollback_version_id=rollback_version.version_id,
+                    rollback_source="previous_version",
+                )
+                rollback_version = None
             if rollback_version:
                 rollback_source = "previous_version"
         if rollback_version and rollback_version.version_id != version.version_id:
@@ -1716,6 +1763,15 @@ async def review_merger_node(state: dict[str, Any]) -> dict[str, Any]:
             project_id=state["project_id"],
             chapter_number=state["chapter_number"],
         )
+        if active_best is not None and _version_has_duplicate_content(active_best):
+            logger.warning(
+                "rewrite.rollback_target_duplicate_skipped",
+                project_id=state["project_id"],
+                chapter_number=state["chapter_number"],
+                rollback_version_id=active_best.version_id,
+                rollback_source="active_best",
+            )
+            active_best = None
         _goal_for_rollback = await load_chapter_goal(state.get("chapter_goal_id", ""))
         _rollback_target_wc = _goal_for_rollback.word_count_target if _goal_for_rollback else 3000
         active_best_score_card = (
@@ -1827,6 +1883,15 @@ async def review_merger_node(state: dict[str, Any]) -> dict[str, Any]:
                 project_id=state["project_id"],
                 chapter_number=state["chapter_number"],
             )
+            if active_best is not None and _version_has_duplicate_content(active_best):
+                logger.warning(
+                    "rewrite.rollback_target_duplicate_skipped",
+                    project_id=state["project_id"],
+                    chapter_number=state["chapter_number"],
+                    rollback_version_id=active_best.version_id,
+                    rollback_source="active_best",
+                )
+                active_best = None
             _goal_for_rollback = await load_chapter_goal(state.get("chapter_goal_id", ""))
             _rollback_target_wc = (
                 _goal_for_rollback.word_count_target if _goal_for_rollback else 3000
@@ -1925,7 +1990,15 @@ async def review_merger_node(state: dict[str, Any]) -> dict[str, Any]:
         # 未反弹，只有通过 QG 硬门的版本才能作为 settlement 前回滚目标。
         # 否则会把 length/readability 等失败版本写入 best，导致收敛终点
         # 回滚到仍然不能结算的版本。
-        if not _score_card_passes_quality_gate(score_card.model_dump()):
+        # Task 225: 含逐字重复内容的脏版本同样不得写入 best。
+        _has_duplicate_content = _version_has_duplicate_content(version)
+        if _has_duplicate_content:
+            logger.warning(
+                "review_merger.best_skipped_duplicate_content",
+                version_id=version.version_id,
+                revision_round=rround,
+            )
+        if not _score_card_passes_quality_gate(score_card.model_dump()) or _has_duplicate_content:
             logger.info(
                 "review_merger.round_summary",
                 version_id=version.version_id,
@@ -2011,6 +2084,14 @@ async def review_merger_node(state: dict[str, Any]) -> dict[str, Any]:
     _should_save_best = (
         (needs_revision and rround == 0) or not state.get("_best_version_id")
     ) and _score_card_passes_quality_gate(score_card.model_dump())
+    if _should_save_best and _version_has_duplicate_content(version):
+        # Task 225: 含逐字重复内容的脏版本不得写入 best
+        logger.warning(
+            "review_merger.best_skipped_duplicate_content",
+            version_id=version.version_id,
+            revision_round=rround,
+        )
+        _should_save_best = False
     if _should_save_best:
         result["_best_issues_count"] = current_issues
         result["_best_overall_score"] = current_score

@@ -172,3 +172,100 @@ class TestMidLengthDedupAlignedToT9:
         # 与检测器一致：该中段对不应被判重复。
         text = f"{_MID_NEAR_A}\n\n{_MID_NEAR_B}"
         assert detect_duplicate_paragraphs(text) == []
+
+
+# ---------------------------------------------------------------------------
+# Task 225: 句子级逐字重复检测
+# 语料来源：.tmp/225_ch2_new.txt（rev-2-12 被误 accept 脏版）、
+# .tmp/225_old_ch3_accepted.txt（旧 Ch3 accepted 的逐字重复句）。
+# 背景：段落级相似度检测漏掉「两段共享一个逐字长句但整体相似度 < 0.95」的情况。
+# ---------------------------------------------------------------------------
+_CH2_NEW_DUP_SENTENCE = "对话框关闭后，8.0kg的缺口没有扩大，反而被固定成一个可复测的间隔。"
+_CH2_NEW_TRIPLE_SENTENCE = "沈砚的视线扫过它，没有停留。"
+_OLD_CH3_DUP_SENTENCE = (
+    "他撤销了手动关联请求，在比对规则里把“合并同源对象”改为“保留独立对象并生成会话内临时标签”。"
+)
+
+
+class TestDuplicateSentenceDetection:
+    def test_detects_verbatim_sentence_across_dissimilar_paragraphs(self) -> None:
+        """ch2_new 真实形态：两段共享逐字长句但段落整体不重复（相似度 ~0.79）."""
+        para_a = f"然后他移动光标，选择了“否”。系统没有再次询问。{_CH2_NEW_DUP_SENTENCE}"
+        para_b = (
+            f"系统没有再次询问。{_CH2_NEW_DUP_SENTENCE}"
+            "本地终端在间隔两侧添加了测量基准点，使这段缺口可以被未来的任何复核操作精确复现。"
+        )
+        text = f"前文铺垫段落，内容完全不同。\n\n{para_a}\n\n{para_b}"
+
+        matches = detect_duplicate_paragraphs(text)
+
+        assert len(matches) == 1
+        assert matches[0].matched_text == _CH2_NEW_DUP_SENTENCE
+        assert matches[0].paragraph_index == 3
+        assert matches[0].duplicate_of_index == 2
+        assert matches[0].similarity == 1.0
+        assert matches[0].location.startswith("第3段")
+        assert matches[0].original_location.startswith("第2段")
+
+    def test_old_ch3_style_verbatim_sentence_hit(self) -> None:
+        """old_ch3_accepted 的逐字重复句（47 字）必须命中."""
+        para_a = f"他盯着比对结果看了很久。{_OLD_CH3_DUP_SENTENCE}"
+        para_b = f"{_OLD_CH3_DUP_SENTENCE}标签生成后，会话日志里多了一条可回溯的记录。"
+
+        matches = detect_duplicate_paragraphs(f"{para_a}\n\n{para_b}")
+
+        assert len(matches) == 1
+        assert matches[0].matched_text == _OLD_CH3_DUP_SENTENCE
+        assert matches[0].similarity == 1.0
+
+    def test_triple_occurrence_reports_each_repeat(self) -> None:
+        """ch2_new 中 ×3 的 14 字句：第二次、第三次出现各报一条."""
+        para_a = f"关闭选项在屏幕上闪烁。{_CH2_NEW_TRIPLE_SENTENCE}他转而看向接收选项。"
+        para_b = f"审计会话的关闭选项再次亮起。{_CH2_NEW_TRIPLE_SENTENCE}他没有触碰关闭选项。"
+        para_c = f"拒绝选项同样在屏幕上。{_CH2_NEW_TRIPLE_SENTENCE}拒绝会让责任质量悬置。"
+        text = f"{para_a}\n\n{para_b}\n\n{para_c}"
+
+        matches = detect_duplicate_paragraphs(text)
+
+        assert len(matches) == 2
+        assert {m.paragraph_index for m in matches} == {2, 3}
+        assert all(m.duplicate_of_index == 1 for m in matches)
+        assert all(m.matched_text == _CH2_NEW_TRIPLE_SENTENCE for m in matches)
+
+    def test_short_sentence_below_min_chars_ignored(self) -> None:
+        """归一化后 < 12 字的句子重复不报（防误伤短 refrain）."""
+        text = "他沉默了。系统没有再次询问。\n\n她签字前停顿了一秒。系统没有再次询问。"
+
+        assert detect_duplicate_paragraphs(text) == []
+
+    def test_ch1_style_numeric_readings_no_false_positive(self) -> None:
+        """Ch1 accepted 风格：27.00kg 等数值多次出现但句子整体不同，不命中."""
+        text = (
+            "责任质量差值那一栏从0.00kg跳到27.00kg，又跳回0.00kg。\n\n"
+            "差值停在27.00kg的整数上，没有再变动。\n\n"
+            "沈砚把扫描结果和磁锁回执并排放在屏幕上，两个数据之间的差值精确地等于27.00kg。\n\n"
+            "协议文本被存进离线记录，差值静止在27.00kg，没有继续增长。"
+        )
+
+        assert detect_duplicate_paragraphs(text) == []
+
+    def test_sentence_match_deduped_against_paragraph_match(self) -> None:
+        """段落级已命中的后现段落，其内部句子级命中须去重，不重复计数."""
+        para = _long_para()
+        text = f"{para}\n\n过渡段。\n\n{para}"
+
+        matches = detect_duplicate_paragraphs(text)
+
+        assert len(matches) == 1
+        assert matches[0].matched_text == para
+        assert matches[0].paragraph_index == 3
+
+    def test_clean_text_zero_hits(self) -> None:
+        """干净重写版（ch2_v13 形态）：零重复，必须零命中."""
+        text = (
+            "沈砚把完整链路重新走了一遍，每一步都留下独立的时间戳。\n\n"
+            "复核终端亮起绿色的状态灯，缺口数值保持稳定，没有任何漂移。\n\n"
+            "他合上记录本，确认这次会话可以归档，然后起身离开了值班席。"
+        )
+
+        assert detect_duplicate_paragraphs(text) == []

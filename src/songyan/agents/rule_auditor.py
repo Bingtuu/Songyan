@@ -450,6 +450,53 @@ def _paragraphs_with_offsets(text: str) -> list[tuple[int, str, int]]:
     return result
 
 
+def detect_duplicate_sentences(
+    text: str,
+    *,
+    min_chars: int = 12,
+) -> list[DuplicateParagraphMatch]:
+    """Task 225: 句子级逐字重复检测（段落级相似度检测的兜底）.
+
+    按 。！？ 切句（保留句读），归一化（去除所有空白字符）后长度 >= min_chars
+    且完全相同、出现 >=2 次的句子命中。捕获「两段共享一个逐字长句但段落整体
+    相似度低于阈值」的漏检形态（225 Ch2 rev-2-12：段落相似度 ~0.79 < 0.95）。
+    每个后续出现各报一条，paragraph_index 指向后现段落。
+    """
+    matches: list[DuplicateParagraphMatch] = []
+    paragraphs = _paragraphs_with_offsets(text)
+
+    def _paragraph_index_at(offset: int) -> int:
+        for idx, paragraph, start in paragraphs:
+            if start <= offset < start + len(paragraph):
+                return idx
+        return 1
+
+    first_seen: dict[str, tuple[int, str, int]] = {}
+    for match in re.finditer(r"[^。！？]*[。！？]", text):
+        raw = match.group(0)
+        sentence = raw.strip()
+        normalized = re.sub(r"\s+", "", sentence)
+        if len(normalized) < min_chars:
+            continue
+        start = match.start() + (len(raw) - len(raw.lstrip()))
+        if normalized not in first_seen:
+            first_seen[normalized] = (start, sentence, _paragraph_index_at(start))
+            continue
+        original_start, original, original_index = first_seen[normalized]
+        matches.append(
+            DuplicateParagraphMatch(
+                paragraph_index=_paragraph_index_at(start),
+                duplicate_of_index=original_index,
+                matched_text=sentence,
+                original_text=original,
+                location=locate_position(text, start),
+                original_location=locate_position(text, original_start),
+                similarity=1.0,
+            )
+        )
+    return matches
+
+
 def detect_duplicate_paragraphs(
     text: str,
     *,
@@ -464,6 +511,7 @@ def detect_duplicate_paragraphs(
     落在 [min_chars, long_paragraph_chars) 的中段改用更严的 short_similarity_threshold，
     只抓近乎逐字的重复。这样既能捕获 70-95 字的近似重复（170c Ch31 漏报），
     又不会误伤刻意的短句 refrain（< min_chars 直接跳过）。
+    Task 225 起合并句子级逐字重复命中（detect_duplicate_sentences）。
     """
     matches: list[DuplicateParagraphMatch] = []
     seen: list[tuple[int, str, str, int]] = []
@@ -500,6 +548,13 @@ def detect_duplicate_paragraphs(
             break
 
         seen.append((paragraph_index, paragraph, normalized, start))
+
+    # Task 225: 句子级逐字重复兜底；后现段落已被段落级命中覆盖的跳过，避免重复计数。
+    covered_paragraphs = {m.paragraph_index for m in matches}
+    for sentence_match in detect_duplicate_sentences(text):
+        if sentence_match.paragraph_index in covered_paragraphs:
+            continue
+        matches.append(sentence_match)
 
     return matches
 
