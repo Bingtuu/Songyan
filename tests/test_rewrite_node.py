@@ -291,6 +291,135 @@ class TestRewriteNode:
 
 
     @pytest.mark.asyncio
+    async def test_injects_word_count_gap_when_best_below_lower(self) -> None:
+        """Task 225: best 稿低于字数下限时，rewrite 注入具体篇幅缺口."""
+        mock_ctx = AsyncMock()
+        mock_ctx.human_instructions = []
+
+        mock_version = MagicMock()
+        mock_version.version_id = "v-rewrite-005"
+        mock_version.content = "测试内容。"
+        mock_version.word_count = 3000
+        mock_version.scenes = [{"scene_id": "s1"}, {"scene_id": "s2"}]
+
+        best_version = MagicMock()
+        best_version.version_id = "v-best-001"
+        best_version.word_count = 2200
+
+        goal = AsyncMock()
+        goal.word_count_target = 3000
+
+        rule_result = MagicMock()
+        rule_result.has_opening_hook = True
+        rule_result.has_ending_hook = True
+
+        with patch(
+            "songyan.workflows._nodes.write_chapter",
+            new_callable=AsyncMock,
+            return_value=mock_version,
+        ):
+            with patch(
+                "songyan.workflows._nodes._get_context_package",
+                new_callable=AsyncMock,
+                return_value=mock_ctx,
+            ):
+                with patch(
+                    "songyan.workflows._nodes.load_chapter_goal",
+                    new_callable=AsyncMock,
+                    return_value=goal,
+                ):
+                    with patch(
+                        "songyan.workflows._nodes.run_rule_audit",
+                        return_value=rule_result,
+                    ):
+                        with patch(
+                            "songyan.workflows._nodes._load_active_best_version",
+                            new_callable=AsyncMock,
+                            return_value=best_version,
+                        ):
+                            state = {
+                                "project_id": "p1",
+                                "chapter_number": 3,
+                                "chapter_goal_id": "gp-1",
+                                "creative_brief_id": None,
+                                "review_report_id": None,
+                                "_new_issues_introduced": None,
+                                "_best_version_id": "v-best-001",
+                            }
+                            result = await rewrite_node(state)
+
+        assert result["_was_rewritten"] is True
+        gap_instr = next(
+            h for h in mock_ctx.human_instructions if h["type"] == "word_count_gap"
+        )
+        assert "2200" in gap_instr["content"]
+        assert "2700" in gap_instr["content"]
+        assert "缺口 500 字" in gap_instr["content"]
+
+    @pytest.mark.asyncio
+    async def test_no_word_count_gap_when_best_meets_lower(self) -> None:
+        """Task 225: best 稿已达标时不注入篇幅缺口（避免干扰正常重写）."""
+        mock_ctx = AsyncMock()
+        mock_ctx.human_instructions = []
+
+        mock_version = MagicMock()
+        mock_version.version_id = "v-rewrite-006"
+        mock_version.content = "测试内容。"
+        mock_version.word_count = 3000
+        mock_version.scenes = [{"scene_id": "s1"}, {"scene_id": "s2"}]
+
+        best_version = MagicMock()
+        best_version.version_id = "v-best-002"
+        best_version.word_count = 2950
+
+        goal = AsyncMock()
+        goal.word_count_target = 3000
+
+        rule_result = MagicMock()
+        rule_result.has_opening_hook = True
+        rule_result.has_ending_hook = True
+
+        with patch(
+            "songyan.workflows._nodes.write_chapter",
+            new_callable=AsyncMock,
+            return_value=mock_version,
+        ):
+            with patch(
+                "songyan.workflows._nodes._get_context_package",
+                new_callable=AsyncMock,
+                return_value=mock_ctx,
+            ):
+                with patch(
+                    "songyan.workflows._nodes.load_chapter_goal",
+                    new_callable=AsyncMock,
+                    return_value=goal,
+                ):
+                    with patch(
+                        "songyan.workflows._nodes.run_rule_audit",
+                        return_value=rule_result,
+                    ):
+                        with patch(
+                            "songyan.workflows._nodes._load_active_best_version",
+                            new_callable=AsyncMock,
+                            return_value=best_version,
+                        ):
+                            state = {
+                                "project_id": "p1",
+                                "chapter_number": 3,
+                                "chapter_goal_id": "gp-1",
+                                "creative_brief_id": None,
+                                "review_report_id": None,
+                                "_new_issues_introduced": None,
+                                "_best_version_id": "v-best-002",
+                            }
+                            result = await rewrite_node(state)
+
+        assert result["_was_rewritten"] is True
+        assert not any(
+            h["type"] == "word_count_gap" for h in mock_ctx.human_instructions
+        )
+
+    @pytest.mark.asyncio
     async def test_hard_truncate_fallback_on_rewrite(self) -> None:
         """093: rewrite 后字数严重超标且结构保护阻止截断 → 启用硬截断 (收紧到 1.20x).
 

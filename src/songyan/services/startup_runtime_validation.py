@@ -59,7 +59,36 @@ _COMMON_FALSE_NAME_HITS = {
     "对象",
     "协议",
     "终端",
+    # Task 225: UI 状态/颜色词与系统行为描述——"显示为灰色""签名是系统自动验证"
+    # 这类界面状态陈述不是人名。
+    "灰色",
+    "红色",
+    "绿色",
+    "蓝色",
+    "黄色",
+    "黑色",
+    "白色",
+    "空白",
+    "为空",
+    "一条灰带",
+    "已归档",
+    "已确认",
+    "待确认",
+    "正常",
+    "异常",
+    "离线",
+    "在线",
+    "锁定",
+    "完成",
+    "失败",
+    "系统自动",
 }
+
+# Task 225: "坐标"后接缺失/差异陈述时不揭示任何坐标值，不构成违规。
+_COORDINATE_ABSENCE_SUFFIXES = ("不同", "缺失", "为空", "不符", "未知")
+
+# Task 225: "跨区"后接日志/记录类目名时是数据类别而非跨区追逐情节。
+_CROSS_LOCATION_CATEGORY_SUFFIXES = ("审计日志", "日志", "记录", "同步", "数据")
 
 
 def validate_startup_runtime(
@@ -157,23 +186,11 @@ def _scan_content(
         if finding:
             findings.append(finding)
     if not policy.allow_coordinates:
-        finding = _scan_pattern(
-            content,
-            _COORDINATE_RE,
-            chapter_number=chapter_number,
-            code="coordinates",
-            message="startup draft contains coordinate evidence",
-        )
+        finding = _scan_coordinates(content, chapter_number)
         if finding:
             findings.append(finding)
     if not policy.allow_cross_location_chase:
-        finding = _scan_pattern(
-            content,
-            _CROSS_LOCATION_RE,
-            chapter_number=chapter_number,
-            code="cross_location_chase",
-            message="startup draft contains cross-location chase evidence",
-        )
+        finding = _scan_cross_location(content, chapter_number)
         if finding:
             findings.append(finding)
     if not policy.allow_identity_secret_reveal:
@@ -253,6 +270,7 @@ def _scan_new_named_characters(
                 or name in allowed_names
                 or name in _COMMON_FALSE_NAME_HITS
                 or not _looks_like_person_name(name)
+                or _overlaps_allowed_name(content, match.start(1), match.end(1), allowed_names)
             ):
                 continue
             seen.add(name)
@@ -265,6 +283,56 @@ def _scan_new_named_characters(
                 )
             )
     return findings
+
+
+_ABSENCE_MARKERS = ("没有", "无", "不含")
+
+
+def _scan_coordinates(content: str, chapter_number: int) -> StartupRuntimeFinding | None:
+    """Scan for coordinate evidence; bare "坐标" preceded by absence markers is exempt.
+
+    Task 225 修复：裸词"坐标"在"没有值班席坐标"这类缺席陈述中不揭示任何坐标，
+    不应触发红线；数对（31.23, 121.47）与"经纬度"无论是否定语境一律拦截。
+    """
+    for match in _COORDINATE_RE.finditer(content):
+        if _is_negated_match(content, match.start(), match.end()):
+            continue
+        if match.group(0) == "坐标":
+            prefix = content[max(0, match.start() - 8): match.start()]
+            if any(marker in prefix for marker in _ABSENCE_MARKERS):
+                continue
+            if content[match.end(): match.end() + 2] in _COORDINATE_ABSENCE_SUFFIXES:
+                continue
+        return StartupRuntimeFinding(
+            chapter_number=chapter_number,
+            code="coordinates",
+            message="startup draft contains coordinate evidence",
+            evidence=_evidence(content, match.start(), match.end()),
+        )
+    return None
+
+
+def _scan_cross_location(content: str, chapter_number: int) -> StartupRuntimeFinding | None:
+    """Scan for cross-location chase evidence; log-category names are exempt.
+
+    Task 225 修复："跨区审计日志/跨区同步记录"这类数据类别名不是跨区追逐情节，
+    "跨区"后接日志/记录类目词时豁免；其余跨区表述与"追踪到/前往/D区/储物柜"
+    维持原红线。
+    """
+    for match in _CROSS_LOCATION_RE.finditer(content):
+        if _is_negated_match(content, match.start(), match.end()):
+            continue
+        if match.group(0) == "跨区":
+            suffix = content[match.end(): match.end() + 4]
+            if any(suffix.startswith(cat) for cat in _CROSS_LOCATION_CATEGORY_SUFFIXES):
+                continue
+        return StartupRuntimeFinding(
+            chapter_number=chapter_number,
+            code="cross_location_chase",
+            message="startup draft contains cross-location chase evidence",
+            evidence=_evidence(content, match.start(), match.end()),
+        )
+    return None
 
 
 def _scan_pattern(
@@ -288,6 +356,28 @@ def _scan_pattern(
 
 def _looks_like_person_name(name: str) -> bool:
     return 2 <= len(name) <= 4 and all("\u4e00" <= char <= "\u9fff" for char in name)
+
+
+def _overlaps_allowed_name(
+    content: str,
+    start: int,
+    end: int,
+    allowed_names: set[str],
+) -> bool:
+    """Task 225 修复：匹配片段与既有角色名重叠时视为同一人物，不判新角色。
+
+    例如"沈砚把左腕的工牌"中，"XX的工牌"模式会贪婪命中"砚把左腕"，
+    但该片段与 allowed_names 中的"沈砚"重叠，属于主角自己的工牌。
+    """
+    for name in allowed_names:
+        if not name:
+            continue
+        idx = content.find(name)
+        while idx != -1:
+            if idx < end and start < idx + len(name):
+                return True
+            idx = content.find(name, idx + 1)
+    return False
 
 
 def _is_negated_match(text: str, start: int, end: int) -> bool:

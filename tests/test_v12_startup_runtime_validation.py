@@ -266,6 +266,157 @@ def test_blocks_actual_coordinate_mentions() -> None:
     assert "coordinates" in codes
 
 
+def test_allows_ui_status_displayed_values() -> None:
+    """Task 225 修复："显示为灰色/已归档"是界面状态陈述，不是新角色。"""
+    content = (
+        "确认外部同步栏的四项全部显示为灰色，V-0003的条目仍留在本地对象列表。"
+        "文档进入本地归档区，状态显示为已归档。"
+    )
+
+    findings = validate_startup_runtime(
+        content=content,
+        settlement=StateSettlement(),
+        spec=_spec(),
+        chapter_number=1,
+        allowed_names={"沈砚"},
+    )
+
+    assert findings == []
+
+
+def test_allows_system_auto_signature() -> None:
+    """Task 225 修复："签名是系统自动验证的"是系统行为描述，不是新角色。"""
+    content = "空舱门的接收方签名是系统自动验证的，而值班席的接收方签名栏是空的。"
+
+    findings = validate_startup_runtime(
+        content=content,
+        settlement=StateSettlement(),
+        spec=_spec(),
+        chapter_number=1,
+        allowed_names={"沈砚"},
+    )
+
+    assert findings == []
+
+
+def test_allows_cross_region_log_category() -> None:
+    """Task 225 修复："跨区审计日志"是数据类别名，不是跨区追逐情节。"""
+    content = "第二项是跨区审计日志。关闭后，灰色向下蔓延，遮住了交接确认单。"
+
+    findings = validate_startup_runtime(
+        content=content,
+        settlement=StateSettlement(),
+        spec=_spec(),
+        chapter_number=1,
+        allowed_names={"沈砚"},
+    )
+    codes = {finding.code for finding in findings}
+
+    assert "cross_location_chase" not in codes
+
+
+def test_still_blocks_cross_region_chase_plot() -> None:
+    """真正的跨区移动情节仍应被拦截。"""
+    content = "沈砚跨区赶往D区储物柜，追踪到信号的源头。"
+
+    findings = validate_startup_runtime(
+        content=content,
+        settlement=StateSettlement(),
+        spec=_spec(),
+        chapter_number=1,
+        allowed_names={"沈砚"},
+    )
+    codes = {finding.code for finding in findings}
+
+    assert "cross_location_chase" in codes
+
+
+def test_allows_coordinate_difference_statement() -> None:
+    """Task 225 修复："空间坐标不同"是差异陈述，不揭示坐标值。"""
+    content = "两个对象的时间戳不重叠，空间坐标不同，唯一的关联是责任质量链的中断位。"
+
+    findings = validate_startup_runtime(
+        content=content,
+        settlement=StateSettlement(),
+        spec=_spec(),
+        chapter_number=1,
+        allowed_names={"沈砚"},
+    )
+    codes = {finding.code for finding in findings}
+
+    assert "coordinates" not in codes
+
+
+def test_allows_coordinate_absence_statement() -> None:
+    """Task 225 修复："没有值班席坐标"是缺席陈述，不揭示坐标，不应被拦截。"""
+    content = (
+        "他把新条目放大。V-0003没有任何属性字段，没有关联的舱门编号，"
+        "没有值班席坐标，只有一个空的标识符和一行状态文本。"
+    )
+
+    findings = validate_startup_runtime(
+        content=content,
+        settlement=StateSettlement(),
+        spec=_spec(),
+        chapter_number=1,
+        allowed_names={"沈砚"},
+    )
+    codes = {finding.code for finding in findings}
+
+    assert "coordinates" not in codes
+
+
+def test_blocks_numeric_coordinate_even_under_negation() -> None:
+    """真实坐标数对即使在否定语境中也必须拦截（缺席豁免只覆盖裸词"坐标"）。"""
+    content = "他没有记录坐标：31.23, 121.47，只保存了状态文本。"
+
+    findings = validate_startup_runtime(
+        content=content,
+        settlement=StateSettlement(),
+        spec=_spec(),
+        chapter_number=1,
+        allowed_names={"沈砚"},
+    )
+    codes = {finding.code for finding in findings}
+
+    assert "coordinates" in codes
+
+
+def test_allows_protagonist_own_badge() -> None:
+    """Task 225 修复："沈砚把左腕的工牌"中"XX的工牌"模式会贪婪命中"砚把左腕"，
+    但该片段与主角名重叠，属于主角自己的工牌，不应判新角色。
+    """
+    content = (
+        "隔离终端启动时，空调先送出一阵风。沈砚把左腕的工牌贴近读卡区，"
+        "磁扣吸合的声响比往常钝了半拍。屏幕亮起来，默认停在本地审计模式。"
+    )
+
+    findings = validate_startup_runtime(
+        content=content,
+        settlement=StateSettlement(),
+        spec=_spec(),
+        chapter_number=1,
+        allowed_names={"沈砚"},
+    )
+
+    assert findings == []
+
+
+def test_still_blocks_other_person_badge() -> None:
+    """真正引入他人工牌（与主角名不重叠）仍应被拦截。"""
+    content = "沈砚在储物格底层翻到林岚的工牌，照片已经磨损。"
+
+    findings = validate_startup_runtime(
+        content=content,
+        settlement=StateSettlement(),
+        spec=_spec(),
+        chapter_number=1,
+        allowed_names={"沈砚"},
+    )
+
+    assert [finding.code for finding in findings] == ["new_character"]
+
+
 def test_allows_technical_history_records() -> None:
     """Task 224d 修复："不调用外部历史记录"是技术操作指令（拒绝访问历史），
     不应被 _RELATIVE_TIME_RE 的"历史记录"分支误判为 past_backstory。

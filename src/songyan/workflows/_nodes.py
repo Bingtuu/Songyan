@@ -1037,6 +1037,45 @@ async def rewrite_node(state: dict[str, Any]) -> dict[str, Any]:
                 ),
             }
         )
+        # Task 225: 篇幅缺口量化——最新评估稿低于下限时给出具体增量目标。
+        # 泛化的"控制在 lower~upper 之间"对 LLM 不可操作，V12-225 实测 6 轮
+        # Ch3 重写中仍有 2 轮欠幅（1892/2212）；给出"上一版 X 字、缺口 Y 字、
+        # 必须净增 Z 字"的具体数字是可执行的约束。
+        # 欠幅稿通常过不了 QG 下限、不会被 save_best，因此优先取 best、
+        # 回退 current_version_id（rewrite 前的最新修订稿）。
+        _gap_version_id = state.get("_best_version_id") or state.get("current_version_id")
+        _gap_best = (
+            await _load_active_best_version(
+                version_id=_gap_version_id,
+                project_id=state["project_id"],
+                chapter_number=state["chapter_number"],
+            )
+            if _gap_version_id
+            else None
+        )
+        _gap_best_wc = getattr(_gap_best, "word_count", None) if _gap_best else None
+        if isinstance(_gap_best_wc, int | float) and 0 < _gap_best_wc < lower:
+            _gap = int(lower - _gap_best_wc)
+            ctx.human_instructions.append(
+                {
+                    "type": "word_count_gap",
+                    "content": (
+                        f"【篇幅缺口】上一版正文实际 {int(_gap_best_wc)} 字，"
+                        f"低于下限 {lower} 字，缺口 {_gap} 字。 "
+                        f"重写稿必须比上一版净增至少 {_gap + 100} 字："
+                        "优先为每个施工 Beat 补齐 操作动作—系统反馈—角色核对 的完整展开，"
+                        "不得通过合并或跳过 Beat 来控制篇幅。"
+                    ),
+                }
+            )
+            logger.info(
+                "rewrite.injected_word_count_gap",
+                project_id=state["project_id"],
+                chapter_number=state["chapter_number"],
+                best_word_count=int(_gap_best_wc),
+                lower=lower,
+                gap=_gap,
+            )
         # Task 095: 注入场景结构约束
         ctx.human_instructions.append(
             {

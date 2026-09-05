@@ -229,6 +229,23 @@ class TestValidateSummaryFacts:
 
         assert missing == []
 
+    def test_pronoun_decision_with_clause_between_subject_and_verb(self) -> None:
+        """Task 225 修复：主语代词与决策动词之间插入状语从句时仍应识别。
+
+        真实语料："沈砚没有修改文档内容。他在归档界面停留了几秒，然后选择了…"
+        ——"他"距"选择"13 字，8 字局部窗口漏判，导致 pre-accept 事实检查误报。
+        """
+        summary = ChapterSummary(chapter_number=3, summary="环境描写", emotional_tone="平静")
+        settlement = StateSettlement()
+        content = (
+            "沈砚没有修改文档内容。他在归档界面停留了几秒，"
+            "然后选择了系统提供的替代归档名。"
+        )
+
+        missing = _validate_summary_facts(summary, settlement, content=content)
+
+        assert missing == []
+
     def test_non_protagonist_decision_in_content_does_not_count(self) -> None:
         summary = ChapterSummary(chapter_number=1, summary="环境描写", emotional_tone="平静")
         settlement = StateSettlement()

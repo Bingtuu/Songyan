@@ -266,7 +266,9 @@ def _has_protagonist_decision_in_content(content: str) -> bool:
 
 def _content_decision_has_protagonist_context(content: str, keyword_index: int) -> bool:
     """Check the local subject around a decision keyword without using LLM judgment."""
-    local_start = max(0, keyword_index - 8)
+    # Task 225: 局部窗口 8 → 16 字。中文常见"他+状语从句+然后决定/选择"句式
+    # （如"他在归档界面停留了几秒，然后选择了…"），8 字窗口会漏掉主语代词。
+    local_start = max(0, keyword_index - 16)
     local_subject = content[local_start:keyword_index]
     if any(subject in local_subject for subject in _PROTAGONIST_DECISION_SUBJECTS):
         return True
