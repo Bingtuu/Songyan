@@ -26,6 +26,7 @@ Public documentation map for users and contributors.
 | Document | Purpose |
 |----------|---------|
 | [质量门方法论：CED / T9 / 五门](quality-gates.md) | 质量度量口径定义、证据要求、阈值出处与复现命令 |
+| [Ch200 baseline 结果摘要](baseline-results.md) | 4 体裁 200 章验收的公开聚合数值（已脱敏） |
 
 ## Roadmap
 
