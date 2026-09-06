@@ -24,7 +24,7 @@ Current public status: Songyan is ready as a technical preview / release-candida
 - SQLite-backed long-term project memory.
 - Packaged genre profiles and project templates.
 - `doctor` environment and resource checks.
-- `create-project`, `run`, `report`, `bundle-run`, `export`, `backup`, `restore`.
+- `create-project`, `run`, `report`, `metrics`, `five-gate`, `t9`, `bundle-run`, `export`, `backup`, `restore`.
 - Profile safety tools: `validate`, `upsert --dry-run`, `history`, `rollback`.
 - Redacted diagnostic bundle for reproducible issue reports.
 - CI for ruff, runtime mypy, pytest, CLI tests and wheel smoke.

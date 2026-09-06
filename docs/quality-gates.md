@@ -150,18 +150,19 @@ budget 门包含 halt 检测：评估边界内存在质量熔断证据（adaptiv
 
 ## 复现命令链
 
-以下命令均在真实 run 上实际执行过（执行日期 2026-09-06）。示例输出已脱敏：`myproject` 为占位 project_id，数值为真实执行结果。
+以下命令均随 pip 包分发，并在真实 run 上实际执行过（执行日期 2026-09-06）。示例输出已脱敏：`myproject` 为占位 project_id，数值为真实执行结果。
+
+退出码约定（两条命令一致）：`0` = PASS，`1` = FAIL，`2` = 工具错误或样本不足。
 
 ### 五门 + CED
 
 ```bash
-python scripts/five_gate_check.py \
-  --genre mygenre \
-  --db path/to/songyan.db \
-  --project-id myproject \
-  --up-to 3 \
-  --format text
+songyan five-gate --project-id myproject --up-to 3
 ```
+
+- `--db` 可选，指定 SQLite 文件路径；缺省用 `DATABASE_URL` 指向的库（`.env.example` 默认 `sqlite:///songyan.db`）。
+- `--genre` 可选（仅作报告标签）；缺省从目标 DB 的 `projects` 表读取。
+- `--baseline` 可选；缺省用包内 sci-fi baseline。`--allow-gap` 可选，默认 1。
 
 实际输出（一个 3 章启动校准项目，对 Ch25 baseline 点取值）：
 
@@ -177,39 +178,39 @@ python scripts/five_gate_check.py \
   NOTE: partial climb; verdict is an early-warning read.
 ```
 
-退出码：`0` = PASS，`1` = FAIL，`2` = 工具错误（如 DB 不存在）。`--format json` 输出完整结构化结果，其中 `metrics.ced` 段（`issue_count` / `word_count` / `ced_per_1k_words`）即 CED 的独立取数来源。
+`--format json` 输出完整结构化结果，其中 `metrics.ced` 段（`issue_count` / `word_count` / `ced_per_1k_words`）即 CED 的独立取数来源。
 
 上例 budget 门 FAIL 的原因是 halt 检测命中：该项目 DB 中存在评估边界内的历史失败 run 记录（`pause_reason` 为空，按保守语义计为 halt）。这演示了 halt 语义的保守性，也说明了为什么五门的正式用途是体裁爬坡验收（`final=True` 需 `up_to ≥ 100`），而非 3 章启动窗口。
 
 注意：
 
-- 该工具以只读模式（SQLite `mode=ro` URI）打开 DB，不写任何表。
-- 该脚本位于 `scripts/`，**不随 pip 包分发**，需要克隆仓库执行。打包为 CLI 子命令是 Task 229 的范围。
-- `--db` 接受 SQLite 文件路径。你的项目 DB 位置由 `DATABASE_URL` 决定（`.env.example` 默认 `sqlite:///songyan.db`）。
+- 该命令以只读模式（SQLite `mode=ro` URI）打开 DB，不写任何表。
+- 克隆仓库时也可用等价脚本 `python scripts/five_gate_check.py --genre G --db path/to/songyan.db --project-id P --up-to N`，参数与输出一致。
+- Windows 下将输出重定向到文件时，非 ASCII 文本按控制台代码页编码；如需 UTF-8 文件，先设置 `$env:PYTHONIOENCODING = "utf-8"`。
 
 ### T9
 
 ```bash
-songyan metrics --project-id myproject --chapters 1-3
+songyan t9 --project-id myproject --chapters 1-3
 ```
 
-输出报告的「文本洁净度（T9 harness 数据源）」段，实际输出（同上 3 章项目）：
+实际输出（同上 3 章项目）：
 
 ```text
-- 汇总：元标记 1（含 artifact），重复长段落 0，时间线矛盾 0。
-
-| 章 | 元标记/artifact | 重复长段落 | 时间线矛盾 |
-|----|----------------|------------|------------|
-| 1  | 0              | 0          | 0          |
-| 2  | 0              | 0          | 0          |
-| 3  | 1              | 0          | 0          |
+=== T9 文本洁净度 @ myproject Ch1-3 ===
+  verdict   : FAIL（阈值 meta=0; duplicate=0; timeline report-only）
+  measured  : meta=1, duplicate=0, timeline=0
+  detail    : 元标记违规章: [3]
+  per-chapter:
+    Ch1: meta=0 duplicate=0 timeline=0
+    Ch2: meta=0 duplicate=0 timeline=0
+    Ch3: meta=1 duplicate=0 timeline=0
 ```
 
-报告末尾的 V6 验收判据段含 T9 三态行（pass/fail + 三类计数 + 红线口径）。
-
-注意：
-
-- `songyan metrics` 会**重算并持久化派生度量**（写 `text_cleanliness_metrics`、`adaptive_gate_signal_snapshots` 等派生表；不改章节、正文或 settlement 事实）。若需要严格只读的 T9 单口径命令，属 Task 229 范围，交付后本文档将更新。
+- 该命令走纯内存重算（`persist=False`），**不写** `text_cleanliness_metrics` 等派生表。
+- `--include-timeline` 可将时间线矛盾计入红线；冻结口径默认 report-only，不加该 flag 即默认行为。
+- `--format json` 输出结构化结果（含 `per_chapter` 计数数组）。样本不足（窗口内无 accepted 正文）时退出码为 `2`，不会误判为 PASS。
+- `songyan metrics` 报告的「文本洁净度」段与 V6 验收判据段含同一口径的 T9 结果，但会重算并持久化派生度量（写 `text_cleanliness_metrics`、`adaptive_gate_signal_snapshots` 等派生表；不改章节、正文或 settlement 事实）。严格只读复现请用 `songyan t9`。
 - 逐章明细（`details_json`，含 artifact 的原文定位）保存在 DB 派生表中，用于内部排查；按脱敏边界不进入公开文档。
 
 ---
@@ -223,7 +224,6 @@ songyan metrics --project-id myproject --chapters 1-3
 ## 已知限制
 
 - **两个阈值的原始取值理由不可考**：completeness 的 `gap ≤ 1` 继承自未入库的 V8 原型脚本；health 的 `8.0` 相对 V7 旧口径 `8.5` 的下调理由未留记录。两处数值自 Task 182 起冻结，口径不再追溯取值理由，调整须另立任务。
-- 五门脚本当前需克隆仓库执行，不随 pip 包分发（Task 229 收口）。
-- `songyan metrics` 不是只读命令（见上节注意项）。
+- `songyan metrics` 不是只读命令（见上节注意项）；严格只读复现用 `songyan five-gate` / `songyan t9`。
 - sci-fi baseline 覆盖 Ch25-100；低于 Ch25 的评估直接取 Ch25 点，高于 Ch100 的评估取 Ch100 点，均为近似。
 - run bundle（`songyan bundle-run`）当前不内嵌三口径的实测数值（占位 `external_not_embedded`），复现必须基于原始 SQLite DB。

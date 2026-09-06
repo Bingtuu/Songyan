@@ -11,6 +11,7 @@ from typing import Any, Literal, cast
 import click
 
 from songyan.cli.commands.index import register_index_commands
+from songyan.cli.commands.quality import register_quality_commands
 from songyan.cli.outline_import import load_outline_file
 from songyan.config import settings
 from songyan.creative_modes.registry import (
@@ -1305,3 +1306,8 @@ def metrics_cmd(project_id: str, chapters: str, output: Path | None) -> None:
 # Phase 8b: RAG index commands
 # ---------------------------------------------------------------------------
 register_index_commands(cli)
+
+# ---------------------------------------------------------------------------
+# V13 Task 229: 质量口径复现命令（只读）
+# ---------------------------------------------------------------------------
+register_quality_commands(cli)
