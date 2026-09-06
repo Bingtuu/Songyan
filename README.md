@@ -50,6 +50,7 @@ Songyan 目前适合懂命令行、能配置 LLM API key 的技术用户试用�
 - 科幻长窗口 baseline 已冻结在 200+ 章规模。
 - 玄幻、武侠、都市样本完成 200 章 accepted 内部验证。
 - Windows 下通过 wheel 构建、wheel 安装、非仓库目录运行、资源加载、模板建项和 accepted 正文导出 smoke。
+- 质量门口径（CED / T9 / 五门）与 Ch200 baseline 聚合数值已公开，可用 `songyan five-gate` / `songyan t9` 只读复现。
 - CI 覆盖 ruff、runtime mypy、pytest、CLI tests 和 wheel smoke。
 
 ## 功能概览
@@ -66,6 +67,8 @@ Songyan 目前适合懂命令行、能配置 LLM API key 的技术用户试用�
 | 诊断工具 | `doctor`、`report`、脱敏 `bundle-run`、成本和质量信号 |
 | 资产生命周期 | `backup` / `restore` 保存和恢复项目资产 |
 | Profile 安全 | `validate`、`upsert --dry-run`、`history`、`rollback` |
+| 按角色模型路由 | 写作 / 审查 / 结算等角色独立配置模型与 endpoint（`LLM_<ROLE>_*`，两级显式回退） |
+| 质量门复现 | `five-gate` / `t9` 只读重算公开口径指标（CED / T9 / 五门） |
 | 正文导出 | 从 accepted 章节导出 Markdown / txt 书稿 |
 
 ## 快速开始
@@ -99,6 +102,8 @@ Windows 本地 smoke 或短窗口验证时，可以先使用：
 CHECKPOINTER_MODE=memory
 ```
 
+需要按角色分层模型成本时（例如写作用强模型、审查用便宜模型），可在 `.env` 中追加 `LLM_WRITER_MODEL` 等角色级覆盖，解析顺序和角色清单见 [Quickstart](docs/quickstart.md) 的 per-role 路由小节。
+
 ### 最短闭环
 
 ```powershell
@@ -122,7 +127,7 @@ songyan export --project-id <project_id> --chapters 1-3 --format md --output exp
 songyan backup --project-id <project_id> --output backups/
 ```
 
-更完整的安装、配置、10 章教程和恢复入口见 [Quickstart](docs/quickstart.md)。
+更完整的安装、配置、Ch1-3 短窗口教程和恢复入口见 [Quickstart](docs/quickstart.md)。
 
 ## 常用命令
 
@@ -141,6 +146,8 @@ songyan backup --project-id <project_id> --output backups/
 | `songyan profile upsert --genre <genre> --set key=value --dry-run` | 预览 profile override，不写 DB |
 | `songyan profile history --genre <genre>` | 查看 profile 修改历史 |
 | `songyan profile rollback --genre <genre> --history-id <id>` | 回滚 profile override |
+| `songyan five-gate --project-id <id> --up-to 100` | 只读重算五门指标（persist=False） |
+| `songyan t9 --project-id <id> --chapters 1-200` | 只读重算 T9 文本洁净度红线 |
 
 ## 架构概览
 
