@@ -178,6 +178,7 @@ flowchart LR
 - [Quickstart](docs/quickstart.md)：安装、配置、运行和导出
 - [Troubleshooting](docs/troubleshooting.md)：常见失败与恢复命令
 - [Release Checklist](docs/release-checklist.md)：维护者发布清单
+- [质量门方法论](docs/quality-gates.md)：CED / T9 / 五门口径定义、阈值出处与复现命令
 - [Minimal Reproduction Guide](docs/minimal-repro.md)：如何提交可复现问题
 - [Documentation Index](docs/INDEX.md)：公开文档导航
 - [Changelog](CHANGELOG.md)：版本变更记录

@@ -54,6 +54,7 @@ These historical validation records are not part of the public main documentatio
 | [Quickstart](quickstart.md) | Install, configure and run |
 | [Troubleshooting](troubleshooting.md) | Failure recovery guide |
 | [Release Checklist](release-checklist.md) | Maintainer release gate |
+| [Quality Gates Methodology](quality-gates.md) | CED / T9 / five-gate definitions, threshold provenance and reproduction commands |
 | [Minimal Reproduction Guide](minimal-repro.md) | Issue reporting and diagnostics |
 | [Documentation Index](INDEX.md) | Public documentation map |
 | [Changelog](../CHANGELOG.md) | Release notes |

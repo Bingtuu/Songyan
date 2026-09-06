@@ -3,7 +3,7 @@
 > **阶段**: 质量方法论公开化
 > **定位**: V13 是差异化资产建设阶段，目标是把 Songyan 独有的"可量化质量门"从内部纪律变成公开、可复现的方法论资产。不新增任何生成能力。
 > **当前口径**: V11 已完成开源可用化收尾（Task 208-215），V12 启动校准进行中（Task 224/225 待闭环）。V13 与 V12 无代码依赖，可并行规划，但发布动作（baseline 公开）建议在 V11 正式 release tag 之后执行。
-> **状态**: 已启动。Task 226 methodology disclosure audit 已完成（报告 `docs/reports/226-v13-methodology-disclosure-audit.md`），当前任务为 Task 227 质量门口径公开文档。
+> **状态**: 进行中。Task 226 审计 DONE（报告 `docs/reports/226-v13-methodology-disclosure-audit.md`），Task 227 口径公开文档 DONE（`docs/quality-gates.md`），当前任务为 Task 228 baseline 结果脱敏公开。
 
 ---
 
@@ -76,7 +76,7 @@
 | Task | 名称 | 状态 | 目标 | 依赖 |
 |------|------|:----:|------|------|
 | 226 | V13 methodology disclosure audit | DONE | 只读审计 CED/T9/五门实现与既有文档的差距，冻结公开范围、脱敏边界和复现命令清单 | V11 closure |
-| 227 | 质量门口径公开文档 | TODO | 撰写 CED / T9 / 五门方法论文档，含定义、证据要求、阈值来源、复现命令 | 226 |
+| 227 | 质量门口径公开文档 | DONE | 撰写 CED / T9 / 五门方法论文档，含定义、证据要求、阈值来源、复现命令 | 226 |
 | 228 | baseline 结果脱敏公开 | TODO | 4 体裁 200 章 baseline 聚合数值摘要导出，脱敏审查后进入公开文档 | 226/227 |
 | 229 | 口径复现命令链 | TODO | 提供只读的 CED/T9 复现命令或脚本，输出与 `songyan report` 一致 | 226/227 |
 

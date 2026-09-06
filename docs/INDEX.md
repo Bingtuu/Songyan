@@ -21,6 +21,12 @@ Public documentation map for users and contributors.
 | [Changelog](../CHANGELOG.md) | Release notes |
 | [License](../LICENSE) | AGPL-3.0 license |
 
+## Quality Methodology
+
+| Document | Purpose |
+|----------|---------|
+| [质量门方法论：CED / T9 / 五门](quality-gates.md) | 质量度量口径定义、证据要求、阈值出处与复现命令 |
+
 ## Roadmap
 
 | Document | Purpose |
