@@ -1155,15 +1155,22 @@ def _usage_group(
     cost: float,
     prompt: int = 0,
     completion: int = 0,
+    model: str | None = None,
 ) -> dict[str, Any]:
-    """构造 aggregate_for_run 的单行分组结果（per_chapter / per_agent 同构）."""
-    return {
+    """构造 aggregate_for_run 的单行分组结果（per_chapter / per_agent 同构）.
+
+    Task 232：per_agent 行带 model 键；model=None 时不写入（模拟旧数据/未知）。
+    """
+    row = {
         key: value,
         "call_count": call_count,
         "prompt_tokens": prompt,
         "completion_tokens": completion,
         "cost_cny": cost,
     }
+    if model is not None:
+        row["model"] = model
+    return row
 
 
 def _stats(
@@ -1204,10 +1211,12 @@ class TestRenderCostSection:
                 _usage_group(
                     "agent", "writer",
                     call_count=2, cost=0.014, prompt=300, completion=150,
+                    model="deepseek-chat",
                 ),
                 _usage_group(
                     "agent", "llm_auditor",
                     call_count=2, cost=0.004, prompt=150, completion=80,
+                    model="deepseek-chat",
                 ),
             ],
         }
@@ -1226,9 +1235,9 @@ class TestRenderCostSection:
         # 两个估算占比：分子/分母齐全（估算占比高 = usage/成本提取要修的早期信号）
         assert "25.0% (1/4)" in text
         assert "50.0% (2/4)" in text
-        # per agent 成本分布表
-        assert "| writer | 2 | 300 | 150 |" in text
-        assert "| llm_auditor | 2 | 150 | 80 |" in text
+        # per agent 成本分布表（Task 232 起含模型列）
+        assert "| writer | deepseek-chat | 2 | 300 | 150 |" in text
+        assert "| llm_auditor | deepseek-chat | 2 | 150 | 80 |" in text
 
     def test_no_data_renders_hint_without_tables(self) -> None:
         """无 usage 数据的旧 run：输出「无成本数据」提示，不渲染表格，不报错."""
@@ -1252,7 +1261,8 @@ class TestRenderCostSection:
         assert "无成本数据" not in text
         assert "**成功调用数**: 0/1" in text
         assert "token_source='estimate' 占比**: -" in text
-        assert "| writer | 1 | 0 | 0 |" in text
+        # 无 model 键的分组行模型列显示「未记录」
+        assert "| writer | （未记录） | 1 | 0 | 0 |" in text
         assert "| run 级 | 1 | 0 | 0 |" in text
 
     def test_null_chapter_group_rendered_as_run_level(self) -> None:
@@ -1285,14 +1295,40 @@ class TestRenderCostSection:
         assert "| agent-6 |" in text
         assert "| agent-5 |" in text
         assert "| agent-4 |" not in text
-        # 其余 4 个合并：call_count=4、prompt=100、completion=50、cost=0.010
-        assert f"| 其他（4 个 agent） | 4 | 100 | 50 | {format_cost_estimate(0.010)} |" in text
+        # 其余 4 个合并：call_count=4、prompt=100、completion=50、cost=0.010，模型列「多种」
+        assert (
+            f"| 其他（4 个 agent） | 多种 | 4 | 100 | 50 | {format_cost_estimate(0.010)} |"
+            in text
+        )
 
     def test_per_agent_within_top_n_has_no_others_row(self) -> None:
         """agent 数 ≤ top_n 时不出现「其他」合并行，标题也不带「Top N」后缀."""
         text = render_cost_section(self._aggregate(), _stats(4))
         assert "其他" not in text
         assert "（Top" not in text
+
+    def test_per_agent_same_agent_multiple_models_gets_own_rows(self) -> None:
+        """Task 232：同一 agent 在 run 内用了多个模型时各占一行，模型列分别显示."""
+        aggregate = {
+            "per_chapter": [_usage_group("chapter_number", 1, call_count=3, cost=0.03)],
+            "per_agent": [
+                _usage_group(
+                    "agent", "writer",
+                    call_count=2, cost=0.020, prompt=200, completion=100,
+                    model="deepseek-reasoner",
+                ),
+                _usage_group(
+                    "agent", "writer",
+                    call_count=1, cost=0.010, prompt=100, completion=50,
+                    model="deepseek-chat",
+                ),
+            ],
+        }
+
+        text = render_cost_section(aggregate, _stats(3))
+
+        assert "| writer | deepseek-reasoner | 2 | 200 | 100 |" in text
+        assert "| writer | deepseek-chat | 1 | 100 | 50 |" in text
 
     def test_error_param_renders_distinct_failure_line(self) -> None:
         """error 参数（取数失败降级）：渲染可区分的错误行，不伪装成「无成本数据」."""

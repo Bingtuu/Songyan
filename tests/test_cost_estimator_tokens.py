@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from structlog.testing import capture_logs
+
+from songyan.utils import cost_estimator as cost_estimator_module
 from songyan.utils.cost_estimator import (
     estimate_cost,
     estimate_cost_from_tokens,
@@ -78,3 +81,29 @@ class TestFormatCostEstimate:
         result = format_cost_estimate(1.5)
         assert "¥" in result
         assert "1.50" in result
+
+
+class TestPricingFallback:
+    """Task 232：未知模型定价口径——回落 default + 每模型每进程 warning 一次."""
+
+    def setup_method(self) -> None:
+        cost_estimator_module._warned_unknown_models.clear()
+
+    def test_unknown_model_falls_back_to_default_with_warning_once(self) -> None:
+        with capture_logs() as logs:
+            cost1 = estimate_cost_from_tokens(1000, 500, model="some-new-model")
+            estimate_cost_from_tokens(1000, 500, model="some-new-model")
+        # 回落 default 定价（¥1/¥2 每 1M）：与 deepseek-chat 结果一致
+        assert cost1 == estimate_cost_from_tokens(1000, 500, model="deepseek-chat")
+        warnings = [e for e in logs if e["event"] == "llm.pricing_unknown_model"]
+        assert len(warnings) == 1
+        assert warnings[0]["model"] == "some-new-model"
+
+    def test_deepseek_reasoner_pricing_entry(self) -> None:
+        # 2025-09 V3.1 调价口径：输入 ¥4 / 输出 ¥12 每 1M
+        cost = estimate_cost_from_tokens(1_000_000, 1_000_000, model="deepseek-reasoner")
+        assert abs(cost - 16.0) < 0.0001
+        cost_prefixed = estimate_cost_from_tokens(
+            1_000_000, 0, model="deepseek/deepseek-reasoner"
+        )
+        assert abs(cost_prefixed - 4.0) < 0.0001

@@ -12,6 +12,9 @@ logger = structlog.get_logger(__name__)
 # 输入：缓存命中 ¥0.1，缓存未命中 ¥1.0
 # 输出：¥2.0
 # 保守估算使用缓存未命中价格
+#
+# Task 232 口径冻结：PRICING 是手工维护的保守估算基线，不是实时价目。
+# 未知模型回落 default（DeepSeek chat 档）并 warning；精确对账以 provider 账单为准。
 PRICING: dict[str, dict[str, float]] = {
     "deepseek/deepseek-chat": {
         "input": 1.0,
@@ -25,6 +28,16 @@ PRICING: dict[str, dict[str, float]] = {
         "input": 1.0,
         "output": 2.0,
     },
+    # deepseek-reasoner：2025-09 V3.1 调价后 chat/reasoner 同价
+    # （缓存未命中输入 ¥4、输出 ¥12），per-role 路由常见目标模型
+    "deepseek-reasoner": {
+        "input": 4.0,
+        "output": 12.0,
+    },
+    "deepseek/deepseek-reasoner": {
+        "input": 4.0,
+        "output": 12.0,
+    },
     # 默认兜底
     "default": {
         "input": 1.0,
@@ -32,10 +45,19 @@ PRICING: dict[str, dict[str, float]] = {
     },
 }
 
+#: 已告警过的未知模型（每进程每模型只 warning 一次，避免热路径刷屏）
+_warned_unknown_models: set[str] = set()
+
 
 def _get_pricing(model: str) -> dict[str, float]:
-    """获取模型定价，未知模型使用默认定价."""
-    return PRICING.get(model, PRICING["default"])
+    """获取模型定价；未知模型回落默认定价并 warning（每模型每进程一次）."""
+    pricing = PRICING.get(model)
+    if pricing is None:
+        if model not in _warned_unknown_models:
+            _warned_unknown_models.add(model)
+            logger.warning("llm.pricing_unknown_model", model=model, fallback="default")
+        pricing = PRICING["default"]
+    return pricing
 
 
 def count_tokens(text: str, model: str = "deepseek-chat") -> int:

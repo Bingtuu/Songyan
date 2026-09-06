@@ -22,6 +22,8 @@ CostSource = Literal["provider_cost", "pricing_estimate"]
 _GROUP_BY_COLUMNS: dict[str, str] = {
     "chapter_number": "chapter_number",
     "agent": "agent",
+    # Task 232: per_agent 细分到 角色 × 模型（同一份行的细分，总和不变）
+    "agent_model": "agent, model",
 }
 
 
@@ -106,28 +108,31 @@ class LlmCallUsageRepository:
             return float(row[0]) if row else 0.0
 
     async def aggregate_for_run(self, run_id: str) -> dict[str, list[dict[str, Any]]]:
-        """按 chapter_number / agent 分组聚合（供 report 成本视图）.
+        """按 chapter_number / agent×model 分组聚合（供 report 成本视图）.
 
         per_chapter 的 NULL 分组语义：chapter_number 可空，run 级调用（未绑定
         章节）会聚成一章 chapter_number=None 的分组，且在 ORDER BY 下排最前；
         report 层可自行把 None 映射为「run 级」标签展示。
 
+        Task 232：per_agent 细分到 角色 × 模型——同一 agent 在 run 内用过多个
+        模型时展开为多行；单模型场景行数与分组语义和此前一致，各行合计不变。
+
         Returns:
             {"per_chapter": [...], "per_agent": [...]}，每项含
-            chapter_number/agent、call_count、prompt_tokens、completion_tokens、
-            cost_cny 合计。
+            chapter_number/agent（per_agent 另含 model）、call_count、
+            prompt_tokens、completion_tokens、cost_cny 合计。
         """
         async with get_db() as conn:
             conn.row_factory = Row
             per_chapter = await self._group_by(conn, run_id, "chapter_number")
-            per_agent = await self._group_by(conn, run_id, "agent")
+            per_agent = await self._group_by(conn, run_id, "agent_model")
         return {"per_chapter": per_chapter, "per_agent": per_agent}
 
     async def _group_by(
         self,
         conn: aiosqlite.Connection,
         run_id: str,
-        column: Literal["chapter_number", "agent"],
+        column: Literal["chapter_number", "agent", "agent_model"],
     ) -> list[dict[str, Any]]:
         group_column = _GROUP_BY_COLUMNS[column]
         cursor = await conn.execute(

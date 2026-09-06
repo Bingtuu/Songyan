@@ -256,6 +256,45 @@ class TestAggregateForRun:
         result = await repo.aggregate_for_run("no-such-run")
         assert result == {"per_chapter": [], "per_agent": []}
 
+    async def test_per_agent_splits_by_model_and_sums_match(self, test_db: Path) -> None:
+        """Task 232：per_agent 按 角色×模型 细分；同一角色双模型两行，合计不重不漏."""
+        repo = LlmCallUsageRepository()
+        rows = [
+            ("writer", "deepseek-reasoner", 100, 200, 1.0),
+            ("writer", "deepseek-chat", 50, 50, 0.5),
+            ("writer", "deepseek-chat", 50, 50, 0.5),
+            ("llm_auditor", "deepseek-chat", 10, 20, 0.1),
+        ]
+        for agent, model, prompt, completion, cost in rows:
+            await repo.record(
+                run_id="run-m",
+                chapter_number=1,
+                agent=agent,
+                model=model,
+                prompt_tokens=prompt,
+                completion_tokens=completion,
+                cost_cny=cost,
+                token_source="response",
+                cost_source="provider_cost",
+            )
+
+        result = await repo.aggregate_for_run("run-m")
+
+        per_agent = result["per_agent"]
+        assert len(per_agent) == 3  # writer×reasoner / writer×chat / auditor×chat
+        by_pair = {(r["agent"], r["model"]): r for r in per_agent}
+        writer_reasoner = by_pair[("writer", "deepseek-reasoner")]
+        assert writer_reasoner["call_count"] == 1
+        assert writer_reasoner["cost_cny"] == pytest.approx(1.0)
+        writer_chat = by_pair[("writer", "deepseek-chat")]
+        assert writer_chat["call_count"] == 2
+        assert writer_chat["cost_cny"] == pytest.approx(1.0)
+
+        # 细分合计 == run 总量（与 per_chapter / sum_cost_for_run 对齐）
+        total_split = sum(r["cost_cny"] for r in per_agent)
+        assert total_split == pytest.approx(2.1)
+        assert total_split == pytest.approx(await repo.sum_cost_for_run("run-m"))
+
 
 class TestSourceStatsForRun:
     """source_stats_for_run：token_source / cost_source 分布计数（report 估算占比的分子分母）."""

@@ -40,9 +40,20 @@ def _format_ratio(numerator: int, denominator: int) -> str:
 
 
 def _usage_row(label: str, row: dict[str, Any]) -> str:
-    """渲染一行 usage 明细（per agent / 每章 两张表同构）."""
+    """渲染一行 usage 明细（每章表）."""
     return (
         f"| {label} | {_int(row.get('call_count'))} | "
+        f"{_int(row.get('prompt_tokens'))} | "
+        f"{_int(row.get('completion_tokens'))} | "
+        f"{format_cost_estimate(_float(row.get('cost_cny')))} |"
+    )
+
+
+def _agent_usage_row(label: str, row: dict[str, Any]) -> str:
+    """渲染一行 per agent 明细（Task 232 起含模型列；空 model 显示「未记录」）."""
+    model = str(row.get("model") or "（未记录）")
+    return (
+        f"| {label} | {model} | {_int(row.get('call_count'))} | "
         f"{_int(row.get('prompt_tokens'))} | "
         f"{_int(row.get('completion_tokens'))} | "
         f"{format_cost_estimate(_float(row.get('cost_cny')))} |"
@@ -128,7 +139,8 @@ def render_cost_section(
         ]
     )
 
-    # ---- per agent 成本分布（成本降序；agent 数 > top_n 时截断 Top N，其余合并「其他」） ----
+    # ---- per agent 成本分布（Task 232 起细分到 角色 × 模型；成本降序；
+    #      行数 > top_n 时截断 Top N，其余合并「其他」行，模型列标「多种」） ----
     sorted_agents = sorted(
         per_agent,
         key=lambda row: (-_float(row.get("cost_cny")), str(row.get("agent") or "")),
@@ -144,14 +156,15 @@ def render_cost_section(
         [
             agent_title,
             "",
-            "| Agent | 调用次数 | prompt tokens | completion tokens | 成本 |",
-            "|-------|---------:|--------------:|------------------:|-----:|",
+            "| Agent | 模型 | 调用次数 | prompt tokens | completion tokens | 成本 |",
+            "|-------|------|---------:|--------------:|------------------:|-----:|",
         ]
     )
     for row in top_rows:
-        lines.append(_usage_row(str(row.get("agent") or "unknown"), row))
+        lines.append(_agent_usage_row(str(row.get("agent") or "unknown"), row))
     if rest_rows:
-        lines.append(_usage_row(f"其他（{len(rest_rows)} 个 agent）", _merge_rows(rest_rows)))
+        merged = {**_merge_rows(rest_rows), "model": "多种"}
+        lines.append(_agent_usage_row(f"其他（{len(rest_rows)} 个 agent）", merged))
     lines.append("")
 
     # ---- 每章成本（保持 repo 排序：run 级 NULL 分组在前，其后按章号升序） ----
