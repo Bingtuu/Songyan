@@ -2,8 +2,8 @@
 
 > **阶段**: 成本优化与按角色模型路由
 > **定位**: V14 是运行成本工程阶段，目标是把单一 LLM 配置升级为按角色（writer / auditor / settlement / summary 等）独立路由模型，并让路由收益可量化。不新增 Agent，不动 pipeline 结构。
-> **当前口径**: V13 方法论公开化规划完成。V14 只改 LLM client 的配置注入与成本观测，不改变任何质量门口径。
-> **状态**: 规划完成，未启动。首个任务为 Task 230 V14 model routing audit。
+> **当前口径**: V13 已全量闭环（Task 226-229，2026-09-06），口径定义以 `docs/quality-gates.md` 为准。V14 只改 LLM client 的配置注入与成本观测，不改变任何质量门口径。
+> **状态**: 进行中。Task 230 model routing audit DONE（报告 `docs/reports/230-v14-model-routing-audit.md`，本地），当前任务为 Task 231 per-role 配置解析与注入。
 
 ---
 
@@ -39,7 +39,7 @@
 - LLM client 调用点按角色注入配置。
 - doctor / preflight 增加 per-role 配置校验。
 - report / run log 的成本聚合增加 per-role 拆分。
-- 顺路执行 217 review 的 P2 重构 backlog 中与 LLM 调用路径直接相关的部分。
+- 顺路执行 217 review 中与 LLM 调用路径直接相关的 backlog（Task 230 审计结论：P2 九项无一直接相关；相关项 P1-2 settlement 重试次数涉及质量行为，另立任务评估，不并入 V14）。
 
 ---
 
@@ -70,7 +70,7 @@ LLM_SUMMARY_MODEL=...
 |----|----------|----------|
 | A | 向后兼容 | 只配全局 `LLM_MODEL` 的既有用户行为零变化 |
 | B | 路由生效 | 每个角色的实际调用模型可在 run log 中验证 |
-| C | fail-fast | 角色配置非法（空 model、不可达 endpoint）在 preflight 阶段 exit 1，不进 pipeline |
+| C | fail-fast | 角色配置非法（空 model、非法 base_url 形态）在 preflight 阶段 exit 1，不进 pipeline；真实可达性探测保持 opt-in（`--check-llm`）并扩展为逐角色 |
 | D | 成本可量化 | report 输出 per-role token / 成本拆分，同窗口对比有数字 |
 | E | 口径零变化 | scifi 短窗口回归通过；CED / T9 / 五门实现零行为变化 |
 | F | 既有守护项 | `pytest tests/` 全绿、ruff 通过，不破坏 V11 已验收路径 |
@@ -81,7 +81,7 @@ LLM_SUMMARY_MODEL=...
 
 | Task | 名称 | 状态 | 目标 | 依赖 |
 |------|------|:----:|------|------|
-| 230 | V14 model routing audit | TODO | 只读审计 LLM client 全部调用点与配置注入路径，冻结角色清单、解析顺序和改动面 | V13 规划 |
+| 230 | V14 model routing audit | DONE | 只读审计 LLM client 全部调用点与配置注入路径，冻结角色清单、解析顺序和改动面 | V13 规划 |
 | 231 | per-role 配置解析与注入 | TODO | 配置层支持角色覆盖，client 调用点按角色解析，doctor/preflight 校验 | 230 |
 | 232 | 成本观测 per-role 拆分 | TODO | run log / report 成本聚合按角色拆分，路由收益可量化 | 231 |
 | 233 | V14 回归与成本对比验收 | TODO | scifi 短窗口回归 + 单模型 vs 路由模型同窗口成本对比，产出验收报告 | 231/232 |
