@@ -1,7 +1,55 @@
 """Pydantic Settings 配置管理."""
 
-from pydantic import AliasChoices, Field, ValidationError, field_validator
+import os
+import re
+from collections.abc import Mapping
+
+from dotenv import dotenv_values
+from pydantic import (
+    AliasChoices,
+    BaseModel,
+    Field,
+    ValidationError,
+    field_validator,
+    model_validator,
+)
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class RoleLlmOverride(BaseModel):
+    """单个路由角色的 LLM 覆盖配置（V14 Task 231）.
+
+    三个字段均可选；未设置的字段在解析时回落到全局默认。
+    """
+
+    model: str | None = None
+    base_url: str | None = None
+    api_key: str | None = None
+
+
+_LLM_ROLE_OVERRIDE_PATTERN = re.compile(r"^LLM_(.+)_(MODEL|BASE_URL|API_KEY)$")
+
+
+def collect_llm_role_overrides(
+    *sources: Mapping[str, str | None],
+) -> dict[str, RoleLlmOverride]:
+    """从配置源收集 ``LLM_<ROLE>_{MODEL,BASE_URL,API_KEY}`` 覆盖项.
+
+    靠前的 source 优先级更高（先传 os.environ 再传 .env）；角色名小写归一。
+    不校验角色合法性——未知角色由 doctor / preflight 提示，配置加载期不 fail。
+    """
+    collected: dict[str, dict[str, str]] = {}
+    for source in reversed(sources):  # 低优先级先写，高优先级后写覆盖
+        for key, value in source.items():
+            if not value:
+                continue
+            match = _LLM_ROLE_OVERRIDE_PATTERN.match(key)
+            if match is None:
+                continue
+            role = match.group(1).lower()
+            field_name = match.group(2).lower()
+            collected.setdefault(role, {})[field_name] = value
+    return {role: RoleLlmOverride(**fields) for role, fields in collected.items()}
 
 
 class Settings(BaseSettings):
@@ -27,6 +75,10 @@ class Settings(BaseSettings):
         default=0.0,
         validation_alias=AliasChoices("SONGYAN_RUN_COST_BUDGET", "RUN_COST_BUDGET"),
     )
+
+    # V14 Task 231: per-role LLM 覆盖（LLM_<ROLE>_{MODEL,BASE_URL,API_KEY}），
+    # 由 _collect_llm_role_overrides 从 env/.env 收集，非 env 直接映射
+    llm_role_overrides: dict[str, RoleLlmOverride] = Field(default_factory=dict)
 
     # Token 预算
     context_total_budget: int = 32_000
@@ -57,6 +109,14 @@ class Settings(BaseSettings):
             return float(value)
         except (TypeError, ValueError):
             return 0.0
+
+    @model_validator(mode="after")
+    def _collect_llm_role_overrides(self) -> "Settings":
+        """收集 per-role LLM 覆盖（env 优先于 .env）；不在加载期校验合法性."""
+        env_file = self.model_config.get("env_file", ".env")
+        dotenv_map = dotenv_values(env_file) if env_file else {}
+        self.llm_role_overrides = collect_llm_role_overrides(os.environ, dotenv_map)
+        return self
 
 
 _SETTINGS_LOAD_ERROR: ValidationError | None = None

@@ -15,6 +15,7 @@ from songyan.db.repository import ProjectRepository
 from songyan.genres.loader import list_genre_profiles
 from songyan.literary_optimization.plugin_loader import load_strategy_plugins
 from songyan.llm.client import aclose_llm_clients, get_llm
+from songyan.llm.roles import LLM_ROLE_NAMES
 from songyan.project_templates import ProjectTemplateLoader
 from songyan.prompts import get_prompt_loader
 
@@ -168,6 +169,50 @@ def _check_llm_config(config: Settings) -> list[DoctorCheck]:
                 "llm.config",
                 "pass",
                 f"model={config.llm_model}, base_url={config.llm_base_url}",
+            )
+        )
+
+    # Task 231: per-role 覆盖（LLM_<ROLE>_MODEL/BASE_URL/API_KEY）逐项校验
+    for role, override in sorted(config.llm_role_overrides.items()):
+        check_id = f"llm.role.{role}"
+        if role not in LLM_ROLE_NAMES:
+            checks.append(
+                DoctorCheck(
+                    check_id,
+                    "warn",
+                    f"unknown LLM role override: {role}",
+                    "角色名须为已注册角色（writer/llm_auditor 等）；未识别角色不会生效。",
+                )
+            )
+            continue
+        if override.base_url and not override.base_url.startswith(("http://", "https://")):
+            checks.append(
+                DoctorCheck(
+                    check_id,
+                    "fail",
+                    f"role {role} base_url invalid: {override.base_url}",
+                    "LLM_<ROLE>_BASE_URL 必须以 http:// 或 https:// 开头。",
+                )
+            )
+            continue
+        if override.base_url:
+            role_key = override.api_key or config.llm_api_key or os.getenv("LLM_API_KEY", "")
+            if not role_key:
+                checks.append(
+                    DoctorCheck(
+                        check_id,
+                        "fail",
+                        f"role {role} overrides base_url but no API key available",
+                        "角色级 base_url 覆盖需要全局 LLM_API_KEY 或 LLM_<ROLE>_API_KEY。",
+                    )
+                )
+                continue
+        checks.append(
+            DoctorCheck(
+                check_id,
+                "pass",
+                f"role {role}: model={override.model or '(global)'}, "
+                f"base_url={override.base_url or '(global)'}",
             )
         )
     return checks
@@ -412,14 +457,18 @@ def _check_package_resources() -> DoctorCheck:
         return DoctorCheck("resources.package", "fail", f"resource check failed: {exc}")
 
 
-async def _probe_llm_connectivity() -> DoctorCheck:
+async def _probe_llm_connectivity(config: Settings = settings) -> DoctorCheck:
     """Opt-in LLM client probe.
 
-    This only initializes the configured client; it does not issue a generation
-    request, avoiding hidden API cost and telemetry writes from doctor.
+    Initializes the global client plus one client per configured role override
+    (Task 231); it does not issue a generation request, avoiding hidden API cost
+    and telemetry writes from doctor.
     """
     try:
         get_llm(temperature=0.0, max_tokens=1, timeout=10)
+        for role in sorted(config.llm_role_overrides):
+            if role in LLM_ROLE_NAMES:
+                get_llm(temperature=0.0, max_tokens=1, timeout=10, role=role)
     except Exception as exc:  # noqa: BLE001 - report any initialization failure
         return DoctorCheck("llm.connectivity", "fail", f"LLM client init failed: {exc}")
     finally:
@@ -444,7 +493,7 @@ async def run_doctor(
     checks.append(_check_run_cost_budget(config))
     checks.append(_check_package_resources())
     if check_llm:
-        checks.append(await _probe_llm_connectivity())
+        checks.append(await _probe_llm_connectivity(config))
     return _summarize(checks)
 
 

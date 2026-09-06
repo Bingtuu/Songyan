@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import asyncio
 import inspect
-import os
 import time
 from contextvars import ContextVar
+from dataclasses import dataclass
 from functools import lru_cache
 from typing import TYPE_CHECKING, Any, Literal
 
@@ -21,6 +21,7 @@ from songyan.llm._usage import (
     _UsageExtract,
 )
 from songyan.llm.retry import retry_with_backoff
+from songyan.llm.roles import LLM_ROLE_NAMES
 from songyan.utils.cost_estimator import count_tokens, estimate_cost_from_tokens
 
 if TYPE_CHECKING:
@@ -100,8 +101,59 @@ async def init_run_cost_from_db(run_id: str, *, fallback: float | None = None) -
 
 
 def _resolve_model() -> str:
-    """解析当前模型名（settings 优先，环境变量兜底）；get_llm 与遥测路径共用."""
-    return settings.llm_model or os.getenv("LLM_MODEL", "deepseek-chat")
+    """解析全局模型名（settings 优先）；无角色场景与遥测兜底共用."""
+    return settings.llm_model or "deepseek-chat"
+
+
+@dataclass(frozen=True)
+class ResolvedLlmConfig:
+    """单次 LLM 调用的解析结果（per-role 覆盖 + 全局配置 + 内置默认）."""
+
+    role: str | None
+    model: str
+    api_key: str
+    base_url: str
+    model_source: str  # role / global / default
+
+
+def _role_from_context() -> str | None:
+    """从遥测归因 contextvars 推导角色名；非 run 上下文返回 None."""
+    agent = _current_call_context().agent
+    if not agent or agent == "unknown":
+        return None
+    return agent
+
+
+def resolve_llm_config(role: str | None = None) -> ResolvedLlmConfig:
+    """按两级解析链解析 LLM 配置：LLM_<ROLE>_* → 全局 settings.llm_* → 内置默认.
+
+    role 不在注册角色清单（LLM_ROLE_NAMES）时 warning 并按全局配置处理；
+    覆盖字段为空串时自然回落到下一级。
+    """
+    if role is not None and role not in LLM_ROLE_NAMES:
+        logger.warning("llm.unknown_role_fallback", role=role)
+        role = None
+    override = settings.llm_role_overrides.get(role) if role else None
+
+    if override and override.model:
+        model, model_source = override.model, "role"
+    elif settings.llm_model:
+        model, model_source = settings.llm_model, "global"
+    else:
+        model, model_source = "deepseek-chat", "default"
+    api_key = (override.api_key if override and override.api_key else "") or settings.llm_api_key
+    base_url = (
+        (override.base_url if override and override.base_url else "")
+        or settings.llm_base_url
+        or "https://api.deepseek.com"
+    )
+    return ResolvedLlmConfig(
+        role=role,
+        model=model,
+        api_key=api_key,
+        base_url=base_url,
+        model_source=model_source,
+    )
 
 
 def _extract_retry_after(exc: Exception) -> float | None:
@@ -244,7 +296,8 @@ async def aclose_llm_clients() -> None:
     _get_llm_cached.cache_clear()
 
 
-@lru_cache(maxsize=16)
+# maxsize=64：per-role 路由后缓存键 ≈ 角色数 × 温度/参数组合（Task 231）
+@lru_cache(maxsize=64)
 def _get_llm_cached(
     model: str,
     api_key: str,
@@ -271,7 +324,11 @@ def _get_llm_cached(
 
 
 def get_llm(
-    temperature: float = 0.7, max_tokens: int = 4096, timeout: int = 60
+    temperature: float = 0.7,
+    max_tokens: int = 4096,
+    timeout: int = 60,
+    *,
+    role: str | None = None,
 ) -> BaseChatModel:
     """获取配置好的 LLM 实例（带缓存）.
 
@@ -282,6 +339,7 @@ def get_llm(
         temperature: 采样温度
         max_tokens: 最大输出 token 数（默认 4096）
         timeout: 单次 LLM 调用超时秒数（默认 60）
+        role: 可选角色名（writer/llm_auditor 等）；配置 LLM_<ROLE>_* 时按角色解析
 
     Returns:
         配置好的 ChatLiteLLM 实例
@@ -295,9 +353,10 @@ def get_llm(
         msg = "langchain-litellm 未安装，无法初始化 LLM"
         raise LLMError(msg)
 
-    api_key = settings.llm_api_key or os.getenv("LLM_API_KEY", "")
-    base_url = settings.llm_base_url or os.getenv("LLM_BASE_URL", "https://api.deepseek.com")
-    model = _resolve_model()
+    resolved = resolve_llm_config(role)
+    api_key = resolved.api_key
+    base_url = resolved.base_url
+    model = resolved.model
 
     if not api_key:
         msg = "LLM API Key 未配置（请设置 LLM_API_KEY 环境变量或在 .env 中配置 llm_api_key）"
@@ -348,6 +407,7 @@ async def call_llm(
     max_tokens: int = 4096,
     max_retries: int | None = None,
     timeout: int = 60,
+    role: str | None = None,
 ) -> str:
     """调用 LLM 并返回文本响应.
 
@@ -361,6 +421,7 @@ async def call_llm(
         max_tokens: 最大输出 token 数（默认 4096）
         max_retries: 最大重试次数；None 时使用 settings.llm_max_retries
         timeout: 单次 LLM 调用超时秒数（默认 60）
+        role: 可选角色名；None 时从遥测归因 contextvars 推导
 
     Returns:
         LLM 返回的文本内容
@@ -373,6 +434,8 @@ async def call_llm(
         temperature = settings.llm_temperature
     if max_retries is None:
         max_retries = settings.llm_max_retries
+    if role is None:
+        role = _role_from_context()
 
     budget = settings.llm_run_call_budget
     if budget > 0:
@@ -426,8 +489,10 @@ async def call_llm(
                 budget_cost=cost_budget,
             )
 
-    llm = get_llm(temperature=temperature, max_tokens=max_tokens, timeout=timeout)
-    model = _resolve_model()
+    llm = get_llm(
+        temperature=temperature, max_tokens=max_tokens, timeout=timeout, role=role
+    )
+    model = resolve_llm_config(role).model
     # attempt 索引由 retry_with_backoff 经 on_attempt 回调透传（Task 175）；
     # cost_cny 由成功路径回传——ContextVar 写入不跨 asyncio.wait_for 的 task
     # 边界回传，故累计在 call_llm 外层 context 进行（与 _llm_call_count 同层）

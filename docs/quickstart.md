@@ -63,6 +63,19 @@ SONGYAN_RUN_COST_BUDGET=10
 
 `0` 表示不启用单次运行成本预算。预算相关失败会通过 `doctor` / preflight / report 输出恢复建议。
 
+### 可选：per-role 模型路由
+
+可以为单个生成角色单独指定模型、endpoint 或 API key，适合「写作用强模型、审核用便宜模型」这类成本/质量分层：
+
+```dotenv
+LLM_WRITER_MODEL=deepseek-reasoner
+LLM_LLM_AUDITOR_MODEL=deepseek-chat
+```
+
+解析顺序为两级显式回退：`LLM_<ROLE>_*` → 全局 `LLM_*` → 内置默认（`deepseek-chat` / `https://api.deepseek.com`）。未配置的项自动回落，不需要三项都写。
+
+可路由角色共 10 个（环境变量中用大写）：`WRITER`、`REVISION_HANDLER`、`LLM_AUDITOR`、`LITERARY_AUDITOR`、`SETTLEMENT_EXTRACTOR`、`SUMMARY_WRITER`、`GOAL_PLANNER`、`CREATIVE_DIRECTOR`、`ARC_SUMMARY_GENERATOR`、`VOLUME_SUMMARY_GENERATOR`。完整示例见 `.env.example`。配置后运行 `songyan doctor --check-llm` 会逐角色校验并探测客户端初始化。
+
 ## 自检
 
 第一次运行建议初始化或迁移 DB：
@@ -81,6 +94,7 @@ songyan doctor --json --init-db
 
 - `.env` 或环境变量配置。
 - `LLM_API_KEY`、`LLM_BASE_URL`、`LLM_MODEL`。
+- per-role 覆盖（`LLM_<ROLE>_*`）：未知角色名告警、非法 base_url / 缺 key 报错。
 - SQLite `DATABASE_URL` 和 DB 父目录写权限。
 - DB schema 完整性。
 - `CHECKPOINTER_MODE`。
