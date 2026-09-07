@@ -3,7 +3,7 @@
 > **阶段**: 成本优化与按角色模型路由
 > **定位**: V14 是运行成本工程阶段，目标是把单一 LLM 配置升级为按角色（writer / auditor / settlement / summary 等）独立路由模型，并让路由收益可量化。不新增 Agent，不动 pipeline 结构。
 > **当前口径**: V13 已全量闭环（Task 226-229，2026-09-06），口径定义以 `docs/quality-gates.md` 为准。V14 只改 LLM client 的配置注入与成本观测，不改变任何质量门口径。
-> **状态**: 进行中。Task 232 成本观测 per-role 拆分 DONE（`tasks/232-v14-per-role-cost-split-DONE.md`，本地），当前任务为 Task 233 V14 回归与成本对比验收。
+> **状态**: 已全量闭环（2026-09-07）。Task 233 验收 GO（`docs/reports/233-v14-regression-cost-compare.md`，本地），V15 成本前置已解锁。
 
 ---
 
@@ -84,7 +84,7 @@ LLM_SUMMARY_MODEL=...
 | 230 | V14 model routing audit | DONE | 只读审计 LLM client 全部调用点与配置注入路径，冻结角色清单、解析顺序和改动面 | V13 规划 |
 | 231 | per-role 配置解析与注入 | DONE | 配置层支持角色覆盖，client 调用点按角色解析，doctor/preflight 校验 | 230 |
 | 232 | 成本观测 per-role 拆分 | DONE | run log / report 成本聚合按角色拆分，路由收益可量化 | 231 |
-| 233 | V14 回归与成本对比验收 | TODO | scifi 短窗口回归 + 单模型 vs 路由模型同窗口成本对比，产出验收报告 | 231/232 |
+| 233 | V14 回归与成本对比验收 | DONE | scifi 短窗口回归 + 单模型 vs 路由模型同窗口成本对比，产出验收报告（GO，含 writer=reasoner 负结果） | 231/232 |
 
 ---
 
