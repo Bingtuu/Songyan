@@ -26,6 +26,7 @@ Current public status: Songyan is ready as a technical preview / release-candida
 - `doctor` environment and resource checks.
 - `create-project`, `run`, `report`, `metrics`, `five-gate`, `t9`, `bundle-run`, `export`, `backup`, `restore`.
 - Profile safety tools: `validate`, `upsert --dry-run`, `history`, `rollback`.
+- Per-role LLM model routing (`LLM_<ROLE>_*`) with per-role token/cost split in run reports.
 - Redacted diagnostic bundle for reproducible issue reports.
 - CI for ruff, runtime mypy, pytest, CLI tests and wheel smoke.
 

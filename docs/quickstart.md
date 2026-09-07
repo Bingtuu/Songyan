@@ -68,9 +68,11 @@ SONGYAN_RUN_COST_BUDGET=10
 可以为单个生成角色单独指定模型、endpoint 或 API key，适合「写作用强模型、审核用便宜模型」这类成本/质量分层：
 
 ```dotenv
-LLM_WRITER_MODEL=deepseek-reasoner
-LLM_LLM_AUDITOR_MODEL=deepseek-chat
+LLM_LLM_AUDITOR_MODEL=deepseek-coder
+LLM_WRITER_MODEL=deepseek-chat
 ```
+
+注意：带思考链的 reasoning 模型（如 `deepseek-reasoner`）目前不要配置给 `WRITER` 等长正文生成角色——思考链会占满调用点的输出预算（max_tokens），导致可见正文为空、质量门拦截。审查 / 结算 / 摘要类角色无此限制。
 
 解析顺序为两级显式回退：`LLM_<ROLE>_*` → 全局 `LLM_*` → 内置默认（`deepseek-chat` / `https://api.deepseek.com`）。未配置的项自动回落，不需要三项都写。
 

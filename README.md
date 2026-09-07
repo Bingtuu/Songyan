@@ -64,7 +64,7 @@ Songyan 目前适合懂命令行、能配置 LLM API key 的技术用户试用�
 | 版本追溯 | draft / revision / accepted 版本全部 append-only |
 | 上下文控制 | 动态预算、分层摘要、角色聚焦和 ContextEmergency |
 | 失败恢复 | 对配置、DB、preflight、run、report、export、restore 提供恢复建议 |
-| 诊断工具 | `doctor`、`report`、脱敏 `bundle-run`、成本和质量信号 |
+| 诊断工具 | `doctor`、`report`、脱敏 `bundle-run`、per-role 成本拆分和质量信号 |
 | 资产生命周期 | `backup` / `restore` 保存和恢复项目资产 |
 | Profile 安全 | `validate`、`upsert --dry-run`、`history`、`rollback` |
 | 按角色模型路由 | 写作 / 审查 / 结算等角色独立配置模型与 endpoint（`LLM_<ROLE>_*`，两级显式回退） |
@@ -102,7 +102,7 @@ Windows 本地 smoke 或短窗口验证时，可以先使用：
 CHECKPOINTER_MODE=memory
 ```
 
-需要按角色分层模型成本时（例如写作用强模型、审查用便宜模型），可在 `.env` 中追加 `LLM_WRITER_MODEL` 等角色级覆盖，解析顺序和角色清单见 [Quickstart](docs/quickstart.md) 的 per-role 路由小节。
+需要按角色分层模型成本时（例如写作用强模型、审查用便宜模型），可在 `.env` 中追加 `LLM_WRITER_MODEL` 等角色级覆盖，解析顺序和角色清单见 [Quickstart](docs/quickstart.md) 的 per-role 路由小节。注意：带思考链的 reasoning 模型（如 deepseek-reasoner）目前不适合配置给写作角色——思考链会占满该调用点的输出预算，导致正文为空被质量门拦截；审查类角色无此限制。
 
 ### 最短闭环
 
