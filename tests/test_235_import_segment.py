@@ -3,11 +3,17 @@
 from __future__ import annotations
 
 import hashlib
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 
 from songyan.exceptions import ImportSourceError
+from songyan.models.import_manifest import (
+    ChapterBoundary,
+    SegmentManifest,
+    manifest_to_json,
+)
 from songyan.services.import_segment_service import decode_source
 from songyan.utils.hashing import sha256_file
 
@@ -33,3 +39,50 @@ def test_decode_source_gb18030_fallback() -> None:
 def test_decode_source_undecodable_raises() -> None:
     with pytest.raises(ImportSourceError, match="编码"):
         decode_source(b"\xff\xfe\x00\x01\x8f\x8e")
+
+
+def _boundary(number: int, start: int, end: int) -> ChapterBoundary:
+    return ChapterBoundary(
+        chapter_number=number,
+        title=f"第{number}章",
+        start_offset=start,
+        end_offset=end,
+        char_count=end - start,
+        word_count=end - start,
+        est_tokens=10,
+        over_token_budget=False,
+        body_sha256="x" * 64,
+    )
+
+
+def _manifest(boundaries: list[ChapterBoundary]) -> SegmentManifest:
+    return SegmentManifest(
+        source_path="book.txt",
+        source_sha256="a" * 64,
+        normalized_sha256="b" * 64,
+        encoding="utf-8-sig",
+        line_endings_normalized=False,
+        token_budget=6000,
+        chapter_count=len(boundaries),
+        has_prologue=False,
+        prologue_chars=0,
+        boundaries=boundaries,
+        status="pending_confirmation",
+        created_at=datetime(2026, 9, 8, tzinfo=UTC),
+    )
+
+
+def test_manifest_json_is_deterministic() -> None:
+    m = _manifest([_boundary(1, 0, 100), _boundary(2, 100, 200)])
+    assert manifest_to_json(m) == manifest_to_json(m)
+    assert manifest_to_json(m).endswith("\n")
+
+
+def test_manifest_rejects_non_sequential_chapters() -> None:
+    with pytest.raises(ValueError):
+        _manifest([_boundary(1, 0, 100), _boundary(3, 100, 200)])
+
+
+def test_manifest_rejects_overlapping_offsets() -> None:
+    with pytest.raises(ValueError):
+        _manifest([_boundary(1, 0, 150), _boundary(2, 100, 200)])
