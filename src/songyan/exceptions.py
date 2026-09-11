@@ -95,3 +95,11 @@ class AutoHaltException(SongyanError):  # noqa: N818
         super().__init__(message)
         self.last_chapter = last_chapter
         self.reason = reason
+
+
+class ImportSourceError(SongyanError):
+    """V15 导入：源文件读取/解码失败（不猜测编码，显式报错）."""
+
+
+class ImportSegmentError(SongyanError):
+    """V15 导入：章节切分、清单校验或人工确认闸门失败."""
