@@ -73,9 +73,13 @@ def _manifest(boundaries: list[ChapterBoundary]) -> SegmentManifest:
 
 
 def test_manifest_json_is_deterministic() -> None:
-    m = _manifest([_boundary(1, 0, 100), _boundary(2, 100, 200)])
-    assert manifest_to_json(m) == manifest_to_json(m)
-    assert manifest_to_json(m).endswith("\n")
+    first = _manifest([_boundary(1, 0, 100), _boundary(2, 100, 200)])
+    second = SegmentManifest(**first.model_dump())
+    assert first is not second
+    first_json = manifest_to_json(first)
+    assert first_json == manifest_to_json(second)
+    assert first_json.endswith("\n")
+    assert '"created_at": "2026-09-08T00:00:00Z"' in first_json
 
 
 def test_manifest_rejects_non_sequential_chapters() -> None:
@@ -86,3 +90,26 @@ def test_manifest_rejects_non_sequential_chapters() -> None:
 def test_manifest_rejects_overlapping_offsets() -> None:
     with pytest.raises(ValueError):
         _manifest([_boundary(1, 0, 150), _boundary(2, 100, 200)])
+
+
+def test_manifest_rejects_confirmed_without_confirmed_at() -> None:
+    payload = _manifest([_boundary(1, 0, 100)]).model_dump()
+    payload["status"] = "confirmed"
+    with pytest.raises(ValueError, match="confirmed"):
+        SegmentManifest(**payload)
+
+
+def test_manifest_rejects_pending_with_confirmed_at() -> None:
+    payload = _manifest([_boundary(1, 0, 100)]).model_dump()
+    payload["confirmed_at"] = datetime(2026, 9, 9, tzinfo=UTC)
+    with pytest.raises(ValueError, match="confirmed"):
+        SegmentManifest(**payload)
+
+
+def test_manifest_accepts_confirmed_with_confirmed_at() -> None:
+    payload = _manifest([_boundary(1, 0, 100)]).model_dump()
+    payload["status"] = "confirmed"
+    payload["confirmed_at"] = datetime(2026, 9, 9, tzinfo=UTC)
+    manifest = SegmentManifest(**payload)
+    assert manifest.status == "confirmed"
+    assert manifest.confirmed_at == datetime(2026, 9, 9, tzinfo=UTC)

@@ -12,13 +12,17 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-SCHEMA_VERSION = "1.0"
+SCHEMA_VERSION: Literal["1.0"] = "1.0"
 
 
 class ChapterBoundary(BaseModel):
-    """单章边界：偏移基于规范化后文本（LF 行尾），end 为开区间."""
+    """单章边界：偏移基于规范化后文本（LF 行尾），end 为开区间.
 
-    model_config = ConfigDict(extra="forbid")
+    ``char_count`` / ``word_count`` 统计剥离标题行后的正文，
+    与 ``end_offset - start_offset``（含标题行与空白）不要求相等。
+    """
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
     chapter_number: int = Field(ge=1)
     title: str
@@ -28,18 +32,18 @@ class ChapterBoundary(BaseModel):
     word_count: int = Field(ge=0)
     est_tokens: int = Field(ge=0)
     over_token_budget: bool
-    body_sha256: str
+    body_sha256: str = Field(min_length=64, max_length=64)
 
 
 class SegmentManifest(BaseModel):
     """切分清单：指纹绑定源文件，人工确认闸门状态."""
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
     schema_version: Literal["1.0"] = SCHEMA_VERSION
     source_path: str
-    source_sha256: str
-    normalized_sha256: str
+    source_sha256: str = Field(min_length=64, max_length=64)
+    normalized_sha256: str = Field(min_length=64, max_length=64)
     encoding: str
     line_endings_normalized: bool
     token_budget: int = Field(gt=0)
@@ -50,6 +54,14 @@ class SegmentManifest(BaseModel):
     status: Literal["pending_confirmation", "confirmed"]
     created_at: datetime
     confirmed_at: datetime | None = None
+
+    @model_validator(mode="after")
+    def validate_confirmation_gate(self) -> SegmentManifest:
+        """闸门状态一致：confirmed 必须携带 confirmed_at，反之亦然."""
+        if (self.status == "confirmed") != (self.confirmed_at is not None):
+            msg = "status == 'confirmed' requires confirmed_at, and vice versa"
+            raise ValueError(msg)
+        return self
 
     @model_validator(mode="after")
     def validate_boundaries(self) -> SegmentManifest:
