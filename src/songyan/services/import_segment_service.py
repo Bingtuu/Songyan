@@ -13,7 +13,12 @@ _DECODE_ORDER = ("utf-8-sig", "gb18030")
 
 
 def decode_source(data: bytes) -> tuple[str, str]:
-    """按固定顺序解码源文件字节；全部失败时显式报错，不猜测."""
+    """按固定顺序解码源文件字节；全部失败时显式报错，不猜测.
+
+    已知盲区：gb18030 几乎能对任意字节序列解码"成功"，因此无 BOM 的
+    UTF-16 源文件会被静默解码成乱码而非抛错。双编码顺序是冻结设计，
+    不在此处猜测或嗅探编码；用户需按报错提示自行转存 UTF-8。
+    """
     for encoding in _DECODE_ORDER:
         try:
             return data.decode(encoding), encoding
