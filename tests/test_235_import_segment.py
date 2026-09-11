@@ -8,14 +8,25 @@ from pathlib import Path
 
 import pytest
 
-from songyan.exceptions import ImportSourceError
+from songyan.exceptions import ImportSegmentError, ImportSourceError
 from songyan.models.import_manifest import (
     ChapterBoundary,
     SegmentManifest,
     manifest_to_json,
 )
-from songyan.services.import_segment_service import decode_source
+from songyan.services.import_segment_service import (
+    decode_source,
+    detect_boundaries,
+    normalize_line_endings,
+)
 from songyan.utils.hashing import sha256_file
+
+SAMPLE = (
+    "引子\n\n这是一段题外话。\n\n"
+    "第一章 风起\n\n松烟初入城。\n他抬头看天。\n\n"
+    "第二章\n\n雨下了一夜。\n\n"
+    "第三十五章 雪\n\n城破了。\n"
+)
 
 
 def test_sha256_file_streams_content(tmp_path: Path) -> None:
@@ -113,3 +124,53 @@ def test_manifest_accepts_confirmed_with_confirmed_at() -> None:
     manifest = SegmentManifest(**payload)
     assert manifest.status == "confirmed"
     assert manifest.confirmed_at == datetime(2026, 9, 9, tzinfo=UTC)
+
+
+def test_normalize_line_endings() -> None:
+    text, changed = normalize_line_endings("a\r\nb\rc")
+    assert text == "a\nb\nc"
+    assert changed is True
+    assert normalize_line_endings("a\nb") == ("a\nb", False)
+
+
+def test_detect_boundaries_chinese_and_arabic() -> None:
+    boundaries, prologue, _bodies = detect_boundaries(SAMPLE, token_budget=6000)
+    assert prologue == "引子\n\n这是一段题外话。"
+    assert [b.chapter_number for b in boundaries] == [1, 2, 3]
+    assert boundaries[0].title == "第一章 风起"
+    assert boundaries[1].title == "第二章"
+    assert boundaries[2].title == "第三十五章 雪"
+
+
+def test_detect_boundaries_offsets_roundtrip() -> None:
+    text, _ = normalize_line_endings(SAMPLE)
+    boundaries, _, _bodies = detect_boundaries(text, token_budget=6000)
+    for boundary in boundaries:
+        segment = text[boundary.start_offset : boundary.end_offset]
+        assert segment.startswith(boundary.title)
+    assert boundaries[0].start_offset == text.index("第一章")
+    assert boundaries[-1].end_offset == len(text)
+
+
+def test_detect_boundaries_english_and_hui_unit() -> None:
+    text = "Chapter 1 Awakening\n\nBody one.\n\n第五回 试剑\n\nBody two.\n"
+    boundaries, prologue, _ = detect_boundaries(text, token_budget=6000)
+    assert len(boundaries) == 2
+    assert prologue == ""
+
+
+def test_detect_boundaries_strips_title_from_body() -> None:
+    boundaries, _, bodies = detect_boundaries(SAMPLE, token_budget=6000)
+    expected = hashlib.sha256("松烟初入城。\n他抬头看天。".encode()).hexdigest()
+    assert bodies[0] == "松烟初入城。\n他抬头看天。"
+    assert boundaries[0].body_sha256 == expected
+
+
+def test_detect_boundaries_flags_over_budget() -> None:
+    boundaries, _, _ = detect_boundaries(SAMPLE, token_budget=5)
+    assert all(b.over_token_budget for b in boundaries)
+
+
+def test_detect_boundaries_no_header_raises() -> None:
+    with pytest.raises(ImportSegmentError, match="章节标题"):
+        detect_boundaries("没有标题的一大段正文。" * 100, token_budget=6000)

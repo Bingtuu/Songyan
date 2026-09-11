@@ -6,10 +6,25 @@
 
 from __future__ import annotations
 
-from songyan.exceptions import ImportSourceError
+import hashlib
+import re
+
+from songyan.exceptions import ImportSegmentError, ImportSourceError
+from songyan.models.import_manifest import ChapterBoundary
+from songyan.utils.token_estimator import TokenEstimator
+from songyan.utils.word_count import count_chinese_words
 
 #: 解码尝试顺序：utf-8-sig 覆盖 BOM 与普通 utf-8；gb18030 是 GBK 超集（标准库自带）。
 _DECODE_ORDER = ("utf-8-sig", "gb18030")
+
+#: 章节标题行：口径合并自 agents/writer.py 与 services/text_cleanliness_cleaner.py。
+_CHAPTER_HEADER_RE = re.compile(
+    r"^[ \t]*#{0,6}[ \t]*"
+    r"(?:第[ \t]*[一二三四五六七八九十百千万零〇两\d]+[ \t]*(?:章|章节|回)"
+    r"|Chapter[ \t]+\d+)"
+    r"[^\n]*$",
+    re.MULTILINE | re.IGNORECASE,
+)
 
 
 def decode_source(data: bytes) -> tuple[str, str]:
@@ -29,3 +44,56 @@ def decode_source(data: bytes) -> tuple[str, str]:
         "请先用文本编辑器将源文件另存为 UTF-8 后重试。"
     )
     raise ImportSourceError(msg)
+
+
+def normalize_line_endings(text: str) -> tuple[str, bool]:
+    """CRLF/CR 归一化为 LF；返回 (文本, 是否发生过归一)."""
+    normalized = text.replace("\r\n", "\n").replace("\r", "\n")
+    return normalized, normalized != text
+
+
+def detect_boundaries(
+    text: str,
+    *,
+    token_budget: int,
+    estimator: TokenEstimator | None = None,
+) -> tuple[list[ChapterBoundary], str, list[str]]:
+    """规则切分章节；返回 (边界列表, 前言文本, 逐章正文列表).
+
+    偏移基于传入文本（调用方需先 normalize_line_endings）。
+    正文为标题行之后到下一章标题前的内容，标题行剥离（与 Writer 入库口径一致）。
+    识别不到任何章节标题时显式报错，不自动硬切。
+    """
+    estimator = estimator or TokenEstimator()
+    matches = list(_CHAPTER_HEADER_RE.finditer(text))
+    if not matches:
+        msg = (
+            "未识别到任何章节标题（支持 第N章/第N章节/第N回/Chapter N，可带 # 前缀）。"
+            "请先人工为源文件补充章节标题，或拆分文件后重试。"
+        )
+        raise ImportSegmentError(msg)
+
+    prologue = text[: matches[0].start()].strip()
+    boundaries: list[ChapterBoundary] = []
+    bodies: list[str] = []
+    for index, match in enumerate(matches):
+        start = match.start()
+        end = matches[index + 1].start() if index + 1 < len(matches) else len(text)
+        title = match.group(0).strip().lstrip("#").strip()
+        body = text[match.end() : end].strip()
+        est_tokens = estimator.estimate(body)
+        boundaries.append(
+            ChapterBoundary(
+                chapter_number=index + 1,
+                title=title,
+                start_offset=start,
+                end_offset=end,
+                char_count=len(body),
+                word_count=count_chinese_words(body),
+                est_tokens=est_tokens,
+                over_token_budget=est_tokens > token_budget,
+                body_sha256=hashlib.sha256(body.encode("utf-8")).hexdigest(),
+            )
+        )
+        bodies.append(body)
+    return boundaries, prologue, bodies
