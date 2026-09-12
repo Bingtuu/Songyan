@@ -12,7 +12,7 @@ import pytest
 from click.testing import CliRunner
 
 from songyan.cli.main import cli
-from songyan.config import settings
+from songyan.config import Settings, settings
 from songyan.services.doctor_service import DoctorCheck
 
 
@@ -238,7 +238,7 @@ def test_doctor_check_llm_runs_probe(
     doctor_env: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    async def fake_probe() -> DoctorCheck:
+    async def fake_probe(config: Settings) -> DoctorCheck:
         return DoctorCheck("llm.connectivity", "pass", "mock probe ok")
 
     monkeypatch.setattr("songyan.services.doctor_service._probe_llm_connectivity", fake_probe)
