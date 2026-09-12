@@ -20,7 +20,6 @@ from songyan.models.import_manifest import (
     SegmentManifest,
     manifest_to_json,
 )
-from songyan.utils.hashing import sha256_file
 from songyan.utils.token_estimator import TokenEstimator
 from songyan.utils.word_count import count_chinese_words
 
@@ -128,7 +127,7 @@ def build_manifest(
     boundaries, prologue, bodies = detect_boundaries(normalized, token_budget=token_budget)
     manifest = SegmentManifest(
         source_path=str(source_path),
-        source_sha256=sha256_file(source_path),
+        source_sha256=hashlib.sha256(raw).hexdigest(),
         normalized_sha256=hashlib.sha256(normalized.encode("utf-8")).hexdigest(),
         encoding=encoding,
         line_endings_normalized=endings_changed,
