@@ -45,7 +45,7 @@ def import_group() -> None:
     default=MAX_CONTENT_TOKENS,
     show_default=True,
     type=int,
-    help="单章 token 预算（超出标红）",
+    help="单章 token 预算（超出则在结果中列出）",
 )
 def import_segment_cmd(source: Path, output: Path, token_budget: int) -> None:
     """规则切分源文件，产出章节边界清单（需人工确认后才可回放）."""
