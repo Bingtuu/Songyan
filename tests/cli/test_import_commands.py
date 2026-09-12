@@ -63,3 +63,22 @@ def test_segment_no_chapter_header_fails(tmp_path: Path) -> None:
     )
     assert result.exit_code != 0
     assert "章节标题" in result.output
+
+
+def test_segment_over_confirmed_manifest_warns(tmp_path: Path) -> None:
+    runner = CliRunner()
+    src = _make_source(tmp_path)
+    out = tmp_path / "import-out"
+    manifest = out / "manifest.json"
+
+    result = runner.invoke(cli, ["import", "segment", "--source", str(src), "--output", str(out)])
+    assert result.exit_code == 0, result.output
+    assert "已覆盖" not in result.output
+    result = runner.invoke(cli, ["import", "confirm", "--manifest", str(manifest)])
+    assert result.exit_code == 0, result.output
+
+    result = runner.invoke(cli, ["import", "segment", "--source", str(src), "--output", str(out)])
+    assert result.exit_code == 0, result.output
+    assert "已覆盖先前已确认的清单" in result.output
+    result = runner.invoke(cli, ["import", "status", "--manifest", str(manifest)])
+    assert result.exit_code == 1  # 覆盖后回到未确认状态

@@ -44,16 +44,20 @@ def import_group() -> None:
     "--token-budget",
     default=MAX_CONTENT_TOKENS,
     show_default=True,
-    type=int,
+    type=click.IntRange(min=1),
     help="单章 token 预算（超出则在结果中列出）",
 )
 def import_segment_cmd(source: Path, output: Path, token_budget: int) -> None:
     """规则切分源文件，产出章节边界清单（需人工确认后才可回放）."""
     try:
         manifest, normalized, bodies = build_manifest(source.resolve(), token_budget=token_budget)
-        manifest_path = write_segment_artifacts(output, manifest, normalized, bodies)
+        manifest_path, overwrote_confirmed = write_segment_artifacts(
+            output, manifest, normalized, bodies
+        )
     except SongyanError as exc:
         raise click.ClickException(str(exc)) from exc
+    if overwrote_confirmed:
+        click.echo("注意：已覆盖先前已确认的清单，需重新人工确认")
     click.echo(f"源文件    : {source}（{manifest.encoding}）")
     click.echo(f"章节数    : {manifest.chapter_count}")
     if manifest.has_prologue:

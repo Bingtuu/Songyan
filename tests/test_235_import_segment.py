@@ -280,7 +280,7 @@ def test_gate_rejects_pending_manifest(tmp_path: Path) -> None:
 
     src = _write_source(tmp_path)
     manifest, normalized, bodies = build_manifest(src, token_budget=6000)
-    path = write_segment_artifacts(tmp_path / "out", manifest, normalized, bodies)
+    path, _ = write_segment_artifacts(tmp_path / "out", manifest, normalized, bodies)
     with pytest.raises(ImportSegmentError, match="确认"):
         assert_replay_allowed(path)
 
@@ -295,7 +295,7 @@ def test_confirm_flips_status_and_gate_passes(tmp_path: Path) -> None:
 
     src = _write_source(tmp_path)
     manifest, normalized, bodies = build_manifest(src, token_budget=6000)
-    path = write_segment_artifacts(tmp_path / "out", manifest, normalized, bodies)
+    path, _ = write_segment_artifacts(tmp_path / "out", manifest, normalized, bodies)
     confirmed = confirm_manifest(path)
     assert confirmed.status == "confirmed"
     assert confirmed.confirmed_at is not None
@@ -311,7 +311,7 @@ def test_confirm_rejects_tampered_source(tmp_path: Path) -> None:
 
     src = _write_source(tmp_path)
     manifest, normalized, bodies = build_manifest(src, token_budget=6000)
-    path = write_segment_artifacts(tmp_path / "out", manifest, normalized, bodies)
+    path, _ = write_segment_artifacts(tmp_path / "out", manifest, normalized, bodies)
     src.write_text("被改过的源文件", encoding="utf-8")
     with pytest.raises(ImportSegmentError, match="指纹"):
         confirm_manifest(path)
@@ -328,7 +328,7 @@ def test_confirm_revalidates_edited_boundaries(tmp_path: Path) -> None:
 
     src = _write_source(tmp_path)
     manifest, normalized, bodies = build_manifest(src, token_budget=6000)
-    path = write_segment_artifacts(tmp_path / "out", manifest, normalized, bodies)
+    path, _ = write_segment_artifacts(tmp_path / "out", manifest, normalized, bodies)
     payload = _json.loads(path.read_text(encoding="utf-8"))
     payload["boundaries"][1]["start_offset"] = len(normalized) + 100
     payload["boundaries"][1]["end_offset"] = len(normalized) + 200
@@ -348,7 +348,7 @@ def test_confirm_regenerates_chapters_after_manual_split(tmp_path: Path) -> None
 
     src = _write_source(tmp_path)
     manifest, normalized, bodies = build_manifest(src, token_budget=6000)
-    path = write_segment_artifacts(tmp_path / "out", manifest, normalized, bodies)
+    path, _ = write_segment_artifacts(tmp_path / "out", manifest, normalized, bodies)
     payload = _json.loads(path.read_text(encoding="utf-8"))
     second = payload["boundaries"][1]
     mid = second["start_offset"] + (second["end_offset"] - second["start_offset"]) // 2
@@ -374,3 +374,95 @@ def test_confirm_regenerates_chapters_after_manual_split(tmp_path: Path) -> None
         assert content.endswith("\n")
         current = hashlib.sha256(content[:-1].encode("utf-8")).hexdigest()
         assert current == boundary.body_sha256
+
+
+def test_slice_chapter_body_matches_detect_bodies() -> None:
+    from songyan.services.import_segment_service import slice_chapter_body
+
+    text, _ = normalize_line_endings(SAMPLE)
+    boundaries, _, bodies = detect_boundaries(text, token_budget=6000)
+    for boundary, body in zip(boundaries, bodies, strict=True):
+        title, sliced_body = slice_chapter_body(text, boundary)
+        assert title == boundary.title
+        assert sliced_body == body
+        assert hashlib.sha256(sliced_body.encode("utf-8")).hexdigest() == boundary.body_sha256
+
+
+def test_confirm_body_sha256_matches_detect(tmp_path: Path) -> None:
+    """detect 与 confirm 对同一未编辑样本产出相同 body_sha256（共享切片口径）."""
+    from songyan.services.import_segment_service import (
+        build_manifest,
+        confirm_manifest,
+        write_segment_artifacts,
+    )
+
+    src = _write_source(tmp_path)
+    manifest, normalized, bodies = build_manifest(src, token_budget=6000)
+    path, _ = write_segment_artifacts(tmp_path / "out", manifest, normalized, bodies)
+    confirmed = confirm_manifest(path)
+    for original, refreshed in zip(manifest.boundaries, confirmed.boundaries, strict=True):
+        assert refreshed.body_sha256 == original.body_sha256
+        assert refreshed.title == original.title
+
+
+def test_resegment_removes_stale_chapter_files(tmp_path: Path) -> None:
+    """重新切分章数减少后，chapters/ 不残留旧章."""
+    from songyan.services.import_segment_service import (
+        build_manifest,
+        slice_chapter_body,
+        write_segment_artifacts,
+    )
+
+    src = _write_source(tmp_path)
+    manifest, normalized, bodies = build_manifest(src, token_budget=6000)
+    out = tmp_path / "out"
+    write_segment_artifacts(out, manifest, normalized, bodies)
+    assert (out / "chapters" / "ch003.md").exists()
+
+    merged = manifest.boundaries[1].model_copy(
+        update={"end_offset": manifest.boundaries[2].end_offset}
+    )
+    new_boundaries = [manifest.boundaries[0], merged]
+    new_manifest = manifest.model_copy(
+        update={"boundaries": new_boundaries, "chapter_count": 2}
+    )
+    new_bodies = [slice_chapter_body(normalized, b)[1] for b in new_boundaries]
+    write_segment_artifacts(out, new_manifest, normalized, new_bodies)
+    assert sorted(p.name for p in (out / "chapters").iterdir()) == ["ch001.md", "ch002.md"]
+
+
+def test_cleanup_preserves_non_chapter_notes(tmp_path: Path) -> None:
+    """清理只针对 ch + 恰好 3 位数字 + .md，不误删人工笔记."""
+    from songyan.services.import_segment_service import (
+        build_manifest,
+        confirm_manifest,
+        write_segment_artifacts,
+    )
+
+    src = _write_source(tmp_path)
+    manifest, normalized, bodies = build_manifest(src, token_budget=6000)
+    out = tmp_path / "out"
+    path, _ = write_segment_artifacts(out, manifest, normalized, bodies)
+    notes = out / "chapters" / "ch_notes.md"
+    notes.write_text("人工审查笔记", encoding="utf-8")
+    confirm_manifest(path)
+    assert notes.read_text(encoding="utf-8") == "人工审查笔记"
+    write_segment_artifacts(out, manifest, normalized, bodies)
+    assert notes.read_text(encoding="utf-8") == "人工审查笔记"
+
+
+def test_write_artifacts_flags_overwrite_of_confirmed(tmp_path: Path) -> None:
+    from songyan.services.import_segment_service import (
+        build_manifest,
+        confirm_manifest,
+        write_segment_artifacts,
+    )
+
+    src = _write_source(tmp_path)
+    manifest, normalized, bodies = build_manifest(src, token_budget=6000)
+    out = tmp_path / "out"
+    path, overwritten = write_segment_artifacts(out, manifest, normalized, bodies)
+    assert overwritten is False
+    confirm_manifest(path)
+    _, overwritten = write_segment_artifacts(out, manifest, normalized, bodies)
+    assert overwritten is True

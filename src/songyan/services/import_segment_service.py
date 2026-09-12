@@ -42,6 +42,40 @@ _CHAPTER_HEADER_RE = re.compile(
     re.MULTILINE | re.IGNORECASE,
 )
 
+#: 章节快照文件名：ch + 恰好 3 位数字 + .md。清理旧章时只匹配此模式，
+#: 不误删 chapters/ 下的人工笔记（如 ch_notes.md）。
+_CHAPTER_FILE_RE = re.compile(r"^ch\d{3}\.md$")
+
+
+def _chapter_file_name(chapter_number: int) -> str:
+    return f"ch{chapter_number:03d}.md"
+
+
+def _split_title_body(segment: str) -> tuple[str, str]:
+    """剥离切片首行标题，返回 (title, body)；唯一一份标题剥离实现."""
+    header_end = segment.find("\n")
+    title = (segment if header_end == -1 else segment[:header_end]).strip().lstrip("#").strip()
+    body = ("" if header_end == -1 else segment[header_end:]).strip()
+    return title, body
+
+
+def slice_chapter_body(normalized_text: str, boundary: ChapterBoundary) -> tuple[str, str]:
+    """按 boundary 偏移切片 normalized_text 并剥离首行标题，返回 (title, body).
+
+    正文派生的唯一口径：replay（Task 236）必须经此函数按 manifest 偏移取正文，
+    保证与清单中 body_sha256 严格一致，不得另起临时实现。
+    """
+    return _split_title_body(normalized_text[boundary.start_offset : boundary.end_offset])
+
+
+def _clean_stale_chapters(chapters_dir: Path, expected: set[str]) -> None:
+    """删除 chapters/ 下不在 expected 中的旧章节文件（仅 chNNN.md 模式）."""
+    if not chapters_dir.is_dir():
+        return
+    for stale in chapters_dir.iterdir():
+        if _CHAPTER_FILE_RE.match(stale.name) and stale.name not in expected:
+            stale.unlink()
+
 
 def decode_source(data: bytes) -> tuple[str, str]:
     """按固定顺序解码源文件字节；全部失败时显式报错，不猜测.
@@ -97,8 +131,7 @@ def detect_boundaries(
     for index, match in enumerate(matches):
         start = match.start()
         end = matches[index + 1].start() if index + 1 < len(matches) else len(text)
-        title = match.group(0).strip().lstrip("#").strip()
-        body = text[match.end() : end].strip()
+        title, body = _split_title_body(text[start:end])
         est_tokens = estimator.estimate(body)
         boundaries.append(
             ChapterBoundary(
@@ -153,18 +186,31 @@ def write_segment_artifacts(
     manifest: SegmentManifest,
     normalized_text: str,
     bodies: list[str],
-) -> Path:
-    """落盘切分产物；返回 manifest 路径."""
+) -> tuple[Path, bool]:
+    """落盘切分产物；返回 (manifest 路径, 是否覆盖了已确认清单).
+
+    写入前清理 chapters/ 下不在本次清单中的旧章节文件（与 confirm_manifest 同口径），
+    避免重新切分章数减少后残留旧章误导人工审查。
+    若 output_dir 已存在 status=confirmed 的清单，返回标志 True，由 CLI 提示需重新确认。
+    """
     output_dir.mkdir(parents=True, exist_ok=True)
     chapters_dir = output_dir / "chapters"
     chapters_dir.mkdir(exist_ok=True)
     (output_dir / "source.normalized.txt").write_text(normalized_text, encoding="utf-8")
+    expected = {_chapter_file_name(b.chapter_number) for b in manifest.boundaries}
+    _clean_stale_chapters(chapters_dir, expected)
     for boundary, body in zip(manifest.boundaries, bodies, strict=True):
-        chapter_file = chapters_dir / f"ch{boundary.chapter_number:03d}.md"
+        chapter_file = chapters_dir / _chapter_file_name(boundary.chapter_number)
         chapter_file.write_text(body + "\n", encoding="utf-8")
     manifest_path = output_dir / "manifest.json"
+    overwrote_confirmed = False
+    if manifest_path.exists():
+        try:
+            overwrote_confirmed = load_manifest(manifest_path).status == "confirmed"
+        except ImportSegmentError:
+            overwrote_confirmed = False
     manifest_path.write_text(manifest_to_json(manifest), encoding="utf-8")
-    return manifest_path
+    return manifest_path, overwrote_confirmed
 
 
 def load_manifest(manifest_path: Path) -> SegmentManifest:
@@ -222,10 +268,7 @@ def confirm_manifest(manifest_path: Path, *, now: datetime | None = None) -> Seg
     refreshed: list[ChapterBoundary] = []
     bodies: list[str] = []
     for boundary in manifest.boundaries:
-        segment = normalized[boundary.start_offset : boundary.end_offset]
-        header_end = segment.find("\n")
-        title = (segment if header_end == -1 else segment[:header_end]).strip().lstrip("#").strip()
-        body = ("" if header_end == -1 else segment[header_end:]).strip()
+        title, body = slice_chapter_body(normalized, boundary)
         est_tokens = estimator.estimate(body)
         refreshed.append(
             boundary.model_copy(
@@ -249,12 +292,10 @@ def confirm_manifest(manifest_path: Path, *, now: datetime | None = None) -> Seg
     )
     chapters_dir = manifest_path.parent / "chapters"
     chapters_dir.mkdir(exist_ok=True)
-    expected = {f"ch{boundary.chapter_number:03d}.md" for boundary in refreshed}
-    for stale in chapters_dir.glob("ch*.md"):
-        if stale.name not in expected:
-            stale.unlink()
+    expected = {_chapter_file_name(boundary.chapter_number) for boundary in refreshed}
+    _clean_stale_chapters(chapters_dir, expected)
     for boundary, body in zip(refreshed, bodies, strict=True):
-        (chapters_dir / f"ch{boundary.chapter_number:03d}.md").write_text(
+        (chapters_dir / _chapter_file_name(boundary.chapter_number)).write_text(
             body + "\n", encoding="utf-8"
         )
     manifest_path.write_text(manifest_to_json(confirmed), encoding="utf-8")
