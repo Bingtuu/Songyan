@@ -269,3 +269,69 @@ def test_load_manifest_invalid_json_raises(tmp_path: Path) -> None:
     bad.write_text("{not json", encoding="utf-8")
     with pytest.raises(ImportSegmentError):
         load_manifest(bad)
+
+
+def test_gate_rejects_pending_manifest(tmp_path: Path) -> None:
+    from songyan.services.import_segment_service import (
+        assert_replay_allowed,
+        build_manifest,
+        write_segment_artifacts,
+    )
+
+    src = _write_source(tmp_path)
+    manifest, normalized, bodies = build_manifest(src, token_budget=6000)
+    path = write_segment_artifacts(tmp_path / "out", manifest, normalized, bodies)
+    with pytest.raises(ImportSegmentError, match="确认"):
+        assert_replay_allowed(path)
+
+
+def test_confirm_flips_status_and_gate_passes(tmp_path: Path) -> None:
+    from songyan.services.import_segment_service import (
+        assert_replay_allowed,
+        build_manifest,
+        confirm_manifest,
+        write_segment_artifacts,
+    )
+
+    src = _write_source(tmp_path)
+    manifest, normalized, bodies = build_manifest(src, token_budget=6000)
+    path = write_segment_artifacts(tmp_path / "out", manifest, normalized, bodies)
+    confirmed = confirm_manifest(path)
+    assert confirmed.status == "confirmed"
+    assert confirmed.confirmed_at is not None
+    assert assert_replay_allowed(path).status == "confirmed"
+
+
+def test_confirm_rejects_tampered_source(tmp_path: Path) -> None:
+    from songyan.services.import_segment_service import (
+        build_manifest,
+        confirm_manifest,
+        write_segment_artifacts,
+    )
+
+    src = _write_source(tmp_path)
+    manifest, normalized, bodies = build_manifest(src, token_budget=6000)
+    path = write_segment_artifacts(tmp_path / "out", manifest, normalized, bodies)
+    src.write_text("被改过的源文件", encoding="utf-8")
+    with pytest.raises(ImportSegmentError, match="指纹"):
+        confirm_manifest(path)
+
+
+def test_confirm_revalidates_edited_boundaries(tmp_path: Path) -> None:
+    import json as _json
+
+    from songyan.services.import_segment_service import (
+        build_manifest,
+        confirm_manifest,
+        write_segment_artifacts,
+    )
+
+    src = _write_source(tmp_path)
+    manifest, normalized, bodies = build_manifest(src, token_budget=6000)
+    path = write_segment_artifacts(tmp_path / "out", manifest, normalized, bodies)
+    payload = _json.loads(path.read_text(encoding="utf-8"))
+    payload["boundaries"][1]["start_offset"] = len(normalized) + 100
+    payload["boundaries"][1]["end_offset"] = len(normalized) + 200
+    path.write_text(_json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+    with pytest.raises(ImportSegmentError):
+        confirm_manifest(path)

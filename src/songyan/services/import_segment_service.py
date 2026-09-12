@@ -20,6 +20,7 @@ from songyan.models.import_manifest import (
     SegmentManifest,
     manifest_to_json,
 )
+from songyan.utils.hashing import sha256_file
 from songyan.utils.token_estimator import TokenEstimator
 from songyan.utils.word_count import count_chinese_words
 
@@ -169,3 +170,83 @@ def load_manifest(manifest_path: Path) -> SegmentManifest:
     except (OSError, json.JSONDecodeError, ValidationError) as exc:
         msg = f"切分清单无法读取或校验失败: {manifest_path}（{exc}）"
         raise ImportSegmentError(msg) from exc
+
+
+def validate_manifest(manifest: SegmentManifest, manifest_path: Path) -> list[str]:
+    """对照磁盘只读校验清单；返回问题列表（空列表 = 通过）."""
+    problems: list[str] = []
+    source = Path(manifest.source_path)
+    if not source.exists():
+        problems.append(f"源文件不存在: {source}")
+    elif sha256_file(source) != manifest.source_sha256:
+        problems.append("源文件指纹不匹配（源文件在切分后被修改）")
+    normalized_path = manifest_path.parent / "source.normalized.txt"
+    normalized = ""
+    if not normalized_path.exists():
+        problems.append(f"规范化源快照缺失: {normalized_path}")
+    else:
+        normalized = normalized_path.read_text(encoding="utf-8")
+        current = hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+        if current != manifest.normalized_sha256:
+            problems.append("规范化源快照指纹不匹配")
+    if normalized:
+        for boundary in manifest.boundaries:
+            if boundary.end_offset > len(normalized):
+                problems.append(f"第 {boundary.chapter_number} 章偏移超出文本范围")
+    return problems
+
+
+def confirm_manifest(manifest_path: Path, *, now: datetime | None = None) -> SegmentManifest:
+    """人工确认：校验通过后重新派生统计并翻转为 confirmed，回写清单."""
+    manifest = load_manifest(manifest_path)
+    problems = validate_manifest(manifest, manifest_path)
+    if problems:
+        msg = "切分清单校验失败：\n" + "\n".join(f"- {p}" for p in problems)
+        raise ImportSegmentError(msg)
+    normalized = (manifest_path.parent / "source.normalized.txt").read_text(encoding="utf-8")
+    estimator = TokenEstimator()
+    refreshed: list[ChapterBoundary] = []
+    for boundary in manifest.boundaries:
+        segment = normalized[boundary.start_offset : boundary.end_offset]
+        header_end = segment.find("\n")
+        title = (segment if header_end == -1 else segment[:header_end]).strip().lstrip("#").strip()
+        body = ("" if header_end == -1 else segment[header_end:]).strip()
+        est_tokens = estimator.estimate(body)
+        refreshed.append(
+            boundary.model_copy(
+                update={
+                    "title": title,
+                    "char_count": len(body),
+                    "word_count": count_chinese_words(body),
+                    "est_tokens": est_tokens,
+                    "over_token_budget": est_tokens > manifest.token_budget,
+                    "body_sha256": hashlib.sha256(body.encode("utf-8")).hexdigest(),
+                }
+            )
+        )
+    confirmed = manifest.model_copy(
+        update={
+            "boundaries": refreshed,
+            "status": "confirmed",
+            "confirmed_at": now or datetime.now(UTC),
+        }
+    )
+    manifest_path.write_text(manifest_to_json(confirmed), encoding="utf-8")
+    return confirmed
+
+
+def assert_replay_allowed(manifest_path: Path) -> SegmentManifest:
+    """回放入口闸门（Task 236 调用）：未确认或清单失效时拒绝."""
+    manifest = load_manifest(manifest_path)
+    problems = validate_manifest(manifest, manifest_path)
+    if problems:
+        msg = "回放被拒绝，切分清单已失效：\n" + "\n".join(f"- {p}" for p in problems)
+        raise ImportSegmentError(msg)
+    if manifest.status != "confirmed":
+        msg = (
+            "回放被拒绝：切分清单尚未人工确认。"
+            "请人工审查 manifest.json 与 chapters/ 后执行 "
+            "songyan import confirm --manifest <path>。"
+        )
+        raise ImportSegmentError(msg)
+    return manifest
