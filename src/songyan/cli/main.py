@@ -10,6 +10,7 @@ from typing import Any, Literal, cast
 
 import click
 
+from songyan.cli.commands.import_pipeline import register_import_commands
 from songyan.cli.commands.index import register_index_commands
 from songyan.cli.commands.quality import register_quality_commands
 from songyan.cli.outline_import import load_outline_file
@@ -1311,3 +1312,8 @@ register_index_commands(cli)
 # V13 Task 229: 质量口径复现命令（只读）
 # ---------------------------------------------------------------------------
 register_quality_commands(cli)
+
+# ---------------------------------------------------------------------------
+# V15 Task 235: 导入管线 segment/confirm/status
+# ---------------------------------------------------------------------------
+register_import_commands(cli)
