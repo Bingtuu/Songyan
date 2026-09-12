@@ -335,3 +335,42 @@ def test_confirm_revalidates_edited_boundaries(tmp_path: Path) -> None:
     path.write_text(_json.dumps(payload, ensure_ascii=False), encoding="utf-8")
     with pytest.raises(ImportSegmentError):
         confirm_manifest(path)
+
+
+def test_confirm_regenerates_chapters_after_manual_split(tmp_path: Path) -> None:
+    import json as _json
+
+    from songyan.services.import_segment_service import (
+        build_manifest,
+        confirm_manifest,
+        write_segment_artifacts,
+    )
+
+    src = _write_source(tmp_path)
+    manifest, normalized, bodies = build_manifest(src, token_budget=6000)
+    path = write_segment_artifacts(tmp_path / "out", manifest, normalized, bodies)
+    payload = _json.loads(path.read_text(encoding="utf-8"))
+    second = payload["boundaries"][1]
+    mid = second["start_offset"] + (second["end_offset"] - second["start_offset"]) // 2
+    first_half = dict(second, end_offset=mid)
+    second_half = dict(second, start_offset=mid, chapter_number=3)
+    payload["boundaries"][2]["chapter_number"] = 4
+    payload["boundaries"][1:2] = [first_half, second_half]
+    payload["chapter_count"] = 4
+    path.write_text(_json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+    confirmed = confirm_manifest(path)
+    assert confirmed.chapter_count == 4
+    chapters_dir = path.parent / "chapters"
+    assert sorted(p.name for p in chapters_dir.iterdir()) == [
+        "ch001.md",
+        "ch002.md",
+        "ch003.md",
+        "ch004.md",
+    ]
+    for boundary in confirmed.boundaries:
+        content = (chapters_dir / f"ch{boundary.chapter_number:03d}.md").read_text(
+            encoding="utf-8"
+        )
+        assert content.endswith("\n")
+        current = hashlib.sha256(content[:-1].encode("utf-8")).hexdigest()
+        assert current == boundary.body_sha256

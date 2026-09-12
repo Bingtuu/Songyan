@@ -2,6 +2,11 @@
 
 只读源文件，产出可 diff 的章节边界清单；人工确认后才允许回放。
 设计冻结见 docs/reports/234-v15-import-pipeline-audit.md。
+
+契约：manifest 的边界偏移是 replay 阶段的权威输入；``chapters/chNNN.md``
+是供人工审查的同步快照，confirm 时按边界重新派生并重写，保证两者严格一致。
+``encoding`` / ``has_prologue`` / ``prologue_chars`` 是切分时刻的信息性字段，
+confirm 不重派生。
 """
 
 from __future__ import annotations
@@ -173,7 +178,11 @@ def load_manifest(manifest_path: Path) -> SegmentManifest:
 
 
 def validate_manifest(manifest: SegmentManifest, manifest_path: Path) -> list[str]:
-    """对照磁盘只读校验清单；返回问题列表（空列表 = 通过）."""
+    """对照磁盘只读校验清单；返回问题列表（空列表 = 通过）.
+
+    相邻章之间允许存在间隙（``ch N+1.start_offset > ch N.end_offset``）：
+    间隙文本被人为切除、不进任何章节，是有意支持人工裁内容的行为，不报问题。
+    """
     problems: list[str] = []
     source = Path(manifest.source_path)
     if not source.exists():
@@ -197,7 +206,12 @@ def validate_manifest(manifest: SegmentManifest, manifest_path: Path) -> list[st
 
 
 def confirm_manifest(manifest_path: Path, *, now: datetime | None = None) -> SegmentManifest:
-    """人工确认：校验通过后重新派生统计并翻转为 confirmed，回写清单."""
+    """人工确认：校验通过后重新派生统计并翻转为 confirmed，回写清单与 chapters/.
+
+    按当前 boundaries 从规范化文本重新派生每章统计（覆盖人工编辑后的陈旧值），
+    并按新正文重写 ``chapters/chNNN.md``（与 write_segment_artifacts 同口径），
+    清理章节数减少后残留的旧文件，保证 confirm 后 manifest 与 chapters/ 严格一致。
+    """
     manifest = load_manifest(manifest_path)
     problems = validate_manifest(manifest, manifest_path)
     if problems:
@@ -206,6 +220,7 @@ def confirm_manifest(manifest_path: Path, *, now: datetime | None = None) -> Seg
     normalized = (manifest_path.parent / "source.normalized.txt").read_text(encoding="utf-8")
     estimator = TokenEstimator()
     refreshed: list[ChapterBoundary] = []
+    bodies: list[str] = []
     for boundary in manifest.boundaries:
         segment = normalized[boundary.start_offset : boundary.end_offset]
         header_end = segment.find("\n")
@@ -224,6 +239,7 @@ def confirm_manifest(manifest_path: Path, *, now: datetime | None = None) -> Seg
                 }
             )
         )
+        bodies.append(body)
     confirmed = manifest.model_copy(
         update={
             "boundaries": refreshed,
@@ -231,6 +247,16 @@ def confirm_manifest(manifest_path: Path, *, now: datetime | None = None) -> Seg
             "confirmed_at": now or datetime.now(UTC),
         }
     )
+    chapters_dir = manifest_path.parent / "chapters"
+    chapters_dir.mkdir(exist_ok=True)
+    expected = {f"ch{boundary.chapter_number:03d}.md" for boundary in refreshed}
+    for stale in chapters_dir.glob("ch*.md"):
+        if stale.name not in expected:
+            stale.unlink()
+    for boundary, body in zip(refreshed, bodies, strict=True):
+        (chapters_dir / f"ch{boundary.chapter_number:03d}.md").write_text(
+            body + "\n", encoding="utf-8"
+        )
     manifest_path.write_text(manifest_to_json(confirmed), encoding="utf-8")
     return confirmed
 
