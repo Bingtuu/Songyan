@@ -209,3 +209,63 @@ def test_detect_boundaries_eof_empty_body_chapter() -> None:
 def test_detect_boundaries_no_header_raises() -> None:
     with pytest.raises(ImportSegmentError, match="章节标题"):
         detect_boundaries("没有标题的一大段正文。" * 100, token_budget=6000)
+
+
+def _write_source(tmp_path: Path, content: str = SAMPLE) -> Path:
+    src = tmp_path / "book.txt"
+    src.write_text(content, encoding="utf-8")
+    return src
+
+
+def test_build_manifest_binds_fingerprints(tmp_path: Path) -> None:
+    from songyan.services.import_segment_service import build_manifest
+
+    src = _write_source(tmp_path)
+    manifest, normalized, bodies = build_manifest(src, token_budget=6000)
+    assert manifest.source_sha256 == sha256_file(src)
+    assert manifest.normalized_sha256 == hashlib.sha256(normalized.encode()).hexdigest()
+    assert manifest.encoding == "utf-8-sig"
+    assert manifest.chapter_count == 3
+    assert manifest.has_prologue is True
+    assert manifest.status == "pending_confirmation"
+    assert len(bodies) == 3
+    assert bodies[0] == "松烟初入城。\n他抬头看天。"
+
+
+def test_write_artifacts_layout_and_no_title_in_bodies(tmp_path: Path) -> None:
+    from songyan.services.import_segment_service import build_manifest, write_segment_artifacts
+
+    src = _write_source(tmp_path)
+    manifest, normalized, bodies = build_manifest(src, token_budget=6000)
+    out = tmp_path / "out"
+    write_segment_artifacts(out, manifest, normalized, bodies)
+
+    assert (out / "manifest.json").exists()
+    assert (out / "source.normalized.txt").read_text(encoding="utf-8") == normalized
+    ch1 = (out / "chapters" / "ch001.md").read_text(encoding="utf-8")
+    assert "第一章" not in ch1
+    assert ch1.startswith("松烟初入城。")
+
+
+def test_load_manifest_roundtrip(tmp_path: Path) -> None:
+    from songyan.services.import_segment_service import (
+        build_manifest,
+        load_manifest,
+        write_segment_artifacts,
+    )
+
+    src = _write_source(tmp_path)
+    manifest, normalized, bodies = build_manifest(src, token_budget=6000)
+    out = tmp_path / "out"
+    write_segment_artifacts(out, manifest, normalized, bodies)
+    loaded = load_manifest(out / "manifest.json")
+    assert loaded == manifest
+
+
+def test_load_manifest_invalid_json_raises(tmp_path: Path) -> None:
+    from songyan.services.import_segment_service import load_manifest
+
+    bad = tmp_path / "manifest.json"
+    bad.write_text("{not json", encoding="utf-8")
+    with pytest.raises(ImportSegmentError):
+        load_manifest(bad)

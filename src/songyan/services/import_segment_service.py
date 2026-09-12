@@ -7,10 +7,20 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import re
+from datetime import UTC, datetime
+from pathlib import Path
+
+from pydantic import ValidationError
 
 from songyan.exceptions import ImportSegmentError, ImportSourceError
-from songyan.models.import_manifest import ChapterBoundary
+from songyan.models.import_manifest import (
+    ChapterBoundary,
+    SegmentManifest,
+    manifest_to_json,
+)
+from songyan.utils.hashing import sha256_file
 from songyan.utils.token_estimator import TokenEstimator
 from songyan.utils.word_count import count_chinese_words
 
@@ -100,3 +110,63 @@ def detect_boundaries(
         )
         bodies.append(body)
     return boundaries, prologue, bodies
+
+
+def build_manifest(
+    source_path: Path,
+    *,
+    token_budget: int,
+    now: datetime | None = None,
+) -> tuple[SegmentManifest, str, list[str]]:
+    """读取源文件并构建切分清单；返回 (清单, 规范化文本, 逐章正文).
+
+    只读源文件，不修改。``now`` 可注入以保证产物可复现（默认当前 UTC 时间）。
+    """
+    raw = source_path.read_bytes()
+    text, encoding = decode_source(raw)
+    normalized, endings_changed = normalize_line_endings(text)
+    boundaries, prologue, bodies = detect_boundaries(normalized, token_budget=token_budget)
+    manifest = SegmentManifest(
+        source_path=str(source_path),
+        source_sha256=sha256_file(source_path),
+        normalized_sha256=hashlib.sha256(normalized.encode("utf-8")).hexdigest(),
+        encoding=encoding,
+        line_endings_normalized=endings_changed,
+        token_budget=token_budget,
+        chapter_count=len(boundaries),
+        has_prologue=bool(prologue),
+        prologue_chars=len(prologue),
+        boundaries=boundaries,
+        status="pending_confirmation",
+        created_at=now or datetime.now(UTC),
+    )
+    return manifest, normalized, bodies
+
+
+def write_segment_artifacts(
+    output_dir: Path,
+    manifest: SegmentManifest,
+    normalized_text: str,
+    bodies: list[str],
+) -> Path:
+    """落盘切分产物；返回 manifest 路径."""
+    output_dir.mkdir(parents=True, exist_ok=True)
+    chapters_dir = output_dir / "chapters"
+    chapters_dir.mkdir(exist_ok=True)
+    (output_dir / "source.normalized.txt").write_text(normalized_text, encoding="utf-8")
+    for boundary, body in zip(manifest.boundaries, bodies, strict=True):
+        chapter_file = chapters_dir / f"ch{boundary.chapter_number:03d}.md"
+        chapter_file.write_text(body + "\n", encoding="utf-8")
+    manifest_path = output_dir / "manifest.json"
+    manifest_path.write_text(manifest_to_json(manifest), encoding="utf-8")
+    return manifest_path
+
+
+def load_manifest(manifest_path: Path) -> SegmentManifest:
+    """加载并校验清单；文件损坏时显式报错."""
+    try:
+        payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+        return SegmentManifest.model_validate(payload)
+    except (OSError, json.JSONDecodeError, ValidationError) as exc:
+        msg = f"切分清单无法读取或校验失败: {manifest_path}（{exc}）"
+        raise ImportSegmentError(msg) from exc
