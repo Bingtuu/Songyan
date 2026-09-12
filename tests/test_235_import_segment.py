@@ -171,6 +171,41 @@ def test_detect_boundaries_flags_over_budget() -> None:
     assert all(b.over_token_budget for b in boundaries)
 
 
+def test_detect_boundaries_within_budget() -> None:
+    boundaries, _, _ = detect_boundaries(SAMPLE, token_budget=6000)
+    assert all(b.over_token_budget is False for b in boundaries)
+
+
+def test_detect_boundaries_full_width_indent_header() -> None:
+    text = "　第一章 风起\n\n松烟初入城。\n\n第二章\n\n雨下了一夜。\n"
+    boundaries, prologue, _ = detect_boundaries(text, token_budget=6000)
+    assert prologue == ""
+    assert [b.title for b in boundaries] == ["第一章 风起", "第二章"]
+
+
+def test_detect_boundaries_prefixed_header_offsets_and_title() -> None:
+    text = "　## 第三章 标题\n\n正文内容。\n"
+    boundaries, prologue, bodies = detect_boundaries(text, token_budget=6000)
+    assert prologue == ""
+    assert len(boundaries) == 1
+    boundary = boundaries[0]
+    assert boundary.title == "第三章 标题"
+    # start_offset 指向原始标题行行首（含全角缩进与 # 前缀），是有意语义。
+    assert boundary.start_offset == 0
+    assert text[boundary.start_offset : boundary.end_offset] == text
+    assert bodies[0] == "正文内容。"
+    assert boundary.body_sha256 == hashlib.sha256("正文内容。".encode()).hexdigest()
+
+
+def test_detect_boundaries_eof_empty_body_chapter() -> None:
+    text = "第一章 A\n\n正文。\n\n第二章 B\n"
+    boundaries, _, bodies = detect_boundaries(text, token_budget=6000)
+    assert len(boundaries) == 2
+    assert bodies[1] == ""
+    assert boundaries[1].char_count == 0
+    assert boundaries[1].body_sha256 == hashlib.sha256(b"").hexdigest()
+
+
 def test_detect_boundaries_no_header_raises() -> None:
     with pytest.raises(ImportSegmentError, match="章节标题"):
         detect_boundaries("没有标题的一大段正文。" * 100, token_budget=6000)

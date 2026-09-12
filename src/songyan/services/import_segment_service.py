@@ -18,8 +18,9 @@ from songyan.utils.word_count import count_chinese_words
 _DECODE_ORDER = ("utf-8-sig", "gb18030")
 
 #: 章节标题行：口径合并自 agents/writer.py 与 services/text_cleanliness_cleaner.py。
+#: 行首额外容忍全角空格（U+3000），覆盖中文网文/出版文本的全角缩进标题行。
 _CHAPTER_HEADER_RE = re.compile(
-    r"^[ \t]*#{0,6}[ \t]*"
+    r"^[ \t　]*#{0,6}[ \t]*"
     r"(?:第[ \t]*[一二三四五六七八九十百千万零〇两\d]+[ \t]*(?:章|章节|回)"
     r"|Chapter[ \t]+\d+)"
     r"[^\n]*$",
@@ -63,6 +64,8 @@ def detect_boundaries(
     偏移基于传入文本（调用方需先 normalize_line_endings）。
     正文为标题行之后到下一章标题前的内容，标题行剥离（与 Writer 入库口径一致）。
     识别不到任何章节标题时显式报错，不自动硬切。
+    已知盲区：以「第N章…」开头的正文引用行会被识别为标题（规则切分固有盲区，
+    由人工确认闸门兜底）。
     """
     estimator = estimator or TokenEstimator()
     matches = list(_CHAPTER_HEADER_RE.finditer(text))
