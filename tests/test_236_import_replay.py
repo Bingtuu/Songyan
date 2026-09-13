@@ -480,3 +480,318 @@ class TestGetOrCreateImportDraft:
         by_id = {v.version_id: v for v in versions}
         assert by_id[v1].version_number == 1
         assert by_id[v2].version_number == 2
+
+
+# ---------------------------------------------------------------------------
+# Task 3: 回放循环核心（extract / summary 均 mock，零真实 LLM）
+# ---------------------------------------------------------------------------
+
+from unittest.mock import AsyncMock, patch  # noqa: E402
+
+from songyan.db.repository import ChapterHeadRepository  # noqa: E402
+from songyan.exceptions import LLMError  # noqa: E402
+from songyan.models import StateSettlement  # noqa: E402
+from songyan.models.settlement import CharacterUpdate  # noqa: E402
+from songyan.services.import_replay_service import replay_import  # noqa: E402
+from songyan.services.import_segment_service import (  # noqa: E402
+    build_manifest,
+    confirm_manifest,
+    load_manifest,
+    write_segment_artifacts,
+)
+
+_SOURCE_TEXT = (
+    "第一章 荒山\n林凡睁开眼睛，发现自己躺在荒山之中。\n\n"
+    "第二章 下山\n林凡拍了拍尘土，朝山下走去。\n\n"
+    "第三章 小镇\n林凡走进小镇，听见远处的钟声。\n"
+)
+
+
+def _write_source(tmp_path: Path, text: str = _SOURCE_TEXT) -> Path:
+    source = tmp_path / "novel.txt"
+    source.write_text(text, encoding="utf-8")
+    return source
+
+
+def _confirmed_manifest(tmp_path: Path, out_name: str = "segment_out") -> Path:
+    """用 Task 235 的真实产物链路造 3 章 confirmed 清单，返回 manifest 路径."""
+    source = _write_source(tmp_path)
+    manifest, normalized, bodies = build_manifest(source, token_budget=6000)
+    manifest_path, _ = write_segment_artifacts(
+        tmp_path / out_name, manifest, normalized, bodies
+    )
+    confirm_manifest(manifest_path)
+    return manifest_path
+
+
+def _canned_settlement(character_id: str) -> StateSettlement:
+    return StateSettlement(
+        character_updates=[
+            CharacterUpdate(
+                character_id=character_id,
+                field="location",
+                old_value="未知",
+                new_value="荒山",
+                source_quote="林凡睁开眼睛",
+            )
+        ],
+        validation_status="valid",
+        impact_score=0.5,
+    )
+
+
+async def _protagonist_id(project_id: str = "proj-1") -> str:
+    characters = await CharacterRepository().list_by_project(project_id)
+    return next(c.character_id for c in characters if c.role_type == "protagonist")
+
+
+async def _state_snapshot_count(db_path: Path, character_id: str) -> int:
+    async with aiosqlite.connect(str(db_path)) as conn:
+        cursor = await conn.execute(
+            "SELECT COUNT(*) FROM character_states WHERE character_id = ?",
+            (character_id,),
+        )
+        row = await cursor.fetchone()
+        assert row is not None
+        return int(row[0])
+
+
+class TestReplayImport:
+    """回放主循环：happy path / 幂等 / 断点续跑 / 隔离 / 闸门拒绝."""
+
+    pytestmark = pytest.mark.asyncio
+
+    @pytest.fixture
+    def mock_extract(self):
+        with patch(
+            "songyan.services.import_replay_service.extract_settlement",
+            new_callable=AsyncMock,
+        ) as mock:
+            yield mock
+
+    @pytest.fixture
+    def mock_summary(self):
+        with patch(
+            "songyan.services.import_replay_service.write_chapter_summary_with_fact_check",
+            new_callable=AsyncMock,
+        ) as mock:
+            mock.return_value = ("sum-test", None, [])
+            yield mock
+
+    async def test_happy_path_applies_all_chapters(
+        self, test_db: Path, tmp_path: Path, mock_extract, mock_summary
+    ) -> None:
+        await _seed_project(with_protagonist=True)
+        pid = await _protagonist_id()
+        mock_extract.side_effect = lambda *args, **kwargs: _canned_settlement(pid)
+        manifest_path = _confirmed_manifest(tmp_path)
+        fingerprint = load_manifest(manifest_path).source_sha256
+
+        report = await replay_import("proj-1", manifest_path)
+
+        assert report.project_id == "proj-1"
+        assert report.run_id.startswith("run-")
+        assert [o.status for o in report.outcomes] == ["applied"] * 3
+        assert [o.chapter_number for o in report.outcomes] == [1, 2, 3]
+        assert all(o.accepted_version_id for o in report.outcomes)
+        assert mock_extract.await_count == 3
+        assert mock_summary.await_count == 3
+
+        # chapter_heads：3 章 accepted
+        heads = await ChapterHeadRepository().list_by_project("proj-1")
+        assert len(heads) == 3
+        assert all(h.status == "accepted" for h in heads)
+        by_chapter = {h.chapter_number: h for h in heads}
+        for outcome in report.outcomes:
+            head = by_chapter[outcome.chapter_number]
+            assert head.accepted_version_id == outcome.accepted_version_id
+            assert head.current_version_id == outcome.accepted_version_id
+
+        # 幂等标记：3 行，绑定清单指纹与本 run
+        assert await _mark_count(test_db) == 3
+        mark = await ImportReplayRepository().get_mark("proj-1", 1)
+        assert mark is not None
+        assert mark.run_id == report.run_id
+        assert mark.source_fingerprint == fingerprint
+        assert mark.summary_id == "sum-test"
+
+        # 事实库：主角状态快照已写入
+        assert await _state_snapshot_count(test_db, pid) == 3
+
+        # accepted 版本行存在，且继承 draft 的 import 来源标记（可溯源自径）
+        for outcome in report.outcomes:
+            version = await ChapterVersionRepository().get(
+                outcome.accepted_version_id or ""
+            )
+            assert version is not None
+            assert version.version_type == "accepted"
+            import_meta = version.generation_metadata["import"]
+            assert import_meta["source_fingerprint"] == fingerprint
+            assert import_meta["segment_chapter"] == outcome.chapter_number
+
+    async def test_chapters_filter_limits_scope(
+        self, test_db: Path, tmp_path: Path, mock_extract, mock_summary
+    ) -> None:
+        await _seed_project(with_protagonist=True)
+        pid = await _protagonist_id()
+        mock_extract.side_effect = lambda *args, **kwargs: _canned_settlement(pid)
+        manifest_path = _confirmed_manifest(tmp_path)
+
+        report = await replay_import("proj-1", manifest_path, chapters={1, 3})
+
+        assert [o.chapter_number for o in report.outcomes] == [1, 3]
+        assert mock_extract.await_count == 2
+        assert await _mark_count(test_db) == 2
+        assert await ChapterHeadRepository().get("proj-1", 2) is None
+
+    async def test_rerun_is_idempotent_with_zero_llm_calls(
+        self, test_db: Path, tmp_path: Path, mock_extract, mock_summary
+    ) -> None:
+        await _seed_project(with_protagonist=True)
+        pid = await _protagonist_id()
+        mock_extract.side_effect = lambda *args, **kwargs: _canned_settlement(pid)
+        manifest_path = _confirmed_manifest(tmp_path)
+
+        first = await replay_import("proj-1", manifest_path)
+        assert len(first.by_status("applied")) == 3
+
+        mock_extract.reset_mock()
+        mock_summary.reset_mock()
+        second = await replay_import("proj-1", manifest_path, run_id="run-resume")
+
+        assert [o.status for o in second.outcomes] == ["skipped"] * 3
+        assert second.run_id == "run-resume"
+        # 断点续跑核心承诺：已应用章零 LLM 调用
+        assert mock_extract.await_count == 0
+        assert mock_summary.await_count == 0
+        assert await _mark_count(test_db) == 3
+        # skipped outcome 仍携带已 accepted 的版本引用
+        assert all(o.accepted_version_id for o in second.outcomes)
+
+    async def test_resume_after_chapter_llm_failure(
+        self, test_db: Path, tmp_path: Path, mock_extract, mock_summary
+    ) -> None:
+        await _seed_project(with_protagonist=True)
+        pid = await _protagonist_id()
+        manifest_path = _confirmed_manifest(tmp_path)
+
+        def _fail_chapter_2(*args: object, **kwargs: object) -> StateSettlement:
+            if args[2] == 2:
+                raise LLMError("mock llm down")
+            return _canned_settlement(pid)
+
+        mock_extract.side_effect = _fail_chapter_2
+        first = await replay_import("proj-1", manifest_path)
+
+        assert [o.status for o in first.outcomes] == ["applied", "failed", "applied"]
+        failed = first.by_status("failed")
+        assert len(failed) == 1
+        assert failed[0].chapter_number == 2
+        assert "mock llm down" in (failed[0].error or "")
+        # 失败章：无 accepted head、无幂等标记
+        assert await ChapterHeadRepository().get("proj-1", 2) is None
+        assert await ImportReplayRepository().get_mark("proj-1", 2) is None
+        assert await _mark_count(test_db) == 2
+
+        # 重跑：只对第 2 章发起 LLM 调用，其余章幂等跳过
+        mock_extract.reset_mock()
+        mock_extract.side_effect = lambda *args, **kwargs: _canned_settlement(pid)
+        second = await replay_import("proj-1", manifest_path)
+
+        assert [o.status for o in second.outcomes] == ["skipped", "applied", "skipped"]
+        assert mock_extract.await_count == 1
+        assert mock_extract.call_args.args[2] == 2
+        assert await _mark_count(test_db) == 3
+        heads = await ChapterHeadRepository().list_by_project("proj-1")
+        assert len(heads) == 3
+        assert all(h.status == "accepted" for h in heads)
+
+    async def test_needs_human_review_isolates_chapter(
+        self, test_db: Path, tmp_path: Path, mock_extract, mock_summary
+    ) -> None:
+        await _seed_project(with_protagonist=True)
+        pid = await _protagonist_id()
+
+        def _invalid_chapter_2(*args: object, **kwargs: object) -> StateSettlement:
+            if args[2] == 2:
+                return StateSettlement(
+                    validation_status="needs_human_review",
+                    validation_errors=["角色旧值与 DB 当前值不一致"],
+                )
+            return _canned_settlement(pid)
+
+        mock_extract.side_effect = _invalid_chapter_2
+        manifest_path = _confirmed_manifest(tmp_path)
+
+        report = await replay_import("proj-1", manifest_path)
+
+        assert [o.status for o in report.outcomes] == ["applied", "failed", "applied"]
+        failed = report.by_status("failed")[0]
+        assert failed.chapter_number == 2
+        assert "needs_human_review" in (failed.error or "")
+        assert "角色旧值" in (failed.error or "")
+        # 非 valid settlement 不进事务：无版本被 accept、无标记
+        assert await ChapterHeadRepository().get("proj-1", 2) is None
+        assert await ImportReplayRepository().get_mark("proj-1", 2) is None
+        assert await _mark_count(test_db) == 2
+        versions = await ChapterVersionRepository().list_by_chapter("proj-1", 2)
+        assert all(v.version_type != "accepted" for v in versions)
+        # 失败章的 summary 不应生成
+        assert mock_summary.await_count == 2
+
+    async def test_fingerprint_change_rejected(
+        self, test_db: Path, tmp_path: Path, mock_extract, mock_summary
+    ) -> None:
+        await _seed_project(with_protagonist=True)
+        pid = await _protagonist_id()
+        mock_extract.side_effect = lambda *args, **kwargs: _canned_settlement(pid)
+        manifest_path = _confirmed_manifest(tmp_path)
+
+        first = await replay_import("proj-1", manifest_path)
+        assert len(first.by_status("applied")) == 3
+
+        # 源文件变更后重新 segment + confirm（指纹随之变化）
+        _write_source(tmp_path, text=_SOURCE_TEXT + "\n第四章 进城\n林凡进了城。\n")
+        source = tmp_path / "novel.txt"
+        manifest, normalized, bodies = build_manifest(source, token_budget=6000)
+        new_manifest_path, _ = write_segment_artifacts(
+            tmp_path / "segment_out_v2", manifest, normalized, bodies
+        )
+        confirm_manifest(new_manifest_path)
+
+        mock_extract.reset_mock()
+        with pytest.raises(ImportReplayError, match="指纹"):
+            await replay_import("proj-1", new_manifest_path)
+        assert mock_extract.await_count == 0
+        assert await _mark_count(test_db) == 3
+
+    async def test_missing_protagonist_rejected_before_extract(
+        self, test_db: Path, tmp_path: Path, mock_extract, mock_summary
+    ) -> None:
+        await _seed_project(with_protagonist=False)
+        manifest_path = _confirmed_manifest(tmp_path)
+
+        with pytest.raises(ImportReplayError, match="主角"):
+            await replay_import("proj-1", manifest_path)
+        mock_extract.assert_not_called()
+        assert await _mark_count(test_db) == 0
+
+    async def test_summary_failure_does_not_block_apply(
+        self, test_db: Path, tmp_path: Path, mock_extract, mock_summary
+    ) -> None:
+        await _seed_project(with_protagonist=True)
+        pid = await _protagonist_id()
+        mock_extract.side_effect = lambda *args, **kwargs: _canned_settlement(pid)
+        mock_summary.side_effect = LLMError("summary boom")
+        manifest_path = _confirmed_manifest(tmp_path)
+
+        report = await replay_import("proj-1", manifest_path)
+
+        # 摘要失败不阻断 accept（对齐 _nodes.py fallback 语义）
+        assert [o.status for o in report.outcomes] == ["applied"] * 3
+        assert await _mark_count(test_db) == 3
+        heads = await ChapterHeadRepository().list_by_project("proj-1")
+        assert len(heads) == 3
+        mark = await ImportReplayRepository().get_mark("proj-1", 1)
+        assert mark is not None
+        assert mark.summary_id is None
