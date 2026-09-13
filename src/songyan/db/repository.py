@@ -7,7 +7,7 @@ import sqlite3
 import uuid
 from datetime import datetime
 from sqlite3 import Row
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 import structlog
 
@@ -74,8 +74,8 @@ class ProjectRepository:
                     taboos, target_word_count, tone, reference_works,
                     arc_boundaries, volume_boundaries,
                     estimated_chapters, words_per_chapter, story_structure,
-                    sub_genre_id, arc_boundaries_auto
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    sub_genre_id, arc_boundaries_auto, lifecycle_status
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
                     project_id,
                     project.title,
@@ -96,6 +96,7 @@ class ProjectRepository:
                     project.story_structure,
                     project.sub_genre_id,
                     int(project.arc_boundaries_auto),
+                    project.lifecycle_status,
                 ),
             )
 
@@ -136,6 +137,7 @@ class ProjectRepository:
             story_structure=row["story_structure"],
             sub_genre_id=row["sub_genre_id"],
             arc_boundaries_auto=bool(row["arc_boundaries_auto"]),
+            lifecycle_status=row["lifecycle_status"],
         )
 
     async def update_seed_config(
@@ -192,6 +194,39 @@ class ProjectRepository:
             operation="update_seed_config",
             project_id=project_id,
             fields=list(updates.keys()),
+        )
+
+    async def update_lifecycle_status(
+        self, project_id: str, status: Literal["importing", "active"]
+    ) -> None:
+        """更新项目生命周期状态（V15 Task 237）.
+
+        值域校验先于 SQL：SQLite ALTER 无法补 CHECK，此处兜底。
+        项目不存在时 UPDATE 未命中行，沿用 update_seed_config 惯例不报错。
+
+        Args:
+            project_id: 项目 ID
+            status: 目标状态，仅允许 importing / active
+
+        Raises:
+            ValueError: status 不在值域内
+        """
+        if status not in ("importing", "active"):
+            raise ValueError(
+                f"非法 lifecycle_status: {status!r}（仅允许 importing / active）"
+            )
+        async with get_db() as conn:
+            await conn.execute(
+                "UPDATE projects SET lifecycle_status = ? WHERE project_id = ?",
+                (status, project_id),
+            )
+            await conn.commit()
+        logger.info(
+            "repository.write",
+            table="projects",
+            operation="update_lifecycle_status",
+            project_id=project_id,
+            lifecycle_status=status,
         )
 
 

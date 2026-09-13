@@ -33,6 +33,9 @@ class ProjectSetting(BaseModel):
     arc_boundaries_auto: bool = False
     sub_genre_id: str | None = None
 
+    # V15 Task 237：项目生命周期（importing=导入中，publish 后回 active）
+    lifecycle_status: Literal["importing", "active"] = "active"
+
     @property
     def word_range(self) -> tuple[int, int]:
         """返回字数目标范围（±20%）."""

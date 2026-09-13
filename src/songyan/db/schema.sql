@@ -28,6 +28,8 @@ CREATE TABLE IF NOT EXISTS projects (
     story_structure TEXT DEFAULT 'free',
     sub_genre_id TEXT,
     arc_boundaries_auto INTEGER DEFAULT 0,
+    -- V15 Task 237: 项目生命周期（importing=导入中，publish 后回 active）
+    lifecycle_status TEXT NOT NULL DEFAULT 'active' CHECK (lifecycle_status IN ('importing','active')),
     created_at      TEXT DEFAULT (datetime('now'))
 );
 

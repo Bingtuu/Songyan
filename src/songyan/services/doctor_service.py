@@ -22,7 +22,12 @@ from songyan.prompts import get_prompt_loader
 DoctorStatus = Literal["pass", "warn", "fail"]
 
 _REQUIRED_SCHEMA_COLUMNS: dict[str, set[str]] = {
-    "projects": {"estimated_chapters", "words_per_chapter", "story_structure"},
+    "projects": {
+        "estimated_chapters",
+        "words_per_chapter",
+        "story_structure",
+        "lifecycle_status",
+    },
     "chapter_versions": {"score_card"},
     "context_snapshots": {"context_emergency_level", "budget_used_before_emergency"},
     "creative_briefs": {
@@ -521,6 +526,42 @@ async def _check_project_exists(project_id: str) -> DoctorCheck:
     )
 
 
+async def _check_project_published(project_id: str) -> DoctorCheck:
+    """run 闸门：拒绝 lifecycle_status='importing' 的项目进入 songyan run（V15 Task 237）.
+
+    项目不存在或查询异常时返回 pass——缺失/错误由既有 _check_project_exists 报告，
+    避免双 fail 噪声。
+    """
+    try:
+        project = await ProjectRepository().get(project_id)
+    except Exception:  # noqa: BLE001 - 由 project.exists 报告，不重复 fail
+        return DoctorCheck(
+            "project.published",
+            "pass",
+            "project lookup unavailable；详见 project.exists 检查结果。",
+        )
+    if project is None:
+        return DoctorCheck(
+            "project.published",
+            "pass",
+            "project not found；详见 project.exists 检查结果。",
+        )
+    if project.lifecycle_status == "importing":
+        return DoctorCheck(
+            "project.published",
+            "fail",
+            f"project {project_id} 处于导入中（lifecycle_status=importing），"
+            "不可进入 songyan run。",
+            "完成导入验收后运行 songyan import publish --project "
+            f"{project_id}，再启动 songyan run。",
+        )
+    return DoctorCheck(
+        "project.published",
+        "pass",
+        f"project published: {project_id}",
+    )
+
+
 async def run_run_preflight(
     project_id: str,
     *,
@@ -539,4 +580,5 @@ async def run_run_preflight(
     db_failed = any(check.status == "fail" and check.id.startswith("db.") for check in checks)
     if not db_failed:
         checks.append(await _check_project_exists(project_id))
+        checks.append(await _check_project_published(project_id))
     return _summarize(checks)

@@ -992,6 +992,7 @@ async def init_schema(db_path: str | Path | None = None) -> None:
         await _migrate_llm_call_usage(conn)
         await _migrate_project_runs_pause_reason(conn)
         await _migrate_import_replay_marks(conn)
+        await _migrate_projects_lifecycle_status(conn)
         await conn.commit()
 
 
@@ -1094,6 +1095,22 @@ async def _migrate_import_replay_marks(conn: aiosqlite.Connection) -> None:
     )
 
 
+async def _migrate_projects_lifecycle_status(conn: aiosqlite.Connection) -> None:
+    """为 projects 表添加 lifecycle_status 列（V15 Task 237）.
+
+    SQLite ALTER 无法补 CHECK 约束，值域（importing/active）由
+    ProjectRepository.update_lifecycle_status 在写入前校验兜底；
+    既有行由 DEFAULT 回填为 'active'。
+    """
+    cursor = await conn.execute("PRAGMA table_info(projects)")
+    cols = {row[1] for row in await cursor.fetchall()}
+    if "lifecycle_status" not in cols:
+        await conn.execute(
+            "ALTER TABLE projects ADD COLUMN lifecycle_status "
+            "TEXT NOT NULL DEFAULT 'active'"
+        )
+
+
 async def verify_schema(conn: aiosqlite.Connection) -> list[str]:
     """验证所有期望的表是否存在.
 
@@ -1158,4 +1175,5 @@ async def run_migrations(conn: aiosqlite.Connection) -> None:
     await _migrate_llm_call_usage(conn)
     await _migrate_project_runs_pause_reason(conn)
     await _migrate_import_replay_marks(conn)
+    await _migrate_projects_lifecycle_status(conn)
     logger.info("migrations.run_all", status="complete")

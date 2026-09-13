@@ -92,7 +92,7 @@ def _load_project(db_path: Path, project_id: str) -> dict[str, Any]:
             """
             SELECT project_id, title, genre_id, mode_id, protagonist_name,
                    estimated_chapters, words_per_chapter, story_structure,
-                   created_at
+                   lifecycle_status, created_at
             FROM projects
             WHERE project_id = ?
             """,
