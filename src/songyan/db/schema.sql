@@ -376,6 +376,23 @@ CREATE TABLE IF NOT EXISTS project_runs (
 CREATE INDEX IF NOT EXISTS idx_project_runs_project ON project_runs(project_id);
 
 -- ============================================================
+-- import_replay_marks — V15 Task 236: 导入回放幂等标记
+-- ============================================================
+-- 只记录成功应用的章；失败章不进表（重跑自然重试）。
+CREATE TABLE IF NOT EXISTS import_replay_marks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id TEXT NOT NULL REFERENCES projects(project_id),
+    run_id TEXT NOT NULL,
+    chapter_number INTEGER NOT NULL,
+    draft_version_id TEXT NOT NULL,
+    accepted_version_id TEXT NOT NULL,
+    summary_id TEXT,
+    source_fingerprint TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(project_id, chapter_number)
+);
+
+-- ============================================================
 -- 13. summaries — 章节摘要（Settlement 后生成）
 -- ============================================================
 CREATE TABLE IF NOT EXISTS summaries (

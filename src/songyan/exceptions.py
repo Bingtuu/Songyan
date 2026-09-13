@@ -103,3 +103,7 @@ class ImportSourceError(SongyanError):
 
 class ImportSegmentError(SongyanError):
     """V15 导入：章节切分、清单校验或人工确认闸门失败."""
+
+
+class ImportReplayError(SongyanError):
+    """V15 导入：回放执行失败（preflight、指纹失配、事务写入等）."""

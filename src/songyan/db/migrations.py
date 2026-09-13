@@ -76,6 +76,8 @@ _EXPECTED_TABLES: list[str] = [
     "genre_runtime_profile_history",
     # V9 Task 175: LLM 调用成本遥测
     "llm_call_usage",
+    # V15 Task 236: 导入回放幂等标记
+    "import_replay_marks",
 ]
 
 
@@ -989,6 +991,7 @@ async def init_schema(db_path: str | Path | None = None) -> None:
         await _migrate_genre_runtime_profile_history(conn)
         await _migrate_llm_call_usage(conn)
         await _migrate_project_runs_pause_reason(conn)
+        await _migrate_import_replay_marks(conn)
         await conn.commit()
 
 
@@ -1069,6 +1072,28 @@ async def _migrate_llm_call_usage(conn: aiosqlite.Connection) -> None:
     )
 
 
+async def _migrate_import_replay_marks(conn: aiosqlite.Connection) -> None:
+    """创建导入回放幂等标记表（V15 Task 236）.
+
+    只记录成功应用的章；失败章不进表（重跑自然重试）。
+    (project_id, chapter_number) 唯一，重跑时按指纹比对判定幂等。
+    """
+    await conn.execute(
+        """CREATE TABLE IF NOT EXISTS import_replay_marks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id TEXT NOT NULL REFERENCES projects(project_id),
+            run_id TEXT NOT NULL,
+            chapter_number INTEGER NOT NULL,
+            draft_version_id TEXT NOT NULL,
+            accepted_version_id TEXT NOT NULL,
+            summary_id TEXT,
+            source_fingerprint TEXT NOT NULL,
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            UNIQUE(project_id, chapter_number)
+        )"""
+    )
+
+
 async def verify_schema(conn: aiosqlite.Connection) -> list[str]:
     """验证所有期望的表是否存在.
 
@@ -1132,4 +1157,5 @@ async def run_migrations(conn: aiosqlite.Connection) -> None:
     await _migrate_genre_runtime_profile_history(conn)
     await _migrate_llm_call_usage(conn)
     await _migrate_project_runs_pause_reason(conn)
+    await _migrate_import_replay_marks(conn)
     logger.info("migrations.run_all", status="complete")
