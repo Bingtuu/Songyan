@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from pathlib import Path
 
 import aiosqlite
@@ -10,12 +11,24 @@ from pydantic import ValidationError
 
 from songyan.db.import_replay_repo import ImportReplayRepository
 from songyan.db.migrations import init_schema, run_migrations, verify_schema
+from songyan.db.repository import (
+    ChapterVersionRepository,
+    CharacterRepository,
+    ProjectRepository,
+)
 from songyan.exceptions import ImportReplayError
+from songyan.models import Character, ProjectSetting
+from songyan.models.import_manifest import ChapterBoundary, SegmentManifest
 from songyan.models.import_replay import (
     ChapterReplayOutcome,
     ReplayMark,
     ReplayReport,
 )
+from songyan.services.import_replay_service import (
+    get_or_create_import_draft,
+    preflight_replay,
+)
+from songyan.workflows._helpers import ensure_protagonist_character
 
 _FP_A = "a" * 64
 _FP_B = "b" * 64
@@ -284,3 +297,186 @@ class TestModels:
                 project_id="p",
                 unexpected_field="x",  # type: ignore[call-arg]
             )
+
+
+# ---------------------------------------------------------------------------
+# Task 2: preflight + import draft 创建/复用
+# ---------------------------------------------------------------------------
+
+
+def _boundary(chapter_number: int = 1, title: str = "第一章 开端") -> ChapterBoundary:
+    return ChapterBoundary(
+        chapter_number=chapter_number,
+        title=title,
+        start_offset=0,
+        end_offset=12,
+        char_count=10,
+        word_count=5,
+        est_tokens=8,
+        over_token_budget=False,
+        body_sha256="c" * 64,
+    )
+
+
+def _manifest(boundaries: list[ChapterBoundary] | None = None) -> SegmentManifest:
+    items = boundaries or [_boundary()]
+    return SegmentManifest(
+        source_path="novel.txt",
+        source_sha256=_FP_A,
+        normalized_sha256=_FP_B,
+        encoding="utf-8",
+        line_endings_normalized=False,
+        token_budget=6000,
+        chapter_count=len(items),
+        has_prologue=False,
+        prologue_chars=0,
+        boundaries=items,
+        status="confirmed",
+        created_at=datetime.now(UTC),
+        confirmed_at=datetime.now(UTC),
+    )
+
+
+async def _seed_project(
+    project_id: str = "proj-1", *, with_protagonist: bool = False
+) -> None:
+    await ProjectRepository().create(
+        ProjectSetting(title="测试项目", genre_id="scifi", protagonist_name="林凡"),
+        project_id,
+    )
+    if with_protagonist:
+        created = await ensure_protagonist_character(project_id)
+        assert created, "测试种子应新建 protagonist 角色"
+
+
+class TestPreflight:
+    """回放前置检查：项目存在 + 主角档案已建档（F1 拦截）."""
+
+    pytestmark = pytest.mark.asyncio
+
+    async def test_missing_project_raises(self, test_db: Path) -> None:
+        with pytest.raises(ImportReplayError, match="项目不存在"):
+            await preflight_replay("no-such-project", _manifest())
+
+    async def test_missing_protagonist_raises(self, test_db: Path) -> None:
+        await _seed_project()
+        with pytest.raises(ImportReplayError, match="主角"):
+            await preflight_replay("proj-1", _manifest())
+
+    async def test_supporting_only_does_not_satisfy(self, test_db: Path) -> None:
+        await _seed_project()
+        await CharacterRepository().create(
+            Character(
+                character_id="char-s1",
+                project_id="proj-1",
+                name="配角甲",
+                role_type="supporting",
+            )
+        )
+        with pytest.raises(ImportReplayError, match="主角"):
+            await preflight_replay("proj-1", _manifest())
+
+    async def test_with_protagonist_passes(self, test_db: Path) -> None:
+        await _seed_project(with_protagonist=True)
+        await preflight_replay("proj-1", _manifest())  # 不抛错即通过
+
+
+class TestGetOrCreateImportDraft:
+    """import draft 创建/复用：同章同指纹幂等复用，指纹变化新建版本."""
+
+    pytestmark = pytest.mark.asyncio
+
+    async def test_first_call_creates_draft_with_import_metadata(
+        self, test_db: Path
+    ) -> None:
+        await _seed_project()
+        body = "林凡睁开眼睛，发现自己躺在陌生的房间里。"
+        version_id = await get_or_create_import_draft(
+            "proj-1",
+            _boundary(),
+            body,
+            source_fingerprint=_FP_A,
+            confirmed_at="2026-09-08T10:00:00+00:00",
+        )
+        assert version_id.startswith("v-")
+
+        version = await ChapterVersionRepository().get(version_id)
+        assert version is not None
+        assert version.version_number == 1
+        assert version.version_type == "draft"
+        assert version.chapter_number == 1
+        assert version.content == body
+
+        import_meta = version.generation_metadata["import"]
+        assert import_meta["source_fingerprint"] == _FP_A
+        assert import_meta["segment_chapter"] == 1
+        assert import_meta["chapter_title"] == "第一章 开端"
+        assert import_meta["confirmed_at"] == "2026-09-08T10:00:00+00:00"
+
+        # 指纹必须可经 json_extract 查询（draft 复用查询依赖此口径）
+        async with aiosqlite.connect(str(test_db)) as conn:
+            cursor = await conn.execute(
+                "SELECT COUNT(*) FROM chapter_versions "
+                "WHERE project_id = ? AND chapter_number = ? "
+                "AND version_type = 'draft' "
+                "AND json_extract(generation_metadata, "
+                "'$.import.source_fingerprint') = ?",
+                ("proj-1", 1, _FP_A),
+            )
+            row = await cursor.fetchone()
+        assert row is not None and row[0] == 1
+
+    async def test_same_fingerprint_reuses_existing_draft(self, test_db: Path) -> None:
+        await _seed_project()
+        body = "正文内容。"
+        first = await get_or_create_import_draft(
+            "proj-1", _boundary(), body,
+            source_fingerprint=_FP_A, confirmed_at=None,
+        )
+        second = await get_or_create_import_draft(
+            "proj-1", _boundary(), body,
+            source_fingerprint=_FP_A, confirmed_at=None,
+        )
+        assert second == first
+        versions = await ChapterVersionRepository().list_by_chapter("proj-1", 1)
+        assert len(versions) == 1
+
+    async def test_different_chapters_do_not_interfere(self, test_db: Path) -> None:
+        await _seed_project()
+        v1 = await get_or_create_import_draft(
+            "proj-1", _boundary(1, "第一章 甲"), "正文一",
+            source_fingerprint=_FP_A, confirmed_at=None,
+        )
+        v2 = await get_or_create_import_draft(
+            "proj-1", _boundary(2, "第二章 乙"), "正文二",
+            source_fingerprint=_FP_A, confirmed_at=None,
+        )
+        assert v1 != v2
+
+        again = await get_or_create_import_draft(
+            "proj-1", _boundary(1, "第一章 甲"), "正文一",
+            source_fingerprint=_FP_A, confirmed_at=None,
+        )
+        assert again == v1
+        assert len(await ChapterVersionRepository().list_by_chapter("proj-1", 1)) == 1
+        assert len(await ChapterVersionRepository().list_by_chapter("proj-1", 2)) == 1
+
+    async def test_different_fingerprint_creates_new_draft(
+        self, test_db: Path
+    ) -> None:
+        await _seed_project()
+        v1 = await get_or_create_import_draft(
+            "proj-1", _boundary(), "正文旧",
+            source_fingerprint=_FP_A, confirmed_at=None,
+        )
+        v2 = await get_or_create_import_draft(
+            "proj-1", _boundary(), "正文新",
+            source_fingerprint=_FP_B, confirmed_at=None,
+        )
+        assert v2 != v1
+
+        versions = await ChapterVersionRepository().list_by_chapter("proj-1", 1)
+        assert len(versions) == 2
+        by_id = {v.version_id: v for v in versions}
+        assert by_id[v1].version_number == 1
+        assert by_id[v2].version_number == 2
