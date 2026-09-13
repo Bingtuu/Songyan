@@ -4,6 +4,7 @@ ingest   → 创建导入项目（projects + 主角 characters，指纹登记）
 segment  → 规则切分源文件，产出可审查的章节边界清单
 confirm  → 人工确认清单（回放闸门）
 status   → 查看清单状态与回放闸门判定（退出码 0=可回放, 1=不可）
+replay   → 逐章回放 settlement（幂等断点续跑，存在失败章时退出码 1）
 """
 
 from __future__ import annotations
@@ -225,6 +226,62 @@ def import_status_cmd(manifest_path: Path) -> None:
         click.echo(f"回放闸门  : 拒绝（{exc}）")
         raise SystemExit(1) from None
     click.echo("回放闸门  : 放行")
+
+
+@import_group.command(name="replay")
+@click.option(
+    "--project",
+    "project_id",
+    required=True,
+    help="项目 ID（ingest 回执中的项目 ID）",
+)
+@click.option(
+    "--manifest",
+    "manifest_path",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    required=True,
+    help="manifest.json 路径（须已 confirm 放行）",
+)
+@click.option(
+    "--chapters",
+    default=None,
+    help="只回放指定章节，逗号分隔章节号（如 1,2,3）；缺省回放全部",
+)
+@click.option(
+    "--run-id",
+    default=None,
+    help="复用既有回放 run_id（断点续跑归并到同一 run）",
+)
+def import_replay_cmd(
+    project_id: str,
+    manifest_path: Path,
+    chapters: str | None,
+    run_id: str | None,
+) -> None:
+    """对已确认清单逐章回放 settlement.存在失败章时退出码 1."""
+    from songyan.services.import_replay_service import replay_import
+
+    chapter_set: set[int] | None = None
+    if chapters is not None:
+        try:
+            chapter_set = {int(part) for part in chapters.split(",")}
+        except ValueError:
+            raise click.ClickException(
+                f"无法解析 --chapters: {chapters!r}。"
+                "正确格式为逗号分隔的章节号，例如: 1,2,3"
+            ) from None
+
+    try:
+        report = asyncio.run(
+            replay_import(
+                project_id, manifest_path, chapters=chapter_set, run_id=run_id
+            )
+        )
+    except SongyanError as exc:
+        raise click.ClickException(str(exc)) from exc
+    click.echo(report.render_text())
+    if report.by_status("failed"):
+        raise SystemExit(1)
 
 
 def register_import_commands(cli: click.Group) -> None:

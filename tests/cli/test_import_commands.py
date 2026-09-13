@@ -4,12 +4,15 @@ from __future__ import annotations
 
 import sqlite3
 from pathlib import Path
+from typing import Any
 
 import pytest
 from click.testing import CliRunner
 
 from songyan.cli.main import cli
 from songyan.db.migrations import init_schema
+from songyan.exceptions import ImportReplayError
+from songyan.models.import_replay import ChapterReplayOutcome, ReplayReport
 from songyan.utils.hashing import sha256_file
 
 SAMPLE = (
@@ -221,3 +224,189 @@ def test_ingest_twice_creates_separate_projects(tmp_path: Path, import_cli_db: P
         (projects[0][0], "protagonist", "林渊"),
         (projects[1][0], "protagonist", "苏黎"),
     ]
+
+
+# ---------------------------------------------------------------------------
+# Task 237-3: import replay
+# ---------------------------------------------------------------------------
+
+
+def _make_manifest(tmp_path: Path) -> Path:
+    """replay_import 已被 mock，仅需满足 click.Path(exists=True) 的占位清单."""
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text("{}", encoding="utf-8")
+    return manifest
+
+
+def _patch_replay_import(
+    monkeypatch: pytest.MonkeyPatch,
+    fake: Any,
+) -> None:
+    # 命令内 lazy import replay_import，patch 服务层引用源即可生效
+    monkeypatch.setattr(
+        "songyan.services.import_replay_service.replay_import", fake
+    )
+
+
+def _applied_outcome(chapter_number: int, title: str) -> ChapterReplayOutcome:
+    return ChapterReplayOutcome(
+        chapter_number=chapter_number, title=title, status="applied"
+    )
+
+
+def test_replay_passes_args_and_echoes_report(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    manifest = _make_manifest(tmp_path)
+    captured: dict[str, Any] = {}
+
+    async def fake_replay_import(
+        project_id: str,
+        manifest_path: Path,
+        *,
+        chapters: set[int] | None = None,
+        run_id: str | None = None,
+    ) -> ReplayReport:
+        captured.update(
+            project_id=project_id,
+            manifest_path=manifest_path,
+            chapters=chapters,
+            run_id=run_id,
+        )
+        return ReplayReport(
+            run_id="run-test123",
+            project_id=project_id,
+            outcomes=[
+                _applied_outcome(1, "风起"),
+                _applied_outcome(2, "雨夜"),
+            ],
+        )
+
+    _patch_replay_import(monkeypatch, fake_replay_import)
+
+    result = CliRunner().invoke(
+        cli,
+        ["import", "replay", "--project", "proj-1", "--manifest", str(manifest)],
+    )
+    assert result.exit_code == 0, result.output
+    assert captured == {
+        "project_id": "proj-1",
+        "manifest_path": manifest,
+        "chapters": None,
+        "run_id": None,
+    }
+    assert "导入回放报告" in result.output
+    assert "run-test123" in result.output
+    assert "applied=2" in result.output
+
+
+def test_replay_chapters_and_run_id_passthrough(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    manifest = _make_manifest(tmp_path)
+    captured: dict[str, Any] = {}
+
+    async def fake_replay_import(
+        project_id: str,
+        manifest_path: Path,
+        *,
+        chapters: set[int] | None = None,
+        run_id: str | None = None,
+    ) -> ReplayReport:
+        captured.update(chapters=chapters, run_id=run_id)
+        return ReplayReport(run_id=run_id or "generated", project_id=project_id)
+
+    _patch_replay_import(monkeypatch, fake_replay_import)
+
+    result = CliRunner().invoke(
+        cli,
+        [
+            "import", "replay",
+            "--project", "proj-1",
+            "--manifest", str(manifest),
+            "--chapters", "1,3,5",
+            "--run-id", "run-resume",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert captured == {"chapters": {1, 3, 5}, "run_id": "run-resume"}
+
+
+def test_replay_chapters_invalid_format(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    manifest = _make_manifest(tmp_path)
+
+    async def fake_replay_import(*args: Any, **kwargs: Any) -> ReplayReport:
+        raise AssertionError("非法 --chapters 不应到达服务层")
+
+    _patch_replay_import(monkeypatch, fake_replay_import)
+
+    result = CliRunner().invoke(
+        cli,
+        [
+            "import", "replay",
+            "--project", "proj-1",
+            "--manifest", str(manifest),
+            "--chapters", "1,a",
+        ],
+    )
+    assert result.exit_code != 0
+    assert "1,2,3" in result.output  # 格式示例
+    assert "逗号分隔" in result.output
+
+
+def test_replay_failed_chapters_exit_1(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    manifest = _make_manifest(tmp_path)
+
+    async def fake_replay_import(
+        project_id: str,
+        manifest_path: Path,
+        *,
+        chapters: set[int] | None = None,
+        run_id: str | None = None,
+    ) -> ReplayReport:
+        return ReplayReport(
+            run_id="run-fail",
+            project_id=project_id,
+            outcomes=[
+                _applied_outcome(1, "风起"),
+                ChapterReplayOutcome(
+                    chapter_number=2,
+                    title="雨夜",
+                    status="failed",
+                    error="settlement 验证失败",
+                ),
+            ],
+        )
+
+    _patch_replay_import(monkeypatch, fake_replay_import)
+
+    result = CliRunner().invoke(
+        cli,
+        ["import", "replay", "--project", "proj-1", "--manifest", str(manifest)],
+    )
+    assert result.exit_code == 1
+    assert "失败章节" in result.output
+    assert "第 2 章" in result.output
+    assert "恢复建议" in result.output
+
+
+def test_replay_import_error_becomes_click_exception(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    manifest = _make_manifest(tmp_path)
+
+    async def fake_replay_import(*args: Any, **kwargs: Any) -> ReplayReport:
+        raise ImportReplayError("回放被拒绝：清单未确认")
+
+    _patch_replay_import(monkeypatch, fake_replay_import)
+
+    result = CliRunner().invoke(
+        cli,
+        ["import", "replay", "--project", "proj-1", "--manifest", str(manifest)],
+    )
+    assert result.exit_code != 0
+    assert "回放被拒绝：清单未确认" in result.output
