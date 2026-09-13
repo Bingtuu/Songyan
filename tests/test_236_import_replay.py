@@ -795,3 +795,340 @@ class TestReplayImport:
         mark = await ImportReplayRepository().get_mark("proj-1", 1)
         assert mark is not None
         assert mark.summary_id is None
+
+
+# ---------------------------------------------------------------------------
+# Task 4: run 壳 + contextvars 遥测归因 + report 渲染
+# ---------------------------------------------------------------------------
+
+import sqlite3  # noqa: E402
+
+from structlog.contextvars import get_contextvars  # noqa: E402
+
+from songyan.db.llm_call_usage_repo import LlmCallUsageRepository  # noqa: E402
+from songyan.db.project_run_repo import ProjectRunRepository  # noqa: E402
+from songyan.models import ProjectRunState  # noqa: E402
+
+
+class TestRunShell:
+    """run 壳：project_runs 状态流转 running → completed / partial / failed."""
+
+    pytestmark = pytest.mark.asyncio
+
+    @pytest.fixture
+    def mock_extract(self):
+        with patch(
+            "songyan.services.import_replay_service.extract_settlement",
+            new_callable=AsyncMock,
+        ) as mock:
+            yield mock
+
+    @pytest.fixture
+    def mock_summary(self):
+        with patch(
+            "songyan.services.import_replay_service.write_chapter_summary_with_fact_check",
+            new_callable=AsyncMock,
+        ) as mock:
+            mock.return_value = ("sum-test", None, [])
+            yield mock
+
+    async def test_run_shell_created_and_completed(
+        self, test_db: Path, tmp_path: Path, mock_extract, mock_summary
+    ) -> None:
+        await _seed_project(with_protagonist=True)
+        pid = await _protagonist_id()
+        mock_extract.side_effect = lambda *args, **kwargs: _canned_settlement(pid)
+        manifest_path = _confirmed_manifest(tmp_path)
+
+        report = await replay_import("proj-1", manifest_path)
+
+        run_state = await ProjectRunRepository().get(report.run_id)
+        assert run_state is not None, "replay 应创建 project_runs run 壳"
+        assert run_state.project_id == "proj-1"
+        assert run_state.status == "completed"
+        assert run_state.chapter_range_start == 1
+        assert run_state.chapter_range_end == 3
+        assert run_state.current_chapter == 3
+        assert run_state.completed_chapters == [1, 2, 3]
+        assert run_state.failed_chapters == []
+
+    async def test_partial_run_then_resume_to_completed(
+        self, test_db: Path, tmp_path: Path, mock_extract, mock_summary
+    ) -> None:
+        await _seed_project(with_protagonist=True)
+        pid = await _protagonist_id()
+        manifest_path = _confirmed_manifest(tmp_path)
+
+        def _fail_chapter_2(*args: object, **kwargs: object) -> StateSettlement:
+            if args[2] == 2:
+                raise LLMError("mock llm down")
+            return _canned_settlement(pid)
+
+        mock_extract.side_effect = _fail_chapter_2
+        first = await replay_import("proj-1", manifest_path)
+
+        first_run = await ProjectRunRepository().get(first.run_id)
+        assert first_run is not None
+        assert first_run.status == "partial"
+        assert first_run.completed_chapters == [1, 3]
+        assert first_run.failed_chapters == [2]
+
+        mock_extract.side_effect = lambda *args, **kwargs: _canned_settlement(pid)
+        second = await replay_import("proj-1", manifest_path)
+
+        second_run = await ProjectRunRepository().get(second.run_id)
+        assert second_run is not None
+        assert second_run.status == "completed"
+        assert second_run.completed_chapters == [1, 2, 3]
+        assert second_run.failed_chapters == []
+
+    async def test_all_chapters_failed_marks_run_failed(
+        self, test_db: Path, tmp_path: Path, mock_extract, mock_summary
+    ) -> None:
+        """preflight 后全灭 → run 壳终态 failed（无一章完成）."""
+        await _seed_project(with_protagonist=True)
+        mock_extract.side_effect = LLMError("llm totally down")
+        manifest_path = _confirmed_manifest(tmp_path)
+
+        report = await replay_import("proj-1", manifest_path, run_id="run-all-fail")
+
+        assert [o.status for o in report.outcomes] == ["failed"] * 3
+        run_state = await ProjectRunRepository().get("run-all-fail")
+        assert run_state is not None
+        assert run_state.status == "failed"
+        assert run_state.completed_chapters == []
+        assert run_state.failed_chapters == [1, 2, 3]
+
+    async def test_explicit_run_id_reused_across_replays(
+        self, test_db: Path, tmp_path: Path, mock_extract, mock_summary
+    ) -> None:
+        await _seed_project(with_protagonist=True)
+        pid = await _protagonist_id()
+        mock_extract.side_effect = lambda *args, **kwargs: _canned_settlement(pid)
+        manifest_path = _confirmed_manifest(tmp_path)
+
+        first = await replay_import("proj-1", manifest_path, run_id="run-fixed")
+        second = await replay_import("proj-1", manifest_path, run_id="run-fixed")
+
+        assert first.run_id == second.run_id == "run-fixed"
+        # 同一 run_id 只保留一行 project_runs 记录
+        runs = await ProjectRunRepository().list_by_project("proj-1")
+        assert [r.run_id for r in runs] == ["run-fixed"]
+        run_state = runs[0]
+        assert run_state.status == "completed"
+        assert run_state.completed_chapters == [1, 2, 3]
+        # 复用 run 的重跑以 skipped 完成，completed 清单不丢失
+        assert [o.status for o in second.outcomes] == ["skipped"] * 3
+
+    async def test_run_id_from_other_project_rejected(
+        self, test_db: Path, tmp_path: Path, mock_extract, mock_summary
+    ) -> None:
+        await _seed_project(with_protagonist=True)
+        await _seed_project("proj-2", with_protagonist=False)
+        await ProjectRunRepository().create(
+            ProjectRunState(
+                run_id="run-other",
+                project_id="proj-2",
+                chapter_range_start=1,
+                chapter_range_end=3,
+            )
+        )
+        manifest_path = _confirmed_manifest(tmp_path)
+
+        with pytest.raises(ImportReplayError, match="不能复用"):
+            await replay_import("proj-1", manifest_path, run_id="run-other")
+        mock_extract.assert_not_called()
+
+    async def test_unexpected_exception_marks_failed_and_reraises(
+        self, test_db: Path, tmp_path: Path, mock_extract, mock_summary
+    ) -> None:
+        """未预期异常（sqlite3.Error）：run 壳落 failed 终态并 re-raise."""
+        await _seed_project(with_protagonist=True)
+        pid = await _protagonist_id()
+        manifest_path = _confirmed_manifest(tmp_path)
+
+        def _crash_chapter_2(*args: object, **kwargs: object) -> StateSettlement:
+            if args[2] == 2:
+                raise sqlite3.OperationalError("database is locked")
+            return _canned_settlement(pid)
+
+        mock_extract.side_effect = _crash_chapter_2
+        with pytest.raises(sqlite3.OperationalError, match="database is locked"):
+            await replay_import("proj-1", manifest_path, run_id="run-crash")
+
+        run_state = await ProjectRunRepository().get("run-crash")
+        assert run_state is not None
+        assert run_state.status == "failed"
+        # 第 1 章已成功落盘，进度保留供续跑
+        assert run_state.completed_chapters == [1]
+        assert run_state.failed_chapters == []
+        # 中断后 contextvars 不泄漏（finally reset 生效）
+        leaked = get_contextvars()
+        assert "run_id" not in leaked
+        assert "chapter_number" not in leaked
+
+        # 兜底语义不改变幂等承诺：修复后重跑同一命令可续跑
+        mock_extract.side_effect = lambda *args, **kwargs: _canned_settlement(pid)
+        report = await replay_import("proj-1", manifest_path, run_id="run-crash")
+        assert [o.status for o in report.outcomes] == ["skipped", "applied", "applied"]
+        recovered = await ProjectRunRepository().get("run-crash")
+        assert recovered is not None
+        assert recovered.status == "completed"
+
+    async def test_total_cost_refreshed_from_llm_call_usage(
+        self, test_db: Path, tmp_path: Path, mock_extract, mock_summary
+    ) -> None:
+        """run 壳收尾从 llm_call_usage 刷新 total_cost（Task 175 口径平账）."""
+        await _seed_project(with_protagonist=True)
+        pid = await _protagonist_id()
+        mock_extract.side_effect = lambda *args, **kwargs: _canned_settlement(pid)
+        manifest_path = _confirmed_manifest(tmp_path)
+
+        usage_repo = LlmCallUsageRepository()
+        await usage_repo.record(
+            run_id="run-cost",
+            project_id="proj-1",
+            chapter_number=1,
+            agent="settlement_extractor",
+            model="mock-model",
+            prompt_tokens=100,
+            completion_tokens=50,
+            cost_cny=0.5,
+            token_source="response",
+            cost_source="pricing_estimate",
+        )
+        await usage_repo.record(
+            run_id="run-cost",
+            project_id="proj-1",
+            chapter_number=1,
+            agent="summary_writer",
+            model="mock-model",
+            prompt_tokens=80,
+            completion_tokens=20,
+            cost_cny=0.25,
+            token_source="response",
+            cost_source="pricing_estimate",
+        )
+
+        await replay_import("proj-1", manifest_path, run_id="run-cost")
+
+        run_state = await ProjectRunRepository().get("run-cost")
+        assert run_state is not None
+        assert run_state.total_cost == pytest.approx(0.75)
+
+
+class TestContextvarsAttribution:
+    """每章回放绑定 run_id/project_id/chapter_number，章末 reset 不泄漏."""
+
+    pytestmark = pytest.mark.asyncio
+
+    @pytest.fixture
+    def mock_summary(self):
+        with patch(
+            "songyan.services.import_replay_service.write_chapter_summary_with_fact_check",
+            new_callable=AsyncMock,
+        ) as mock:
+            mock.return_value = ("sum-test", None, [])
+            yield mock
+
+    async def test_chapter_scoped_binding_and_no_leak(
+        self, test_db: Path, tmp_path: Path, mock_summary
+    ) -> None:
+        await _seed_project(with_protagonist=True)
+        pid = await _protagonist_id()
+        manifest_path = _confirmed_manifest(tmp_path)
+        snapshots: list[dict[str, object]] = []
+
+        def _capture(*args: object, **kwargs: object) -> StateSettlement:
+            snapshots.append(dict(get_contextvars()))
+            return _canned_settlement(pid)
+
+        with patch(
+            "songyan.services.import_replay_service.extract_settlement",
+            new_callable=AsyncMock,
+        ) as mock_extract:
+            mock_extract.side_effect = _capture
+            report = await replay_import("proj-1", manifest_path)
+
+        # 章内 LLM 调用上下文：run_id / project_id / chapter_number 正确归因
+        assert [s["chapter_number"] for s in snapshots] == [1, 2, 3]
+        assert all(s["run_id"] == report.run_id for s in snapshots)
+        assert all(s["project_id"] == "proj-1" for s in snapshots)
+
+        # 章末 reset：回放结束后 contextvars 无残留，不泄漏到调用方
+        leaked = get_contextvars()
+        assert "run_id" not in leaked
+        assert "chapter_number" not in leaked
+        assert "project_id" not in leaked
+
+
+class TestRenderText:
+    """ReplayReport.render_text：纯内存渲染，覆盖统计/失败/观察项各段."""
+
+    def _report(self) -> ReplayReport:
+        return ReplayReport(
+            run_id="run-render",
+            project_id="proj-1",
+            outcomes=[
+                ChapterReplayOutcome(
+                    chapter_number=1, title="第一章 荒山", status="applied",
+                    accepted_version_id="acc-1",
+                ),
+                ChapterReplayOutcome(
+                    chapter_number=2, title="第二章 下山", status="failed",
+                    error="settlement 校验未通过",
+                ),
+                ChapterReplayOutcome(
+                    chapter_number=3, title="第三章 小镇", status="skipped",
+                    accepted_version_id="acc-3",
+                ),
+                ChapterReplayOutcome(
+                    chapter_number=4, title="第四章 进城", status="applied",
+                    accepted_version_id="acc-4",
+                    summary_missing_facts=2,
+                    over_token_budget=True,
+                ),
+            ],
+        )
+
+    def test_render_contains_overall_stats(self) -> None:
+        text = self._report().render_text()
+        assert "run-render" in text
+        assert "proj-1" in text
+        assert "共 4 章" in text
+        assert "applied=2" in text
+        assert "skipped=1" in text
+        assert "failed=1" in text
+
+    def test_render_failed_section_with_recovery_hint(self) -> None:
+        text = self._report().render_text()
+        assert "失败章节" in text
+        assert "第 2 章" in text
+        assert "第二章 下山" in text
+        assert "settlement 校验未通过" in text
+        assert "重跑同一命令即可续跑" in text
+
+    def test_render_over_budget_and_missing_facts_observations(self) -> None:
+        text = self._report().render_text()
+        assert "超 token 预算章节" in text
+        assert "第 4 章" in text
+        assert "missing_facts" in text
+        assert "共 2 条" in text
+
+    def test_render_clean_report_omits_optional_sections(self) -> None:
+        report = ReplayReport(
+            run_id="run-clean",
+            project_id="proj-1",
+            outcomes=[
+                ChapterReplayOutcome(
+                    chapter_number=1, title="第一章", status="applied",
+                    accepted_version_id="acc-1",
+                )
+            ],
+        )
+        text = report.render_text()
+        assert "共 1 章" in text
+        assert "failed=0" in text
+        assert "失败章节" not in text
+        assert "超 token 预算" not in text
+        assert "missing_facts" not in text

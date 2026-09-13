@@ -12,6 +12,7 @@ from pathlib import Path
 from sqlite3 import Row
 
 import structlog
+from structlog.contextvars import bind_contextvars, reset_contextvars
 
 from songyan.agents.settlement_extractor import apply_settlement, extract_settlement
 from songyan.agents.summary_writer import write_chapter_summary_with_fact_check
@@ -19,6 +20,8 @@ from songyan.db.connection import get_db
 from songyan.db.context_repo import SummaryRepository
 from songyan.db.genre_runtime_profile_repo import load_profile
 from songyan.db.import_replay_repo import ImportReplayRepository
+from songyan.db.llm_call_usage_repo import LlmCallUsageRepository
+from songyan.db.project_run_repo import ProjectRunRepository
 from songyan.db.repository import (
     ChapterHeadRepository,
     ChapterVersionRepository,
@@ -31,7 +34,12 @@ from songyan.exceptions import (
     LLMResponseParseError,
     SettlementError,
 )
-from songyan.models import ChapterHead, ChapterVersion, StateSettlement
+from songyan.models import (
+    ChapterHead,
+    ChapterVersion,
+    ProjectRunState,
+    StateSettlement,
+)
 from songyan.models.import_manifest import ChapterBoundary, SegmentManifest
 from songyan.models.import_replay import (
     ChapterReplayOutcome,
@@ -142,8 +150,115 @@ async def get_or_create_import_draft(
 
 
 # ---------------------------------------------------------------------------
-# Task 3: 回放循环核心
+# Task 3/4: 回放循环核心 + run 壳（project_runs）+ contextvars 遥测归因
 # ---------------------------------------------------------------------------
+
+
+async def _get_or_create_run(
+    project_id: str, manifest: SegmentManifest, run_id: str | None
+) -> ProjectRunState:
+    """建/复用 run 壳（project_runs 记录，惯例同 phase2_graph 的 _save_run_state）.
+
+    调用方传入 run_id：已存在则复用（跨项目复用拒绝），不存在则以该 id 新建；
+    未传入则按 run-<uuid8> 新建。chapter_range 取清单全量范围（与 chapters
+    过滤无关）。返回的 run 壳已持久化、状态 running。
+    """
+    repo = ProjectRunRepository()
+    if run_id is not None:
+        existing = await repo.get(run_id)
+        if existing is not None:
+            if existing.project_id != project_id:
+                msg = (
+                    f"回放被拒绝：run_id {run_id} 属于项目 "
+                    f"{existing.project_id}，不能复用于项目 {project_id}。"
+                )
+                raise ImportReplayError(msg)
+            existing.status = "running"
+            existing.pause_reason = None
+            await repo.update(existing)
+            return existing
+    chapter_numbers = [b.chapter_number for b in manifest.boundaries]
+    run_state = ProjectRunState(
+        run_id=run_id or f"run-{uuid.uuid4().hex[:8]}",
+        project_id=project_id,
+        chapter_range_start=min(chapter_numbers),
+        chapter_range_end=max(chapter_numbers),
+        current_chapter=min(chapter_numbers),
+        status="running",
+    )
+    await repo.create(run_state)
+    return run_state
+
+
+async def _persist_replay_progress(
+    run_state: ProjectRunState, chapter_number: int, status: str
+) -> None:
+    """每章（含幂等跳过）后更新 run 壳进度并落盘.
+
+    completed 含 applied + skipped（skipped 章的事实已在库中，等价于完成）；
+    复用 run 时与既有清单按章号 reconcile，失败章重跑成功后自动移出失败清单。
+    """
+    run_state.current_chapter = chapter_number
+    completed = [c for c in run_state.completed_chapters if c != chapter_number]
+    failed = [c for c in run_state.failed_chapters if c != chapter_number]
+    if status == "failed":
+        failed.append(chapter_number)
+    else:
+        completed.append(chapter_number)
+    run_state.completed_chapters = sorted(completed)
+    run_state.failed_chapters = sorted(failed)
+    await ProjectRunRepository().update(run_state)
+
+
+async def _refresh_run_total_cost(run_state: ProjectRunState) -> None:
+    """从 llm_call_usage 合计刷新 run_state.total_cost（Task 175 口径）；
+    读取失败保留既有值，不阻断回放."""
+    try:
+        total = await LlmCallUsageRepository().sum_cost_for_run(run_state.run_id)
+    except Exception as exc:  # 成本合计失败不应阻断回放
+        logger.warning(
+            "import_replay.total_cost_refresh_failed",
+            run_id=run_state.run_id,
+            error=str(exc),
+        )
+        return
+    run_state.total_cost = total
+
+
+async def _finalize_run(run_state: ProjectRunState) -> None:
+    """写 run 壳终态：completed（无失败）/ partial（有失败但有完成）/ failed（全灭）.
+
+    状态公式与 phase2_graph 收尾一致；落盘前刷新 total_cost，
+    保证 project_runs.total_cost 与 llm_call_usage 合计一致。
+    """
+    if run_state.failed_chapters:
+        run_state.status = "partial" if run_state.completed_chapters else "failed"
+    else:
+        run_state.status = "completed"
+    await _refresh_run_total_cost(run_state)
+    await ProjectRunRepository().update(run_state)
+    logger.info(
+        "import_replay.run_finalized",
+        run_id=run_state.run_id,
+        status=run_state.status,
+        completed=len(run_state.completed_chapters),
+        failed=len(run_state.failed_chapters),
+        total_cost=run_state.total_cost,
+    )
+
+
+async def _fail_run(run_state: ProjectRunState) -> None:
+    """未预期异常中断兜底：尽力落 failed 终态；持久化失败只告警，不掩盖原异常."""
+    run_state.status = "failed"
+    try:
+        await _refresh_run_total_cost(run_state)
+        await ProjectRunRepository().update(run_state)
+    except Exception as exc:
+        logger.warning(
+            "import_replay.run_fail_persist_failed",
+            run_id=run_state.run_id,
+            error=str(exc),
+        )
 
 
 async def replay_import(
@@ -159,50 +274,66 @@ async def replay_import(
         encoding="utf-8"
     )
     await preflight_replay(project_id, manifest)
-    resolved_run_id = run_id or f"run-{uuid.uuid4().hex[:8]}"
+    run_state = await _get_or_create_run(project_id, manifest, run_id)
+    resolved_run_id = run_state.run_id
 
     repo = ImportReplayRepository()
     report = ReplayReport(run_id=resolved_run_id, project_id=project_id)
-    for boundary in manifest.boundaries:
-        if chapters and boundary.chapter_number not in chapters:
-            continue
-        existing = await repo.get_mark(project_id, boundary.chapter_number)
-        if existing is not None and existing.source_fingerprint == manifest.source_sha256:
-            report.outcomes.append(
-                ChapterReplayOutcome(
+    try:
+        for boundary in manifest.boundaries:
+            if chapters and boundary.chapter_number not in chapters:
+                continue
+            existing = await repo.get_mark(project_id, boundary.chapter_number)
+            if (
+                existing is not None
+                and existing.source_fingerprint == manifest.source_sha256
+            ):
+                report.outcomes.append(
+                    ChapterReplayOutcome(
+                        chapter_number=boundary.chapter_number,
+                        title=boundary.title,
+                        status="skipped",
+                        accepted_version_id=existing.accepted_version_id,
+                        over_token_budget=boundary.over_token_budget,
+                    )
+                )
+                await _persist_replay_progress(
+                    run_state, boundary.chapter_number, "skipped"
+                )
+                continue
+            if existing is not None:
+                msg = (
+                    f"回放被拒绝：第 {boundary.chapter_number} 章已应用过，"
+                    "但源文件指纹已变化。请重新 segment 并确认后再回放。"
+                )
+                raise ImportReplayError(msg)
+            try:
+                outcome = await _replay_one(
+                    project_id, resolved_run_id, manifest, boundary, normalized
+                )
+            except (LLMError, SettlementError, ImportReplayError) as exc:
+                logger.warning(
+                    "import_replay.chapter_failed",
+                    project_id=project_id,
+                    chapter_number=boundary.chapter_number,
+                    error=str(exc),
+                )
+                outcome = ChapterReplayOutcome(
                     chapter_number=boundary.chapter_number,
                     title=boundary.title,
-                    status="skipped",
-                    accepted_version_id=existing.accepted_version_id,
+                    status="failed",
                     over_token_budget=boundary.over_token_budget,
+                    error=str(exc),
                 )
+            report.outcomes.append(outcome)
+            await _persist_replay_progress(
+                run_state, boundary.chapter_number, outcome.status
             )
-            continue
-        if existing is not None:
-            msg = (
-                f"回放被拒绝：第 {boundary.chapter_number} 章已应用过，"
-                "但源文件指纹已变化。请重新 segment 并确认后再回放。"
-            )
-            raise ImportReplayError(msg)
-        try:
-            outcome = await _replay_one(
-                project_id, resolved_run_id, manifest, boundary, normalized
-            )
-        except (LLMError, SettlementError, ImportReplayError) as exc:
-            logger.warning(
-                "import_replay.chapter_failed",
-                project_id=project_id,
-                chapter_number=boundary.chapter_number,
-                error=str(exc),
-            )
-            outcome = ChapterReplayOutcome(
-                chapter_number=boundary.chapter_number,
-                title=boundary.title,
-                status="failed",
-                over_token_budget=boundary.over_token_budget,
-                error=str(exc),
-            )
-        report.outcomes.append(outcome)
+    except Exception:
+        # 未预期异常（如 sqlite3.Error）或指纹拒绝：落 failed 终态后 re-raise
+        await _fail_run(run_state)
+        raise
+    await _finalize_run(run_state)
     logger.info(
         "import_replay.completed",
         project_id=project_id,
@@ -221,61 +352,78 @@ async def _replay_one(
     boundary: ChapterBoundary,
     normalized: str,
 ) -> ChapterReplayOutcome:
-    """单章回放：draft → extract → 原子回放事务 → summary（失败不阻断）."""
-    title, body = slice_chapter_body(normalized, boundary)
-    draft_version_id = await get_or_create_import_draft(
-        project_id,
-        boundary,
-        body,
-        source_fingerprint=manifest.source_sha256,
-        confirmed_at=manifest.confirmed_at.isoformat() if manifest.confirmed_at else None,
-    )
-    settlement = await extract_settlement(
-        body,
-        project_id,
-        boundary.chapter_number,
-        draft_version_id,
-        genre_rules=None,
-    )
-    if settlement.validation_status != "valid":
-        details = "；".join(settlement.validation_errors) or "（无详细错误）"
-        msg = (
-            f"第 {boundary.chapter_number} 章 settlement 校验未通过 "
-            f"(validation_status={settlement.validation_status}): {details}"
-        )
-        raise SettlementError(msg)
-    accepted_version_id = await _accept_with_replay_mark(
-        project_id=project_id,
-        chapter_number=boundary.chapter_number,
-        draft_version_id=draft_version_id,
-        settlement=settlement,
-        body=body,
+    """单章回放：draft → extract → 原子回放事务 → summary（失败不阻断）.
+
+    进入时按章绑定 structlog contextvars（run_id/project_id/chapter_number），
+    保证章内 LLM 调用写入 llm_call_usage 时正确归因；章末 reset token
+    恢复原上下文，避免泄漏到下一章或调用方。
+    """
+    context_tokens = bind_contextvars(
         run_id=run_id,
-        source_fingerprint=manifest.source_sha256,
-    )
-    summary_id, missing_facts_count = await _write_replay_summary(
-        body=body,
-        settlement=settlement,
         project_id=project_id,
         chapter_number=boundary.chapter_number,
     )
-    if summary_id is not None:
-        await _update_mark_summary_id(project_id, boundary.chapter_number, summary_id)
-    logger.info(
-        "import_replay.chapter_applied",
-        project_id=project_id,
-        chapter_number=boundary.chapter_number,
-        draft_version_id=draft_version_id,
-        accepted_version_id=accepted_version_id,
-    )
-    return ChapterReplayOutcome(
-        chapter_number=boundary.chapter_number,
-        title=title,
-        status="applied",
-        accepted_version_id=accepted_version_id,
-        summary_missing_facts=missing_facts_count,
-        over_token_budget=boundary.over_token_budget,
-    )
+    try:
+        title, body = slice_chapter_body(normalized, boundary)
+        draft_version_id = await get_or_create_import_draft(
+            project_id,
+            boundary,
+            body,
+            source_fingerprint=manifest.source_sha256,
+            confirmed_at=(
+                manifest.confirmed_at.isoformat() if manifest.confirmed_at else None
+            ),
+        )
+        settlement = await extract_settlement(
+            body,
+            project_id,
+            boundary.chapter_number,
+            draft_version_id,
+            genre_rules=None,
+        )
+        if settlement.validation_status != "valid":
+            details = "；".join(settlement.validation_errors) or "（无详细错误）"
+            msg = (
+                f"第 {boundary.chapter_number} 章 settlement 校验未通过 "
+                f"(validation_status={settlement.validation_status}): {details}"
+            )
+            raise SettlementError(msg)
+        accepted_version_id = await _accept_with_replay_mark(
+            project_id=project_id,
+            chapter_number=boundary.chapter_number,
+            draft_version_id=draft_version_id,
+            settlement=settlement,
+            body=body,
+            run_id=run_id,
+            source_fingerprint=manifest.source_sha256,
+        )
+        summary_id, missing_facts_count = await _write_replay_summary(
+            body=body,
+            settlement=settlement,
+            project_id=project_id,
+            chapter_number=boundary.chapter_number,
+        )
+        if summary_id is not None:
+            await _update_mark_summary_id(
+                project_id, boundary.chapter_number, summary_id
+            )
+        logger.info(
+            "import_replay.chapter_applied",
+            project_id=project_id,
+            chapter_number=boundary.chapter_number,
+            draft_version_id=draft_version_id,
+            accepted_version_id=accepted_version_id,
+        )
+        return ChapterReplayOutcome(
+            chapter_number=boundary.chapter_number,
+            title=title,
+            status="applied",
+            accepted_version_id=accepted_version_id,
+            summary_missing_facts=missing_facts_count,
+            over_token_budget=boundary.over_token_budget,
+        )
+    finally:
+        reset_contextvars(**context_tokens)
 
 
 async def _accept_with_replay_mark(
