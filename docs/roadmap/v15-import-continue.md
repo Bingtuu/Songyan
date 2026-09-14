@@ -3,7 +3,7 @@
 > **阶段**: 导入已有小说续写
 > **定位**: V15 是新的用户路径阶段，目标是把外部已有小说"语义编译"成 Songyan 项目——逐章回放 SettlementExtractor 建立 SQLite 事实库，然后从第 N+1 章进入正常续写流水线。这是 Songyan settlement 架构红利的兑现，不是新产品线。
 > **当前口径**: V14 成本路由是 V15 的前置（导入一本 200 章的书 = 200 次 settlement 调用）。V15 不改变生成管线本身，只新增导入路径。
-> **状态**: 进行中。Task 234 审计、Task 235 章节切分与人工确认、Task 236 逐章 settlement 回放已完成（2026-09-09，`replay_import` 服务层交付，幂等断点续跑 + 单章隔离 + run 壳成本归因）；下一步 Task 237 import CLI 与全书级归纳。
+> **状态**: 进行中。Task 234 审计、Task 235 章节切分与人工确认、Task 236 逐章 settlement 回放、Task 237 import CLI 与全书级归纳已完成（2026-09-14，`songyan import` 五阶段全通 + publish 闸门）；下一步 Task 238 导入续写验收。
 
 ---
 
@@ -85,7 +85,7 @@ publish   人工验收后发布为正常项目，进入第 N+1 章续写
 | 234 | V15 import pipeline audit | DONE | 只读审计 SettlementExtractor 对非生成正文的适用性、章节切分策略选项、断点续跑机制，冻结管线设计（报告 `docs/reports/234-v15-import-pipeline-audit.md`） | V14 closure |
 | 235 | 章节切分与人工确认 | DONE | 实现 segment 阶段：章节边界识别、清单输出、人工确认/干预/重放（`songyan import segment/confirm/status`，DONE 文档 `tasks/235-v15-import-segment-confirmation-DONE.md`） | 234 |
 | 236 | 逐章 settlement 回放 | DONE | 实现 replay 阶段：只提取不生成、断点续跑、单章失败隔离 | 234/235 |
-| 237 | import CLI 与全书级归纳 | TODO | `songyan import` 命令、ingest/synthesize/publish 阶段、体裁 profile 与主角档案确认 | 235/236 |
+| 237 | import CLI 与全书级归纳 | DONE | `songyan import` 命令、ingest/synthesize/publish 阶段、体裁 profile 与主角档案确认 | 235/236 |
 | 238 | 导入续写验收 | TODO | 用真实样本导入 + 续写窗口，对比 CED 与原生 baseline，产出验收报告 | 237 |
 
 ---
@@ -160,6 +160,10 @@ publish   人工验收后发布为正常项目，进入第 N+1 章续写
 
 - 每个阶段的中断恢复路径有演练证据。
 - publish 前项目不可进入 `songyan run`。
+
+状态：
+
+- `DONE`（2026-09-14）。`songyan import ingest/replay/synthesize/publish` 交付（segment/confirm/status 已在 235 交付）；`projects.lifecycle_status` 闸门（importing 项目 `songyan run` preflight 拒绝，publish 后放行）；doctor 新增 F5 reasoning 模型告警（`llm.settlement_reasoning`）。详见 `tasks/237-v15-import-cli-synthesize-DONE.md`。
 
 ---
 
