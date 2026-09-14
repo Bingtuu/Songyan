@@ -107,3 +107,13 @@ class ImportReplayRepository:
             project_id=mark.project_id,
             chapter_number=mark.chapter_number,
         )
+
+    async def count_by_project(self, project_id: str) -> int:
+        """统计项目已回放章数（幂等标记行数）；V15 synthesize/publish 只读汇总."""
+        async with get_db() as conn:
+            cursor = await conn.execute(
+                "SELECT COUNT(*) FROM import_replay_marks WHERE project_id = ?",
+                (project_id,),
+            )
+            row = await cursor.fetchone()
+        return int(row[0]) if row else 0

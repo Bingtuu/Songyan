@@ -5,6 +5,8 @@ segment  → 规则切分源文件，产出可审查的章节边界清单
 confirm  → 人工确认清单（回放闸门）
 status   → 查看清单状态与回放闸门判定（退出码 0=可回放, 1=不可）
 replay   → 逐章回放 settlement（幂等断点续跑，存在失败章时退出码 1）
+synthesize → 全书级归纳审查（只读汇总 + 人工确认闸门，不调用 LLM）
+publish  → 人工验收后置 lifecycle_status='active'（重复执行为幂等提示）
 """
 
 from __future__ import annotations
@@ -12,6 +14,7 @@ from __future__ import annotations
 import asyncio
 import uuid
 from pathlib import Path
+from typing import Any
 
 import click
 
@@ -282,6 +285,150 @@ def import_replay_cmd(
     click.echo(report.render_text())
     if report.by_status("failed"):
         raise SystemExit(1)
+
+
+@import_group.command(name="synthesize")
+@click.option(
+    "--project",
+    "project_id",
+    required=True,
+    help="项目 ID（ingest 回执中的项目 ID）",
+)
+@click.option(
+    "--yes",
+    is_flag=True,
+    default=False,
+    help="跳过人工确认闸门（测试与脚本用）",
+)
+def import_synthesize_cmd(project_id: str, yes: bool) -> None:
+    """全书级归纳审查：只读汇总世界观数据，人工确认后进入 publish 阶段（不调用 LLM）."""
+    from songyan.db.context_repo import CharacterStateRepository, SummaryRepository
+    from songyan.db.import_replay_repo import ImportReplayRepository
+    from songyan.db.repository import CharacterRepository
+    from songyan.db.settlement_repo import (
+        ForeshadowingRepository,
+        SettingSnapshotRepository,
+    )
+    from songyan.genres.loader import GenreProfileError, load_genre_profile
+
+    async def _gather() -> dict[str, Any] | None:
+        await init_schema()
+        project = await ProjectRepository().get(project_id)
+        if project is None:
+            return None
+        return {
+            "project": project,
+            "characters": await CharacterRepository().list_by_project(project_id),
+            "setting_counts": await SettingSnapshotRepository().count_by_lifecycle(
+                project_id
+            ),
+            "active_foreshadowings": await ForeshadowingRepository().list_active(
+                project_id
+            ),
+            "character_states": await CharacterStateRepository().list_latest_by_project(
+                project_id
+            ),
+            "max_summary_chapter": await SummaryRepository().get_max_chapter_number(
+                project_id
+            ),
+            "replayed_chapters": await ImportReplayRepository().count_by_project(
+                project_id
+            ),
+        }
+
+    try:
+        data = asyncio.run(_gather())
+    except SongyanError as exc:
+        raise click.ClickException(str(exc)) from exc
+    if data is None:
+        raise click.ClickException(f"项目不存在: {project_id}")
+
+    project: ProjectSetting = data["project"]
+    # F8 双保险：ingest 已显式选择体裁，此处显式加载 profile 再确认一次
+    try:
+        profile = load_genre_profile(project.genre_id)
+    except GenreProfileError as exc:
+        raise click.ClickException(str(exc)) from exc
+
+    click.echo("== 项目基本信息 ==")
+    click.echo(f"标题      : {project.title}")
+    click.echo(f"体裁      : {project.genre_id}")
+    click.echo(f"生命周期  : {project.lifecycle_status}")
+    click.echo(f"主角      : {project.protagonist_name}")
+
+    click.echo("== 体裁 Profile 确认 ==")
+    click.echo(f"Profile   : {profile.name}（{profile.id}）")
+    click.echo(f"写作规则  : {len(profile.writer_rules)} 条")
+    click.echo(f"审查焦点  : {len(profile.reviewer_focus)} 条")
+    click.echo(f"禁忌      : {len(profile.taboos)} 条")
+
+    click.echo("== 主角档案复核 ==")
+    protagonists = [c for c in data["characters"] if c.role_type == "protagonist"]
+    if not protagonists:
+        click.echo("主角档案  : 缺失（characters 表无 protagonist 行，请人工核查）")
+    for char in protagonists:
+        background = char.background or "（空）"
+        if len(background) > 60:
+            background = background[:60] + "…"
+        click.echo(f"主角档案  : {char.name} — {background}")
+
+    setting_counts: dict[str, int] = data["setting_counts"]
+    breakdown = ", ".join(f"{k}={v}" for k, v in setting_counts.items()) or "无"
+    click.echo("== 世界观汇总 ==")
+    click.echo(f"设定快照  : {sum(setting_counts.values())} 条（{breakdown}）")
+    click.echo(f"活跃伏笔  : {len(data['active_foreshadowings'])} 条")
+    click.echo(f"角色状态  : {len(data['character_states'])} 条")
+    click.echo(f"摘要覆盖至: 第 {data['max_summary_chapter']} 章")
+    click.echo(f"已回放章数: {data['replayed_chapters']}")
+
+    if not yes and not click.confirm("确认进入 publish 阶段？"):
+        click.echo("已取消。可再次运行 songyan import synthesize 复核。")
+        raise SystemExit(1)
+    click.echo(f"下一步: songyan import publish --project {project_id}")
+
+
+@import_group.command(name="publish")
+@click.option(
+    "--project",
+    "project_id",
+    required=True,
+    help="项目 ID（ingest 回执中的项目 ID）",
+)
+@click.option(
+    "--yes",
+    is_flag=True,
+    default=False,
+    help="跳过人工确认闸门（测试与脚本用）",
+)
+def import_publish_cmd(project_id: str, yes: bool) -> None:
+    """人工验收后发布导入项目（lifecycle_status → active，之后可 songyan run）."""
+    from songyan.db.import_replay_repo import ImportReplayRepository
+
+    async def _publish() -> None:
+        await init_schema()
+        repo = ProjectRepository()
+        project = await repo.get(project_id)
+        if project is None:
+            raise click.ClickException(f"项目不存在: {project_id}")
+        replayed = await ImportReplayRepository().count_by_project(project_id)
+        if project.lifecycle_status == "active":
+            click.echo(f"项目 {project_id} 已是 active，无需重复发布")
+            return
+        click.echo(f"标题      : {project.title}")
+        click.echo(f"体裁      : {project.genre_id}")
+        click.echo(f"主角      : {project.protagonist_name}")
+        click.echo(f"已回放章数: {replayed}")
+        if not yes and not click.confirm("确认发布？发布后项目可进入 songyan run"):
+            click.echo("已取消发布，项目仍处于 importing")
+            raise SystemExit(1)
+        await repo.update_lifecycle_status(project_id, "active")
+        click.echo(f"发布成功: 项目 {project_id} 已置为 active")
+        click.echo(f"下一步: songyan run --project-id {project_id} --chapters <范围>")
+
+    try:
+        asyncio.run(_publish())
+    except SongyanError as exc:
+        raise click.ClickException(str(exc)) from exc
 
 
 def register_import_commands(cli: click.Group) -> None:

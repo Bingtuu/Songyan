@@ -223,6 +223,44 @@ def _check_llm_config(config: Settings) -> list[DoctorCheck]:
     return checks
 
 
+#: F5：settlement 角色清单（思考模型与这两类角色的调用点 token 预算不兼容）
+_SETTLEMENT_LLM_ROLES: frozenset[str] = frozenset(
+    {"settlement_extractor", "summary_writer"}
+)
+
+#: reasoning 模型名匹配关键字（大小写不敏感，如 deepseek-reasoner）
+_REASONING_MODEL_KEYWORD = "reasoner"
+
+
+def _check_settlement_role_not_reasoning(config: Settings) -> DoctorCheck:
+    """F5 告警：settlement 角色配置 reasoning 模型存在 token 预算风险（V14 负结果）.
+
+    V14 Task 233 实测：writer=deepseek-reasoner 与调用点 max_tokens(6000) 不兼容，
+    思考 token 挤占输出预算导致空响应。settlement 角色同样受限，故按名告警（不 fail）。
+    """
+    hits = [
+        role
+        for role, override in sorted(config.llm_role_overrides.items())
+        if role in _SETTLEMENT_LLM_ROLES
+        and override.model
+        and _REASONING_MODEL_KEYWORD in override.model.lower()
+    ]
+    if not hits:
+        return DoctorCheck(
+            "llm.settlement_reasoning",
+            "pass",
+            "settlement 角色未配置 reasoning 模型",
+        )
+    return DoctorCheck(
+        "llm.settlement_reasoning",
+        "warn",
+        f"settlement 角色配置了 reasoning 模型: {', '.join(hits)}；"
+        "思考模型输出易超出调用点 max_tokens 预算导致空响应（V14 负结果）。",
+        "建议为 settlement_extractor / summary_writer 改用非 reasoning 模型"
+        "（如 deepseek-chat）。",
+    )
+
+
 async def _check_database(
     config: Settings,
     *,
@@ -492,6 +530,7 @@ async def run_doctor(
     checks.append(_check_settings_load())
     checks.append(_check_env_file())
     checks.extend(_check_llm_config(config))
+    checks.append(_check_settlement_role_not_reasoning(config))
     checks.extend(await _check_database(config, init_db=init_db))
     checks.append(_check_runtime_mode(config))
     checks.append(_check_log_path())

@@ -12,7 +12,7 @@ import pytest
 from click.testing import CliRunner
 
 from songyan.cli.main import cli
-from songyan.config import Settings, settings
+from songyan.config import RoleLlmOverride, Settings, settings
 from songyan.services.doctor_service import DoctorCheck
 
 
@@ -260,3 +260,57 @@ def test_doctor_fails_for_invalid_checkpointer_mode(
 
     assert result.exit_code == 1
     assert "[FAIL] runtime.checkpointer" in result.output
+
+
+# ---------------------------------------------------------------------------
+# Task 237-4: doctor F5 — settlement 角色配置 reasoning 模型告警
+# ---------------------------------------------------------------------------
+
+
+def test_doctor_warns_when_settlement_role_uses_reasoning_model(
+    runner: CliRunner,
+    doctor_env: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        settings,
+        "llm_role_overrides",
+        {"settlement_extractor": RoleLlmOverride(model="deepseek-reasoner")},
+    )
+
+    result = runner.invoke(cli, ["doctor"])
+
+    assert result.exit_code == 0, result.output
+    assert "[WARN] llm.settlement_reasoning" in result.output
+    assert "settlement_extractor" in result.output
+    assert "reasoning" in result.output
+
+
+def test_doctor_settlement_reasoning_pass_without_override(
+    runner: CliRunner,
+    doctor_env: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(settings, "llm_role_overrides", {})
+
+    result = runner.invoke(cli, ["doctor"])
+
+    assert result.exit_code == 0, result.output
+    assert "[PASS] llm.settlement_reasoning" in result.output
+
+
+def test_doctor_settlement_reasoning_ignores_non_settlement_roles(
+    runner: CliRunner,
+    doctor_env: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        settings,
+        "llm_role_overrides",
+        {"writer": RoleLlmOverride(model="deepseek-reasoner")},
+    )
+
+    result = runner.invoke(cli, ["doctor"])
+
+    assert result.exit_code == 0, result.output
+    assert "[PASS] llm.settlement_reasoning" in result.output

@@ -481,6 +481,27 @@ class SettingSnapshotRepository:
             )
         return result
 
+    async def count_by_lifecycle(self, project_id: str) -> dict[str, int]:
+        """按 lifecycle_status 分组统计 setting_snapshots 数量（V15 synthesize 只读汇总）."""
+        async with get_db() as conn:
+            cursor = await conn.execute(
+                """SELECT lifecycle_status, COUNT(*)
+                FROM setting_snapshots
+                WHERE project_id = ?
+                GROUP BY lifecycle_status
+                ORDER BY lifecycle_status""",
+                (project_id,),
+            )
+            rows = await cursor.fetchall()
+        result = {row[0]: row[1] for row in rows}
+        logger.info(
+            "repository.read",
+            table="setting_snapshots",
+            operation="count_by_lifecycle",
+            project_id=project_id,
+        )
+        return result
+
     async def archive_stale(
         self,
         project_id: str,

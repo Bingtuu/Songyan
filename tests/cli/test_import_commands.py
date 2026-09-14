@@ -410,3 +410,196 @@ def test_replay_import_error_becomes_click_exception(
     )
     assert result.exit_code != 0
     assert "回放被拒绝：清单未确认" in result.output
+
+
+# ---------------------------------------------------------------------------
+# Task 237-4: import synthesize / publish
+# ---------------------------------------------------------------------------
+
+
+def _seed_project(
+    db_path: Path,
+    project_id: str,
+    *,
+    genre_id: str = "scifi",
+    lifecycle_status: str = "importing",
+    title: str = "导入小说",
+    protagonist: str = "林渊",
+    with_world: bool = True,
+) -> None:
+    """直插项目与回放后世界观数据（sqlite3 默认不开 FK，供 CLI 只读统计）."""
+    conn = sqlite3.connect(db_path)
+    try:
+        conn.execute(
+            """INSERT INTO projects (
+                project_id, title, genre_id, protagonist_name, lifecycle_status
+            ) VALUES (?, ?, ?, ?, ?)""",
+            (project_id, title, genre_id, protagonist, lifecycle_status),
+        )
+        conn.execute(
+            """INSERT INTO characters (
+                character_id, project_id, name, role_type, background
+            ) VALUES (?, ?, ?, 'protagonist', ?)""",
+            (f"char-{project_id}", project_id, protagonist, "星河码头长大的拾荒少年"),
+        )
+        if with_world:
+            for i, status in enumerate(("active", "active", "dormant"), start=1):
+                conn.execute(
+                    """INSERT INTO setting_snapshots (
+                        setting_id, project_id, setting_name, setting_key, lifecycle_status
+                    ) VALUES (?, ?, ?, ?, ?)""",
+                    (f"set-{i}", project_id, f"设定{i}", f"key-{i}", status),
+                )
+            conn.execute(
+                """INSERT INTO foreshadowings (
+                    foreshadowing_id, project_id, description,
+                    planted_in_chapter, status, lifecycle_status, source_version_id
+                ) VALUES (?, ?, ?, 1, 'planted', 'active', 'ver-1')""",
+                (f"fore-{project_id}", project_id, "神秘芯片的来历"),
+            )
+            for chapter in (1, 2):
+                conn.execute(
+                    """INSERT INTO summaries (
+                        summary_id, project_id, chapter_number, plot_summary
+                    ) VALUES (?, ?, ?, ?)""",
+                    (
+                        f"sum-{project_id}-{chapter}",
+                        project_id,
+                        chapter,
+                        f"第{chapter}章摘要",
+                    ),
+                )
+            conn.execute(
+                """INSERT INTO character_states (
+                    character_id, field, value, source_version_id
+                ) VALUES (?, 'mood', '平静', 'ver-1')""",
+                (f"char-{project_id}",),
+            )
+            for chapter in (1, 2):
+                conn.execute(
+                    """INSERT INTO import_replay_marks (
+                        project_id, run_id, chapter_number, draft_version_id,
+                        accepted_version_id, source_fingerprint
+                    ) VALUES (?, 'run-1', ?, ?, ?, ?)""",
+                    (
+                        project_id,
+                        chapter,
+                        f"draft-{chapter}",
+                        f"acc-{chapter}",
+                        f"fp-{chapter}",
+                    ),
+                )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def test_synthesize_happy_path(tmp_path: Path, import_cli_db: Path) -> None:
+    _seed_project(import_cli_db, "proj-syn")
+
+    result = CliRunner().invoke(
+        cli, ["import", "synthesize", "--project", "proj-syn", "--yes"]
+    )
+    assert result.exit_code == 0, result.output
+    assert "scifi" in result.output
+    assert "科幻" in result.output  # 体裁 profile 名称
+    assert "林渊" in result.output
+    assert "拾荒少年" in result.output
+    assert "设定快照  : 3 条" in result.output
+    assert "active=2" in result.output and "dormant=1" in result.output
+    assert "活跃伏笔  : 1 条" in result.output
+    assert "角色状态  : 1 条" in result.output
+    assert "摘要覆盖至: 第 2 章" in result.output
+    assert "已回放章数: 2" in result.output
+    assert "import publish" in result.output
+
+
+def test_synthesize_unknown_genre_fails(tmp_path: Path, import_cli_db: Path) -> None:
+    _seed_project(import_cli_db, "proj-bad", genre_id="nonexistent", with_world=False)
+
+    result = CliRunner().invoke(
+        cli, ["import", "synthesize", "--project", "proj-bad", "--yes"]
+    )
+    assert result.exit_code != 0
+    assert "nonexistent" in result.output
+
+
+def test_synthesize_missing_project_fails(tmp_path: Path, import_cli_db: Path) -> None:
+    result = CliRunner().invoke(
+        cli, ["import", "synthesize", "--project", "ghost", "--yes"]
+    )
+    assert result.exit_code != 0
+    assert "项目不存在" in result.output
+
+
+def test_synthesize_confirm_rejected_exits_1(
+    tmp_path: Path, import_cli_db: Path
+) -> None:
+    _seed_project(import_cli_db, "proj-syn", with_world=False)
+
+    result = CliRunner().invoke(
+        cli, ["import", "synthesize", "--project", "proj-syn"], input="n\n"
+    )
+    assert result.exit_code == 1
+    assert "已取消" in result.output
+
+
+def test_publish_activates_importing_project(
+    tmp_path: Path, import_cli_db: Path
+) -> None:
+    _seed_project(import_cli_db, "proj-pub")
+
+    result = CliRunner().invoke(
+        cli, ["import", "publish", "--project", "proj-pub", "--yes"]
+    )
+    assert result.exit_code == 0, result.output
+    assert "已回放章数: 2" in result.output
+    assert "songyan run" in result.output
+    rows = _query(
+        import_cli_db,
+        "SELECT lifecycle_status FROM projects WHERE project_id = ?",
+        ("proj-pub",),
+    )
+    assert rows == [("active",)]
+
+
+def test_publish_already_active_is_idempotent(
+    tmp_path: Path, import_cli_db: Path
+) -> None:
+    _seed_project(import_cli_db, "proj-pub")
+    first = CliRunner().invoke(
+        cli, ["import", "publish", "--project", "proj-pub", "--yes"]
+    )
+    assert first.exit_code == 0, first.output
+
+    result = CliRunner().invoke(
+        cli, ["import", "publish", "--project", "proj-pub", "--yes"]
+    )
+    assert result.exit_code == 0, result.output
+    assert "已是 active" in result.output
+
+
+def test_publish_missing_project_fails(tmp_path: Path, import_cli_db: Path) -> None:
+    result = CliRunner().invoke(
+        cli, ["import", "publish", "--project", "ghost", "--yes"]
+    )
+    assert result.exit_code != 0
+    assert "项目不存在" in result.output
+
+
+def test_publish_confirm_rejected_keeps_importing(
+    tmp_path: Path, import_cli_db: Path
+) -> None:
+    _seed_project(import_cli_db, "proj-pub")
+
+    result = CliRunner().invoke(
+        cli, ["import", "publish", "--project", "proj-pub"], input="n\n"
+    )
+    assert result.exit_code == 1
+    assert "已取消" in result.output
+    rows = _query(
+        import_cli_db,
+        "SELECT lifecycle_status FROM projects WHERE project_id = ?",
+        ("proj-pub",),
+    )
+    assert rows == [("importing",)]
