@@ -27,6 +27,7 @@ Current public status: Songyan is ready as a technical preview / release-candida
 - `create-project`, `run`, `report`, `metrics`, `five-gate`, `t9`, `bundle-run`, `export`, `backup`, `restore`.
 - Profile safety tools: `validate`, `upsert --dry-run`, `history`, `rollback`.
 - Per-role LLM model routing (`LLM_<ROLE>_*`) with per-role token/cost split in run reports.
+- Import pipeline for existing novels: `import` command group (`ingest` / `segment` / `confirm` / `status` / `replay` / `synthesize` / `publish`) with manual confirmation gates, idempotent chapter replay with settlement extraction, and a lifecycle gate that blocks `run` until publish.
 - Redacted diagnostic bundle for reproducible issue reports.
 - CI for ruff, runtime mypy, pytest, CLI tests and wheel smoke.
 
@@ -45,6 +46,7 @@ These historical validation records are not part of the public main documentatio
 - Songyan is a CLI system, not a web app or hosted service.
 - Running real generation requires an LLM API key and may incur cost.
 - The maintainer must rerun real LLM Ch1-3 smoke before a formal release tag.
+- The import pipeline (`songyan import`) has full automated test coverage and CLI smoke evidence, but its real-LLM acceptance run (import a real manuscript, then continue writing) is still pending; treat imported-project continuation quality as unverified until that acceptance report lands.
 - Research / report-only evaluation modules are not runtime release gates.
 
 ## Public Docs

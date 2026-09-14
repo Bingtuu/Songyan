@@ -51,6 +51,7 @@ Songyan 目前适合懂命令行、能配置 LLM API key 的技术用户试用�
 - 玄幻、武侠、都市样本完成 200 章 accepted 内部验证。
 - Windows 下通过 wheel 构建、wheel 安装、非仓库目录运行、资源加载、模板建项和 accepted 正文导出 smoke。
 - 质量门口径（CED / T9 / 五门）与 Ch200 baseline 聚合数值已公开，可用 `songyan five-gate` / `songyan t9` 只读复现。
+- 导入已有小说续写管线（`songyan import`）已交付：切分人工确认、幂等回放、发布闸门齐备；真实书稿的导入续写验收仍在进行中，验收报告落地前该路径按预览功能对待。
 - CI 覆盖 ruff、runtime mypy、pytest、CLI tests 和 wheel smoke。
 
 ## 功能概览
@@ -69,6 +70,7 @@ Songyan 目前适合懂命令行、能配置 LLM API key 的技术用户试用�
 | Profile 安全 | `validate`、`upsert --dry-run`、`history`、`rollback` |
 | 按角色模型路由 | 写作 / 审查 / 结算等角色独立配置模型与 endpoint（`LLM_<ROLE>_*`，两级显式回退） |
 | 质量门复现 | `five-gate` / `t9` 只读重算公开口径指标（CED / T9 / 五门） |
+| 导入已有小说 | `import` 命令组：切分 + 人工确认 + 逐章事实回放 + 全书归纳 + 发布闸门，从第 N+1 章续写 |
 | 正文导出 | 从 accepted 章节导出 Markdown / txt 书稿 |
 
 ## 快速开始
@@ -148,6 +150,8 @@ songyan backup --project-id <project_id> --output backups/
 | `songyan profile rollback --genre <genre> --history-id <id>` | 回滚 profile override |
 | `songyan five-gate --project-id <id> --up-to 100` | 只读重算五门指标（persist=False） |
 | `songyan t9 --project-id <id> --chapters 1-200` | 只读重算 T9 文本洁净度红线 |
+| `songyan import ingest --source <file> --genre <id> --protagonist-name <名>` | 导入已有小说：建档 + 主角入库 |
+| `songyan import segment --source <file> --output <dir>` → `confirm` → `replay` → `synthesize` → `publish` | 切分人工确认后逐章回放事实库，publish 后方可 `run` 续写 |
 
 ## 架构概览
 
