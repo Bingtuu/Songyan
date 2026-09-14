@@ -405,6 +405,10 @@ async def _recycle_duplicate_setting_clusters(
                 canonical_key=existing["setting_key"],
                 canonical=canonical,
             )
+            # Task 238: H 组观察计数（report-only，纯增量）
+            settlement.observation_counts["setting_duplicate_recycled"] = (
+                settlement.observation_counts.get("setting_duplicate_recycled", 0) + 1
+            )
             continue
         if canonical and canonical in seen_new_canonicals:
             logger.info(
@@ -413,6 +417,10 @@ async def _recycle_duplicate_setting_clusters(
                 chapter_number=chapter_number,
                 duplicate_key=setting.setting_key,
                 canonical=canonical,
+            )
+            # Task 238: H 组观察计数（report-only，纯增量）
+            settlement.observation_counts["setting_duplicate_skipped"] = (
+                settlement.observation_counts.get("setting_duplicate_skipped", 0) + 1
             )
             continue
         retained.append(setting)
@@ -664,6 +672,10 @@ async def apply_settlement(
                     project_id=project_id,
                     action="skip",
                 )
+                # Task 238: H 组观察计数（report-only，纯增量）
+                settlement.observation_counts["character_update_skipped"] = (
+                    settlement.observation_counts.get("character_update_skipped", 0) + 1
+                )
                 continue
 
             # Task 110a: 按角色层级保真压缩状态值
@@ -759,6 +771,10 @@ async def apply_settlement(
                     character_id=num.character_id,
                     project_id=project_id,
                     action="skip_numerical",
+                )
+                # Task 238: H 组观察计数（report-only，纯增量）
+                settlement.observation_counts["numerical_update_skipped"] = (
+                    settlement.observation_counts.get("numerical_update_skipped", 0) + 1
                 )
                 continue
             ledger_id = f"num-{project_id}-{chapter_number}-{uuid.uuid4().hex[:8]}"

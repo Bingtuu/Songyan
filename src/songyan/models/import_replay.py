@@ -33,6 +33,9 @@ class ChapterReplayOutcome(BaseModel):
     summary_missing_facts: int = 0
     over_token_budget: bool = False
     error: str | None = None
+    # Task 238: H 组观察项（report-only，不影响 exit code）
+    observation_counts: dict[str, int] = Field(default_factory=dict)
+    opening_closing_mismatch: int = 0
 
 
 class ReplayReport(BaseModel):
@@ -91,4 +94,35 @@ class ReplayReport(BaseModel):
             lines.append(
                 f"摘要 missing_facts 汇总（观察项）：共 {total_missing} 条（{detail}）。"
             )
+        # Task 238 H 组观察项：F4 计数（settlement 丢弃/回收）+ F6 跨章 diff。
+        # 纯观察，不影响 exit code；全零时整段省略（沿用可选段惯例）。
+        observation_totals: dict[str, int] = {}
+        observation_by_chapter: dict[str, list[tuple[int, int]]] = {}
+        for outcome in self.outcomes:
+            for key, value in outcome.observation_counts.items():
+                if not value:
+                    continue
+                observation_totals[key] = observation_totals.get(key, 0) + value
+                observation_by_chapter.setdefault(key, []).append(
+                    (outcome.chapter_number, value)
+                )
+        total_mismatch = sum(o.opening_closing_mismatch for o in self.outcomes)
+        if observation_totals or total_mismatch:
+            lines.append("H 组观察项（report-only，不影响回放结果与验收结论）：")
+            for key in sorted(observation_totals):
+                detail = "、".join(
+                    f"第 {chapter} 章 {count} 次"
+                    for chapter, count in observation_by_chapter[key]
+                )
+                lines.append(f"  {key}：共 {observation_totals[key]} 次（{detail}）")
+            if total_mismatch:
+                detail = "、".join(
+                    f"第 {o.chapter_number} 章 {o.opening_closing_mismatch} 处"
+                    for o in self.outcomes
+                    if o.opening_closing_mismatch
+                )
+                lines.append(
+                    "  opening_closing_mismatch（F6 数值台账跨章 "
+                    f"opening/closing 不一致）：共 {total_mismatch} 处（{detail}）"
+                )
         return "\n".join(lines)

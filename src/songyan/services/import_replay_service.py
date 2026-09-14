@@ -37,6 +37,7 @@ from songyan.exceptions import (
 from songyan.models import (
     ChapterHead,
     ChapterVersion,
+    NumericalUpdate,
     ProjectRunState,
     StateSettlement,
 )
@@ -345,6 +346,64 @@ async def replay_import(
     return report
 
 
+async def _count_opening_closing_mismatches(
+    *,
+    project_id: str,
+    chapter_number: int,
+    numerical_updates: list[NumericalUpdate],
+) -> int:
+    """F6 跨章 diff 观察项：本章 opening_value 对前章最新 closing_value.
+
+    在回放事务提交后执行（只读 SELECT），比较失败只告警、不影响已提交章。
+    不复用 ``NumericalLedgerRepository.get_latest``——它不按 project_id 过滤；
+    此处用参数化 SQL 按 (project_id, character_id, attribute_name) 取
+    chapter_number < 本章的最新台账行。首章或该键无前章行 → 不计。
+    """
+    if not numerical_updates:
+        return 0
+    mismatches = 0
+    try:
+        async with get_db() as conn:
+            for num in numerical_updates:
+                cursor = await conn.execute(
+                    """SELECT closing_value FROM numerical_ledgers
+                       WHERE project_id = ? AND character_id = ?
+                         AND attribute_name = ? AND chapter_number < ?
+                       ORDER BY chapter_number DESC, created_at DESC
+                       LIMIT 1""",
+                    (
+                        project_id,
+                        num.character_id,
+                        num.attribute_name,
+                        chapter_number,
+                    ),
+                )
+                row = await cursor.fetchone()
+                if row is None:
+                    continue
+                previous_closing = float(row[0])
+                if previous_closing != float(num.opening_value):
+                    mismatches += 1
+                    logger.info(
+                        "import_replay.opening_closing_mismatch",
+                        project_id=project_id,
+                        chapter_number=chapter_number,
+                        character_id=num.character_id,
+                        attribute_name=num.attribute_name,
+                        opening_value=num.opening_value,
+                        previous_closing_value=previous_closing,
+                    )
+    except Exception as exc:  # 观察项失败不应影响已提交章
+        logger.warning(
+            "import_replay.opening_closing_diff_failed",
+            project_id=project_id,
+            chapter_number=chapter_number,
+            error=str(exc),
+        )
+        return 0
+    return mismatches
+
+
 async def _replay_one(
     project_id: str,
     run_id: str,
@@ -397,6 +456,12 @@ async def _replay_one(
             run_id=run_id,
             source_fingerprint=manifest.source_sha256,
         )
+        # Task 238 F6：回放事务提交后做跨章 opening/closing 只读比对（观察项）
+        opening_closing_mismatch = await _count_opening_closing_mismatches(
+            project_id=project_id,
+            chapter_number=boundary.chapter_number,
+            numerical_updates=settlement.numerical_updates,
+        )
         summary_id, missing_facts_count = await _write_replay_summary(
             body=body,
             settlement=settlement,
@@ -421,6 +486,10 @@ async def _replay_one(
             accepted_version_id=accepted_version_id,
             summary_missing_facts=missing_facts_count,
             over_token_budget=boundary.over_token_budget,
+            # Task 238: H 组观察计数从 settlement 拷贝（validate/apply 阶段填充），
+            # observation_counts 为新增字段，不被既有 settlement 改写逻辑触碰。
+            observation_counts=dict(settlement.observation_counts),
+            opening_closing_mismatch=opening_closing_mismatch,
         )
     finally:
         reset_contextvars(**context_tokens)

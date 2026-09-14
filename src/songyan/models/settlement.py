@@ -118,3 +118,8 @@ class StateSettlement(BaseModel):
     # Phase 4 新增：影响力与开放线索
     impact_score: float = Field(0.0, ge=0.0, le=1.0)  # P2-11
     open_threads: list[str] = Field(default_factory=list)
+
+    # Task 238: H 组观察计数（回放验收 report-only）。
+    # validate/apply 在丢弃/回收实际发生时纯增量 +1；默认空字典，
+    # 在线路径零行为变化，不进完整性约束。
+    observation_counts: dict[str, int] = Field(default_factory=dict)

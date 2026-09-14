@@ -872,6 +872,13 @@ async def _validate_settlement(
                     project_id=project_id,
                     chapter_number=chapter_number,
                 )
+                # Task 238: H 组观察计数（report-only，纯增量）
+                settlement.observation_counts["foreshadowing_resolve_missing_id"] = (
+                    settlement.observation_counts.get(
+                        "foreshadowing_resolve_missing_id", 0
+                    )
+                    + 1
+                )
                 continue
             if (
                 resolvable_foreshadowing_ids is not None
@@ -883,6 +890,13 @@ async def _validate_settlement(
                     description=fs.description[:50],
                     project_id=project_id,
                     chapter_number=chapter_number,
+                )
+                # Task 238: H 组观察计数（report-only，纯增量）
+                settlement.observation_counts["foreshadowing_resolve_unknown_id"] = (
+                    settlement.observation_counts.get(
+                        "foreshadowing_resolve_unknown_id", 0
+                    )
+                    + 1
                 )
                 continue
         # Task 094: 验证 expected_resolve_chapter 必须在当前章节之后。
