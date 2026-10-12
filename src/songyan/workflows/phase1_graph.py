@@ -85,6 +85,7 @@ class Phase1State(TypedDict):
     _content_preservation_ratio: float | None
     # exp/canon-loop
     _canon_decision: str | None
+    _recover_action: str | None
     # 058d: revision 引入的新问题（序列化后的 ReviewIssue dict 列表）
     _new_issues_introduced: list[dict[str, Any]] | None
     _new_issues_version_id: str | None
@@ -400,11 +401,23 @@ async def build_phase1_graph() -> Any:
     )
 
     # settlement_extractor → 结束
+    # fix #1: bounded auto-recovery instead of silent error=None failures (batch / auto-confirm)
+    from songyan.canon.recovery import auto_recover_node, auto_recover_router
+
+    builder.add_node("auto_recover", auto_recover_node)  # type: ignore[type-var]
+    builder.add_edge("settlement_extractor", "auto_recover")
+    builder.add_conditional_edges(
+        "auto_recover",
+        auto_recover_router,  # type: ignore[arg-type]
+        {
+            "done": "canon_update" if _canon_on else END,
+            "retry_summary": "settlement_extractor",
+            "retry_chapter": "writer",
+            "error": END,
+        },
+    )
     if _canon_on:
-        builder.add_edge("settlement_extractor", "canon_update")
         builder.add_edge("canon_update", END)
-    else:
-        builder.add_edge("settlement_extractor", END)
 
     _compiled_graph = builder.compile(checkpointer=await _get_checkpointer())
     return _compiled_graph

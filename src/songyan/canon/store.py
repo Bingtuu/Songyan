@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import json
+import os
 import re
+import time
 import sqlite3
 from typing import Any
 
@@ -25,6 +27,10 @@ CREATE TABLE IF NOT EXISTS canon_conflicts (
   project_id TEXT NOT NULL, chapter INTEGER, kind TEXT, key TEXT,
   canon_value TEXT, new_value TEXT, reason TEXT,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS retry_counters (
+  project_id TEXT NOT NULL, chapter INTEGER NOT NULL, kind TEXT NOT NULL,
+  token TEXT NOT NULL, count INTEGER DEFAULT 0, PRIMARY KEY(project_id, chapter, kind)
 );
 CREATE TABLE IF NOT EXISTS canon_feedback (
   project_id TEXT NOT NULL, chapter INTEGER NOT NULL, attempts INTEGER DEFAULT 0,
@@ -133,16 +139,20 @@ def seed_from_project(project_id: str) -> None:
 
 
 def get_feedback(project_id: str, chapter: int) -> tuple[int, str]:
+    """(attempts in THIS process, feedback text)."""
     with _conn() as c:
-        r = c.execute("SELECT attempts, feedback FROM canon_feedback WHERE project_id=? AND chapter=?",
+        r = c.execute("SELECT feedback FROM canon_feedback WHERE project_id=? AND chapter=?",
                       (project_id, chapter)).fetchone()
-    return (r[0], r[1]) if r else (0, "")
+    return get_count(project_id, chapter, "canon"), (r[0] if r else "")
 
 
 def set_feedback(project_id: str, chapter: int, attempts: int, feedback: str) -> None:
+    """Store feedback; attempts are tracked by retry_counters (kind='canon')."""
     with _conn() as c:
         c.execute("INSERT OR REPLACE INTO canon_feedback(project_id,chapter,attempts,feedback) VALUES(?,?,?,?)",
                   (project_id, chapter, attempts, feedback))
+    while get_count(project_id, chapter, "canon") < attempts:
+        bump_count(project_id, chapter, "canon")
 
 
 def render_block(project_id: str, chapter: int) -> str:
@@ -185,3 +195,26 @@ def render_block(project_id: str, chapter: int) -> str:
         L.append(fb)
     L.append("【CANON 结束】\n")
     return "\n".join(L)
+
+
+# ---------------------------------------------------------------------------
+# fix #5: retry budgets are scoped to one process invocation (one `songyan run`),
+# so `--resume` starts with a fresh, still-bounded budget instead of zero.
+PROCESS_TOKEN = f"{os.getpid()}-{time.time():.0f}"
+
+
+def get_count(project_id: str, chapter: int, kind: str, token: str | None = None) -> int:
+    token = token or PROCESS_TOKEN
+    with _conn() as c:
+        r = c.execute("SELECT token, count FROM retry_counters WHERE project_id=? AND chapter=? AND kind=?",
+                      (project_id, chapter, kind)).fetchone()
+    return int(r[1]) if r and r[0] == token else 0
+
+
+def bump_count(project_id: str, chapter: int, kind: str, token: str | None = None) -> int:
+    token = token or PROCESS_TOKEN
+    n = get_count(project_id, chapter, kind, token) + 1
+    with _conn() as c:
+        c.execute("INSERT OR REPLACE INTO retry_counters(project_id,chapter,kind,token,count) VALUES(?,?,?,?,?)",
+                  (project_id, chapter, kind, token, n))
+    return n
