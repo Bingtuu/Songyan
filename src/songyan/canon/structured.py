@@ -163,6 +163,14 @@ def canon_slots(project_id: str, chapter: int) -> tuple[list[dict[str, Any]], li
     return ms, fs
 
 
+def _same_subject(a: Any, b: Any) -> bool:
+    a, b = re.sub(r"\s", "", str(a or "")), re.sub(r"\s", "", str(b or ""))
+    if not a or not b:
+        return False
+    m = difflib.SequenceMatcher(None, a, b).find_longest_match(0, len(a), 0, len(b))
+    return m.size >= max(2, min(len(a), len(b)) - 1)
+
+
 def _fallback_link(measures: list[dict[str, Any]], dm: list[dict[str, Any]], chapter: int | None) -> None:
     """Code-side linking for the continuity seam: a previous chapter's END value re-stated
     in this chapter's opening (first ~25% of measures) with the same subject is the same quantity."""
@@ -197,10 +205,10 @@ def compare(project_id: str, measures: list[dict[str, Any]], facts: list[dict[st
         ref = str(x.get("canon_ref") or "").strip().upper()
         if ref.startswith("M") and ref[1:].isdigit() and 1 <= int(ref[1:]) <= len(measures):
             c = measures[int(ref[1:]) - 1]
-            if x.get("subject") and x.get("_linked_by") is None and difflib.SequenceMatcher(
-                    None, re.sub(r"\s", "", c.get("subject") or ""), re.sub(r"\s", "", x["subject"])).ratio() < 0.5:
-                continue  # code rejects an LLM link whose subjects don't match (声源频率 ≠ 回声起始频率)
-            if numbers_differ(c.get("value"), x.get("value")):
+            # code verifies the LLM link: subjects must share a core (声源频率 ≠ 回声起始频率)
+            if x.get("subject") and x.get("_linked_by") is None and not _same_subject(c.get("subject"), x["subject"]):
+                pass
+            elif numbers_differ(c.get("value"), x.get("value")):
                 out.append({"type": "number", "severity": "error", "quote": x.get("quote", ""),
                             "canon": f"第{c['chapter']}章 {c['subject']}｜{c.get('condition','')} = {c.get('value')}{c.get('unit','')}",
                             "explanation": f"同一个量，草稿写成 {x.get('value')}"})
