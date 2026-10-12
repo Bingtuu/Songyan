@@ -563,6 +563,40 @@ async def _execute_with_db_retry(
     raise RuntimeError("Unexpected exit from retry loop")
 
 
+async def _degraded_block_rollback(
+    conn: aiosqlite.Connection,
+    savepoint: str,
+    exc: BaseException,
+    *,
+    project_id: str,
+    chapter_number: int,
+    event: str,
+) -> None:
+    """降级块失败处理：回滚到本块 savepoint；事务已被 SQLite 整体回滚时上抛.
+
+    SQLITE_FULL / IOERR 等错误会使 SQLite 自动回滚整个事务（核心写入一并丢失）。
+    此时 savepoint 不复存在（ROLLBACK TO 失败，吞掉），``in_transaction`` 为
+    False：核心事实已丢，必须上抛让整章失败——否则章节会带损坏事实库进入
+    accepted 并写入幂等标记（回放路径将永久跳过该章）。
+    """
+    try:
+        await conn.execute(f"ROLLBACK TO SAVEPOINT {savepoint}")
+        await conn.execute(f"RELEASE SAVEPOINT {savepoint}")
+    except sqlite3.Error:
+        pass  # 事务已整体回滚时 savepoint 不复存在
+    if not conn.in_transaction:
+        raise SettlementError(
+            f"settlement degraded block {savepoint} failed and the transaction "
+            "was rolled back by SQLite; core settlement writes are lost"
+        ) from exc
+    logger.warning(
+        event,
+        project_id=project_id,
+        chapter_number=chapter_number,
+        error=str(exc),
+    )
+
+
 async def apply_settlement(
     settlement: StateSettlement,
     project_id: str,
@@ -805,6 +839,8 @@ async def apply_settlement(
         raise
 
     # Task 110: Foreshadowing pressure tracking
+    # Task 242: 降级块 SAVEPOINT 隔离——块内失败只回滚本块；事务整体死亡上抛
+    await conn.execute("SAVEPOINT sp_settlement_pressure")
     try:
         await foreshadowing_repo.mark_overdue(project_id, chapter_number, conn=conn)
         ratio = await foreshadowing_repo.get_unresolved_ratio(
@@ -824,16 +860,19 @@ async def apply_settlement(
             pressure=settlement.foreshadowing_pressure,
         )
     except (RuntimeError, OSError, ConnectionError, ValueError, TypeError, sqlite3.Error) as exc:
-        logger.warning(
-            "settlement.foreshadowing_pressure_failed",
-            project_id=project_id,
-            chapter_number=chapter_number,
-            error=str(exc),
+        await _degraded_block_rollback(
+            conn, "sp_settlement_pressure", exc,
+            project_id=project_id, chapter_number=chapter_number,
+            event="settlement.foreshadowing_pressure_failed",
         )
+    else:
+        await conn.execute("RELEASE SAVEPOINT sp_settlement_pressure")
 
     # 5. Task 137: 设定回收闭环 — 正文提及已存在设定时刷新 last_mentioned
     refreshed_keys: set[str] = set(duplicate_refreshed_keys)
     if content:
+        # Task 242: 降级块 SAVEPOINT 隔离
+        await conn.execute("SAVEPOINT sp_settlement_recycling")
         try:
             active_settings = [
                 s
@@ -899,14 +938,17 @@ async def apply_settlement(
         except (
             RuntimeError, OSError, ConnectionError, ValueError, TypeError, sqlite3.Error
         ) as exc:
-            logger.warning(
-                "settlement.recycling_detection_failed",
-                project_id=project_id,
-                chapter_number=chapter_number,
-                error=str(exc),
+            await _degraded_block_rollback(
+                conn, "sp_settlement_recycling", exc,
+                project_id=project_id, chapter_number=chapter_number,
+                event="settlement.recycling_detection_failed",
             )
+        else:
+            await conn.execute("RELEASE SAVEPOINT sp_settlement_recycling")
 
     # 6+7. Continuity tracking + Permanent scenes（同一连接，调用方管理事务）
+    # Task 242: 降级块 SAVEPOINT 隔离
+    await conn.execute("SAVEPOINT sp_settlement_continuity")
     try:
         await _update_continuity_tracking(
             settlement=settlement,
@@ -932,12 +974,13 @@ async def apply_settlement(
             chapter_number=chapter_number,
         )
     except (RuntimeError, OSError, ConnectionError, ValueError, TypeError, sqlite3.Error) as exc:
-        logger.warning(
-            "settlement.continuity_tracking_failed",
-            project_id=project_id,
-            chapter_number=chapter_number,
-            error=str(exc),
+        await _degraded_block_rollback(
+            conn, "sp_settlement_continuity", exc,
+            project_id=project_id, chapter_number=chapter_number,
+            event="settlement.continuity_tracking_failed",
         )
+    else:
+        await conn.execute("RELEASE SAVEPOINT sp_settlement_continuity")
 
 
 def _infer_setting_category(
