@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sqlite3
+from collections.abc import Awaitable, Callable
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -934,6 +935,24 @@ async def _migrate_numerical_ledgers_formula(conn: aiosqlite.Connection) -> None
         )
 
 
+async def _migrate_foreshadowings_resolved_trace(conn: aiosqlite.Connection) -> None:
+    """为 foreshadowings 添加 resolved_chapter / resolved_version_id 列（Task 241）.
+
+    照搬 Task 152 setting_tracking 追溯列先例：resolve 时回填，历史行保持 NULL
+    （历史 resolve 时刻不可考，不回填、不猜测）。
+    """
+    cursor = await conn.execute("PRAGMA table_info(foreshadowings)")
+    cols = {row[1] for row in await cursor.fetchall()}
+    for col, dtype in (
+        ("resolved_chapter", "INTEGER"),
+        ("resolved_version_id", "TEXT"),
+    ):
+        if col not in cols:
+            await conn.execute(
+                f"ALTER TABLE foreshadowings ADD COLUMN {col} {dtype}"
+            )
+
+
 async def init_schema(db_path: str | Path | None = None) -> None:
     """读取 schema.sql 并执行，幂等（所有 CREATE 带 IF NOT EXISTS）.
 
@@ -954,45 +973,9 @@ async def init_schema(db_path: str | Path | None = None) -> None:
     async with aiosqlite.connect(db_path) as conn:
         await conn.executescript(sql)
         # Task 100a: 为旧表添加缺失列（必须在 executescript 之后，否则新数据库表不存在）
-        await _migrate_lifecycle_status(conn)
-        await _migrate_setting_category(conn)
-        await _migrate_creative_briefs_punch(conn)
-        await _migrate_creative_briefs_voice_anchors(conn)
-        await _migrate_creative_briefs_voice_samples(conn)
-        await _migrate_creative_briefs_171v_guardrails(conn)
-        await _migrate_human_instructions(conn)
-        await _migrate_continuity_tables(conn)
-        # Phase 4 迁移
-        await _migrate_summaries_impact_score(conn)
-        await _migrate_project_arc_boundaries(conn)
-        await _migrate_layered_context_tables(conn)
-        await _migrate_continuity_suggested_marks(conn)
-        await _migrate_human_marks(conn)
-        await _migrate_project_seed_config(conn)
-        await _migrate_chapter_chunks(conn)
-        await _migrate_dialogue_style_card(conn)
-        await _migrate_chapter_versions_score_card(conn)
-        await _migrate_context_snapshots(conn)
-        await _migrate_context_snapshots_emergency_fields(conn)
-        await _migrate_setting_setting_key_index(conn)
-        await _migrate_human_marks_extra_fields(conn)
-        await _migrate_narrative_skeleton(conn)
-        await _migrate_chapter_goal_derived_from_arc(conn)
-        await _migrate_run_quality_debt(conn)
-        await _migrate_setting_tracking_lifecycle_columns(conn)
-        await _migrate_run_db_metrics(conn)
-        await _migrate_text_cleanliness_metrics(conn)
-        await _migrate_numerical_ledgers_formula(conn)
-        await _migrate_replan_proposals(conn)
-        await _migrate_foreshadowing_schedule(conn)
-        await _migrate_adaptive_gate_signals(conn)
-        await _migrate_adaptive_halt_decisions(conn)
-        await _migrate_genre_runtime_profiles(conn)
-        await _migrate_genre_runtime_profile_history(conn)
-        await _migrate_llm_call_usage(conn)
-        await _migrate_project_runs_pause_reason(conn)
-        await _migrate_import_replay_marks(conn)
-        await _migrate_projects_lifecycle_status(conn)
+        # Task 240: 迁移清单收敛为 _MIGRATIONS 单一注册表，与 run_migrations 共用。
+        for _name, _migrate in _MIGRATIONS:
+            await _migrate(conn)
         await conn.commit()
 
 
@@ -1136,44 +1119,68 @@ async def get_schema_version(conn: aiosqlite.Connection) -> int:
     return len(_EXPECTED_TABLES) - len(missing)
 
 async def run_migrations(conn: aiosqlite.Connection) -> None:
-    """按创建顺序执行所有待执行的数据库迁移."""
-    await _migrate_continuity_tables(conn)
-    await _migrate_human_instructions(conn)
-    await _migrate_creative_briefs_punch(conn)
-    await _migrate_creative_briefs_voice_anchors(conn)
-    await _migrate_creative_briefs_voice_samples(conn)
-    await _migrate_creative_briefs_171v_guardrails(conn)
-    await _migrate_summaries_impact_score(conn)
-    await _migrate_project_arc_boundaries(conn)
-    await _migrate_chapter_versions_score_card(conn)
-    await _migrate_context_snapshots(conn)
-    await _migrate_context_snapshots_emergency_fields(conn)
-    await _migrate_layered_context_tables(conn)
-    await _migrate_continuity_suggested_marks(conn)
-    await _migrate_human_marks(conn)
-    await _migrate_human_marks_extra_fields(conn)
-    await _migrate_project_seed_config(conn)
-    await _migrate_dialogue_style_card(conn)
-    await _migrate_chapter_chunks(conn)
-    await _migrate_lifecycle_status(conn)
-    await _migrate_setting_category(conn)
-    await _migrate_chapter_versions_score_card(conn)
-    await _migrate_setting_setting_key_index(conn)
-    await _migrate_narrative_skeleton(conn)
-    await _migrate_chapter_goal_derived_from_arc(conn)
-    await _migrate_run_quality_debt(conn)
-    await _migrate_setting_tracking_lifecycle_columns(conn)
-    await _migrate_run_db_metrics(conn)
-    await _migrate_text_cleanliness_metrics(conn)
-    await _migrate_numerical_ledgers_formula(conn)
-    await _migrate_replan_proposals(conn)
-    await _migrate_foreshadowing_schedule(conn)
-    await _migrate_adaptive_gate_signals(conn)
-    await _migrate_adaptive_halt_decisions(conn)
-    await _migrate_genre_runtime_profiles(conn)
-    await _migrate_genre_runtime_profile_history(conn)
-    await _migrate_llm_call_usage(conn)
-    await _migrate_project_runs_pause_reason(conn)
-    await _migrate_import_replay_marks(conn)
-    await _migrate_projects_lifecycle_status(conn)
+    """执行注册表中的所有迁移（与 init_schema 共用 _MIGRATIONS 单一事实源）."""
+    for _name, _migrate in _MIGRATIONS:
+        await _migrate(conn)
     logger.info("migrations.run_all", status="complete")
+
+
+# Task 240: 迁移单一注册表 — init_schema 与 run_migrations 共用。
+# 注册顺序 = 原 init_schema 调用顺序（doctor --init-db 与全部测试的实际执行路径）。
+# 新增迁移：在文件内定义 _migrate_* 函数后，追加到本表末尾。
+_MIGRATIONS: list[tuple[str, Callable[[aiosqlite.Connection], Awaitable[None]]]] = [
+    ("_migrate_lifecycle_status", _migrate_lifecycle_status),
+    ("_migrate_setting_category", _migrate_setting_category),
+    ("_migrate_creative_briefs_punch", _migrate_creative_briefs_punch),
+    ("_migrate_creative_briefs_voice_anchors", _migrate_creative_briefs_voice_anchors),
+    ("_migrate_creative_briefs_voice_samples", _migrate_creative_briefs_voice_samples),
+    (
+        "_migrate_creative_briefs_171v_guardrails",
+        _migrate_creative_briefs_171v_guardrails,
+    ),
+    ("_migrate_human_instructions", _migrate_human_instructions),
+    ("_migrate_continuity_tables", _migrate_continuity_tables),
+    ("_migrate_summaries_impact_score", _migrate_summaries_impact_score),
+    ("_migrate_project_arc_boundaries", _migrate_project_arc_boundaries),
+    ("_migrate_layered_context_tables", _migrate_layered_context_tables),
+    ("_migrate_continuity_suggested_marks", _migrate_continuity_suggested_marks),
+    ("_migrate_human_marks", _migrate_human_marks),
+    ("_migrate_project_seed_config", _migrate_project_seed_config),
+    ("_migrate_chapter_chunks", _migrate_chapter_chunks),
+    ("_migrate_dialogue_style_card", _migrate_dialogue_style_card),
+    ("_migrate_chapter_versions_score_card", _migrate_chapter_versions_score_card),
+    ("_migrate_context_snapshots", _migrate_context_snapshots),
+    (
+        "_migrate_context_snapshots_emergency_fields",
+        _migrate_context_snapshots_emergency_fields,
+    ),
+    ("_migrate_setting_setting_key_index", _migrate_setting_setting_key_index),
+    ("_migrate_human_marks_extra_fields", _migrate_human_marks_extra_fields),
+    ("_migrate_narrative_skeleton", _migrate_narrative_skeleton),
+    ("_migrate_chapter_goal_derived_from_arc", _migrate_chapter_goal_derived_from_arc),
+    ("_migrate_run_quality_debt", _migrate_run_quality_debt),
+    (
+        "_migrate_setting_tracking_lifecycle_columns",
+        _migrate_setting_tracking_lifecycle_columns,
+    ),
+    ("_migrate_run_db_metrics", _migrate_run_db_metrics),
+    ("_migrate_text_cleanliness_metrics", _migrate_text_cleanliness_metrics),
+    ("_migrate_numerical_ledgers_formula", _migrate_numerical_ledgers_formula),
+    ("_migrate_replan_proposals", _migrate_replan_proposals),
+    ("_migrate_foreshadowing_schedule", _migrate_foreshadowing_schedule),
+    ("_migrate_adaptive_gate_signals", _migrate_adaptive_gate_signals),
+    ("_migrate_adaptive_halt_decisions", _migrate_adaptive_halt_decisions),
+    ("_migrate_genre_runtime_profiles", _migrate_genre_runtime_profiles),
+    (
+        "_migrate_genre_runtime_profile_history",
+        _migrate_genre_runtime_profile_history,
+    ),
+    ("_migrate_llm_call_usage", _migrate_llm_call_usage),
+    ("_migrate_project_runs_pause_reason", _migrate_project_runs_pause_reason),
+    ("_migrate_import_replay_marks", _migrate_import_replay_marks),
+    ("_migrate_projects_lifecycle_status", _migrate_projects_lifecycle_status),
+    (
+        "_migrate_foreshadowings_resolved_trace",
+        _migrate_foreshadowings_resolved_trace,
+    ),
+]

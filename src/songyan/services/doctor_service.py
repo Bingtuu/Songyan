@@ -38,6 +38,7 @@ _REQUIRED_SCHEMA_COLUMNS: dict[str, set[str]] = {
     },
     "human_marks": {"lifecycle_status", "version_id", "severity"},
     "setting_tracking": {"category"},
+    "foreshadowings": {"resolved_chapter", "resolved_version_id"},
     "llm_call_usage": {"cost_cny", "token_source", "cost_source", "retry_attempt"},
 }
 

@@ -311,6 +311,8 @@ CREATE TABLE IF NOT EXISTS foreshadowings (
     status                  TEXT DEFAULT 'planted',  -- planted | due | overdue | resolved
     lifecycle_status        TEXT DEFAULT 'active' CHECK(lifecycle_status IN ('active', 'dormant', 'archived')),
     source_version_id       TEXT NOT NULL REFERENCES chapter_versions(version_id) ON DELETE CASCADE,  -- ⭐
+    resolved_chapter        INTEGER,                 -- Task 241: resolve 发生竫（可追溯，NULL=未回收/历史）
+    resolved_version_id     TEXT,                    -- Task 241: resolve 关联版本
     created_at              TEXT DEFAULT (datetime('now'))
 );
 

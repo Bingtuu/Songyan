@@ -266,14 +266,14 @@ async def reset_checkpointer() -> None:
 
 
 async def build_phase1_graph() -> Any:
-    global _compiled_graph
-    if _compiled_graph is not None:
-        return _compiled_graph
     """构建 Phase 1 工作流图.
 
     Returns:
         编译后的 LangGraph 图（含 AsyncSqliteSaver checkpoint）
     """
+    global _compiled_graph
+    if _compiled_graph is not None:
+        return _compiled_graph
     builder = StateGraph(Phase1State)
 
     # 注册节点

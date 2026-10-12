@@ -2169,7 +2169,10 @@ class TestApplySettlement:
             numerical_repo=AsyncMock(),
         )
         from unittest.mock import ANY
-        mock_fs.update_status.assert_called_once_with("fs1", "resolved", conn=ANY)
+        # Task 241: resolve 分支回填可追溯列（章号 + 关联版本）
+        mock_fs.update_status.assert_called_once_with(
+            "fs1", "resolved", conn=ANY, resolved_chapter=3, resolved_version_id="v1"
+        )
 
     async def test_applies_numerical_updates(self) -> None:
         mock_num = AsyncMock()

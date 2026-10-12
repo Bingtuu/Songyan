@@ -747,8 +747,13 @@ async def apply_settlement(
                 logger.info("settlement.foreshadowing_planted", foreshadowing_id=fs_id)
             elif fs.operation == "resolve":
                 if fs.foreshadowing_id:
+                    # Task 241: resolve 回填可追溯列（章号 + 关联版本）
                     await foreshadowing_repo.update_status(
-                        fs.foreshadowing_id, "resolved", conn=c
+                        fs.foreshadowing_id,
+                        "resolved",
+                        conn=c,
+                        resolved_chapter=chapter_number,
+                        resolved_version_id=version_id,
                     )
                     logger.info(
                         "settlement.foreshadowing_resolved",
@@ -790,7 +795,7 @@ async def apply_settlement(
     try:
         await _apply_core(conn)
         logger.info("settlement.applied", project_id=project_id, chapter_number=chapter_number)
-    except (RuntimeError, OSError, ConnectionError, ValueError, TypeError):
+    except (RuntimeError, OSError, ConnectionError, ValueError, TypeError, sqlite3.Error):
         logger.error(
             "settlement.failed",
             project_id=project_id,
@@ -818,7 +823,7 @@ async def apply_settlement(
             ratio=round(ratio, 3),
             pressure=settlement.foreshadowing_pressure,
         )
-    except (RuntimeError, OSError, ConnectionError, ValueError, TypeError) as exc:
+    except (RuntimeError, OSError, ConnectionError, ValueError, TypeError, sqlite3.Error) as exc:
         logger.warning(
             "settlement.foreshadowing_pressure_failed",
             project_id=project_id,
@@ -891,7 +896,9 @@ async def apply_settlement(
                     chapter_number=chapter_number,
                     count=resolved_count,
                 )
-        except (RuntimeError, OSError, ConnectionError, ValueError, TypeError) as exc:
+        except (
+            RuntimeError, OSError, ConnectionError, ValueError, TypeError, sqlite3.Error
+        ) as exc:
             logger.warning(
                 "settlement.recycling_detection_failed",
                 project_id=project_id,
@@ -924,7 +931,7 @@ async def apply_settlement(
             project_id=project_id,
             chapter_number=chapter_number,
         )
-    except (RuntimeError, OSError, ConnectionError, ValueError, TypeError) as exc:
+    except (RuntimeError, OSError, ConnectionError, ValueError, TypeError, sqlite3.Error) as exc:
         logger.warning(
             "settlement.continuity_tracking_failed",
             project_id=project_id,

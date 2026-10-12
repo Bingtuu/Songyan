@@ -62,13 +62,38 @@ class ForeshadowingRepository:
         )
 
     async def update_status(
-        self, foreshadowing_id: str, status: str, conn: aiosqlite.Connection | None = None
+        self,
+        foreshadowing_id: str,
+        status: str,
+        conn: aiosqlite.Connection | None = None,
+        *,
+        resolved_chapter: int | None = None,
+        resolved_version_id: str | None = None,
     ) -> None:
+        """更新伏笔状态；仅 resolve 时可携带可追溯列（Task 241）.
+
+        ``resolved_chapter`` / ``resolved_version_id`` 仅在 ``status == "resolved"``
+        且两者均提供时回填；其余状态翻转（due/overdue 等）不触碰这两列。
+        """
+        backfill = (
+            status == "resolved"
+            and resolved_chapter is not None
+            and resolved_version_id is not None
+        )
+
         async def _do(c: aiosqlite.Connection) -> None:
-            await c.execute(
-                "UPDATE foreshadowings SET status = ? WHERE foreshadowing_id = ?",
-                (status, foreshadowing_id),
-            )
+            if backfill:
+                await c.execute(
+                    """UPDATE foreshadowings
+                    SET status = ?, resolved_chapter = ?, resolved_version_id = ?
+                    WHERE foreshadowing_id = ?""",
+                    (status, resolved_chapter, resolved_version_id, foreshadowing_id),
+                )
+            else:
+                await c.execute(
+                    "UPDATE foreshadowings SET status = ? WHERE foreshadowing_id = ?",
+                    (status, foreshadowing_id),
+                )
 
         if conn is None:
             async with get_db() as c:
