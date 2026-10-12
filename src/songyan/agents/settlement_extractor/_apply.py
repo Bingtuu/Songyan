@@ -639,6 +639,11 @@ async def apply_settlement(
             f"Refusing to apply invalid settlement: {settlement.validation_status}"
         )
 
+    # Task 243: SAVEPOINT 在无打开事务时自成最外层事务，RELEASE 即提交——
+    # 破坏 accept/幂等标记的原子性。任何写入与 SAVEPOINT 之前确保事务打开。
+    if not conn.in_transaction:
+        await conn.execute("BEGIN")
+
     if char_repo is None:
         char_repo = CharacterRepository()
     if setting_repo is None:

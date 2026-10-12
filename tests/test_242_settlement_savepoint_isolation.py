@@ -171,3 +171,68 @@ class TestDegradedBlockSavepointIsolation:
             )
         events = [log["event"] for log in logs]
         assert "settlement.continuity_tracking_failed" in events
+
+
+class TestTransactionBoundary:
+    """Task 243: SAVEPOINT 自成最外层事务时 RELEASE 即提交——事务必须提前打开."""
+
+    pytestmark = pytest.mark.asyncio
+
+    async def test_empty_settlement_leaves_transaction_open(
+        self, test_db: Path
+    ) -> None:
+        """空 settlement（核心块零写入）apply 后事务仍打开，留给调用方 commit.
+
+        修复前：第一个 SAVEPOINT 成为最外层事务，RELEASE 直接提交，
+        in_transaction 回落为 False，后续 accept/幂等标记失去原子性。
+        """
+        await _seed(test_db)
+        async with get_db() as conn:
+            await apply_settlement(
+                StateSettlement(validation_status="valid"),
+                "proj-1",
+                1,
+                "v1",
+                conn=conn,
+            )
+            assert conn.in_transaction is True
+            await conn.commit()
+
+    async def test_no_double_begin_when_transaction_already_open(
+        self, test_db: Path
+    ) -> None:
+        """连接已在事务中时不重复 BEGIN（不抛 cannot start a transaction）."""
+        pid = await _seed(test_db)
+        async with get_db() as conn:
+            # 先写一行打开事务
+            await conn.execute(
+                "INSERT INTO location_tracker (track_id, project_id, character_id,"
+                " location) VALUES ('loc-pre', 'proj-1', ?, '荒山')",
+                (pid,),
+            )
+            assert conn.in_transaction is True
+            await apply_settlement(
+                StateSettlement(validation_status="valid"),
+                "proj-1",
+                1,
+                "v1",
+                conn=conn,
+            )
+            await conn.commit()
+        assert await _count(test_db, "location_tracker") == 1
+
+    async def test_caller_rollback_leaves_no_residue(self, test_db: Path) -> None:
+        """空 settlement apply 后调用方 rollback：无任何残留（RELEASE 未提前提交）."""
+        await _seed(test_db)
+        async with get_db() as conn:
+            await apply_settlement(
+                StateSettlement(validation_status="valid"),
+                "proj-1",
+                1,
+                "v1",
+                conn=conn,
+            )
+            await conn.rollback()
+        # 降级块未被提前提交：本场景本无写入，断言无异常即通过；
+        # 真正的原子性证据是上一个测试的 in_transaction 仍为 True。
+        assert await _count(test_db, "setting_tracking") == 0
