@@ -400,6 +400,15 @@ def get_llm(
 # --------------------------------------------------------------------------- #
 
 
+_BACKOFF_BASE = 2.0
+_BACKOFF_MAX = 30.0
+
+
+def effective_attempt_timeout(timeout: int, max_tokens: int) -> float:
+    """单次尝试的硬超时：至少 timeout 秒；长输出按 ~20 tok/s 放宽，封顶 600 秒."""
+    return float(max(timeout, min(600, max_tokens // 20)))
+
+
 async def call_llm(
     prompt: str,
     *,
@@ -584,15 +593,31 @@ async def call_llm(
         )
         return text
 
+    # exp/canon-loop fix #2: 单次尝试硬超时（ChatLiteLLM 的 timeout 在流式/长输出下不生效），
+    # 超时视为可重试的 LLMError，按指数退避重试单次调用，而不是耗尽总超时后整章失败。
+    attempt_timeout = effective_attempt_timeout(timeout, max_tokens)
+
+    async def _invoke_with_deadline() -> str:
+        try:
+            return await asyncio.wait_for(_invoke(), timeout=attempt_timeout)
+        except TimeoutError as exc:
+            logger.warning(
+                "llm.attempt_timeout",
+                attempt=attempt_state["index"],
+                attempt_timeout=attempt_timeout,
+                role=role,
+            )
+            raise LLMError(f"LLM 单次调用超时（{attempt_timeout:.0f} 秒）", cause=exc) from exc
+
     try:
-        # 总超时 = 单次超时 * 最大重试次数 + 退避延迟缓冲
-        total_timeout = timeout * max_retries + 30
+        # 总超时 = 单次超时 * 最大重试次数 + 指数退避上限之和
+        total_timeout = attempt_timeout * max_retries + _BACKOFF_MAX * max_retries + 30
         text = await asyncio.wait_for(
             retry_with_backoff(
-                _invoke,
+                _invoke_with_deadline,
                 max_retries=max_retries,
-                base_delay=1.0,
-                max_delay=10.0,
+                base_delay=_BACKOFF_BASE,
+                max_delay=_BACKOFF_MAX,
                 retryable_exceptions=(LLMError,),
                 on_attempt=_on_attempt,
             ),
