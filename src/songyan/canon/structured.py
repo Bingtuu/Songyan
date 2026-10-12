@@ -126,7 +126,8 @@ def values_disagree(a: str, b: str) -> bool:
     if not a or not b or a in b or b in a or any(x in (a, b) for x in _ABSENT):
         return False
     if parse_number(a) is not None and parse_number(b) is not None:
-        return numbers_differ(a, b)
+        res = lambda v: re.sub(r"[\d零〇一二两三四五六七八九十百.:：]", "", v)  # noqa: E731
+        return res(a) == res(b) and numbers_differ(a, b)  # 十二号通道 vs 七号通道; not 07:58 vs 次日07:30
     la, lb = _label(a), _label(b)
     return any(f in lb and la[f] != lb[f] for f in la)
 
@@ -196,6 +197,9 @@ def compare(project_id: str, measures: list[dict[str, Any]], facts: list[dict[st
         ref = str(x.get("canon_ref") or "").strip().upper()
         if ref.startswith("M") and ref[1:].isdigit() and 1 <= int(ref[1:]) <= len(measures):
             c = measures[int(ref[1:]) - 1]
+            if x.get("subject") and x.get("_linked_by") is None and difflib.SequenceMatcher(
+                    None, re.sub(r"\s", "", c.get("subject") or ""), re.sub(r"\s", "", x["subject"])).ratio() < 0.5:
+                continue  # code rejects an LLM link whose subjects don't match (声源频率 ≠ 回声起始频率)
             if numbers_differ(c.get("value"), x.get("value")):
                 out.append({"type": "number", "severity": "error", "quote": x.get("quote", ""),
                             "canon": f"第{c['chapter']}章 {c['subject']}｜{c.get('condition','')} = {c.get('value')}{c.get('unit','')}",

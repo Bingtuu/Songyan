@@ -119,3 +119,10 @@ def test_precision_tolerance_and_family_links():
     ms = [{"chapter": 1, "subject": "回声延迟", "condition": "实测", "value": "3"}]
     draft = {"measures": [{"value": v, "canon_ref": "M1", "quote": v} for v in ("3.7", "4.5", "5.1")]}
     assert S.compare("p", ms, [], draft) == []
+
+
+def test_link_verification_and_time_values():
+    ms = [{"chapter": 1, "subject": "回声起始频率", "condition": "实测", "value": "17", "unit": "Hz"}]
+    bad = {"measures": [{"subject": "声源频率", "value": "125赫兹", "canon_ref": "M1", "quote": "125赫兹"}]}
+    assert S.compare("p", ms, [], bad) == []
+    assert not S.values_disagree("07:58:23", "次日07:30")
