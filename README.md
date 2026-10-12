@@ -52,6 +52,7 @@ Songyan 目前适合懂命令行、能配置 LLM API key 的技术用户试用�
 - Windows 下通过 wheel 构建、wheel 安装、非仓库目录运行、资源加载、模板建项和 accepted 正文导出 smoke。
 - 质量门口径（CED / T9 / 五门）与 Ch200 baseline 聚合数值已公开，可用 `songyan five-gate` / `songyan t9` 只读复现。
 - 导入已有小说续写管线（`songyan import`）已交付：切分人工确认、幂等回放、发布闸门齐备；真实书稿的导入续写验收仍在进行中，验收报告落地前该路径按预览功能对待。
+- 结算写入路径完成事务加固：降级块 SAVEPOINT 隔离、SQLite 故障结构化日志、事务整体死亡时整章失败（可重跑）而非静默 accepted；伏笔回收可追溯（`resolved_chapter` / `resolved_version_id`）。
 - CI 覆盖 ruff、runtime mypy、pytest、CLI tests 和 wheel smoke。
 
 ## 功能概览
@@ -67,6 +68,7 @@ Songyan 目前适合懂命令行、能配置 LLM API key 的技术用户试用�
 | 失败恢复 | 对配置、DB、preflight、run、report、export、restore 提供恢复建议 |
 | 诊断工具 | `doctor`、`report`、脱敏 `bundle-run`、per-role 成本拆分和质量信号 |
 | 资产生命周期 | `backup` / `restore` 保存和恢复项目资产 |
+| 事务完整性 | settlement 写入单事务提交；降级块 SAVEPOINT 隔离；事务死亡整章失败可重跑 |
 | Profile 安全 | `validate`、`upsert --dry-run`、`history`、`rollback` |
 | 按角色模型路由 | 写作 / 审查 / 结算等角色独立配置模型与 endpoint（`LLM_<ROLE>_*`，两级显式回退） |
 | 质量门复现 | `five-gate` / `t9` 只读重算公开口径指标（CED / T9 / 五门） |

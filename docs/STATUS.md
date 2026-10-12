@@ -28,6 +28,9 @@ Current public status: Songyan is ready as a technical preview / release-candida
 - Profile safety tools: `validate`, `upsert --dry-run`, `history`, `rollback`.
 - Per-role LLM model routing (`LLM_<ROLE>_*`) with per-role token/cost split in run reports.
 - Import pipeline for existing novels: `import` command group (`ingest` / `segment` / `confirm` / `status` / `replay` / `synthesize` / `publish`) with manual confirmation gates, idempotent chapter replay with settlement extraction, and a lifecycle gate that blocks `run` until publish.
+- Settlement write path hardened: degraded blocks are SAVEPOINT-isolated within the accept transaction, sqlite3.Error failures are logged via structlog, and transaction-aborting errors (e.g. SQLITE_FULL/IOERR) fail the chapter instead of silently accepting it with a corrupted fact base.
+- Foreshadowing resolution traceability: `resolved_chapter` / `resolved_version_id` columns on `foreshadowings` (write-only, no gate-caliber change).
+- Schema migrations run from a single ordered `_MIGRATIONS` registry shared by `init_schema` and `run_migrations`.
 - Redacted diagnostic bundle for reproducible issue reports.
 - CI for ruff, runtime mypy, pytest, CLI tests and wheel smoke.
 
