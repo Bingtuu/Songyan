@@ -126,7 +126,9 @@ async def llm_judge(project_id: str, chapter: int, text: str) -> list[dict[str, 
     facts = [e for e in ents if e["kind"] == "fact"][-25:]
     from songyan.canon.structured import structured_check
 
-    jobs = {"struct": structured_check(project_id, chapter, text)}
+    from songyan.canon.structured import anaphora_check
+
+    jobs = {"struct": structured_check(project_id, chapter, text), "ana": anaphora_check(text)}
     if prev:
         p = prev[0]
         jobs["open"] = ask_json(_J_OPEN.format(loc=p.get("location", ""), sit=p.get("situation", ""),
@@ -147,9 +149,9 @@ async def llm_judge(project_id: str, chapter: int, text: str) -> list[dict[str, 
         m = re.search(r"[-+]?\d+(?:\.\d+)?", x)
         return float(m.group()) if m else None
 
-    st = res.get("struct")
-    if isinstance(st, list):
-        out += st
+    for k in ("struct", "ana"):
+        if isinstance(res.get(k), list):
+            out += res[k]
     o = res.get("open") or {}
     if o.get("broken") is True:
         out.append({"type": "opening", "severity": "error", "quote": o.get("quote", ""),
@@ -174,7 +176,9 @@ async def llm_judge(project_id: str, chapter: int, text: str) -> list[dict[str, 
 
 async def verify(project_id: str, chapter: int, text: str) -> list[dict[str, Any]]:
     store.seed_from_project(project_id)
-    vs = deterministic_checks(project_id, text)
+    from songyan.canon.structured import decimal_slips
+
+    vs = deterministic_checks(project_id, text) + decimal_slips(text)
     vs += await llm_judge(project_id, chapter, text)
     return vs
 

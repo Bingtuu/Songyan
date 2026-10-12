@@ -85,3 +85,21 @@ async def test_hard_gate_rejects_after_retries_soft_passes(monkeypatch):
     st["chapter_number"] = 4
     ds = [(await nodes.canon_verify_node(st))["_canon_decision"] for _ in range(nodes.MAX_RETRIES + 1)]
     assert ds[-1] == "pass"
+
+
+def test_decimal_slip_detects_070_vs_007_only_at_anaphora():
+    t = "两组数据并排。差值0.70秒。" + "填充。" * 400 + "铅笔字写着修正量+0.07s。0.07秒。父亲五年前就记录过这个偏移量。"
+    v = S.decimal_slips(t)
+    assert len(v) == 1 and "0.07" in v[0]["explanation"]
+    assert S.decimal_slips("差值0.70秒。后来读数0.07秒，继续下降。") == []
+
+
+def test_fact_families_no_paraphrase_fp():
+    assert S.values_disagree("自己走", "被背出") and S.values_disagree("十二号通道", "七号通道")
+    assert not S.values_disagree("已死亡", "已殉职") and not S.values_disagree("图纸", "手稿")
+    assert not S.values_disagree("自己走", "未提及")
+
+
+def test_compare_anaphora_code_decides():
+    assert S.compare_anaphora([{"referent_value": "0.70秒", "asserted_value": "0.07s"}])
+    assert not S.compare_anaphora([{"referent_value": "0.07秒", "asserted_value": "0.07s"}])
