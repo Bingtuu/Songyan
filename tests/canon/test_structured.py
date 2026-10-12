@@ -111,3 +111,11 @@ def test_opening_seam_fallback_link_43_vs_100():
     import copy
     assert [v["type"] for v in S.compare("p", ms, [], copy.deepcopy(draft), chapter=3)] == ["number"]
     assert S.compare("p", ms, [], copy.deepcopy(draft), chapter=5) == []  # only the immediate seam
+
+
+def test_precision_tolerance_and_family_links():
+    assert not S.numbers_differ("3.7", "3.72") and not S.numbers_differ("3", "3.72")
+    assert S.numbers_differ("0.70", "0.07") and S.numbers_differ("12秒", "第13秒") and S.numbers_differ("43%", "100%")
+    ms = [{"chapter": 1, "subject": "回声延迟", "condition": "实测", "value": "3"}]
+    draft = {"measures": [{"value": v, "canon_ref": "M1", "quote": v} for v in ("3.7", "4.5", "5.1")]}
+    assert S.compare("p", ms, [], draft) == []

@@ -47,9 +47,28 @@ def parse_number(x: Any) -> float | None:
     return float(ip)
 
 
+def _decimals(x: Any) -> int:
+    m = re.search(r"\d+\.(\d+)", str(x or ""))
+    if m:
+        return len(m.group(1))
+    m = re.search(r"点([零〇一二三四五六七八九]+)", str(x or ""))
+    return len(m.group(1)) if m else 0
+
+
 def numbers_differ(a: Any, b: Any) -> bool:
+    """Different values, tolerant to stated precision: 3.7 == 3.72, 3 == 3.72 (约3秒); 0.70 != 0.07."""
     fa, fb = parse_number(a), parse_number(b)
-    return fa is not None and fb is not None and abs(fa - fb) > 1e-9
+    if fa is None or fb is None:
+        return False
+    if abs(fa - fb) <= 1e-9:
+        return False
+    da, db = _decimals(a), _decimals(b)
+    if da == db:
+        return True
+    coarse, fine = (fa, fb) if da < db else (fb, fa)
+    d = min(da, db)
+    q = 10 ** d
+    return not (abs(round(fine * q) - coarse * q) < 1e-6 or abs(int(fine * q) - coarse * q) < 1e-6)
 
 
 # ---------------------------------------------------------------- aliases
@@ -166,6 +185,13 @@ def compare(project_id: str, measures: list[dict[str, Any]], facts: list[dict[st
     out: list[dict[str, Any]] = []
     dm = [x for x in (draft.get("measures") or []) if isinstance(x, dict)]
     _fallback_link(measures, dm, chapter)
+    # a canon slot that >=3 draft numbers link to with different values is a varying family
+    # (e.g. 回声延迟 at several coordinates), not one quantity → ambiguous link, drop it
+    from collections import Counter
+    refs = Counter(str(x.get("canon_ref") or "").upper() for x in dm if x.get("canon_ref"))
+    for x in dm:
+        if refs.get(str(x.get("canon_ref") or "").upper(), 0) >= 3:
+            x["canon_ref"] = ""
     for i, x in enumerate(dm):
         ref = str(x.get("canon_ref") or "").strip().upper()
         if ref.startswith("M") and ref[1:].isdigit() and 1 <= int(ref[1:]) <= len(measures):
