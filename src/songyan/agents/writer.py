@@ -732,6 +732,17 @@ async def write_chapter(
 
     # 渲染 Prompt
     prompt = _render_prompt(context_package)
+    # exp/canon-loop: separate must-obey canon block, prepended ahead of all background
+    from songyan.canon import nodes as _canon_nodes
+
+    if _canon_nodes.enabled():
+        from songyan.canon.store import render_block
+
+        _canon_block = render_block(project_id, chapter_number)
+        if _canon_block:
+            prompt = _canon_block + "\n" + prompt
+            logger.info("writer.canon_block_injected", chars=len(_canon_block),
+                        chapter_number=chapter_number)
 
     # 调用 LLM
     llm_response = await call_llm(prompt, temperature=temperature, max_tokens=6000)

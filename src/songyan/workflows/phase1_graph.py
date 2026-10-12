@@ -83,6 +83,8 @@ class Phase1State(TypedDict):
     _total_revision_count: int
     # 058c: 内容保留率（RevisionHandler 截断检测）
     _content_preservation_ratio: float | None
+    # exp/canon-loop
+    _canon_decision: str | None
     # 058d: revision 引入的新问题（序列化后的 ReviewIssue dict 列表）
     _new_issues_introduced: list[dict[str, Any]] | None
     _new_issues_version_id: str | None
@@ -290,6 +292,18 @@ async def build_phase1_graph() -> Any:
     builder.add_node("quality_gate", quality_gate_node)  # type: ignore[type-var]
     builder.add_node("human_confirm", human_confirm_node)  # type: ignore[type-var]
     builder.add_node("settlement_extractor", settlement_extractor_node)  # type: ignore[type-var]
+    from songyan.canon import nodes as _canon
+
+    _canon_on = _canon.enabled()
+    if _canon_on:
+        builder.add_node("canon_verify", _canon.canon_verify_node)  # type: ignore[type-var]
+        builder.add_node("canon_update", _canon.canon_update_node)  # type: ignore[type-var]
+        builder.add_conditional_edges(
+            "canon_verify",
+            _canon.canon_verify_router,  # type: ignore[arg-type]
+            {"pass": "human_confirm", "retry": "writer", "error": END},
+        )
+    _to_confirm = "canon_verify" if _canon_on else "human_confirm"
 
     # 顺序边。任何节点返回 error 时必须终止本章，避免错误状态继续
     # 流入后续节点并污染 clean rerun 样本。
@@ -355,7 +369,7 @@ async def build_phase1_graph() -> Any:
     builder.add_conditional_edges(
         "rewrite",
         rewrite_router,
-        {"audit": "rule_auditor", "human_confirm": "human_confirm", "error": END},
+        {"audit": "rule_auditor", "human_confirm": _to_confirm, "error": END},
     )
 
     # Task 100b: 质量门条件边
@@ -363,7 +377,7 @@ async def build_phase1_graph() -> Any:
         "quality_gate",
         quality_gate_router,
         {
-            "pass": "human_confirm",
+            "pass": _to_confirm,
             "rewrite": "rewrite",
             "revision_needed": "revision_handler",
             "blocked": END,
@@ -386,7 +400,11 @@ async def build_phase1_graph() -> Any:
     )
 
     # settlement_extractor → 结束
-    builder.add_edge("settlement_extractor", END)
+    if _canon_on:
+        builder.add_edge("settlement_extractor", "canon_update")
+        builder.add_edge("canon_update", END)
+    else:
+        builder.add_edge("settlement_extractor", END)
 
     _compiled_graph = builder.compile(checkpointer=await _get_checkpointer())
     return _compiled_graph
