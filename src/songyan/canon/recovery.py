@@ -26,12 +26,14 @@ _RESET = {
     "_best_issues_count": None, "_best_report_id": None, "_best_score_card": None,
     "_quality_gate_passed": None, "_quality_gate_failures": [], "_skip_settlement": False,
     "_settlement_needs_human_review": False, "_convergence_failed": False, "error": None,
-    "_canon_decision": None,
+    "_canon_decision": None, "_summary_missing_facts": [],
 }
 
 
 def classify(state: dict[str, Any]) -> str | None:
     """Return the dead-end reason, or None when the chapter is fine (accepted)."""
+    if state.get("status") == "human_review_required":
+        return "qg_false_after_rollback"
     if state.get("status") != "settlement_review" and not state.get("_settlement_needs_human_review"):
         return None
     if state.get("_quality_gate_passed") is False and state.get("_skip_settlement"):
@@ -60,6 +62,7 @@ async def auto_recover_node(state: dict[str, Any]) -> dict[str, Any]:
         n = store.bump_count(pid, ch, "summary")
         logger.warning("auto_recover.retry_summary", project_id=pid, chapter_number=ch, attempt=n, reason=detail)
         return {"_recover_action": "retry_summary", "_summary_missing_facts": [],
+                "current_version_id": state.get("_settlement_input_version_id") or state.get("current_version_id"),
                 "_settlement_needs_human_review": False, "status": "settlement_extractor"}
     if reason in ("qg_false_after_rollback", "summary_missing_facts") and \
             store.get_count(pid, ch, "chapter_regen") < CHAPTER_RETRIES:

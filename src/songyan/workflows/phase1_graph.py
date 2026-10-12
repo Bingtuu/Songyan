@@ -86,6 +86,7 @@ class Phase1State(TypedDict):
     # exp/canon-loop
     _canon_decision: str | None
     _recover_action: str | None
+    _settlement_input_version_id: str | None
     # 058d: revision 引入的新问题（序列化后的 ReviewIssue dict 列表）
     _new_issues_introduced: list[dict[str, Any]] | None
     _new_issues_version_id: str | None
@@ -207,7 +208,8 @@ def quality_gate_router(state: Phase1State) -> str:
     if state.get("status") == "rule_auditing":
         return "revision_needed"
     if state.get("status") == "human_review_required":
-        return "blocked"
+        # fix #1: batch dead end → explicit bounded auto-recovery (was END with error=None)
+        return "recover"
     return "pass"
 
 
@@ -382,6 +384,7 @@ async def build_phase1_graph() -> Any:
             "rewrite": "rewrite",
             "revision_needed": "revision_handler",
             "blocked": END,
+            "recover": "auto_recover",
         },
     )
 

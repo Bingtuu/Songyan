@@ -3444,6 +3444,7 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
 
     return {
         "current_version_id": version.version_id if settlement_applied else None,
+        "_settlement_input_version_id": version.version_id,
         "settlement_id": new_id("st") if settlement_applied else None,
         "summary_id": summary_id,
         "_summary_fact_check_available": summary_fact_check_available,

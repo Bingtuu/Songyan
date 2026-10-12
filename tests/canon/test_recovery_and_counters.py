@@ -48,3 +48,17 @@ def test_retry_budget_resets_per_process_token():
     # a resumed run (new process token) gets a fresh, bounded budget
     assert store.get_count("p", 2, "canon", token="run-B") == 0
     assert store.bump_count("p", 2, "canon", token="run-B") == 1
+
+
+@pytest.mark.asyncio
+async def test_retry_summary_restores_version_id():
+    s = _st(_summary_missing_facts=["x"], current_version_id=None, _settlement_input_version_id="v-1")
+    out = await recovery.auto_recover_node(s)
+    assert out["_recover_action"] == "retry_summary" and out["current_version_id"] == "v-1"
+
+
+def test_qg_human_review_required_routes_to_recover_not_silent_end():
+    from songyan.workflows.phase1_graph import quality_gate_router
+    assert quality_gate_router({"status": "human_review_required"}) == "recover"
+    assert recovery.classify({"status": "human_review_required"}) == "qg_false_after_rollback"
+    assert quality_gate_router({"status": "human_review_required", "error": "boom"}) == "blocked"

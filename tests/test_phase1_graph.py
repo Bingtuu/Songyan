@@ -370,8 +370,10 @@ class TestRevisionRouter:
 
 class TestQualityGateRouter:
     def test_human_review_required_blocks_graph(self) -> None:
+        # exp/canon-loop fix #1: no longer a silent END; goes to bounded auto_recover
+        # (which still ends with an explicit error once its budget is exhausted)
         state = _base_revision_state(status="human_review_required")
-        assert quality_gate_router(state) == "blocked"
+        assert quality_gate_router(state) == "recover"
 
     def test_error_blocks_graph(self) -> None:
         state = _base_revision_state(status="quality_gate", error="boom")
