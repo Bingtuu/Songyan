@@ -1217,8 +1217,15 @@ async def _run_single_chapter(
             if "__interrupt__" in state:
                 if auto_confirm:
                     _set_stage("human_confirm")
-                    state = await resume_human_confirm(thread_id, "accept")
+                    # fix #1: auto_recover can loop back to writer → a 2nd/3rd human_confirm
+                    # interrupt; resume each (bounded) instead of failing with error=None.
+                    for _ in range(8):
+                        state = await resume_human_confirm(thread_id, "accept")
+                        if "__interrupt__" not in state:
+                            break
                     final_state = cast(dict[str, Any], state)
+                    if "__interrupt__" in state:
+                        final_state["error"] = "auto_confirm: human_confirm interrupt loop exceeded 8"
                 else:
                     error_stage = "human_confirm"
                     break
