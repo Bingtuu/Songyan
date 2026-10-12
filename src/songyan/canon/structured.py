@@ -205,6 +205,11 @@ def compare(project_id: str, measures: list[dict[str, Any]], facts: list[dict[st
         ref = str(x.get("canon_ref") or "").strip().upper()
         if ref.startswith("M") and ref[1:].isdigit() and 1 <= int(ref[1:]) <= len(measures):
             c = measures[int(ref[1:]) - 1]
+            # state quantities: a later chapter-END value of the same subject supersedes older ones
+            later = [m for m in measures if m["chapter"] > c["chapter"] and "章末" in (m.get("condition") or "")
+                     and (m.get("subject") or "") == (c.get("subject") or "")]
+            if later:
+                c = later[-1]
             # code verifies the LLM link: subjects must share a core (声源频率 ≠ 回声起始频率)
             if x.get("subject") and x.get("_linked_by") is None and not _same_subject(c.get("subject"), x["subject"]):
                 pass

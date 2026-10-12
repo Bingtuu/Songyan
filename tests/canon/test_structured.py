@@ -126,3 +126,10 @@ def test_link_verification_and_time_values():
     bad = {"measures": [{"subject": "声源频率", "value": "125赫兹", "canon_ref": "M1", "quote": "125赫兹"}]}
     assert S.compare("p", ms, [], bad) == []
     assert not S.values_disagree("07:58:23", "次日07:30")
+
+
+def test_latest_chapter_end_value_supersedes():
+    ms = [{"chapter": 1, "subject": "数据回传进度", "condition": "章末·中断", "value": "43"},
+          {"chapter": 2, "subject": "数据回传进度", "condition": "第二章·章末", "value": "100"}]
+    d = {"measures": [{"subject": "数据回传进度", "value": "43%", "quote": "回传43%后中断", "canon_ref": "M1"}]}
+    assert [v["type"] for v in S.compare("p", ms, [], d, chapter=3)] == ["number"]
