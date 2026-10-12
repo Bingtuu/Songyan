@@ -143,11 +143,29 @@ def canon_slots(project_id: str, chapter: int) -> tuple[list[dict[str, Any]], li
     return ms, fs
 
 
+def _fallback_link(measures: list[dict[str, Any]], dm: list[dict[str, Any]], chapter: int | None) -> None:
+    """Code-side linking for the continuity seam: a previous chapter's END value re-stated
+    in this chapter's opening (first ~25% of measures) with the same subject is the same quantity."""
+    if not chapter:
+        return
+    ends = [(i, m) for i, m in enumerate(measures) if m["chapter"] == chapter - 1 and "章末" in (m.get("condition") or "")]
+    for x in dm[: max(3, len(dm) // 4)]:
+        if x.get("canon_ref"):
+            continue
+        for i, m in ends:
+            subj = re.sub(r"\s", "", m.get("subject") or "")
+            xs = re.sub(r"\s", "", f"{x.get('subject','')}{x.get('quote','')}")
+            if len(subj) >= 2 and (subj in xs or difflib.SequenceMatcher(None, subj, x.get("subject") or "").ratio() >= 0.6):
+                x["canon_ref"], x["_linked_by"] = f"M{i+1}", "code_opening_seam"
+                break
+
+
 def compare(project_id: str, measures: list[dict[str, Any]], facts: list[dict[str, Any]],
-            draft: dict[str, Any]) -> list[dict[str, Any]]:
+            draft: dict[str, Any], chapter: int | None = None) -> list[dict[str, Any]]:
     """Pure code comparison of extracted draft structure against canon slots."""
     out: list[dict[str, Any]] = []
     dm = [x for x in (draft.get("measures") or []) if isinstance(x, dict)]
+    _fallback_link(measures, dm, chapter)
     for i, x in enumerate(dm):
         ref = str(x.get("canon_ref") or "").strip().upper()
         if ref.startswith("M") and ref[1:].isdigit() and 1 <= int(ref[1:]) <= len(measures):
@@ -187,7 +205,7 @@ async def structured_check(project_id: str, chapter: int, text: str) -> list[dic
         text=text)
     draft = await ask_json(prompt, max_tokens=3000)
     LAST_DRAFT_EXTRACTION[(project_id, chapter)] = draft
-    return compare(project_id, ms, fs, draft)
+    return compare(project_id, ms, fs, draft, chapter)
 
 
 LAST_DRAFT_EXTRACTION: dict[tuple[str, int], Any] = {}

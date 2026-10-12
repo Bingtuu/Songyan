@@ -103,3 +103,11 @@ def test_fact_families_no_paraphrase_fp():
 def test_compare_anaphora_code_decides():
     assert S.compare_anaphora([{"referent_value": "0.70秒", "asserted_value": "0.07s"}])
     assert not S.compare_anaphora([{"referent_value": "0.07秒", "asserted_value": "0.07s"}])
+
+
+def test_opening_seam_fallback_link_43_vs_100():
+    ms = [{"chapter": 2, "subject": "数据回传进度", "condition": "第二章锚钉回传·章末", "value": "100", "unit": "%"}]
+    draft = {"measures": [{"subject": "数据回传进度", "value": "43%", "quote": "回传43%后中断", "canon_ref": ""}]}
+    import copy
+    assert [v["type"] for v in S.compare("p", ms, [], copy.deepcopy(draft), chapter=3)] == ["number"]
+    assert S.compare("p", ms, [], copy.deepcopy(draft), chapter=5) == []  # only the immediate seam

@@ -14,6 +14,7 @@ JSON 结构：
  "numbers":[{{"subject":"对象（如 回声延迟偏移、数据回传进度）","condition":"条件/场合/事件（如 17号区第三坐标·低功率·实测；第二章锚钉回传·章末）","value":"数字","unit":"单位"}}],
  "costs":[{{"key":"主角本人因规则付出的身体/精神/记忆代价（一句话，写明后果）","persistent":true}}],
  "facts":[{{"subject":"主体（人/物）","attribute":"属性（如 离开十七号区的方式、撤离指令通道）","value":"值的核心词（动作/编号/状态，≤6字，如 自己走、被背、十二号、已死亡）","statement":"后续不可违背的事实或指令，一句话"}}],
+ "char_end":[{{"name":"章末在场或刚离场的重要人物","whereabouts":"章末去向/位置，≤10字","manner":"如何到达/离开的核心词（自己走/被背/被抬/乘车…），≤6字"}}],
  "end_state":{{"location":"章末主角所在位置","situation":"章末处境一句话","pending":["章末未了结、下一章必须回应的事项"]}}
 }}
 要求：costs 只收主角本人承受的损失（如记忆缺失、肢体失去知觉），设备损坏、样本异常不算；人物包括已故/被提及者（如父亲）；numbers 只取剧情关键数值（≤10条），同一个量在章内变化（如进度从43%到100%）只记章末最终值，condition 写明“章末”；facts ≤8 条。
@@ -47,6 +48,11 @@ async def extract_canon(text: str, chapter: int, protagonist: str) -> list[dict[
             key = f"{subj}|{attr}" if subj and attr else (f.get("key") or f["statement"][:20])
             facts.append({"kind": "fact", "key": key, "subject": subj, "attribute": attr,
                           "value": f.get("value", ""), "statement": f["statement"]})
+    for ce in d.get("char_end", []) or []:
+        if ce.get("name") and ce.get("manner"):
+            facts.append({"kind": "fact", "key": f"{ce['name']}|第{chapter}章章末去向方式", "subject": ce["name"],
+                          "attribute": f"第{chapter}章章末去向方式", "value": ce["manner"],
+                          "statement": f"第{chapter}章末{ce['name']}{ce['manner']}，{ce.get('whereabouts','')}"})
     es = d.get("end_state") or {}
     if es:
         facts.append({"kind": "end_state", "key": f"ch{chapter}", "location": es.get("location", ""),
