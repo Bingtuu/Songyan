@@ -101,12 +101,18 @@ def add_facts(project_id: str, chapter: int, facts: list[dict[str, Any]]) -> lis
                 continue
             fields = _CHAR_FIXED if kind == "character" else ("value",)
             merged, changed = dict(old), False
+            if kind == "character" and val.get("aliases"):
+                al = list(dict.fromkeys((old.get("aliases") or []) + list(val["aliases"])))
+                if al != (old.get("aliases") or []):
+                    merged["aliases"], changed = al, True
             for fld in fields:
                 o, n = _norm(old.get(fld)), _norm(val.get(fld))
                 if n and not o or (n and o in ("未知", "unknown")):
                     merged[fld] = val[fld]
                     changed = True  # filling a gap is an ADD, allowed
                 elif n and o and n != o and n not in ("未知", "unknown") and not (
+                    kind == "number" and not _num_differ(o, n)) and not (
+                    kind == "fact" and not _fact_differ(o, n)) and not (
                     fld == "relation" and (n in o or o in n or set(re.split(r"[/、,，]", n)) & set(re.split(r"[/、,，]", o)))
                 ):
                     conflicts.append({"kind": kind, "key": key, "canon": o, "new": n,
@@ -218,3 +224,13 @@ def bump_count(project_id: str, chapter: int, kind: str, token: str | None = Non
         c.execute("INSERT OR REPLACE INTO retry_counters(project_id,chapter,kind,token,count) VALUES(?,?,?,?,?)",
                   (project_id, chapter, kind, token, n))
     return n
+
+
+def _num_differ(a: str, b: str) -> bool:
+    from songyan.canon.structured import numbers_differ
+    return numbers_differ(a, b)
+
+
+def _fact_differ(a: str, b: str) -> bool:
+    from songyan.canon.structured import values_disagree
+    return values_disagree(a, b)

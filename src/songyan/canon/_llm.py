@@ -18,7 +18,16 @@ async def ask_json(prompt: str, *, max_tokens: int = 3000, hard_timeout: float =
                          role="settlement_extractor"),
                 timeout=hard_timeout,
             )
-            return json.loads(extract_json(txt))
+            raw = extract_json(txt)
+            try:
+                return json.loads(raw)
+            except json.JSONDecodeError:
+                import json_repair  # truncated / slightly malformed JSON from the judge
+
+                d = json_repair.loads(raw)
+                if isinstance(d, dict):
+                    return d
+                raise
         except (asyncio.TimeoutError, json.JSONDecodeError, ValueError) as exc:
             last = exc
     raise RuntimeError(f"canon LLM call failed: {last}")

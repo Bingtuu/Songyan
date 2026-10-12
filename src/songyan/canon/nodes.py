@@ -13,7 +13,10 @@ from songyan.canon.extract import extract_canon
 logger = structlog.get_logger(__name__)
 
 MAX_RETRIES = int(os.environ.get("SONGYAN_CANON_MAX_RETRIES", "2"))
-HARD_TYPES = {"name", "gender", "opening", "number"}  # never accepted while present
+# fix #3: identity/continuity/number violations are HARD gates: never soft-passed;
+# after MAX_RETRIES targeted rewrites the chapter is rejected with an explicit reason.
+HARD_TYPES = {"name", "gender", "opening", "number"}
+SOFT_TYPES = {"cost", "fact"}
 _LOG = os.environ.get("SONGYAN_CANON_LOG", "")
 
 
@@ -89,6 +92,11 @@ async def canon_update_node(state: dict[str, Any]) -> dict[str, Any]:
     from songyan.workflows._helpers import load_version
 
     pid, ch = state["project_id"], state["chapter_number"]
+    from songyan.canon.structured import flush_setting_conflicts
+
+    blocked = flush_setting_conflicts(pid, ch)
+    if blocked:
+        _audit({"chapter": ch, "setting_snapshots_blocked": blocked})
     head = await ChapterHeadRepository().get(pid, ch)
     if head is None or not head.accepted_version_id:
         return {}

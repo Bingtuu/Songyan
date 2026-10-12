@@ -10,18 +10,24 @@ from songyan.canon._llm import ask_json
 
 def deterministic_checks(project_id: str, text: str) -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
+    from songyan.canon.structured import alias_map
+
     chars = [c for c in store.get_entries(project_id, "character")]
-    names = {c["key"] for c in chars}
+    amap = alias_map(project_id)
+    names = {c["key"] for c in chars} | set(amap)
+    from songyan.canon.structured import normalize_subject
+
+    ntext = normalize_subject(text, amap)  # 老周 → 周德望 before relation-slot matching
     # 1) relation-slot name drift: e.g. 父亲沈远 → 父亲沈拓
     for c in chars:
         rel, name = (c.get("relation") or "").strip(), c["key"]
         if not rel or rel in ("本人", "无", "未知") or len(name) < 2:
             continue
         pat = re.compile(rf"{re.escape(rel)}[^，。！？\n]{{0,6}}?({re.escape(name[0])}[\u4e00-\u9fff]{{{len(name)-1}}})")
-        for m in pat.finditer(text):
+        for m in pat.finditer(ntext):
             cand = m.group(1)
             if cand != name and cand not in names:
-                out.append({"type": "name", "severity": "error", "quote": text[max(0, m.start()-5):m.end()+5],
+                out.append({"type": "name", "severity": "error", "quote": ntext[max(0, m.start()-5):m.end()+5],
                             "canon": f"{rel}={name}", "explanation": f"{rel}的名字被写成“{cand}”"})
     # 2) pronoun/gender drift for characters with known gender
     paras = [p for p in text.split("\n") if p.strip()]
@@ -32,8 +38,9 @@ def deterministic_checks(project_id: str, text: str) -> list[dict[str, Any]]:
         wrong, right = ("她", "他") if g == "男" else ("他", "她")
         n_w = n_r = 0
         for p in paras:
-            others = [o for o in names if o != c["key"] and o in p]
-            if c["key"] in p and not others:
+            mine = {a for a, k in amap.items() if k == c["key"]} | {c["key"]}
+            others = [o for o in names if o not in mine and amap.get(o) != c["key"] and o in p]
+            if any(m in p for m in mine) and not others:
                 n_w += p.count(wrong)
                 n_r += p.count(right)
         if n_w >= 3 and n_w > n_r:
@@ -105,6 +112,11 @@ async def _safe(coro):  # type: ignore[no-untyped-def]
         return {"_error": str(exc)}
 
 
+def is_hard_unverified(vs: list[dict[str, Any]]) -> bool:
+    """A hard-gate judge (opening/struct) failed to run → cannot certify the chapter."""
+    return any(v.get("type") == "verifier_error" and v.get("canon") in ("open", "struct") for v in vs)
+
+
 async def llm_judge(project_id: str, chapter: int, text: str) -> list[dict[str, Any]]:
     import asyncio
 
@@ -112,7 +124,9 @@ async def llm_judge(project_id: str, chapter: int, text: str) -> list[dict[str, 
     prev = [e for e in ents if e["kind"] == "end_state" and e["chapter"] == chapter - 1]
     costs = [e for e in ents if e["kind"] == "cost" and e["chapter"] == chapter - 1 and e.get("persistent", True)]
     facts = [e for e in ents if e["kind"] == "fact"][-25:]
-    jobs = {"num": ask_json(_J_NUM.format(text=text), max_tokens=800)}
+    from songyan.canon.structured import structured_check
+
+    jobs = {"struct": structured_check(project_id, chapter, text)}
     if prev:
         p = prev[0]
         jobs["open"] = ask_json(_J_OPEN.format(loc=p.get("location", ""), sit=p.get("situation", ""),
@@ -121,7 +135,9 @@ async def llm_judge(project_id: str, chapter: int, text: str) -> list[dict[str, 
     if costs:
         jobs["cost"] = ask_json(_J_COST.format(costs="\n".join(f"{i+1}. {c['key']}" for i, c in enumerate(costs)),
                                                text=text), max_tokens=600)
-    if facts:
+    legacy_facts = [f for f in facts if not f.get("attribute")]
+    if legacy_facts:  # unstructured facts from older canon only
+        facts = legacy_facts
         jobs["fact"] = ask_json(_J_FACT.format(facts="\n".join(f"{i+1}. {f.get('statement', f['key'])}" for i, f in enumerate(facts)),
                                                text=text), max_tokens=1000)
     keys = list(jobs)
@@ -131,24 +147,9 @@ async def llm_judge(project_id: str, chapter: int, text: str) -> list[dict[str, 
         m = re.search(r"[-+]?\d+(?:\.\d+)?", x)
         return float(m.group()) if m else None
 
-    cands = []
-    for v in (res.get("num") or {}).get("pairs", []) or []:
-        a, b = str(v.get("value_a", "")).strip(), str(v.get("value_b", "")).strip()
-        fa, fb = _f(a), _f(b)
-        if v.get("same_quantity") is True and fa is not None and fb is not None and abs(abs(fa) - abs(fb)) > 1e-9:
-            cands.append(v)
-    confirmed = []
-    if cands:
-        cres = await _safe(ask_json(_J_NUM_CONFIRM.format(
-            cands="\n".join(f"{i+1}. “{c.get('quote','')}”：{c.get('value_a')} vs {c.get('value_b')}" for i, c in enumerate(cands)),
-            text=text), max_tokens=800))
-        ok = {int(r.get("index", 0) or 0) for r in (cres or {}).get("results", []) or [] if r.get("contradiction") is True}
-        confirmed = [c for i, c in enumerate(cands) if i + 1 in ok]
-    for v in confirmed:
-        a, b = str(v.get("value_a", "")).strip(), str(v.get("value_b", "")).strip()
-        if True:
-            out.append({"type": "number", "severity": "error", "quote": v.get("quote", ""),
-                        "canon": f"{a} vs {b}", "explanation": v.get("explanation", "")})
+    st = res.get("struct")
+    if isinstance(st, list):
+        out += st
     o = res.get("open") or {}
     if o.get("broken") is True:
         out.append({"type": "opening", "severity": "error", "quote": o.get("quote", ""),

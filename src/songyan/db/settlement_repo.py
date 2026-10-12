@@ -452,6 +452,21 @@ class SettingSnapshotRepository:
         setting_id: str,
         conn: aiosqlite.Connection | None = None,
     ) -> None:
+        # canon loop (fix #4): settlement writes go through canon conflict interception
+        from songyan.canon import nodes as _canon_nodes
+
+        if _canon_nodes.enabled():
+            from songyan.canon import structured as _cs
+
+            hits = _cs.screen_setting(project_id, setting.setting_name, setting.description)
+            if hits:
+                _cs.PENDING_SETTING_CONFLICTS.append(
+                    {"project_id": project_id, "chapter": setting.chapter_number,
+                     "setting": setting.setting_name, "hits": hits})
+                logger.warning("canon.setting_snapshot_blocked", setting=setting.setting_name,
+                               hits=[h["canon"] for h in hits])
+                return
+
         async def _do(c: aiosqlite.Connection) -> None:
             await c.execute(
                 """INSERT INTO setting_snapshots (
