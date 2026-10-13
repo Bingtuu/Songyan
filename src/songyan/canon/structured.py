@@ -198,7 +198,11 @@ def _fallback_link(measures: list[dict[str, Any]], dm: list[dict[str, Any]], cha
     if not chapter:
         return
     ends = [(i, m) for i, m in enumerate(measures) if m["chapter"] == chapter - 1 and "章末" in (m.get("condition") or "")]
-    for x in dm[: max(3, len(dm) // 4)]:
+    if any("_pos" in x for x in dm):  # v4: opening = first 30% of the text (by quote position)
+        cand = [x for x in dm if 0 <= x.get("_pos", 1.0) < 0.3]
+    else:
+        cand = dm[: max(3, len(dm) // 4)]
+    for x in cand:
         if x.get("canon_ref"):
             continue
         for i, m in ends:
@@ -290,6 +294,10 @@ async def structured_check(project_id: str, chapter: int, text: str) -> list[dic
         facts="\n".join(f"F{i+1}. {f['subject']}｜{f['attribute']}" for i, f in enumerate(fs)) or "（无）",
         text=text)
     draft = await ask_json(prompt, max_tokens=3000)
+    for x in draft.get("measures") or []:
+        if isinstance(x, dict) and x.get("quote"):
+            i = text.find(str(x["quote"])[:12])
+            x["_pos"] = i / max(1, len(text)) if i >= 0 else 1.0
     LAST_DRAFT_EXTRACTION[(project_id, chapter)] = draft
     return compare(project_id, ms, fs, draft, chapter)
 

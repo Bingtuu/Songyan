@@ -49,3 +49,10 @@ def test_store_mutable_updates_latest_no_conflict_immutable_conflicts():
     j = {"kind": "number", "key": "案发日期|", "subject": "案发日期", "condition": "", "mutable": False}
     store.add_facts("p", 1, [{**j, "value": "3"}])
     assert len(store.add_facts("p", 2, [{**j, "value": "5"}])) == 1
+
+
+def test_seam_uses_quote_position_not_list_order():
+    ms = [{"chapter": 2, "subject": "数据回传进度", "condition": "章末", "value": "100"}]
+    filler = [{"subject": f"量{i}", "value": str(i), "quote": f"q{i}", "_pos": 0.5} for i in range(12)]
+    d = {"measures": filler + [{"subject": "数据回传进度", "value": "43%", "quote": "回传43%后中断", "_pos": 0.02}]}
+    assert [v["type"] for v in S.compare("p", ms, [], d, chapter=3)] == ["number"]
