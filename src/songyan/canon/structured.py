@@ -252,8 +252,9 @@ def compare(project_id: str, measures: list[dict[str, Any]], facts: list[dict[st
             # code verifies the LLM link: subjects must share a core (声源频率 ≠ 回声起始频率)
             if x.get("subject") and x.get("_linked_by") is None and not _same_subject(c.get("subject"), x["subject"]):
                 pass
-            elif c.get("mutable", default_mutable(c.get("subject", ""), c.get("condition", ""))) and (change_narrated(x.get("quote", "")) or x.get("_linked_by") != "code_opening_seam"):
-                pass  # v4: mutable quantity — narrated or plausible change is acceptable (seam w/o narration stays hard)
+            elif c.get("mutable", default_mutable(c.get("subject", ""), c.get("condition", ""))) and (change_narrated(x.get("quote", "")) or not (
+                    chapter and c["chapter"] == chapter - 1 and "章末" in (c.get("condition") or ""))):
+                pass  # v4: mutable — narrated change, or not at the prev-chapter-end seam, is acceptable
             elif _comparable(c, x) and numbers_differ(c.get("value"), x.get("value")):
                 out.append({"type": "number", "severity": "error", "quote": x.get("quote", ""),
                             "canon": f"第{c['chapter']}章 {c['subject']}｜{c.get('condition','')} = {c.get('value')}{c.get('unit','')}",

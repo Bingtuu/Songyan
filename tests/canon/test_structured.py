@@ -29,7 +29,7 @@ def test_cross_chapter_43_vs_100_and_fact_carried_vs_walked():
     fs = [{"chapter": 2, "subject": "老周", "attribute": "进入接驳点的方式", "value": "自己走"}]
     draft = {"measures": [{"value": "43%", "quote": "回传43%后中断", "canon_ref": "M1"}],
              "facts": [{"ref": "F1", "value": "被背", "quote": "沈栖背着老周"}]}
-    types = sorted(v["type"] for v in S.compare("p", ms, fs, draft))
+    types = sorted(v["type"] for v in S.compare("p", ms, fs, draft, chapter=3))
     assert types == ["fact", "number"]
     ok = {"measures": [{"value": "百分之百", "canon_ref": "M1"}], "facts": [{"ref": "F1", "value": "自己走"}]}
     assert S.compare("p", ms, fs, ok) == []
