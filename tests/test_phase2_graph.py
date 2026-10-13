@@ -665,3 +665,27 @@ async def test_pipeline_halts_on_degraded_context_emergency_streak() -> None:
     assert saved_states[-1].status == "paused"
     assert saved_states[-1].completed_chapters == [1, 2]
     assert saved_states[-1].failed_chapters == [3]
+
+
+@pytest.mark.asyncio
+async def test_auto_confirm_resumes_repeated_interrupts_8d06cf3() -> None:
+    """exp/canon-loop 8d06cf3: auto_recover can loop back to writer → 2nd/3rd human_confirm
+    interrupt; all must be resumed (bounded) instead of failing with error=None."""
+    resume = AsyncMock(side_effect=[
+        _make_chapter_state(status="settlement", has_interrupt=True),
+        _make_chapter_state(status="settlement", has_interrupt=True),
+        _make_chapter_state(status="done"),
+    ])
+    with (
+        patch("songyan.workflows.phase2_graph.run_chapter_pipeline", new_callable=AsyncMock,
+              return_value=_make_chapter_state(status="settlement", has_interrupt=True)),
+        patch("songyan.workflows.phase2_graph.resume_human_confirm", resume),
+        patch("songyan.workflows.phase2_graph._get_previous_summary", new_callable=AsyncMock, return_value=""),
+        patch("songyan.workflows.phase2_graph._get_summary_text", new_callable=AsyncMock, return_value="s"),
+        patch("songyan.workflows.phase2_graph._save_run_state", new_callable=AsyncMock),
+        patch("songyan.workflows.phase2_graph.log_chapter_run", new_callable=AsyncMock),
+    ):
+        result = await run_project_pipeline(project_id="proj-001", chapter_range=(1, 1), auto_confirm=True)
+    assert resume.await_count == 3
+    assert result.final_status == "completed"
+    assert result.chapters_completed == [1]

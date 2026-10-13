@@ -529,15 +529,29 @@ async def goal_planner_node(state: dict[str, Any]) -> dict[str, Any]:
         narrative_ctx = await load_narrative_goal_context(
             state["project_id"], state["chapter_number"]
         )
+        _prev_summary = state.get("previous_summary", "")
+        _end_state = None
+        from songyan.canon import nodes as _canon_nodes
+
+        if _canon_nodes.enabled():
+            from songyan.canon import bridge as _bridge
+
+            _end_state = _bridge.prev_end_state(state["project_id"], state["chapter_number"])
+            if _end_state:
+                # v3: planning layer starts from the previous chapter's END state
+                _prev_summary = ("【上一章章末状态（本章必须从这里开始或明确过渡）】"
+                                 + _bridge.end_state_text(_end_state) + "\n" + (_prev_summary or ""))
         goal = await define_chapter_goal(
             project_id=state["project_id"],
             project=project,
             genre_profile=genre,
             mode_profile=mode,
             chapter_number=state["chapter_number"],
-            previous_summary=state.get("previous_summary", ""),
+            previous_summary=_prev_summary,
             narrative_ctx=narrative_ctx,
         )
+        if _end_state:
+            goal = _bridge.apply_to_goal(goal, _end_state)
         goal_id = new_id("gp")
         await ChapterGoalRepository().create(goal, goal_id, state["project_id"])
         schedule_item_ids = [

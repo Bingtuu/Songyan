@@ -188,6 +188,24 @@ def _fallback_link(measures: list[dict[str, Any]], dm: list[dict[str, Any]], cha
                 break
 
 
+_COORD = re.compile(r"北纬|南纬|东经|西经|经度|纬度|坐标")
+_DIST = re.compile(r"米|公里|距离|千米")
+
+
+def _qkind(x: dict[str, Any]) -> str:
+    t = f"{x.get('subject','')}{x.get('value','')}"
+    if _COORD.search(t):
+        return "coord"
+    if _DIST.search(t):
+        return "dist"
+    return ""
+
+
+def _comparable(a: dict[str, Any], b: dict[str, Any]) -> bool:
+    ka, kb = _qkind(a), _qkind(b)
+    return not (ka and kb and ka != kb) and not ("coord" in (ka, kb) and ka != kb)
+
+
 def compare(project_id: str, measures: list[dict[str, Any]], facts: list[dict[str, Any]],
             draft: dict[str, Any], chapter: int | None = None) -> list[dict[str, Any]]:
     """Pure code comparison of extracted draft structure against canon slots."""
@@ -213,7 +231,7 @@ def compare(project_id: str, measures: list[dict[str, Any]], facts: list[dict[st
             # code verifies the LLM link: subjects must share a core (声源频率 ≠ 回声起始频率)
             if x.get("subject") and x.get("_linked_by") is None and not _same_subject(c.get("subject"), x["subject"]):
                 pass
-            elif numbers_differ(c.get("value"), x.get("value")):
+            elif _comparable(c, x) and numbers_differ(c.get("value"), x.get("value")):
                 out.append({"type": "number", "severity": "error", "quote": x.get("quote", ""),
                             "canon": f"第{c['chapter']}章 {c['subject']}｜{c.get('condition','')} = {c.get('value')}{c.get('unit','')}",
                             "explanation": f"同一个量，草稿写成 {x.get('value')}"})
@@ -221,7 +239,8 @@ def compare(project_id: str, measures: list[dict[str, Any]], facts: list[dict[st
             j = int(x.get("same_as") or 0)
         except (TypeError, ValueError):
             j = 0
-        if 1 <= j <= len(dm) and j != i + 1 and numbers_differ(dm[j - 1].get("value"), x.get("value")):
+        if 1 <= j <= len(dm) and j != i + 1 and _comparable(dm[j - 1], x) and \
+                numbers_differ(dm[j - 1].get("value"), x.get("value")):
             out.append({"type": "number", "severity": "error", "quote": x.get("quote", ""),
                         "canon": f"本章：{dm[j-1].get('quote','')}",
                         "explanation": f"正文声称是同一个量，但 {dm[j-1].get('value')} ≠ {x.get('value')}"})
@@ -293,7 +312,10 @@ def screen_setting(project_id: str, name: str, description: str) -> list[dict[st
 
 
 # ---------------------------------------------------------------- anaphoric number claims
-_ANAPHORA = re.compile(r"(这个|那个|同一个|同样的)(偏移量?|数值?|读数|延迟|差值|修正量|进度|百分比|坐标)|一模一样|正是这个|早就记录过|和上次一样|分毫不差")
+# v3: an anaphor only counts when bound to a NAMED quantity (not bare 这个数字/一模一样)
+_QTY = r"(?:偏移量?|延迟|差值|修正量|进度|百分比|读数|频率|温度|功率|衰减系数|速率)"
+_ANAPHORA = re.compile(rf"(?:这个|那个|同一个|同样的){_QTY}|{_QTY}[^，。！？\n]{{0,8}}(?:一模一样|分毫不差|完全一致|完全吻合)|"
+                       rf"早就记录过(?:这个|那个){_QTY}|正是这个{_QTY}")
 _J_ANA = """下面每条是小说中一句“回指某个数值”的句子（如“父亲早就记录过这个偏移量”），附带它之前的上下文。
 对每条，抽取两个数（照抄原文数字，不做判断）：
 - referent_value：句中“这个X/同一个X”在上下文中所指的那个量，最早被测出/提出时的数值（例如前文先测得“差值0.70秒”，后面又提到“笔记写0.07秒……早就记录过这个偏移量”，则 referent_value=0.70秒）；
@@ -337,7 +359,17 @@ async def anaphora_check(text: str) -> list[dict[str, Any]]:
     return compare_anaphora(d.get("items") or [])
 
 
-_NUM_RE = re.compile(r"(?<![\d.])\d+\.\d+|零点[零〇一二三四五六七八九]+")
+_NUM_RE = re.compile(r"(?<![\d.])(\d+\.\d+|零点[零〇一二三四五六七八九]+)\s*(秒|s|Hz|赫兹|毫米|厘米|米|%|单位|度|ppm)?")
+_UNIT_NORM = {"s": "秒", "赫兹": "Hz"}
+
+
+def _num_units(seg: str) -> list[tuple[float, str]]:
+    out = []
+    for n, u in _NUM_RE.findall(seg):
+        v = parse_number(n)
+        if v is not None:
+            out.append((v, _UNIT_NORM.get(u, u)))
+    return out
 
 
 def _digits(v: float) -> str:
@@ -350,11 +382,13 @@ def decimal_slips(text: str) -> list[dict[str, Any]]:
     out = []
     for m in _ANAPHORA.finditer(text):
         win_s = max(0, m.start() - 120)
-        local = [parse_number(x) for x in _NUM_RE.findall(text[win_s:m.end()])]
-        earlier = [parse_number(x) for x in _NUM_RE.findall(text[:win_s])]
-        for a in filter(None, local):
-            for b in filter(None, earlier):
-                if a != b and _digits(a) == _digits(b) and abs(max(a, b) / min(a, b) - 10.0) < 1e-6:
+        local = _num_units(text[win_s:m.end()])
+        earlier = _num_units(text[:win_s])
+        for a, ua in local:
+            for b, ub in earlier:
+                # v3: same non-empty unit required (0.03单位 vs 0.3米 is not one quantity)
+                if ua and ua == ub and a and b and a != b and _digits(a) == _digits(b) \
+                        and abs(max(a, b) / min(a, b) - 10.0) < 1e-6:
                     out.append({"type": "number", "severity": "error", "quote": text[win_s:m.end()][-40:],
                                 "canon": f"前文 {b:g}", "explanation": f"回指同一个量却写成 {a:g}（小数点错位）"})
                     break

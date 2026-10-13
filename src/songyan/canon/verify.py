@@ -67,7 +67,7 @@ _J_OPEN = """判断小说本章开头是否与上一章结尾衔接。
 本章开头（前800字）：
 {head}
 
-规则：若本章开头主角所处的时空/处境与上一章结尾不同，且开头没有任何交代（时间跳转、如何回到某地、对未了结事项的处理），判 broken=true。有交代（哪怕一句）即 false。只输出 JSON：
+规则：若本章开头主角所处的时空/处境与上一章结尾不同，且开头没有任何交代，判 broken=true。以下任一即算已衔接（false）：时间标记（次日/第二天/X点…）表明这是之后的场景；新场景是在执行上一章约定的未了结事项（如约定次日复测，本章开头即复测现场）；交代了如何到达。不要求交代过夜细节或处理全部未了结事项。只输出 JSON：
 {{"broken":false,"quote":"本章开头相关原文≤40字","explanation":"≤60字"}}
 """
 
@@ -129,7 +129,9 @@ async def llm_judge(project_id: str, chapter: int, text: str) -> list[dict[str, 
     from songyan.canon.structured import anaphora_check
 
     jobs = {"struct": structured_check(project_id, chapter, text), "ana": anaphora_check(text)}
-    if prev:
+    from songyan.canon.bridge import bridged_opening
+
+    if prev and not bridged_opening(prev[0], text):  # code accepts explicit bridges first
         p = prev[0]
         jobs["open"] = ask_json(_J_OPEN.format(loc=p.get("location", ""), sit=p.get("situation", ""),
                                                pending="；".join(p.get("pending") or []) or "无",
