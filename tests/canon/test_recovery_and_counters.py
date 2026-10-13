@@ -62,3 +62,9 @@ def test_qg_human_review_required_routes_to_recover_not_silent_end():
     assert quality_gate_router({"status": "human_review_required"}) == "recover"
     assert recovery.classify({"status": "human_review_required"}) == "qg_false_after_rollback"
     assert quality_gate_router({"status": "human_review_required", "error": "boom"}) == "blocked"
+
+
+def test_convergence_failed_skip_settlement_is_recoverable():
+    s = {"status": "settlement_review", "_settlement_needs_human_review": True,
+         "_skip_settlement": True, "_convergence_failed": True, "_quality_gate_passed": True}
+    assert recovery.classify(s) == "qg_false_after_rollback"

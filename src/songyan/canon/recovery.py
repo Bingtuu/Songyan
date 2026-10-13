@@ -36,7 +36,9 @@ def classify(state: dict[str, Any]) -> str | None:
         return "qg_false_after_rollback"
     if state.get("status") != "settlement_review" and not state.get("_settlement_needs_human_review"):
         return None
-    if state.get("_quality_gate_passed") is False and state.get("_skip_settlement"):
+    if state.get("_skip_settlement") and (state.get("_quality_gate_passed") is False
+                                          or state.get("_convergence_failed")):
+        # v3: convergence failed → settlement skipped (even if QG recovered a best version)
         return "qg_false_after_rollback"
     if state.get("_summary_missing_facts"):
         return "summary_missing_facts"
