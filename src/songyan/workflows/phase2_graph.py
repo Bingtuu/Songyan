@@ -1408,9 +1408,12 @@ async def _run_single_chapter(
 
         except LLMBudgetExceededError:
             raise
-        except Exception:
+        except Exception as _exc:
             logger.exception("project_pipeline.chapter_exception", chapter_number=chapter_number)
             error_stage = error_stage or _stage or "exception"
+            # v4: never report an exception as error=None
+            final_state = dict(final_state or {})
+            final_state["error"] = final_state.get("error") or f"{type(_exc).__name__}: {_exc}"
             if attempts < max_attempts:
                 thread_id = new_id("thread")
                 continue

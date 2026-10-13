@@ -44,9 +44,26 @@ _PER_CHAPTER_KINDS = {"end_state"}
 _CHAR_FIXED = ("name", "gender", "relation")
 
 
+_DDL_DONE: set[str] = set()
+
+
+class _Conn(sqlite3.Connection):
+    """Short-lived connection: commit/rollback AND close on context exit (no lingering handles)."""
+
+    def __exit__(self, *exc):  # type: ignore[no-untyped-def]
+        r = super().__exit__(*exc)
+        self.close()
+        return r
+
+
 def _conn() -> sqlite3.Connection:
-    c = sqlite3.connect(get_db_path(), timeout=30)
-    c.executescript(_DDL)
+    # v4: run DDL once per process (executescript takes a write lock every call → contention with
+    # the aiosqlite pipeline writers → 'database is locked'); close connections after each use.
+    path = str(get_db_path())
+    c = sqlite3.connect(path, timeout=30, factory=_Conn)
+    if path not in _DDL_DONE:
+        c.executescript(_DDL)
+        _DDL_DONE.add(path)
     return c
 
 
