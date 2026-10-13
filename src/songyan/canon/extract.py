@@ -11,7 +11,7 @@ _PROMPT = """你是小说连续性档案员。从下面第{ch}章正文中抽取
 JSON 结构：
 {{
  "characters":[{{"name":"全名","gender":"男/女/未知（依据正文代词）","relation":"与主角关系，如 本人/父亲/上级/同事；无则空","role":"身份，≤15字","aliases":["正文中对此人的其他称呼，如 老周；无则空"]}}],
- "numbers":[{{"subject":"对象（如 回声延迟偏移、数据回传进度）","condition":"条件/场合/事件（如 17号区第三坐标·低功率·实测；第二章锚钉回传·章末）","value":"数字","unit":"单位"}}],
+ "numbers":[{{"subject":"对象（如 回声延迟偏移、数据回传进度）","condition":"条件/场合/事件（如 17号区第三坐标·低功率·实测；第二章锚钉回传·章末）","value":"数字","unit":"单位","mutable":"true=会随剧情合理变化的量（周期/读数/进度/计数/金钱/时间等）；false=固定事实（过去事件日期、某时点年龄、历史测量值、地址、编号）"}}],
  "costs":[{{"key":"主角本人因规则付出的身体/精神/记忆代价（一句话，写明后果）","persistent":true}}],
  "facts":[{{"subject":"主体（人/物）","attribute":"属性（如 离开十七号区的方式、撤离指令通道）","value":"值的核心词（动作/编号/状态，≤6字，如 自己走、被背、十二号、已死亡）","statement":"后续不可违背的事实或指令，一句话"}}],
  "char_end":[{{"name":"章末在场或刚离场的重要人物","whereabouts":"章末去向/位置，≤10字","manner":"如何到达/离开的核心词（自己走/被背/被抬/乘车…），≤6字"}}],
@@ -37,8 +37,13 @@ async def extract_canon(text: str, chapter: int, protagonist: str) -> list[dict[
         subj = n.get("subject") or n.get("key")
         if subj:
             cond = n.get("condition", "")
+            from songyan.canon.structured import default_mutable
+
+            prop = n.get("mutable")
+            prop = prop if isinstance(prop, bool) else {"true": True, "false": False}.get(str(prop).lower())
             facts.append({"kind": "number", "key": f"{subj}|{cond}", "subject": subj, "condition": cond,
-                          "value": str(n.get("value", "")), "unit": n.get("unit", "")})
+                          "value": str(n.get("value", "")), "unit": n.get("unit", ""),
+                          "mutable": default_mutable(subj, cond, prop)})
     for c in d.get("costs", []) or []:
         if c.get("key"):
             facts.append({"kind": "cost", "key": c["key"], "persistent": bool(c.get("persistent", True))})

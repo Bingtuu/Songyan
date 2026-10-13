@@ -71,6 +71,27 @@ def numbers_differ(a: Any, b: Any) -> bool:
     return not (abs(round(fine * q) - coarse * q) < 1e-6 or abs(int(fine * q) - coarse * q) < 1e-6)
 
 
+# ---------------------------------------------------------------- mutability (v4)
+_IMMUTABLE_KW = re.compile(r"日期|年份|年龄|岁|生日|出生|地址|门牌|编号|案发|死亡时间|殉职|当年|历史|档案|原始记录|笔记|身高|血型")
+_MUTABLE_KW = re.compile(r"周期|读数|进度|计数|次数|数量|人数|余额|存款|价格|钱|元|时间|时刻|剩余|倒计时|温度|体温|心率|"
+                         r"频率|强度|速率|速度|浓度|电量|距离|深度|高度|偏移|压力|气压|衰减|功率")
+_CHANGE_KW = re.compile(r"变|升|降|涨|跌|增|减|拉长|缩短|延长|衰减|跳到|跃至|升至|降至|到了|已经|仍在|继续|从.{0,12}[到至]")
+
+
+def default_mutable(subject: str, condition: str = "", proposed: Any = None) -> bool:
+    """Code default by quantity type; strong immutable markers win over the LLM proposal."""
+    text = f"{subject}{condition}"
+    if _IMMUTABLE_KW.search(text):
+        return False
+    if isinstance(proposed, bool):
+        return proposed
+    return bool(_MUTABLE_KW.search(text))
+
+
+def change_narrated(quote: str) -> bool:
+    return bool(_CHANGE_KW.search(str(quote or "")))
+
+
 # ---------------------------------------------------------------- aliases
 def alias_map(project_id: str) -> dict[str, str]:
     """alias → canonical name. Explicit aliases from canon + 老X/小X for unique surnames."""
@@ -231,6 +252,8 @@ def compare(project_id: str, measures: list[dict[str, Any]], facts: list[dict[st
             # code verifies the LLM link: subjects must share a core (声源频率 ≠ 回声起始频率)
             if x.get("subject") and x.get("_linked_by") is None and not _same_subject(c.get("subject"), x["subject"]):
                 pass
+            elif c.get("mutable", default_mutable(c.get("subject", ""), c.get("condition", ""))) and (change_narrated(x.get("quote", "")) or x.get("_linked_by") != "code_opening_seam"):
+                pass  # v4: mutable quantity — narrated or plausible change is acceptable (seam w/o narration stays hard)
             elif _comparable(c, x) and numbers_differ(c.get("value"), x.get("value")):
                 out.append({"type": "number", "severity": "error", "quote": x.get("quote", ""),
                             "canon": f"第{c['chapter']}章 {c['subject']}｜{c.get('condition','')} = {c.get('value')}{c.get('unit','')}",

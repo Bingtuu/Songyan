@@ -101,6 +101,14 @@ def add_facts(project_id: str, chapter: int, facts: list[dict[str, Any]]) -> lis
                 continue
             fields = _CHAR_FIXED if kind == "character" else ("value",)
             merged, changed = dict(old), False
+            if kind == "number" and (old.get("mutable") or val.get("mutable")) and _norm(val.get("value")):
+                # v4: mutable quantity → keep latest value + history; never a conflict
+                if _norm(val.get("value")) != _norm(old.get("value")):
+                    merged["history"] = (old.get("history") or []) + [old.get("value")]
+                    merged["value"] = val["value"]
+                    c.execute("UPDATE canon_entries SET value=?, chapter=? WHERE project_id=? AND kind=? AND key=?",
+                              (json.dumps(merged, ensure_ascii=False), chapter, project_id, kind, key))
+                continue
             if kind == "character" and val.get("aliases"):
                 al = list(dict.fromkeys((old.get("aliases") or []) + list(val["aliases"])))
                 if al != (old.get("aliases") or []):
@@ -191,7 +199,8 @@ def render_block(project_id: str, chapter: int) -> str:
         L += [f"- 第{e['chapter']}章：{e['key']}" for e in costs]
     if nums:
         L.append("■ 已确立的数值（再次提及时必须一致；同章内也不得自相矛盾）：")
-        L += [f"- {e['key']} = {e.get('value')}{e.get('unit', '')}" for e in nums]
+        L += [f"- {e['key']} = {e.get('value')}{e.get('unit', '')}" + ("（可变量：最新值，变化须交代）" if e.get("mutable") else "（固定）")
+              for e in nums]
     if facts:
         L.append("■ 已确立的事实/指令（不得与之矛盾）：")
         L += [f"- {e.get('statement', e['key'])}" for e in facts]
