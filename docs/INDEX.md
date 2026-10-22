@@ -35,6 +35,9 @@ Public documentation map for users and contributors.
 | [V13 质量方法论公开化](roadmap/v13-quality-methodology.md) | 公开 CED / T9 / 五门口径与脱敏 baseline（已规划，Task 226-229） |
 | [V14 成本与按角色模型路由](roadmap/v14-model-routing.md) | per-role LLM 配置与成本拆分（已规划，Task 230-233） |
 | [V15 导入已有小说续写](roadmap/v15-import-continue.md) | ingest → segment → replay → synthesize → publish（进行中，Task 234/235/236/237 DONE） |
+| [Plan-first 一致性路线](ROADMAP-plan-first.md) | 约 90 天证明跨章真错误召回；阶段 A/B/C 与非目标 |
+| [ADR-0001 Plan-first 事实层](adr/0001-plan-first-facts.md) | 计划写 canon，正文对照计划做窄检查 |
+| [Mew 每日切片](HANDOFF-mew.md) | 下一刀、相关代码位置、报告格式 |
 
 ## Architecture References
 
