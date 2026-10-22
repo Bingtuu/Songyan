@@ -14,6 +14,8 @@ Songyan is a long-form Chinese fiction generation system with strict data and qu
 
 Open-source contributions should preserve these runtime boundaries unless a proposal explicitly includes regression evidence.
 
+Consistency work follows [docs/ROADMAP-plan-first.md](docs/ROADMAP-plan-first.md) (daily slices: [docs/HANDOFF-mew.md](docs/HANDOFF-mew.md)). Do not extend extract-then-patch or add genre-specific checkers as the main path.
+
 ## Before Opening a PR
 
 Run:
