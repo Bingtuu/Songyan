@@ -363,6 +363,51 @@ def _format_chapter_summary(chapter_number: int, summary_text: str) -> str:
     return f"第{chapter_number}章：{summary_text}"
 
 
+def _chapter_failure_error(
+    final_state: dict[str, Any] | None,
+    chapter_number: int,
+) -> str | None:
+    """章节失败结果在非 done 终态下不得带空 error.
+
+    settlement_review 等分支经常不写 error，于是 chapter_failed 打出 error=None。
+    这里只补失败结果上的原因和单章重跑提示，不改结算入库。
+    """
+    if not final_state:
+        return "Max attempts exceeded"
+
+    existing = final_state.get("error")
+    if isinstance(existing, str) and existing.strip():
+        return existing
+    if not isinstance(existing, str) and existing:
+        return str(existing)
+
+    # done 之后的异常仍走原有空 error，避免把成功终态改写成结算失败。
+    status = final_state.get("status")
+    if status == "done":
+        return existing if isinstance(existing, str) else None
+
+    reasons: list[str] = []
+    missing_raw = final_state.get("_summary_missing_facts") or []
+    if isinstance(missing_raw, str):
+        missing_items: list[Any] = [missing_raw]
+    elif isinstance(missing_raw, list):
+        missing_items = missing_raw
+    else:
+        missing_items = []
+    missing_facts = [text for item in missing_items if (text := str(item).strip())]
+    if missing_facts:
+        reasons.append(f"摘要缺少事实（{'、'.join(missing_facts)}）")
+    if final_state.get("_settlement_needs_human_review"):
+        reasons.append("需要人工审核（_settlement_needs_human_review）")
+    if not reasons:
+        reasons.append("未记录 error")
+    reason = "；".join(reasons)
+    return (
+        f"章节结束于 {status or 'unknown'}：{reason}。"
+        f"恢复：对该章单独重跑 songyan run --chapters {chapter_number}"
+    )
+
+
 def _is_terminal_success_state(state: dict[str, Any]) -> bool:
     """判断章节是否已完成可结算终态，防止前置非致命错误污染结果.
 
@@ -1416,11 +1461,7 @@ async def _run_single_chapter(
     _qg_passed = final_state.get("_quality_gate_passed") if final_state else False
     _settlement_success = final_state.get("settlement_id") is not None if final_state else False
     _summary_success = final_state.get("summary_id") is not None if final_state else False
-    error_msg = (
-        final_state.get("error")
-        if final_state
-        else "Max attempts exceeded"
-    )
+    error_msg = _chapter_failure_error(final_state, chapter_number)
     bind_contextvars(
         stage="run_logger",
         version_id=final_state.get("current_version_id") if final_state else None,
