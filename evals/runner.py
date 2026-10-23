@@ -395,14 +395,15 @@ async def _persist_outputs(
 ) -> None:
     """将评测原始产物持久化到 output_dir."""
     # Chapter v2 正文
-    if version_id:
-        version = await ChapterVersionRepository().get(version_id)
-        if version:
-            (output_path / "chapter_v2.md").write_text(version.content, encoding="utf-8")
+    version = await ChapterVersionRepository().get(version_id) if version_id else None
+    if version:
+        (output_path / "chapter_v2.md").write_text(version.content, encoding="utf-8")
 
-    # Review report
+    # Review report. accept_version 会复制出新的 accepted id，合并报告仍挂在父版本上。
     if report_id:
         report = await ReviewReportRepository().get_by_version(version_id)
+        if report is None and version is not None and version.parent_version_id:
+            report = await ReviewReportRepository().get_by_version(version.parent_version_id)
         if report:
             (output_path / "review_report.json").write_text(
                 report.model_dump_json(indent=2, ensure_ascii=False),

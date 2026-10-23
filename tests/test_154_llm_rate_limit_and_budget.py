@@ -279,6 +279,7 @@ class TestPipelineBudgetPause:
         """call_llm max_retries=None 时回退 settings.llm_max_retries."""
         monkeypatch.setattr(settings, "llm_max_retries", 2)
         monkeypatch.setattr(settings, "llm_run_call_budget", 0)
+        monkeypatch.setattr(settings, "llm_api_key", "test-key")
         reset_llm_call_count()
 
         with patch("songyan.llm.client.retry_with_backoff") as mock_retry:
