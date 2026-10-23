@@ -178,6 +178,26 @@ def _extract_retry_after(exc: Exception) -> float | None:
     return None
 
 
+# litellm.Timeout / httpx read-and-connect timeouts. Matched by class name so
+# client.py does not import litellm at module load.
+_TIMEOUT_ERROR_NAMES = frozenset(
+    {
+        "Timeout",
+        "APITimeoutError",
+        "TimeoutException",
+        "ConnectTimeout",
+        "ReadTimeout",
+        "WriteTimeout",
+        "PoolTimeout",
+    }
+)
+
+
+def _is_timeout_error(exc: BaseException) -> bool:
+    """True when the provider or HTTP client gave up on a stuck call."""
+    return isinstance(exc, TimeoutError) or type(exc).__name__ in _TIMEOUT_ERROR_NAMES
+
+
 def _is_rate_limit_error(exc: Exception) -> bool:
     """判断异常是否为 429 / 限流."""
     status_code = getattr(exc, "status_code", None)
@@ -309,13 +329,16 @@ def _get_llm_cached(
     """缓存 LLM 实例，避免每次调用都重新创建."""
     from langchain_litellm import ChatLiteLLM
 
-    client = ChatLiteLLM(  # type: ignore[call-arg]  # langchain_litellm stub: base_url/timeout
+    # ``timeout=`` is not a ChatLiteLLM field (Pydantic extra=ignore drops it),
+    # so the HTTP client never saw it and fell back to litellm's 600s default.
+    # ``request_timeout`` is what _default_params sends as the completion timeout.
+    client = ChatLiteLLM(  # type: ignore[call-arg]  # langchain_litellm stub: base_url
         model=model,
         api_key=api_key,
         base_url=base_url,
         temperature=temperature,
         max_tokens=max_tokens,
-        timeout=timeout,
+        request_timeout=timeout,
     )
     _llm_client_registry[
         (model, api_key, base_url, temperature, max_tokens, timeout)
@@ -541,6 +564,10 @@ async def call_llm(
                     retry_after=retry_after,
                     cause=e,
                 ) from e
+            if _is_timeout_error(e):
+                # 单次 HTTP 超时：重试循环会再试，但这一次挂起的连接已经切断。
+                logger.warning("llm.timeout", timeout=timeout, error=str(e)[:500])
+                raise LLMError(f"LLM 调用超时（超过 {timeout} 秒）", cause=e) from e
             # 网络/API 瞬态错误，包装为 LLMError 以便重试
             raise LLMError(f"LLM 调用失败: {e}", cause=e) from e
 
