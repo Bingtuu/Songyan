@@ -261,11 +261,11 @@ def write_run_log(log: ChapterRunLog, run_id: str | None = None) -> str:
     Returns:
         写入的文件路径
     """
-    _ensure_logs_dir()
     file_run_id = run_id or log.run_id or "unknown"
     filepath = _LOGS_DIR / f"{file_run_id}.jsonl"
 
     try:
+        _ensure_logs_dir()
         with open(filepath, "a", encoding="utf-8") as f:
             f.write(log.to_jsonl() + "\n")
     except OSError as exc:

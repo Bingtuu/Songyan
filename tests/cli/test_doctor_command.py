@@ -254,6 +254,7 @@ def test_doctor_fails_for_invalid_checkpointer_mode(
     doctor_env: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    monkeypatch.delenv("CHECKPOINTER_MODE", raising=False)
     monkeypatch.setattr(settings, "checkpointer_mode", "invalid")
 
     result = runner.invoke(cli, ["doctor"])

@@ -228,14 +228,17 @@ def review_plan_documents(
 
     policy = chapter_spec.stage_policy
     if not policy.allow_new_characters:
-        match = _NEW_CHARACTER_PATTERN.search(plan_text)
-        if match and not _is_negated_policy_match(plan_text, match.start(), match.end()):
+        # Distinct from the finditer loop variable, which mypy types as Match[str].
+        character_match = _NEW_CHARACTER_PATTERN.search(plan_text)
+        if character_match and not _is_negated_policy_match(
+            plan_text, character_match.start(), character_match.end()
+        ):
             findings.append(
                 PlanReviewFinding(
                     chapter_number=chapter_number,
                     code="new_character",
                     message="plan appears to introduce a new character",
-                    evidence=_evidence(plan_text, match.group(0)),
+                    evidence=_evidence(plan_text, character_match.group(0)),
                 )
             )
     _add_policy_finding(
