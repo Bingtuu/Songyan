@@ -3,6 +3,7 @@
 import os
 import re
 from collections.abc import Mapping
+from pathlib import Path
 
 from dotenv import dotenv_values
 from pydantic import (
@@ -114,7 +115,12 @@ class Settings(BaseSettings):
     def _collect_llm_role_overrides(self) -> "Settings":
         """收集 per-role LLM 覆盖（env 优先于 .env）；不在加载期校验合法性."""
         env_file = self.model_config.get("env_file", ".env")
-        dotenv_map = dotenv_values(env_file) if env_file else {}
+        # pydantic-settings types env_file as a path or a sequence of paths.
+        # dotenv_values accepts one path; this project sets a single file.
+        if isinstance(env_file, (str, Path)) and env_file:
+            dotenv_map = dotenv_values(env_file)
+        else:
+            dotenv_map = {}
         self.llm_role_overrides = collect_llm_role_overrides(os.environ, dotenv_map)
         return self
 
