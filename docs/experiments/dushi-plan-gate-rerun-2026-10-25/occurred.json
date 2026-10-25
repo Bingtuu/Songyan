@@ -1,0 +1,27 @@
+{
+  "D1": {
+    "occurred": true,
+    "intercepted": false,
+    "recall": false
+  },
+  "D2": {
+    "occurred": true,
+    "intercepted": false,
+    "recall": false
+  },
+  "D3": {
+    "occurred": false,
+    "intercepted": null,
+    "recall": true
+  },
+  "D4": {
+    "occurred": true,
+    "intercepted": false,
+    "recall": false
+  },
+  "D5": {
+    "occurred": true,
+    "intercepted": false,
+    "recall": false
+  }
+}

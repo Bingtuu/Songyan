@@ -1,0 +1,72 @@
+{
+  "project_id": "153fe8f222534585a2bdc2410496dfa0",
+  "plan_project_id": "dushi-lingyi",
+  "title": "末班铜牌",
+  "source": "attached owner_costs.json plus Mew scoreboard human note; box llm_call_usage",
+  "pricing": {
+    "input_cny_per_m": 2.0,
+    "output_cny_per_m": 8.0,
+    "stop_threshold_cny": 7.66,
+    "note": "owner B18 rates ¥2/M in ¥8/M out; stop at 10× v1 ch3 ¥0.766. tool cost_cny matched owner_cost_cny on this run; cost_cny is pricing_estimate not bill"
+  },
+  "v1_baseline_owner_cny": {
+    "ch1": 0.358,
+    "ch2": 0.246,
+    "ch3": 0.766,
+    "total": 1.37
+  },
+  "live_rerun": {
+    "by_chapter": {
+      "1": {
+        "prompt_tokens": 509830,
+        "completion_tokens": 274599,
+        "calls": 145,
+        "tool_cost_cny": 3.216452,
+        "owner_cost_cny": 3.216452
+      },
+      "2": {
+        "prompt_tokens": 386506,
+        "completion_tokens": 228193,
+        "calls": 118,
+        "tool_cost_cny": 2.598556,
+        "owner_cost_cny": 2.598556
+      },
+      "3": {
+        "prompt_tokens": 147552,
+        "completion_tokens": 89985,
+        "calls": 46,
+        "tool_cost_cny": 1.014984,
+        "owner_cost_cny": 1.014984
+      }
+    },
+    "total": {
+      "prompt_tokens": 1043888,
+      "completion_tokens": 592777,
+      "calls": 309,
+      "tool_cost_cny": 6.829992,
+      "owner_cost_cny": 6.829992
+    }
+  },
+  "cost_gate": {
+    "owner_cny_total": 6.829992,
+    "owner_cny_total_recorded": "¥6.830",
+    "ratio_vs_v1": 4.99,
+    "any_chapter_hit_stop": false,
+    "verdict": "borderline / owner call",
+    "same_order_note": "~5× v1 total; clearly higher than Phase B 1.5×; no chapter reached the ¥7.66 stop"
+  },
+  "human_time": {
+    "card_approval": "Owner delegated card approval to Mew (2026-10-25). Owner wall-clock for card review on this run was not stopwatched.",
+    "scoreboard_review": "Scoreboard review by Mew from occurred_basis; no stopwatch.",
+    "gate_target": "≤10 min/ch",
+    "verdict": "pass_with_delegation_note"
+  },
+  "recall": {
+    "recalled": 1,
+    "denominator": 5,
+    "ratio": "1/5",
+    "pass_threshold": "≥4/5",
+    "verdict": "fail",
+    "classes": "D1–D5 story-specific; not 霞飞路 T*"
+  }
+}
