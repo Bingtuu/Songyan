@@ -22,4 +22,4 @@
 
 这组对照说明检查器会标出那五类。它不是重跑三章之后的召回数字。
 
-2026-10-25 的重跑没有新正文：执行环境没有 LLM API key。召回未测量，见 [experiments/xiafei-plan-gate-rerun-2026-10-25](experiments/xiafei-plan-gate-rerun-2026-10-25/README.md)。审查 state 不提供类型化摘录和主张锚；同一段 v4 第 3 章在缺这两项时标不出钩痕归属漂移。
+2026-10-25 的活路径重跑（box，项目 `030b687372374aa491e0c294e6d62969`）召回 **5/5**，见 [experiments/xiafei-plan-gate-rerun-2026-10-25](experiments/xiafei-plan-gate-rerun-2026-10-25/README.md)。T1、T2 发生且被必须提及拦住；T4、T6 未发生；T5 未发生。审查 state 仍不提供类型化摘录和主张锚，归属漂移若再发生，活路径标不出。
