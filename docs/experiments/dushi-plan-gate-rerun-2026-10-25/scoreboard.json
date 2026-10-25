@@ -1,0 +1,81 @@
+{
+  "project_id": "153fe8f222534585a2bdc2410496dfa0",
+  "plan_project_id": "dushi-lingyi",
+  "title": "末班铜牌",
+  "path": "live",
+  "scored_by": "Mew",
+  "scored_on": "2026-10-25",
+  "rule": "intercepted OR non-occurrence = recall; phrase absence ≠ non-occurrence; do not reuse 霞飞路 T1–T6",
+  "live_path_limit": "no _plan_attribute_extracts / _plan_claim_anchors; typed drift and claim contradictions mostly invisible",
+  "classes": [
+    {
+      "class_id": "D1",
+      "name": "刻痕方向/数量漂移",
+      "approved": "direction=东向西, count=1",
+      "occurred": true,
+      "intercepted": false,
+      "basis": "ch3 正文刻痕从一道变成两道，东向西→西向东。活路径无 typed extracts，attribute_mismatches=0。",
+      "recall": false
+    },
+    {
+      "class_id": "D2",
+      "name": "灵印记名归属漂移",
+      "approved": "ownership=周晚宁",
+      "occurred": true,
+      "intercepted": false,
+      "basis": "窗内交还后登记簿记名改为沈酌，ch2–3 延续。主张无锚，claim 全 unmentioned。",
+      "recall": false
+    },
+    {
+      "class_id": "D3",
+      "name": "灵印位置离牌（上腕等）",
+      "approved": "site=铜牌正面（不在手腕）",
+      "occurred": false,
+      "intercepted": null,
+      "basis": "三章未见记名迁到手腕；位置保持牌面。非发生计召回。ch2 must-mention 仅拦字面「铜牌正面」，不构成对本类漂移的拦截。",
+      "recall": true
+    },
+    {
+      "class_id": "D4",
+      "name": "交还朝向漂移（面朝东）",
+      "approved": "direction=面朝东",
+      "occurred": true,
+      "intercepted": false,
+      "basis": "ch2 监控面朝西仍通过；ch3 备注循环西/北/东/南。无锚未拦。",
+      "recall": false
+    },
+    {
+      "class_id": "D5",
+      "name": "改写禁忌被打破（窗内仍改写）",
+      "approved": "仅窗口外交还才改写记名到交还者",
+      "occurred": true,
+      "intercepted": false,
+      "basis": "ch1 交还约23:52在窗内，随后记名仍改写为沈酌。taboo claim unmentioned。",
+      "recall": false
+    }
+  ],
+  "recall": {
+    "recalled": 1,
+    "denominator": 5,
+    "ratio": "1/5",
+    "pass_threshold": "≥4/5",
+    "verdict": "fail"
+  },
+  "cost": {
+    "owner_cny_total": 6.829992,
+    "by_chapter": {
+      "1": 3.216452,
+      "2": 2.598556,
+      "3": 1.014984
+    },
+    "v1_baseline_cny": 1.37,
+    "ratio_vs_v1": 4.99,
+    "stop_threshold_cny": 7.66,
+    "any_chapter_hit_stop": false,
+    "same_order_note": "~5× v1 total; same order of magnitude as tens vs ones, but clearly higher than Phase B 1.5× — owner judgment for '同量级' gate"
+  },
+  "human": {
+    "verdict": "pass_with_delegation_note",
+    "note": "Owner delegated card approval to Mew (2026-10-25). Scoreboard review by Mew from occurred_basis; no stopwatch."
+  }
+}

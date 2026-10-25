@@ -2,7 +2,7 @@
 
 > **读者**: owner（Bingtuu）与每日切片执行者（Mew）
 > **起点**: 2026-10-22
-> **更新**: 2026-10-25。Phase A 已合入 main（B7 #5、B5 #6、B18 #8）。Phase B 已完成（#13，`c84a2dac`）：霞飞路 ch1–3 活路径三道门已有记录，召回 **5/5**，人工 **pass_with_delegation_note**，成本同量级（¥2.115 vs v1 ≈¥1.37）。Phase C 已开始：体裁 **都市灵异**，这一刀只入库 `dushi-lingyi` 的批准卡，活路径还没跑。
+> **更新**: 2026-10-25。Phase A 已合入 main（B7 #5、B5 #6、B18 #8）。Phase B 已完成（#13，`c84a2dac`）：霞飞路 ch1–3 活路径三道门已有记录，召回 **5/5**，人工 **pass_with_delegation_note**，成本同量级（¥2.115 vs v1 ≈¥1.37）。Phase C 活路径已跑完（都市灵异《末班铜牌》ch1–3，项目 `153fe8f222534585a2bdc2410496dfa0`）：召回 **1/5，fail**（门槛 ≥4/5，只有 D3），人工 **pass_with_delegation_note**，成本 owner ¥6.830 vs v1 ≈¥1.37（约 5 倍，**borderline / owner call**；没有单章 ≥¥7.66）。**阶段 C 退出条件未满足**，因为召回失败。
 > **状态**: 方向已定。SettlementExtractor 的权威路径尚未改写。审查路径只读已批准 plan 卡，不把抽取写进 canon。
 > **每日入口**: [HANDOFF-mew.md](HANDOFF-mew.md)
 > **架构决定**: [adr/0001-plan-first-facts.md](adr/0001-plan-first-facts.md)
@@ -24,6 +24,8 @@
 | 成本记录（`llm_call_usage`） | 正式产出 v1 三章：用户口径 **≈¥1.37**，工具自报 ¥0.458（第 1/2/3 章用户口径 ¥0.358 / ¥0.246 / ¥0.766；第 3 章含一次静默失败后的整章重跑）。审查开销约是写作的 3 倍。两次卡死的挂起请求没有入账。canon loop 边际约 ¥0.06–0.1/章，每触发一次重试再加约 ¥0.3。 |
 | 霞飞路活路径重跑（2026-10-25，box，项目 `030b687372374aa491e0c294e6d62969`） | 五类召回 **5/5**。T1、T2 发生且被必须提及拦住；T4、T6 未发生；T5 未发生（活路径没有摘录和锚，发生时标不出）。见 [实验记录](experiments/xiafei-plan-gate-rerun-2026-10-25/README.md)。 |
 | 同一项目的人工与成本（`llm_call_usage`，[`phase-b-cost-human.json`](experiments/xiafei-plan-gate-rerun-2026-10-25/phase-b-cost-human.json)） | 人工 **pass_with_delegation_note**（owner 委托批卡，没有秒表；若 owner 读计分板，估计 ≤5 分钟/章）。成本 owner 口径 ch1/2/3 = ¥0.824 / ¥1.072 / ¥0.219，合计 ¥2.115，对比 v1 ≈¥1.37。见 [gates.md](experiments/xiafei-plan-gate-rerun-2026-10-25/gates.md)。 |
+| 都市灵异活路径（2026-10-25，box，项目 `153fe8f222534585a2bdc2410496dfa0`，《末班铜牌》） | 故事自己的五类召回 **1/5，fail**（门槛 ≥4/5）。D3 灵印位置离牌未发生，记召回。D1 刻痕方向/数量、D2 灵印记名归属、D4 交还朝向、D5 窗内改写禁忌发生，活路径没有摘录和锚，没有拦住。见 [实验记录](experiments/dushi-plan-gate-rerun-2026-10-25/README.md)。 |
+| 同一项目的人工与成本（`llm_call_usage`，[`phase-c-cost-human.json`](experiments/dushi-plan-gate-rerun-2026-10-25/phase-c-cost-human.json)） | 人工 **pass_with_delegation_note**（owner 委托批卡，没有秒表）。成本 owner 口径 ch1/2/3 = ¥3.216 / ¥2.599 / ¥1.015，合计 ¥6.830，对比 v1 ≈¥1.37，约 5 倍，**borderline / owner call**。没有一章达到 ¥7.66。见 [gates.md](experiments/dushi-plan-gate-rerun-2026-10-25/gates.md)。 |
 
 调研报告给出的最小实验口径，本路线直接沿用：人工确认事实卡后重跑 ch1–3；拦截或不发生的 v4 类错误 **≥4/5**；人工 **≤10 分钟/章**。
 
@@ -58,7 +60,7 @@ A 的退出条件是这三项各自有可复现的测试或记录，不是「顺
 
 **阶段 B 退出：三道门都有记录，退出条件满足。** 召回 pass，成本 pass，人工是带委托说明的 pass。没有未记录的成功门挡着阶段 C。owner 已指定阶段 C 体裁，见下方 C。
 
-活路径的限制还在：`run_chapter_pipeline` 不填 `_plan_attribute_extracts` / `_plan_claim_anchors`。门做得到必须提及，做不到类型化不符。T5 这次没发生；再发生时活路径标不出。这是已知限制，不是没记下的成功门。把摘录和锚接到审查 state（option 1）继续推迟。
+活路径的限制还在：`run_chapter_pipeline` 不填 `_plan_attribute_extracts` / `_plan_claim_anchors`。门做得到必须提及，做不到类型化不符。T5 这次没发生；再发生时活路径标不出。这是已知限制，不是没记下的成功门。把摘录和锚接到审查 state（option 1）继续推迟，留到阶段 C 作为 owner 可选的一刀。
 
 窄验证仍只做下面三件事。阶段 C 不加第四件。
 
@@ -78,15 +80,36 @@ A 的退出条件是这三项各自有可复现的测试或记录，不是「顺
 
 ### C. 第二体裁 3 章，不加题材专用规则
 
-**状态（2026-10-25）：已开始，只完成种子和批准卡。** owner Bingtuu 在 Songyan评估 指定体裁 **都市灵异**（调研报告曾建议仙侠或言情；以 owner 指定为准）。`project_id=dushi-lingyi`，标题《末班铜牌》：当代宁波地铁夜班，一枚铜牌的刻痕方向与数量、灵印记名与位置、末班时间窗、交还朝向是可核对的规则。卡在 `src/songyan/plan_facts/dushi_lingyi.json`，经现有 `plan_fact_loader` 入库，全部 `approval_status=approved`。Mew 按 owner 委托代批。代码和检查规则与 B 相同。没有新的题材检查器，没有跑 ch1–3。
+**状态（2026-10-25）：活路径 ch1–3 已跑完并记分。阶段 C 退出条件未满足。** owner Bingtuu 指定体裁 **都市灵异**（调研报告曾建议仙侠或言情；以 owner 指定为准）。`project_id=dushi-lingyi`，标题《末班铜牌》：当代宁波地铁夜班，一枚铜牌的刻痕方向与数量、灵印记名与位置、末班时间窗、交还朝向是可核对的规则。卡在 `src/songyan/plan_facts/dushi_lingyi.json`，经现有 `plan_fact_loader` 入库，全部 `approval_status=approved`。Mew 按 owner 委托代批。代码和检查规则与 B 相同。没有新的题材检查器。
 
-题材配置里没有「都市灵异」这个 id。卡上 `genre_id` 用已经能加载的 `urban_fantasy`（配置名「都市异能」）。故事身份写在标题和 `core_hook`。本刀不新增题材配置。
+题材配置里没有「都市灵异」这个 id。卡上 `genre_id` 用已经能加载的 `urban_fantasy`（配置名「都市异能」）。故事身份写在标题和 `core_hook`。没有新增题材配置。
 
-**下一刀只做一件：** 用现有只读 `plan_fact_gate` 跑 `dushi-lingyi` 的 ch1–3 活路径，再按这个故事的人工跨章错误类记召回。不加检查器。不把 `_plan_attribute_extracts` / `_plan_claim_anchors` 接上。错误类等这次跑完由 owner/Mew 标注，不把霞飞路的五类硬套过来。
+**活路径这一刀（2026-10-25）已有记录。** box 上写出 ch1–3（运行项目 `153fe8f222534585a2bdc2410496dfa0`）。召回的分母是 Mew 为《末班铜牌》标出的 D1–D5，不是霞飞路的五类。见 [实验记录](experiments/dushi-plan-gate-rerun-2026-10-25/README.md)、[gates.md](experiments/dushi-plan-gate-rerun-2026-10-25/gates.md) 与 [`phase-c-cost-human.json`](experiments/dushi-plan-gate-rerun-2026-10-25/phase-c-cost-human.json)。没有改生产代码。
 
-成功门与 B 相同：召回 ≥4/5、人工 ≤10 分钟/章、成本同量级。召回的分母是 owner/Mew 在这次活路径之后为《末班铜牌》标出的跨章真错误类，不把霞飞路的五类硬套过来。这三道门这一刀都还没有记录。
+成功门与 B 相同。三道门都有记录，判定如下：
 
-若失败：停止加规则。退到薄封装——**人维护事实圣经，AI 按圣经写**。把失败记进实验笔记，作为「需要更多人在环」的证据，不把它补成一套新的题材检查器。
+| 门 | 判定 |
+|----|------|
+| 召回 ≥4/5 | **fail** — 1/5（只有 D3） |
+| 人工 ≤10 分钟/章 | **pass_with_delegation_note** |
+| 成本与 v1 同量级 | **borderline / owner call** — ¥6.830 vs ≈¥1.37（约 5 倍）；没有单章 ≥¥7.66 |
+
+- 召回 **fail**。只有 D3（灵印位置离牌、上腕）未发生，记召回。D1 刻痕方向/数量、D2 灵印记名归属、D4 交还朝向、D5 窗内改写禁忌都发生了，活路径没有拦住。
+- 人工 **pass_with_delegation_note**。owner 把批卡委托给 Mew。没有秒表。计分板由 Mew 按 `occurred_basis` 定稿。
+- 成本 **borderline / owner call**。owner 口径合计 ¥6.830（ch1 ¥3.216、ch2 ¥2.599、ch3 ¥1.015），v1 三章合计 ≈¥1.37，约 5 倍。停的阈值是单章超过 v1 第 3 章 ¥0.766 一个数量级；最高的 ch1 ¥3.216 没有到 ¥7.66。同量级不记 pass。阶段 B 的对照是约 1.5 倍。
+
+**阶段 C 退出条件未满足，因为召回失败。** 缺召回这一条，退出不算过。成本留给 owner 判断，不记成 pass。人工是带委托说明的 pass。
+
+活路径仍不填 `_plan_attribute_extracts` / `_plan_claim_anchors`。必须提及只抓到字面（第 1 章缺 `23:40`，第 2 章缺 `铜牌正面`），`attribute_mismatches` 三章都是 0，主张核验缺省为 unmentioned。D1、D2、D4、D5 发生时没有被拦住。D3 能记召回，是因为那一类没有发生。
+
+**失败路径已经走到记录这一步。** 停止加题材规则。失败已记进实验笔记，作为「需要更多人在环」的证据。推荐的下一步是薄封装——**人维护事实圣经，AI 按圣经写**。本刀没有把这条收束写成 owner 已经接受的结论，也没有开始接线。
+
+请 owner 选定下一刀，二选一：
+
+1. **(a) 接受薄封装结论。** 阶段 C 以召回失败收束。这是失败路径上的推荐项。
+2. **(b) 可选的一刀。** 只把摘录和锚接到审查 state，用同一套 D1–D5 重记召回。不加题材规则，不改 SettlementExtractor。这是阶段 B 推迟的 option 1。
+
+在 owner 选定之前，下一刀不写代码。
 
 ## 非目标
 
@@ -104,3 +127,5 @@ A 的退出条件是这三项各自有可复现的测试或记录，不是「顺
 ## 90 天怎样算证明了
 
 A 完成，并且 B 的三道门有记录。C 要么在不加题材规则的情况下过同一组门，要么写下薄封装退路。两条都算这条路线有了结论。结论可以是「plan-first 够用」，也可以是「必须更多人在环」；不能是「再加一批检查规则继续抽」。
+
+2026-10-25 的都市灵异活路径没有过同一组门（召回 1/5）。薄封装退路已写进实验笔记，作为推荐给 owner 的决定，owner 尚未接受。在 owner 选定（a）或（b）之前，这条路线的结论还没有收束。
