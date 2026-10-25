@@ -29,14 +29,13 @@ class TestCountTokens:
 
 class TestEstimateCost:
     def test_deepseek_chat_cost(self) -> None:
-        """DeepSeek 定价：输入 ¥1/M，输出 ¥2/M."""
+        """deepseek-chat 用户口径：输入 ¥2/M，输出 ¥8/M."""
         prompt = "这是一个测试 prompt。" * 100  # ~1700 字符
         response = "这是一个测试 response。" * 100  # ~2100 字符
         cost = estimate_cost(prompt, response, model="deepseek-chat")
         assert cost > 0
-        # 2000 字符 / 2 ≈ 1000 tokens
-        # cost ≈ 1000 * 1 / 1M + 1000 * 2 / 1M = ¥0.003
-        assert cost < 0.1  # 应远低于旧估算
+        # 约 1000 tokens ×（¥2 + ¥8）/ 1M ≈ ¥0.01
+        assert cost < 0.1
 
     def test_unknown_model_uses_default(self) -> None:
         cost = estimate_cost("test", "test", model="unknown-model")

@@ -78,7 +78,7 @@ LLM_WRITER_MODEL=deepseek-chat
 
 可路由角色共 10 个（环境变量中用大写）：`WRITER`、`REVISION_HANDLER`、`LLM_AUDITOR`、`LITERARY_AUDITOR`、`SETTLEMENT_EXTRACTOR`、`SUMMARY_WRITER`、`GOAL_PLANNER`、`CREATIVE_DIRECTOR`、`ARC_SUMMARY_GENERATOR`、`VOLUME_SUMMARY_GENERATOR`。完整示例见 `.env.example`。配置后运行 `songyan doctor --check-llm` 会逐角色校验并探测客户端初始化。
 
-成本估算口径：report 成本段按 角色 × 模型 拆分；`cost_estimator` 的定价表是手工维护的保守估算基线（缓存未命中价），不是实时价目。未知模型会回落默认（DeepSeek chat 档）并在日志中 warning 一次；精确对账以 provider 账单为准。
+成本估算口径：report 成本段按 角色 × 模型 拆分，并标明 chat 估算口径。`deepseek-chat`（及未知模型回落的 default）按用户口径记输入 ¥2/M、输出 ¥8/M；这是写入 `cost_cny` 的估算标签，不是 DeepSeek 账单，也不改 provider 计费。`deepseek-reasoner` 仍用单独的 ¥4/M、¥12/M 表。未知模型会在日志中 warning 一次；精确对账以 provider 账单为准。
 
 ## 自检
 

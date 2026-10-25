@@ -1226,6 +1226,9 @@ class TestRenderCostSection:
         text = render_cost_section(self._aggregate(), _stats(4, token_est=1, cost_est=2))
 
         assert "## 成本视图" in text
+        assert "chat 估算口径" in text
+        assert "¥2/M" in text
+        assert "¥8/M" in text
         # run 总成本 = 0.002 + 0.010 + 0.006 = 0.018（含 run 级分组）
         assert f"**run 总成本**: {format_cost_estimate(0.018)}" in text
         # 章节数只计非 NULL 分组，run 级调用次数以注释呈现
