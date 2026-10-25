@@ -2,7 +2,7 @@
 
 活路径召回 **5/5**。目标是 ≥4/5。正文来自 Mew 的 box（本 PR 分支，有 `LLM_API_KEY`），项目 `030b687372374aa491e0c294e6d62969`。云端虚拟机没有密钥，没有参与这次写章。
 
-`scoreboard.json` 是这次测量。`scoreboard-live.json` 是计分脚本的原输出。`occurred.json` 与 `occurred_basis.md` 是读 `chapters/` 之后的发生判断。
+`scoreboard.json` 是这次测量。`scoreboard-live.json` 是计分脚本的原输出。`occurred.json` 与 `occurred_basis.md` 是读 `chapters/` 之后的发生判断。阶段 B 另外两道门（人工、成本）在 [gates.md](gates.md)，原始数字在 `phase-b-cost-human.json`。
 
 | 类 | 发生 | 门 | 召回 |
 |----|------|----|------|
@@ -27,4 +27,4 @@ python scripts/rerun_xiafei_plan_gate.py
 
 脚本用 `tpl/xiafei/` 建项目，把批准卡改记到该项目 id，再按章 `songyan run --auto-confirm`。没有密钥时它会改写 `scoreboard.json` 为未计分；这次的 5/5 以 `scoreboard-live.json` 为准。
 
-人工时长和成本没有记。没有写《规则年代》。没有加题材规则。没有把抽取吸进 plan canon。没有改 SettlementExtractor。没有改质量门路由。没有开始阶段 C。
+人工与成本的判定在 [gates.md](gates.md)：人工 **pass_with_delegation_note**（没有秒表），成本同量级 **pass**（合计 ¥2.115，v1 ≈¥1.37）。没有写《规则年代》。没有加题材规则。没有把抽取吸进 plan canon。没有改 SettlementExtractor。没有改质量门路由。没有开始阶段 C。没有接 `_plan_attribute_extracts` / `_plan_claim_anchors`。
