@@ -1,0 +1,84 @@
+{
+  "experiment": "xiafei-plan-gate-rerun-2026-10-25",
+  "chapters_written": false,
+  "recall_measured": false,
+  "llm_probe": {
+    "checked_on": "2026-10-25",
+    "api_key_present": false,
+    "dotenv_present": false,
+    "llm_base_url": "https://api.deepseek.com",
+    "llm_model": "deepseek-chat",
+    "reason": "这台环境不能调用 Songyan 的生产 LLM。 LLM_API_KEY 未设置，工作区也没有可用的 .env。 songyan run 的 preflight 会在 llm.key 失败。 没有新的 ch1–3，五类召回未测量。"
+  },
+  "live_review_path": {
+    "extracts_state_key": "_plan_attribute_extracts",
+    "anchors_state_key": "_plan_claim_anchors",
+    "populated_by_run_chapter_pipeline": false,
+    "note": "rule_auditor_node 只把 state 里已有的摘录和锚交给 run_plan_fact_gate。初始 state 不写这两项，所以活路径的类型化比较为空，主张核验只认主张原文。"
+  },
+  "scoreboard": {
+    "status": "blocked",
+    "recalled": null,
+    "denominator": 5,
+    "classes": [
+      {
+        "class_id": "T1",
+        "label": "证物属性漂移",
+        "occurred": null,
+        "intercepted": null,
+        "recall": null,
+        "verdict": "unscored",
+        "basis": "没有新章正文，不能判断这一类是拦截还是未发生。",
+        "signals": [],
+        "live_path_signal": "第 2 章必须提及可以标出缺「右向左」。没有摘录时，方向和数量的类型化比较不会标出。"
+      },
+      {
+        "class_id": "T5",
+        "label": "证物归属漂移",
+        "occurred": null,
+        "intercepted": null,
+        "recall": null,
+        "verdict": "unscored",
+        "basis": "没有新章正文，不能判断这一类是拦截还是未发生。",
+        "signals": [],
+        "live_path_signal": "活路径标不出。归属不符要类型化摘录，主张矛盾要「横杆拓片」这类锚；两者都不在审查 state 里。"
+      },
+      {
+        "class_id": "T4",
+        "label": "机制方向",
+        "occurred": null,
+        "intercepted": null,
+        "recall": null,
+        "verdict": "unscored",
+        "basis": "没有新章正文，不能判断这一类是拦截还是未发生。",
+        "signals": [],
+        "live_path_signal": "第 3 章必须提及可以标出缺「往外拉」。没有摘录时，类型化方向不会标出。"
+      },
+      {
+        "class_id": "T2",
+        "label": "证据遗漏",
+        "occurred": null,
+        "intercepted": null,
+        "recall": null,
+        "verdict": "unscored",
+        "basis": "没有新章正文，不能判断这一类是拦截还是未发生。",
+        "signals": [],
+        "live_path_signal": "第 2 章必须提及可以标出缺「钝器伤」。没有主张锚时，主张「未提及」是缺省值，不算这一类的拦截。"
+      },
+      {
+        "class_id": "T6",
+        "label": "时代时间线",
+        "occurred": null,
+        "intercepted": null,
+        "recall": null,
+        "verdict": "unscored",
+        "basis": "没有新章正文，不能判断这一类是拦截还是未发生。",
+        "signals": [],
+        "live_path_signal": "第 1 章必须提及可以标出缺「九一八」。没有摘录时，时局时间锚的类型化比较不会标出。"
+      }
+    ],
+    "anchors_supplied": false,
+    "extracts_supplied": false,
+    "reason": "这台环境不能调用 Songyan 的生产 LLM。 LLM_API_KEY 未设置，工作区也没有可用的 .env。 songyan run 的 preflight 会在 llm.key 失败。 没有新的 ch1–3，五类召回未测量。"
+  }
+}

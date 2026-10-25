@@ -2,7 +2,7 @@
 
 > **读者**: owner（Bingtuu）与每日切片执行者（Mew）
 > **起点**: 2026-10-22
-> **更新**: 2026-10-25。Phase A 已合入 main（B7 #5、B5 #6、B18 #8）。Phase B：事实卡 schema 已合入；霞飞路《旧案》ch1–3 批准卡与三项窄检查已落地（fixture 对照 v4 五类）；写章审查路径已调用只读 plan 门。尚未重跑正文，也没有新的召回数字。
+> **更新**: 2026-10-25。Phase A 已合入 main（B7 #5、B5 #6、B18 #8）。Phase B：事实卡、批准卡、窄检查、只读门已在 main。重跑 ch1–3 未测出召回：执行环境没有 LLM API key，没有新正文。五类未计分，不是 0/5。
 > **状态**: 方向已定。SettlementExtractor 的权威路径尚未改写。审查路径只读已批准 plan 卡，不把抽取写进 canon。
 > **每日入口**: [HANDOFF-mew.md](HANDOFF-mew.md)
 > **架构决定**: [adr/0001-plan-first-facts.md](adr/0001-plan-first-facts.md)
@@ -47,7 +47,11 @@ A 的退出条件是这三项各自有可复现的测试或记录，不是「顺
 
 **第三刀（审查路径上的只读门）：** 写章审查在正文版本存在之后调用这三项检查，只读当前项目已批准的 plan 卡。不改 SettlementExtractor 权威，不把抽取吸进 canon，也没有重跑正文。成功门不变，留到重跑那一刀。
 
-**下一刀：** 重跑霞飞路《旧案》ch1–3，用只读门记下路线图五类的召回（目标 ≥4/5）。先不写《规则年代》，不加题材规则。窄验证仍只做下面三件事。
+**重跑这一刀（2026-10-25）没有召回数字。** 执行环境没有 `LLM_API_KEY`，也没有 `.env`，生产模型（默认 DeepSeek）调不到，`songyan run` 在 preflight 的 `llm.key` 停住。没有新的 ch1–3。五类判决都是未计分，`recalled` 为空，不是 0/5，也没有达到 ≥4/5。记录和复跑入口在 [experiments/xiafei-plan-gate-rerun-2026-10-25](experiments/xiafei-plan-gate-rerun-2026-10-25/README.md)。
+
+活路径另有一条已核实的限制，不算进上面的空召回：`run_chapter_pipeline` 不填 `_plan_attribute_extracts` / `_plan_claim_anchors`。门因此做得到必须提及，做不到类型化不符，也不把缺省的「未提及」当成矛盾。T5 归属漂移在这档输入下标不出。计分脚本把这件事和「人读正文后的发生与否」分开；短语没出现不算未发生。
+
+**下一刀：** 在有 `LLM_API_KEY` 的环境执行 `scripts/rerun_xiafei_plan_gate.py`，再按实验目录里的计分脚本给五类召回。先不写《规则年代》，不加题材规则。窄验证仍只做下面三件事。
 
 1. **必须提及**：本章计划点名的证物、伤情、时间锚，生成后逐条核对是否出现。
 2. **主张核验**：事件卡上的每条主张，对照正文段落，判支持 / 矛盾 / 未提及，并附引文。

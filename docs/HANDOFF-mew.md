@@ -18,13 +18,13 @@ owner：Bingtuu。目标与非目标以 [ROADMAP-plan-first.md](ROADMAP-plan-fir
 
 ## 下一刀
 
-**Phase A 已完成。** B7 #5、B5 #6、B18 #8 已在 main。事实卡 schema、霞飞路批准卡、三项窄检查也已在 main。规模写作仍然冻结。
+**Phase A 已完成。** B7 #5、B5 #6、B18 #8 已在 main。事实卡 schema、霞飞路批准卡、三项窄检查、写章审查上的只读门也已在 main。规模写作仍然冻结。
 
-**本刀是只读 plan 门，并已接到写章审查路径。** `rule_auditor_node` 在正文版本已经存在之后调用 `run_plan_fact_gate`。门只读当前项目 `approval_status=approved` 的线索、事件和属性，然后调用必须提及、主张核验、类型化属性比较。主张核验默认用确定性锚点（`AnchoredClaimJudge`），不调用模型。类型化比较只用调用方交给门的结构化摘录（审查 state 上的 `_plan_attribute_extracts`）；主张锚在 `_plan_claim_anchors`。门不从正文再抽，也不把摘录写进 plan canon。结果记在 `_plan_fact_gate`，不改质量门路由。SettlementExtractor 仍写原结算库，不写 plan canon。
+**重跑这一刀没有召回数字。** 执行环境没有 `LLM_API_KEY`，也没有 `.env`，生产模型调不到。没有新的 ch1–3。五类都是未计分，`recalled` 为空。这不是 0/5。记录在 [experiments/xiafei-plan-gate-rerun-2026-10-25](experiments/xiafei-plan-gate-rerun-2026-10-25/README.md)。`scripts/rerun_xiafei_plan_gate.py` 在没有密钥时写这份记分板并退出；有密钥时用 `tpl/xiafei` 建项目，把批准卡改记到该项目 id 上，再 `songyan run`。
 
-稳定 `project_id` 仍是 `xiafei-jiuan`。卡和 fixture 对照记录不变，见 [xiafei-plan-checks.md](xiafei-plan-checks.md)。同一组输入仍会标出路线图上的五类。这一刀没有重跑霞飞路，没有写新章，也没有新的召回数字。
+`rule_auditor_node` 仍只读已批准卡，结果仍在 `_plan_fact_gate`，不改质量门路由。SettlementExtractor 仍写原结算库。核实过的缺口：`run_chapter_pipeline` 不填 `_plan_attribute_extracts` / `_plan_claim_anchors`。必须提及会跑；类型化比较为空；没有锚时主张对不上原文就是未提及，这个缺省值不算矛盾，也不算 T2 的拦截。T5 归属漂移因此在活路径上标不出。计分脚本 `scripts/score_xiafei_roadmap_recall.py` 要求人读正文后填写发生与否，不用 v4 短语缺席代替「未发生」。
 
-**下一刀只做一件：** 重跑霞飞路《旧案》ch1–3，用这道只读门记下路线图五类的召回（目标 ≥4/5）。不写《规则年代》，不加题材规则，不把抽取吸进 canon。理由：卡、检查器和写章审查路径上的门都已经在；只有重跑才有新的实验数字。人工时长和成本仍是阶段 B 的另外两道门，不放进这一刀。
+**下一刀只做一件：** 在有 `LLM_API_KEY` 的环境执行 `scripts/rerun_xiafei_plan_gate.py`，再用计分脚本给出五类召回（目标 ≥4/5）。不写《规则年代》，不加题材规则，不把抽取吸进 canon。理由：卡、门和计分规则已经在，缺的是一次真实写章。人工时长和成本仍不放进这一刀。
 
 ## 怎么报告
 

@@ -1,0 +1,12 @@
+{"outline":{"core_conflict":"证据与权力的对抗：法医的科学取证与租界各方势力对真相的操纵","mainline_synopsis":"顾怀瑾初到验尸所即遇霞飞路当铺密室命案。他从尸体与库房痕迹中发现死亡时间与证词不符，追查当铺暗账，牵出巡捕房督察长、青帮与日本商会对同一批货的争夺。他在各方施压下坚持以证据重建时间线，最终揭开密室的布置与合谋者。","themes":["证据与真相","个人与体制","乱世中的职业操守"],"intended_ending":"顾怀瑾以证据揭开当铺命案与暗账真相，但真相被时局吞没，他选择留下继续验尸"},
+"arc_plans":[
+{"arc_index":0,"start_chapter":1,"end_chapter":30,"arc_goal":"顾怀瑾勘验当铺密室命案，发现死亡时间与证词矛盾，暗账浮出","threads_to_open":["t_locked","t_ledger","t_father"],"threads_to_resolve":[],"is_mainline":true},
+{"arc_index":1,"start_chapter":31,"end_chapter":60,"arc_goal":"三方势力围绕暗账施压","threads_to_open":["t_factions"],"threads_to_resolve":[],"is_mainline":true},
+{"arc_index":2,"start_chapter":61,"end_chapter":90,"arc_goal":"密室手法初步破解","threads_to_open":[],"threads_to_resolve":["t_locked"],"is_mainline":true},
+{"arc_index":3,"start_chapter":91,"end_chapter":120,"arc_goal":"父亲旧案关联","threads_to_open":[],"threads_to_resolve":["t_father"],"is_mainline":true},
+{"arc_index":4,"start_chapter":121,"end_chapter":300,"arc_goal":"终局","threads_to_open":[],"threads_to_resolve":["t_ledger","t_factions"],"is_mainline":true}],
+"plot_threads":[
+{"thread_id":"t_locked","title":"当铺密室","description":"库房从内闩死，老板死于其中","is_mainline":true,"expected_resolve_arc":2},
+{"thread_id":"t_ledger","title":"暗账","description":"当铺替各方保管的暗账去向","is_mainline":true,"expected_resolve_arc":4},
+{"thread_id":"t_father","title":"父亲旧案","description":"顾父生前代理的最后一桩案子与当铺有关","is_mainline":false,"expected_resolve_arc":3},
+{"thread_id":"t_factions","title":"三方势力","description":"巡捕房、青帮、日本商会的博弈","is_mainline":true,"expected_resolve_arc":4}]}

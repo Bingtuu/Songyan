@@ -26,8 +26,13 @@ def main(argv: list[str] | None = None) -> None:
         default=bundled_xiafei_fixture(),
         help="fixture JSON (default: 霞飞路《旧案》 ch1–3)",
     )
+    parser.add_argument(
+        "--project-id",
+        default=None,
+        help="write the cards onto this project id (default: the id in the fixture)",
+    )
     args = parser.parse_args(argv)
-    bundle = asyncio.run(load_plan_fact_fixture(args.fixture))
+    bundle = asyncio.run(load_plan_fact_fixture(args.fixture, project_id=args.project_id))
     print(
         f"loaded project {bundle.project_id}: "
         f"{len(bundle.entities)} entities, "

@@ -21,3 +21,5 @@
 类型化比较用的摘录在 `tests/fixtures/xiafei_jiuan/v4_extracts.json`，是对 v4 正文的显式标注，不是从正文再抽进 canon。主张的确定性路径用同目录 `claim_anchors.json` 里该主张自己的支持 / 矛盾短语；矛盾短语优先。LLM 路径只发送这一条主张和这一章，测试注入 `complete`，不在 CI 里调用 API。
 
 这组对照说明检查器会标出那五类。它不是重跑三章之后的召回数字。
+
+2026-10-25 的重跑没有新正文：执行环境没有 LLM API key。召回未测量，见 [experiments/xiafei-plan-gate-rerun-2026-10-25](experiments/xiafei-plan-gate-rerun-2026-10-25/README.md)。审查 state 不提供类型化摘录和主张锚；同一段 v4 第 3 章在缺这两项时标不出钩痕归属漂移。

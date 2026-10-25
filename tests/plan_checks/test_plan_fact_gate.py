@@ -394,6 +394,62 @@ class TestChapterReviewInvokesGate:
         assert result["error"] == "Version not found"
         assert "_plan_fact_gate" not in result
 
+    async def test_live_state_does_not_score_typed_hook_drift(self, gate_db: None) -> None:
+        """The review path leaves extracts and anchors unset.
+
+        v4 chapter 3 puts the hook mark on the bar rubbing. Must-mention
+        still runs. Typed ownership and the contradicted hook claim do
+        not, until the caller supplies those inputs.
+        """
+        await load_plan_fact_fixture(bundled_xiafei_fixture())
+        text = (_FIXTURE / "ch03.md").read_text(encoding="utf-8")
+        version = ChapterVersion(
+            version_id="v-ch3",
+            project_id=XIAFEI_PROJECT_ID,
+            chapter_number=3,
+            content=text,
+            word_count=len(text),
+        )
+        state = {
+            "project_id": XIAFEI_PROJECT_ID,
+            "chapter_number": 3,
+            "current_version_id": "v-ch3",
+            "chapter_goal_id": "",
+            "context_package": SimpleNamespace(mandatory_references=None),
+        }
+
+        with (
+            patch(
+                "songyan.workflows._nodes.load_version",
+                new_callable=AsyncMock,
+                return_value=version,
+            ),
+            patch("songyan.workflows._nodes.save_rule_audit", new_callable=AsyncMock),
+        ):
+            result = await rule_auditor_node(state)
+
+        report = result["_plan_fact_gate"]
+        assert report["attribute_mismatches"] == []
+        hook = next(row for row in report["claim_verdicts"] if row["claim_id"] == "claim-ch3-hook")
+        assert hook["status"] == "unmentioned"
+        assert any(row["point_id"] == "clue-mechanism" for row in report["missing_mentions"])
+
+        supplied = await run_plan_fact_gate(
+            XIAFEI_PROJECT_ID,
+            3,
+            text,
+            extracts=_v4_extracts(),
+            anchors=_v4_anchors(),
+        )
+        assert any(
+            row.entity_id == "xiafei-hook" and row.key == "ownership"
+            for row in supplied.attribute_mismatches
+        )
+        assert any(
+            row.claim_id == "claim-ch3-hook" and row.status == "contradicted"
+            for row in supplied.claim_verdicts
+        )
+
 
 def _v4_extracts() -> list[AttributeExtract]:
     payload = json.loads((_FIXTURE / "v4_extracts.json").read_text(encoding="utf-8"))
