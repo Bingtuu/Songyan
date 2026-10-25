@@ -3,8 +3,11 @@
 Example::
 
     DATABASE_URL=sqlite:///songyan.db python scripts/load_plan_facts.py
+    DATABASE_URL=sqlite:///songyan.db python scripts/load_plan_facts.py \\
+        src/songyan/plan_facts/dushi_lingyi.json
 
-With no path, loads the shipped 霞飞路《旧案》 ch1–3 cards.
+With no path, loads the shipped 霞飞路《旧案》 ch1–3 cards. Pass the
+都市灵异 fixture path to load ``dushi-lingyi`` instead.
 """
 
 from __future__ import annotations

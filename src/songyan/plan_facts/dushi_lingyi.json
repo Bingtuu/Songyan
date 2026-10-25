@@ -1,0 +1,388 @@
+{
+  "project_id": "dushi-lingyi",
+  "project": {
+    "title": "末班铜牌",
+    "genre_id": "urban_fantasy",
+    "mode_id": "webnovel",
+    "protagonist_name": "沈酌",
+    "protagonist_background": "宁波地铁四号线塘河站夜班站务员，做了六年末班清点，只信失物登记簿上的格号和时刻，不信传闻",
+    "core_hook": "都市灵异。2024年11月2日夜，宁波地铁四号线塘河站夜班站务员沈酌在失物柜第三格登记一枚铜牌：只有一道刻痕，方向东向西。灵印记名周晚宁，印在铜牌正面。交还只许在当日末班窗23:40-00:10，人面朝东。窗口外交还会把记名改写到交还者身上。",
+    "target_reader_expectation": "当代都市灵异短篇三章。铜牌刻痕的方向与数量、灵印的记名与位置、末班时间窗、交还朝向要前后一致，规则先于惊吓",
+    "target_word_count": 9000,
+    "tone": "克制",
+    "estimated_chapters": 3,
+    "words_per_chapter": 3000,
+    "story_structure": "three_act",
+    "arc_boundaries": [1, 2],
+    "arc_boundaries_auto": false,
+    "taboos": ["用异能等级或战力化解交还", "临时改写铜牌规则", "把灵异写成没有约束的鬼打墙"],
+    "reference_works": ["民调局异闻录", "心理罪"]
+  },
+  "time_anchors": [
+    {
+      "anchor_id": "dly-ta-day",
+      "project_id": "dushi-lingyi",
+      "date": "2024-11-02",
+      "kind": "story",
+      "approval_status": "approved"
+    },
+    {
+      "anchor_id": "dly-ta-window",
+      "project_id": "dushi-lingyi",
+      "date": "23:40-00:10",
+      "kind": "story",
+      "approval_status": "approved"
+    },
+    {
+      "anchor_id": "dly-ta-morning",
+      "project_id": "dushi-lingyi",
+      "date": "2024-11-03 06:00后（非交还窗）",
+      "kind": "history",
+      "approval_status": "approved"
+    }
+  ],
+  "entities": [
+    {
+      "entity_id": "dly-shen",
+      "project_id": "dushi-lingyi",
+      "entity_type": "person",
+      "aliases": ["沈酌", "站务员"],
+      "approval_status": "approved"
+    },
+    {
+      "entity_id": "dly-pei",
+      "project_id": "dushi-lingyi",
+      "entity_type": "person",
+      "aliases": ["裴岚", "值班站长"],
+      "approval_status": "approved"
+    },
+    {
+      "entity_id": "dly-zhou",
+      "project_id": "dushi-lingyi",
+      "entity_type": "person",
+      "aliases": ["周晚宁"],
+      "approval_status": "approved"
+    },
+    {
+      "entity_id": "dly-station",
+      "project_id": "dushi-lingyi",
+      "entity_type": "place",
+      "aliases": ["塘河站", "失物柜第三格"],
+      "approval_status": "approved"
+    },
+    {
+      "entity_id": "dly-token",
+      "project_id": "dushi-lingyi",
+      "entity_type": "object",
+      "aliases": ["铜牌", "失物铜牌"],
+      "approval_status": "approved"
+    },
+    {
+      "entity_id": "dly-notch",
+      "project_id": "dushi-lingyi",
+      "entity_type": "object",
+      "aliases": ["铜牌刻痕", "刻痕"],
+      "approval_status": "approved"
+    },
+    {
+      "entity_id": "dly-mark",
+      "project_id": "dushi-lingyi",
+      "entity_type": "object",
+      "aliases": ["灵印", "记名"],
+      "approval_status": "approved"
+    },
+    {
+      "entity_id": "dly-site",
+      "project_id": "dushi-lingyi",
+      "entity_type": "object",
+      "aliases": ["灵印位置", "铜牌正面"],
+      "approval_status": "approved"
+    },
+    {
+      "entity_id": "dly-return",
+      "project_id": "dushi-lingyi",
+      "entity_type": "mechanism",
+      "aliases": ["面朝东交还"],
+      "approval_status": "approved"
+    },
+    {
+      "entity_id": "dly-taboo",
+      "project_id": "dushi-lingyi",
+      "entity_type": "mechanism",
+      "aliases": ["窗口外改写记名", "记名改写"],
+      "approval_status": "approved"
+    },
+    {
+      "entity_id": "dly-window",
+      "project_id": "dushi-lingyi",
+      "entity_type": "time",
+      "aliases": ["末班窗"],
+      "approval_status": "approved"
+    },
+    {
+      "entity_id": "dly-day",
+      "project_id": "dushi-lingyi",
+      "entity_type": "time",
+      "aliases": ["故事日"],
+      "approval_status": "approved"
+    }
+  ],
+  "attributes": [
+    {
+      "attribute_id": "dly-attr-notch-direction",
+      "project_id": "dushi-lingyi",
+      "entity_id": "dly-notch",
+      "key": "direction",
+      "value": "东向西",
+      "valid_from_ch": 1,
+      "valid_to_ch": 3,
+      "source": "human",
+      "approval_status": "approved"
+    },
+    {
+      "attribute_id": "dly-attr-notch-count",
+      "project_id": "dushi-lingyi",
+      "entity_id": "dly-notch",
+      "key": "count",
+      "value": "1",
+      "valid_from_ch": 1,
+      "valid_to_ch": 3,
+      "source": "human",
+      "approval_status": "approved"
+    },
+    {
+      "attribute_id": "dly-attr-notch-owner",
+      "project_id": "dushi-lingyi",
+      "entity_id": "dly-notch",
+      "key": "ownership",
+      "value": "铜牌",
+      "valid_from_ch": 1,
+      "valid_to_ch": 3,
+      "source": "human",
+      "approval_status": "approved"
+    },
+    {
+      "attribute_id": "dly-attr-mark-owner",
+      "project_id": "dushi-lingyi",
+      "entity_id": "dly-mark",
+      "key": "ownership",
+      "value": "周晚宁",
+      "valid_from_ch": 1,
+      "valid_to_ch": 3,
+      "source": "human",
+      "approval_status": "approved"
+    },
+    {
+      "attribute_id": "dly-attr-mark-site",
+      "project_id": "dushi-lingyi",
+      "entity_id": "dly-site",
+      "key": "ownership",
+      "value": "铜牌正面",
+      "valid_from_ch": 1,
+      "valid_to_ch": 3,
+      "source": "human",
+      "approval_status": "approved"
+    },
+    {
+      "attribute_id": "dly-attr-return-direction",
+      "project_id": "dushi-lingyi",
+      "entity_id": "dly-return",
+      "key": "direction",
+      "value": "面朝东",
+      "valid_from_ch": 2,
+      "valid_to_ch": 3,
+      "source": "human",
+      "approval_status": "approved"
+    },
+    {
+      "attribute_id": "dly-attr-window-time",
+      "project_id": "dushi-lingyi",
+      "entity_id": "dly-window",
+      "key": "time_anchor",
+      "value": "23:40-00:10",
+      "valid_from_ch": 1,
+      "valid_to_ch": 3,
+      "source": "plan",
+      "approval_status": "approved"
+    },
+    {
+      "attribute_id": "dly-attr-day-time",
+      "project_id": "dushi-lingyi",
+      "entity_id": "dly-day",
+      "key": "time_anchor",
+      "value": "2024-11-02",
+      "valid_from_ch": 1,
+      "valid_to_ch": 3,
+      "source": "human",
+      "approval_status": "approved"
+    }
+  ],
+  "events": [
+    {
+      "event_id": "dly-evt-ch1-intake",
+      "project_id": "dushi-lingyi",
+      "ch": 1,
+      "time_anchor_id": "dly-ta-day",
+      "participants": ["dly-shen", "dly-token"],
+      "causes": [],
+      "reveals_evidence": ["dly-clue-notch", "dly-clue-mark-name", "dly-clue-mark-site"],
+      "claims": [
+        {
+          "claim_id": "dly-claim-ch1-notch",
+          "text": "铜牌只有一道刻痕，方向为东向西"
+        },
+        {
+          "claim_id": "dly-claim-ch1-mark",
+          "text": "灵印在铜牌正面，记名归属周晚宁，不在沈酌手腕上"
+        }
+      ],
+      "approval_status": "approved"
+    },
+    {
+      "event_id": "dly-evt-ch1-taboo",
+      "project_id": "dushi-lingyi",
+      "ch": 1,
+      "time_anchor_id": "dly-ta-window",
+      "participants": ["dly-shen", "dly-taboo"],
+      "causes": [],
+      "reveals_evidence": ["dly-clue-window", "dly-clue-taboo"],
+      "claims": [
+        {
+          "claim_id": "dly-claim-ch1-window",
+          "text": "交还只能发生在当日23:40到00:10的末班窗内"
+        },
+        {
+          "claim_id": "dly-claim-ch1-taboo",
+          "text": "窗口外交还会把记名改写到交还者身上；窗口内交还不改写"
+        }
+      ],
+      "approval_status": "approved"
+    },
+    {
+      "event_id": "dly-evt-ch2-log",
+      "project_id": "dushi-lingyi",
+      "ch": 2,
+      "time_anchor_id": "dly-ta-day",
+      "participants": ["dly-shen", "dly-pei"],
+      "causes": ["dly-evt-ch1-intake"],
+      "reveals_evidence": ["dly-clue-notch", "dly-clue-mark-name"],
+      "claims": [
+        {
+          "claim_id": "dly-claim-ch2-notch",
+          "text": "值班记录里的刻痕仍是一道，方向为东向西，没有第二道"
+        },
+        {
+          "claim_id": "dly-claim-ch2-name",
+          "text": "灵印记名仍是周晚宁"
+        }
+      ],
+      "approval_status": "approved"
+    },
+    {
+      "event_id": "dly-evt-ch2-return",
+      "project_id": "dushi-lingyi",
+      "ch": 2,
+      "time_anchor_id": "dly-ta-window",
+      "participants": ["dly-shen"],
+      "causes": ["dly-evt-ch1-intake"],
+      "reveals_evidence": ["dly-clue-return", "dly-clue-mark-site"],
+      "claims": [
+        {
+          "claim_id": "dly-claim-ch2-face",
+          "text": "窗口内交还时人面朝东"
+        },
+        {
+          "claim_id": "dly-claim-ch2-site",
+          "text": "灵印仍在铜牌正面，不在手腕上"
+        }
+      ],
+      "approval_status": "approved"
+    },
+    {
+      "event_id": "dly-evt-ch3-review",
+      "project_id": "dushi-lingyi",
+      "ch": 3,
+      "time_anchor_id": "dly-ta-day",
+      "participants": ["dly-shen", "dly-pei"],
+      "causes": ["dly-evt-ch2-return"],
+      "reveals_evidence": ["dly-clue-return", "dly-clue-mark-name", "dly-clue-window"],
+      "claims": [
+        {
+          "claim_id": "dly-claim-ch3-face",
+          "text": "交还方向仍是面朝东"
+        },
+        {
+          "claim_id": "dly-claim-ch3-mark",
+          "text": "灵印记名仍归周晚宁，位置仍在铜牌正面"
+        },
+        {
+          "claim_id": "dly-claim-ch3-time",
+          "text": "交还时刻仍在23:40到00:10，故事日仍是2024-11-02，不是首班之后"
+        }
+      ],
+      "approval_status": "approved"
+    }
+  ],
+  "clues": [
+    {
+      "clue_id": "dly-clue-notch",
+      "project_id": "dushi-lingyi",
+      "planted_ch": 1,
+      "revealed_ch": null,
+      "must_mention_in": [1, 2],
+      "label": "铜牌刻痕",
+      "mention_terms": ["东向西"],
+      "approval_status": "approved"
+    },
+    {
+      "clue_id": "dly-clue-mark-name",
+      "project_id": "dushi-lingyi",
+      "planted_ch": 1,
+      "revealed_ch": null,
+      "must_mention_in": [1, 2, 3],
+      "label": "灵印记名",
+      "mention_terms": ["周晚宁"],
+      "approval_status": "approved"
+    },
+    {
+      "clue_id": "dly-clue-mark-site",
+      "project_id": "dushi-lingyi",
+      "planted_ch": 1,
+      "revealed_ch": null,
+      "must_mention_in": [1, 2, 3],
+      "label": "灵印位置",
+      "mention_terms": ["铜牌正面"],
+      "approval_status": "approved"
+    },
+    {
+      "clue_id": "dly-clue-window",
+      "project_id": "dushi-lingyi",
+      "planted_ch": 1,
+      "revealed_ch": null,
+      "must_mention_in": [1, 3],
+      "label": "末班窗",
+      "mention_terms": ["23:40"],
+      "approval_status": "approved"
+    },
+    {
+      "clue_id": "dly-clue-return",
+      "project_id": "dushi-lingyi",
+      "planted_ch": 2,
+      "revealed_ch": null,
+      "must_mention_in": [2, 3],
+      "label": "面朝东交还",
+      "mention_terms": ["面朝东"],
+      "approval_status": "approved"
+    },
+    {
+      "clue_id": "dly-clue-taboo",
+      "project_id": "dushi-lingyi",
+      "planted_ch": 1,
+      "revealed_ch": null,
+      "must_mention_in": [1],
+      "label": "窗口外改写记名",
+      "mention_terms": ["记名改写"],
+      "approval_status": "approved"
+    }
+  ]
+}
