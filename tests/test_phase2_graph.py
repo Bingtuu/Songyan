@@ -538,6 +538,83 @@ async def test_run_single_chapter_ignores_stale_error_after_terminal_success() -
 
 
 @pytest.mark.asyncio
+async def test_run_single_chapter_settlement_review_empty_error_is_not_none() -> None:
+    """B7: settlement_review with no error must still name the reason and how to retry."""
+    from songyan.workflows.phase2_graph import _run_single_chapter
+
+    state = {
+        "status": "settlement_review",
+        "current_version_id": "v-3",
+        "_settlement_needs_human_review": True,
+        "_summary_missing_facts": ["缺少主角决策/认知变化"],
+    }
+
+    with (
+        patch(
+            "songyan.workflows.phase2_graph.run_chapter_pipeline",
+            new_callable=AsyncMock,
+            return_value=state,
+        ),
+        patch(
+            "songyan.workflows.phase2_graph.log_chapter_run",
+            new_callable=AsyncMock,
+        ) as mock_log,
+    ):
+        result = await _run_single_chapter(
+            project_id="p-1",
+            chapter_number=3,
+            mode_id="webnovel",
+            previous_summary="",
+            auto_confirm=True,
+            on_failure="abort",
+        )
+
+    assert result["success"] is False
+    error = result["error"]
+    assert error is not None
+    assert "缺少主角决策/认知变化" in error
+    assert "_settlement_needs_human_review" in error
+    assert "--chapters 3" in error
+    mock_log.assert_called_once()
+    assert mock_log.call_args.kwargs["error"] == error
+    assert mock_log.call_args.kwargs["error_stage"] == "settlement_review"
+
+
+@pytest.mark.asyncio
+async def test_run_single_chapter_blank_error_on_non_done_status_is_not_none() -> None:
+    """B7: any non-done end with a blank error still names the status and retry hint."""
+    from songyan.workflows.phase2_graph import _run_single_chapter
+
+    with (
+        patch(
+            "songyan.workflows.phase2_graph.run_chapter_pipeline",
+            new_callable=AsyncMock,
+            return_value={"status": "quality_gate", "error": ""},
+        ),
+        patch(
+            "songyan.workflows.phase2_graph.log_chapter_run",
+            new_callable=AsyncMock,
+        ) as mock_log,
+    ):
+        result = await _run_single_chapter(
+            project_id="p-1",
+            chapter_number=4,
+            mode_id="webnovel",
+            previous_summary="",
+            auto_confirm=True,
+            on_failure="abort",
+        )
+
+    error = result["error"]
+    assert result["success"] is False
+    assert error is not None
+    assert "quality_gate" in error
+    assert "未记录 error" in error
+    assert "--chapters 4" in error
+    assert mock_log.call_args.kwargs["error"] == error
+
+
+@pytest.mark.asyncio
 async def test_run_single_chapter_returns_logged_circuit_metrics() -> None:
     """外层熔断使用写入 JSONL 的最终指标，避免与报告口径分叉."""
     from songyan.workflows.phase2_graph import _run_single_chapter
