@@ -73,6 +73,11 @@ from songyan.models import (
     StateSettlement,
 )
 from songyan.models.rag import RAGConfig as _RAGConfig
+from songyan.plan_checks.gate import (
+    claim_anchors_from_state,
+    plan_attribute_extracts_from_state,
+    run_plan_fact_gate,
+)
 from songyan.services.foreshadowing_schedule import (
     mark_schedule_items_injected,
     update_schedule_after_accept,
@@ -1585,6 +1590,15 @@ async def rule_auditor_node(state: dict[str, Any]) -> dict[str, Any]:
     if version is None:
         return {"error": "Version not found", "status": "rule_auditor"}
 
+    # 只读 plan 门：对照当前项目已批准的事实卡。不写 canon，不改结算权威。
+    plan_gate = await run_plan_fact_gate(
+        str(state["project_id"]),
+        int(state["chapter_number"]),
+        version.content,
+        extracts=plan_attribute_extracts_from_state(state.get("_plan_attribute_extracts")),
+        anchors=claim_anchors_from_state(state.get("_plan_claim_anchors")),
+    )
+
     project = await load_project(state["project_id"])
     genre = load_genre_profile(project.genre_id) if project else None
     # 从 chapter_goal 获取目标字数，而不是用实际字数
@@ -1648,7 +1662,11 @@ async def rule_auditor_node(state: dict[str, Any]) -> dict[str, Any]:
         result=result,
         report_id=report_id,
     )
-    return {"_rule_report_id": report_id, "status": "llm_auditing"}
+    return {
+        "_rule_report_id": report_id,
+        "status": "llm_auditing",
+        "_plan_fact_gate": plan_gate.model_dump(),
+    }
 
 
 async def llm_auditor_node(state: dict[str, Any]) -> dict[str, Any]:

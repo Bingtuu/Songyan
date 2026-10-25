@@ -1,6 +1,6 @@
 # ADR-0001: Plan-first 事实层
 
-- **状态**: 已接受（方向）。2026-10-25：最小表和读写已落地；SettlementExtractor 权威尚未翻转。
+- **状态**: 已接受（方向）。2026-10-25：最小表和读写已落地；写章审查会只读已批准 plan 卡。SettlementExtractor 权威尚未翻转。
 - **日期**: 2026-10-22（决定）；2026-10-25（实现注记）
 - **决定者**: Bingtuu（owner）；执行切片见 [HANDOFF-mew.md](../HANDOFF-mew.md)
 - **相关**: [ROADMAP-plan-first.md](../ROADMAP-plan-first.md)
@@ -40,7 +40,7 @@ SQLite 仍是唯一长期事实库。变的是谁有权写入权威行：计划�
 ## Consequence
 
 - Phase A（B5 / B7 / B18）已合入 main。运行信号先修完，对照实验才量得准。
-- 最小事件卡 / 事实卡的表和读写已落地（见下方实现注记）。霞飞路 ch1–3 的召回 ≥4/5、人工 ≤10 分钟/章、成本与 v1 同量级，仍是下一刀的门。本切片没有开跑。
+- 最小事件卡 / 事实卡的表和读写已落地（见下方实现注记）。写章审查会对照已批准卡做只读窄检查，但不改章节路由。霞飞路 ch1–3 的召回 ≥4/5、人工 ≤10 分钟/章、成本与 v1 同量级，仍是重跑那一刀的门。正文还没有重跑。
 - `SettlementExtractor` 的抽取结果仍然走原结算路径。权威翻转是单独切片。在那之前不把抽取行自动写进 plan canon，避免半套权威源。抽取结果以后可以留下作比对或待审项；本切片没有这条通道。
 - 不新增题材专用检查规则来追霞飞路类错误。第二体裁（Phase C）复用同一套卡和窄验证；失败则退到人维护事实圣经、AI 按圣经写。
 - 研究 / report-only 信号仍然不进 runtime prompt、CED、T9 或 hard gate。本 ADR 不改那些门的口径。
@@ -64,4 +64,6 @@ Phase A 已合入（B7 #5、B5 #6、B18 #8）。本切片只加表和读写：
 
 这一刀明确不做：改写规划 / 写作 / 审查图节点；让 SettlementExtractor 停止写结算库；把抽取事实自动吸进这些表；写霞飞路或《规则年代》；实现必须提及、主张核验、类型化属性比较。
 
-2026-10-25 第二刀补上主张文本和登记用语两列（`_migrate_plan_fact_check_fields`），并载入 `xiafei-jiuan` 的批准卡。检查器在 `src/songyan/plan_checks/`，仍不写 canon，也还没接进写章图。
+2026-10-25 第二刀补上主张文本和登记用语两列（`_migrate_plan_fact_check_fields`），并载入 `xiafei-jiuan` 的批准卡。检查器在 `src/songyan/plan_checks/`，不写 canon。
+
+2026-10-25 第三刀把这三项检查接到写章审查（`rule_auditor_node` 读到正文版本之后）。门只读当前项目 `approval_status=approved` 的卡，默认用确定性主张锚，不调用模型。结构化摘录和主张锚由调用方提供，不从正文写回 plan canon。结算权威仍是 SettlementExtractor。尚未重跑霞飞路。
