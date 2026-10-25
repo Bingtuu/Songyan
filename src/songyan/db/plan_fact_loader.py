@@ -23,6 +23,7 @@ from songyan.models.plan_facts import (
 from songyan.models.project import ProjectSetting
 
 XIAFEI_PROJECT_ID = "xiafei-jiuan"
+DUSHI_LINGYI_PROJECT_ID = "dushi-lingyi"
 
 
 class PlanFactBundle(BaseModel):
@@ -40,6 +41,11 @@ class PlanFactBundle(BaseModel):
 def bundled_xiafei_fixture() -> Path:
     """Path to the approved 霞飞路《旧案》 ch1–3 cards shipped with the package."""
     return Path(__file__).resolve().parents[1] / "plan_facts" / "xiafei_jiuan.json"
+
+
+def bundled_dushi_lingyi_fixture() -> Path:
+    """Path to the approved 都市灵异《末班铜牌》 ch1–3 cards shipped with the package."""
+    return Path(__file__).resolve().parents[1] / "plan_facts" / "dushi_lingyi.json"
 
 
 def read_plan_fact_fixture(path: Path) -> PlanFactBundle:
