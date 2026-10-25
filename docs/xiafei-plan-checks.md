@@ -21,3 +21,5 @@
 类型化比较用的摘录在 `tests/fixtures/xiafei_jiuan/v4_extracts.json`，是对 v4 正文的显式标注，不是从正文再抽进 canon。主张的确定性路径用同目录 `claim_anchors.json` 里该主张自己的支持 / 矛盾短语；矛盾短语优先。LLM 路径只发送这一条主张和这一章，测试注入 `complete`，不在 CI 里调用 API。
 
 这组对照说明检查器会标出那五类。它不是重跑三章之后的召回数字。
+
+2026-10-25 的活路径重跑（box，项目 `030b687372374aa491e0c294e6d62969`）召回 **5/5**，见 [experiments/xiafei-plan-gate-rerun-2026-10-25](experiments/xiafei-plan-gate-rerun-2026-10-25/README.md)。T1、T2 发生且被必须提及拦住；T4、T6 未发生；T5 未发生。审查 state 仍不提供类型化摘录和主张锚，归属漂移若再发生，活路径标不出。

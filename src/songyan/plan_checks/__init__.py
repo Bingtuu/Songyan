@@ -18,6 +18,12 @@ from songyan.plan_checks.claim_check import (
 )
 from songyan.plan_checks.gate import PlanFactGateReport, run_plan_fact_gate
 from songyan.plan_checks.must_mention import MissingMention, check_must_mention
+from songyan.plan_checks.roadmap_recall import (
+    RecallScoreboard,
+    blocked_rerun_scoreboard,
+    score_chapters,
+    score_reports,
+)
 from songyan.plan_checks.typed_attributes import (
     AttributeExtract,
     AttributeMismatch,
@@ -35,9 +41,13 @@ __all__ = [
     "LlmClaimJudge",
     "MissingMention",
     "PlanFactGateReport",
+    "RecallScoreboard",
+    "blocked_rerun_scoreboard",
     "check_must_mention",
     "compare_typed_attributes",
     "parse_claim_judgment",
     "run_plan_fact_gate",
+    "score_chapters",
+    "score_reports",
     "verify_chapter_claims",
 ]

@@ -1,0 +1,9 @@
+{"characters":[{"name":"顾怀瑾","role":"protagonist","age":28,"description":"刚从法国里昂学成归国的法医，受聘法租界巡捕房验尸所；冷静、较真、只信证据，对旧上海人情世故生疏，父亲是已故的老派讼师。","initial_state":{}}],
+"initial_settings":[
+{"setting_key":"concession","setting_name":"法租界","description":"1931年上海法租界，霞飞路一带商铺林立，华洋杂处；法国人掌权，华人巡捕与包探负责具体办案。","source_quote":""},
+{"setting_key":"police","setting_name":"法租界巡捕房","description":"法国总巡统辖，华人督察长与包探多与帮会有往来；验尸所新设，法医地位低于包探，验尸报告常被上峰改写。","source_quote":""},
+{"setting_key":"green_gang","setting_name":"青帮","description":"控制码头、烟土与赌场的帮会，在法租界与巡捕房高层勾连；讲辈分与规矩，惯用私刑。","source_quote":""},
+{"setting_key":"japanese_assoc","setting_name":"日本商会","description":"以贸易为名在沪活动的日本商人团体，暗中收购古玩与地契，与情报机关有牵连；九一八前夕局势紧张。","source_quote":""},
+{"setting_key":"pawnshop","setting_name":"霞飞路当铺","description":"老字号当铺，老板在库房内身亡，库房铁门从内侧上闩、唯一高窗有铁栅；当铺兼营暗当，替各方销赃。","source_quote":""},
+{"setting_key":"hidden_truth","setting_name":"密室真相(隐藏)","description":"隐藏设定，前期不可明示：当铺老板替三方保管同一批货的账册，死亡是多人合谋与意外叠加的结果，密室由事后布置形成。","source_quote":""}
+],"numerical_system":null}

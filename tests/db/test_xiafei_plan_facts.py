@@ -17,6 +17,7 @@ from songyan.db.plan_fact_loader import (
     read_plan_fact_fixture,
 )
 from songyan.db.plan_fact_repo import PlanFactError, PlanFactRepository
+from songyan.db.repository import ProjectRepository
 
 
 @pytest.fixture
@@ -111,6 +112,25 @@ class TestXiafeiPlanFactSeed:
 
         assert before_count == 0
         assert after_count == 0
+
+    async def test_retarget_puts_approved_cards_on_the_writing_project(
+        self, fact_db: Path
+    ) -> None:
+        bundle = await load_plan_fact_fixture(
+            bundled_xiafei_fixture(),
+            project_id="runtime-xiafei",
+        )
+        repo = PlanFactRepository()
+
+        assert bundle.project_id == "runtime-xiafei"
+        assert [row.project_id for row in bundle.clues] == ["runtime-xiafei"] * len(bundle.clues)
+        clues = await repo.list_canon_clues("runtime-xiafei")
+        assert {row.clue_id for row in clues} == {row.clue_id for row in bundle.clues}
+        assert await repo.list_canon_clues(XIAFEI_PROJECT_ID) == []
+        assert await repo.list_canon_attributes("runtime-xiafei")
+        project = await ProjectRepository().get("runtime-xiafei")
+        assert project is not None
+        assert project.title == "霞飞路旧案"
 
     def test_fixture_rejects_a_foreign_project_id(self, tmp_path: Path) -> None:
         path = tmp_path / "bad.json"

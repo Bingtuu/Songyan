@@ -50,15 +50,50 @@ def read_plan_fact_fixture(path: Path) -> PlanFactBundle:
     return bundle
 
 
-async def load_plan_fact_fixture(path: Path) -> PlanFactBundle:
+def retarget_plan_fact_bundle(bundle: PlanFactBundle, project_id: str) -> PlanFactBundle:
+    """Copy a bundle onto another project id. Card ids stay the same.
+
+    ``songyan run`` checks cards for the writing project's id. A project
+    created from the 霞飞路 template does not use ``xiafei-jiuan``, so the
+    runner retargets the approved cards onto that id before the run.
+
+    The ids are primary keys. Loading the copy into a database that
+    already holds them moves the rows onto ``project_id``.
+    """
+    if not isinstance(project_id, str) or not project_id.strip():
+        raise PlanFactError("project_id is empty")
+    cloned = bundle.model_copy(deep=True)
+    cloned.project_id = project_id
+    cards: list[PlanEntity | PlanAttribute | PlanTimeAnchor | PlanEvent | PlanClue] = [
+        *cloned.entities,
+        *cloned.time_anchors,
+        *cloned.attributes,
+        *cloned.events,
+        *cloned.clues,
+    ]
+    for row in cards:
+        row.project_id = project_id
+    _require_consistent_ids(cloned)
+    return cloned
+
+
+async def load_plan_fact_fixture(
+    path: Path,
+    *,
+    project_id: str | None = None,
+) -> PlanFactBundle:
     """Upsert the fixture into the current database and return the bundle.
 
     Creates the project row when ``project_id`` is new. A second load
     updates the cards and leaves an existing project row in place.
+    ``project_id`` retargets every card onto the writing project so the
+    read-only gate can see the approved 霞飞路 rows.
     """
     from songyan.db.connection import get_db
 
     bundle = read_plan_fact_fixture(path)
+    if project_id is not None:
+        bundle = retarget_plan_fact_bundle(bundle, project_id)
     repo = PlanFactRepository()
     async with get_db() as conn:
         cursor = await conn.execute(

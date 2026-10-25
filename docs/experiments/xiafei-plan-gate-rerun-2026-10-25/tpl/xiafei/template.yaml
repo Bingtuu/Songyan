@@ -1,0 +1,22 @@
+id: xiafei
+name: 霞飞路旧案
+extends: null
+overwrite: {}
+project_setting:
+  title: 霞飞路旧案
+  genre_id: urban
+  mode_id: webnovel_intense
+  protagonist_name: 顾怀瑾
+  protagonist_background: 1931年刚从里昂学成归国的法医，受聘于法租界巡捕房验尸所；讲证据、不信口供，家道中落，父亲曾是上海老派讼师
+  core_hook: 1931年上海法租界，霞飞路一间当铺的老板死在从内部闩死的库房里。初归国的法医顾怀瑾被卷入这桩密室命案，巡捕房、青帮与日本商会各怀鬼胎。
+  target_reader_expectation: 民国本格悬疑推理，线索公平呈现，时间线、证物、证词、不在场证明经得起推敲，氛围克制
+  target_word_count: 1000000
+  tone: 冷峻
+  estimated_chapters: 300
+  words_per_chapter: 4000
+  story_structure: serial
+  sub_genre_id: null
+  arc_boundaries: [30, 60, 90, 120, 150, 180, 210, 240, 270]
+  arc_boundaries_auto: false
+  taboos: ["凶手靠超自然手段作案", "主角凭直觉而非证据破案"]
+  reference_works: ["福尔摩斯探案集", "法医秦明", "长安十二时辰"]

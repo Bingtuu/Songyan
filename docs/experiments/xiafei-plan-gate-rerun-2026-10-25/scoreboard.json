@@ -1,0 +1,81 @@
+{
+  "experiment": "xiafei-plan-gate-rerun-2026-10-25",
+  "source": "box-live-path",
+  "project_id": "030b687372374aa491e0c294e6d62969",
+  "chapters_written": true,
+  "recall_measured": true,
+  "note": "正文与计分来自 Mew 的 box（本 PR 分支，有 LLM_API_KEY）。不是云端虚拟机生成的。anchors_supplied 与 extracts_supplied 都是 false，即活路径。",
+  "scoreboard": {
+    "status": "scored",
+    "recalled": 5,
+    "denominator": 5,
+    "classes": [
+      {
+        "class_id": "T1",
+        "label": "证物属性漂移",
+        "occurred": true,
+        "intercepted": true,
+        "recall": true,
+        "verdict": "recalled",
+        "basis": "发生了，门标出：第 2 章必须提及缺「右向左」。",
+        "signals": [
+          "第 2 章必须提及缺「右向左」"
+        ],
+        "live_path_signal": "第 2 章必须提及可以标出缺「右向左」。没有摘录时，方向和数量的类型化比较不会标出。"
+      },
+      {
+        "class_id": "T5",
+        "label": "证物归属漂移",
+        "occurred": false,
+        "intercepted": false,
+        "recall": true,
+        "verdict": "recalled",
+        "basis": "未发生，记为召回。门没有标出这一类。",
+        "signals": [],
+        "live_path_signal": "活路径标不出。归属不符要类型化摘录，主张矛盾要「横杆拓片」这类锚；两者都不在审查 state 里。"
+      },
+      {
+        "class_id": "T4",
+        "label": "机制方向",
+        "occurred": false,
+        "intercepted": true,
+        "recall": true,
+        "verdict": "recalled",
+        "basis": "未发生，记为召回。门另有标记：第 3 章必须提及缺「往外拉」。",
+        "signals": [
+          "第 3 章必须提及缺「往外拉」"
+        ],
+        "live_path_signal": "第 3 章必须提及可以标出缺「往外拉」。没有摘录时，类型化方向不会标出。"
+      },
+      {
+        "class_id": "T2",
+        "label": "证据遗漏",
+        "occurred": true,
+        "intercepted": true,
+        "recall": true,
+        "verdict": "recalled",
+        "basis": "发生了，门标出：第 2 章必须提及缺「钝器伤」。",
+        "signals": [
+          "第 2 章必须提及缺「钝器伤」"
+        ],
+        "live_path_signal": "第 2 章必须提及可以标出缺「钝器伤」。没有主张锚时，主张「未提及」是缺省值，不算这一类的拦截。"
+      },
+      {
+        "class_id": "T6",
+        "label": "时代时间线",
+        "occurred": false,
+        "intercepted": true,
+        "recall": true,
+        "verdict": "recalled",
+        "basis": "未发生，记为召回。门另有标记：第 1 章必须提及缺「九一八」。",
+        "signals": [
+          "第 1 章必须提及缺「九一八」"
+        ],
+        "live_path_signal": "第 1 章必须提及可以标出缺「九一八」。没有摘录时，时局时间锚的类型化比较不会标出。"
+      }
+    ],
+    "anchors_supplied": false,
+    "extracts_supplied": false,
+    "reason": ""
+  }
+}
