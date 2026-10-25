@@ -2,7 +2,7 @@
 
 > **读者**: owner（Bingtuu）与每日切片执行者（Mew）
 > **起点**: 2026-10-22
-> **更新**: 2026-10-25。Phase A 已合入 main（B7 #5、B5 #6、B18 #8）。Phase B 第一刀是事实卡 schema；霞飞路三章对照和窄检查还没开始。
+> **更新**: 2026-10-25。Phase A 已合入 main（B7 #5、B5 #6、B18 #8）。Phase B：事实卡 schema 已合入；霞飞路《旧案》ch1–3 批准卡与三项窄检查已落地（fixture 对照 v4 五类），尚未接入写章流水线，也未重跑正文。
 > **状态**: 方向已定。生成管线与 SettlementExtractor 的权威路径尚未改写。
 > **每日入口**: [HANDOFF-mew.md](HANDOFF-mew.md)
 > **架构决定**: [adr/0001-plan-first-facts.md](adr/0001-plan-first-facts.md)
@@ -43,7 +43,9 @@ A 的退出条件是这三项各自有可复现的测试或记录，不是「顺
 
 **第一刀（随本文件合入）：事实卡 schema。** ADR-0001 的五类记录可以创建、读回、再写进 SQLite，带稳定 ID。`approval_status` 把 `pending` 和 plan|human 已批准的 canon 行分开。这一刀不写霞飞路正文，不接窄检查，不改 SettlementExtractor 的权威路径，也不把抽取结果自动吸进这些表。
 
-**下一刀：** 人工确认的霞飞路《旧案》同一种子，重跑 ch1–3。生成前由人确认事件卡 / 事实卡，再写正文。材料沿用调研报告。窄验证只做三件事。成功门不变。
+**第二刀（随本文件之后的切片）：批准卡 + 三项窄检查。** `project_id=xiafei-jiuan` 的 ch1–3 卡已批准入库。必须提及、主张核验、类型化属性比较在 `src/songyan/plan_checks/`，用 v4 正文做了 fixture 对照（见 [xiafei-plan-checks.md](xiafei-plan-checks.md)）。还没有接到写章流水线，也没有重跑正文。成功门不变，留到重跑那一刀。
+
+**下一刀：** 把这三项窄检查接到章节流水线的只读门上（只读已批准 plan 卡；不改 SettlementExtractor 权威，不把抽取吸进 canon）。先不重跑 ch1–3。窄验证仍只做下面三件事。
 
 1. **必须提及**：本章计划点名的证物、伤情、时间锚，生成后逐条核对是否出现。
 2. **主张核验**：事件卡上的每条主张，对照正文段落，判支持 / 矛盾 / 未提及，并附引文。

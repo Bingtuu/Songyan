@@ -1,0 +1,20 @@
+{
+  "chapters": {
+    "1": [
+      {"entity_id": "xiafei-scratch", "key": "direction", "value": "右向左", "chapter": 1},
+      {"entity_id": "xiafei-scratch", "key": "count", "value": "1", "chapter": 1},
+      {"entity_id": "xiafei-era", "key": "time_anchor", "value": "1931年末·日军进逼锦州", "chapter": 1}
+    ],
+    "2": [
+      {"entity_id": "xiafei-scratch", "key": "direction", "value": "自内向外", "chapter": 2},
+      {"entity_id": "xiafei-scratch", "key": "count", "value": "2", "chapter": 2},
+      {"entity_id": "xiafei-mechanism", "key": "direction", "value": "往外拉", "chapter": 2},
+      {"entity_id": "xiafei-hook", "key": "ownership", "value": "门框暗处", "chapter": 2}
+    ],
+    "3": [
+      {"entity_id": "xiafei-mechanism", "key": "direction", "value": "从外往内拉", "chapter": 3},
+      {"entity_id": "xiafei-hook", "key": "ownership", "value": "横杆拓片", "chapter": 3},
+      {"entity_id": "xiafei-case-time", "key": "time_anchor", "value": "1931-03", "chapter": 3}
+    ]
+  }
+}

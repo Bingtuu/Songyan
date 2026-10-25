@@ -21,6 +21,7 @@ from songyan.exceptions import SongyanError
 from songyan.models.plan_facts import (
     PlanApprovalStatus,
     PlanAttribute,
+    PlanClaim,
     PlanClue,
     PlanEntity,
     PlanEvent,
@@ -107,6 +108,20 @@ def _str_list(raw: object) -> list[str]:
     return [item for item in parsed if isinstance(item, str)]
 
 
+def _claim_list(raw: object) -> list[PlanClaim]:
+    if not isinstance(raw, str):
+        return []
+    parsed = from_json(raw, [])
+    if not isinstance(parsed, list):
+        raise PlanFactError("claims is not a list")
+    claims: list[PlanClaim] = []
+    for item in parsed:
+        if not isinstance(item, dict):
+            raise PlanFactError("claim entry is not an object")
+        claims.append(PlanClaim.model_validate(item))
+    return claims
+
+
 def _int_list(raw: object) -> list[int]:
     if not isinstance(raw, str):
         return []
@@ -164,6 +179,7 @@ def _event_from_row(row: Row) -> PlanEvent:
         participants=_str_list(row["participants"]),
         causes=_str_list(row["causes"]),
         reveals_evidence=_str_list(row["reveals_evidence"]),
+        claims=_claim_list(row["claims"]),
         approval_status=_approval(row),
     )
 
@@ -175,6 +191,8 @@ def _clue_from_row(row: Row) -> PlanClue:
         planted_ch=_integer(row, "planted_ch"),
         revealed_ch=_optional_integer(row, "revealed_ch"),
         must_mention_in=_int_list(row["must_mention_in"]),
+        label=_text(row, "label"),
+        mention_terms=_str_list(row["mention_terms"]),
         approval_status=_approval(row),
     )
 
@@ -372,8 +390,8 @@ class PlanFactRepository:
             conn,
             """INSERT INTO plan_events (
                 event_id, project_id, ch, time_anchor_id,
-                participants, causes, reveals_evidence, approval_status
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                participants, causes, reveals_evidence, claims, approval_status
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(event_id) DO UPDATE SET
                 project_id = excluded.project_id,
                 ch = excluded.ch,
@@ -381,6 +399,7 @@ class PlanFactRepository:
                 participants = excluded.participants,
                 causes = excluded.causes,
                 reveals_evidence = excluded.reveals_evidence,
+                claims = excluded.claims,
                 approval_status = excluded.approval_status,
                 updated_at = datetime('now')""",
             (
@@ -391,6 +410,7 @@ class PlanFactRepository:
                 to_json(event.participants),
                 to_json(event.causes),
                 to_json(event.reveals_evidence),
+                to_json([claim.model_dump() for claim in event.claims]),
                 event.approval_status,
             ),
             table="plan_events",
@@ -426,13 +446,15 @@ class PlanFactRepository:
             conn,
             """INSERT INTO plan_clues (
                 clue_id, project_id, planted_ch, revealed_ch,
-                must_mention_in, approval_status
-            ) VALUES (?, ?, ?, ?, ?, ?)
+                must_mention_in, label, mention_terms, approval_status
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(clue_id) DO UPDATE SET
                 project_id = excluded.project_id,
                 planted_ch = excluded.planted_ch,
                 revealed_ch = excluded.revealed_ch,
                 must_mention_in = excluded.must_mention_in,
+                label = excluded.label,
+                mention_terms = excluded.mention_terms,
                 approval_status = excluded.approval_status,
                 updated_at = datetime('now')""",
             (
@@ -441,6 +463,8 @@ class PlanFactRepository:
                 clue.planted_ch,
                 clue.revealed_ch,
                 to_json(clue.must_mention_in),
+                clue.label,
+                to_json(clue.mention_terms),
                 clue.approval_status,
             ),
             table="plan_clues",

@@ -1157,6 +1157,7 @@ async def _migrate_plan_fact_cards(conn: aiosqlite.Connection) -> None:
             participants     TEXT NOT NULL DEFAULT '[]',
             causes           TEXT NOT NULL DEFAULT '[]',
             reveals_evidence TEXT NOT NULL DEFAULT '[]',
+            claims           TEXT NOT NULL DEFAULT '[]',
             approval_status  TEXT NOT NULL DEFAULT 'approved'
                              CHECK (approval_status IN ('approved', 'pending')),
             created_at       TEXT NOT NULL DEFAULT (datetime('now')),
@@ -1168,6 +1169,8 @@ async def _migrate_plan_fact_cards(conn: aiosqlite.Connection) -> None:
             planted_ch       INTEGER NOT NULL CHECK (planted_ch >= 1),
             revealed_ch      INTEGER,
             must_mention_in  TEXT NOT NULL DEFAULT '[]',
+            label            TEXT NOT NULL DEFAULT '',
+            mention_terms    TEXT NOT NULL DEFAULT '[]',
             approval_status  TEXT NOT NULL DEFAULT 'approved'
                              CHECK (approval_status IN ('approved', 'pending')),
             created_at       TEXT NOT NULL DEFAULT (datetime('now')),
@@ -1194,6 +1197,47 @@ async def _migrate_plan_fact_cards(conn: aiosqlite.Connection) -> None:
     ]
     for sql in indexes:
         await conn.execute(sql)
+
+
+async def _migrate_plan_fact_check_fields(conn: aiosqlite.Connection) -> None:
+    """Add claim text and must-mention phrases to plan cards already created.
+
+    Phase B knife 2. ``CREATE TABLE IF NOT EXISTS`` does not alter an
+    existing table, so databases migrated before these columns existed
+    receive them here. Defaults keep old rows valid: events have no
+    claims, clues have no required phrases.
+    """
+    await _add_column_if_missing(
+        conn,
+        table="plan_events",
+        column="claims",
+        ddl="ALTER TABLE plan_events ADD COLUMN claims TEXT NOT NULL DEFAULT '[]'",
+    )
+    await _add_column_if_missing(
+        conn,
+        table="plan_clues",
+        column="label",
+        ddl="ALTER TABLE plan_clues ADD COLUMN label TEXT NOT NULL DEFAULT ''",
+    )
+    await _add_column_if_missing(
+        conn,
+        table="plan_clues",
+        column="mention_terms",
+        ddl="ALTER TABLE plan_clues ADD COLUMN mention_terms TEXT NOT NULL DEFAULT '[]'",
+    )
+
+
+async def _add_column_if_missing(
+    conn: aiosqlite.Connection,
+    *,
+    table: str,
+    column: str,
+    ddl: str,
+) -> None:
+    cursor = await conn.execute(f"PRAGMA table_info({table})")
+    columns = {row[1] for row in await cursor.fetchall()}
+    if column not in columns:
+        await conn.execute(ddl)
 
 
 async def verify_schema(conn: aiosqlite.Connection) -> list[str]:
@@ -1286,4 +1330,5 @@ _MIGRATIONS: list[tuple[str, Callable[[aiosqlite.Connection], Awaitable[None]]]]
         _migrate_foreshadowings_resolved_trace,
     ),
     ("_migrate_plan_fact_cards", _migrate_plan_fact_cards),
+    ("_migrate_plan_fact_check_fields", _migrate_plan_fact_check_fields),
 ]

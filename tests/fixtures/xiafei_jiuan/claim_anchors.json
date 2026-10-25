@@ -1,0 +1,17 @@
+[
+  {"claim_id": "claim-ch1-blunt", "support_terms": ["钝器伤"], "contradict_terms": []},
+  {"claim_id": "claim-ch1-scratch", "support_terms": ["右向左"], "contradict_terms": []},
+  {"claim_id": "claim-ch1-physics", "support_terms": ["与向左推一致"], "contradict_terms": ["刮痕的方向反了"]},
+  {"claim_id": "claim-ch1-era", "support_terms": ["九一八"], "contradict_terms": ["日军进逼锦州"]},
+  {"claim_id": "claim-ch2-blunt", "support_terms": ["钝器伤"], "contradict_terms": []},
+  {
+    "claim_id": "claim-ch2-scratch",
+    "support_terms": ["右向左"],
+    "contradict_terms": ["自内向外", "纤维残留", "至少两人"]
+  },
+  {"claim_id": "claim-ch2-pull", "support_terms": ["往外拉"], "contradict_terms": []},
+  {"claim_id": "claim-ch2-hook", "support_terms": ["门框暗处"], "contradict_terms": ["横杆拓片"]},
+  {"claim_id": "claim-ch3-pull", "support_terms": ["往外拉"], "contradict_terms": ["从外往内拉"]},
+  {"claim_id": "claim-ch3-hook", "support_terms": ["门框暗处"], "contradict_terms": ["横杆拓片"]},
+  {"claim_id": "claim-ch3-date", "support_terms": ["三月初九"], "contradict_terms": ["锦州"]}
+]

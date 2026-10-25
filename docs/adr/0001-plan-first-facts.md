@@ -54,12 +54,14 @@ Phase A 已合入（B7 #5、B5 #6、B18 #8）。本切片只加表和读写：
 |------|----|----------------|
 | entity | `plan_entities` | `entity_id`，`entity_type`，`aliases` |
 | attribute | `plan_attributes` | `attribute_id`，`entity_id`，`key`，`value`，`valid_from_ch`，`valid_to_ch`，`source=plan\|human` |
-| event | `plan_events` | `event_id`，`ch`，`time_anchor_id`，`participants`，`causes`，`reveals_evidence` |
+| event | `plan_events` | `event_id`，`ch`，`time_anchor_id`，`participants`，`causes`，`reveals_evidence`，`claims`（`claim_id` + 主张文本） |
 | time_anchor | `plan_time_anchors` | `anchor_id`，`date`，`kind=story\|history` |
-| clue | `plan_clues` | `clue_id`，`planted_ch`，`revealed_ch`，`must_mention_in` |
+| clue | `plan_clues` | `clue_id`，`planted_ch`，`revealed_ch`，`must_mention_in`，`label`，`mention_terms` |
 
 五张表都有 `approval_status`：`approved` 或 `pending`。canon 读（`list_canon_*`）只返回 `approved`。attribute 的 canon 读还要求 `source` 是 `plan` 或 `human`。pending 行留在同一张表里，默认不会被当成已成立事实。
 
 代码：`src/songyan/models/plan_facts.py`，`src/songyan/db/plan_fact_repo.py`，迁移 `_migrate_plan_fact_cards`。
 
 这一刀明确不做：改写规划 / 写作 / 审查图节点；让 SettlementExtractor 停止写结算库；把抽取事实自动吸进这些表；写霞飞路或《规则年代》；实现必须提及、主张核验、类型化属性比较。
+
+2026-10-25 第二刀补上主张文本和登记用语两列（`_migrate_plan_fact_check_fields`），并载入 `xiafei-jiuan` 的批准卡。检查器在 `src/songyan/plan_checks/`，仍不写 canon，也还没接进写章图。
