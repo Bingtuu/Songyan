@@ -11,8 +11,8 @@ def test_import_songyan() -> None:
 
 
 def test_settings_defaults() -> None:
-    """Settings 有正确的默认值（不读取 .env 环境变量）."""
-    s = Settings(_env_file=None)
+    """Settings 字段默认值，不读取 .env 或当前进程环境变量."""
+    s = Settings(_env_file=None, _env_prefix="SONGYAN_TEST_UNUSED_")
     assert s.llm_base_url == "https://api.deepseek.com"
     assert s.llm_model == "deepseek-chat"
     assert s.llm_temperature == 0.7
