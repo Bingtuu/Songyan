@@ -195,6 +195,7 @@ flowchart LR
 - [Ch200 baseline 结果摘要](docs/baseline-results.md)：4 体裁 200 章验收的公开聚合数值
 - [Minimal Reproduction Guide](docs/minimal-repro.md)：如何提交可复现问题
 - [Documentation Index](docs/INDEX.md)：公开文档导航
+- [Plan-first 路线](docs/ROADMAP-plan-first.md)：约 90 天的一致性方向（先证明跨章召回，不赶完本）
 - [Changelog](CHANGELOG.md)：版本变更记录
 - [Contributing](CONTRIBUTING.md)：贡献方式和工程边界
 

@@ -79,6 +79,12 @@ _EXPECTED_TABLES: list[str] = [
     "llm_call_usage",
     # V15 Task 236: 导入回放幂等标记
     "import_replay_marks",
+    # Phase B / ADR-0001: plan-first fact cards
+    "plan_entities",
+    "plan_attributes",
+    "plan_events",
+    "plan_time_anchors",
+    "plan_clues",
 ]
 
 
@@ -1094,6 +1100,102 @@ async def _migrate_projects_lifecycle_status(conn: aiosqlite.Connection) -> None
         )
 
 
+async def _migrate_plan_fact_cards(conn: aiosqlite.Connection) -> None:
+    """创建 plan-first 事实卡五张表（ADR-0001 / Phase B 第一刀）.
+
+    权威行由计划层或人写入。``approval_status`` 区分已批准 canon（approved）
+    与待审行（pending）。attribute.source 只允许 plan|human。
+    本迁移不读取、不改写 SettlementExtractor 的结算表。
+    """
+    tables = [
+        """CREATE TABLE IF NOT EXISTS plan_entities (
+            entity_id        TEXT PRIMARY KEY,
+            project_id       TEXT NOT NULL REFERENCES projects(project_id) ON DELETE CASCADE,
+            entity_type      TEXT NOT NULL,
+            aliases          TEXT NOT NULL DEFAULT '[]',
+            approval_status  TEXT NOT NULL DEFAULT 'approved'
+                             CHECK (approval_status IN ('approved', 'pending')),
+            created_at       TEXT NOT NULL DEFAULT (datetime('now')),
+            updated_at       TEXT NOT NULL DEFAULT (datetime('now'))
+        )""",
+        """CREATE TABLE IF NOT EXISTS plan_time_anchors (
+            anchor_id        TEXT PRIMARY KEY,
+            project_id       TEXT NOT NULL REFERENCES projects(project_id) ON DELETE CASCADE,
+            date             TEXT NOT NULL,
+            kind             TEXT NOT NULL CHECK (kind IN ('story', 'history')),
+            approval_status  TEXT NOT NULL DEFAULT 'approved'
+                             CHECK (approval_status IN ('approved', 'pending')),
+            created_at       TEXT NOT NULL DEFAULT (datetime('now')),
+            updated_at       TEXT NOT NULL DEFAULT (datetime('now'))
+        )""",
+        """CREATE TABLE IF NOT EXISTS plan_attributes (
+            attribute_id     TEXT PRIMARY KEY,
+            project_id       TEXT NOT NULL REFERENCES projects(project_id) ON DELETE CASCADE,
+            entity_id        TEXT NOT NULL REFERENCES plan_entities(entity_id) ON DELETE CASCADE,
+            key              TEXT NOT NULL,
+            value            TEXT NOT NULL,
+            valid_from_ch    INTEGER,
+            valid_to_ch      INTEGER,
+            source           TEXT NOT NULL CHECK (source IN ('plan', 'human')),
+            approval_status  TEXT NOT NULL DEFAULT 'approved'
+                             CHECK (approval_status IN ('approved', 'pending')),
+            created_at       TEXT NOT NULL DEFAULT (datetime('now')),
+            updated_at       TEXT NOT NULL DEFAULT (datetime('now')),
+            CHECK (valid_from_ch IS NULL OR valid_from_ch >= 1),
+            CHECK (valid_to_ch IS NULL OR valid_to_ch >= 1),
+            CHECK (
+                valid_from_ch IS NULL
+                OR valid_to_ch IS NULL
+                OR valid_to_ch >= valid_from_ch
+            )
+        )""",
+        """CREATE TABLE IF NOT EXISTS plan_events (
+            event_id         TEXT PRIMARY KEY,
+            project_id       TEXT NOT NULL REFERENCES projects(project_id) ON DELETE CASCADE,
+            ch               INTEGER NOT NULL CHECK (ch >= 1),
+            time_anchor_id   TEXT REFERENCES plan_time_anchors(anchor_id) ON DELETE SET NULL,
+            participants     TEXT NOT NULL DEFAULT '[]',
+            causes           TEXT NOT NULL DEFAULT '[]',
+            reveals_evidence TEXT NOT NULL DEFAULT '[]',
+            approval_status  TEXT NOT NULL DEFAULT 'approved'
+                             CHECK (approval_status IN ('approved', 'pending')),
+            created_at       TEXT NOT NULL DEFAULT (datetime('now')),
+            updated_at       TEXT NOT NULL DEFAULT (datetime('now'))
+        )""",
+        """CREATE TABLE IF NOT EXISTS plan_clues (
+            clue_id          TEXT PRIMARY KEY,
+            project_id       TEXT NOT NULL REFERENCES projects(project_id) ON DELETE CASCADE,
+            planted_ch       INTEGER NOT NULL CHECK (planted_ch >= 1),
+            revealed_ch      INTEGER,
+            must_mention_in  TEXT NOT NULL DEFAULT '[]',
+            approval_status  TEXT NOT NULL DEFAULT 'approved'
+                             CHECK (approval_status IN ('approved', 'pending')),
+            created_at       TEXT NOT NULL DEFAULT (datetime('now')),
+            updated_at       TEXT NOT NULL DEFAULT (datetime('now')),
+            CHECK (revealed_ch IS NULL OR revealed_ch >= 1),
+            CHECK (revealed_ch IS NULL OR revealed_ch >= planted_ch)
+        )""",
+    ]
+    for sql in tables:
+        await conn.execute(sql)
+    indexes = [
+        "CREATE INDEX IF NOT EXISTS idx_plan_entities_project "
+        "ON plan_entities(project_id, approval_status)",
+        "CREATE INDEX IF NOT EXISTS idx_plan_attributes_project "
+        "ON plan_attributes(project_id, approval_status)",
+        "CREATE INDEX IF NOT EXISTS idx_plan_attributes_entity "
+        "ON plan_attributes(entity_id)",
+        "CREATE INDEX IF NOT EXISTS idx_plan_events_project "
+        "ON plan_events(project_id, ch)",
+        "CREATE INDEX IF NOT EXISTS idx_plan_time_anchors_project "
+        "ON plan_time_anchors(project_id, approval_status)",
+        "CREATE INDEX IF NOT EXISTS idx_plan_clues_project "
+        "ON plan_clues(project_id, approval_status)",
+    ]
+    for sql in indexes:
+        await conn.execute(sql)
+
+
 async def verify_schema(conn: aiosqlite.Connection) -> list[str]:
     """验证所有期望的表是否存在.
 
@@ -1183,4 +1285,5 @@ _MIGRATIONS: list[tuple[str, Callable[[aiosqlite.Connection], Awaitable[None]]]]
         "_migrate_foreshadowings_resolved_trace",
         _migrate_foreshadowings_resolved_trace,
     ),
+    ("_migrate_plan_fact_cards", _migrate_plan_fact_cards),
 ]

@@ -93,6 +93,13 @@ from songyan.models.narrative import (
     PlotThreadStatus,
     StoryOutline,
 )
+from songyan.models.plan_facts import (
+    PlanAttribute,
+    PlanClue,
+    PlanEntity,
+    PlanEvent,
+    PlanTimeAnchor,
+)
 from songyan.models.project import ProjectSetting
 from songyan.models.project_run import ProjectRunResult, ProjectRunState
 from songyan.models.project_template import (
@@ -236,6 +243,12 @@ __all__ = [
     "ArcPlan",
     "PlotThread",
     "PlotThreadStatus",
+    # Phase B / ADR-0001: plan-first fact cards
+    "PlanEntity",
+    "PlanAttribute",
+    "PlanEvent",
+    "PlanTimeAnchor",
+    "PlanClue",
     # V7 Task 166a: re-plan proposal models
     "ArcOutcomeEvaluation",
     "ArcOutcomeRiskLevel",

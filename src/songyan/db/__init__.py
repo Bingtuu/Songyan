@@ -6,6 +6,7 @@ from songyan.db.context_repo import CharacterStateRepository, SummaryRepository
 from songyan.db.human_mark_repo import HumanMarkRepository
 from songyan.db.literary_repo import LiteraryKeywordRepository
 from songyan.db.migrations import init_schema, verify_schema
+from songyan.db.plan_fact_repo import PlanFactRepository
 from songyan.db.repository import (
     ChapterGoalRepository,
     ChapterHeadRepository,
@@ -37,6 +38,7 @@ __all__ = [
     "LiteraryKeywordRepository",
     "LiteraryObservationRepository",
     "NumericalLedgerRepository",
+    "PlanFactRepository",
     "ProjectRepository",
     "ReviewReportRepository",
     "SettingSnapshotRepository",
