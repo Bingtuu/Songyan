@@ -18,6 +18,7 @@ from songyan.db.plan_fact_repo import PlanFactError, PlanFactRepository
 from songyan.db.repository import ProjectRepository
 from songyan.models.plan_facts import (
     PlanAttribute,
+    PlanClaim,
     PlanClue,
     PlanEntity,
     PlanEvent,
@@ -179,6 +180,34 @@ class TestPlanFactRoundTrip:
 
         assert await repo.read_time_anchor(anchor.anchor_id) == anchor
         assert await repo.read_event(event.event_id) == event
+
+    async def test_event_claims_round_trip(self, fact_db: Path) -> None:
+        repo = PlanFactRepository()
+        event = PlanEvent(
+            event_id="evt-claim",
+            project_id="p1",
+            ch=1,
+            claims=[PlanClaim(claim_id="c1", text="后脑有一处钝器伤")],
+        )
+
+        await repo.write_event(event)
+
+        assert await repo.read_event(event.event_id) == event
+
+    async def test_clue_mention_terms_round_trip(self, fact_db: Path) -> None:
+        repo = PlanFactRepository()
+        clue = PlanClue(
+            clue_id="clue-terms",
+            project_id="p1",
+            planted_ch=1,
+            must_mention_in=[1, 2],
+            label="后脑钝器伤",
+            mention_terms=["钝器伤"],
+        )
+
+        await repo.write_clue(clue)
+
+        assert await repo.read_clue(clue.clue_id) == clue
 
     async def test_clue_round_trip(self, fact_db: Path) -> None:
         repo = PlanFactRepository()
@@ -391,6 +420,7 @@ class TestPlanFactSchema:
             "participants",
             "causes",
             "reveals_evidence",
+            "claims",
             "approval_status",
         } <= columns["plan_events"]
         assert {"anchor_id", "date", "kind", "approval_status"} <= columns["plan_time_anchors"]
@@ -399,6 +429,8 @@ class TestPlanFactSchema:
             "planted_ch",
             "revealed_ch",
             "must_mention_in",
+            "label",
+            "mention_terms",
             "approval_status",
         } <= columns["plan_clues"]
 
@@ -428,3 +460,25 @@ class TestPlanFactSchema:
             await conn.commit()
 
             assert await verify_schema(conn) == []
+
+    async def test_check_field_migration_adds_columns_dropped_from_old_tables(
+        self, fact_db: Path
+    ) -> None:
+        import aiosqlite
+
+        from songyan.db.migrations import _migrate_plan_fact_check_fields
+
+        async with aiosqlite.connect(fact_db) as conn:
+            await conn.execute("ALTER TABLE plan_events DROP COLUMN claims")
+            await conn.execute("ALTER TABLE plan_clues DROP COLUMN label")
+            await conn.execute("ALTER TABLE plan_clues DROP COLUMN mention_terms")
+            await conn.commit()
+            await _migrate_plan_fact_check_fields(conn)
+            await conn.commit()
+            event_cursor = await conn.execute("PRAGMA table_info(plan_events)")
+            event_cols = {row[1] for row in await event_cursor.fetchall()}
+            clue_cursor = await conn.execute("PRAGMA table_info(plan_clues)")
+            clue_cols = {row[1] for row in await clue_cursor.fetchall()}
+
+        assert "claims" in event_cols
+        assert {"label", "mention_terms"} <= clue_cols

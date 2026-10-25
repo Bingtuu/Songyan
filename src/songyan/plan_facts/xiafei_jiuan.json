@@ -1,0 +1,410 @@
+{
+  "project_id": "xiafei-jiuan",
+  "project": {
+    "title": "霞飞路旧案",
+    "genre_id": "urban",
+    "mode_id": "webnovel_intense",
+    "protagonist_name": "顾怀瑾",
+    "protagonist_background": "1931年刚从里昂学成归国的法医，受聘于法租界巡捕房验尸所；讲证据、不信口供，家道中落，父亲曾是上海老派讼师",
+    "core_hook": "1931年上海法租界，霞飞路一间当铺的老板死在从内部闩死的库房里。初归国的法医顾怀瑾被卷入这桩密室命案，巡捕房、青帮与日本商会各怀鬼胎。",
+    "target_reader_expectation": "民国本格悬疑推理，线索公平呈现，时间线、证物、证词、不在场证明经得起推敲，氛围克制",
+    "target_word_count": 1000000,
+    "tone": "冷峻",
+    "estimated_chapters": 300,
+    "words_per_chapter": 4000,
+    "story_structure": "serial",
+    "arc_boundaries": [30, 60, 90, 120, 150, 180, 210, 240, 270],
+    "arc_boundaries_auto": false,
+    "taboos": ["凶手靠超自然手段作案", "主角凭直觉而非证据破案"],
+    "reference_works": ["福尔摩斯探案集", "法医秦明", "长安十二时辰"]
+  },
+  "time_anchors": [
+    {
+      "anchor_id": "xiafei-ta-pre918",
+      "project_id": "xiafei-jiuan",
+      "date": "1931-09-18前",
+      "kind": "history",
+      "approval_status": "approved"
+    },
+    {
+      "anchor_id": "xiafei-ta-march",
+      "project_id": "xiafei-jiuan",
+      "date": "1931-03",
+      "kind": "story",
+      "approval_status": "approved"
+    },
+    {
+      "anchor_id": "xiafei-ta-jinzhou",
+      "project_id": "xiafei-jiuan",
+      "date": "1931-11后（非本案当下）",
+      "kind": "history",
+      "approval_status": "approved"
+    }
+  ],
+  "entities": [
+    {
+      "entity_id": "xiafei-gu",
+      "project_id": "xiafei-jiuan",
+      "entity_type": "person",
+      "aliases": ["顾怀瑾", "顾法医"],
+      "approval_status": "approved"
+    },
+    {
+      "entity_id": "xiafei-cheng",
+      "project_id": "xiafei-jiuan",
+      "entity_type": "person",
+      "aliases": ["程慕远", "督察长"],
+      "approval_status": "approved"
+    },
+    {
+      "entity_id": "xiafei-aliu",
+      "project_id": "xiafei-jiuan",
+      "entity_type": "person",
+      "aliases": ["阿六", "学徒"],
+      "approval_status": "approved"
+    },
+    {
+      "entity_id": "xiafei-boss",
+      "project_id": "xiafei-jiuan",
+      "entity_type": "person",
+      "aliases": ["当铺老板", "死者"],
+      "approval_status": "approved"
+    },
+    {
+      "entity_id": "xiafei-pawnshop",
+      "project_id": "xiafei-jiuan",
+      "entity_type": "place",
+      "aliases": ["霞飞路当铺", "当铺库房"],
+      "approval_status": "approved"
+    },
+    {
+      "entity_id": "xiafei-scratch",
+      "project_id": "xiafei-jiuan",
+      "entity_type": "object",
+      "aliases": ["门闩横杆刮痕", "证物E1", "刮痕"],
+      "approval_status": "approved"
+    },
+    {
+      "entity_id": "xiafei-hook",
+      "project_id": "xiafei-jiuan",
+      "entity_type": "object",
+      "aliases": ["门框暗处钩痕", "钩状弧线"],
+      "approval_status": "approved"
+    },
+    {
+      "entity_id": "xiafei-blunt",
+      "project_id": "xiafei-jiuan",
+      "entity_type": "injury",
+      "aliases": ["后脑钝器伤", "钝器伤"],
+      "approval_status": "approved"
+    },
+    {
+      "entity_id": "xiafei-poison",
+      "project_id": "xiafei-jiuan",
+      "entity_type": "object",
+      "aliases": ["口鼻苦杏仁", "氰化物"],
+      "approval_status": "approved"
+    },
+    {
+      "entity_id": "xiafei-mechanism",
+      "project_id": "xiafei-jiuan",
+      "entity_type": "mechanism",
+      "aliases": ["门外钩杆拉闩"],
+      "approval_status": "approved"
+    },
+    {
+      "entity_id": "xiafei-era",
+      "project_id": "xiafei-jiuan",
+      "entity_type": "time",
+      "aliases": ["时局", "九一八前夕"],
+      "approval_status": "approved"
+    },
+    {
+      "entity_id": "xiafei-case-time",
+      "project_id": "xiafei-jiuan",
+      "entity_type": "time",
+      "aliases": ["案发时间"],
+      "approval_status": "approved"
+    }
+  ],
+  "attributes": [
+    {
+      "attribute_id": "attr-scratch-direction",
+      "project_id": "xiafei-jiuan",
+      "entity_id": "xiafei-scratch",
+      "key": "direction",
+      "value": "右向左",
+      "valid_from_ch": 1,
+      "valid_to_ch": 3,
+      "source": "human",
+      "approval_status": "approved"
+    },
+    {
+      "attribute_id": "attr-scratch-count",
+      "project_id": "xiafei-jiuan",
+      "entity_id": "xiafei-scratch",
+      "key": "count",
+      "value": "1",
+      "valid_from_ch": 1,
+      "valid_to_ch": 3,
+      "source": "human",
+      "approval_status": "approved"
+    },
+    {
+      "attribute_id": "attr-scratch-owner",
+      "project_id": "xiafei-jiuan",
+      "entity_id": "xiafei-scratch",
+      "key": "ownership",
+      "value": "门闩横杆",
+      "valid_from_ch": 1,
+      "valid_to_ch": 3,
+      "source": "human",
+      "approval_status": "approved"
+    },
+    {
+      "attribute_id": "attr-hook-owner",
+      "project_id": "xiafei-jiuan",
+      "entity_id": "xiafei-hook",
+      "key": "ownership",
+      "value": "门框暗处",
+      "valid_from_ch": 2,
+      "valid_to_ch": 3,
+      "source": "human",
+      "approval_status": "approved"
+    },
+    {
+      "attribute_id": "attr-mechanism-direction",
+      "project_id": "xiafei-jiuan",
+      "entity_id": "xiafei-mechanism",
+      "key": "direction",
+      "value": "往外拉",
+      "valid_from_ch": 2,
+      "valid_to_ch": 3,
+      "source": "human",
+      "approval_status": "approved"
+    },
+    {
+      "attribute_id": "attr-blunt-count",
+      "project_id": "xiafei-jiuan",
+      "entity_id": "xiafei-blunt",
+      "key": "count",
+      "value": "1",
+      "valid_from_ch": 1,
+      "valid_to_ch": 3,
+      "source": "human",
+      "approval_status": "approved"
+    },
+    {
+      "attribute_id": "attr-blunt-owner",
+      "project_id": "xiafei-jiuan",
+      "entity_id": "xiafei-blunt",
+      "key": "ownership",
+      "value": "死者后脑",
+      "valid_from_ch": 1,
+      "valid_to_ch": 3,
+      "source": "human",
+      "approval_status": "approved"
+    },
+    {
+      "attribute_id": "attr-era-window",
+      "project_id": "xiafei-jiuan",
+      "entity_id": "xiafei-era",
+      "key": "time_anchor",
+      "value": "1931-09-18前",
+      "valid_from_ch": 1,
+      "valid_to_ch": 3,
+      "source": "plan",
+      "approval_status": "approved"
+    },
+    {
+      "attribute_id": "attr-case-time",
+      "project_id": "xiafei-jiuan",
+      "entity_id": "xiafei-case-time",
+      "key": "time_anchor",
+      "value": "1931-03",
+      "valid_from_ch": 1,
+      "valid_to_ch": 3,
+      "source": "human",
+      "approval_status": "approved"
+    },
+    {
+      "attribute_id": "attr-poison-owner",
+      "project_id": "xiafei-jiuan",
+      "entity_id": "xiafei-poison",
+      "key": "ownership",
+      "value": "口鼻",
+      "valid_from_ch": 1,
+      "valid_to_ch": 3,
+      "source": "human",
+      "approval_status": "approved"
+    }
+  ],
+  "events": [
+    {
+      "event_id": "evt-ch1-exam",
+      "project_id": "xiafei-jiuan",
+      "ch": 1,
+      "time_anchor_id": "xiafei-ta-march",
+      "participants": ["xiafei-gu", "xiafei-boss"],
+      "causes": [],
+      "reveals_evidence": ["clue-blunt", "clue-scratch", "clue-poison"],
+      "claims": [
+        {
+          "claim_id": "claim-ch1-blunt",
+          "text": "死者后脑有一处钝器伤"
+        },
+        {
+          "claim_id": "claim-ch1-scratch",
+          "text": "门闩横杆只有一道刮痕，方向为右向左"
+        },
+        {
+          "claim_id": "claim-ch1-physics",
+          "text": "从内向左推闩时刮痕走向应为右向左，不能据此说受力方向相反"
+        }
+      ],
+      "approval_status": "approved"
+    },
+    {
+      "event_id": "evt-ch1-era",
+      "project_id": "xiafei-jiuan",
+      "ch": 1,
+      "time_anchor_id": "xiafei-ta-pre918",
+      "participants": ["xiafei-era"],
+      "causes": [],
+      "reveals_evidence": ["clue-era"],
+      "claims": [
+        {
+          "claim_id": "claim-ch1-era",
+          "text": "本案当下在九一八之前，报纸报道的不是日军进逼锦州"
+        }
+      ],
+      "approval_status": "approved"
+    },
+    {
+      "event_id": "evt-ch2-report",
+      "project_id": "xiafei-jiuan",
+      "ch": 2,
+      "time_anchor_id": "xiafei-ta-march",
+      "participants": ["xiafei-gu", "xiafei-cheng"],
+      "causes": ["evt-ch1-exam"],
+      "reveals_evidence": ["clue-blunt", "clue-scratch"],
+      "claims": [
+        {
+          "claim_id": "claim-ch2-blunt",
+          "text": "正式验尸报告写有死者后脑钝器伤"
+        },
+        {
+          "claim_id": "claim-ch2-scratch",
+          "text": "报告中的横杆刮痕仍是一道，方向为右向左，没有第二处纤维残留"
+        }
+      ],
+      "approval_status": "approved"
+    },
+    {
+      "event_id": "evt-ch2-mechanism",
+      "project_id": "xiafei-jiuan",
+      "ch": 2,
+      "time_anchor_id": "xiafei-ta-march",
+      "participants": ["xiafei-gu"],
+      "causes": ["evt-ch1-exam"],
+      "reveals_evidence": ["clue-hook", "clue-mechanism"],
+      "claims": [
+        {
+          "claim_id": "claim-ch2-pull",
+          "text": "门外用带钩细杆钩住横杆往外拉"
+        },
+        {
+          "claim_id": "claim-ch2-hook",
+          "text": "钩状弧线在门框暗处，横杆上的刮痕是直线"
+        }
+      ],
+      "approval_status": "approved"
+    },
+    {
+      "event_id": "evt-ch3-review",
+      "project_id": "xiafei-jiuan",
+      "ch": 3,
+      "time_anchor_id": "xiafei-ta-march",
+      "participants": ["xiafei-gu", "xiafei-cheng"],
+      "causes": ["evt-ch2-mechanism"],
+      "reveals_evidence": ["clue-hook", "clue-mechanism"],
+      "claims": [
+        {
+          "claim_id": "claim-ch3-pull",
+          "text": "拉闩方向仍是往外拉"
+        },
+        {
+          "claim_id": "claim-ch3-hook",
+          "text": "钩状弧线属于门框暗处，不在横杆拓片上"
+        },
+        {
+          "claim_id": "claim-ch3-date",
+          "text": "当票日期在一九三一年三月，仍在九一八之前"
+        }
+      ],
+      "approval_status": "approved"
+    }
+  ],
+  "clues": [
+    {
+      "clue_id": "clue-blunt",
+      "project_id": "xiafei-jiuan",
+      "planted_ch": 1,
+      "revealed_ch": null,
+      "must_mention_in": [1, 2],
+      "label": "后脑钝器伤",
+      "mention_terms": ["钝器伤"],
+      "approval_status": "approved"
+    },
+    {
+      "clue_id": "clue-scratch",
+      "project_id": "xiafei-jiuan",
+      "planted_ch": 1,
+      "revealed_ch": null,
+      "must_mention_in": [1, 2],
+      "label": "门闩横杆刮痕",
+      "mention_terms": ["右向左"],
+      "approval_status": "approved"
+    },
+    {
+      "clue_id": "clue-hook",
+      "project_id": "xiafei-jiuan",
+      "planted_ch": 2,
+      "revealed_ch": null,
+      "must_mention_in": [2],
+      "label": "门框暗处钩痕",
+      "mention_terms": ["门框暗处"],
+      "approval_status": "approved"
+    },
+    {
+      "clue_id": "clue-mechanism",
+      "project_id": "xiafei-jiuan",
+      "planted_ch": 2,
+      "revealed_ch": null,
+      "must_mention_in": [2, 3],
+      "label": "往外拉闩",
+      "mention_terms": ["往外拉"],
+      "approval_status": "approved"
+    },
+    {
+      "clue_id": "clue-era",
+      "project_id": "xiafei-jiuan",
+      "planted_ch": 1,
+      "revealed_ch": null,
+      "must_mention_in": [1],
+      "label": "九一八前夕",
+      "mention_terms": ["九一八"],
+      "approval_status": "approved"
+    },
+    {
+      "clue_id": "clue-poison",
+      "project_id": "xiafei-jiuan",
+      "planted_ch": 1,
+      "revealed_ch": null,
+      "must_mention_in": [1],
+      "label": "口鼻苦杏仁",
+      "mention_terms": ["苦杏仁"],
+      "approval_status": "approved"
+    }
+  ]
+}

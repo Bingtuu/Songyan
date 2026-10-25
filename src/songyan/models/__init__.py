@@ -95,6 +95,7 @@ from songyan.models.narrative import (
 )
 from songyan.models.plan_facts import (
     PlanAttribute,
+    PlanClaim,
     PlanClue,
     PlanEntity,
     PlanEvent,
@@ -247,6 +248,7 @@ __all__ = [
     "PlanEntity",
     "PlanAttribute",
     "PlanEvent",
+    "PlanClaim",
     "PlanTimeAnchor",
     "PlanClue",
     # V7 Task 166a: re-plan proposal models
