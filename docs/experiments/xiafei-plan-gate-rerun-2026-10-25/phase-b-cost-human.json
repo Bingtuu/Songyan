@@ -1,0 +1,52 @@
+{
+  "project_id": "030b687372374aa491e0c294e6d62969",
+  "pricing": {
+    "input_cny_per_m": 2,
+    "output_cny_per_m": 8,
+    "note": "owner B18 rates; tool cost_cny is pricing_estimate not bill"
+  },
+  "v1_baseline_owner_cny": {
+    "ch1": 0.358,
+    "ch2": 0.246,
+    "ch3": 0.766,
+    "total": 1.37
+  },
+  "live_rerun": {
+    "by_chapter": {
+      "1": {
+        "prompt_tokens": 133747,
+        "completion_tokens": 69595,
+        "calls": 37,
+        "tool_cost_cny": 0.824254,
+        "owner_cost_cny": 0.824254
+      },
+      "2": {
+        "prompt_tokens": 177449,
+        "completion_tokens": 89631,
+        "calls": 47,
+        "tool_cost_cny": 1.071946,
+        "owner_cost_cny": 1.071946
+      },
+      "3": {
+        "prompt_tokens": 39422,
+        "completion_tokens": 17493,
+        "calls": 10,
+        "tool_cost_cny": 0.218788,
+        "owner_cost_cny": 0.218788
+      }
+    },
+    "total": {
+      "prompt_tokens": 350618,
+      "completion_tokens": 176719,
+      "calls": 94,
+      "tool_cost_cny": 2.114988,
+      "owner_cost_cny": 2.114988
+    }
+  },
+  "human_time": {
+    "card_approval": "owner delegated to Mew (2026-10-25 「你来审核吧，不用给我看」); owner wall-clock for card review ≈0 for this run",
+    "scoreboard_review_estimate_min_per_chapter": "Mew scored from chapters+gate signals without owner; estimate ≤5 min/ch for reading scoreboard+occurred_basis if owner did it",
+    "gate_target": "≤10 min/ch",
+    "verdict": "pass_with_delegation_note"
+  }
+}

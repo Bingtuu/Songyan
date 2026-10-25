@@ -14,17 +14,17 @@ owner：Bingtuu。目标与非目标以 [ROADMAP-plan-first.md](ROADMAP-plan-fir
 | 现有结算路径（先别改权威） | `src/songyan/agents/settlement_extractor/`。它仍写原结算库，不写 plan canon |
 | Phase A 已完成 | B7 #5、B5 #6、B18 #8。不要再开这三刀 |
 
-证据数字只用来自 2026-10 的 owner 笔记，外加这一刀在 box 上测得的召回：调研报告（2026-10-13）、canon-v4 对照、规则年代 Ch1–3 审稿、bug 记录（`257314c`）、成本记录、霞飞路重跑 5/5（[experiments/xiafei-plan-gate-rerun-2026-10-25](experiments/xiafei-plan-gate-rerun-2026-10-25/README.md)）。不要在切片里再补一套新的评测数字。
+证据数字只用来自 2026-10 的 owner 笔记，外加 box 上已经测得的召回、人工与成本：调研报告（2026-10-13）、canon-v4 对照、规则年代 Ch1–3 审稿、bug 记录（`257314c`）、v1 成本记录、霞飞路重跑 5/5 与阶段 B 人工/成本（[experiments/xiafei-plan-gate-rerun-2026-10-25](experiments/xiafei-plan-gate-rerun-2026-10-25/README.md)，[gates.md](experiments/xiafei-plan-gate-rerun-2026-10-25/gates.md)）。不要在切片里再补一套新的评测数字。
 
 ## 下一刀
 
 **Phase A 已完成。** B7 #5、B5 #6、B18 #8 已在 main。事实卡 schema、霞飞路批准卡、三项窄检查、写章审查上的只读门也已在 main。规模写作仍然冻结。
 
-**重跑这一刀（knife4）已测量：活路径召回 5/5，达到 ≥4/5。** 正文来自 box 上的项目 `030b687372374aa491e0c294e6d62969`，不是云端虚拟机。T1、T2 发生，必须提及拦住了；T4、T6 未发生（门仍标缺「往外拉」「九一八」）；T5 未发生，所以记召回。记录在 [experiments/xiafei-plan-gate-rerun-2026-10-25](experiments/xiafei-plan-gate-rerun-2026-10-25/README.md)。
+**阶段 B 三道成功门都有记录。** 活路径召回 5/5（≥4/5）。人工 ≤10 分钟/章记为 **pass_with_delegation_note**：owner 在 2026-10-25 把批卡委托给 Mew（「你来审核吧，不用给我看」）；没有秒表；若 owner 自己读计分板和 `occurred_basis`，估计 ≤5 分钟/章。成本同量级 **pass**：owner 口径合计 ¥2.115（两位小数 ¥2.12），v1 ≈¥1.37，约 1.5 倍；ch1 ¥0.824 / ch2 ¥1.072 / ch3 ¥0.219。没有一章达到 v1 第 3 章 ¥0.766 的十倍。正文来自 box 上的项目 `030b687372374aa491e0c294e6d62969`。记录在 [experiments/xiafei-plan-gate-rerun-2026-10-25](experiments/xiafei-plan-gate-rerun-2026-10-25/README.md) 与 [gates.md](experiments/xiafei-plan-gate-rerun-2026-10-25/gates.md)。
 
-`rule_auditor_node` 仍只读已批准卡，结果仍在 `_plan_fact_gate`，不改质量门路由。SettlementExtractor 仍写原结算库。`run_chapter_pipeline` 仍不填 `_plan_attribute_extracts` / `_plan_claim_anchors`。T5 这次没有发生；归属漂移若再发生，活路径标不出。人工时长和成本仍没有记录，阶段 B 还没过完。不开始阶段 C。
+`rule_auditor_node` 仍只读已批准卡，结果仍在 `_plan_fact_gate`，不改质量门路由。SettlementExtractor 仍写原结算库。`run_chapter_pipeline` 仍不填 `_plan_attribute_extracts` / `_plan_claim_anchors`。T5 这次没有发生；归属漂移若再发生，活路径标不出。这条限制不挡已经记下的三道门。不开始阶段 C。
 
-**下一刀还没定，两件里只做一件：** 把类型化摘录和主张锚接到审查 state，让 T5 发生时能被拦住；或者本 PR 合入之后再开下一片。不写《规则年代》，不加题材规则，不把抽取吸进 canon。
+**下一刀只做一件：请 owner 指定阶段 C 的第二体裁。** 调研报告建议仙侠或言情；路线图写明开跑前由 owner 指定。指定之前不写章、不加题材规则、不把抽取吸进 canon。类型化摘录和主张锚继续不接（已推迟的 option 1）。
 
 ## 怎么报告
 
