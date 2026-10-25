@@ -8,28 +8,34 @@ import structlog
 
 logger = structlog.get_logger(__name__)
 
-# DeepSeek API 定价（CNY / 1M tokens，2025-05）
-# 输入：缓存命中 ¥0.1，缓存未命中 ¥1.0
-# 输出：¥2.0
-# 保守估算使用缓存未命中价格
-#
-# Task 232 口径冻结：PRICING 是手工维护的保守估算基线，不是实时价目。
-# 未知模型回落 default（DeepSeek chat 档）并 warning；精确对账以 provider 账单为准。
+# B18：chat 的报告 / 落库 cost_cny 用 owner 口径标签，不是 DeepSeek 账单。
+# 输入 ¥2 / 1M tokens，输出 ¥8 / 1M tokens。
+# 三章笔记：旧表（¥1/¥2）自报约 ¥0.458，同一 token 按本口径约为 ¥1.37。
+# provider response_cost（USD）仍不入账，见 llm/client.py。
+# deepseek-coder 保留旧缓存未命中表；deepseek-reasoner 保留 ¥4/¥12。
+# 未知模型回落 default（与 deepseek-chat 同一用户口径）并 warning。
+OWNER_CHAT_INPUT_CNY_PER_MILLION = 2.0
+OWNER_CHAT_OUTPUT_CNY_PER_MILLION = 8.0
+
+#: report 成本段标明的 chat 估算口径（标签，不是发票）
+CHAT_COST_BASIS_LABEL = (
+    "用户口径（chat 输入 ¥2/M、输出 ¥8/M；写入 cost_cny 的估算标签，不是 DeepSeek 账单）"
+)
+
+_OWNER_CHAT_RATES: dict[str, float] = {
+    "input": OWNER_CHAT_INPUT_CNY_PER_MILLION,
+    "output": OWNER_CHAT_OUTPUT_CNY_PER_MILLION,
+}
+
 PRICING: dict[str, dict[str, float]] = {
-    "deepseek/deepseek-chat": {
-        "input": 1.0,
-        "output": 2.0,
-    },
+    "deepseek/deepseek-chat": dict(_OWNER_CHAT_RATES),
+    # coder 不是 B18 的 chat 口径，保持 2025-05 缓存未命中价
     "deepseek/deepseek-coder": {
         "input": 1.0,
         "output": 2.0,
     },
-    "deepseek-chat": {
-        "input": 1.0,
-        "output": 2.0,
-    },
-    # deepseek-reasoner：2025-09 V3.1 调价后 chat/reasoner 同价
-    # （缓存未命中输入 ¥4、输出 ¥12），per-role 路由常见目标模型
+    "deepseek-chat": dict(_OWNER_CHAT_RATES),
+    # deepseek-reasoner：单独价目（缓存未命中输入 ¥4、输出 ¥12）
     "deepseek-reasoner": {
         "input": 4.0,
         "output": 12.0,
@@ -38,11 +44,8 @@ PRICING: dict[str, dict[str, float]] = {
         "input": 4.0,
         "output": 12.0,
     },
-    # 默认兜底
-    "default": {
-        "input": 1.0,
-        "output": 2.0,
-    },
+    # 默认兜底：与 deepseek-chat 同一用户口径
+    "default": dict(_OWNER_CHAT_RATES),
 }
 
 #: 已告警过的未知模型（每进程每模型只 warning 一次，避免热路径刷屏）

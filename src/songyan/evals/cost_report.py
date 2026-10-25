@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from songyan.utils.cost_estimator import format_cost_estimate
+from songyan.utils.cost_estimator import CHAT_COST_BASIS_LABEL, format_cost_estimate
 
 #: per agent 成本分布默认展示条数（其余合并为「其他」行）
 DEFAULT_TOP_N = 5
@@ -126,6 +126,7 @@ def render_cost_section(
     lines.extend(
         [
             f"- **run 总成本**: {format_cost_estimate(total_cost)}",
+            f"- **chat 估算口径**: {CHAT_COST_BASIS_LABEL}",
             f"- **章节数**: {chapter_count_text}",
             f"- **每章均成本**: {avg_cost_text}",
             f"- **成功调用数**: {total_calls}/{total_usage_rows}",
