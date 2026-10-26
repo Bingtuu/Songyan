@@ -67,7 +67,9 @@ def plan_fact_gate_failure_lines(report: object) -> list[str]:
         return []
     lines: list[str] = []
     for row in _rows(data.get("missing_mentions")):
-        terms = "、".join(str(term) for term in row.get("missing_terms") or [])
+        raw_terms = row.get("missing_terms")
+        term_list = raw_terms if isinstance(raw_terms, list) else []
+        terms = "、".join(str(term) for term in term_list)
         label = str(row.get("label") or "").strip()
         point_id = str(row.get("point_id") or "").strip()
         head = " ".join(part for part in (point_id, label) if part)
@@ -208,28 +210,29 @@ def _render(
     if not events and not clues:
         return ""
     lines: list[str] = []
-    for row in entities:
-        aliases = "、".join(alias for alias in row.aliases if alias.strip())
+    for entity in entities:
+        aliases = "、".join(alias for alias in entity.aliases if alias.strip())
         suffix = f"：{aliases}" if aliases else ""
-        lines.append(f"实体 {row.entity_id}（{row.entity_type}）{suffix}")
-    for row in attributes:
+        lines.append(f"实体 {entity.entity_id}（{entity.entity_type}）{suffix}")
+    for attribute in attributes:
         lines.append(
-            f"属性 {row.attribute_id}：{row.entity_id}.{row.key} = {row.value}"
-            f"（{_window_label(row)}，来源 {row.source}）"
+            f"属性 {attribute.attribute_id}："
+            f"{attribute.entity_id}.{attribute.key} = {attribute.value}"
+            f"（{_window_label(attribute)}，来源 {attribute.source}）"
         )
-    for row in anchors:
-        lines.append(f"时间锚 {row.anchor_id}：{row.date}（{row.kind}）")
-    for row in events:
-        anchor = f"，时间锚 {row.time_anchor_id}" if row.time_anchor_id else ""
-        participants = "、".join(row.participants) or "（无）"
-        lines.append(f"事件 {row.event_id}（第{row.ch}章{anchor}）：参与 {participants}")
-        for claim in row.claims:
+    for anchor in anchors:
+        lines.append(f"时间锚 {anchor.anchor_id}：{anchor.date}（{anchor.kind}）")
+    for event in events:
+        when = f"，时间锚 {event.time_anchor_id}" if event.time_anchor_id else ""
+        participants = "、".join(event.participants) or "（无）"
+        lines.append(f"事件 {event.event_id}（第{event.ch}章{when}）：参与 {participants}")
+        for claim in event.claims:
             lines.append(f"主张 {claim.claim_id}：{claim.text}")
-    for row in clues:
-        terms = row.mention_terms or ([row.label] if row.label.strip() else [])
+    for clue in clues:
+        terms = clue.mention_terms or ([clue.label] if clue.label.strip() else [])
         shown = "、".join(terms)
-        label = row.label.strip() or row.clue_id
-        lines.append(f"线索 {row.clue_id}：{label}。本章必须出现：{shown}")
+        label = clue.label.strip() or clue.clue_id
+        lines.append(f"线索 {clue.clue_id}：{label}。本章必须出现：{shown}")
     return "\n".join(lines)
 
 
