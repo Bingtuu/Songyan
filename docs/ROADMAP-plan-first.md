@@ -2,8 +2,8 @@
 
 > **读者**: owner（Bingtuu）与每日切片执行者（Mew）
 > **起点**: 2026-10-22
-> **更新**: 2026-10-26。Phase A 已合入 main（B7 #5、B5 #6、B18 #8）。Phase B 已完成（#13，`c84a2dac`）：霞飞路 ch1–3 活路径三道门已有记录，召回 **5/5**，人工 **pass_with_delegation_note**，成本同量级（¥2.115 vs v1 ≈¥1.37）。Phase C 活路径已跑完（都市灵异《末班铜牌》ch1–3，项目 `153fe8f222534585a2bdc2410496dfa0`）：召回 **1/5，fail**（门槛 ≥4/5，只有 D3），人工 **pass_with_delegation_note**，成本 owner ¥6.830 vs v1 ≈¥1.37（约 5 倍，**borderline / owner call**；没有单章 ≥¥7.66）。**阶段 C 已关闭，退出条件未满足。** owner 在 2026-10-26（Asia/Shanghai）选定 **(a) 接受薄封装结论**：人维护事实圣经，AI 按圣经写。同日下令加速：切片 1 把摘录和锚接到审查 state（已做，没有重记召回）。切片 2 薄封装运行时已做：写作和修订读已批准计划卡，审查失败出现在 human gate，正文抽取不进 canon。下一刀是切片 3 发布核对与冒烟，不是再开阶段 C。不再加题材专用检查器。
-> **状态**: 方向已定，阶段 C 以薄封装收束（退出未过）。SettlementExtractor 的权威路径尚未改写。写作和审查只读已批准 plan 卡，不把抽取写进 canon。
+> **更新**: 2026-10-26。Phase A 已合入 main（B7 #5、B5 #6、B18 #8）。Phase B 已完成（#13，`c84a2dac`）：霞飞路 ch1–3 活路径三道门已有记录，召回 **5/5**，人工 **pass_with_delegation_note**，成本同量级（¥2.115 vs v1 ≈¥1.37）。Phase C 活路径已跑完（都市灵异《末班铜牌》ch1–3，项目 `153fe8f222534585a2bdc2410496dfa0`）：召回 **1/5，fail**（门槛 ≥4/5，只有 D3），人工 **pass_with_delegation_note**，成本 owner ¥6.830 vs v1 ≈¥1.37（约 5 倍，**borderline / owner call**；没有单章 ≥¥7.66）。**阶段 C 已关闭，退出条件未满足。** owner 在 2026-10-26（Asia/Shanghai）选定 **(a) 接受薄封装结论**：人维护事实圣经，AI 按圣经写。同日下令加速，顺序是切片 1→2→3。切片 1 已在 main（#17，`196f5379`）：摘录和锚接到审查 state，没有重记召回。切片 2 已在 main（#18，`11c4c761`）：薄封装运行时，已批准计划卡作为本章事实圣经；写作和修订读这些卡，审查失败出现在 human gate，正文抽取不进 canon。切片 3 的真实 LLM Ch1–3 发布冒烟已有记录（2026-10-26 Asia/Shanghai，main `11c4c761`）：**fail**。科幻项目 `fdfc04b0771c493b83ec67750325ade7`，主运行 `run-e98414fc`，第 2 章重跑 `run-3defb98a`。只有第 1 章 accepted。第 2、3 章 `settlement_review` 失败（摘要缺主角决策/认知变化）。主运行非零：`AutoHaltException`（ContextEmergency 连续 Ch1–3）。Owner 口径 ¥0.874（ch1 ¥0.208 / ch2 ¥0.406 含重跑 / ch3 ¥0.260），停的阈值 ¥7.66 没碰到。部分通过：doctor、create-project、report、bundle 卫生（无 `.env`/密钥/书稿）、导出 1 个 md。产物在维护者 box（`/workspace/songyan-release-smoke-out/smoke_result.json`、`notes.md`，以及 smoke_result 里的 reports/bundles/exports），不在仓库。正式发布标签挡住。技术预览 / release-candidate 口径不变。下一刀只修 `settlement_review` / `summary_writer` 的这一处缺口。不是再开阶段 C。不再加题材专用检查器。
+> **状态**: 方向已定，阶段 C 以薄封装收束（退出未过）。SettlementExtractor 的权威路径尚未改写。写作和审查只读已批准 plan 卡，不把抽取写进 canon。切片 3 真实 LLM Ch1–3 发布冒烟 **fail**（main `11c4c761`），正式发布标签挡住。技术预览 / release-candidate 口径不变。下一刀只修摘要缺的主角决策/认知变化。
 > **每日入口**: [HANDOFF-mew.md](HANDOFF-mew.md)
 > **架构决定**: [adr/0001-plan-first-facts.md](adr/0001-plan-first-facts.md)
 
@@ -26,6 +26,7 @@
 | 同一项目的人工与成本（`llm_call_usage`，[`phase-b-cost-human.json`](experiments/xiafei-plan-gate-rerun-2026-10-25/phase-b-cost-human.json)） | 人工 **pass_with_delegation_note**（owner 委托批卡，没有秒表；若 owner 读计分板，估计 ≤5 分钟/章）。成本 owner 口径 ch1/2/3 = ¥0.824 / ¥1.072 / ¥0.219，合计 ¥2.115，对比 v1 ≈¥1.37。见 [gates.md](experiments/xiafei-plan-gate-rerun-2026-10-25/gates.md)。 |
 | 都市灵异活路径（2026-10-25，box，项目 `153fe8f222534585a2bdc2410496dfa0`，《末班铜牌》） | 故事自己的五类召回 **1/5，fail**（门槛 ≥4/5）。D3 灵印位置离牌未发生，记召回。D1 刻痕方向/数量、D2 灵印记名归属、D4 交还朝向、D5 窗内改写禁忌发生，活路径没有摘录和锚，没有拦住。见 [实验记录](experiments/dushi-plan-gate-rerun-2026-10-25/README.md)。 |
 | 同一项目的人工与成本（`llm_call_usage`，[`phase-c-cost-human.json`](experiments/dushi-plan-gate-rerun-2026-10-25/phase-c-cost-human.json)） | 人工 **pass_with_delegation_note**（owner 委托批卡，没有秒表）。成本 owner 口径 ch1/2/3 = ¥3.216 / ¥2.599 / ¥1.015，合计 ¥6.830，对比 v1 ≈¥1.37，约 5 倍，**borderline / owner call**。没有一章达到 ¥7.66。见 [gates.md](experiments/dushi-plan-gate-rerun-2026-10-25/gates.md)。 |
+| 发布冒烟（2026-10-26，Asia/Shanghai，维护者 box，main `11c4c761`，科幻，项目 `fdfc04b0771c493b83ec67750325ade7`） | **fail**。主运行 `run-e98414fc` 非零退出（`AutoHaltException`，ContextEmergency 连续 Ch1–3）。只有 Ch1 accepted。Ch2、Ch3 失败在 `settlement_review`，摘要缺主角决策/认知变化。Ch2 另有重跑 `run-3defb98a`。Owner 口径合计 ¥0.874（ch1 ¥0.208 / ch2 ¥0.406 含重跑 / ch3 ¥0.260）。停的阈值 ¥7.66 没碰到。部分通过：doctor、create-project、report、bundle 卫生（无 `.env`/密钥/书稿）、导出 1 个 md。产物在维护者 box 的 `/workspace/songyan-release-smoke-out/`（`smoke_result.json`、`notes.md`，以及 smoke_result 里的 reports/bundles/exports），不在本仓库。 |
 
 调研报告给出的最小实验口径，本路线直接沿用：人工确认事实卡后重跑 ch1–3；拦截或不发生的 v4 类错误 **≥4/5**；人工 **≤10 分钟/章**。
 
@@ -60,7 +61,7 @@ A 的退出条件是这三项各自有可复现的测试或记录，不是「顺
 
 **阶段 B 退出：三道门都有记录，退出条件满足。** 召回 pass，成本 pass，人工是带委托说明的 pass。没有未记录的成功门挡着阶段 C。owner 已指定阶段 C 体裁，见下方 C。
 
-2026-10-25 那次活路径不填 `_plan_attribute_extracts` / `_plan_claim_anchors`。门做得到必须提及，做不到类型化不符。T5 这次没发生。这是那次记录的限制，不是没记下的成功门。切片 1（2026-10-26）起，审查节点在调用方没钉住列表时会从当章正文读出摘录和锚再交给门。上面的 5/5 仍是接线之前的数字。
+2026-10-25 那次活路径不填 `_plan_attribute_extracts` / `_plan_claim_anchors`。门做得到必须提及，做不到类型化不符。T5 这次没发生。这是那次记录的限制，不是没记下的成功门。切片 1（2026-10-26，#17，`196f5379`）起，审查节点在调用方没钉住列表时会从当章正文读出摘录和锚再交给门。上面的 5/5 仍是接线之前的数字。
 
 窄验证仍只做下面三件事。阶段 C 不加第四件。
 
@@ -102,7 +103,7 @@ A 的退出条件是这三项各自有可复现的测试或记录，不是「顺
 
 那次活路径不填 `_plan_attribute_extracts` / `_plan_claim_anchors`。必须提及只抓到字面（第 1 章缺 `23:40`，第 2 章缺 `铜牌正面`），`attribute_mismatches` 三章都是 0，主张核验缺省为 unmentioned。D1、D2、D4、D5 发生时没有被拦住。D3 能记召回，是因为那一类没有发生。这些数字是接线之前的记录。
 
-**失败路径已经收束。** owner 在 2026-10-26（Asia/Shanghai）选定 **(a)**，接受薄封装：**人维护事实圣经，AI 按圣经写**。阶段 C 以召回失败关闭，作为「需要更多人在环」的记录。不再加题材专用检查器。同日切片 1 把摘录和锚接到审查 state，没有重记 D1–D5，也没有改 SettlementExtractor。切片 2 让写作和修订读已批准计划卡，并在 human gate 上标出 `plan_fact_gate` 失败；正文抽取仍不进 canon。下一刀是切片 3 发布核对与冒烟，不是再开阶段 C。
+**失败路径已经收束。** owner 在 2026-10-26（Asia/Shanghai）选定 **(a)**，接受薄封装：**人维护事实圣经，AI 按圣经写**。阶段 C 以召回失败关闭，作为「需要更多人在环」的记录。不再加题材专用检查器。同日切片 1（#17，`196f5379`）把摘录和锚接到审查 state，没有重记 D1–D5，也没有改 SettlementExtractor。切片 2（#18，`11c4c761`）让写作和修订读已批准计划卡，并在 human gate 上标出 `plan_fact_gate` 失败；正文抽取仍不进 canon。切片 3 的真实 LLM Ch1–3 发布冒烟（main `11c4c761`）**fail**：只有第 1 章 accepted，第 2、3 章卡在 `settlement_review`（摘要缺主角决策/认知变化）。正式发布标签挡住。技术预览 / release-candidate 口径不变。下一刀只修这一处，不是再开阶段 C。
 
 ## 非目标
 
@@ -121,4 +122,4 @@ A 的退出条件是这三项各自有可复现的测试或记录，不是「顺
 
 A 完成，并且 B 的三道门有记录。C 要么在不加题材规则的情况下过同一组门，要么写下薄封装退路。两条都算这条路线有了结论。结论可以是「plan-first 够用」，也可以是「必须更多人在环」；不能是「再加一批检查规则继续抽」。
 
-2026-10-26 owner 选定 (a)。都市灵异活路径没有过同一组门（召回 1/5）。薄封装成为操作结论：人维护事实圣经，AI 按圣经写。这条路线已经收束，结论是「必须更多人在环」。阶段 C 已关闭。不再加题材专用检查器。切片 1 已把摘录和锚接到审查 state，没有重记召回。切片 2 已把已批准卡接到写作和修订，并让 human gate 看见门的失败。下一刀是切片 3 发布核对与冒烟。
+2026-10-26 owner 选定 (a)。都市灵异活路径没有过同一组门（召回 1/5）。薄封装成为操作结论：人维护事实圣经，AI 按圣经写。这条路线已经收束，结论是「必须更多人在环」。阶段 C 已关闭。不再加题材专用检查器。切片 1 已在 main（#17，`196f5379`），把摘录和锚接到审查 state，没有重记召回。切片 2 已在 main（#18，`11c4c761`），把已批准卡接到写作和修订，并让 human gate 看见门的失败。切片 3 发布冒烟 **fail**（main `11c4c761`，只有第 1 章 accepted）。正式发布标签挡住。技术预览 / release-candidate 口径不变。下一刀只修 `settlement_review` / `summary_writer` 缺的主角决策/认知变化。

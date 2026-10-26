@@ -15,6 +15,8 @@ owner：Bingtuu。目标与非目标以 [ROADMAP-plan-first.md](ROADMAP-plan-fir
 | 都市灵异活路径记录（Phase C 已关闭，退出未过） | [experiments/dushi-plan-gate-rerun-2026-10-25](experiments/dushi-plan-gate-rerun-2026-10-25/README.md)，[gates.md](experiments/dushi-plan-gate-rerun-2026-10-25/gates.md) |
 | 现有结算路径（先别改权威） | `src/songyan/agents/settlement_extractor/`。它仍写原结算库，不写 plan canon |
 | Phase A 已完成 | B7 #5、B5 #6、B18 #8。不要再开这三刀 |
+| 切片 3 的发布冒烟（fail） | [release-checklist.md](release-checklist.md)。2026-10-26 真实 LLM Ch1–3 在 main `11c4c761` 上 **fail**。正式发布标签挡住。产物在维护者 box，不在仓库 |
+| 下一刀要看的摘要缺口 | `src/songyan/agents/summary_writer.py`（「缺少主角决策/认知变化」）；`settlement_review` 在 `src/songyan/workflows/_nodes.py` |
 
 证据数字只用来自 2026-10 的 owner 笔记，外加 box 上已经测得的召回、人工与成本：调研报告（2026-10-13）、canon-v4 对照、规则年代 Ch1–3 审稿、bug 记录（`257314c`）、v1 成本记录、霞飞路重跑 5/5 与阶段 B 人工/成本（[experiments/xiafei-plan-gate-rerun-2026-10-25](experiments/xiafei-plan-gate-rerun-2026-10-25/README.md)，[gates.md](experiments/xiafei-plan-gate-rerun-2026-10-25/gates.md)）、都市灵异活路径 1/5 与阶段 C 人工/成本（[experiments/dushi-plan-gate-rerun-2026-10-25](experiments/dushi-plan-gate-rerun-2026-10-25/README.md)，[gates.md](experiments/dushi-plan-gate-rerun-2026-10-25/gates.md)）。不要在切片里再补一套新的评测数字。
 
@@ -34,11 +36,13 @@ owner：Bingtuu。目标与非目标以 [ROADMAP-plan-first.md](ROADMAP-plan-fir
 
 **阶段 C 以召回失败关闭，退出条件未满足。** 这是「需要更多人在环」的记录。操作结论仍是薄封装：人维护事实圣经，AI 按圣经写。
 
-**切片 1 已完成（2026-10-26，owner Bingtuu 下令加速，只做接线）。** `rule_auditor_node` 在审查 state 没有同时钉住 `_plan_attribute_extracts` 和 `_plan_claim_anchors` 时，从本章正文和已批准卡读出类型化摘录和主张锚，写回这两项，再交给原来的 `run_plan_fact_gate`。下一轮修订按新稿重读，不沿用上一稿。调用方已经同时放了列表时，沿用调用方的列表。门仍不从正文发明摘录，也不写 canon。没有新的题材检查器。没有重记 D1–D5。没有改 SettlementExtractor，没有改质量门路由，没有写《规则年代》。
+**切片 1 已在 main（2026-10-26，#17，`196f5379`，owner Bingtuu 下令加速，只做接线）。** `rule_auditor_node` 在审查 state 没有同时钉住 `_plan_attribute_extracts` 和 `_plan_claim_anchors` 时，从本章正文和已批准卡读出类型化摘录和主张锚，写回这两项，再交给原来的 `run_plan_fact_gate`。下一轮修订按新稿重读，不沿用上一稿。调用方已经同时放了列表时，沿用调用方的列表。门仍不从正文发明摘录，也不写 canon。没有新的题材检查器。没有重记 D1–D5。没有改 SettlementExtractor，没有改质量门路由，没有写《规则年代》。
 
-**切片 2 已完成（2026-10-26，薄封装运行时）。** 写章上下文只读当前项目、当前章的已批准计划卡，放进 `ContextPackage.plan_bible`。Writer 和修订提示词把这段放在最前面，当作本章事实圣经。待审卡、别的章、别的项目、窗口盖不住本章的属性，不进圣经。审查仍把正文摘录留在 `_plan_attribute_extracts` / `_plan_claim_anchors`，不把它们写成 plan canon，也不自动送进待审队列。人批准仍是进 canon 的唯一入口。`plan_fact_gate` 没过时，失败条目出现在 human gate 的 `plan_fact_gate_failures`，并记在 `plan_fact_gate.failures` 日志里。接受、退回、质量门的路由都不变。SettlementExtractor 仍只写原结算库。没有新的题材检查器。没有重记 D1–D5。没有发版，没有写《规则年代》。
+**切片 2 已在 main（2026-10-26，#18，`11c4c761`，薄封装运行时：已批准计划卡作为本章事实圣经）。** 写章上下文只读当前项目、当前章的已批准计划卡，放进 `ContextPackage.plan_bible`。Writer 和修订提示词把这段放在最前面，当作本章事实圣经。待审卡、别的章、别的项目、窗口盖不住本章的属性，不进圣经。审查仍把正文摘录留在 `_plan_attribute_extracts` / `_plan_claim_anchors`，不把它们写成 plan canon，也不自动送进待审队列。人批准仍是进 canon 的唯一入口。`plan_fact_gate` 没过时，失败条目出现在 human gate 的 `plan_fact_gate_failures`，并记在 `plan_fact_gate.failures` 日志里。接受、退回、质量门的路由都不变。SettlementExtractor 仍只写原结算库。没有新的题材检查器。没有重记 D1–D5。没有发版，没有写《规则年代》。
 
-**下一刀是切片 3：发布核对与冒烟。** 核对写章会读已批准圣经、审查失败对人可见、正文抽取不进 canon。不要加题材规则，不要改 SettlementExtractor 的权威，不要重记阶段 C 的召回。
+**切片 3 已有记录（2026-10-26，Asia/Shanghai，真实 LLM Ch1–3 发布冒烟，main `11c4c761`）：fail。** 维护者 box 上的科幻（scifi）项目 `fdfc04b0771c493b83ec67750325ade7`。主运行 `run-e98414fc`。只重跑第 2 章的运行是 `run-3defb98a`。只有第 1 章 accepted。第 2、3 章失败在 `settlement_review`，摘要缺少主角决策/认知变化。主运行非零退出：`AutoHaltException`，ContextEmergency 连续出现在第 1–3 章。Owner 口径合计 ¥0.874（ch1 ¥0.208 / ch2 ¥0.406，含这次重跑 / ch3 ¥0.260）。停的阈值 ¥7.66 没有碰到。部分通过：doctor、create-project、report、bundle 卫生（没有 `.env`、密钥、书稿）、导出 1 个 Markdown。产物在维护者 box，不在本仓库：`/workspace/songyan-release-smoke-out/smoke_result.json`、`notes.md`，以及 `smoke_result` 里记下的 reports、bundles、exports。正式发布标签挡住。公开的技术预览 / release-candidate 口径不变。本记录不改生产代码。
+
+**下一刀：修 `settlement_review` / `summary_writer`，补上摘要里缺的主角决策/认知变化。** 这一处挡住了科幻第 2、3 章的接受，发布冒烟因此 fail，正式标签继续挡住。本文件已经把这次失败记成已知的发布阻断。下一刀只改这一处，不要再写一篇同样的记录。看 `src/songyan/agents/summary_writer.py` 的「缺少主角决策/认知变化」，以及 `src/songyan/workflows/_nodes.py` 里把章节收成 `settlement_review` 的路径。不要加题材检查器，不要重记阶段 B/C 的召回，不要在同一刀里再记一套新的冒烟数字，不要打发布标签。
 
 ## 怎么报告
 
