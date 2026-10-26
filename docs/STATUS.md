@@ -72,3 +72,5 @@ These historical validation records are not part of the public main documentatio
 1. Rerun [Release Checklist](release-checklist.md) on the target release commit.
 2. Record real LLM Ch1-3 smoke results in release notes.
 3. Confirm no `.env`, local DB, logs, backups, bundles or private manuscripts are staged.
+
+Real LLM Ch1-3 smoke is running on the maintainer box. Results are pending and will be recorded when available.

@@ -15,6 +15,7 @@ owner：Bingtuu。目标与非目标以 [ROADMAP-plan-first.md](ROADMAP-plan-fir
 | 都市灵异活路径记录（Phase C 已关闭，退出未过） | [experiments/dushi-plan-gate-rerun-2026-10-25](experiments/dushi-plan-gate-rerun-2026-10-25/README.md)，[gates.md](experiments/dushi-plan-gate-rerun-2026-10-25/gates.md) |
 | 现有结算路径（先别改权威） | `src/songyan/agents/settlement_extractor/`。它仍写原结算库，不写 plan canon |
 | Phase A 已完成 | B7 #5、B5 #6、B18 #8。不要再开这三刀 |
+| 切片 3 的发布核对 | [release-checklist.md](release-checklist.md)。真实 LLM Ch1–3 冒烟在维护者 box 上，结果待记 |
 
 证据数字只用来自 2026-10 的 owner 笔记，外加 box 上已经测得的召回、人工与成本：调研报告（2026-10-13）、canon-v4 对照、规则年代 Ch1–3 审稿、bug 记录（`257314c`）、v1 成本记录、霞飞路重跑 5/5 与阶段 B 人工/成本（[experiments/xiafei-plan-gate-rerun-2026-10-25](experiments/xiafei-plan-gate-rerun-2026-10-25/README.md)，[gates.md](experiments/xiafei-plan-gate-rerun-2026-10-25/gates.md)）、都市灵异活路径 1/5 与阶段 C 人工/成本（[experiments/dushi-plan-gate-rerun-2026-10-25](experiments/dushi-plan-gate-rerun-2026-10-25/README.md)，[gates.md](experiments/dushi-plan-gate-rerun-2026-10-25/gates.md)）。不要在切片里再补一套新的评测数字。
 
@@ -34,11 +35,11 @@ owner：Bingtuu。目标与非目标以 [ROADMAP-plan-first.md](ROADMAP-plan-fir
 
 **阶段 C 以召回失败关闭，退出条件未满足。** 这是「需要更多人在环」的记录。操作结论仍是薄封装：人维护事实圣经，AI 按圣经写。
 
-**切片 1 已完成（2026-10-26，owner Bingtuu 下令加速，只做接线）。** `rule_auditor_node` 在审查 state 没有同时钉住 `_plan_attribute_extracts` 和 `_plan_claim_anchors` 时，从本章正文和已批准卡读出类型化摘录和主张锚，写回这两项，再交给原来的 `run_plan_fact_gate`。下一轮修订按新稿重读，不沿用上一稿。调用方已经同时放了列表时，沿用调用方的列表。门仍不从正文发明摘录，也不写 canon。没有新的题材检查器。没有重记 D1–D5。没有改 SettlementExtractor，没有改质量门路由，没有写《规则年代》。
+**切片 1 已在 main（2026-10-26，#17，`196f5379`，owner Bingtuu 下令加速，只做接线）。** `rule_auditor_node` 在审查 state 没有同时钉住 `_plan_attribute_extracts` 和 `_plan_claim_anchors` 时，从本章正文和已批准卡读出类型化摘录和主张锚，写回这两项，再交给原来的 `run_plan_fact_gate`。下一轮修订按新稿重读，不沿用上一稿。调用方已经同时放了列表时，沿用调用方的列表。门仍不从正文发明摘录，也不写 canon。没有新的题材检查器。没有重记 D1–D5。没有改 SettlementExtractor，没有改质量门路由，没有写《规则年代》。
 
-**切片 2 已完成（2026-10-26，薄封装运行时）。** 写章上下文只读当前项目、当前章的已批准计划卡，放进 `ContextPackage.plan_bible`。Writer 和修订提示词把这段放在最前面，当作本章事实圣经。待审卡、别的章、别的项目、窗口盖不住本章的属性，不进圣经。审查仍把正文摘录留在 `_plan_attribute_extracts` / `_plan_claim_anchors`，不把它们写成 plan canon，也不自动送进待审队列。人批准仍是进 canon 的唯一入口。`plan_fact_gate` 没过时，失败条目出现在 human gate 的 `plan_fact_gate_failures`，并记在 `plan_fact_gate.failures` 日志里。接受、退回、质量门的路由都不变。SettlementExtractor 仍只写原结算库。没有新的题材检查器。没有重记 D1–D5。没有发版，没有写《规则年代》。
+**切片 2 已在 main（2026-10-26，#18，`11c4c761`，薄封装运行时：已批准计划卡作为本章事实圣经）。** 写章上下文只读当前项目、当前章的已批准计划卡，放进 `ContextPackage.plan_bible`。Writer 和修订提示词把这段放在最前面，当作本章事实圣经。待审卡、别的章、别的项目、窗口盖不住本章的属性，不进圣经。审查仍把正文摘录留在 `_plan_attribute_extracts` / `_plan_claim_anchors`，不把它们写成 plan canon，也不自动送进待审队列。人批准仍是进 canon 的唯一入口。`plan_fact_gate` 没过时，失败条目出现在 human gate 的 `plan_fact_gate_failures`，并记在 `plan_fact_gate.failures` 日志里。接受、退回、质量门的路由都不变。SettlementExtractor 仍只写原结算库。没有新的题材检查器。没有重记 D1–D5。没有发版，没有写《规则年代》。
 
-**下一刀是切片 3：发布核对与冒烟。** 核对写章会读已批准圣经、审查失败对人可见、正文抽取不进 canon。不要加题材规则，不要改 SettlementExtractor 的权威，不要重记阶段 C 的召回。
+**下一刀是切片 3：发布清单核对，加上真实 LLM 的 Ch1–3 冒烟。** 按 [release-checklist.md](release-checklist.md) 核对，并在维护者的 box 上跑真实 LLM 的 Ch1–3。这次冒烟正在那台机器上跑。结果还没回来，有了再记进发布记录。本文件不写通过或失败，不写成本，不写哪一章被接受。核对时仍要确认写章会读已批准圣经、审查失败对人可见、正文抽取不进 canon。不要加题材规则，不要改 SettlementExtractor 的权威，不要重记阶段 C 的召回，不要从本记录打发布标签。
 
 ## 怎么报告
 
