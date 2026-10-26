@@ -4,7 +4,7 @@
 
 ## 当前结论
 
-当前代码已具备面向外部技术用户的 technical preview / release-candidate 条件。正式开源可用版本发布前，维护者仍应在目标 release commit 上重新执行本清单，并确认真实 LLM Ch1-3 smoke 的成本和结果可接受。
+当前代码已具备面向外部技术用户的 technical preview / release-candidate 条件。2026-10-26（Asia/Shanghai）在 main `eaa6bef7721e43ccd1b53be2280076a355842d9b`（PR #20 squash）上的真实 LLM Ch1–3 smoke **PASS**，技术预览 / release-candidate 可以带着这份证据往下走。正式发布标签仍由维护者决定，本清单不打 tag。此前在 `11c4c761`（PR #19 所记）上的同项 smoke **fail**，留作历史。
 
 ## 硬门槛
 
@@ -82,6 +82,15 @@ songyan export --project-id <project_id> --chapters 1-3 --format md --output exp
 - `export` 至少导出一个 Markdown 或 txt 文件。
 
 如果没有真实 LLM 凭证或维护者不希望消耗预算，该项不能伪造为真实运行；应在 release notes 中标注为未执行或使用替代 smoke。
+
+### 已记录的 Ch1–3
+
+| 日期（Asia/Shanghai） | main | 结果 | 标识 |
+|----------------------|------|:----:|------|
+| 2026-10-26 | `11c4c761`（PR #19 记录） | **fail**（历史） | 项目 `fdfc04b0771c493b83ec67750325ade7`。主运行 `run-e98414fc` 非零退出（`AutoHaltException`，ContextEmergency 连续 Ch1–3）。只有 Ch1 accepted。Ch2、Ch3 失败在 `settlement_review`（摘要缺主角决策/认知变化）。Ch2 另有重跑 `run-3defb98a`。Owner 口径合计 ¥0.874。停的阈值 ¥7.66 没碰到。 |
+| 2026-10-26 | `eaa6bef7721e43ccd1b53be2280076a355842d9b`（PR #20 squash） | **PASS** | scifi 模板项目 `5a7f3a4263bc499d95109ea460aa79df`（create-project 标题《轨道蜃景》）。`run-552b2c04` 退出码 0，status=completed。Ch1–3 全部 accepted。没有 `settlement_review` / missing_facts 失败。ContextEmergency 只有连续警告，没有 AutoHalt。Owner 口径合计 ¥1.035（输入 ¥2/M、输出 ¥8/M），单章最高约 ¥0.400。停的阈值 ¥7.66 没碰到。 |
+
+`eaa6bef` 这一 tip 的正式标签冒烟门已经满足。不再开 `settlement_review` 修复刀。证据在维护者 box，不提交 DB、日志或书稿；box 路径只写在 [HANDOFF-mew.md](HANDOFF-mew.md)。正式发布标签仍由维护者决定。
 
 ## 发布前人工检查
 

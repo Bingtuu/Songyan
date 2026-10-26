@@ -15,8 +15,9 @@ owner：Bingtuu。目标与非目标以 [ROADMAP-plan-first.md](ROADMAP-plan-fir
 | 都市灵异活路径记录（Phase C 已关闭，退出未过） | [experiments/dushi-plan-gate-rerun-2026-10-25](experiments/dushi-plan-gate-rerun-2026-10-25/README.md)，[gates.md](experiments/dushi-plan-gate-rerun-2026-10-25/gates.md) |
 | 现有结算路径（先别改权威） | `src/songyan/agents/settlement_extractor/`。它仍写原结算库，不写 plan canon |
 | Phase A 已完成 | B7 #5、B5 #6、B18 #8。不要再开这三刀 |
-| 切片 3 的发布冒烟（fail） | [release-checklist.md](release-checklist.md)。2026-10-26 真实 LLM Ch1–3 在 main `11c4c761` 上 **fail**。正式发布标签挡住。产物在维护者 box，不在仓库 |
-| 摘要缺口的修复 | `src/songyan/agents/summary_writer.py` 与 `src/songyan/workflows/_nodes.py`。正文已有主角决策/认知变化时写回摘要，不再误入 `settlement_review` |
+| 切片 3 的发布冒烟（fail，历史） | [release-checklist.md](release-checklist.md)。2026-10-26 真实 LLM Ch1–3 在 main `11c4c761`（PR #19）上 **fail**。产物在维护者 box，不在仓库 |
+| 切片 3 重跑（PASS） | 2026-10-26 Asia/Shanghai，main `eaa6bef`（PR #20）。box：`/workspace/songyan-release-smoke-out-rerun20/notes.md`、`/workspace/songyan-release-smoke-out-rerun20/smoke_result.json`。正式标签仍由维护者决定 |
+| 摘要缺口的修复（已在 main，#20） | `src/songyan/agents/summary_writer.py` 与 `src/songyan/workflows/_nodes.py`。正文已有主角决策/认知变化时写回摘要，不再误入 `settlement_review`。不是下一刀 |
 
 证据数字只用来自 2026-10 的 owner 笔记，外加 box 上已经测得的召回、人工与成本：调研报告（2026-10-13）、canon-v4 对照、规则年代 Ch1–3 审稿、bug 记录（`257314c`）、v1 成本记录、霞飞路重跑 5/5 与阶段 B 人工/成本（[experiments/xiafei-plan-gate-rerun-2026-10-25](experiments/xiafei-plan-gate-rerun-2026-10-25/README.md)，[gates.md](experiments/xiafei-plan-gate-rerun-2026-10-25/gates.md)）、都市灵异活路径 1/5 与阶段 C 人工/成本（[experiments/dushi-plan-gate-rerun-2026-10-25](experiments/dushi-plan-gate-rerun-2026-10-25/README.md)，[gates.md](experiments/dushi-plan-gate-rerun-2026-10-25/gates.md)）。不要在切片里再补一套新的评测数字。
 
@@ -40,11 +41,13 @@ owner：Bingtuu。目标与非目标以 [ROADMAP-plan-first.md](ROADMAP-plan-fir
 
 **切片 2 已在 main（2026-10-26，#18，`11c4c761`，薄封装运行时：已批准计划卡作为本章事实圣经）。** 写章上下文只读当前项目、当前章的已批准计划卡，放进 `ContextPackage.plan_bible`。Writer 和修订提示词把这段放在最前面，当作本章事实圣经。待审卡、别的章、别的项目、窗口盖不住本章的属性，不进圣经。审查仍把正文摘录留在 `_plan_attribute_extracts` / `_plan_claim_anchors`，不把它们写成 plan canon，也不自动送进待审队列。人批准仍是进 canon 的唯一入口。`plan_fact_gate` 没过时，失败条目出现在 human gate 的 `plan_fact_gate_failures`，并记在 `plan_fact_gate.failures` 日志里。接受、退回、质量门的路由都不变。SettlementExtractor 仍只写原结算库。没有新的题材检查器。没有重记 D1–D5。没有发版，没有写《规则年代》。
 
-**切片 3 已有记录（2026-10-26，Asia/Shanghai，真实 LLM Ch1–3 发布冒烟，main `11c4c761`）：fail。** 维护者 box 上的科幻（scifi）项目 `fdfc04b0771c493b83ec67750325ade7`。主运行 `run-e98414fc`。只重跑第 2 章的运行是 `run-3defb98a`。只有第 1 章 accepted。第 2、3 章失败在 `settlement_review`，摘要缺少主角决策/认知变化。主运行非零退出：`AutoHaltException`，ContextEmergency 连续出现在第 1–3 章。Owner 口径合计 ¥0.874（ch1 ¥0.208 / ch2 ¥0.406，含这次重跑 / ch3 ¥0.260）。停的阈值 ¥7.66 没有碰到。部分通过：doctor、create-project、report、bundle 卫生（没有 `.env`、密钥、书稿）、导出 1 个 Markdown。产物在维护者 box，不在本仓库：`/workspace/songyan-release-smoke-out/smoke_result.json`、`notes.md`，以及 `smoke_result` 里记下的 reports、bundles、exports。正式发布标签挡住。公开的技术预览 / release-candidate 口径不变。
+**切片 3 已有记录（2026-10-26，Asia/Shanghai，真实 LLM Ch1–3 发布冒烟，main `11c4c761`）：fail。** 维护者 box 上的科幻（scifi）项目 `fdfc04b0771c493b83ec67750325ade7`。主运行 `run-e98414fc`。只重跑第 2 章的运行是 `run-3defb98a`。只有第 1 章 accepted。第 2、3 章失败在 `settlement_review`，摘要缺少主角决策/认知变化。主运行非零退出：`AutoHaltException`，ContextEmergency 连续出现在第 1–3 章。Owner 口径合计 ¥0.874（ch1 ¥0.208 / ch2 ¥0.406，含这次重跑 / ch3 ¥0.260）。停的阈值 ¥7.66 没有碰到。部分通过：doctor、create-project、report、bundle 卫生（没有 `.env`、密钥、书稿）、导出 1 个 Markdown。产物在维护者 box，不在本仓库：`/workspace/songyan-release-smoke-out/smoke_result.json`、`notes.md`，以及 `smoke_result` 里记下的 reports、bundles、exports。当时正式发布标签因此挡住。下面的重跑是后来的记录。
 
-**这一刀修的是上面挡住第 2、3 章的摘要事实检查。** 检查器原先只把「沈砚」和「决定/意识到」一类 tell 动词当成证据，Writer 又禁止在正文里写这些认知动词。项目主角名现在参与归因；正文里已经写出的决策或认知变化会写回摘要，不再因此误入 `settlement_review`。质量门路由没改。SettlementExtractor 仍只写原结算库。不另记一套冒烟数字，不打发布标签。
+**摘要缺口已在 main（2026-10-26，#20，`eaa6bef7721e43ccd1b53be2280076a355842d9b`）。** 检查器原先只把「沈砚」和「决定/意识到」一类 tell 动词当成证据，Writer 又禁止在正文里写这些认知动词。项目主角名现在参与归因；正文里已经写出的决策或认知变化会写回摘要，不再因此误入 `settlement_review`。质量门路由没改。SettlementExtractor 仍只写原结算库。这一刀不打发布标签。
 
-**下一刀是重跑 release LLM smoke。** 在这刀合入后的 main 上，按 `docs/release-checklist.md` 重跑模板 scifi 的真实 LLM Ch1–3，确认 `run` 退出码为 0 且三章 accepted。不要加题材规则，不要改 SettlementExtractor 的权威，不要重记阶段 C 的召回。
+**重跑已完成（2026-10-26，Asia/Shanghai，真实 LLM Ch1–3 发布冒烟，main `eaa6bef7721e43ccd1b53be2280076a355842d9b`，PR #20 squash）：PASS。** 维护者 box 上的 scifi 模板项目 `5a7f3a4263bc499d95109ea460aa79df`，create-project 给出的标题是《轨道蜃景》。`run-552b2c04` 退出码 0，status=completed。Ch1–3 全部 accepted。没有 `settlement_review` / missing_facts 失败。ContextEmergency 只有连续警告，没有 AutoHalt。Owner 口径合计 ¥1.035（输入 ¥2/M、输出 ¥8/M），单章最高约 ¥0.400。停的阈值 ¥7.66 没有碰到。产物在维护者 box，不在本仓库：`/workspace/songyan-release-smoke-out-rerun20/notes.md`、`/workspace/songyan-release-smoke-out-rerun20/smoke_result.json`。不提交 DB、日志或书稿。上面 `11c4c761` / PR #19 的 fail 留下，不抹掉。正式发布标签仍由维护者决定。技术预览 / release-candidate 可以带着这份证据往下走。
+
+**下一刀不是 `settlement_review` 修复，也不是再跑一遍冒烟。** 这个 tip 的正式标签冒烟门已经满足。不要打发布标签。不要加题材规则，不要改 SettlementExtractor 的权威，不要重记阶段 C 的召回。
 
 ## 怎么报告
 
