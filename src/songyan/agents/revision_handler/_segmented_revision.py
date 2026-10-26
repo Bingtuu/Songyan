@@ -16,6 +16,7 @@ from structlog.contextvars import bind_contextvars
 from songyan.agents.writer import _strip_scene_marker_lines
 from songyan.llm.client import call_llm
 from songyan.models import Patch, ReviewIssue, RevisionOutput, RuleAuditResult
+from songyan.plan_checks.bible import wrap_writing_prompt
 from songyan.utils.scene_parser import SCENE_PATTERN, _merge_short_blocks
 from songyan.utils.token_estimator import truncate_to_tokens
 from songyan.utils.word_count import count_chinese_words
@@ -175,6 +176,7 @@ def _render_scene_prompt(
     scene_content: str,
     issues: list[ReviewIssue],
     protected_fissures: list[str],
+    plan_bible: str = "",
 ) -> str:
     """渲染单个 scene 的修订 Prompt."""
     scene_content = truncate_to_tokens(scene_content, MAX_SCENE_CONTENT_TOKENS)
@@ -198,7 +200,7 @@ def _render_scene_prompt(
 5. 输出格式：直接输出正文，不要用 markdown 代码块包裹
 6. 不要输出 `### Scene N`、`Scene 1:`、`场景一` 等任何场景标题或编号
 """
-    return prompt
+    return wrap_writing_prompt(prompt, plan_bible)
 
 
 def _compute_preservation_ratio(original: str, revised: str) -> float:
@@ -213,6 +215,7 @@ async def _revise_single_scene(
     issues: list[ReviewIssue],
     protected_fissures: list[str],
     temperature: float = 0.3,
+    plan_bible: str = "",
 ) -> tuple[str, list[Patch], bool]:
     """对单个 scene 调用 LLM 修订.
 
@@ -221,7 +224,9 @@ async def _revise_single_scene(
         fallback=True 表示保留率 < MIN_PRESERVATION_RATIO，已回退到原始内容
     """
     bind_contextvars(agent="revision_handler")
-    prompt = _render_scene_prompt(scene["content"], issues, protected_fissures)
+    prompt = _render_scene_prompt(
+        scene["content"], issues, protected_fissures, plan_bible=plan_bible
+    )
     llm_response = await call_llm(prompt, temperature=temperature)
 
     # 清理 LLM 输出（去除代码块标记等）
@@ -270,6 +275,7 @@ async def run_segmented_revision(
     revised_rule_result: RuleAuditResult | None = None,
     target_word_count: int = 3000,
     chapter_number: int = 0,
+    plan_bible: str = "",
 ) -> tuple[RevisionOutput, str]:
     """按 scene 分段修订主入口.
 
@@ -342,7 +348,7 @@ async def run_segmented_revision(
             continue
 
         revised_scene, patches, fallback = await _revise_single_scene(
-            scene, scene_issues, protected, temperature
+            scene, scene_issues, protected, temperature, plan_bible=plan_bible
         )
         revised_scenes.append(revised_scene)
         all_patches.extend(patches)

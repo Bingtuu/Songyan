@@ -210,6 +210,9 @@ class ContextPackage(BaseModel):
     # === 人类指令（HITL）===
     human_instructions: list[dict[str, Any]] = Field(default_factory=list)
 
+    # 本章已批准计划卡。空字符串表示这一章没有事实圣经。
+    plan_bible: str = ""
+
     # === V12 startup beat sheet（Writer 正向施工单）===
     startup_beat_sheet: list[BeatSpec] = Field(default_factory=list)
 

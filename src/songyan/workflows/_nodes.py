@@ -73,6 +73,10 @@ from songyan.models import (
     StateSettlement,
 )
 from songyan.models.rag import RAGConfig as _RAGConfig
+from songyan.plan_checks.bible import (
+    load_chapter_plan_bible,
+    plan_fact_gate_failure_lines,
+)
 from songyan.plan_checks.gate import (
     claim_anchors_from_state,
     plan_attribute_extracts_from_state,
@@ -692,6 +696,16 @@ async def _assemble_context_from_state(
     )
     ctx.human_instructions = state.get("human_instructions", [])
     _inject_startup_beat_sheet_from_runtime(ctx, state)
+    project_id = state.get("project_id")
+    chapter_number = state.get("chapter_number")
+    if (
+        isinstance(project_id, str)
+        and project_id.strip()
+        and isinstance(chapter_number, int)
+        and chapter_number >= 1
+    ):
+        bible = await load_chapter_plan_bible(project_id, chapter_number)
+        ctx.plan_bible = bible.text
     return ctx
 
 
@@ -1619,6 +1633,14 @@ async def rule_auditor_node(state: dict[str, Any]) -> dict[str, Any]:
         extracts=plan_attribute_extracts_from_state(observed_extracts),
         anchors=claim_anchors_from_state(observed_anchors),
     )
+    failure_lines = plan_fact_gate_failure_lines(plan_gate)
+    if failure_lines:
+        logger.info(
+            "plan_fact_gate.failures",
+            project_id=state["project_id"],
+            chapter=state["chapter_number"],
+            failures=failure_lines,
+        )
 
     project = await load_project(state["project_id"])
     genre = load_genre_profile(project.genre_id) if project else None
@@ -2286,6 +2308,17 @@ async def revision_handler_node(state: dict[str, Any]) -> dict[str, Any]:
         else None
     )
 
+    plan_bible = ""
+    project_id = state.get("project_id")
+    chapter_number = state.get("chapter_number")
+    if (
+        isinstance(project_id, str)
+        and project_id.strip()
+        and isinstance(chapter_number, int)
+        and chapter_number >= 1
+    ):
+        plan_bible = (await load_chapter_plan_bible(project_id, chapter_number)).text
+
     # Task 128c: 传入 score_card，使 RevisionHandler 能识别 readability 问题并走专精路径
     output, revised_content = await run_revision(
         content=version.content,
@@ -2296,6 +2329,7 @@ async def revision_handler_node(state: dict[str, Any]) -> dict[str, Any]:
         chapter_number=state["chapter_number"],
         score_card=state.get("_score_card"),
         mode_profile=mode_profile,
+        plan_bible=plan_bible,
     )
 
     # 截断检测：若内容保留率 < 50%，跳过 revision，回退到原始版本
@@ -2689,6 +2723,14 @@ async def human_gate_node(state: dict[str, Any]) -> dict[str, Any]:
 
     gate_type = state.get("_current_gate") or "human_confirm"
     existing_instructions = state.get("human_instructions", [])
+    plan_fact_failures = plan_fact_gate_failure_lines(state.get("_plan_fact_gate"))
+    if plan_fact_failures:
+        logger.info(
+            "human_gate.plan_fact_gate_failures",
+            project_id=state.get("project_id"),
+            chapter_number=state.get("chapter_number"),
+            failures=plan_fact_failures,
+        )
 
     decision = interrupt(
         {
@@ -2699,6 +2741,7 @@ async def human_gate_node(state: dict[str, Any]) -> dict[str, Any]:
             ),
             "options": ["accept", "edit", "reject", "back"],
             "human_instructions": existing_instructions,
+            "plan_fact_gate_failures": plan_fact_failures,
         }
     )
 

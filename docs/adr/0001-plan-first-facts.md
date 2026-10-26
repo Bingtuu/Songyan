@@ -67,3 +67,5 @@ Phase A 已合入（B7 #5、B5 #6、B18 #8）。本切片只加表和读写：
 2026-10-25 第二刀补上主张文本和登记用语两列（`_migrate_plan_fact_check_fields`），并载入 `xiafei-jiuan` 的批准卡。检查器在 `src/songyan/plan_checks/`，不写 canon。
 
 2026-10-25 第三刀把这三项检查接到写章审查（`rule_auditor_node` 读到正文版本之后）。门只读当前项目 `approval_status=approved` 的卡，默认用确定性主张锚，不调用模型。结构化摘录和主张锚由调用方提供，不从正文写回 plan canon。结算权威仍是 SettlementExtractor。尚未重跑霞飞路。
+
+2026-10-26 薄封装运行时：写章上下文和修订提示词只读本章已批准卡（`load_chapter_plan_bible`）。待审行不进入这段圣经。正文摘录仍停在审查 state，不自动写入 plan 表，也不自动变成待审行。`plan_fact_gate` 的失败条目出现在 human gate 的 `plan_fact_gate_failures`。质量门路由和 SettlementExtractor 的结算库写法都没有改。

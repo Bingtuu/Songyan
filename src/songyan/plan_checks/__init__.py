@@ -2,10 +2,17 @@
 
 These functions compare one chapter to approved plan cards. They do not
 write canon and do not read settlement tables. ``run_plan_fact_gate`` is
-the read-only entry the chapter review path calls. SettlementExtractor
-remains the writer of the old settlement database.
+the read-only entry the chapter review path calls.
+``load_chapter_plan_bible`` is the read the writer and revision prompts
+use. SettlementExtractor remains the writer of the old settlement database.
 """
 
+from songyan.plan_checks.bible import (
+    ChapterPlanBible,
+    load_chapter_plan_bible,
+    plan_fact_gate_failure_lines,
+    wrap_writing_prompt,
+)
 from songyan.plan_checks.claim_check import (
     AnchoredClaimJudge,
     ClaimAnchor,
@@ -34,6 +41,7 @@ from songyan.plan_checks.typed_attributes import (
 __all__ = [
     "AnchoredClaimJudge",
     "AttributeExtract",
+    "ChapterPlanBible",
     "AttributeMismatch",
     "ClaimAnchor",
     "ClaimCheckError",
@@ -46,10 +54,13 @@ __all__ = [
     "blocked_rerun_scoreboard",
     "check_must_mention",
     "compare_typed_attributes",
+    "load_chapter_plan_bible",
+    "plan_fact_gate_failure_lines",
     "observe_plan_review_inputs",
     "parse_claim_judgment",
     "run_plan_fact_gate",
     "score_chapters",
     "score_reports",
     "verify_chapter_claims",
+    "wrap_writing_prompt",
 ]
