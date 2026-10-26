@@ -69,6 +69,6 @@ These historical validation records are not part of the public main documentatio
 
 ## Maintainer Next Steps
 
-1. Fix `settlement_review` / `summary_writer` so the chapter summary includes 主角决策 and 认知变化. That gap blocked scifi Ch2 and Ch3 on the 2026-10-26 smoke (`11c4c761`, project `fdfc04b0771c493b83ec67750325ade7`). This page already records that failure as a release blocker.
+1. Re-run the real LLM Ch1–3 release smoke after the `settlement_review` / `summary_writer` fact-check fix lands on main. Confirm the run exits 0 and Ch1–3 are accepted. The 2026-10-26 smoke (`11c4c761`, project `fdfc04b0771c493b83ec67750325ade7`) failed because the summary omitted 主角决策/认知变化 that the body already showed. This page already records that failure as a release blocker.
 2. Leave the formal release tag uncut. Technical preview / release-candidate status stays as it is.
 3. Confirm no `.env`, local DB, logs, backups, bundles or private manuscripts are staged.

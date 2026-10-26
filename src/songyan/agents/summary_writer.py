@@ -26,20 +26,79 @@ _MAX_SETTING_FORESHADOWING_LENGTH = 80
 _MAX_EMOTION_TURN_LENGTH = 40
 _MAX_HOOK_LENGTH = 60
 
-#  protagonist 决策变化关键词（用于关键事实验证）
+# 主角决策/认知变化关键词。摘要正文里出现即算覆盖。
 _PROTAGONIST_DECISION_KEYWORDS = [
     "决定", "选择", "意识到", "明白", "决心", "立志", "发誓", "承诺",
     "accept", "decide", "realize", "choose", "determine", "resolve",
 ]
-_PROTAGONIST_DECISION_SUBJECTS = (
-    "主角",
-    "主人公",
-    "沈砚",
-    "他",
-    "她",
-    "我",
+_COGNITION_KEYWORDS = ("意识到", "明白", "realize")
+_DECISION_KEYWORDS = (
+    "决定",
+    "选择",
+    "决心",
+    "立志",
+    "发誓",
+    "承诺",
+    "accept",
+    "decide",
+    "choose",
+    "determine",
+    "resolve",
 )
-_PROTAGONIST_DECISION_CONTEXT_NAMES = ("沈砚", "主角", "主人公")
+# Writer 禁止在正文里写「意识到/明白/知道」，微决策必须写成操作选择。
+# 这些线索对应施工单里的操作选择，不是题材词表。
+_SHOWN_DECISION_CUES = (
+    "没有确认",
+    "不确认",
+    "没有拒绝",
+    "不拒绝",
+    "没有填写",
+    "不填写",
+    "没有关闭",
+    "不关闭",
+    "没有上报",
+    "不上报",
+    "没有打开",
+    "不打开",
+    "没有交出",
+    "不交出",
+    "保存",
+    "留下",
+    "封存",
+    "切断",
+    "关掉",
+    "按下",
+    "改成",
+    "改为",
+    "换成",
+)
+_GLUE_WORDS = (
+    "然后",
+    "便",
+    "就",
+    "才",
+    "仍",
+    "又",
+    "再",
+    "终于",
+    "这才",
+    "还是",
+    "却",
+    "只",
+    "并",
+    "而",
+    "但",
+    "于是",
+    "因此",
+    "所以",
+    "随后",
+    "接着",
+    "仍旧",
+    "依旧",
+)
+_SUBJECT_WINDOW = 40
+_SENTENCE_BREAKS = "。！？\n"
+_CLAUSE_BREAKS = "，,；;"
 
 
 def _build_prompt(content: str, settlement: StateSettlement) -> str:
@@ -190,25 +249,20 @@ def _validate_summary_facts(
     settlement: StateSettlement,
     *,
     content: str = "",
+    protagonist_name: str = "",
 ) -> list[str]:
     """检查 summary 是否覆盖了关键事实.
 
     返回缺失项列表，由 workflow 决定是否进入人工复核。
+    正文里已经出现的主角决策或认知变化算覆盖，避免摘要漏写时误入复核。
     """
     missing: list[str] = []
-    fact_text = "\n".join(
-        [
-            summary.summary,
-            summary.emotional_tone,
-            *summary.key_events,
-            *summary.characters_appeared,
-        ]
-    )
+    fact_text = _summary_fact_text(summary)
 
     # 1. 是否包含 protagonist 决策变化
-    has_decision = _has_decision_signal(fact_text) or _has_protagonist_decision_in_content(
-        content
-    )
+    has_decision = _has_decision_signal(fact_text) or _decision_evidence(
+        content, protagonist_name
+    ) is not None
     if not has_decision:
         missing.append("缺少主角决策/认知变化")
 
@@ -242,45 +296,159 @@ def _has_foreshadowing_in_content(keyword: str, content: str) -> bool:
     return bool(content) and keyword in content
 
 
+def _summary_fact_text(summary: ChapterSummary) -> str:
+    return "\n".join(
+        [
+            summary.summary,
+            summary.emotional_tone,
+            *summary.key_events,
+            *summary.characters_appeared,
+        ]
+    )
+
+
 def _has_decision_signal(text: str) -> bool:
     """Return whether structured summary text contains a decision/cognition signal."""
+    if "主角决策：" in text or "认知变化：" in text:
+        return True
     return any(kw in text for kw in _PROTAGONIST_DECISION_KEYWORDS)
 
 
-def _has_protagonist_decision_in_content(content: str) -> bool:
-    """Return whether chapter content itself contains protagonist decision evidence."""
-    if not content:
-        return False
+def _protagonist_subjects(protagonist_name: str) -> tuple[str, ...]:
+    """Subjects that count as the protagonist. The project name is not hardcoded."""
+    subjects = ["主角", "主人公", "他", "她", "我"]
+    if isinstance(protagonist_name, str):
+        name = protagonist_name.strip()
+        if name and name not in subjects:
+            subjects.insert(0, name)
+    return tuple(subjects)
 
-    for keyword in _PROTAGONIST_DECISION_KEYWORDS:
+
+def _is_glue_clause(clause: str) -> bool:
+    """A clause of only connectives still belongs to the previous subject."""
+    text = clause.strip()
+    if not text:
+        return True
+    for word in sorted(_GLUE_WORDS, key=len, reverse=True):
+        text = text.replace(word, "")
+    return text.strip() == ""
+
+
+def _window_before(content: str, index: int) -> str:
+    start = index
+    lower = max(0, index - _SUBJECT_WINDOW)
+    for cursor in range(index - 1, lower - 1, -1):
+        if content[cursor] in _SENTENCE_BREAKS:
+            break
+        start = cursor
+    return content[start:index]
+
+
+def _attributed_to_protagonist(
+    content: str,
+    index: int,
+    subjects: tuple[str, ...],
+) -> bool:
+    """Attribute a cue to the protagonist without crossing a sentence boundary.
+
+    A comma-clause that is only 「然后/便/就」 still keeps the earlier subject,
+    so 「他在归档界面停留了几秒，然后选择」counts. 「系统决定」does not.
+    """
+    window = _window_before(content, index)
+    clause = window
+    for sep in _CLAUSE_BREAKS:
+        if sep in clause:
+            clause = clause.rsplit(sep, 1)[-1]
+    if _is_glue_clause(clause):
+        clause = window
+    return any(subject and subject in clause for subject in subjects)
+
+
+def _sentence_around(content: str, index: int) -> str:
+    start = -1
+    for cursor in range(index - 1, -1, -1):
+        if content[cursor] in _SENTENCE_BREAKS:
+            start = cursor
+            break
+    end = len(content)
+    for cursor in range(index, len(content)):
+        if content[cursor] in _SENTENCE_BREAKS:
+            end = cursor + 1
+            break
+    sentence = content[start + 1 : end].strip()
+    if len(sentence) > 80:
+        sentence = sentence[:80].rstrip() + "..."
+    return sentence
+
+
+def _first_attributed_hit(
+    content: str,
+    cues: tuple[str, ...],
+    subjects: tuple[str, ...],
+) -> int | None:
+    for cue in cues:
         start = 0
         while True:
-            idx = content.find(keyword, start)
+            idx = content.find(cue, start)
             if idx < 0:
                 break
-            if _content_decision_has_protagonist_context(content, idx):
-                return True
-            start = idx + len(keyword)
-    return False
+            if _attributed_to_protagonist(content, idx, subjects):
+                return idx
+            start = idx + len(cue)
+    return None
 
 
-def _content_decision_has_protagonist_context(content: str, keyword_index: int) -> bool:
-    """Check the local subject around a decision keyword without using LLM judgment."""
-    # Task 225: 局部窗口 8 → 16 字。中文常见"他+状语从句+然后决定/选择"句式
-    # （如"他在归档界面停留了几秒，然后选择了…"），8 字窗口会漏掉主语代词。
-    local_start = max(0, keyword_index - 16)
-    local_subject = content[local_start:keyword_index]
-    if any(subject in local_subject for subject in _PROTAGONIST_DECISION_SUBJECTS):
-        return True
+def _decision_evidence(
+    content: str,
+    protagonist_name: str,
+) -> tuple[str, str] | None:
+    """Return (label, sentence) when the body shows a protagonist decision or cognition."""
+    if not content:
+        return None
+    subjects = _protagonist_subjects(protagonist_name)
+    candidates: list[tuple[str, int]] = []
+    cognition_idx = _first_attributed_hit(content, _COGNITION_KEYWORDS, subjects)
+    decision_idx = _first_attributed_hit(content, _DECISION_KEYWORDS, subjects)
+    shown_idx = _first_attributed_hit(content, _SHOWN_DECISION_CUES, subjects)
+    if cognition_idx is not None:
+        candidates.append(("认知变化", cognition_idx))
+    if decision_idx is not None:
+        candidates.append(("主角决策", decision_idx))
+    if shown_idx is not None:
+        candidates.append(("主角决策", shown_idx))
+    if not candidates:
+        return None
+    label, idx = min(candidates, key=lambda item: item[1])
+    sentence = _sentence_around(content, idx)
+    if not sentence:
+        return None
+    return label, sentence
 
-    context_start = max(0, keyword_index - 80)
-    context = content[context_start:keyword_index]
-    has_protagonist_context = any(name in context for name in _PROTAGONIST_DECISION_CONTEXT_NAMES)
-    has_pronoun_subject = any(
-        pronoun in local_subject
-        for pronoun in ("他", "她", "我")
-    )
-    return has_protagonist_context and has_pronoun_subject
+
+def _record_labeled_fact(summary: ChapterSummary, label: str, text: str) -> None:
+    """Put a required settlement field on the summary the gate and the next chapter read."""
+    cleaned = text.strip().rstrip("。")
+    if not cleaned:
+        return
+    line = f"{label}：{cleaned}"
+    if line not in summary.key_events:
+        summary.key_events.insert(0, line)
+    if f"{label}：" not in summary.summary:
+        summary.summary = f"{line}。{summary.summary}" if summary.summary else line
+
+
+def _backfill_decision_from_content(
+    summary: ChapterSummary,
+    content: str,
+    protagonist_name: str,
+) -> None:
+    if _has_decision_signal(_summary_fact_text(summary)):
+        return
+    found = _decision_evidence(content, protagonist_name)
+    if found is None:
+        return
+    label, sentence = found
+    _record_labeled_fact(summary, label, sentence)
 
 
 def _extract_key_events_from_settlement(settlement: StateSettlement) -> list[str]:
@@ -306,6 +474,7 @@ async def write_chapter_summary(
     db: SummaryRepository,
     *,
     temperature: float = 0.3,
+    protagonist_name: str = "",
 ) -> tuple[str, ChapterSummary]:
     """基于 accepted version + settlement 生成结构化摘要.
 
@@ -328,6 +497,7 @@ async def write_chapter_summary(
         chapter_number=chapter_number,
         db=db,
         temperature=temperature,
+        protagonist_name=protagonist_name,
     )
     return summary_id, summary
 
@@ -340,6 +510,7 @@ async def write_chapter_summary_with_fact_check(
     db: SummaryRepository,
     *,
     temperature: float = 0.3,
+    protagonist_name: str = "",
 ) -> tuple[str, ChapterSummary, list[str]]:
     """Generate a chapter summary and return non-blocking fact-check misses."""
     summary, missing_facts = await generate_chapter_summary_with_fact_check(
@@ -348,6 +519,7 @@ async def write_chapter_summary_with_fact_check(
         project_id=project_id,
         chapter_number=chapter_number,
         temperature=temperature,
+        protagonist_name=protagonist_name,
     )
     summary_id = await save_chapter_summary(
         db=db,
@@ -365,6 +537,7 @@ async def generate_chapter_summary_with_fact_check(
     chapter_number: int,
     *,
     temperature: float = 0.3,
+    protagonist_name: str = "",
 ) -> tuple[ChapterSummary, list[str]]:
     """Generate a chapter summary and fact-check misses without saving it."""
     bind_contextvars(agent="summary_writer")
@@ -379,6 +552,8 @@ async def generate_chapter_summary_with_fact_check(
     characters_appeared = _extract_characters_from_settlement(settlement)
 
     # LLM 可能提供更多 key_events 和 characters，合并去重
+    protagonist_decision = ""
+    cognition_change = ""
     if isinstance(data, dict):
         llm_events = data.get("key_events", [])
         if isinstance(llm_events, list):
@@ -388,6 +563,12 @@ async def generate_chapter_summary_with_fact_check(
             characters_appeared = list(dict.fromkeys(characters_appeared + llm_chars))
         plot_summary = data.get("plot_summary", "")
         emotional_tone = data.get("emotional_tone", "")
+        raw_decision = data.get("protagonist_decision", "")
+        raw_cognition = data.get("cognition_change", "")
+        if isinstance(raw_decision, str):
+            protagonist_decision = raw_decision.strip()
+        if isinstance(raw_cognition, str):
+            cognition_change = raw_cognition.strip()
     else:
         plot_summary = ""
         emotional_tone = ""
@@ -406,9 +587,20 @@ async def generate_chapter_summary_with_fact_check(
         emotional_tone=emotional_tone,
         impact_score=settlement.impact_score,
     )
+    if protagonist_decision:
+        _record_labeled_fact(summary, "主角决策", protagonist_decision)
+    if cognition_change:
+        _record_labeled_fact(summary, "认知变化", cognition_change)
+    # 摘要漏写时，用正文里已经写出的决策/认知补上，再做事实检查。
+    _backfill_decision_from_content(summary, content, protagonist_name)
 
     # Task 110b: 关键事实验证（在模板化之前检查原始 LLM 输出，不阻塞，仅日志）
-    missing_facts = _validate_summary_facts(summary, settlement, content=content)
+    missing_facts = _validate_summary_facts(
+        summary,
+        settlement,
+        content=content,
+        protagonist_name=protagonist_name,
+    )
     if missing_facts:
         logger.warning(
             "summary_writer.missing_facts",

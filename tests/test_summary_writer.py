@@ -11,6 +11,7 @@ from songyan.agents.summary_writer import (
     _build_prompt,
     _normalize_summary,
     _validate_summary_facts,
+    generate_chapter_summary_with_fact_check,
     write_chapter_summary,
     write_chapter_summary_with_fact_check,
 )
@@ -216,7 +217,12 @@ class TestValidateSummaryFacts:
         settlement = StateSettlement()
         content = "沈砚复核完当前数值链。沈砚决定先保存离线记录，再关闭外部同步。"
 
-        missing = _validate_summary_facts(summary, settlement, content=content)
+        missing = _validate_summary_facts(
+            summary,
+            settlement,
+            content=content,
+            protagonist_name="沈砚",
+        )
 
         assert missing == []
 
@@ -407,6 +413,88 @@ class TestValidateSummaryFacts:
 
         assert missing == []
 
+    def test_named_protagonist_decision_counts_when_summary_omits_it(self) -> None:
+        """项目主角名不是硬编码人名时，正文里的决策仍应算覆盖。
+
+        科幻模板主角是「江燃」。摘要若没写决定/认知动词，门不得因为
+        只认识「沈砚」就把合法章送进 settlement_review。
+        """
+        summary = ChapterSummary(chapter_number=2, summary="环境描写", emotional_tone="平静")
+        settlement = StateSettlement()
+        content = "江燃复核完舱压。江燃决定先封存离线记录，再关闭外部同步。"
+
+        missing = _validate_summary_facts(
+            summary,
+            settlement,
+            content=content,
+            protagonist_name="江燃",
+        )
+
+        assert missing == []
+
+    def test_shown_micro_decision_counts_without_tell_verbs(self) -> None:
+        """Writer 禁止认知动词，微决策写成操作选择时，摘要漏写不得误报。
+
+        正文没有「决定/选择/意识到/明白」，但主角做了施工单要求的操作选择。
+        """
+        summary = ChapterSummary(chapter_number=2, summary="舱内灯光稳定", emotional_tone="克制")
+        settlement = StateSettlement()
+        content = (
+            "江燃把终端转到本地模式。指腹在触控板上停留了两秒，皮下轻微发麻。"
+            "他没有确认归属，也没有拒绝，只把当前协议哈希保存下来。"
+        )
+
+        missing = _validate_summary_facts(
+            summary,
+            settlement,
+            content=content,
+            protagonist_name="江燃",
+        )
+
+        assert missing == []
+
+    def test_other_character_decision_does_not_cover_protagonist(self) -> None:
+        summary = ChapterSummary(chapter_number=2, summary="环境描写", emotional_tone="平静")
+        settlement = StateSettlement()
+        content = "老鬼决定延迟上报。江燃站在门边观察读数。"
+
+        missing = _validate_summary_facts(
+            summary,
+            settlement,
+            content=content,
+            protagonist_name="江燃",
+        )
+
+        assert missing == ["缺少主角决策/认知变化"]
+
+    def test_system_save_does_not_count_as_protagonist_decision(self) -> None:
+        summary = ChapterSummary(chapter_number=2, summary="环境描写", emotional_tone="平静")
+        settlement = StateSettlement()
+        content = "系统保存了缓存。江燃站在门边观察读数。"
+
+        missing = _validate_summary_facts(
+            summary,
+            settlement,
+            content=content,
+            protagonist_name="江燃",
+        )
+
+        assert missing == ["缺少主角决策/认知变化"]
+
+    def test_named_protagonist_cognition_counts_when_summary_omits_it(self) -> None:
+        summary = ChapterSummary(chapter_number=3, summary="读数跳动", emotional_tone="紧")
+        settlement = StateSettlement()
+        content = "江燃盯着十二面体。江燃这才明白常数被改写了。"
+
+        missing = _validate_summary_facts(
+            summary,
+            settlement,
+            content=content,
+            protagonist_name="江燃",
+        )
+
+        assert missing == []
+
 
 class TestWriteChapterSummary:
     @pytest.mark.anyio
@@ -521,6 +609,7 @@ class TestWriteChapterSummary:
                     project_id="proj_123",
                     chapter_number=1,
                     db=mock_db,
+                    protagonist_name="沈砚",
                 )
 
         assert summary_id.startswith("sum-proj_123-1-")
@@ -553,3 +642,36 @@ class TestWriteChapterSummary:
                 )
 
         assert missing == ["缺少主角决策/认知变化"]
+
+    @pytest.mark.anyio
+    async def test_llm_omitted_decision_is_backfilled_from_shown_choice(self) -> None:
+        """摘要模型没写决策/认知时，正文里的操作选择要写进摘要并让复核通过。"""
+        llm_response = json.dumps(
+            {
+                "plot_summary": "舱内灯光稳定，读数没有变化",
+                "emotional_tone": "克制",
+                "key_events": ["观察读数"],
+                "characters_appeared": ["江燃"],
+            }
+        )
+        content = (
+            "江燃把终端转到本地模式。指腹在触控板上停留了两秒，皮下轻微发麻。"
+            "他没有确认归属，也没有拒绝，只把当前协议哈希保存下来。"
+        )
+
+        with patch(
+            "songyan.agents.summary_writer.call_llm",
+            new_callable=AsyncMock,
+            return_value=llm_response,
+        ):
+            summary, missing = await generate_chapter_summary_with_fact_check(
+                content=content,
+                settlement=StateSettlement(),
+                project_id="proj_scifi",
+                chapter_number=2,
+                protagonist_name="江燃",
+            )
+
+        assert missing == []
+        recorded = "\n".join([summary.summary, *summary.key_events])
+        assert "主角决策：" in recorded or "认知变化：" in recorded

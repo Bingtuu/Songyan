@@ -19,7 +19,9 @@ system_prompt: |
     "plot_summary": "300字以内的情节概述，包含起承转合",
     "key_events": ["事件1", "事件2", ...],
     "characters_appeared": ["角色A", "角色B", ...],
-    "emotional_tone": "本章的情感基调，如：压抑中暗藏希望"
+    "emotional_tone": "本章的情感基调，如：压抑中暗藏希望",
+    "protagonist_decision": "主角这一章做出的选择。正文用动作呈现时，用一句话写明",
+    "cognition_change": "主角认知发生了什么变化。没有变化则空字符串"
   }
   ```
 
@@ -30,6 +32,7 @@ system_prompt: |
   - emotional_tone 不超过 20 字
   - 如果 settlement 中无角色变更，从正文中提取出场角色
   - 不要编造 settlement 中不存在的事件
+  - protagonist_decision 与 cognition_change 必须来自正文里已经发生的事。正文即使没有「决定」「意识到」这些词，只要主角做了选择或认知变了，也要写成这两个字段。两个字段都空，仅当主角既没有做选择，也没有发生认知变化。
 
   ## StateSettlement
 
@@ -52,6 +55,8 @@ sections:
       - key_events: string[], 至少1个
       - characters_appeared: string[], 至少1个
       - emotional_tone: string, 20字以内
+      - protagonist_decision: string，主角选择；没有则空字符串
+      - cognition_change: string，主角认知变化；没有则空字符串
 
 variables:
   - name: settlement_text

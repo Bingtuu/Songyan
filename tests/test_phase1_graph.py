@@ -1545,3 +1545,132 @@ class TestSettlementExtractorNode:
         assert result["status"] == "settlement_review"
         assert result["_settlement_needs_human_review"] is True
         assert result["summary_id"] is None
+
+    @pytest.mark.asyncio
+    async def test_shown_protagonist_choice_does_not_enter_settlement_review(self) -> None:
+        """正文已有主角操作选择、摘要漏写时，不得卡在 settlement_review。"""
+        from songyan.workflows._nodes import settlement_extractor_node
+
+        content = (
+            "江燃把终端转到本地模式。指腹在触控板上停留了两秒，皮下轻微发麻。"
+            "他没有确认归属，也没有拒绝，只把当前协议哈希保存下来。"
+        )
+
+        class _Version:
+            def __init__(self) -> None:
+                self.version_id = "v-valid"
+                self.content = content
+                self.version_type = "draft"
+
+            def model_copy(self, update: dict | None = None) -> _Version:
+                copied = _Version()
+                if update:
+                    self_version_id = update.get("version_id", self.version_id)
+                    copied.version_id = self_version_id
+                    copied.version_type = update.get("version_type", self.version_type)
+                return copied
+
+        version = _Version()
+        project = MagicMock(mode_id=None, genre_id="scifi", protagonist_name="江燃")
+        goal = MagicMock(word_count_target=3000)
+        settlement = StateSettlement()
+        llm_response = json.dumps(
+            {
+                "plot_summary": "舱内灯光稳定，读数没有变化",
+                "emotional_tone": "克制",
+                "key_events": ["观察读数"],
+                "characters_appeared": ["江燃"],
+            }
+        )
+
+        with (
+            patch(
+                "songyan.workflows._nodes.load_version",
+                new_callable=AsyncMock,
+                return_value=version,
+            ),
+            patch(
+                "songyan.workflows._nodes.load_project",
+                new_callable=AsyncMock,
+                return_value=project,
+            ),
+            patch(
+                "songyan.workflows._nodes.load_chapter_goal",
+                new_callable=AsyncMock,
+                return_value=goal,
+            ),
+            patch("songyan.workflows._nodes.load_genre_profile", return_value=None),
+            patch(
+                "songyan.workflows._nodes.extract_settlement",
+                new_callable=AsyncMock,
+                return_value=settlement,
+            ),
+            patch(
+                "songyan.workflows._nodes.accept_with_settlement_boundary",
+                new_callable=AsyncMock,
+                return_value="v-accepted",
+            ) as accept_mock,
+            patch(
+                "songyan.agents.summary_writer.call_llm",
+                new_callable=AsyncMock,
+                return_value=llm_response,
+            ),
+            patch(
+                "songyan.workflows._nodes.save_chapter_summary",
+                new_callable=AsyncMock,
+                return_value="sum-real",
+            ) as save_summary,
+            patch(
+                "songyan.workflows._nodes._run_lifecycle_cleanup",
+                new_callable=AsyncMock,
+            ),
+            patch(
+                "songyan.workflows._nodes.trigger_layered_summaries",
+                new_callable=AsyncMock,
+            ),
+            patch(
+                "songyan.workflows._nodes.update_plot_threads_after_settlement",
+                new_callable=AsyncMock,
+                return_value=[],
+            ),
+            patch(
+                "songyan.workflows._nodes.update_schedule_after_accept",
+                new_callable=AsyncMock,
+                return_value={"satisfied": [], "missed": []},
+            ),
+            patch(
+                "songyan.workflows._nodes.demote_overflow_new_settings",
+                new_callable=AsyncMock,
+                return_value=[],
+            ),
+            patch(
+                "songyan.workflows._nodes.promote_candidate_settings_after_settlement",
+                new_callable=AsyncMock,
+                return_value=[],
+            ),
+            patch(
+                "songyan.workflows._nodes.resolve_settings_after_settlement",
+                new_callable=AsyncMock,
+                return_value=[],
+            ),
+            patch(
+                "songyan.agents.setting_evaporator.SettingEvaporator",
+            ) as evaporator_cls,
+        ):
+            evaporator_cls.return_value.run = AsyncMock(return_value=[])
+            result = await settlement_extractor_node(
+                {
+                    "project_id": "p1",
+                    "chapter_number": 2,
+                    "current_version_id": "v-valid",
+                    "chapter_goal_id": "goal-1",
+                }
+            )
+
+        assert result["status"] == "done"
+        assert result["_summary_missing_facts"] == []
+        assert result["_settlement_needs_human_review"] is False
+        accept_mock.assert_awaited_once()
+        saved = save_summary.await_args.kwargs["summary"]
+        recorded = "\n".join([saved.summary, *saved.key_events])
+        assert "主角决策：" in recorded or "认知变化：" in recorded
