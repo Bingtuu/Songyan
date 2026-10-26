@@ -120,8 +120,11 @@ class Phase1State(TypedDict):
     # Task 138h: 前置 mandatory reference 检查是否通过（revision 反弹后使用）
     _mandatory_reference_check_passed: bool | None
     # 只读 plan 门的结果（已批准卡对照）。不参与路由，不写 canon。
-    # 类型化摘录和主张锚不是初始状态。审查节点只在调用方放了
-    # ``_plan_attribute_extracts`` / ``_plan_claim_anchors`` 时才把它们交给门。
+    # 摘录和锚在写出正文之前是空的。``rule_auditor_node`` 按当前版本
+    # 读出来再交给门；调用方若同时钉住这两项，审查节点不覆盖。
+    _plan_attribute_extracts: list[dict[str, Any]] | None
+    _plan_claim_anchors: list[dict[str, Any]] | None
+    _plan_review_inputs_observed: bool | None
     _plan_fact_gate: dict[str, Any] | None
     # 单章 pipeline 允许的最大 revision 轮次
     _max_revision_rounds: int
@@ -480,7 +483,10 @@ async def run_chapter_pipeline(
         "_skip_settlement": False,
         "_prev_merged_issues": None,
         "_mandatory_reference_check_passed": None,
-        # 不填 _plan_attribute_extracts / _plan_claim_anchors：门不会从正文现抽。
+        # 正文还不存在。审查节点读到版本后再填摘录和锚。
+        "_plan_attribute_extracts": None,
+        "_plan_claim_anchors": None,
+        "_plan_review_inputs_observed": None,
         "_plan_fact_gate": None,
         "thread_id": None,
     }
