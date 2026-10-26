@@ -14,9 +14,9 @@ This page is the public status board for developers evaluating or contributing t
 | Template project creation | PASS |
 | Accepted manuscript export smoke | PASS |
 | CLI tests / full pytest / ruff / runtime mypy | PASS |
-| Real LLM Ch1-3 release smoke | FAIL on `11c4c761` (2026-10-26). Formal tag blocked |
+| Real LLM Ch1-3 release smoke | PASS on `eaa6bef` (2026-10-26, #20). Formal tag is a maintainer decision |
 
-Current public status: Songyan remains a technical preview / release-candidate for external developers. The real LLM Ch1-3 smoke on main `11c4c761` (2026-10-26, Asia/Shanghai) failed, so a formal release tag is blocked.
+Current public status: Songyan remains a technical preview / release-candidate for external developers. The real LLM Ch1-3 smoke on main `eaa6bef7721e43ccd1b53be2280076a355842d9b` (PR #20, 2026-10-26, Asia/Shanghai) passed, so a technical preview / release-candidate may proceed with this evidence. A formal release tag is still a maintainer decision. The earlier FAIL on `11c4c761` (PR #19) stays as history.
 
 ## What Works
 
@@ -48,7 +48,8 @@ These historical validation records are not part of the public main documentatio
 
 - Songyan is a CLI system, not a web app or hosted service.
 - Running real generation requires an LLM API key and may incur cost.
-- Real LLM Ch1-3 smoke on main `11c4c761` (2026-10-26, Asia/Shanghai) failed. Only Ch1 was accepted. Ch2 and Ch3 failed `settlement_review` because the summary was missing 主角决策/认知变化. The primary run `run-e98414fc` exited non-zero with `AutoHaltException` (ContextEmergency streak on Ch1–3); Ch2 also has retry `run-3defb98a`. Owner cost was ¥0.874 (Ch1 ¥0.208 / Ch2 ¥0.406 including the retry / Ch3 ¥0.260). The ¥7.66 stop threshold was not hit. Partial pass: doctor, create-project, report, bundle hygiene (no `.env`, keys, or manuscript), and one Markdown export. Artifacts are on the maintainer box at `/workspace/songyan-release-smoke-out/` (`smoke_result.json`, `notes.md`, and the reports, bundles, and exports named in `smoke_result.json`), not in this repository. A formal release tag is blocked. The technical preview / release-candidate stance is unchanged.
+- Real LLM Ch1-3 smoke on main `eaa6bef7721e43ccd1b53be2280076a355842d9b` (PR #20 squash, 2026-10-26, Asia/Shanghai) passed. Project `5a7f3a4263bc499d95109ea460aa79df` (scifi template; create-project title 《轨道蜃景》). Run `run-552b2c04` exited 0 with status=completed. Ch1–3 were all accepted. There were no `settlement_review` or missing_facts failures. ContextEmergency appeared only as a streak warning, with no AutoHalt. Owner cost was ¥1.035 total (¥2/M input, ¥8/M output); the most expensive chapter was about ¥0.400. The ¥7.66 stop threshold was not hit. Box paths are in [HANDOFF-mew.md](HANDOFF-mew.md) only; the DB, logs, and manuscript are not in this repository. The smoke gate for a formal tag is met for this tip. A formal release tag is still a maintainer decision. Technical preview / release-candidate may proceed with this evidence. There is no further `settlement_review` fix knife.
+- Historical: the real LLM Ch1-3 smoke on main `11c4c761` (PR #19, 2026-10-26, Asia/Shanghai) failed. Only Ch1 was accepted. Ch2 and Ch3 failed `settlement_review` because the summary was missing 主角决策/认知变化. The primary run `run-e98414fc` exited non-zero with `AutoHaltException` (ContextEmergency streak on Ch1–3); Ch2 also has retry `run-3defb98a`. Owner cost was ¥0.874 (Ch1 ¥0.208 / Ch2 ¥0.406 including the retry / Ch3 ¥0.260). The ¥7.66 stop threshold was not hit. Partial pass: doctor, create-project, report, bundle hygiene (no `.env`, keys, or manuscript), and one Markdown export. Artifacts for that fail stay on the maintainer box at `/workspace/songyan-release-smoke-out/` (`smoke_result.json`, `notes.md`, and the reports, bundles, and exports named in `smoke_result.json`), not in this repository. That run blocked a formal tag at the time. The `eaa6bef` rerun above is the current evidence.
 - The import pipeline (`songyan import`) has full automated test coverage and CLI smoke evidence, but its real-LLM acceptance run (import a real manuscript, then continue writing) is still pending; treat imported-project continuation quality as unverified until that acceptance report lands.
 - Research / report-only evaluation modules are not runtime release gates.
 
@@ -69,6 +70,6 @@ These historical validation records are not part of the public main documentatio
 
 ## Maintainer Next Steps
 
-1. Re-run the real LLM Ch1–3 release smoke after the `settlement_review` / `summary_writer` fact-check fix lands on main. Confirm the run exits 0 and Ch1–3 are accepted. The 2026-10-26 smoke (`11c4c761`, project `fdfc04b0771c493b83ec67750325ade7`) failed because the summary omitted 主角决策/认知变化 that the body already showed. This page already records that failure as a release blocker.
-2. Leave the formal release tag uncut. Technical preview / release-candidate status stays as it is.
+1. The smoke gate for a formal tag is met on `eaa6bef` (`run-552b2c04`, exit 0, Ch1–3 accepted). Do not open another `settlement_review` fix. The `11c4c761` / PR #19 fail stays on record.
+2. Cutting a formal release tag is still a maintainer decision. Technical preview / release-candidate may proceed with the `eaa6bef` evidence. This page does not cut the tag.
 3. Confirm no `.env`, local DB, logs, backups, bundles or private manuscripts are staged.
