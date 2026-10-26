@@ -2,6 +2,8 @@
 
 This page is the public status board for developers evaluating or contributing to Songyan.
 
+Package version for this tip: **0.5.0** (owner name **v0.5**). This page does not cut a git tag.
+
 ## Release Readiness
 
 | Area | Status |
@@ -16,7 +18,7 @@ This page is the public status board for developers evaluating or contributing t
 | CLI tests / full pytest / ruff / runtime mypy | PASS |
 | Real LLM Ch1-3 release smoke | PASS on `eaa6bef` (2026-10-26, #20). Formal tag is a maintainer decision |
 
-Current public status: Songyan remains a technical preview / release-candidate for external developers. The real LLM Ch1-3 smoke on main `eaa6bef7721e43ccd1b53be2280076a355842d9b` (PR #20, 2026-10-26, Asia/Shanghai) passed, so a technical preview / release-candidate may proceed with this evidence. A formal release tag is still a maintainer decision. The earlier FAIL on `11c4c761` (PR #19) stays as history.
+Current public status: **v0.5** (`0.5.0`) is a usable technical preview. It has Ch1–3 smoke evidence and does not claim that runs of 10 or more chapters are validated. The real LLM Ch1-3 smoke on main `eaa6bef7721e43ccd1b53be2280076a355842d9b` (PR #20, 2026-10-26, Asia/Shanghai) passed; `58d3621` (PR #21) records that result. A formal release tag is still a maintainer decision after merge and CI. The earlier FAIL on `11c4c761` (PR #19) stays as history.
 
 ## What Works
 

@@ -7,7 +7,7 @@ from songyan.config import Settings
 def test_import_songyan() -> None:
     """项目可正确导入."""
     assert hasattr(songyan, "__version__")
-    assert songyan.__version__ == "0.1.0"
+    assert songyan.__version__ == "0.5.0"
 
 
 def test_settings_defaults() -> None:

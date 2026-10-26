@@ -3,14 +3,15 @@
 
   <h1>Songyan（松烟）</h1>
 
-  <p><strong>面向中文长篇小说创作的工程化 AI 写作系统</strong></p>
-  <p><em>规划故事，生成章节，审查事实，沉淀长期记忆。</em></p>
+  <p><strong>基于 LangGraph 的多 Agent 中文长篇小说写作系统</strong></p>
+  <p>本地优先的 Python CLI：人维护事实圣经，模型按圣经写正文。</p>
+  <p><em>A local-first, multi-agent system for writing long Chinese fiction.</em></p>
 
   <p>
+    <img src="https://img.shields.io/badge/version-v0.5-2f6f4e" alt="v0.5" />
     <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-%3E%3D3.11-blue" alt="Python >= 3.11" /></a>
     <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-blue" alt="License AGPL-3.0" /></a>
     <a href="https://github.com/Bingtuu/Songyan/actions/workflows/ci.yml"><img src="https://github.com/Bingtuu/Songyan/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
-    <a href="https://github.com/astral-sh/ruff"><img src="https://img.shields.io/badge/code%20style-ruff-46a2f1" alt="Code style: ruff" /></a>
     <img src="https://img.shields.io/badge/storage-SQLite-044a64" alt="SQLite" />
     <img src="https://img.shields.io/badge/interface-CLI-222222" alt="CLI" />
   </p>
@@ -18,79 +19,55 @@
 
 ---
 
-Songyan 是一个本地优先的 Python CLI 项目，用于把 AI 长篇中文小说创作变成可持续、可审计、可恢复的工程流程。
+**v0.5**（包版本 `0.5.0`）是可用预览。已核对的生成证据是科幻模板上的真实模型前三章。十章及以上的正式长跑还没有在这个 tip 上验收。
 
-它不是“一次提示词生成一章”的玩具，而是一条完整的创作流水线：
+## 这是什么
+
+Songyan 把中文长篇创作收成一条可恢复、可审计的本地流水线。编排在 LangGraph 上。长期事实放在 SQLite。模型写正文；Songyan 负责本章上下文、审查、版本、失败恢复和诊断。
+
+单章大致是：
 
 ```text
-规划故事 -> 组装上下文 -> 生成初稿 -> 规则/语义/文学审查 -> 修订 -> 接收 -> 抽取事实 -> 写入 SQLite
+规划 → 组装上下文（含本章已批准计划卡）→ 生成初稿
+    → 规则 / 语义 / 文学审查 → 修订 → 接收
+    → SettlementExtractor 写入原结算库
 ```
 
-模型负责写正文；Songyan 负责长期记忆、事实校验、版本管理、失败恢复和诊断证据。
+它是命令行程序，面向能配置 LLM API key 的技术用户。内置模板包括 `scifi`、`xuanhuan`、`wuxia`、`urban`、`urban_fantasy`、`post_apocalyptic`、`mystery_noir`。
 
-## 为什么需要 Songyan
+## 为什么
 
-中文长篇小说创作的难点不只是“写出一章”，而是“写到第 200 章时仍然记得第 3 章发生了什么”。Songyan 围绕这个问题设计：
+长篇的难点是写到后面仍对得上前面已经成立的事实：人物、物件、时间、已经付过的代价。开放式「从正文里把事实抽出来，再当成下一章的权威」会把漂移吸进事实库。
 
-| 长篇创作问题 | Songyan 的处理方式 |
-|--------------|--------------------|
-| 上下文越来越长 | 分层摘要、角色聚焦、设定蒸发、预算保护 |
-| 人物和设定漂移 | SQLite 长期事实库 + 正文证据结算 |
-| 质量判断不稳定 | 规则审查、语义审查、文学诊断、质量门 |
-| 长跑中途失败 | run log、断点续跑、失败恢复建议、诊断包 |
-| 项目难以迁移 | backup / restore 保存可恢复资产 |
-| 运行参数误改 | profile validate、dry-run、history、rollback |
+因此当前方向是 [ADR-0001](docs/adr/0001-plan-first-facts.md)：权威事实由计划层和人写入，正文对照已批准的计划卡做窄检查。路线与阶段记录在 [Plan-first 路线](docs/ROADMAP-plan-first.md)。
 
-## 当前状态
+### 计划卡是本章事实圣经
 
-Songyan 目前适合懂命令行、能配置 LLM API key 的技术用户试用。正式发布标签前，维护者仍应在目标 release commit 上重新执行 [Release Checklist](docs/release-checklist.md)，并补充真实 LLM Ch1-3 smoke 结果。
+v0.5 采用薄封装，Phase A–C 已在 main 上收束：
 
-已完成的项目级验证包括：
+- 已批准的计划卡是本章事实圣经。写作和修订把它放在上下文最前面。待审卡、别的章、别的项目不进这段圣经。
+- 审查会从本章正文读出类型化摘录和主张锚，交给同一扇只读门。门没过时，失败出现在 human gate，并记在日志里。
+- 人批准仍是进入 plan canon 的入口。
+- `SettlementExtractor` 仍只写原来的结算库。抽取结果不会自动写成 plan canon。
 
-- 科幻长窗口 baseline 已冻结在 200+ 章规模。
-- 玄幻、武侠、都市样本完成 200 章 accepted 内部验证。
-- Windows 下通过 wheel 构建、wheel 安装、非仓库目录运行、资源加载、模板建项和 accepted 正文导出 smoke。
-- 质量门口径（CED / T9 / 五门）与 Ch200 baseline 聚合数值已公开，可用 `songyan five-gate` / `songyan t9` 只读复现。
-- 导入已有小说续写管线（`songyan import`）已交付：切分人工确认、幂等回放、发布闸门齐备；真实书稿的导入续写验收仍在进行中，验收报告落地前该路径按预览功能对待。
-- 结算写入路径完成事务加固：降级块 SAVEPOINT 隔离、SQLite 故障结构化日志、事务整体死亡时整章失败（可重跑）而非静默 accepted；伏笔回收可追溯（`resolved_chapter` / `resolved_version_id`）。
-- CI 覆盖 ruff、runtime mypy、pytest、CLI tests 和 wheel smoke。
+Phase C 的第二体裁是都市灵异《末班铜牌》。活路径召回 **1/5**（门槛 ≥4/5），退出条件没有满足。Owner Bingtuu 于 2026-10-26 接受的操作结论是：**人维护事实圣经，AI 按圣经写。** 阶段 B 的霞飞路活路径召回 5/5 另有记录。细节、成本和人工口径在 [HANDOFF](docs/HANDOFF-mew.md)，不在这里展开。
 
-## 功能概览
-
-| 模块 | 能力 |
-|------|------|
-| 项目创建 | 从内置体裁模板一键创建小说项目 |
-| 多体裁运行时 | 内置科幻、玄幻、武侠、都市等体裁配置 |
-| 单章流水线 | 规划、写作、审查、修订、接收、事实结算 |
-| 长期记忆 | 用 SQLite 保存项目、章节、版本、设定、角色状态和运行日志 |
-| 版本追溯 | draft / revision / accepted 版本全部 append-only |
-| 上下文控制 | 动态预算、分层摘要、角色聚焦和 ContextEmergency |
-| 失败恢复 | 对配置、DB、preflight、run、report、export、restore 提供恢复建议 |
-| 诊断工具 | `doctor`、`report`、脱敏 `bundle-run`、per-role 成本拆分和质量信号 |
-| 资产生命周期 | `backup` / `restore` 保存和恢复项目资产 |
-| 事务完整性 | settlement 写入单事务提交；降级块 SAVEPOINT 隔离；事务死亡整章失败可重跑 |
-| Profile 安全 | `validate`、`upsert --dry-run`、`history`、`rollback` |
-| 按角色模型路由 | 写作 / 审查 / 结算等角色独立配置模型与 endpoint（`LLM_<ROLE>_*`，两级显式回退） |
-| 质量门复现 | `five-gate` / `t9` 只读重算公开口径指标（CED / T9 / 五门） |
-| 导入已有小说 | `import` 命令组：切分 + 人工确认 + 逐章事实回放 + 全书归纳 + 发布闸门，从第 N+1 章续写 |
-| 正文导出 | 从 accepted 章节导出 Markdown / txt 书稿 |
-
-## 快速开始
-
-### 环境要求
+## 安装
 
 - Python 3.11+
-- DeepSeek API Key，或其他兼容 OpenAI 接口的 LLM endpoint
-- 可写的本地目录，用于 SQLite DB、日志和导出文件
+- 兼容 OpenAI 接口的 LLM endpoint。仓库里的默认示例是 DeepSeek。
+- 一块可写的本地目录，用来放 SQLite、日志和导出文件。
 
-### 开发安装
+开发安装：
 
 ```powershell
 python -m pip install -e ".[dev]"
 Copy-Item .env.example .env
 ```
 
-编辑 `.env`：
+在 bash 里把复制那一行换成 `cp .env.example .env`。其余 `songyan` 子命令相同。
+
+`.env` 至少要有：
 
 ```dotenv
 LLM_API_KEY=your-api-key
@@ -100,143 +77,98 @@ DATABASE_URL=sqlite:///songyan.db
 CHECKPOINTER_MODE=sqlite
 ```
 
-Windows 本地 smoke 或短窗口验证时，可以先使用：
+Windows 上做短窗口验证、遇到 checkpoint 文件锁时，可以临时使用 `CHECKPOINTER_MODE=memory`。按角色拆模型、成本口径，以及为什么不要把带思考链的 reasoning 模型配给写作角色，见 [Quickstart](docs/quickstart.md)。
 
-```dotenv
-CHECKPOINTER_MODE=memory
-```
+报告里的 chat 成本估算按 owner 口径标注：输入 **¥2/M**，输出 **¥8/M**。这是估算标签，不是供应商账单。这些跑次里记下的单章停线是 **¥7.66**（早前 v1 第 3 章 ¥0.766 的十倍）。它是实验和冒烟记录里的停线，由人掌握；可选的 `SONGYAN_RUN_COST_BUDGET` 是另一套运行预算，见 Quickstart。
 
-需要按角色分层模型成本时（例如写作用强模型、审查用便宜模型），可在 `.env` 中追加 `LLM_WRITER_MODEL` 等角色级覆盖，解析顺序和角色清单见 [Quickstart](docs/quickstart.md) 的 per-role 路由小节。注意：带思考链的 reasoning 模型（如 deepseek-reasoner）目前不适合配置给写作角色——思考链会占满该调用点的输出预算，导致正文为空被质量门拦截；审查类角色无此限制。
+## 快速开始
 
-### 最短闭环
+下面是最短闭环。逐步说明、失败恢复和导出细节在 [Quickstart](docs/quickstart.md)。
 
 ```powershell
-# 检查配置、资源和 SQLite schema
 songyan doctor --init-db
-
-# 从内置模板创建项目
 songyan create-project --template scifi
-
-# 使用 create-project 输出的 project_id
 songyan run --project-id <project_id> --chapters 1-3 --auto-confirm
-
-# 使用 run 输出的 run_id
 songyan report --run-id <run_id>
-songyan bundle-run --run-id <run_id> --output bundles/
-
-# 导出 accepted 正文
 songyan export --project-id <project_id> --chapters 1-3 --format md --output exports/
-
-# 备份项目资产
-songyan backup --project-id <project_id> --output backups/
 ```
 
-更完整的安装、配置、Ch1-3 短窗口教程和恢复入口见 [Quickstart](docs/quickstart.md)。
+`create-project` 会打印 `project_id`，`run` 会打印 `run_id`。真实生成会消耗 API 额度。前三章在 2026-10-26 那次通过的冒烟上，owner 口径合计 ¥1.035，最贵的一章约 ¥0.400。
 
-## 常用命令
+常用命令：
 
 | 命令 | 作用 |
 |------|------|
 | `songyan doctor --init-db` | 检查环境并初始化 / 迁移 SQLite |
-| `songyan create-project --template <id>` | 从内置模板创建项目 |
+| `songyan create-project --template <id>` | 从内置模板建项 |
 | `songyan list-projects` | 列出本地项目 |
-| `songyan run --project-id <id> --chapters 1-3 --auto-confirm` | 运行短窗口生成 |
-| `songyan report --run-id <run_id>` | 从 JSONL run log 生成报告 |
+| `songyan run --project-id <id> --chapters 1-3 --auto-confirm` | 跑短窗口 |
+| `songyan report --run-id <run_id>` | 从 run log 生成报告 |
 | `songyan bundle-run --run-id <run_id> --output bundles/` | 生成脱敏诊断包 |
 | `songyan export --project-id <id> --format md --output exports/` | 导出 accepted 正文 |
-| `songyan backup --project-id <id> --output backups/` | 备份可恢复项目资产 |
-| `songyan restore --backup <zip> --database-url sqlite:///restored.db` | 从备份恢复 SQLite 事实库 |
-| `songyan profile validate --genre <genre> --json` | 校验当前体裁运行时 profile |
-| `songyan profile upsert --genre <genre> --set key=value --dry-run` | 预览 profile override，不写 DB |
-| `songyan profile history --genre <genre>` | 查看 profile 修改历史 |
-| `songyan profile rollback --genre <genre> --history-id <id>` | 回滚 profile override |
-| `songyan five-gate --project-id <id> --up-to 100` | 只读重算五门指标（persist=False） |
-| `songyan t9 --project-id <id> --chapters 1-200` | 只读重算 T9 文本洁净度红线 |
-| `songyan import ingest --source <file> --genre <id> --protagonist-name <名>` | 导入已有小说：建档 + 主角入库 |
-| `songyan import segment --source <file> --output <dir>` → `confirm` → `replay` → `synthesize` → `publish` | 切分人工确认后逐章回放事实库，publish 后方可 `run` 续写 |
+| `songyan backup` / `songyan restore` | 备份与恢复项目资产 |
+| `songyan profile validate` / `history` / `rollback` | 校验、查看和回滚体裁 profile |
+| `songyan five-gate` / `songyan t9` | 只读重算质量门口径 |
+| `songyan import ...` | 导入已有小说；真实书稿续写仍未验收，见下方限制 |
 
-## 架构概览
+## v0.5 现在到哪
 
-```mermaid
-flowchart LR
-    Project["项目 / 体裁模板"] --> Planner["Goal Planner"]
-    Planner --> Context["Context Manager"]
-    Context --> Writer["Writer"]
-    Writer --> Audits["规则 + 语义 + 文学审查"]
-    Audits --> Revision["Revision Handler"]
-    Revision --> Accept["Accepted Head"]
-    Accept --> Settlement["Settlement Extractor"]
-    Settlement --> DB["SQLite 事实库"]
-    DB --> Context
-    DB --> Report["Report / Export / Backup / Bundle"]
-```
+Owner 把当前 tip 命名为 **v0.5**。安装元数据是 **`0.5.0`**（`pyproject.toml` 与 `songyan.__version__`）。git tag 由维护者在合并并通过 CI 之后处理。
 
-核心目录：
+按 [Quickstart](docs/quickstart.md) 可以安装、自检和建项。这个 tip 上核对过的真实生成，是下面这一次科幻前三章。冒烟跑在 main `eaa6bef`（PR #20：正文里已经写出的主角决策会写回摘要，不再因此误入 `settlement_review`）上，由随后的文档提交 `58d3621`（PR #21）记入 main：
 
-| 路径 | 作用 |
-|------|------|
-| `src/songyan/agents/` | 规划、写作、审查、修订、事实结算 Agent |
-| `src/songyan/workflows/` | 单章与多章运行编排 |
-| `src/songyan/db/` | SQLite schema、migration 和 repository |
-| `src/songyan/services/` | 面向 CLI 的 doctor、export、backup、bundle、profile 服务 |
-| `src/songyan/genres/` | 内置体裁配置 |
-| `src/songyan/project_templates/` | 内置项目模板 |
-| `src/songyan/prompts/` | 版本化 prompt cards |
-| `tests/` | 单元、集成和 CLI 测试 |
-| `docs/` | 公开用户与贡献文档 |
+| 项 | 记录 |
+|----|------|
+| 日期 | 2026-10-26（Asia/Shanghai） |
+| 代码 | `eaa6bef7721e43ccd1b53be2280076a355842d9b` |
+| 项目 | `5a7f3a4263bc499d95109ea460aa79df`（`scifi` 模板，标题《轨道蜃景》） |
+| 运行 | `run-552b2c04`，退出码 0，`status=completed` |
+| 章节 | Ch1–3 全部 accepted |
+| 结算 | 没有 `settlement_review` 或 missing_facts 失败 |
+| 上下文 | ContextEmergency 只有连续警告，没有 AutoHalt |
+| 成本 | owner 口径合计 ¥1.035（输入 ¥2/M、输出 ¥8/M）；单章最高约 ¥0.400；停线 ¥7.66 没有碰到 |
+
+更早一次同口径冒烟在 `11c4c761`（PR #19）上失败：只有第 1 章 accepted，第 2、3 章卡在 `settlement_review`。那次留下作历史，不抹掉。书稿、数据库和日志不在本仓库；维护者 box 上的路径只写在 [HANDOFF](docs/HANDOFF-mew.md)。发布项如何复核，见 [Release Checklist](docs/release-checklist.md)。公开状态板是 [STATUS](docs/STATUS.md)。
+
+更早的内部长窗口（2026-08 冻结的科幻、玄幻、武侠、都市各 200 章 accepted）是另一份历史证据，公开聚合在 [baseline 摘要](docs/baseline-results.md)。它不能代替 v0.5 这个 tip 上的长跑验收。
+
+## 已知限制
+
+- 十章及以上的正式长跑还没有在这个 tip 上验收。v0.5 的生成证据停在前三章。
+- 都市灵异活路径没有过召回退出条件。跨章事实仍要人维护圣经；模型负责按卡写，并接受窄检查。
+- `SettlementExtractor` 继续写结算库。plan canon 只来自已批准的计划卡；抽取行不会被自动批准进去。
+- `songyan import` 的自动化测试和 CLI 冒烟已有，真实书稿导入后再续写的验收还没有。导入后续写质量先按未验证对待。
+- 需要自备 API key，生成会花钱。报告里的人民币数字是 owner 口径估算。
+- 带思考链的 reasoning 模型不适合写作角色：思考链会占满该调用的输出预算，正文可能为空并被质量门拦住。
+- 研究 / report-only 信号不进入 runtime prompt、CED、T9 或 hard gate。
+- 不要提交 `.env`、API key、私密书稿、本地数据库、未脱敏日志、backup 或 bundle。失败报告优先用 `songyan bundle-run`。
 
 ## 文档
 
-- [Status](docs/STATUS.md)：当前可用性、已验证项和限制
-- [Quickstart](docs/quickstart.md)：安装、配置、运行和导出
-- [Troubleshooting](docs/troubleshooting.md)：常见失败与恢复命令
-- [Release Checklist](docs/release-checklist.md)：维护者发布清单
-- [质量门方法论](docs/quality-gates.md)：CED / T9 / 五门口径定义、阈值出处与复现命令
-- [Ch200 baseline 结果摘要](docs/baseline-results.md)：4 体裁 200 章验收的公开聚合数值
-- [Minimal Reproduction Guide](docs/minimal-repro.md)：如何提交可复现问题
-- [Documentation Index](docs/INDEX.md)：公开文档导航
-- [Plan-first 路线](docs/ROADMAP-plan-first.md)：约 90 天的一致性方向（先证明跨章召回，不赶完本）
-- [Changelog](CHANGELOG.md)：版本变更记录
-- [Contributing](CONTRIBUTING.md)：贡献方式和工程边界
+| 文档 | 何时去看 |
+|------|----------|
+| [Quickstart](docs/quickstart.md) | 安装、配置、短窗口、报告和导出 |
+| [STATUS](docs/STATUS.md) | 现在什么能用、冒烟证据和限制 |
+| [Release Checklist](docs/release-checklist.md) | 维护者发布门槛和冒烟口径 |
+| [HANDOFF](docs/HANDOFF-mew.md) | 每日切片、下一刀、box 上的证据路径 |
+| [ADR-0001](docs/adr/0001-plan-first-facts.md) | 为什么权威事实从计划层来 |
+| [Plan-first 路线](docs/ROADMAP-plan-first.md) | 阶段 A–C 与非目标 |
+| [Troubleshooting](docs/troubleshooting.md) | 常见失败和恢复命令 |
+| [质量门](docs/quality-gates.md) | CED / T9 / 五门的口径 |
+| [Changelog](CHANGELOG.md) | 版本记录 |
+| [文档索引](docs/INDEX.md) | 公开文档地图 |
 
-## 开发
+## 参与贡献
 
-提交 PR 前建议运行：
+贡献方式、测试命令和工程边界在 [CONTRIBUTING](CONTRIBUTING.md)。提问题前先看 [最小复现指南](docs/minimal-repro.md)。
 
-```powershell
-python -m pytest tests/ -q
-python -m pytest tests/cli -q
-ruff check src/ tests/
-mypy src/
-python -m pip wheel . --no-deps -w dist
-```
+几条不会在普通 PR 里放宽的边界：
 
-Windows 下长跑或测试卡住时，可以用硬超时 wrapper：
+- SQLite 是长期事实库。章节版本只追加，不覆盖历史。
+- Agent 不直接拿数据库连接写权威行；写入走 repository / service。
+- 长 prompt 放在包内的 prompt cards 里。
+- 未批准的抽取结果不能被下一章当成已成立的 plan canon。
 
-```powershell
-powershell -File scripts/run_with_timeout.ps1 -TimeoutSec 900 -- python -m pytest tests/ -q
-```
+## 许可证
 
-核心工程边界：
-
-- SQLite 是长期事实源。
-- 章节版本 append-only，不覆盖历史版本。
-- Agent 不直接写 DB connection；写入走 repository / service 边界。
-- Prompt cards 放在包资源中，不在代码里硬编码长 prompt。
-- research / report-only 信号不进入 runtime prompt、CED、T9 或 hard gate。
-
-## 安全与隐私
-
-不要提交 `.env`、API key、私密书稿、local DB、未脱敏日志、backup 或 bundle。
-
-提交 run 失败问题时，优先使用脱敏诊断包：
-
-```powershell
-songyan bundle-run --run-id <run_id> --output bundles/
-```
-
-更多信息见 [Minimal Reproduction Guide](docs/minimal-repro.md)。
-
-## License
-
-Songyan 使用 [AGPL-3.0](LICENSE) 许可证。
+Songyan 使用 [AGPL-3.0](LICENSE)。

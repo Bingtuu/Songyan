@@ -11,7 +11,7 @@ body:
     id: version
     attributes:
       label: Songyan version or commit
-      description: "Example: 2.0.0 or a git commit hash."
+      description: "Example: 0.5.0 or a git commit hash."
     validations:
       required: true
   - type: dropdown

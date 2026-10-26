@@ -94,7 +94,7 @@ songyan profile history --genre <genre>
 ## 好的复现描述示例
 
 ```text
-版本: 2.0.0 / commit <hash>
+版本: 0.5.0 / commit <hash>
 OS: Windows 11
 Python: 3.11.9
 安装方式: wheel
