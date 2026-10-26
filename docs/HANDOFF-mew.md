@@ -49,6 +49,13 @@ owner：Bingtuu。目标与非目标以 [ROADMAP-plan-first.md](ROADMAP-plan-fir
 
 **重跑已完成（2026-10-26，Asia/Shanghai，真实 LLM Ch1–3 发布冒烟，main `eaa6bef7721e43ccd1b53be2280076a355842d9b`，PR #20 squash）：PASS。** 维护者 box 上的 scifi 模板项目 `5a7f3a4263bc499d95109ea460aa79df`，create-project 给出的标题是《轨道蜃景》。`run-552b2c04` 退出码 0，status=completed。Ch1–3 全部 accepted。没有 `settlement_review` / missing_facts 失败。ContextEmergency 只有连续警告，没有 AutoHalt。Owner 口径合计 ¥1.035（输入 ¥2/M、输出 ¥8/M），单章最高约 ¥0.400。停的阈值 ¥7.66 没有碰到。产物在维护者 box，不在本仓库：`/workspace/songyan-release-smoke-out-rerun20/notes.md`、`/workspace/songyan-release-smoke-out-rerun20/smoke_result.json`。不提交 DB、日志或书稿。上面 `11c4c761` / PR #19 的 fail 留下，不抹掉。正式发布标签仍由维护者决定。技术预览 / release-candidate 可以带着这份证据往下走。
 
+**Ch1–10 活跑（2026-10-26）：流水线过，文学不过。** main `47954cbcc7bc8badeebedb1276b82ed8dfd66476`（README #23 之后）。scifi《轨道蜃景》，`project_id=8e30dec7f2ec40c1a9ce54c783981f8c`，`run-33841231`。不打 tag，不改代码。
+
+- 流水线：10/10 accepted；QG / settlement / summary / export 通过；exit 0。Owner 约 ¥3.413（¥2/M 入、¥8/M 出）；单章最高 ¥0.474；¥7.66 未碰到；不需要 import resume。
+- **DG-1 失败**：平均 revision 1.7 > 1.5；ContextEmergency 10/10（警告连续，没有 AutoHalt）。
+- 文学不及格，只作 smoke / 回归证据：Ch1→2 时间线回滚；Hermes/赫耳墨斯专名漂移；三年 vs 417 天 vs「沈岚此刻…四光年」；供氧胁迫与 EVA 共鸣节拍重复；英文渗漏 `ninety-two 秒`。不要写成「10+ 章已验证可读」。
+- Box（不入库）：`/workspace/songyan-ch1-10-out/` 下 `notes.md`、`result.json`、`reports/report-run-33841231.md`、`exports/轨道蜃景-flat.md`、`quality-read.md`。
+
 **下一刀不是 `settlement_review` 修复，也不是再跑一遍冒烟。** 这个 tip 的正式标签冒烟门已经满足。不要打发布标签。不要加题材规则，不要改 SettlementExtractor 的权威，不要重记阶段 C 的召回。
 
 ## 怎么报告
