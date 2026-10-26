@@ -119,7 +119,8 @@ class Phase1State(TypedDict):
     _prev_merged_issues: list[dict[str, Any]] | None
     # Task 138h: 前置 mandatory reference 检查是否通过（revision 反弹后使用）
     _mandatory_reference_check_passed: bool | None
-    # 只读 plan 门的结果（已批准卡对照）。不参与路由，不写 canon。
+    # 只读 plan 门的结果（已批准卡对照）。不参与质量门路由，不写 canon。
+    # 未通过的条目由 human_gate 放进 plan_fact_gate_failures。
     # 摘录和锚在写出正文之前是空的。``rule_auditor_node`` 按当前版本
     # 读出来再交给门；调用方若同时钉住这两项，审查节点不覆盖。
     _plan_attribute_extracts: list[dict[str, Any]] | None

@@ -36,7 +36,9 @@ owner：Bingtuu。目标与非目标以 [ROADMAP-plan-first.md](ROADMAP-plan-fir
 
 **切片 1 已完成（2026-10-26，owner Bingtuu 下令加速，只做接线）。** `rule_auditor_node` 在审查 state 没有同时钉住 `_plan_attribute_extracts` 和 `_plan_claim_anchors` 时，从本章正文和已批准卡读出类型化摘录和主张锚，写回这两项，再交给原来的 `run_plan_fact_gate`。下一轮修订按新稿重读，不沿用上一稿。调用方已经同时放了列表时，沿用调用方的列表。门仍不从正文发明摘录，也不写 canon。没有新的题材检查器。没有重记 D1–D5。没有改 SettlementExtractor，没有改质量门路由，没有写《规则年代》。
 
-**下一刀是切片 2：薄封装运行时。** 人维护事实圣经，AI 按圣经写。不要在这一刀里发版（切片 3），也不要加题材规则，不要改 SettlementExtractor 的权威。
+**切片 2 已完成（2026-10-26，薄封装运行时）。** 写章上下文只读当前项目、当前章的已批准计划卡，放进 `ContextPackage.plan_bible`。Writer 和修订提示词把这段放在最前面，当作本章事实圣经。待审卡、别的章、别的项目、窗口盖不住本章的属性，不进圣经。审查仍把正文摘录留在 `_plan_attribute_extracts` / `_plan_claim_anchors`，不把它们写成 plan canon，也不自动送进待审队列。人批准仍是进 canon 的唯一入口。`plan_fact_gate` 没过时，失败条目出现在 human gate 的 `plan_fact_gate_failures`，并记在 `plan_fact_gate.failures` 日志里。接受、退回、质量门的路由都不变。SettlementExtractor 仍只写原结算库。没有新的题材检查器。没有重记 D1–D5。没有发版，没有写《规则年代》。
+
+**下一刀是切片 3：发布核对与冒烟。** 核对写章会读已批准圣经、审查失败对人可见、正文抽取不进 canon。不要加题材规则，不要改 SettlementExtractor 的权威，不要重记阶段 C 的召回。
 
 ## 怎么报告
 

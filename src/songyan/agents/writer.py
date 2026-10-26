@@ -15,6 +15,7 @@ from songyan.db.repository import ChapterHeadRepository, ChapterVersionRepositor
 from songyan.llm.client import call_llm
 from songyan.models import ChapterHead, ChapterVersion, ContextPackage
 from songyan.models.human_instruction import normalize_human_instruction
+from songyan.plan_checks.bible import wrap_writing_prompt
 from songyan.prompts import get_prompt_loader
 from songyan.utils.calibration import (
     max_word_count_for_chapter,
@@ -505,7 +506,7 @@ def _render_prompt(ctx: ContextPackage) -> str:
         tags.append("chapter_early")
 
     rendered = loader.render_card(card, variables, tags=tags)
-    return rendered.full_prompt
+    return wrap_writing_prompt(rendered.full_prompt, ctx.plan_bible)
 
 
 def _render_startup_beat_sheet(ctx: ContextPackage) -> str:

@@ -25,6 +25,7 @@ from songyan.models import (
     RevisionOutput,
     RuleAuditResult,
 )
+from songyan.plan_checks.bible import wrap_writing_prompt
 from songyan.utils.token_estimator import truncate_to_tokens
 
 from ._diff import (
@@ -495,6 +496,7 @@ def _render_prompt(
     prompt_version: str | None = None,
     readability_metrics: dict[str, Any] | None = None,
     mode_profile: CreativeModeProfile | None = None,
+    plan_bible: str = "",
 ) -> str:
     """渲染 RevisionHandler Prompt.
 
@@ -534,7 +536,7 @@ def _render_prompt(
     feedback = _render_previous_show_dont_tell_feedback(previous_issues)
     if feedback:
         prompt += "\n\n" + feedback
-    return prompt
+    return wrap_writing_prompt(prompt, plan_bible)
 
 
 # ---------------------------------------------------------------------------
@@ -873,6 +875,7 @@ async def run_revision(
     chapter_number: int = 0,
     score_card: dict[str, Any] | None = None,
     mode_profile: CreativeModeProfile | None = None,
+    plan_bible: str = "",
 ) -> tuple[RevisionOutput, str]:
     """运行修订 — 按 issue 局部 patch，不整章重写.
 
@@ -1011,6 +1014,7 @@ async def run_revision(
                 revised_rule_result=revised_rule_result,
                 target_word_count=word_count_target,
                 chapter_number=chapter_number,
+                plan_bible=plan_bible,
             )
             if segmented_output.segmented and segmented_content:
                 logger.info(
@@ -1055,6 +1059,7 @@ async def run_revision(
         prompt_version="1.1.0" if readability_driven else None,
         readability_metrics=readability_metrics,
         mode_profile=mode_profile,
+        plan_bible=plan_bible,
     )
 
     llm_response = await call_llm(prompt, temperature=temperature)
