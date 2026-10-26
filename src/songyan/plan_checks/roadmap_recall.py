@@ -5,9 +5,10 @@ non-occurrence in the new chapters. A missing chapter or a missing
 occurrence judgment leaves that class unscored. Phrase absence is not
 treated as non-occurrence.
 
-On the live review path the gate receives no attribute extracts and no
-claim anchors. Contradiction and typed mismatches therefore stay empty
-unless this scorer is given those inputs. An unmentioned claim counts
+``rule_auditor_node`` fills extracts and anchors from the current draft
+when the caller did not pin them. This scorer does not. It only forwards
+the lists it was given, so a score without them still cannot see typed
+mismatches or anchored contradictions. An unmentioned claim counts
 toward T2 only when anchors were supplied. Without anchors, unmentioned
 is the default for every claim whose text is not copied verbatim.
 """

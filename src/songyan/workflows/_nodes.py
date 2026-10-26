@@ -78,6 +78,7 @@ from songyan.plan_checks.gate import (
     plan_attribute_extracts_from_state,
     run_plan_fact_gate,
 )
+from songyan.plan_checks.observe import load_observed_review_inputs
 from songyan.services.foreshadowing_schedule import (
     mark_schedule_items_injected,
     update_schedule_after_accept,
@@ -1591,12 +1592,32 @@ async def rule_auditor_node(state: dict[str, Any]) -> dict[str, Any]:
         return {"error": "Version not found", "status": "rule_auditor"}
 
     # 只读 plan 门：对照当前项目已批准的事实卡。不写 canon，不改结算权威。
+    # 调用方同时钉住摘录和锚时沿用调用方的列表。否则按当前版本正文现读，
+    # 下一轮修订再读新稿，不把上一稿的摘录留在门上。
+    raw_extracts = state.get("_plan_attribute_extracts")
+    raw_anchors = state.get("_plan_claim_anchors")
+    caller_pinned = (
+        raw_extracts is not None
+        and raw_anchors is not None
+        and state.get("_plan_review_inputs_observed") is not True
+    )
+    if caller_pinned:
+        observed_extracts = raw_extracts
+        observed_anchors = raw_anchors
+    else:
+        extracts, anchors = await load_observed_review_inputs(
+            str(state["project_id"]),
+            int(state["chapter_number"]),
+            version.content,
+        )
+        observed_extracts = [row.model_dump() for row in extracts]
+        observed_anchors = [row.model_dump() for row in anchors]
     plan_gate = await run_plan_fact_gate(
         str(state["project_id"]),
         int(state["chapter_number"]),
         version.content,
-        extracts=plan_attribute_extracts_from_state(state.get("_plan_attribute_extracts")),
-        anchors=claim_anchors_from_state(state.get("_plan_claim_anchors")),
+        extracts=plan_attribute_extracts_from_state(observed_extracts),
+        anchors=claim_anchors_from_state(observed_anchors),
     )
 
     project = await load_project(state["project_id"])
@@ -1662,11 +1683,16 @@ async def rule_auditor_node(state: dict[str, Any]) -> dict[str, Any]:
         result=result,
         report_id=report_id,
     )
-    return {
+    review_update: dict[str, Any] = {
         "_rule_report_id": report_id,
         "status": "llm_auditing",
+        "_plan_attribute_extracts": observed_extracts,
+        "_plan_claim_anchors": observed_anchors,
         "_plan_fact_gate": plan_gate.model_dump(),
     }
+    if not caller_pinned:
+        review_update["_plan_review_inputs_observed"] = True
+    return review_update
 
 
 async def llm_auditor_node(state: dict[str, Any]) -> dict[str, Any]:

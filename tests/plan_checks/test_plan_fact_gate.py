@@ -74,6 +74,53 @@ async def _counts() -> dict[str, int]:
     return counts
 
 
+async def _seed_name_drift_cards() -> None:
+    """Approved ownership plus the other person's alias. No caller extracts."""
+    projects = ProjectRepository()
+    setting = ProjectSetting(genre_id="scifi", protagonist_name="沈酌")
+    await projects.create(setting, "p1")
+    repo = PlanFactRepository()
+    await repo.write_entity(
+        PlanEntity(
+            entity_id="ent-mark",
+            project_id="p1",
+            entity_type="object",
+            aliases=["灵印", "记名"],
+        )
+    )
+    await repo.write_entity(
+        PlanEntity(
+            entity_id="ent-shen",
+            project_id="p1",
+            entity_type="person",
+            aliases=["沈酌"],
+        )
+    )
+    await repo.write_attribute(
+        PlanAttribute(
+            attribute_id="attr-owner",
+            project_id="p1",
+            entity_id="ent-mark",
+            key="ownership",
+            value="周晚宁",
+            valid_from_ch=1,
+            valid_to_ch=3,
+            source="human",
+            approval_status="approved",
+        )
+    )
+    await repo.write_event(
+        PlanEvent(
+            event_id="evt-name",
+            project_id="p1",
+            ch=2,
+            participants=["ent-mark"],
+            claims=[PlanClaim(claim_id="claim-name", text="灵印记名仍是周晚宁")],
+            approval_status="approved",
+        )
+    )
+
+
 async def _seed_mixed_cards() -> None:
     """Approved and pending cards in two projects."""
     projects = ProjectRepository()
@@ -373,6 +420,9 @@ class TestChapterReviewInvokesGate:
         report = result["_plan_fact_gate"]
         assert result["status"] == "llm_auditing"
         assert "settlement_id" not in result
+        assert result["_plan_attribute_extracts"] == state["_plan_attribute_extracts"]
+        assert result["_plan_claim_anchors"] == state["_plan_claim_anchors"]
+        assert result.get("_plan_review_inputs_observed") is not True
         assert report["passed"] is False
         assert [row["point_id"] for row in report["missing_mentions"]] == ["clue-ok"]
         assert [row["claim_id"] for row in report["claim_verdicts"]] == ["claim-scratch"]
@@ -394,12 +444,13 @@ class TestChapterReviewInvokesGate:
         assert result["error"] == "Version not found"
         assert "_plan_fact_gate" not in result
 
-    async def test_live_state_does_not_score_typed_hook_drift(self, gate_db: None) -> None:
-        """The review path leaves extracts and anchors unset.
+    async def test_live_review_fills_extracts_so_hook_drift_is_visible(
+        self, gate_db: None
+    ) -> None:
+        """A draft with no caller extracts still feeds the typed and claim checks.
 
-        v4 chapter 3 puts the hook mark on the bar rubbing. Must-mention
-        still runs. Typed ownership and the contradicted hook claim do
-        not, until the caller supplies those inputs.
+        v4 chapter 3 puts the hook mark on the bar rubbing. The gate itself
+        does not invent extracts. The review node does, from this draft.
         """
         await load_plan_fact_fixture(bundled_xiafei_fixture())
         text = (_FIXTURE / "ch03.md").read_text(encoding="utf-8")
@@ -429,25 +480,81 @@ class TestChapterReviewInvokesGate:
             result = await rule_auditor_node(state)
 
         report = result["_plan_fact_gate"]
-        assert report["attribute_mismatches"] == []
+        assert result["_plan_review_inputs_observed"] is True
+        assert any(
+            row["entity_id"] == "xiafei-hook" and row["value"] == "横杆拓片"
+            for row in result["_plan_attribute_extracts"]
+        )
+        assert any(
+            row["claim_id"] == "claim-ch3-hook" and "横杆拓片" in row["contradict_terms"]
+            for row in result["_plan_claim_anchors"]
+        )
+        assert any(
+            row["entity_id"] == "xiafei-hook"
+            and row["key"] == "ownership"
+            and row["extract_value"] == "横杆拓片"
+            for row in report["attribute_mismatches"]
+        )
         hook = next(row for row in report["claim_verdicts"] if row["claim_id"] == "claim-ch3-hook")
-        assert hook["status"] == "unmentioned"
+        assert hook["status"] == "contradicted"
+        pull = next(row for row in report["claim_verdicts"] if row["claim_id"] == "claim-ch3-pull")
+        assert pull["status"] == "contradicted"
+        assert any(
+            row["entity_id"] == "xiafei-mechanism" and row["key"] == "direction"
+            for row in report["attribute_mismatches"]
+        )
         assert any(row["point_id"] == "clue-mechanism" for row in report["missing_mentions"])
 
-        supplied = await run_plan_fact_gate(
-            XIAFEI_PROJECT_ID,
-            3,
-            text,
-            extracts=_v4_extracts(),
-            anchors=_v4_anchors(),
+        bare = await run_plan_fact_gate(XIAFEI_PROJECT_ID, 3, text)
+        assert bare.attribute_mismatches == []
+        bare_hook = next(row for row in bare.claim_verdicts if row.claim_id == "claim-ch3-hook")
+        assert bare_hook.status == "unmentioned"
+
+    async def test_later_audit_rereads_the_new_draft(self, gate_db: None) -> None:
+        """Extracts observed for one version must not hide drift in the next."""
+        await _seed_name_drift_cards()
+        agreed = ChapterVersion(
+            version_id="v-ok",
+            project_id="p1",
+            chapter_number=2,
+            content="灵印记名仍是周晚宁。",
+            word_count=10,
         )
-        assert any(
-            row.entity_id == "xiafei-hook" and row.key == "ownership"
-            for row in supplied.attribute_mismatches
+        drifted = ChapterVersion(
+            version_id="v-drift",
+            project_id="p1",
+            chapter_number=2,
+            content="记名栏：沈酌。",
+            word_count=8,
         )
+        state = {
+            "project_id": "p1",
+            "chapter_number": 2,
+            "current_version_id": "v-ok",
+            "chapter_goal_id": "",
+            "context_package": SimpleNamespace(mandatory_references=None),
+        }
+
+        def _version(version_id: str) -> ChapterVersion:
+            return agreed if version_id == "v-ok" else drifted
+
+        with (
+            patch(
+                "songyan.workflows._nodes.load_version",
+                new_callable=AsyncMock,
+                side_effect=_version,
+            ),
+            patch("songyan.workflows._nodes.save_rule_audit", new_callable=AsyncMock),
+        ):
+            first = await rule_auditor_node(state)
+            second = await rule_auditor_node(
+                {**state, **first, "current_version_id": "v-drift"}
+            )
+
+        assert first["_plan_fact_gate"]["attribute_mismatches"] == []
         assert any(
-            row.claim_id == "claim-ch3-hook" and row.status == "contradicted"
-            for row in supplied.claim_verdicts
+            row["extract_value"] == "沈酌"
+            for row in second["_plan_fact_gate"]["attribute_mismatches"]
         )
 
 

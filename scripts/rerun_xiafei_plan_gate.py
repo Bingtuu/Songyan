@@ -6,11 +6,12 @@ project from the experiment template, loads the approved ``xiafei-jiuan``
 cards onto that project id, and runs ``songyan run --chapters N
 --auto-confirm`` one chapter at a time.
 
-The live review path still does not set ``_plan_attribute_extracts`` or
-``_plan_claim_anchors``. After a real run the exported chapters can be
-scored with ``scripts/score_xiafei_roadmap_recall.py``. Fill
-``occurred.json`` from the prose. Do not treat a missing v4 phrase as
-non-occurrence.
+``rule_auditor_node`` fills ``_plan_attribute_extracts`` and
+``_plan_claim_anchors`` from the draft when the caller did not pin them.
+``scripts/score_xiafei_roadmap_recall.py`` does not. After a real run,
+score the exported chapters with that script and pass extracts only if
+you want the offline board to see them. Fill ``occurred.json`` from the
+prose. Do not treat a missing v4 phrase as non-occurrence.
 """
 
 from __future__ import annotations
@@ -140,11 +141,11 @@ def _write_blocked(
         "live_review_path": {
             "extracts_state_key": "_plan_attribute_extracts",
             "anchors_state_key": "_plan_claim_anchors",
-            "populated_by_run_chapter_pipeline": False,
+            "populated_by_run_chapter_pipeline": True,
             "note": (
-                "rule_auditor_node 只把 state 里已有的摘录和锚交给 "
-                "run_plan_fact_gate。初始 state 不写这两项，所以活路径的"
-                "类型化比较为空，主张核验只认主张原文。"
+                "rule_auditor_node 在调用方没钉住列表时，按当前版本正文"
+                "读出摘录和锚再交给 run_plan_fact_gate。初始 state 仍是空的，"
+                "因为正文还不存在。离线计分脚本不会自己读这两项。"
             ),
         },
         "scoreboard": board.model_dump(),

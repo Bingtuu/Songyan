@@ -18,6 +18,7 @@ from songyan.plan_checks.claim_check import (
 )
 from songyan.plan_checks.gate import PlanFactGateReport, run_plan_fact_gate
 from songyan.plan_checks.must_mention import MissingMention, check_must_mention
+from songyan.plan_checks.observe import observe_plan_review_inputs
 from songyan.plan_checks.roadmap_recall import (
     RecallScoreboard,
     blocked_rerun_scoreboard,
@@ -45,6 +46,7 @@ __all__ = [
     "blocked_rerun_scoreboard",
     "check_must_mention",
     "compare_typed_attributes",
+    "observe_plan_review_inputs",
     "parse_claim_judgment",
     "run_plan_fact_gate",
     "score_chapters",

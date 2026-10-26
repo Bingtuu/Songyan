@@ -24,7 +24,7 @@ owner：Bingtuu。目标与非目标以 [ROADMAP-plan-first.md](ROADMAP-plan-fir
 
 **阶段 B 已完成，三道成功门都有记录（main #13，`c84a2dac`）。** 活路径召回 5/5（≥4/5）。人工 ≤10 分钟/章记为 **pass_with_delegation_note**：owner 在 2026-10-25 把批卡委托给 Mew（「你来审核吧，不用给我看」）；没有秒表；若 owner 自己读计分板和 `occurred_basis`，估计 ≤5 分钟/章。成本同量级 **pass**：owner 口径合计 ¥2.115（两位小数 ¥2.12），v1 ≈¥1.37，约 1.5 倍；ch1 ¥0.824 / ch2 ¥1.072 / ch3 ¥0.219。没有一章达到 v1 第 3 章 ¥0.766 的十倍。正文来自 box 上的项目 `030b687372374aa491e0c294e6d62969`。记录在 [experiments/xiafei-plan-gate-rerun-2026-10-25](experiments/xiafei-plan-gate-rerun-2026-10-25/README.md) 与 [gates.md](experiments/xiafei-plan-gate-rerun-2026-10-25/gates.md)。
 
-`rule_auditor_node` 仍只读已批准卡，结果仍在 `_plan_fact_gate`，不改质量门路由。SettlementExtractor 仍写原结算库。`run_chapter_pipeline` 仍不填 `_plan_attribute_extracts` / `_plan_claim_anchors`。T5 这次没有发生；归属漂移若再发生，活路径标不出。这条限制不挡已经记下的阶段 B 三道门。阶段 C 的都市灵异活路径上，同一处空洞让 D1、D2、D4、D5 发生且未被拦住。
+`rule_auditor_node` 仍只读已批准卡，结果仍在 `_plan_fact_gate`，不改质量门路由。SettlementExtractor 仍写原结算库。2026-10-25 那次霞飞路活路径没有摘录和锚。T5 这次没有发生。阶段 C 的都市灵异活路径跑的时候也还没有这两项，D1、D2、D4、D5 发生且未被拦住。切片 1 之后，审查节点会在调用方没钉住列表时，按当前版本正文把 `_plan_attribute_extracts` / `_plan_claim_anchors` 填上再交给同一扇门。上面两段召回数字是接线之前的记录。
 
 **阶段 C 已关闭。退出条件未满足。操作结论是薄封装。** owner Bingtuu 在 2026-10-26（Asia/Shanghai）选定 **(a) 接受薄封装结论**：人维护事实圣经，AI 按圣经写。2026-10-25 指定的第二体裁仍是 **都市灵异**。种子和批准卡已在 main：`project_id=dushi-lingyi`，标题《末班铜牌》，卡在 `src/songyan/plan_facts/dushi_lingyi.json`，全部 `approval_status=approved`。Mew 按 owner 的委托代批。仓库题材配置没有「都市灵异」这个 id，卡上的 `genre_id` 仍是已能加载的 `urban_fantasy`。box 上的活路径写出 ch1–3，运行项目 `153fe8f222534585a2bdc2410496dfa0`。错误类是这个故事的 D1–D5，不是霞飞路 T1–T6。记录在 [experiments/dushi-plan-gate-rerun-2026-10-25](experiments/dushi-plan-gate-rerun-2026-10-25/README.md) 与 [gates.md](experiments/dushi-plan-gate-rerun-2026-10-25/gates.md)。
 
@@ -32,9 +32,11 @@ owner：Bingtuu。目标与非目标以 [ROADMAP-plan-first.md](ROADMAP-plan-fir
 - 人工 **pass_with_delegation_note**：owner 在 2026-10-25 把批卡委托给 Mew。没有秒表。计分板由 Mew 按 `occurred_basis` 定稿。
 - 成本 **borderline / owner call**：owner 口径合计 ¥6.830，v1 ≈¥1.37，约 5 倍。ch1 ¥3.216 / ch2 ¥2.599 / ch3 ¥1.015。没有一章达到 v1 第 3 章 ¥0.766 的十倍（¥7.66）。这道门不记 pass。
 
-**阶段 C 以召回失败关闭，退出条件未满足。** 这是「需要更多人在环」的记录，也是当前操作结论：人维护事实圣经，AI 按圣经写。
+**阶段 C 以召回失败关闭，退出条件未满足。** 这是「需要更多人在环」的记录。操作结论仍是薄封装：人维护事实圣经，AI 按圣经写。
 
-**下一件工作不是再开阶段 C 的刀。** 不再加题材专用检查器。可选的 (b) 仍推迟、没有开始：不把 `_plan_attribute_extracts` / `_plan_claim_anchors` 接到审查 state，不用同一套 D1–D5 重记召回。不改 SettlementExtractor，不改质量门路由，不写《规则年代》。本记录不实现薄封装运行时。
+**切片 1 已完成（2026-10-26，owner Bingtuu 下令加速，只做接线）。** `rule_auditor_node` 在审查 state 没有同时钉住 `_plan_attribute_extracts` 和 `_plan_claim_anchors` 时，从本章正文和已批准卡读出类型化摘录和主张锚，写回这两项，再交给原来的 `run_plan_fact_gate`。下一轮修订按新稿重读，不沿用上一稿。调用方已经同时放了列表时，沿用调用方的列表。门仍不从正文发明摘录，也不写 canon。没有新的题材检查器。没有重记 D1–D5。没有改 SettlementExtractor，没有改质量门路由，没有写《规则年代》。
+
+**下一刀是切片 2：薄封装运行时。** 人维护事实圣经，AI 按圣经写。不要在这一刀里发版（切片 3），也不要加题材规则，不要改 SettlementExtractor 的权威。
 
 ## 怎么报告
 
