@@ -2,6 +2,8 @@
 
 owner：Bingtuu。目标与非目标以 [ROADMAP-plan-first.md](ROADMAP-plan-first.md) 为准，架构方向以 [adr/0001-plan-first-facts.md](adr/0001-plan-first-facts.md) 为准。一次切片只做「下一刀」里的一件事。
 
+当前 tip 由 owner 命名为 **v0.5**（包版本 `0.5.0`）。正式 git tag 仍由维护者在合并和 CI 之后打。本文件不打 tag。
+
 ## 先看哪里
 
 | 要做什么 | 看 |
