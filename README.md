@@ -31,15 +31,51 @@
 
 ## 结构
 
-一章大致这样走：
+### 系统
 
-```text
-规划 → 把本章已批准的计划卡放进上下文 → 写初稿
-    → 规则 / 语义 / 文学审查 → 修订 → 接收
-    → 抽出的细节记入结算库
+命令行一次可以跑很多章。写完的章节、日志和导出都回到本机的 SQLite。
+
+```mermaid
+flowchart TB
+    CLI["命令行"] --> Runner["多章运行"]
+    Runner --> Skip["跳过已完成的章"]
+    Runner --> Chapter["单章写作"]
+    Runner --> Log["运行日志"]
+    Runner --> Continuity["连续性审计"]
+    Runner --> Halt["自动暂停"]
+    Cards["已批准的计划卡"] --> Chapter
+    Chapter --> DB["SQLite"]
+    Continuity --> DB
+    Log --> DB
+    DB --> Chapter
+    DB --> Out["报告 / 导出 / 备份"]
 ```
 
-计划卡只服务当前这一章。还没批准的卡、别的章、别的项目不会混进来。从正文抽出的细节另外记在结算库里；已经批准的计划卡保持原样。
+### 一章怎么走
+
+计划卡只进入当前这一章。还没批准的卡、别的章、别的项目不会混进来。从正文抽出的细节记在结算库里；已经批准的计划卡保持原样。
+
+```mermaid
+flowchart LR
+    Plan["规划"] --> Brief["创作简报"]
+    Cards["已批准的计划卡"] --> Context["组装上下文"]
+    Brief --> Context
+    Context --> Draft["写初稿"]
+    Draft --> Rule["规则审查"]
+    Draft --> Semantic["语义审查"]
+    Rule --> Merge["合并审查"]
+    Semantic --> Merge
+    Merge --> Literary["文学审查"]
+    Literary --> Gate{"质量门"}
+    Gate -->|通过| Accept["接收"]
+    Gate -->|可修订| Revise["修订"]
+    Gate -->|重写| Rewrite["整章重写"]
+    Revise --> Rule
+    Rewrite --> Rule
+    Accept --> Extract["记入结算库"]
+    Extract --> DB["SQLite"]
+    DB --> Context
+```
 
 | 路径 | 作用 |
 |------|------|
