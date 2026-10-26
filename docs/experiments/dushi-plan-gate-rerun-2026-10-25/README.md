@@ -1,6 +1,6 @@
 # 都市灵异《末班铜牌》ch1–3 活路径（2026-10-25）
 
-活路径召回 **1/5**。目标是 ≥4/5。**阶段 C 退出条件未满足**，因为召回失败。正文来自 Mew 的 box（有 `LLM_API_KEY`，`deepseek-chat`），运行项目 `153fe8f222534585a2bdc2410496dfa0`，批准卡 `dushi-lingyi`。云端虚拟机没有参与这次写章。
+活路径召回 **1/5**。目标是 ≥4/5。**阶段 C 已关闭，退出条件未满足**，因为召回失败。owner Bingtuu 在 2026-10-26（Asia/Shanghai）选定 **(a) 接受薄封装结论**：人维护事实圣经，AI 按圣经写。正文来自 Mew 的 box（有 `LLM_API_KEY`，`deepseek-chat`），运行项目 `153fe8f222534585a2bdc2410496dfa0`，批准卡 `dushi-lingyi`。云端虚拟机没有参与这次写章。记分数字仍是 2026-10-25 的定稿，本记录不改分。
 
 错误类是这个故事自己的 D1–D5，不是霞飞路的 T1–T6。规则：拦截或不发生都算召回；短语缺席不等于未发生。
 
@@ -40,10 +40,12 @@
 | 人工 ≤10 分钟/章 | **pass_with_delegation_note** |
 | 成本与 v1 同量级 | **borderline / owner call** — owner ¥6.830 vs v1 ≈¥1.37（约 5 倍）；没有一章达到 ¥7.66 |
 
-阶段 C 退出条件未满足。召回失败是退出未过的原因。成本不记 pass。人工是带委托说明的 pass。
+阶段 C 已关闭，退出条件未满足。召回失败是退出未过的原因。成本不记 pass。人工是带委托说明的 pass。操作结论是薄封装：人维护事实圣经，AI 按圣经写。
 
 ## 这一刀没有做的事
 
-没有写《规则年代》。没有加题材规则，没有新的 `plan_checks`。没有把抽取吸进 plan canon。没有改 SettlementExtractor。没有改质量门路由。没有接 `_plan_attribute_extracts` / `_plan_claim_anchors`。没有把薄封装写成 owner 已经接受的结论。
+没有写《规则年代》。没有加题材规则，没有新的 `plan_checks`。没有把抽取吸进 plan canon。没有改 SettlementExtractor。没有改质量门路由。没有接 `_plan_attribute_extracts` / `_plan_claim_anchors`。没有实现薄封装运行时。
 
-按路线图的失败路径，停止加题材规则。推荐 owner 下一刀做决定，二选一：（a）接受薄封装结论——人维护事实圣经，AI 按圣经写；（b）可选的单独一刀，只把摘录和锚接到审查 state，用同一套 D1–D5 重记召回。推荐项是（a）。（b）是阶段 B 推迟的 option 1，不是新的题材规则。
+## Owner 决定（2026-10-26，Asia/Shanghai）
+
+owner 选定 **(a)**。阶段 C 以召回失败关闭。不再加题材专用检查器。可选的 (b)——只把摘录和锚接到审查 state，用同一套 D1–D5 重记召回——仍推迟、没有开始。那是阶段 B 推迟的 option 1。下一件工作不是再开阶段 C 的刀。
