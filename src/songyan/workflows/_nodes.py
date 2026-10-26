@@ -3027,6 +3027,7 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
     summary_id = None
     summary_fact_check_available = False
     summary_missing_facts: list[str] = []
+    protagonist_name = ""
     pending_summary: Any | None = None
     settlement_validation_status: str | None = None
     settlement_validation_errors: list[str] = []
@@ -3166,8 +3167,13 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
                 )
 
                 allowed_names = set()
-                if project is not None and project.protagonist_name:
-                    allowed_names.add(project.protagonist_name)
+                protagonist_name = ""
+                if project is not None and isinstance(
+                    getattr(project, "protagonist_name", None), str
+                ):
+                    protagonist_name = project.protagonist_name.strip()
+                    if protagonist_name:
+                        allowed_names.add(protagonist_name)
                 startup_findings = validate_startup_runtime_from_env(
                     content=version.content,
                     settlement=settlement,
@@ -3198,6 +3204,7 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
                                 settlement=settlement,
                                 project_id=state["project_id"],
                                 chapter_number=state["chapter_number"],
+                                protagonist_name=protagonist_name,
                             )
                         )
                         summary_fact_check_available = True
@@ -3273,6 +3280,7 @@ async def settlement_extractor_node(state: dict[str, Any]) -> dict[str, Any]:
                             project_id=state["project_id"],
                             chapter_number=state["chapter_number"],
                             db=SummaryRepository(),
+                            protagonist_name=protagonist_name,
                         )
                     )
                     summary_fact_check_available = True
