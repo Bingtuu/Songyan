@@ -47,6 +47,7 @@ Identifiers and box paths: [HANDOFF-mew.md](HANDOFF-mew.md).
 | File | Purpose |
 |------|---------|
 | [README](../README.md) | Project overview and Quickstart |
+| [V1.0 PRD](prd-v1-writing-assist.md) | Planning for the human-led writing assistant. Not implemented on this tip |
 | [Quickstart](quickstart.md) | Install, configure and run |
 | [Troubleshooting](troubleshooting.md) | Failure recovery guide |
 | [Release Checklist](release-checklist.md) | Maintainer release gate |

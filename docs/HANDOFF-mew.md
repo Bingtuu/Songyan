@@ -2,6 +2,8 @@
 
 owner：Bingtuu。目标与非目标以 [ROADMAP-plan-first.md](ROADMAP-plan-first.md) 为准，架构方向以 [adr/0001-plan-first-facts.md](adr/0001-plan-first-facts.md) 为准。一次切片只做「下一刀」里的一件事。
 
+2026-10-26：V1.0 写作助手 PRD 已开，见 [prd-v1-writing-assist.md](prd-v1-writing-assist.md)。这是规划，不是下一刀。owner 接受之前不要按该文改代码。
+
 当前 tip 由 owner 命名为 **v0.5**（包版本 `0.5.0`）。正式 git tag 仍由维护者在合并和 CI 之后打。本文件不打 tag。
 
 ## 先看哪里
@@ -9,6 +11,7 @@ owner：Bingtuu。目标与非目标以 [ROADMAP-plan-first.md](ROADMAP-plan-fir
 | 要做什么 | 看 |
 |----------|----|
 | 今天做哪一件 | 本文件「下一刀」 |
+| V1.0 规划（已开，未开工） | [prd-v1-writing-assist.md](prd-v1-writing-assist.md)。owner 接受前不要按本文改代码 |
 | 怎样算 90 天证明了 | [ROADMAP-plan-first.md](ROADMAP-plan-first.md) 阶段 A → B → C |
 | 为什么倒过来写 canon | [adr/0001-plan-first-facts.md](adr/0001-plan-first-facts.md) |
 | 事实卡 schema（已合入的容器） | `src/songyan/models/plan_facts.py`；`src/songyan/db/plan_fact_repo.py`；`src/songyan/db/migrations.py` |

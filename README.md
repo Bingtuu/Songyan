@@ -134,6 +134,7 @@ songyan export --project-id <project_id> --chapters 1-3 --format md --output exp
 | [Troubleshooting](docs/troubleshooting.md) | 失败了怎么恢复 |
 | [Changelog](CHANGELOG.md) | 版本记录 |
 | [文档索引](docs/INDEX.md) | 其余公开文档 |
+| [V1.0 写作助手 PRD](docs/prd-v1-writing-assist.md) | 下一阶段产品规划；当前 tip 仍是 v0.5 |
 
 ## 参与贡献
 
