@@ -26,7 +26,7 @@ from datetime import date
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parents[1]
-_EXPERIMENT = _ROOT / "docs" / "experiments" / "xiafei-plan-gate-rerun-2026-10-25"
+_EXPERIMENT = _ROOT / "docs" / "archive" / "experiments" / "xiafei-plan-gate-rerun-2026-10-25"
 _TEMPLATE_PARENT = _EXPERIMENT / "tpl"
 _PLACEHOLDER_KEY = "your-api-key-here"
 
