@@ -1,4 +1,7 @@
-"""Task 134: SettlementExtractor character/numerical extraction fixes."""
+"""LEGACY — task134; keep green, do not extend.
+
+Task 134: SettlementExtractor character/numerical extraction fixes.
+"""
 
 from __future__ import annotations
 

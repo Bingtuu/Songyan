@@ -1,3 +1,5 @@
+> **HISTORICAL — do not load for daily agent context.** Obsolete auto-novel V1.0 task bible (Task 001–019 and later vibe-coding prompts). Not the writing-assist queue. Current rules: repository root `AGENTS.md`.
+
 好的工程不是一次性写对的，而是在正确的约束下一步步走出来的。
 制墨的工序不能乱：取烟、和胶、捣练、成锭。每步到位，墨才能用。
 

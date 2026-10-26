@@ -1,4 +1,7 @@
-"""Task 135: setting recycling and continuity health score governance."""
+"""LEGACY — task135; keep green, do not extend.
+
+Task 135: setting recycling and continuity health score governance.
+"""
 
 from __future__ import annotations
 

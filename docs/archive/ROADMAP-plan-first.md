@@ -1,17 +1,21 @@
+> **CLOSED / historical.** 阶段 A–C 已收束（薄封装）。不要把本文当每日任务队列，不要重开题材召回 KPI。
+> 日常入口是仓库根 `AGENTS.md`、`docs/prd-v1-writing-assist.md`、`docs/STATUS.md`、`docs/HANDOFF-mew.md`。
+> 本文件留在 `docs/archive/`，只供考古。短指针：`docs/ROADMAP-plan-first.md`。
+
 # Plan-first 一致性路线（约 90 天）
 
 > **读者**: owner（Bingtuu）与每日切片执行者（Mew）
 > **起点**: 2026-10-22
 > **更新**: 2026-10-26。Phase A 已合入 main（B7 #5、B5 #6、B18 #8）。Phase B 已完成（#13，`c84a2dac`）：霞飞路 ch1–3 活路径三道门已有记录，召回 **5/5**，人工 **pass_with_delegation_note**，成本同量级（¥2.115 vs v1 ≈¥1.37）。Phase C 活路径已跑完（都市灵异《末班铜牌》ch1–3，项目 `153fe8f222534585a2bdc2410496dfa0`）：召回 **1/5，fail**（门槛 ≥4/5，只有 D3），人工 **pass_with_delegation_note**，成本 owner ¥6.830 vs v1 ≈¥1.37（约 5 倍，**borderline / owner call**；没有单章 ≥¥7.66）。**阶段 C 已关闭，退出条件未满足。** owner 在 2026-10-26（Asia/Shanghai）选定 **(a) 接受薄封装结论**：人维护事实圣经，AI 按圣经写。同日下令加速，顺序是切片 1→2→3。切片 1 已在 main（#17，`196f5379`）：摘录和锚接到审查 state，没有重记召回。切片 2 已在 main（#18，`11c4c761`）：薄封装运行时，已批准计划卡作为本章事实圣经；写作和修订读这些卡，审查失败出现在 human gate，正文抽取不进 canon。切片 3 的真实 LLM Ch1–3 发布冒烟已有记录（2026-10-26 Asia/Shanghai，main `11c4c761`）：**fail**。科幻项目 `fdfc04b0771c493b83ec67750325ade7`，主运行 `run-e98414fc`，第 2 章重跑 `run-3defb98a`。只有第 1 章 accepted。第 2、3 章 `settlement_review` 失败（摘要缺主角决策/认知变化）。主运行非零：`AutoHaltException`（ContextEmergency 连续 Ch1–3）。Owner 口径 ¥0.874（ch1 ¥0.208 / ch2 ¥0.406 含重跑 / ch3 ¥0.260），停的阈值 ¥7.66 没碰到。部分通过：doctor、create-project、report、bundle 卫生（无 `.env`/密钥/书稿）、导出 1 个 md。产物在维护者 box（`/workspace/songyan-release-smoke-out/smoke_result.json`、`notes.md`，以及 smoke_result 里的 reports/bundles/exports），不在仓库。当时正式发布标签因此挡住。#20（`eaa6bef7721e43ccd1b53be2280076a355842d9b`）已把这一处合入：正文已有主角决策/认知变化时写回摘要。同日在该 tip 上重跑真实 LLM Ch1–3：**PASS**。scifi 模板项目 `5a7f3a4263bc499d95109ea460aa79df`（create-project 标题《轨道蜃景》），`run-552b2c04` 退出码 0、status=completed，Ch1–3 全部 accepted。没有 `settlement_review` / missing_facts 失败；只有 ContextEmergency 连续警告，没有 AutoHalt。Owner 口径合计 ¥1.035（输入 ¥2/M、输出 ¥8/M），单章最高约 ¥0.400，停的阈值 ¥7.66 没碰到。产物在维护者 box，不进仓库，路径只写在 HANDOFF。`11c4c761` / PR #19 的 fail 仍是历史。正式发布标签仍由维护者决定；技术预览 / release-candidate 可以带着这份证据往下走。这个 tip 的冒烟门已经满足，不再开 `settlement_review` 修复刀。不是再开阶段 C。不再加题材专用检查器。
 > **状态**: 方向已定，阶段 C 以薄封装收束（退出未过）。SettlementExtractor 的权威路径尚未改写。写作和审查只读已批准 plan 卡，不把抽取写进 canon。切片 3 在 `11c4c761`（PR #19）上的发布冒烟 **fail** 留作历史。#20 合入后的 tip `eaa6bef` 重跑 **PASS**（`run-552b2c04`，Ch1–3 accepted，退出码 0）。正式发布标签仍由维护者决定。技术预览 / release-candidate 可以带着这份证据往下走。冒烟门对这个 tip 已满足，不再开 `settlement_review` 修复刀。
-> **每日入口**: [HANDOFF-mew.md](HANDOFF-mew.md)
-> **架构决定**: [adr/0001-plan-first-facts.md](adr/0001-plan-first-facts.md)
+> **每日入口**: [HANDOFF-mew.md](../HANDOFF-mew.md)
+> **架构决定**: [adr/0001-plan-first-facts.md](../adr/0001-plan-first-facts.md)
 
 ## 目标
 
 约 90 天内证明一件事：**plan-first 能把跨章真错误召回做到可用**。可用的尺子是霞飞路这一类错误上 **召回 ≥4/5**。
 
-这 90 天的进度是召回门，规模写作先冻住。《规则年代》停在已有章节。CED / T9 / 五门和 200 章 baseline 继续按 [STATUS](STATUS.md) 的公开口径保留。
+这 90 天的进度是召回门，规模写作先冻住。《规则年代》停在已有章节。CED / T9 / 五门和 200 章 baseline 继续按 [STATUS](../STATUS.md) 的公开口径保留。
 
 ## 证据（只引用已有记录，不新造数字）
 
@@ -27,7 +31,7 @@
 | 都市灵异活路径（2026-10-25，box，项目 `153fe8f222534585a2bdc2410496dfa0`，《末班铜牌》） | 故事自己的五类召回 **1/5，fail**（门槛 ≥4/5）。D3 灵印位置离牌未发生，记召回。D1 刻痕方向/数量、D2 灵印记名归属、D4 交还朝向、D5 窗内改写禁忌发生，活路径没有摘录和锚，没有拦住。见 [实验记录](experiments/dushi-plan-gate-rerun-2026-10-25/README.md)。 |
 | 同一项目的人工与成本（`llm_call_usage`，[`phase-c-cost-human.json`](experiments/dushi-plan-gate-rerun-2026-10-25/phase-c-cost-human.json)） | 人工 **pass_with_delegation_note**（owner 委托批卡，没有秒表）。成本 owner 口径 ch1/2/3 = ¥3.216 / ¥2.599 / ¥1.015，合计 ¥6.830，对比 v1 ≈¥1.37，约 5 倍，**borderline / owner call**。没有一章达到 ¥7.66。见 [gates.md](experiments/dushi-plan-gate-rerun-2026-10-25/gates.md)。 |
 | 发布冒烟（2026-10-26，Asia/Shanghai，维护者 box，main `11c4c761`，PR #19，科幻，项目 `fdfc04b0771c493b83ec67750325ade7`） | **fail**（历史）。主运行 `run-e98414fc` 非零退出（`AutoHaltException`，ContextEmergency 连续 Ch1–3）。只有 Ch1 accepted。Ch2、Ch3 失败在 `settlement_review`，摘要缺主角决策/认知变化。Ch2 另有重跑 `run-3defb98a`。Owner 口径合计 ¥0.874（ch1 ¥0.208 / ch2 ¥0.406 含重跑 / ch3 ¥0.260）。停的阈值 ¥7.66 没碰到。部分通过：doctor、create-project、report、bundle 卫生（无 `.env`/密钥/书稿）、导出 1 个 md。产物在维护者 box 的 `/workspace/songyan-release-smoke-out/`（`smoke_result.json`、`notes.md`，以及 smoke_result 里的 reports/bundles/exports），不在本仓库。 |
-| 发布冒烟重跑（2026-10-26，Asia/Shanghai，main `eaa6bef7721e43ccd1b53be2280076a355842d9b`，PR #20 squash，scifi 模板，项目 `5a7f3a4263bc499d95109ea460aa79df`，create-project 标题《轨道蜃景》） | **PASS**。`run-552b2c04` 退出码 0，status=completed。Ch1–3 全部 accepted。没有 `settlement_review` / missing_facts 失败。ContextEmergency 只有连续警告，没有 AutoHalt。Owner 口径合计 ¥1.035（输入 ¥2/M、输出 ¥8/M），单章最高约 ¥0.400。停的阈值 ¥7.66 没碰到。产物在维护者 box，不进仓库；路径只写在 [HANDOFF-mew.md](HANDOFF-mew.md)。正式发布标签仍由维护者决定。这个 tip 的冒烟门已满足。 |
+| 发布冒烟重跑（2026-10-26，Asia/Shanghai，main `eaa6bef7721e43ccd1b53be2280076a355842d9b`，PR #20 squash，scifi 模板，项目 `5a7f3a4263bc499d95109ea460aa79df`，create-project 标题《轨道蜃景》） | **PASS**。`run-552b2c04` 退出码 0，status=completed。Ch1–3 全部 accepted。没有 `settlement_review` / missing_facts 失败。ContextEmergency 只有连续警告，没有 AutoHalt。Owner 口径合计 ¥1.035（输入 ¥2/M、输出 ¥8/M），单章最高约 ¥0.400。停的阈值 ¥7.66 没碰到。产物在维护者 box，不进仓库；路径只写在 [HANDOFF-mew.md](../HANDOFF-mew.md)。正式发布标签仍由维护者决定。这个 tip 的冒烟门已满足。 |
 
 调研报告给出的最小实验口径，本路线直接沿用：人工确认事实卡后重跑 ch1–3；拦截或不发生的 v4 类错误 **≥4/5**；人工 **≤10 分钟/章**。
 
@@ -49,7 +53,7 @@ A 的退出条件是这三项各自有可复现的测试或记录，不是「顺
 
 **第一刀（随本文件合入）：事实卡 schema。** ADR-0001 的五类记录可以创建、读回、再写进 SQLite，带稳定 ID。`approval_status` 把 `pending` 和 plan|human 已批准的 canon 行分开。这一刀不写霞飞路正文，不接窄检查，不改 SettlementExtractor 的权威路径，也不把抽取结果自动吸进这些表。
 
-**第二刀（随本文件之后的切片）：批准卡 + 三项窄检查。** `project_id=xiafei-jiuan` 的 ch1–3 卡已批准入库。必须提及、主张核验、类型化属性比较在 `src/songyan/plan_checks/`，用 v4 正文做了 fixture 对照（见 [xiafei-plan-checks.md](xiafei-plan-checks.md)）。
+**第二刀（随本文件之后的切片）：批准卡 + 三项窄检查。** `project_id=xiafei-jiuan` 的 ch1–3 卡已批准入库。必须提及、主张核验、类型化属性比较在 `src/songyan/plan_checks/`，用 v4 正文做了 fixture 对照（见 [xiafei-plan-checks.md](../xiafei-plan-checks.md)）。
 
 **第三刀（审查路径上的只读门）：** 写章审查在正文版本存在之后调用这三项检查，只读当前项目已批准的 plan 卡。不改 SettlementExtractor 权威，不把抽取吸进 canon，也没有重跑正文。成功门不变，留到重跑那一刀。
 

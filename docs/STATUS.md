@@ -2,7 +2,7 @@
 
 Public status board for developers evaluating or contributing to Songyan.
 
-Package version for this tip: **0.5.0** (owner name **v0.5**). This page does not cut a git tag.
+Package version for this tip: **0.5.0** (owner name **v0.5**). **V1.0** is the product-generation name for the writing assistant, not this package version. This page does not cut a git tag.
 
 ## Release Readiness
 
@@ -47,6 +47,7 @@ Identifiers and box paths: [HANDOFF-mew.md](HANDOFF-mew.md).
 | File | Purpose |
 |------|---------|
 | [README](../README.md) | Project overview and Quickstart |
+| [AGENTS.md](../AGENTS.md) | What to read, and what not to load |
 | [V1.0 PRD](prd-v1-writing-assist.md) | Planning for the human-led writing assistant. Not implemented on this tip |
 | [Quickstart](quickstart.md) | Install, configure and run |
 | [Troubleshooting](troubleshooting.md) | Failure recovery guide |
@@ -60,6 +61,7 @@ Identifiers and box paths: [HANDOFF-mew.md](HANDOFF-mew.md).
 
 ## Maintainer Next Steps
 
-1. Cite the `47954cb` Ch1–10 run as pipeline evidence only. Literary quality failed the human read. Do not open another `settlement_review` fix for the `11c4c761` fail.
+1. Cite the `47954cb` Ch1–10 run as pipeline evidence only. Literary quality failed the human read. Do not open another `settlement_review` fix for the `11c4c761` fail. Do not start another unattended long novel run as the next step.
 2. A formal release tag is still a maintainer decision. This page does not cut the tag.
-3. Confirm no `.env`, local DB, logs, backups, bundles, or private manuscripts are staged.
+3. V1.0 assistant commands wait until the owner accepts [prd-v1-writing-assist.md](prd-v1-writing-assist.md). This cleanup does not implement them.
+4. Confirm no `.env`, local DB, logs, backups, bundles, or private manuscripts are staged.

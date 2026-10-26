@@ -1,3 +1,5 @@
+> **HISTORICAL — do not load for daily agent context.** V13 task index, closed 2026-09-06. Not the V1.0 writing-assist queue.
+
 # V13 Task 总索引
 
 > **阶段**: 质量方法论公开化

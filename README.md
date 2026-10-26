@@ -88,7 +88,7 @@ flowchart LR
 | `src/songyan/prompts/` | 提示词卡片 |
 | `docs/` | 使用说明和发布文档 |
 
-设计取舍见 [ADR-0001](docs/adr/0001-plan-first-facts.md)，阶段说明见 [Plan-first 路线](docs/ROADMAP-plan-first.md)。
+设计取舍见 [ADR-0001](docs/adr/0001-plan-first-facts.md)。下一阶段是人主导的写作助手，规划在 [V1.0 PRD](docs/prd-v1-writing-assist.md)；包版本仍是 v0.5。Plan-first 阶段 A–C 已关闭。
 
 ## 使用方式
 
@@ -117,7 +117,7 @@ songyan export --project-id <project_id> --chapters 1-3 --format md --output exp
 
 ## 进展
 
-**v0.5**（包版本 `0.5.0`）是技术预览。当前这条线上，科幻模板的真实模型前三章已经跑通。十章以及更长的连载，还没有作为这一版的验收标准。
+**v0.5**（包版本 `0.5.0`）是技术预览。「V1.0」是下一阶段的产品代际名，不是这个包版本。科幻模板的真实模型前三章已经跑通。Ch1–10 在 `47954cb` 上只是管线证据：过程门通过，人工阅读未通过，不能当成可读长篇。详见 [STATUS](docs/STATUS.md)。
 
 把现成书稿导入后再接着写，自动化测试已经有了；用真实书稿续写，还没有验收。
 
@@ -127,18 +127,19 @@ songyan export --project-id <project_id> --chapters 1-3 --format md --output exp
 
 | 文档 | 何时去看 |
 |------|----------|
+| [V1.0 写作助手 PRD](docs/prd-v1-writing-assist.md) | 下一阶段产品规划；当前 tip 仍是 v0.5；文中 proposed 命令还没实现 |
+| [AGENTS.md](AGENTS.md) | 贡献者和代理先读：现在是什么、不要加载哪些历史文档 |
 | [Quickstart](docs/quickstart.md) | 安装、配置、短窗口、导出 |
 | [STATUS](docs/STATUS.md) | 现在能用什么，以及限制 |
 | [Release Checklist](docs/release-checklist.md) | 发布前要核对的项 |
 | [baseline 摘要](docs/baseline-results.md) | 更早长窗口的公开数字 |
 | [Troubleshooting](docs/troubleshooting.md) | 失败了怎么恢复 |
 | [Changelog](CHANGELOG.md) | 版本记录 |
-| [文档索引](docs/INDEX.md) | 其余公开文档 |
-| [V1.0 写作助手 PRD](docs/prd-v1-writing-assist.md) | 下一阶段产品规划；当前 tip 仍是 v0.5 |
+| [文档索引](docs/INDEX.md) | 当前文档地图；历史材料在归档里 |
 
 ## 参与贡献
 
-贡献方式、测试命令和工程边界见 [CONTRIBUTING](CONTRIBUTING.md)。提问题前先看 [最小复现指南](docs/minimal-repro.md)。不要提交 `.env`、API key、书稿、本地数据库或未脱敏日志；需要附诊断时用 `songyan bundle-run`。
+先读 [AGENTS.md](AGENTS.md)，再看 [CONTRIBUTING](CONTRIBUTING.md)。当前贡献主路径是已接受的 V1.0 PRD 和 `tasks/`，不是 plan-first 每日切片。提问题前先看 [最小复现指南](docs/minimal-repro.md)。不要提交 `.env`、API key、书稿、本地数据库或未脱敏日志；需要附诊断时用 `songyan bundle-run`。
 
 ## 许可证
 
