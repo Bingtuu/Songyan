@@ -24,7 +24,7 @@ Songyan（松烟）是 **人主导的连载写作助手**，外加一份结构�
 2. [docs/adr/0001-plan-first-facts.md](docs/adr/0001-plan-first-facts.md) — 事实写入方向。
 3. [docs/STATUS.md](docs/STATUS.md) — 工程事实（版本、闸门、已知限制）。
 4. [docs/HANDOFF-mew.md](docs/HANDOFF-mew.md) — 当天的下一步。
-5. [tasks/](tasks/README.md) — 有任务文档之后才算队列。清理被接受之前，队列是空的。
+5. [tasks/](tasks/README.md) — 队列从 `tasks/200-` 起。没有任务文件就不要口头开工。M0 任务桩等 owner 接受 PRD 之后再写。
 
 冲突时，上面的条目压过下面的。不要用归档路线图推翻 PRD。
 
@@ -57,7 +57,7 @@ Songyan（松烟）是 **人主导的连载写作助手**，外加一份结构�
 
 ## 怎么干活
 
-1. 读本文件和当前任务（`tasks/NNN-*.md`，或 HANDOFF 里的下一刀）。没有任务文档就不要口头开工。
+1. 读本文件和当前任务文件（`tasks/200-` 起）。没有任务文件就不要口头开工。
 2. 切片要小。一次只做下一刀里的一件事。
 3. 行为变了就同步 [docs/STATUS.md](docs/STATUS.md) 和 [docs/HANDOFF-mew.md](docs/HANDOFF-mew.md)。进度不要写进 README。
 4. 测试怎么放、哪些必须绿，见 [tests/README.md](tests/README.md)。新测试禁止 `test_task###_*.py`、`test_<数字>_*.py`、`test_v<数字>_*.py`。
@@ -65,4 +65,4 @@ Songyan（松烟）是 **人主导的连载写作助手**，外加一份结构�
 
 ## 命令表面（避免说错）
 
-现网能用的是已经安装的 Click 命令，例如 `doctor`、`create-project`、`run`、`report`、`export`、`import`、`bundle-run`。分组别名和抽卡命令以 PRD 为准；标了 proposed 的都还没做。Git 式整树 `branch` 不在 V1.0。
+现网能用的是已经安装的 Click 命令，例如 `doctor`、`create-project`、`run`、`report`、`export`、`import`、`bundle-run`。作者每天要走的路径将是 `today` / `canon` / `check`（proposed）。`run` 只作冒烟和引擎。分组别名和抽卡命令以 PRD 为准；标了 proposed 的都还没做。Git 式整树 `branch` 不在 V1.0。

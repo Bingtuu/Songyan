@@ -61,7 +61,6 @@ Identifiers and box paths: [HANDOFF-mew.md](HANDOFF-mew.md).
 
 ## Maintainer Next Steps
 
-1. Cite the `47954cb` Ch1–10 run as pipeline evidence only. Literary quality failed the human read. Do not open another `settlement_review` fix for the `11c4c761` fail. Do not start another unattended long novel run as the next step.
-2. A formal release tag is still a maintainer decision. This page does not cut the tag.
-3. V1.0 assistant commands wait until the owner accepts [prd-v1-writing-assist.md](prd-v1-writing-assist.md). This cleanup does not implement them.
-4. Confirm no `.env`, local DB, logs, backups, bundles, or private manuscripts are staged.
+1. After this cleanup merges, close superseded [#24](https://github.com/Bingtuu/Songyan/pull/24) and [#25](https://github.com/Bingtuu/Songyan/pull/25).
+2. Owner accepts the [PRD](prd-v1-writing-assist.md), then open `tasks/200+` (M0 stubs). Do not start another unattended long novel run.
+3. A formal release tag remains a maintainer decision. This page does not cut the tag.
