@@ -18,13 +18,11 @@ test-results/
 junit.xml
 pytest-report.xml
 
-# Generated task/report records. Track intentionally with git add -f only when
-# the artifact becomes a public entry point such as README-linked documentation.
-tasks/
-archive/
+# Local scratch. Root `archive/` is not the tracked historical tree.
+# Public entry points are tracked: `AGENTS.md`, `tasks/`, `docs/archive/`.
+/archive/
 docs/reports/
 docs/memos/
-AGENTS.md
 
 # Environment
 .env

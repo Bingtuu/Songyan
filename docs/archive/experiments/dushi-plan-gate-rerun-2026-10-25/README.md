@@ -1,3 +1,5 @@
+> **HISTORICAL.** Plan-first Phase C rerun record (recall failed; thin-wrapper accepted). `chapters/` is pipeline prose, not a literary deliverable. Do not extend or reopen the genre-checker KPI.
+
 # 都市灵异《末班铜牌》ch1–3 活路径（2026-10-25）
 
 活路径召回 **1/5**。目标是 ≥4/5。**阶段 C 已关闭，退出条件未满足**，因为召回失败。owner Bingtuu 在 2026-10-26（Asia/Shanghai）选定 **(a) 接受薄封装结论**：人维护事实圣经，AI 按圣经写。正文来自 Mew 的 box（有 `LLM_API_KEY`，`deepseek-chat`），运行项目 `153fe8f222534585a2bdc2410496dfa0`，批准卡 `dushi-lingyi`。云端虚拟机没有参与这次写章。记分数字仍是 2026-10-25 的定稿，本记录不改分。

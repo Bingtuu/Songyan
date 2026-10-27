@@ -1,3 +1,5 @@
+> Pipeline rerun prose, not a literary deliverable. Do not present or extend these chapters as finished work.
+
 这三章是 Mew 在有 `LLM_API_KEY` 的 box 上跑出的活路径正文，原样抄入。项目 id：`153fe8f222534585a2bdc2410496dfa0`（批准卡 `dushi-lingyi`，《末班铜牌》）。不是云端虚拟机写的。
 
 | 章 | accepted_version_id | 字数 | 字符 |

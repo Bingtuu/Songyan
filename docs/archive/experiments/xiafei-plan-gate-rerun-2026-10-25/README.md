@@ -1,3 +1,5 @@
+> **HISTORICAL.** Plan-first Phase B rerun record. `chapters/` is pipeline prose kept for the scoreboard, not a literary deliverable. Do not extend.
+
 # 霞飞路《旧案》ch1–3 只读门重跑（2026-10-25）
 
 活路径召回 **5/5**。目标是 ≥4/5。正文来自 Mew 的 box（本 PR 分支，有 `LLM_API_KEY`），项目 `030b687372374aa491e0c294e6d62969`。云端虚拟机没有密钥，没有参与这次写章。

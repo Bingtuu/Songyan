@@ -1,60 +1,29 @@
 # Songyan Documentation
 
-Public documentation map for users and contributors.
+地图只列当前要读的文档。历史材料在 [archive/](archive/README.md)，**日常不要加载**。
 
-## Start Here
-
-| Document | Purpose |
-|----------|---------|
-| [README](../README.md) | Project overview, features and shortest path |
-| [Status](STATUS.md) | Current release readiness and known limits |
-| [Quickstart](quickstart.md) | Install, configure, run and export |
-| [Troubleshooting](troubleshooting.md) | Common failures and recovery commands |
-
-## Release and Contribution
+## 当前
 
 | Document | Purpose |
 |----------|---------|
-| [Release Checklist](release-checklist.md) | Maintainer release gate and smoke commands |
-| [Minimal Reproduction Guide](minimal-repro.md) | How to file actionable issues |
-| [Contributing](../CONTRIBUTING.md) | Contribution workflow and project boundaries |
-| [Changelog](../CHANGELOG.md) | Release notes |
-| [License](../LICENSE) | AGPL-3.0 license |
+| [AGENTS.md](../AGENTS.md) | 代理与贡献者规则：现在是什么、不要读什么 |
+| [V1.0 写作助手 PRD](prd-v1-writing-assist.md) | 产品权威。工作流 W0–W6。实现等 owner 接受 |
+| [ADR-0001](adr/0001-plan-first-facts.md) | 事实写入方向。阶段 A–C 已关闭，不重开召回 KPI |
+| [STATUS](STATUS.md) | 工程事实：v0.5 能做什么；Ch1–10 管线过、文学不过 |
+| [HANDOFF](HANDOFF-mew.md) | 当天下一步 |
+| [Quickstart](quickstart.md) | 安装、配置、短窗口、导出 |
+| [Troubleshooting](troubleshooting.md) | 失败恢复 |
+| [Release Checklist](release-checklist.md) | 维护者发布门 |
+| [质量门方法论](quality-gates.md) | CED / T9 / 五门口径 |
 
-## Quality Methodology
+## 不要默认加载
 
-| Document | Purpose |
-|----------|---------|
-| [质量门方法论：CED / T9 / 五门](quality-gates.md) | 质量度量口径定义、证据要求、阈值出处与复现命令 |
-| [Ch200 baseline 结果摘要](baseline-results.md) | 4 体裁 200 章验收的公开聚合数值（已脱敏） |
+[docs/archive/](archive/README.md)：旧自动成书任务圣经、技术参考、V13–V15 路线、plan-first 全文、实验章节正文。
 
-## Roadmap
+Plan-first 的短指针仍在 [ROADMAP-plan-first.md](ROADMAP-plan-first.md)（**CLOSED**）。打开它不会带出全文。
 
-| Document | Purpose |
-|----------|---------|
-| [V13 质量方法论公开化](roadmap/v13-quality-methodology.md) | 公开 CED / T9 / 五门口径与脱敏 baseline（已规划，Task 226-229） |
-| [V14 成本与按角色模型路由](roadmap/v14-model-routing.md) | per-role LLM 配置与成本拆分（已规划，Task 230-233） |
-| [V15 导入已有小说续写](roadmap/v15-import-continue.md) | ingest → segment → replay → synthesize → publish（进行中，Task 234/235/236/237 DONE） |
-| [Plan-first 一致性路线](ROADMAP-plan-first.md) | 约 90 天证明跨章真错误召回；阶段 A/B/C 与非目标 |
-| [ADR-0001 Plan-first 事实层](adr/0001-plan-first-facts.md) | 计划写 canon，正文对照计划做窄检查 |
-| [Mew 每日切片](HANDOFF-mew.md) | 下一刀、相关代码位置、报告格式 |
+## 运行时不要提交
 
-## Architecture References
+`songyan.db`、`*.db`、`logs/`、`exports/`、`backups/`、`bundles/`、`.env`。
 
-| Document | Purpose |
-|----------|---------|
-| [Engineering Notes](architecture/04-vibe-coding-engineering.md) | Engineering model and workflow notes |
-| [Technical Reference](architecture/05-tech-reference.md) | Technical reference for deeper contributors |
-
-## Runtime Artifacts
-
-Songyan creates local runtime artifacts that should not be committed:
-
-- `songyan.db`, `*.db`, `*.sqlite`
-- `logs/`
-- `exports/`
-- `backups/`
-- `bundles/`
-- `.env`
-
-Use `songyan bundle-run --run-id <run_id> --output bundles/` when you need a redacted diagnostic package for issue reports.
+需要脱敏诊断包时用 `songyan bundle-run --run-id <run_id> --output bundles/`。

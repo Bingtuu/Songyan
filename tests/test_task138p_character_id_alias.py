@@ -1,4 +1,6 @@
-"""Task 138p: 克隆项目角色 ID alias 注册测试.
+"""LEGACY — task138p; keep green, do not extend.
+
+Task 138p: 克隆项目角色 ID alias 注册测试.
 
 在 rehearsal/延续脚本中，源项目的角色 ID（如 char_001）会被克隆为新 ID
 （如 char-abc123-001），但 Writer 生成的正文仍使用原始 ID。 SettlementExtractor

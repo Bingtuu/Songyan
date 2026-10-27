@@ -1,4 +1,7 @@
-"""Task 138n: mandatory reference 聚合、上限与专用 patch 路径测试."""
+"""LEGACY — task138n; keep green, do not extend.
+
+Task 138n: mandatory reference 聚合、上限与专用 patch 路径测试.
+"""
 
 from __future__ import annotations
 

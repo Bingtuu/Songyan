@@ -9,6 +9,7 @@ from songyan.project_templates.loader import ProjectTemplateLoader
 _TEMPLATE_PARENT = (
     Path(__file__).resolve().parents[2]
     / "docs"
+    / "archive"
     / "experiments"
     / "xiafei-plan-gate-rerun-2026-10-25"
     / "tpl"

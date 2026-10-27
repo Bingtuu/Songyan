@@ -1,3 +1,5 @@
+> **HISTORICAL — do not load for daily agent context.** 2026-05 technical reference. Not current product authority. Current rules: repository root `AGENTS.md`.
+
 技术不是越复杂越好，而是越够用越好。
 墨只需要烟和胶，不需要金银。
 

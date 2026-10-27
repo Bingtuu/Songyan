@@ -1,3 +1,5 @@
+> **HISTORICAL — do not load for daily agent context.** V15 import roadmap. Not the V1.0 writing-assist queue.
+
 # V15 Task 总索引
 
 > **阶段**: 导入已有小说续写

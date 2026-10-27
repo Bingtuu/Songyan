@@ -1,4 +1,7 @@
-"""Task 137: 设定回收闭环机制测试."""
+"""LEGACY — task137; keep green, do not extend.
+
+Task 137: 设定回收闭环机制测试.
+"""
 
 from __future__ import annotations
 

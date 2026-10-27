@@ -6,9 +6,9 @@ phrases are not treated as "the error did not happen".
 Example::
 
     python scripts/score_xiafei_roadmap_recall.py \\
-        --chapters-dir docs/experiments/xiafei-plan-gate-rerun-2026-10-25/chapters \\
-        --occurred docs/experiments/xiafei-plan-gate-rerun-2026-10-25/occurred.json \\
-        --extracts docs/experiments/xiafei-plan-gate-rerun-2026-10-25/extracts.json
+        --chapters-dir docs/archive/experiments/xiafei-plan-gate-rerun-2026-10-25/chapters \\
+        --occurred docs/archive/experiments/xiafei-plan-gate-rerun-2026-10-25/occurred.json \\
+        --extracts docs/archive/experiments/xiafei-plan-gate-rerun-2026-10-25/extracts.json
 
 ``--live-path`` omits claim anchors and attribute extracts, which is what
 ``rule_auditor_node`` does when the review state leaves those keys unset.

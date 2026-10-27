@@ -1,3 +1,5 @@
+> **HISTORICAL — do not load for daily agent context.** V14 feature roadmap. Not the V1.0 writing-assist queue.
+
 # V14 Task 总索引
 
 > **阶段**: 成本优化与按角色模型路由

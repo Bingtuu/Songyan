@@ -1,11 +1,11 @@
 # ADR-0001: Plan-first 事实层
 
-- **状态**: 已接受（方向）。2026-10-25：最小表和读写已落地；写章审查会只读已批准 plan 卡。SettlementExtractor 权威尚未翻转。
-- **日期**: 2026-10-22（决定）；2026-10-25（实现注记）
-- **决定者**: Bingtuu（owner）；执行切片见 [HANDOFF-mew.md](../HANDOFF-mew.md)
-- **相关**: [ROADMAP-plan-first.md](../ROADMAP-plan-first.md)
+- **状态**: 已接受（方向）。2026-10-26：阶段 A–C 已收束为薄封装。本文仍是事实写入方向。产品工作流以 [prd-v1-writing-assist.md](../prd-v1-writing-assist.md) 为准。不要重开题材召回 KPI。
+- **日期**: 2026-10-22（决定）；2026-10-25（实现注记）；2026-10-26（收束注记）
+- **决定者**: Bingtuu（owner）；当天切片见 [HANDOFF-mew.md](../HANDOFF-mew.md)
+- **相关**: [ROADMAP-plan-first.md](../ROADMAP-plan-first.md)（CLOSED 短指针；全文在 archive，日常不要加载）
 
-工程手册 [04-vibe-coding-engineering.md](../architecture/04-vibe-coding-engineering.md) 把 ADR 放在 `docs/decisions/ADR-NNN-*.md`，并列出 ADR-001–009。那些文件没有进当前仓库。本系列从 `docs/adr/0001` 起，避免和手册里的编号撞车。
+旧工程手册在 `docs/archive/architecture/04-vibe-coding-engineering.md`。它把 ADR 放在 `docs/decisions/ADR-NNN-*.md`，并列出 ADR-001–009。那些文件没有进当前仓库。本系列从 `docs/adr/0001` 起，避免和手册编号撞车。那本手册是历史任务圣经，不要当每日队列加载。
 
 ## Decision
 
