@@ -4,4 +4,4 @@
 
 全文在 [archive/ROADMAP-plan-first.md](archive/ROADMAP-plan-first.md)。日常不要加载那份正文。
 
-当前权威：[AGENTS.md](../AGENTS.md) → [prd-v1-writing-assist.md](prd-v1-writing-assist.md) → [adr/0001-plan-first-facts.md](adr/0001-plan-first-facts.md) → [STATUS.md](STATUS.md) → [HANDOFF-mew.md](HANDOFF-mew.md)。
+当前权威：[AGENTS.md](../AGENTS.md) → [prd-v1.md](prd-v1.md) → [tech-m0.md](tech-m0.md) → [adr/0001-plan-first-facts.md](adr/0001-plan-first-facts.md) → [STATUS.md](STATUS.md) → [HANDOFF-mew.md](HANDOFF-mew.md)。旧 PRD 路径只留指针。

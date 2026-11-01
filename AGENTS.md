@@ -4,65 +4,79 @@
 
 ## 现在是什么
 
-Songyan（松烟）是 **人主导的连载写作助手**，外加一份结构化 **Canon**（已确认的事实）。人定方向和终稿；程序出草稿、记账、做窄检查。
+Songyan（松烟）是 **人主导的连载写作助手**，接在现有的事实 / 故事线工作台上。人决定事实、数据、人物、时间、道具、伏笔、故事线和终稿。系统记录、检索、发现冲突、审计变更、报告一致性。
 
-当前可运行的包是 **v0.5**（`pyproject.toml` 里的 `0.5.0`）。「V1.0」只是下一产品代际的名字，不是版本号，也不要打 `v1.0` 标签。实现以 [docs/prd-v1-writing-assist.md](docs/prd-v1-writing-assist.md) 为准，而且要等 owner 接受该文之后。
+两条日常路径：
 
-已经关掉的事：plan-first 阶段 A–C（薄封装）。[ADR-0001](docs/adr/0001-plan-first-facts.md) 的方向还在：人维护事实圣经，模型按圣经写。不要重开题材检查器召回 KPI。
+1. **先稿后典：** 草稿 → 结算事实 / 数据 → 人改编 → 审读 / 检查。
+2. **工作台先行：** 人编辑事实与故事线，系统提供一致性支持。
+
+当前可运行的包是 **v0.5**（`pyproject.toml` 的 `0.5.0`）。「V1.0」是产品代际名，不是版本号。不要打 `v1.0` 标签，不要为了文档改版本号。
+
+都市灵异是 Phase C 的试点和 M0 夹具（《末班铜牌》），不是以后唯一题材。不要为此加题材检查器。
 
 ## 现在不是什么
 
-- 不是无人值守写完一本小说的产品。`songyan run --chapters 1-N --auto-confirm` 是引擎 / 冒烟 / 长窗实验，不是作者主路径。
+- 不是无人值守写完一本小说，也不是自动改写终稿。`songyan run --chapters 1-N --auto-confirm` 是引擎 / 冒烟 / 长窗实验。
 - 不是纯设定台账。写作辅助留在产品里。
-- 不会静默改 Canon。抽取、结算摘要、审读建议默认是提案，不是事实。
-- 不拥有文学质量。Ch1–10（`47954cb`，`run-33841231`）只证明管线能跑完；人工阅读未通过。见 [docs/STATUS.md](docs/STATUS.md)。
-- README 里没有的命令，就还没有。PRD 里标了 **`[proposed]`** 的 CLI（`variant`、`canon confirm`、`chapter continue` 等）不要写成已经支持。
+- 不会静默改 Canon。抽取、结算摘要、审读建议默认是提案。确认入典才是作者写入路径。
+- 章内 Variant 不是 Git 分支。默认 N=2。Git 式整树 `branch` 不在这一代。
+- 不拥有文学质量。Ch1–10（`47954cb`，`run-33841231`）只证明管线能跑完。见 [docs/STATUS.md](docs/STATUS.md)。
+- README 里没有的命令，就还没有。PRD 里标了 **`[proposed]`** 的命令不要写成已经支持。
 
-## 文档权威（只按这个顺序）
+## 文档权威
 
-1. [docs/prd-v1-writing-assist.md](docs/prd-v1-writing-assist.md) — 产品。工作流 **W0–W6** 只在这里展开，本文件不复述。
-2. [docs/adr/0001-plan-first-facts.md](docs/adr/0001-plan-first-facts.md) — 事实写入方向。
-3. [docs/STATUS.md](docs/STATUS.md) — 工程事实（版本、闸门、已知限制）。
-4. [docs/HANDOFF-mew.md](docs/HANDOFF-mew.md) — 当天的下一步。
-5. [tasks/](tasks/README.md) — 队列从 `tasks/200-` 起。没有任务文件就不要口头开工。M0 任务桩等 owner 接受 PRD 之后再写。
+书面接受之前，下面的产品文和技术文是 **待审文本**。可以读，不能按它们改 `src/` 或 `tests/`。
 
-冲突时，上面的条目压过下面的。不要用归档路线图推翻 PRD。
+1. [docs/prd-v1.md](docs/prd-v1.md) — 产品。工作流 W0–W6、路径 P-draft / P-bench、里程碑 M0–M4 只在这里展开。
+2. [docs/tech-m0.md](docs/tech-m0.md) — 只规划 M0。不覆盖 M1 及以后。
+3. [docs/adr/0001-plan-first-facts.md](docs/adr/0001-plan-first-facts.md) — 事实写入方向。
+4. [docs/STATUS.md](docs/STATUS.md) — 工程事实（版本、闸门、已知限制）。
+5. [docs/HANDOFF-mew.md](docs/HANDOFF-mew.md) — 当天的下一步。
+6. [tasks/](tasks/README.md) — 队列从 `tasks/200-` 起。没有任务文件就不要口头开工。
+
+冲突时，上面的条目压过下面的。产品边界以 PRD 为准；M0 的实现细节以 `tech-m0.md` 为准，且不得越出 PRD 的 M0。不要用归档路线图或 [docs/prd-v1-writing-assist.md](docs/prd-v1-writing-assist.md) 的指针页推翻 PRD。
+
+**开工门：** owner（Bingtuu）书面接受 PRD、M0 技术方案、本文件和 STATUS 之前，不写实现，不建 `tasks/200`。四份缺一不可。M0 做完之前不写 M1 的代码；M1 要另有被接受的技术方案。
 
 ## 默认不要读
 
-这些文件历史还在，但会撑爆上下文，而且口径已过时：
-
-- `docs/archive/` 全部。说明在 [docs/archive/README.md](docs/archive/README.md)。
-- `docs/archive/architecture/04-vibe-coding-engineering.md` 里的 Task 001–019。那不是活队列。
-- `docs/archive/architecture/05-tech-reference.md`。
+- `docs/archive/` 全部。说明在 [docs/archive/README.md](docs/archive/README.md)。其中有 2026-10-26 的 AGENTS、STATUS、PRD 副本。
+- `docs/archive/architecture/` 里的 Task 001–019。那不是活队列。
 - `docs/archive/roadmap/` 下的 V13 / V14 / V15。
-- `docs/archive/ROADMAP-plan-first.md` 全文。短指针 [docs/ROADMAP-plan-first.md](docs/ROADMAP-plan-first.md) 写明 **CLOSED**。
-- `docs/archive/experiments/**` 里的章节正文。那是 plan-gate 重跑留档，不是文学交付。
+- `docs/archive/ROADMAP-plan-first.md` 全文。短指针写明 **CLOSED**。
+- `docs/archive/experiments/**` 里的章节正文。
 
 地图：[docs/INDEX.md](docs/INDEX.md)。安装与短窗口仍走 [docs/quickstart.md](docs/quickstart.md)。
 
 ## 不要沿这些方向加功能
 
-- 不要把 extract-then-patch，或 SettlementExtractor 的自动写入，做成助手主路径。确认入典才是写入 Canon 的作者路径。
+- 不要把 extract-then-patch，或 SettlementExtractor 的自动写入，做成助手主路径。
 - 不要为了追召回去加题材专用检查器。窄检查保持薄封装。
 - 不要把质量门通过写成「可发表」或「书写得好」。
+- 不要在 M0 里做 confirm、check、抽卡、续写、新表或新迁移。
 - 不要提交 `.env`、密钥、书稿、本地数据库、未脱敏日志。
 
 ## 运行时不变量
 
-- **SQLite 是唯一长期事实源。** 不要另起一套权威库。
-- **章节版本只追加。** 草稿、修订、已接收版本都留着，不覆盖旧稿。
-- **提示词**在 `src/songyan/prompts/cards/`。不要把长提示词嵌进 Python。
+- **SQLite 是唯一长期事实源。**
+- **章节版本只追加。**
+- **提示词**在 `src/songyan/prompts/cards/`。
 - 已批准的计划卡才进入当前章的事实圣经。`pending` 行不能被下一章当成已成立事实。
+- 故事线（大纲 / 弧 / 线索）不是 Canon 的别名。
 
 ## 怎么干活
 
-1. 读本文件和当前任务文件（`tasks/200-` 起）。没有任务文件就不要口头开工。
-2. 切片要小。一次只做下一刀里的一件事。
+1. 读本文件。要改产品行为时，先确认 owner 已经书面接受第「文档权威」节里的开工门。
+2. 切片要小。一次只做下一刀里的一件事。M0 的步序在技术方案里。
 3. 行为变了就同步 [docs/STATUS.md](docs/STATUS.md) 和 [docs/HANDOFF-mew.md](docs/HANDOFF-mew.md)。进度不要写进 README。
 4. 测试怎么放、哪些必须绿，见 [tests/README.md](tests/README.md)。新测试禁止 `test_task###_*.py`、`test_<数字>_*.py`、`test_v<数字>_*.py`。
-5. 提交前跑 `ruff check src/ tests/`，以及与改动对应的 pytest。命令见 [CONTRIBUTING.md](CONTRIBUTING.md)。
+5. 提交前跑 `ruff check src/ tests/`，以及与改动对应的 pytest。命令见 [CONTRIBUTING.md](CONTRIBUTING.md)。`tests/cli` 不在默认收集里，改了 CLI 就要单独跑。
 
-## 命令表面（避免说错）
+## 简报
 
-现网能用的是已经安装的 Click 命令，例如 `doctor`、`create-project`、`run`、`report`、`export`、`import`、`bundle-run`。作者每天要走的路径将是 `today` / `canon` / `check`（proposed）。`run` 只作冒烟和引擎。分组别名和抽卡命令以 PRD 为准；标了 proposed 的都还没做。Git 式整树 `branch` 不在 V1.0。
+给 owner 审这代产品的简报只用简体中文，写在 PR 说明、`docs/STATUS.md`、`docs/HANDOFF-mew.md`。命令、路径、表名、测试名保持仓库里的英文标识。不要另造评审流程、频道或第二套任务队列。
+
+## 命令表面
+
+现网能用的包括 `doctor`、`create-project`、`run`、`report`、`export`、`import`、`bundle-run`。`canon show` 与 `today` 要等 M0 代码合并才算存在。`variant`、`canon confirm`、`chapter continue`、`check` 仍是后继里程碑。完整列表以 PRD 第 9 节为准。

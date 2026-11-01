@@ -1,5 +1,5 @@
 > **CLOSED / historical.** 阶段 A–C 已收束（薄封装）。不要把本文当每日任务队列，不要重开题材召回 KPI。
-> 日常入口是仓库根 `AGENTS.md`、`docs/prd-v1-writing-assist.md`、`docs/STATUS.md`、`docs/HANDOFF-mew.md`。
+> 日常入口是仓库根 `AGENTS.md`、`docs/prd-v1.md`、`docs/tech-m0.md`、`docs/STATUS.md`、`docs/HANDOFF-mew.md`。旧 PRD 路径只是指针。
 > 本文件留在 `docs/archive/`，只供考古。短指针：`docs/ROADMAP-plan-first.md`。
 
 # Plan-first 一致性路线（约 90 天）
