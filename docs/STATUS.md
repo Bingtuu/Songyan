@@ -11,7 +11,7 @@ Package tip remains **0.5.0**. V1.0 is the product-generation name.
 | 项 | 状态 |
 |----|------|
 | 产品需求 [prd-v1.md](prd-v1.md) 与 [tech-m0.md](tech-m0.md) | Owner 已接受文档切分。[#27](https://github.com/Bingtuu/Songyan/pull/27) 已 squash 进 `main` |
-| M0 步 1 `canon show` | **PR 已开，尚未合并。** `main` 上还没有这条命令，不要写成已经可用 |
+| M0 步 1 `canon show` | **[#28](https://github.com/Bingtuu/Songyan/pull/28) 已开，尚未合并。** `main` 上还没有这条命令，不要写成已经可用 |
 | [tasks/200.md](../tasks/200.md) | DOING。只包含步 1。步 2–4 未开始 |
 | 包版本 | 仍是 `0.5.0` |
 

@@ -6,7 +6,7 @@ owner：Bingtuu。包 tip **v0.5**（`0.5.0`）。「V1.0」是产品代际名�
 
 ## 下一刀
 
-**等 Mew 审 M0 步 1 的 PR。** 本切片没有自行合并。任务是 [tasks/200.md](../tasks/200.md)。步 1 只加只读 `canon show`。Storyline 段固定 `（空）`。`today`、故事线填充、缺库退出码都还没做。
+**等 Mew 审 [M0 步 1](https://github.com/Bingtuu/Songyan/pull/28)。** 本切片没有自行合并。任务是 [tasks/200.md](../tasks/200.md)。步 1 只加只读 `canon show`。Storyline 段固定 `（空）`。`today`、故事线填充、缺库退出码都还没做。
 
 文档切分已接受，[#27](https://github.com/Bingtuu/Songyan/pull/27) 已在 `main`。步 1 的代码 PR 未合并之前，不要把 `canon show` 写成 `main` 上可用，也不要开步 2。
 
@@ -23,7 +23,7 @@ owner：Bingtuu。包 tip **v0.5**（`0.5.0`）。「V1.0」是产品代际名�
 | 项 | 记录 |
 |----|------|
 | 产品规划 | [prd-v1.md](prd-v1.md)（文档已接受，#27 已进 main） |
-| M0 技术 | [tech-m0.md](tech-m0.md)。步 1 见 [tasks/200.md](../tasks/200.md)，PR 未合并 |
+| M0 技术 | [tech-m0.md](tech-m0.md)。步 1 见 [tasks/200.md](../tasks/200.md) 与 [#28](https://github.com/Bingtuu/Songyan/pull/28)（未合并） |
 | 当前任务 | [tasks/200.md](../tasks/200.md)（DOING） |
 | 架构方向 | [adr/0001-plan-first-facts.md](adr/0001-plan-first-facts.md) |
 | 工程现状 | [STATUS.md](STATUS.md) |
