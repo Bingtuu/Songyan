@@ -4,7 +4,7 @@ Songyan welcomes focused engineering contributions that improve reliability, doc
 
 ## Read this first
 
-[AGENTS.md](AGENTS.md) is the contributor and agent contract. The product plan is [docs/prd-v1-writing-assist.md](docs/prd-v1-writing-assist.md) (human-led writing assistant). Package tip stays **0.5.0**. “V1.0” is a product-generation name, not a version bump.
+[AGENTS.md](AGENTS.md) is the contributor and agent contract. The product plan is [docs/prd-v1.md](docs/prd-v1.md) (human-led writing assistant on the fact/storyline workbench). The first milestone’s tech plan is [docs/tech-m0.md](docs/tech-m0.md). Package tip stays **0.5.0**. “V1.0” is a product-generation name, not a version bump. Do not start M0 code until the owner accepts those docs in writing.
 
 Plan-first phases A–C are closed. The short pointer is [docs/ROADMAP-plan-first.md](docs/ROADMAP-plan-first.md). Do not load `docs/archive/` for a normal change. Do not treat the old Task 001–019 handbook as a live queue.
 

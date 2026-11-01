@@ -1,6 +1,6 @@
 # ADR-0001: Plan-first 事实层
 
-- **状态**: 已接受（方向）。2026-10-26：阶段 A–C 已收束为薄封装。本文仍是事实写入方向。产品工作流以 [prd-v1-writing-assist.md](../prd-v1-writing-assist.md) 为准。不要重开题材召回 KPI。
+- **状态**: 已接受（方向）。2026-10-26：阶段 A–C 已收束为薄封装。本文仍是事实写入方向。产品工作流以 [prd-v1.md](../prd-v1.md) 为准（待 owner 书面接受；接受前不按该文改代码）。不要重开题材召回 KPI。
 - **日期**: 2026-10-22（决定）；2026-10-25（实现注记）；2026-10-26（收束注记）
 - **决定者**: Bingtuu（owner）；当天切片见 [HANDOFF-mew.md](../HANDOFF-mew.md)
 - **相关**: [ROADMAP-plan-first.md](../ROADMAP-plan-first.md)（CLOSED 短指针；全文在 archive，日常不要加载）

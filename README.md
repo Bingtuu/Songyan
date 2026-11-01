@@ -23,7 +23,7 @@
 
 Songyan 是人主导的连载写作助手。已确认的 Canon 是事实；需要探索写法时，再用本机引擎出草稿。终稿由人定。
 
-当前能跑的包是 **v0.5 技术预览 / 引擎**（`0.5.0`）。多个 Agent 在 LangGraph 上分工，长期记录在 SQLite。下一阶段的产品方向在 [V1.0 PRD](docs/prd-v1-writing-assist.md)。文中标了 `[proposed]` 的命令还没有实现。
+当前能跑的包是 **v0.5 技术预览 / 引擎**（`0.5.0`）。多个 Agent 在 LangGraph 上分工，长期记录在 SQLite。下一阶段的产品方向在 [V1.0 PRD](docs/prd-v1.md)。文中标了 `[proposed]` 的命令还没有实现。PRD 与 M0 技术方案还在等 owner 书面接受，接受前不按它们改代码。
 
 - **Canon 由你确认。** 人物、物件、时间和已经发生的事，以你批准的事实为准。
 - **生成可选。** 模型可以按已批准的计划卡起草，审查标出写偏的地方。
@@ -92,7 +92,7 @@ flowchart LR
 | `src/songyan/prompts/` | 提示词卡片 |
 | `docs/` | 使用说明和发布文档 |
 
-设计取舍见 [ADR-0001](docs/adr/0001-plan-first-facts.md)。下一阶段是人主导的写作助手，规划在 [V1.0 PRD](docs/prd-v1-writing-assist.md)；包版本仍是 v0.5。Plan-first 阶段 A–C 已关闭。
+设计取舍见 [ADR-0001](docs/adr/0001-plan-first-facts.md)。下一阶段是人主导的写作助手，规划在 [V1.0 PRD](docs/prd-v1.md)；包版本仍是 v0.5。Plan-first 阶段 A–C 已关闭。
 
 ## 使用方式
 
@@ -122,7 +122,7 @@ songyan report --run-id <run_id>
 songyan export --project-id <project_id> --chapters 1-3 --format md --output exports/
 ```
 
-`run` 会打印 `run_id`。助手命令（`today`、`canon`、`check`、抽卡）在 [V1.0 PRD](docs/prd-v1-writing-assist.md)，这一版还没有发出。备份、导入已有小说、质量门和排错都在 [Quickstart](docs/quickstart.md)。
+`run` 会打印 `run_id`。助手命令（`today`、`canon`、`check`、抽卡）在 [V1.0 PRD](docs/prd-v1.md)，这一版还没有发出。备份、导入已有小说、质量门和排错都在 [Quickstart](docs/quickstart.md)。
 
 报告里的费用按这个口径估算：输入 **¥2/M**，输出 **¥8/M**，单章停线 **¥7.66**。这是估算，不是供应商账单。
 
@@ -138,7 +138,8 @@ songyan export --project-id <project_id> --chapters 1-3 --format md --output exp
 
 | 文档 | 何时去看 |
 |------|----------|
-| [V1.0 写作助手 PRD](docs/prd-v1-writing-assist.md) | 下一阶段产品规划；当前 tip 仍是 v0.5；文中 proposed 命令还没实现 |
+| [V1.0 PRD](docs/prd-v1.md) | 下一阶段产品规划；待 owner 书面接受；当前 tip 仍是 v0.5；proposed 命令还没实现 |
+| [M0 技术方案](docs/tech-m0.md) | 只规划第一个里程碑。接受前不写代码 |
 | [AGENTS.md](AGENTS.md) | 贡献者和代理先读：现在是什么、不要加载哪些历史文档 |
 | [Quickstart](docs/quickstart.md) | 安装、配置、短窗口、导出 |
 | [STATUS](docs/STATUS.md) | 现在能用什么，以及限制 |

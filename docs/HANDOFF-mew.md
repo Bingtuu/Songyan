@@ -2,11 +2,13 @@
 
 owner：Bingtuu。包 tip **v0.5**（`0.5.0`）。「V1.0」是产品代际名，不是包版本。本文件不打 tag。
 
-权威顺序见 [AGENTS.md](../AGENTS.md)：PRD → ADR-0001 → STATUS（事实）→ 本文件（当天）→ `tasks/`（有任务文档之后）。
+权威顺序见 [AGENTS.md](../AGENTS.md)：[PRD](prd-v1.md) → [M0 技术方案](tech-m0.md) → ADR-0001 → STATUS（事实）→ 本文件（当天）→ `tasks/`（有任务文档之后）。
 
 ## 下一刀
 
-**等 owner 接受 [V1.0 PRD](prd-v1-writing-assist.md)，并接受这次文档清理。** 接受之前不要按 PRD 改代码，不要实现标了 `[proposed]` 的命令，不要开无人值守的长跑小说。
+**等 owner 书面接受四份重启文档：** [prd-v1.md](prd-v1.md)、[tech-m0.md](tech-m0.md)、仓库根 `AGENTS.md`、[STATUS.md](STATUS.md)。四份一起算。接受之前不要按它们改代码，不要写 `tasks/200`，不要实现标了 `[proposed]` 的命令，不要开无人值守的长跑小说。
+
+上一稿 PRD 的总体框架已经接受。现行产品文本是 `prd-v1.md`。旧全文在归档里，日常不要加载。
 
 不要做的事：
 
@@ -14,12 +16,14 @@ owner：Bingtuu。包 tip **v0.5**（`0.5.0`）。「V1.0」是产品代际名�
 - 不重开 plan-first 阶段 C，不加题材专用检查器，不改 SettlementExtractor 的权威。
 - 不把 Ch1–10 写成文学验收。文学质量归人。
 - 正式 git tag 仍由维护者决定。
+- M0 代码未开始。不要把这轮文档写成 `canon show` 已经可用。
 
 ## 事实指针（短）
 
 | 项 | 记录 |
 |----|------|
-| 产品规划 | [prd-v1-writing-assist.md](prd-v1-writing-assist.md)（待接受） |
+| 产品规划 | [prd-v1.md](prd-v1.md)（待书面接受） |
+| M0 技术 | [tech-m0.md](tech-m0.md)（待书面接受；只读工作台，代码未开始） |
 | 架构方向 | [adr/0001-plan-first-facts.md](adr/0001-plan-first-facts.md) |
 | 工程现状 | [STATUS.md](STATUS.md) |
 | 阶段 A–C | [ROADMAP-plan-first.md](ROADMAP-plan-first.md)（CLOSED 短指针；全文在 archive，日常不要加载） |

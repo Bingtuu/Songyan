@@ -6,10 +6,11 @@
 
 | Document | Purpose |
 |----------|---------|
-| [AGENTS.md](../AGENTS.md) | 代理与贡献者规则：现在是什么、不要读什么 |
-| [V1.0 写作助手 PRD](prd-v1-writing-assist.md) | 产品权威。工作流 W0–W6。实现等 owner 接受 |
+| [AGENTS.md](../AGENTS.md) | 冷启动规则：产品方向、文档权威、书面接受前不写代码 |
+| [V1.0 PRD](prd-v1.md) | 产品权威。两条主路径、W0–W6、里程碑 M0–M4。待 owner 书面接受 |
+| [M0 技术方案](tech-m0.md) | 只规划第一个里程碑（只读工作台）。待书面接受 |
 | [ADR-0001](adr/0001-plan-first-facts.md) | 事实写入方向。阶段 A–C 已关闭，不重开召回 KPI |
-| [STATUS](STATUS.md) | 工程事实：v0.5 能做什么；Ch1–10 管线过、文学不过 |
+| [STATUS](STATUS.md) | 工程事实：包仍是 0.5.0；文档待审；M0 代码未开始 |
 | [HANDOFF](HANDOFF-mew.md) | 当天下一步 |
 | [Quickstart](quickstart.md) | 安装、配置、短窗口、导出 |
 | [Troubleshooting](troubleshooting.md) | 失败恢复 |
@@ -18,7 +19,9 @@
 
 ## 不要默认加载
 
-[docs/archive/](archive/README.md)：旧自动成书任务圣经、技术参考、V13–V15 路线、plan-first 全文、实验章节正文。
+[docs/archive/](archive/README.md)：旧自动成书任务圣经、技术参考、V13–V15 路线、plan-first 全文、实验章节正文，以及 2026-10-26 的 AGENTS / STATUS / PRD 副本。
+
+旧路径 [prd-v1-writing-assist.md](prd-v1-writing-assist.md) 只留指针，指向 [prd-v1.md](prd-v1.md)。
 
 Plan-first 的短指针仍在 [ROADMAP-plan-first.md](ROADMAP-plan-first.md)（**CLOSED**）。打开它不会带出全文。
 
