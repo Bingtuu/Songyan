@@ -13,6 +13,7 @@ import click
 from songyan.cli.commands.import_pipeline import register_import_commands
 from songyan.cli.commands.index import register_index_commands
 from songyan.cli.commands.quality import register_quality_commands
+from songyan.cli.commands.workbench import register_workbench_commands
 from songyan.cli.outline_import import load_outline_file
 from songyan.config import settings
 from songyan.creative_modes.registry import (
@@ -1317,3 +1318,6 @@ register_quality_commands(cli)
 # V15 Task 235: 导入管线 segment/confirm/status
 # ---------------------------------------------------------------------------
 register_import_commands(cli)
+
+# M0 step 1: read-only canon show. No today, no writes.
+register_workbench_commands(cli)
