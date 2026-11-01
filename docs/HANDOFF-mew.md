@@ -6,9 +6,9 @@ owner：Bingtuu。包 tip **v0.5**（`0.5.0`）。「V1.0」是产品代际名�
 
 ## 下一刀
 
-**等 Mew 审 [M0 步 1](https://github.com/Bingtuu/Songyan/pull/28)。** 本切片没有自行合并。任务是 [tasks/200.md](../tasks/200.md)。步 1 只加只读 `canon show`。Storyline 段固定 `（空）`。`today`、故事线填充、缺库退出码都还没做。
+**等 Mew 审 M0 步 2 的 PR。** 本切片没有自行合并。任务是 [tasks/201.md](../tasks/201.md)。步 2 只把 Storyline 段改成读 `NarrativeRepository`，并加 `canon show --json`。`today` 和缺库退出码还没做。
 
-文档切分已接受，[#27](https://github.com/Bingtuu/Songyan/pull/27) 已在 `main`。步 1 的代码 PR 未合并之前，不要把 `canon show` 写成 `main` 上可用，也不要开步 2。
+步 1 已在 `main`：[#28](https://github.com/Bingtuu/Songyan/pull/28) squash 为 `1d8c0c0`，任务在 [tasks/done/200.md](../tasks/done/200.md)。`main` 上的故事线段仍是 `（空）`，直到步 2 合并。
 
 不要做的事：
 
@@ -16,15 +16,16 @@ owner：Bingtuu。包 tip **v0.5**（`0.5.0`）。「V1.0」是产品代际名�
 - 不重开 plan-first 阶段 C，不加题材专用检查器，不改 SettlementExtractor 的权威。
 - 不把 Ch1–10 写成文学验收。文学质量归人。
 - 正式 git tag 仍由维护者决定。
-- 步 1 PR 未合并。不要开步 2，不要把 `canon show` 写成 `main` 已安装。
+- 步 2 PR 未合并。不要开步 3，不要把故事线正文写成 `main` 已安装。
 
 ## 事实指针（短）
 
 | 项 | 记录 |
 |----|------|
 | 产品规划 | [prd-v1.md](prd-v1.md)（文档已接受，#27 已进 main） |
-| M0 技术 | [tech-m0.md](tech-m0.md)。步 1 见 [tasks/200.md](../tasks/200.md) 与 [#28](https://github.com/Bingtuu/Songyan/pull/28)（未合并） |
-| 当前任务 | [tasks/200.md](../tasks/200.md)（DOING） |
+| M0 步 1 | [#28](https://github.com/Bingtuu/Songyan/pull/28) 已进 `main`（`1d8c0c0`）。[tasks/done/200.md](../tasks/done/200.md) |
+| M0 步 2 | [tasks/201.md](../tasks/201.md)（DOING，PR 未合并） |
+| 当前任务 | [tasks/201.md](../tasks/201.md) |
 | 架构方向 | [adr/0001-plan-first-facts.md](adr/0001-plan-first-facts.md) |
 | 工程现状 | [STATUS.md](STATUS.md) |
 | 阶段 A–C | [ROADMAP-plan-first.md](ROADMAP-plan-first.md)（CLOSED 短指针；全文在 archive，日常不要加载） |
