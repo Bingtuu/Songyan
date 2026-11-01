@@ -2,7 +2,7 @@
 
 本目录是 **V1.0 写作助手**开工之后的任务队列。**先写任务文档，再写代码**；完成任务后归档，并同步 `docs/STATUS.md` 与 `docs/HANDOFF-mew.md`。
 
-**现在没有待办。** 队列要等 owner 书面接受 `docs/prd-v1.md`、`docs/tech-m0.md`、`AGENTS.md` 和 `docs/STATUS.md` 之后再开。第一张任务只做 M0。不要把 `docs/archive/` 里的旧 Task 001–019 或 V13–V15 抄进这里。
+**当前只有 `200.md`（M0 步 1，DOING，PR 未合并）。** 不要同时开步 2。不要把 `docs/archive/` 里的旧 Task 001–019 或 V13–V15 抄进这里。
 
 ## 文件组织
 

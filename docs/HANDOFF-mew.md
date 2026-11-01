@@ -6,9 +6,9 @@ owner：Bingtuu。包 tip **v0.5**（`0.5.0`）。「V1.0」是产品代际名�
 
 ## 下一刀
 
-**等 owner 书面接受四份重启文档：** [prd-v1.md](prd-v1.md)、[tech-m0.md](tech-m0.md)、仓库根 `AGENTS.md`、[STATUS.md](STATUS.md)。四份一起算。接受之前不要按它们改代码，不要写 `tasks/200`，不要实现标了 `[proposed]` 的命令，不要开无人值守的长跑小说。
+**等 Mew 审 [M0 步 1](https://github.com/Bingtuu/Songyan/pull/28)。** 本切片没有自行合并。任务是 [tasks/200.md](../tasks/200.md)。步 1 只加只读 `canon show`。Storyline 段固定 `（空）`。`today`、故事线填充、缺库退出码都还没做。
 
-上一稿 PRD 的总体框架已经接受。现行产品文本是 `prd-v1.md`。旧全文在归档里，日常不要加载。
+文档切分已接受，[#27](https://github.com/Bingtuu/Songyan/pull/27) 已在 `main`。步 1 的代码 PR 未合并之前，不要把 `canon show` 写成 `main` 上可用，也不要开步 2。
 
 不要做的事：
 
@@ -16,14 +16,15 @@ owner：Bingtuu。包 tip **v0.5**（`0.5.0`）。「V1.0」是产品代际名�
 - 不重开 plan-first 阶段 C，不加题材专用检查器，不改 SettlementExtractor 的权威。
 - 不把 Ch1–10 写成文学验收。文学质量归人。
 - 正式 git tag 仍由维护者决定。
-- M0 代码未开始。不要把这轮文档写成 `canon show` 已经可用。
+- 步 1 PR 未合并。不要开步 2，不要把 `canon show` 写成 `main` 已安装。
 
 ## 事实指针（短）
 
 | 项 | 记录 |
 |----|------|
-| 产品规划 | [prd-v1.md](prd-v1.md)（待书面接受） |
-| M0 技术 | [tech-m0.md](tech-m0.md)（待书面接受；只读工作台，代码未开始） |
+| 产品规划 | [prd-v1.md](prd-v1.md)（文档已接受，#27 已进 main） |
+| M0 技术 | [tech-m0.md](tech-m0.md)。步 1 见 [tasks/200.md](../tasks/200.md) 与 [#28](https://github.com/Bingtuu/Songyan/pull/28)（未合并） |
+| 当前任务 | [tasks/200.md](../tasks/200.md)（DOING） |
 | 架构方向 | [adr/0001-plan-first-facts.md](adr/0001-plan-first-facts.md) |
 | 工程现状 | [STATUS.md](STATUS.md) |
 | 阶段 A–C | [ROADMAP-plan-first.md](ROADMAP-plan-first.md)（CLOSED 短指针；全文在 archive，日常不要加载） |
