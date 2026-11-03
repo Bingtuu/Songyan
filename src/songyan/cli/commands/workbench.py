@@ -187,7 +187,7 @@ def canon_show(project_id: str, as_json: bool) -> None:
 
 
 
-def _count_rows(bucket: dict) -> int:
+def _count_rows(bucket: dict[str, list[_Card]]) -> int:
     return sum(len(bucket[kind]) for kind in _KINDS)
 
 
