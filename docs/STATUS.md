@@ -14,10 +14,10 @@ Package tip remains **0.5.0**. V1.0 is the product-generation name.
 | M0 步 1 `canon show` | **已在 `main`。** [#28](https://github.com/Bingtuu/Songyan/pull/28) squash 为 `1d8c0c0`。任务归档在 [tasks/done/200.md](../tasks/done/200.md) |
 | M0 步 2 故事线 | **已在 `main`。** [#29](https://github.com/Bingtuu/Songyan/pull/29) squash 为 `8f03453`。任务归档在 [tasks/done/201.md](../tasks/done/201.md) |
 | M0 步 3 `today` | **已在 `main`。** [#30](https://github.com/Bingtuu/Songyan/pull/30) squash 为 `d5c2cc1`。任务归档在 [tasks/done/202.md](../tasks/done/202.md) |
-| M0 步 4 缺库 / 缺项目退出码 | **PR 已开，尚未合并。** 任务是 [tasks/203.md](../tasks/203.md) |
+| M0 步 4 缺库 / 缺项目退出码 | **已在 `main`。** [#31](https://github.com/Bingtuu/Songyan/pull/31) squash 为 `48fa354`。任务归档在 [tasks/done/203.md](../tasks/done/203.md) |
 | 包版本 | 仍是 `0.5.0` |
 
-阻塞：Mew 审步 4 的 PR。合并前不要开 confirm / check / variant，不要改结算器。M1 仍要另写技术方案。
+阻塞：无编码刀。M0 只读工作台步 1–4 已全部进 `main`。下一刀是按 [tech-m0.md](tech-m0.md) §6–7 做 M0 验收，或等 owner 决定是否进入 confirm / 另写 M1 技术方案。不要开 confirm / check / variant，不要改结算器。
 
 上一稿 PRD 的总体框架 owner 已经接受。现行文本是 `prd-v1.md`。旧全文在 [archive/prd-v1-writing-assist-2026-10-26.md](archive/prd-v1-writing-assist-2026-10-26.md)。
 
@@ -43,6 +43,7 @@ Package tip remains **0.5.0**. V1.0 is the product-generation name.
 - 计划事实表与 `load_chapter_plan_bible`：只读 `approved`。结算写入仍进结算库，不进 plan canon。
 - `canon show` 在 `main` 上能看五类计划事实的 Canon / Pending，以及故事线骨架（有则打印，无则为 `（空）`），并支持 `--json`。
 - `today` 在 `main` 上能打印只读计数与固定 `next` 句。
+- 缺库 / 缺项目时 `canon show` 与 `today` 退出码 1；缺库时不创建数据库文件。
 
 ## 已知限制
 
@@ -50,7 +51,7 @@ Package tip remains **0.5.0**. V1.0 is the product-generation name.
 - 《轨道蜃景》Ch1–10：`project_id=8e30dec7f2ec40c1a9ce54c783981f8c`，`run-33841231`。10/10 accepted；质量门、结算、摘要、导出通过；exit 0。**DG-1 失败**（平均 revision 1.7，十章都有 ContextEmergency，无 AutoHalt）。
 - 那次导出的人工阅读 **未通过**：时间线回滚、Hermes/赫耳墨斯、时间尺度、供氧 / EVA 复读、英文泄漏 `ninety-two 秒`。
 - 真实模型上「导入后再续写」还没有验收。
-- `check` / `variant` / `chapter continue` 都还没有。缺库 / 缺项目的退出码 1 在未合并的步 4 PR 里。
+- `check` / `variant` / `chapter continue` 都还没有。M0 代码验收（tech-m0 §6–7）与 confirm / M1 尚未开始。
 
 标识和本机路径：[HANDOFF-mew.md](HANDOFF-mew.md)。书稿不入库。
 
@@ -61,7 +62,7 @@ Package tip remains **0.5.0**. V1.0 is the product-generation name.
 | [README](../README.md) | 给访客的概览 |
 | [AGENTS.md](../AGENTS.md) | 冷启动规则：读什么、何时不许写代码 |
 | [V1.0 PRD](prd-v1.md) | 产品。Owner 已接受这轮文档 |
-| [M0 技术方案](tech-m0.md) | 只读工作台。步 1–3 已进 `main`；步 4 的 PR 未合并 |
+| [M0 技术方案](tech-m0.md) | 只读工作台。步 1–4 已进 `main`；整里程碑验收见 §6–7 |
 | [ADR-0001](adr/0001-plan-first-facts.md) | 事实由计划和人写入 |
 | [HANDOFF](HANDOFF-mew.md) | 当天的下一步 |
 | [INDEX](INDEX.md) | 文档地图 |
@@ -70,6 +71,6 @@ Package tip remains **0.5.0**. V1.0 is the product-generation name.
 
 ## 维护者下一步
 
-1. 审 M0 步 4 的 PR（缺库 / 缺项目退出码 1，且缺库不建文件）。
-2. 不要在这一步做 confirm / check / variant 或章节续写。
+1. 按 [tech-m0.md](tech-m0.md) §6–7 做 M0 只读工作台验收（命令与既有测试清单）。
+2. 验收通过后，由 owner 决定是否开 confirm，或另写 M1 技术方案；不要在本步直接开 confirm / check / variant 或章节续写。
 3. 不改结算权威、不加题材检查器、不跑无人值守长篇、不升包版本。
