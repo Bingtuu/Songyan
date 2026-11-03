@@ -2,7 +2,7 @@
 
 本目录是 **V1.0 写作助手**开工之后的任务队列。**先写任务文档，再写代码**；完成任务后归档，并同步 `docs/STATUS.md` 与 `docs/HANDOFF-mew.md`。
 
-**M0 只读工作台步 1–4 已完成；M0 代码验收 PASS（`80f4107`）。当前无 DOING 编码任务。** 归档：`done/200.md`（#28 / `1d8c0c0`）、`done/201.md`（#29 / `8f03453`）、`done/202.md`（#30 / `d5c2cc1`）、`done/203.md`（#31 / `48fa354`）、`done/204-m0-acceptance.md`（验收 PASS）。下一刀见 [docs/HANDOFF-mew.md](../docs/HANDOFF-mew.md)：等 owner 书面接受 [docs/tech-m1.md](../docs/tech-m1.md)，再开 M1 编码任务。**tech-m1 接受前不要创建 M1 编码任务文件。** 不要把 `docs/archive/` 里的旧 Task 001–019 或 V13–V15 抄进这里。
+**M0 只读工作台步 1–4 已完成；M0 代码验收 PASS（`80f4107`）。tech-m1 已接受（Mew 拍板）。当前无 DOING 编码任务。** 归档：`done/200.md`（#28 / `1d8c0c0`）、`done/201.md`（#29 / `8f03453`）、`done/202.md`（#30 / `d5c2cc1`）、`done/203.md`（#31 / `48fa354`）、`done/204-m0-acceptance.md`（验收 PASS）。下一刀见 [docs/HANDOFF-mew.md](../docs/HANDOFF-mew.md)：开 **M1 步 1** 任务（五表 `rejected` 迁移 + 过滤），再改 `src/`。不要把 `docs/archive/` 里的旧 Task 001–019 或 V13–V15 抄进这里。
 
 ## 文件组织
 
@@ -57,4 +57,4 @@ tasks/
 - 验收过不了就不算 DONE。
 - 做不完的任务不删，留 TODO 并写明阻塞。
 - 标了 `[proposed]` 的命令，在对应任务落地之前，README 不得写成已经支持。
-- **里程碑技术方案未经 owner 书面接受之前，不建该里程碑的编码任务。**
+- **里程碑技术方案未经书面接受之前，不建该里程碑的编码任务。** tech-m1 已接受，可以建 M1 步 1 任务。
