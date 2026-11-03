@@ -6,9 +6,9 @@ owner：Bingtuu。包 tip **v0.5**（`0.5.0`）。「V1.0」是产品代际名�
 
 ## 下一刀
 
-**等 Mew 审 M0 步 3 的 PR。** 本切片没有自行合并。任务是 [tasks/202.md](../tasks/202.md)。步 3 只加顶层 `today`：计数与固定 `next` 句，零写入。缺库退出码还没做。
+**等 Mew 审 M0 步 4 的 PR。** 本切片没有自行合并。任务是 [tasks/203.md](../tasks/203.md)。步 4 只补缺库 / 缺项目退出码 1；缺库时不创建文件。不做 confirm。
 
-步 1–2 已在 `main`：[#28](https://github.com/Bingtuu/Songyan/pull/28) → `1d8c0c0`；[#29](https://github.com/Bingtuu/Songyan/pull/29) → `8f03453`。任务分别在 [tasks/done/200.md](../tasks/done/200.md) 与 [tasks/done/201.md](../tasks/done/201.md)。
+步 1–3 已在 `main`：[#28](https://github.com/Bingtuu/Songyan/pull/28) → `1d8c0c0`；[#29](https://github.com/Bingtuu/Songyan/pull/29) → `8f03453`；[#30](https://github.com/Bingtuu/Songyan/pull/30) → `d5c2cc1`。任务分别在 [tasks/done/200.md](../tasks/done/200.md)、[tasks/done/201.md](../tasks/done/201.md)、[tasks/done/202.md](../tasks/done/202.md)。
 
 不要做的事：
 
@@ -16,7 +16,7 @@ owner：Bingtuu。包 tip **v0.5**（`0.5.0`）。「V1.0」是产品代际名�
 - 不重开 plan-first 阶段 C，不加题材专用检查器，不改 SettlementExtractor 的权威。
 - 不把 Ch1–10 写成文学验收。文学质量归人。
 - 正式 git tag 仍由维护者决定。
-- 步 3 PR 未合并。不要开步 4，不要把 `today` 写成 `main` 已安装。
+- 步 4 PR 未合并。不要开 confirm / M1，不要把缺库退出码写成 `main` 已安装。
 
 ## 事实指针（短）
 
@@ -25,8 +25,9 @@ owner：Bingtuu。包 tip **v0.5**（`0.5.0`）。「V1.0」是产品代际名�
 | 产品规划 | [prd-v1.md](prd-v1.md)（文档已接受，#27 已进 main） |
 | M0 步 1 | [#28](https://github.com/Bingtuu/Songyan/pull/28) 已进 `main`（`1d8c0c0`）。[tasks/done/200.md](../tasks/done/200.md) |
 | M0 步 2 | [#29](https://github.com/Bingtuu/Songyan/pull/29) 已进 `main`（`8f03453`）。[tasks/done/201.md](../tasks/done/201.md) |
-| M0 步 3 | [tasks/202.md](../tasks/202.md)（DOING，PR 未合并） |
-| 当前任务 | [tasks/202.md](../tasks/202.md) |
+| M0 步 3 | [#30](https://github.com/Bingtuu/Songyan/pull/30) 已进 `main`（`d5c2cc1`）。[tasks/done/202.md](../tasks/done/202.md) |
+| M0 步 4 | [tasks/203.md](../tasks/203.md)（DOING，PR 未合并） |
+| 当前任务 | [tasks/203.md](../tasks/203.md) |
 | 架构方向 | [adr/0001-plan-first-facts.md](adr/0001-plan-first-facts.md) |
 | 工程现状 | [STATUS.md](STATUS.md) |
 | 阶段 A–C | [ROADMAP-plan-first.md](ROADMAP-plan-first.md)（CLOSED 短指针；全文在 archive，日常不要加载） |

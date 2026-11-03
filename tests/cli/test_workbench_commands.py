@@ -273,3 +273,63 @@ def test_today_json_shape(runner: CliRunner, dushi_with_storyline: Path) -> None
     assert storyline["arc_count"] == 1
     assert storyline["thread_counts"]["opened"] == 1
     assert after == before
+
+
+def test_canon_show_missing_db_exits_1_without_creating_file(
+    runner: CliRunner, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    missing = tmp_path / "no-such.db"
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(settings, "database_url", f"sqlite:///{missing}")
+    assert not missing.exists()
+
+    result = runner.invoke(cli, ["canon", "show", "--project-id", "any-id"])
+
+    assert result.exit_code == 1, result.output
+    assert "找不到数据库" in result.output
+    assert not missing.exists()
+
+
+def test_today_missing_db_exits_1_without_creating_file(
+    runner: CliRunner, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    missing = tmp_path / "no-such-today.db"
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(settings, "database_url", f"sqlite:///{missing}")
+    assert not missing.exists()
+
+    result = runner.invoke(cli, ["today", "--project-id", "any-id"])
+
+    assert result.exit_code == 1, result.output
+    assert "找不到数据库" in result.output
+    assert not missing.exists()
+
+
+@pytest.fixture
+async def empty_schema_db(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    """Schema 已初始化，但没有任何项目行."""
+    db_path = tmp_path / "empty-projects.db"
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(settings, "database_url", f"sqlite:///{db_path}")
+    await init_schema(db_path)
+    return db_path
+
+
+def test_canon_show_missing_project_exits_1(
+    runner: CliRunner, empty_schema_db: Path
+) -> None:
+    result = runner.invoke(cli, ["canon", "show", "--project-id", "no-such-project"])
+
+    assert result.exit_code == 1, result.output
+    assert "项目不存在" in result.output
+    assert "no-such-project" in result.output
+
+
+def test_today_missing_project_exits_1(
+    runner: CliRunner, empty_schema_db: Path
+) -> None:
+    result = runner.invoke(cli, ["today", "--project-id", "no-such-project"])
+
+    assert result.exit_code == 1, result.output
+    assert "项目不存在" in result.output
+    assert "no-such-project" in result.output

@@ -1,7 +1,7 @@
 """Read-only workbench commands.
 
-M0 steps 1–2: ``canon show`` for approved / pending plan facts and storyline.
-Step 3: ``today`` prints counts and a fixed next sentence. No writes.
+M0 steps 1–3: ``canon show`` and ``today`` for approved / pending facts,
+storyline, and counts. Step 4: missing DB / missing project exit 1. No writes.
 """
 
 from __future__ import annotations
@@ -11,8 +11,10 @@ import json
 
 import click
 
+from songyan.db.connection import get_db_path
 from songyan.db.narrative_repo import NarrativeRepository
 from songyan.db.plan_fact_repo import PlanFactRepository
+from songyan.db.repository import ProjectRepository
 from songyan.models.narrative import ArcPlan, PlotThread, StoryOutline
 from songyan.models.plan_facts import (
     PlanAttribute,
@@ -75,6 +77,16 @@ def _storyline_text(
 
 def _dump(rows: list[_Card] | list[ArcPlan] | list[PlotThread]) -> list[dict[str, object]]:
     return [row.model_dump(mode="json") for row in rows]
+
+
+async def _ensure_project_readable(project_id: str) -> None:
+    """Refuse before any get_db() call when the SQLite file is missing."""
+    db_path = get_db_path()
+    if not db_path.is_file():
+        raise click.ClickException(f"找不到数据库文件: {db_path}")
+    project = await ProjectRepository().get(project_id)
+    if project is None:
+        raise click.ClickException(f"项目不存在: {project_id}")
 
 
 async def _load(project_id: str) -> dict[str, object]:
@@ -167,6 +179,7 @@ def _render_json(project_id: str, loaded: dict[str, object]) -> str:
 
 
 async def _render_canon_show(project_id: str, *, as_json: bool) -> str:
+    await _ensure_project_readable(project_id)
     loaded = await _load(project_id)
     if as_json:
         return _render_json(project_id, loaded)
@@ -234,6 +247,7 @@ def _render_today_json(project_id: str, loaded: dict[str, object]) -> str:
 
 
 async def _render_today(project_id: str, *, as_json: bool) -> str:
+    await _ensure_project_readable(project_id)
     loaded = await _load(project_id)
     if as_json:
         return _render_today_json(project_id, loaded)
