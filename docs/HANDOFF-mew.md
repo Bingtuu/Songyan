@@ -2,13 +2,15 @@
 
 owner：Bingtuu。包 tip **v0.5**（`0.5.0`）。「V1.0」是产品代际名，不是包版本。本文件不打 tag。
 
-权威顺序见 [AGENTS.md](../AGENTS.md)：[PRD](prd-v1.md) → [M0 技术方案](tech-m0.md) → ADR-0001 → STATUS（事实）→ 本文件（当天）→ `tasks/`（有任务文档之后）。
+权威顺序见 [AGENTS.md](../AGENTS.md)：[PRD](prd-v1.md) → [M0 技术方案](tech-m0.md) → [M1 技术方案](tech-m1.md)（draft）→ ADR-0001 → STATUS（事实）→ 本文件（当天）→ `tasks/`（有任务文档之后）。
 
 ## 下一刀
 
-**按 [tech-m0.md](tech-m0.md) §6–7 做 M0 只读工作台验收；或等 owner 决定是否进入 confirm / 另写 M1 技术方案。** 当前无 DOING 编码任务。不要开 confirm / check / variant 代码，不要发明 M1 实现切片。
+**等 owner 书面接受 [tech-m1.md](tech-m1.md)，然后再开第一刀 M1 编码切片。** 当前无 DOING 编码任务。接受之前不要写 confirm / check / variant 代码，不要发明 M1 实现切片任务文件。
 
 M0 步 1–4 已全部在 `main`：[#28](https://github.com/Bingtuu/Songyan/pull/28) → `1d8c0c0`；[#29](https://github.com/Bingtuu/Songyan/pull/29) → `8f03453`；[#30](https://github.com/Bingtuu/Songyan/pull/30) → `d5c2cc1`；[#31](https://github.com/Bingtuu/Songyan/pull/31) → `48fa354`。任务分别在 [tasks/done/200.md](../tasks/done/200.md)、[tasks/done/201.md](../tasks/done/201.md)、[tasks/done/202.md](../tasks/done/202.md)、[tasks/done/203.md](../tasks/done/203.md)。
+
+M0 代码验收（步 1–4 + tech-m0 §6–7）在 `main` `80f4107`：**PASS**。归档说明：[tasks/done/204-m0-acceptance.md](../tasks/done/204-m0-acceptance.md)。S6 不在代码验收内。
 
 不要做的事：
 
@@ -16,18 +18,18 @@ M0 步 1–4 已全部在 `main`：[#28](https://github.com/Bingtuu/Songyan/pull
 - 不重开 plan-first 阶段 C，不加题材专用检查器，不改 SettlementExtractor 的权威。
 - 不把 Ch1–10 写成文学验收。文学质量归人。
 - 正式 git tag 仍由维护者决定。
-- 不要在验收未完成、owner 未点头前开 confirm / M1；M1 仍要另写技术方案。
+- **tech-m1 未经 owner 书面接受之前，不开 M1 编码、不建 M1 的 `tasks/20x` 编码文件。**
+- 不声称 V1.0 完成，不升包版本。
 
 ## 事实指针（短）
 
 | 项 | 记录 |
 |----|------|
 | 产品规划 | [prd-v1.md](prd-v1.md)（文档已接受，#27 已进 main） |
-| M0 步 1 | [#28](https://github.com/Bingtuu/Songyan/pull/28) 已进 `main`（`1d8c0c0`）。[tasks/done/200.md](../tasks/done/200.md) |
-| M0 步 2 | [#29](https://github.com/Bingtuu/Songyan/pull/29) 已进 `main`（`8f03453`）。[tasks/done/201.md](../tasks/done/201.md) |
-| M0 步 3 | [#30](https://github.com/Bingtuu/Songyan/pull/30) 已进 `main`（`d5c2cc1`）。[tasks/done/202.md](../tasks/done/202.md) |
-| M0 步 4 | [#31](https://github.com/Bingtuu/Songyan/pull/31) 已进 `main`（`48fa354`）。[tasks/done/203.md](../tasks/done/203.md) |
-| 当前任务 | 无 DOING。下一刀：tech-m0 §6–7 验收，或 owner 决定 confirm / M1 |
+| M0 步 1–4 | 已进 `main`（见上）；[tasks/done/200–203](../tasks/done/) |
+| M0 验收 | **PASS** @ `80f4107`。[tasks/done/204-m0-acceptance.md](../tasks/done/204-m0-acceptance.md) |
+| M1 技术方案 | [tech-m1.md](tech-m1.md) — draft，待 owner 书面接受 |
+| 当前任务 | 无 DOING。下一刀：owner 接受 tech-m1 → 第一刀 M1 编码 |
 | 架构方向 | [adr/0001-plan-first-facts.md](adr/0001-plan-first-facts.md) |
 | 工程现状 | [STATUS.md](STATUS.md) |
 | 阶段 A–C | [ROADMAP-plan-first.md](ROADMAP-plan-first.md)（CLOSED 短指针；全文在 archive，日常不要加载） |

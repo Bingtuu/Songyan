@@ -2,7 +2,7 @@
 
 本目录是 **V1.0 写作助手**开工之后的任务队列。**先写任务文档，再写代码**；完成任务后归档，并同步 `docs/STATUS.md` 与 `docs/HANDOFF-mew.md`。
 
-**M0 只读工作台步 1–4 已完成，当前无 DOING 编码任务。** 归档：`done/200.md`（#28 / `1d8c0c0`）、`done/201.md`（#29 / `8f03453`）、`done/202.md`（#30 / `d5c2cc1`）、`done/203.md`（#31 / `48fa354`）。下一刀见 [docs/HANDOFF-mew.md](../docs/HANDOFF-mew.md)：按 tech-m0 §6–7 做 M0 验收，或等 owner 决定 confirm / M1。不要同时开 confirm / M1 代码。不要把 `docs/archive/` 里的旧 Task 001–019 或 V13–V15 抄进这里。
+**M0 只读工作台步 1–4 已完成；M0 代码验收 PASS（`80f4107`）。当前无 DOING 编码任务。** 归档：`done/200.md`（#28 / `1d8c0c0`）、`done/201.md`（#29 / `8f03453`）、`done/202.md`（#30 / `d5c2cc1`）、`done/203.md`（#31 / `48fa354`）、`done/204-m0-acceptance.md`（验收 PASS）。下一刀见 [docs/HANDOFF-mew.md](../docs/HANDOFF-mew.md)：等 owner 书面接受 [docs/tech-m1.md](../docs/tech-m1.md)，再开 M1 编码任务。**tech-m1 接受前不要创建 M1 编码任务文件。** 不要把 `docs/archive/` 里的旧 Task 001–019 或 V13–V15 抄进这里。
 
 ## 文件组织
 
@@ -17,7 +17,7 @@ tasks/
 - 编号 `NNN` 三位数，从 **200** 起，顺序递增，**在本目录内永不复用**。
 - 归档路线图和 `tests/test_<数字>_*.py` 里出现过的旧工程号（大约到 242）不是本队列。不要据此续写测试文件名，也不要把那些旧号当成这里的下一张任务。
 - 任务名用简短中文动宾结构，如 `200-只读展示已确认事实.md`。
-- 产品设计以 `docs/prd-v1.md` 为准。M0 的实现以 `docs/tech-m0.md` 为准，不得越出 PRD 的 M0。任务里发现设计要改，先改 PRD 再继续。
+- 产品设计以 `docs/prd-v1.md` 为准。M0 的实现以 `docs/tech-m0.md` 为准；M1 的实现以已接受的 `docs/tech-m1.md` 为准，不得越出 PRD 对应里程碑。任务里发现设计要改，先改 PRD 再继续。
 
 ## 任务文档模板
 
@@ -45,7 +45,7 @@ tasks/
 
 ## 工作循环
 
-1. **拆任务**：从已接受的 PRD 拆出任务。写 `NNN-任务名.md`（状态 TODO）。
+1. **拆任务**：从已接受的 PRD / 技术方案拆出任务。写 `NNN-任务名.md`（状态 TODO）。
 2. **开工**：状态改 DOING。同一时刻原则上只有一个 DOING。`docs/HANDOFF-mew.md` 指向这一张。
 3. **完工**：验收标准全部通过；填写完成总结；状态改 DONE；`git mv` 到 `tasks/done/`。
 4. **同步**（同一次提交）：更新 `docs/STATUS.md` 与 `docs/HANDOFF-mew.md`。开发进度不进 README。
@@ -57,3 +57,4 @@ tasks/
 - 验收过不了就不算 DONE。
 - 做不完的任务不删，留 TODO 并写明阻塞。
 - 标了 `[proposed]` 的命令，在对应任务落地之前，README 不得写成已经支持。
+- **里程碑技术方案未经 owner 书面接受之前，不建该里程碑的编码任务。**
