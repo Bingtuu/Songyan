@@ -6,7 +6,7 @@ owner：Bingtuu。包 tip **v0.5**（`0.5.0`）。「V1.0」是产品代际名�
 
 ## 下一刀
 
-**M1 步 1 编码：`rejected` 迁移 + 仓库过滤。** [tech-m1.md](tech-m1.md) 已由 Mew 拍板接受（2026-11-03 Asia/Shanghai，owner t82u 授权）。当前无 DOING 编码任务——先建 `tasks/20x`（步 1），再改 `src/`；TDD；开 PR 后 **Mew COMMENT** 再合并。
+**M1 步 1 PR：等待 Mew COMMENT 后合并。** 任务 [tasks/205-rejected迁移与过滤.md](../tasks/205-rejected迁移与过滤.md)；分支 `m1-step1-rejected`。范围仅五表 `rejected` CHECK 重建迁移 + `PlanApprovalStatus` / `_APPROVAL` / pending 过滤；不做步 2+。
 
 绑定摘要（全文以 tech-m1 为准）：无持久第四态 `accepted`；人写强制 `source=human`；步 1 五表 CHECK 必迁；`check` 正文 = `ChapterVersion.content`，属性侧值 = 注入 `AttributeExtract`；验收最小 kind = entity+attribute；rejected 后同 id 覆盖、无正文史；步 5 更新 `today` 的 `next`。
 
@@ -31,7 +31,7 @@ M0 代码验收（步 1–4 + tech-m0 §6–7）在 `main` `80f4107`：**PASS**�
 | M0 步 1–4 | 已进 `main`（见上）；[tasks/done/200–203](../tasks/done/) |
 | M0 验收 | **PASS** @ `80f4107`。[tasks/done/204-m0-acceptance.md](../tasks/done/204-m0-acceptance.md) |
 | M1 技术方案 | [tech-m1.md](tech-m1.md) — **已接受**（Mew 拍板，2026-11-03 Asia/Shanghai） |
-| 当前任务 | 无 DOING。下一刀：**M1 步 1**（rejected 迁移 + 过滤） |
+| 当前任务 | **DOING** [205](../tasks/205-rejected迁移与过滤.md)（M1 步 1）；PR 待 Mew COMMENT |
 | 架构方向 | [adr/0001-plan-first-facts.md](adr/0001-plan-first-facts.md) |
 | 工程现状 | [STATUS.md](STATUS.md) |
 | 阶段 A–C | [ROADMAP-plan-first.md](ROADMAP-plan-first.md)（CLOSED 短指针；全文在 archive，日常不要加载） |

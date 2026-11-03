@@ -4,8 +4,10 @@ Create, read, and write entity / attribute / event / time-anchor / clue
 rows. Canon lists return ``approval_status='approved'`` only. Attribute
 canon rows also require ``source`` of ``plan`` or ``human``.
 
-Pending rows live in the same tables. This repository does not read
-settlement extracts and does not write settlement tables.
+Pending lists return ``approval_status='pending'`` only; ``rejected``
+rows are stored for dismiss audit but stay out of active queues.
+This repository does not read settlement extracts and does not write
+settlement tables.
 """
 
 from __future__ import annotations
@@ -39,6 +41,7 @@ logger = structlog.get_logger(__name__)
 _APPROVAL: dict[str, PlanApprovalStatus] = {
     "approved": "approved",
     "pending": "pending",
+    "rejected": "rejected",
 }
 _SOURCE: dict[str, PlanFactSource] = {"plan": "plan", "human": "human"}
 _KIND: dict[str, TimeAnchorKind] = {"story": "story", "history": "history"}
@@ -243,7 +246,7 @@ class PlanFactRepository:
         return await self._list_entities(project_id, "approved")
 
     async def list_pending_entities(self, project_id: str) -> list[PlanEntity]:
-        """Unapproved entities for one project."""
+        """Pending entities for one project (excludes rejected)."""
         return await self._list_entities(project_id, "pending")
 
     async def write_attribute(
@@ -310,11 +313,11 @@ class PlanFactRepository:
         return _attribute_from_row(row)
 
     async def list_canon_attributes(self, project_id: str) -> list[PlanAttribute]:
-        """Approved plan|human attributes. Pending rows are excluded."""
+        """Approved plan|human attributes. Pending and rejected rows are excluded."""
         return await self._list_attributes(project_id, "approved")
 
     async def list_pending_attributes(self, project_id: str) -> list[PlanAttribute]:
-        """Attributes waiting for approval."""
+        """Pending attributes for one project (excludes rejected)."""
         return await self._list_attributes(project_id, "pending")
 
     async def write_time_anchor(
@@ -360,7 +363,7 @@ class PlanFactRepository:
         return await self._list_time_anchors(project_id, "approved")
 
     async def list_pending_time_anchors(self, project_id: str) -> list[PlanTimeAnchor]:
-        """Unapproved time anchors for one project."""
+        """Pending time anchors for one project (excludes rejected)."""
         return await self._list_time_anchors(project_id, "pending")
 
     async def write_event(
@@ -433,7 +436,7 @@ class PlanFactRepository:
         return await self._list_events(project_id, "approved")
 
     async def list_pending_events(self, project_id: str) -> list[PlanEvent]:
-        """Unapproved events for one project."""
+        """Pending events for one project (excludes rejected)."""
         return await self._list_events(project_id, "pending")
 
     async def write_clue(
@@ -486,7 +489,7 @@ class PlanFactRepository:
         return await self._list_clues(project_id, "approved")
 
     async def list_pending_clues(self, project_id: str) -> list[PlanClue]:
-        """Unapproved clues for one project."""
+        """Pending clues for one project (excludes rejected)."""
         return await self._list_clues(project_id, "pending")
 
     async def _list_entities(

@@ -16,10 +16,11 @@ Package tip remains **0.5.0**. V1.0 is the product-generation name.
 | M0 步 3 `today` | **已在 `main`。** [#30](https://github.com/Bingtuu/Songyan/pull/30) squash 为 `d5c2cc1`。任务归档在 [tasks/done/202.md](../tasks/done/202.md) |
 | M0 步 4 缺库 / 缺项目退出码 | **已在 `main`。** [#31](https://github.com/Bingtuu/Songyan/pull/31) squash 为 `48fa354`。任务归档在 [tasks/done/203.md](../tasks/done/203.md) |
 | M0 代码验收（步 1–4 + tech-m0 §6–7） | **PASS**（`main` `80f4107`）。证据见 [tasks/done/204-m0-acceptance.md](../tasks/done/204-m0-acceptance.md)。S6（一周打开 3 天）不在代码验收内 |
-| M1 技术方案 [tech-m1.md](tech-m1.md) | **已接受（Mew 拍板，2026-11-03 Asia/Shanghai，owner t82u 授权）。** 绑定决策已写入正文。下一刀 = M1 步 1 编码 |
+| M1 技术方案 [tech-m1.md](tech-m1.md) | **已接受（Mew 拍板，2026-11-03 Asia/Shanghai，owner t82u 授权）。** 绑定决策已写入正文 |
+| M1 步 1 `rejected` 迁移 + 过滤 | **编码中**（`tasks/205`，分支 `m1-step1-rejected`）。未合并 |
 | 包版本 | 仍是 `0.5.0` |
 
-阻塞：无。下一刀 = 按 [tech-m1.md](tech-m1.md) §5 **步 1**（五表 `rejected` 迁移 + 仓库过滤），先写 `tasks/20x` 再改 `src/`；TDD；开 PR 后 Mew COMMENT 再合并。不要越出 PRD 的 M1，不要改结算器，不要声称 V1.0 完成，不要升包版本。
+阻塞：无。当前刀 = [tech-m1.md](tech-m1.md) §5 **步 1**（五表 `rejected` 迁移 + 仓库过滤），任务 [tasks/205-rejected迁移与过滤.md](../tasks/205-rejected迁移与过滤.md)。开 PR 后 Mew COMMENT 再合并。不要越出步 1，不要改结算器，不要声称 V1.0 完成，不要升包版本。
 
 上一稿 PRD 的总体框架 owner 已经接受。现行文本是 `prd-v1.md`。旧全文在 [archive/prd-v1-writing-assist-2026-10-26.md](archive/prd-v1-writing-assist-2026-10-26.md)。
 
@@ -53,7 +54,7 @@ Package tip remains **0.5.0**. V1.0 is the product-generation name.
 - 《轨道蜃景》Ch1–10：`project_id=8e30dec7f2ec40c1a9ce54c783981f8c`，`run-33841231`。10/10 accepted；质量门、结算、摘要、导出通过；exit 0。**DG-1 失败**（平均 revision 1.7，十章都有 ContextEmergency，无 AutoHalt）。
 - 那次导出的人工阅读 **未通过**：时间线回滚、Hermes/赫耳墨斯、时间尺度、供氧 / EVA 复读、英文泄漏 `ninety-two 秒`。
 - 真实模型上「导入后再续写」还没有验收。
-- `canon edit` / `triage` / `confirm`、`check`、`variant`、`chapter continue` 都还没有。tech-m1 **已接受**；编码从 **M1 步 1**（`rejected` 迁移）开始，尚未开工。
+- `canon edit` / `triage` / `confirm`、`check`、`variant`、`chapter continue` 都还没有。tech-m1 **已接受**；**M1 步 1**（`rejected` 迁移 + 过滤）编码中（`tasks/205`），尚未合并。
 
 标识和本机路径：[HANDOFF-mew.md](HANDOFF-mew.md)。书稿不入库。
 
@@ -74,6 +75,6 @@ Package tip remains **0.5.0**. V1.0 is the product-generation name.
 
 ## 维护者下一步
 
-1. 按 [tech-m1.md](tech-m1.md) §5 **步 1**：五表 `approval_status` CHECK 扩 `rejected`（重建表）+ `PlanApprovalStatus` / `_APPROVAL` / pending 过滤；先任务文件，再 `src/`；TDD。
-2. 开 PR 后等 Mew COMMENT，再合并。不要合成大 PR。
+1. 审并 COMMENT [tasks/205](../tasks/205-rejected迁移与过滤.md) 对应 PR（M1 步 1），通过后合并。不要合成大 PR。
+2. 合并后再开步 2（`canon edit`）。
 3. 不改结算权威、不加题材检查器、不跑无人值守长篇、不升包版本、不声称 V1.0 完成。

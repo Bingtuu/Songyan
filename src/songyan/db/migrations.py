@@ -1103,9 +1103,10 @@ async def _migrate_projects_lifecycle_status(conn: aiosqlite.Connection) -> None
 async def _migrate_plan_fact_cards(conn: aiosqlite.Connection) -> None:
     """创建 plan-first 事实卡五张表（ADR-0001 / Phase B 第一刀）.
 
-    权威行由计划层或人写入。``approval_status`` 区分已批准 canon（approved）
-    与待审行（pending）。attribute.source 只允许 plan|human。
+    权威行由计划层或人写入。``approval_status`` 区分已批准 canon（approved）、
+    待审（pending）与驳回（rejected）。attribute.source 只允许 plan|human。
     本迁移不读取、不改写 SettlementExtractor 的结算表。
+    既有库若仍是两态 CHECK，由后续重建迁移扩到含 rejected。
     """
     tables = [
         """CREATE TABLE IF NOT EXISTS plan_entities (
@@ -1114,7 +1115,7 @@ async def _migrate_plan_fact_cards(conn: aiosqlite.Connection) -> None:
             entity_type      TEXT NOT NULL,
             aliases          TEXT NOT NULL DEFAULT '[]',
             approval_status  TEXT NOT NULL DEFAULT 'approved'
-                             CHECK (approval_status IN ('approved', 'pending')),
+                             CHECK (approval_status IN ('approved', 'pending', 'rejected')),
             created_at       TEXT NOT NULL DEFAULT (datetime('now')),
             updated_at       TEXT NOT NULL DEFAULT (datetime('now'))
         )""",
@@ -1124,7 +1125,7 @@ async def _migrate_plan_fact_cards(conn: aiosqlite.Connection) -> None:
             date             TEXT NOT NULL,
             kind             TEXT NOT NULL CHECK (kind IN ('story', 'history')),
             approval_status  TEXT NOT NULL DEFAULT 'approved'
-                             CHECK (approval_status IN ('approved', 'pending')),
+                             CHECK (approval_status IN ('approved', 'pending', 'rejected')),
             created_at       TEXT NOT NULL DEFAULT (datetime('now')),
             updated_at       TEXT NOT NULL DEFAULT (datetime('now'))
         )""",
@@ -1138,7 +1139,7 @@ async def _migrate_plan_fact_cards(conn: aiosqlite.Connection) -> None:
             valid_to_ch      INTEGER,
             source           TEXT NOT NULL CHECK (source IN ('plan', 'human')),
             approval_status  TEXT NOT NULL DEFAULT 'approved'
-                             CHECK (approval_status IN ('approved', 'pending')),
+                             CHECK (approval_status IN ('approved', 'pending', 'rejected')),
             created_at       TEXT NOT NULL DEFAULT (datetime('now')),
             updated_at       TEXT NOT NULL DEFAULT (datetime('now')),
             CHECK (valid_from_ch IS NULL OR valid_from_ch >= 1),
@@ -1159,7 +1160,7 @@ async def _migrate_plan_fact_cards(conn: aiosqlite.Connection) -> None:
             reveals_evidence TEXT NOT NULL DEFAULT '[]',
             claims           TEXT NOT NULL DEFAULT '[]',
             approval_status  TEXT NOT NULL DEFAULT 'approved'
-                             CHECK (approval_status IN ('approved', 'pending')),
+                             CHECK (approval_status IN ('approved', 'pending', 'rejected')),
             created_at       TEXT NOT NULL DEFAULT (datetime('now')),
             updated_at       TEXT NOT NULL DEFAULT (datetime('now'))
         )""",
@@ -1172,7 +1173,7 @@ async def _migrate_plan_fact_cards(conn: aiosqlite.Connection) -> None:
             label            TEXT NOT NULL DEFAULT '',
             mention_terms    TEXT NOT NULL DEFAULT '[]',
             approval_status  TEXT NOT NULL DEFAULT 'approved'
-                             CHECK (approval_status IN ('approved', 'pending')),
+                             CHECK (approval_status IN ('approved', 'pending', 'rejected')),
             created_at       TEXT NOT NULL DEFAULT (datetime('now')),
             updated_at       TEXT NOT NULL DEFAULT (datetime('now')),
             CHECK (revealed_ch IS NULL OR revealed_ch >= 1),
@@ -1225,6 +1226,242 @@ async def _migrate_plan_fact_check_fields(conn: aiosqlite.Connection) -> None:
         column="mention_terms",
         ddl="ALTER TABLE plan_clues ADD COLUMN mention_terms TEXT NOT NULL DEFAULT '[]'",
     )
+
+
+
+async def _plan_table_sql(conn: aiosqlite.Connection, table: str) -> str | None:
+    """Return CREATE TABLE sql for ``table``, or None if missing."""
+    cursor = await conn.execute(
+        "SELECT sql FROM sqlite_master WHERE type='table' AND name=?",
+        (table,),
+    )
+    row = await cursor.fetchone()
+    if row is None:
+        return None
+    sql = row[0]
+    return sql if isinstance(sql, str) else None
+
+
+async def _rebuild_plan_table_approval_check(
+    conn: aiosqlite.Connection,
+    *,
+    table: str,
+    create_sql: str,
+    columns: tuple[str, ...],
+    indexes: tuple[str, ...],
+) -> None:
+    """Rebuild one plan_* table so approval_status CHECK includes rejected.
+
+    Compatible with existing approved/pending rows (value set is a
+    superset). Idempotent: skips when CREATE SQL already mentions
+    rejected.
+    """
+    existing = await _plan_table_sql(conn, table)
+    if existing is None:
+        return
+    if "'rejected'" in existing:
+        return
+
+    new_table = f"{table}__m1_rejected"
+    await conn.execute(create_sql.format(table=new_table))
+    col_list = ", ".join(columns)
+    await conn.execute(
+        f"INSERT INTO {new_table} ({col_list}) SELECT {col_list} FROM {table}"
+    )
+    await conn.execute(f"DROP TABLE {table}")
+    await conn.execute(f"ALTER TABLE {new_table} RENAME TO {table}")
+    for index_sql in indexes:
+        await conn.execute(index_sql)
+
+
+async def _migrate_plan_approval_rejected(conn: aiosqlite.Connection) -> None:
+    """Expand plan_* approval_status CHECK to include rejected (tech-m1 step 1).
+
+    SQLite cannot ALTER a CHECK in place. Rebuild all five plan tables
+    (create → copy → drop → rename → recreate indexes). Foreign keys are
+    turned off for the rebuild so dependent tables can be replaced safely.
+    Already-migrated databases are no-ops. Existing approved/pending rows
+    are copied unchanged.
+    """
+    fk_cursor = await conn.execute("PRAGMA foreign_keys")
+    fk_row = await fk_cursor.fetchone()
+    fk_was_on = bool(fk_row[0]) if fk_row is not None else False
+    await conn.execute("PRAGMA foreign_keys = OFF")
+    try:
+        await _rebuild_plan_table_approval_check(
+            conn,
+            table="plan_entities",
+            create_sql="""CREATE TABLE {table} (
+            entity_id        TEXT PRIMARY KEY,
+            project_id       TEXT NOT NULL REFERENCES projects(project_id) ON DELETE CASCADE,
+            entity_type      TEXT NOT NULL,
+            aliases          TEXT NOT NULL DEFAULT '[]',
+            approval_status  TEXT NOT NULL DEFAULT 'approved'
+                             CHECK (approval_status IN ('approved', 'pending', 'rejected')),
+            created_at       TEXT NOT NULL DEFAULT (datetime('now')),
+            updated_at       TEXT NOT NULL DEFAULT (datetime('now'))
+        )""",
+            columns=(
+                "entity_id",
+                "project_id",
+                "entity_type",
+                "aliases",
+                "approval_status",
+                "created_at",
+                "updated_at",
+            ),
+            indexes=(
+                "CREATE INDEX IF NOT EXISTS idx_plan_entities_project "
+                "ON plan_entities(project_id, approval_status)",
+            ),
+        )
+        await _rebuild_plan_table_approval_check(
+            conn,
+            table="plan_time_anchors",
+            create_sql="""CREATE TABLE {table} (
+            anchor_id        TEXT PRIMARY KEY,
+            project_id       TEXT NOT NULL REFERENCES projects(project_id) ON DELETE CASCADE,
+            date             TEXT NOT NULL,
+            kind             TEXT NOT NULL CHECK (kind IN ('story', 'history')),
+            approval_status  TEXT NOT NULL DEFAULT 'approved'
+                             CHECK (approval_status IN ('approved', 'pending', 'rejected')),
+            created_at       TEXT NOT NULL DEFAULT (datetime('now')),
+            updated_at       TEXT NOT NULL DEFAULT (datetime('now'))
+        )""",
+            columns=(
+                "anchor_id",
+                "project_id",
+                "date",
+                "kind",
+                "approval_status",
+                "created_at",
+                "updated_at",
+            ),
+            indexes=(
+                "CREATE INDEX IF NOT EXISTS idx_plan_time_anchors_project "
+                "ON plan_time_anchors(project_id, approval_status)",
+            ),
+        )
+        await _rebuild_plan_table_approval_check(
+            conn,
+            table="plan_attributes",
+            create_sql="""CREATE TABLE {table} (
+            attribute_id     TEXT PRIMARY KEY,
+            project_id       TEXT NOT NULL REFERENCES projects(project_id) ON DELETE CASCADE,
+            entity_id        TEXT NOT NULL REFERENCES plan_entities(entity_id) ON DELETE CASCADE,
+            key              TEXT NOT NULL,
+            value            TEXT NOT NULL,
+            valid_from_ch    INTEGER,
+            valid_to_ch      INTEGER,
+            source           TEXT NOT NULL CHECK (source IN ('plan', 'human')),
+            approval_status  TEXT NOT NULL DEFAULT 'approved'
+                             CHECK (approval_status IN ('approved', 'pending', 'rejected')),
+            created_at       TEXT NOT NULL DEFAULT (datetime('now')),
+            updated_at       TEXT NOT NULL DEFAULT (datetime('now')),
+            CHECK (valid_from_ch IS NULL OR valid_from_ch >= 1),
+            CHECK (valid_to_ch IS NULL OR valid_to_ch >= 1),
+            CHECK (
+                valid_from_ch IS NULL
+                OR valid_to_ch IS NULL
+                OR valid_to_ch >= valid_from_ch
+            )
+        )""",
+            columns=(
+                "attribute_id",
+                "project_id",
+                "entity_id",
+                "key",
+                "value",
+                "valid_from_ch",
+                "valid_to_ch",
+                "source",
+                "approval_status",
+                "created_at",
+                "updated_at",
+            ),
+            indexes=(
+                "CREATE INDEX IF NOT EXISTS idx_plan_attributes_project "
+                "ON plan_attributes(project_id, approval_status)",
+                "CREATE INDEX IF NOT EXISTS idx_plan_attributes_entity "
+                "ON plan_attributes(entity_id)",
+            ),
+        )
+        await _rebuild_plan_table_approval_check(
+            conn,
+            table="plan_events",
+            create_sql="""CREATE TABLE {table} (
+            event_id         TEXT PRIMARY KEY,
+            project_id       TEXT NOT NULL REFERENCES projects(project_id) ON DELETE CASCADE,
+            ch               INTEGER NOT NULL CHECK (ch >= 1),
+            time_anchor_id   TEXT REFERENCES plan_time_anchors(anchor_id) ON DELETE SET NULL,
+            participants     TEXT NOT NULL DEFAULT '[]',
+            causes           TEXT NOT NULL DEFAULT '[]',
+            reveals_evidence TEXT NOT NULL DEFAULT '[]',
+            claims           TEXT NOT NULL DEFAULT '[]',
+            approval_status  TEXT NOT NULL DEFAULT 'approved'
+                             CHECK (approval_status IN ('approved', 'pending', 'rejected')),
+            created_at       TEXT NOT NULL DEFAULT (datetime('now')),
+            updated_at       TEXT NOT NULL DEFAULT (datetime('now'))
+        )""",
+            columns=(
+                "event_id",
+                "project_id",
+                "ch",
+                "time_anchor_id",
+                "participants",
+                "causes",
+                "reveals_evidence",
+                "claims",
+                "approval_status",
+                "created_at",
+                "updated_at",
+            ),
+            indexes=(
+                "CREATE INDEX IF NOT EXISTS idx_plan_events_project "
+                "ON plan_events(project_id, ch)",
+            ),
+        )
+        await _rebuild_plan_table_approval_check(
+            conn,
+            table="plan_clues",
+            create_sql="""CREATE TABLE {table} (
+            clue_id          TEXT PRIMARY KEY,
+            project_id       TEXT NOT NULL REFERENCES projects(project_id) ON DELETE CASCADE,
+            planted_ch       INTEGER NOT NULL CHECK (planted_ch >= 1),
+            revealed_ch      INTEGER,
+            must_mention_in  TEXT NOT NULL DEFAULT '[]',
+            label            TEXT NOT NULL DEFAULT '',
+            mention_terms    TEXT NOT NULL DEFAULT '[]',
+            approval_status  TEXT NOT NULL DEFAULT 'approved'
+                             CHECK (approval_status IN ('approved', 'pending', 'rejected')),
+            created_at       TEXT NOT NULL DEFAULT (datetime('now')),
+            updated_at       TEXT NOT NULL DEFAULT (datetime('now')),
+            CHECK (revealed_ch IS NULL OR revealed_ch >= 1),
+            CHECK (revealed_ch IS NULL OR revealed_ch >= planted_ch)
+        )""",
+            columns=(
+                "clue_id",
+                "project_id",
+                "planted_ch",
+                "revealed_ch",
+                "must_mention_in",
+                "label",
+                "mention_terms",
+                "approval_status",
+                "created_at",
+                "updated_at",
+            ),
+            indexes=(
+                "CREATE INDEX IF NOT EXISTS idx_plan_clues_project "
+                "ON plan_clues(project_id, approval_status)",
+            ),
+        )
+    finally:
+        if fk_was_on:
+            await conn.execute("PRAGMA foreign_keys = ON")
+        else:
+            await conn.execute("PRAGMA foreign_keys = OFF")
+
 
 
 async def _add_column_if_missing(
@@ -1331,4 +1568,5 @@ _MIGRATIONS: list[tuple[str, Callable[[aiosqlite.Connection], Awaitable[None]]]]
     ),
     ("_migrate_plan_fact_cards", _migrate_plan_fact_cards),
     ("_migrate_plan_fact_check_fields", _migrate_plan_fact_check_fields),
+    ("_migrate_plan_approval_rejected", _migrate_plan_approval_rejected),
 ]

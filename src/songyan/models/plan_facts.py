@@ -3,11 +3,12 @@
 The plan layer and a human write these rows. Chapter prose is checked
 against them later; this module does not absorb settlement extracts.
 
-``approval_status`` is the pending-queue flag. ``approved`` rows are
-canon. ``pending`` rows may be stored, but canon readers must ignore
-them. An attribute's ``source`` stays ``plan`` or ``human`` even while
-the row is pending: that value is the intended authority, not a third
-source type.
+``approval_status`` is the queue flag. ``approved`` rows are canon.
+``pending`` rows may be stored, but canon readers must ignore them.
+``rejected`` rows stay for dismiss audit (tech-m1); canon and pending
+list readers must ignore them. An attribute's ``source`` stays ``plan``
+or ``human`` even while the row is pending or rejected: that value is
+the intended authority, not a third source type.
 """
 
 from __future__ import annotations
@@ -17,7 +18,7 @@ from typing import Literal
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 PlanFactSource = Literal["plan", "human"]
-PlanApprovalStatus = Literal["approved", "pending"]
+PlanApprovalStatus = Literal["approved", "pending", "rejected"]
 TimeAnchorKind = Literal["story", "history"]
 
 
