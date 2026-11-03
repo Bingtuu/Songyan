@@ -36,7 +36,7 @@ Songyan（松烟）是 **人主导的连载写作助手**，接在现有的事�
 
 冲突时，上面的条目压过下面的。产品边界以 PRD 为准；M0 的实现细节以 `tech-m0.md` 为准；M1 的实现细节以**已接受的** `tech-m1.md` 为准，且不得越出 PRD 对应里程碑。不要用归档路线图或 [docs/prd-v1-writing-assist.md](docs/prd-v1-writing-assist.md) 的指针页推翻 PRD。
 
-**开工门（M1）：** `docs/tech-m1.md` 已接受。下一刀为 M1 步 1（`rejected` 迁移 + 过滤）：先建 `tasks/20x`，再改 `src/` / `tests/`；TDD；开 PR 后 Mew COMMENT 再合并。M2 及以后各自另有被接受的技术方案。
+**开工门（M1）：** `docs/tech-m1.md` 已接受。步 1 已合入；下一刀为 M1 步 2（`canon edit`）：先建 `tasks/20x`，再改 `src/` / `tests/`；TDD；开 PR 后 Mew COMMENT 再合并。M2 及以后各自另有被接受的技术方案。
 
 ## 默认不要读
 
@@ -78,4 +78,4 @@ Songyan（松烟）是 **人主导的连载写作助手**，接在现有的事�
 
 ## 命令表面
 
-现网能用的包括 `doctor`、`create-project`、`run`、`report`、`export`、`import`、`bundle-run`，以及 M0 的 `canon show` 与 `today`。`canon edit|triage|confirm` 与规则 `check` 属于已接受的 M1，编码尚未落地（下一刀步 1）。`variant`、`chapter continue`、`review` 仍是更后里程碑。完整列表以 PRD 第 9 节为准。
+现网能用的包括 `doctor`、`create-project`、`run`、`report`、`export`、`import`、`bundle-run`，以及 M0 的 `canon show` 与 `today`。`canon edit` 属 M1 步 2（编码中）；`triage|confirm` 与规则 `check` 仍待后续小步。`variant`、`chapter continue`、`review` 仍是更后里程碑。完整列表以 PRD 第 9 节为准。

@@ -6,7 +6,7 @@ owner：Bingtuu。包 tip **v0.5**（`0.5.0`）。「V1.0」是产品代际名�
 
 ## 下一刀
 
-**M1 步 1 PR：等待 Mew COMMENT 后合并。** 任务 [tasks/205-rejected迁移与过滤.md](../tasks/205-rejected迁移与过滤.md)；分支 `m1-step1-rejected`。范围仅五表 `rejected` CHECK 重建迁移 + `PlanApprovalStatus` / `_APPROVAL` / pending 过滤；不做步 2+。
+**M1 步 2 PR：等待 Mew COMMENT 后合并。** 任务 [tasks/206-canon-edit.md](../tasks/206-canon-edit.md)；分支 `m1-step2-canon-edit`。范围仅 `canon edit`（entity + attribute，pending，attribute `source=human`）；不做 confirm/dismiss/check/today 文案。
 
 绑定摘要（全文以 tech-m1 为准）：无持久第四态 `accepted`；人写强制 `source=human`；步 1 五表 CHECK 必迁；`check` 正文 = `ChapterVersion.content`，属性侧值 = 注入 `AttributeExtract`；验收最小 kind = entity+attribute；rejected 后同 id 覆盖、无正文史；步 5 更新 `today` 的 `next`。
 
@@ -20,7 +20,7 @@ M0 代码验收（步 1–4 + tech-m0 §6–7）在 `main` `80f4107`：**PASS**�
 - 不重开 plan-first 阶段 C，不加题材专用检查器，不改 SettlementExtractor 的权威。
 - 不把 Ch1–10 写成文学验收。文学质量归人。
 - 正式 git tag 仍由维护者决定。
-- 不要跳过步 1 迁移直接写 confirm；不要合成跨步大 PR；不要在无 Mew COMMENT 时自合。
+- 不要跳过步 2 直接做 confirm；不要合成跨步大 PR；不要在无 Mew COMMENT 时自合。
 - 不声称 V1.0 完成，不升包版本。
 
 ## 事实指针（短）
@@ -31,7 +31,7 @@ M0 代码验收（步 1–4 + tech-m0 §6–7）在 `main` `80f4107`：**PASS**�
 | M0 步 1–4 | 已进 `main`（见上）；[tasks/done/200–203](../tasks/done/) |
 | M0 验收 | **PASS** @ `80f4107`。[tasks/done/204-m0-acceptance.md](../tasks/done/204-m0-acceptance.md) |
 | M1 技术方案 | [tech-m1.md](tech-m1.md) — **已接受**（Mew 拍板，2026-11-03 Asia/Shanghai） |
-| 当前任务 | **DOING** [205](../tasks/205-rejected迁移与过滤.md)（M1 步 1）；PR 待 Mew COMMENT |
+| 当前任务 | **DOING** [206](../tasks/206-canon-edit.md)（M1 步 2）；步 1 已合入 `1995181`；PR 待 Mew COMMENT |
 | 架构方向 | [adr/0001-plan-first-facts.md](adr/0001-plan-first-facts.md) |
 | 工程现状 | [STATUS.md](STATUS.md) |
 | 阶段 A–C | [ROADMAP-plan-first.md](ROADMAP-plan-first.md)（CLOSED 短指针；全文在 archive，日常不要加载） |
