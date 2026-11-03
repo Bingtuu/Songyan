@@ -9,10 +9,10 @@
 | [AGENTS.md](../AGENTS.md) | 冷启动规则：产品方向、文档权威、书面接受前不写代码 |
 | [V1.0 PRD](prd-v1.md) | 产品权威。两条主路径、W0–W6、里程碑 M0–M4。Owner 已接受这轮文档 |
 | [M0 技术方案](tech-m0.md) | 只读工作台。步 1–4 已进 `main`；§6–7 代码验收 PASS（`80f4107`） |
-| [M1 技术方案](tech-m1.md) | 人确认入典 + 规则 `check`。draft，待 owner 书面接受 |
+| [M1 技术方案](tech-m1.md) | 人确认入典 + 规则 `check`。**已接受**（Mew 拍板）；下一刀步 1 |
 | [ADR-0001](adr/0001-plan-first-facts.md) | 事实写入方向。阶段 A–C 已关闭，不重开召回 KPI |
-| [STATUS](STATUS.md) | 工程事实：包仍是 0.5.0；M0 验收 PASS；下一闸 = 接受 tech-m1 |
-| [HANDOFF](HANDOFF-mew.md) | 当天下一步：等 owner 接受 tech-m1，再开 M1 编码 |
+| [STATUS](STATUS.md) | 工程事实：包仍是 0.5.0；M0 验收 PASS；tech-m1 已接受；下一刀 = M1 步 1 |
+| [HANDOFF](HANDOFF-mew.md) | 当天下一步：M1 步 1（rejected 迁移 + 过滤） |
 | [Quickstart](quickstart.md) | 安装、配置、短窗口、导出 |
 | [Troubleshooting](troubleshooting.md) | 失败恢复 |
 | [Release Checklist](release-checklist.md) | 维护者发布门 |
