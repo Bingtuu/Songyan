@@ -17,10 +17,11 @@ Package tip remains **0.5.0**. V1.0 is the product-generation name.
 | M0 步 4 缺库 / 缺项目退出码 | **已在 `main`。** [#31](https://github.com/Bingtuu/Songyan/pull/31) squash 为 `48fa354`。任务归档在 [tasks/done/203.md](../tasks/done/203.md) |
 | M0 代码验收（步 1–4 + tech-m0 §6–7） | **PASS**（`main` `80f4107`）。证据见 [tasks/done/204-m0-acceptance.md](../tasks/done/204-m0-acceptance.md)。S6（一周打开 3 天）不在代码验收内 |
 | M1 技术方案 [tech-m1.md](tech-m1.md) | **已接受（Mew 拍板，2026-11-03 Asia/Shanghai，owner t82u 授权）。** 绑定决策已写入正文 |
-| M1 步 1 `rejected` 迁移 + 过滤 | **编码中**（`tasks/205`，分支 `m1-step1-rejected`）。未合并 |
+| M1 步 1 `rejected` 迁移 + 过滤 | **已在 `main`。** [#35](https://github.com/Bingtuu/Songyan/pull/35) squash 为 `1995181`。任务归档在 [tasks/done/205-rejected迁移与过滤.md](../tasks/done/205-rejected迁移与过滤.md) |
+| M1 步 2 `canon edit` | **编码中**（`tasks/206`，分支 `m1-step2-canon-edit`）。未合并 |
 | 包版本 | 仍是 `0.5.0` |
 
-阻塞：无。当前刀 = [tech-m1.md](tech-m1.md) §5 **步 1**（五表 `rejected` 迁移 + 仓库过滤），任务 [tasks/205-rejected迁移与过滤.md](../tasks/205-rejected迁移与过滤.md)。开 PR 后 Mew COMMENT 再合并。不要越出步 1，不要改结算器，不要声称 V1.0 完成，不要升包版本。
+阻塞：无。当前刀 = [tech-m1.md](tech-m1.md) §5 **步 2**（`canon edit`），任务 [tasks/206-canon-edit.md](../tasks/206-canon-edit.md)。开 PR 后 Mew COMMENT 再合并。不要越出步 2，不要做 confirm/dismiss/check，不要改结算器，不要声称 V1.0 完成，不要升包版本。
 
 上一稿 PRD 的总体框架 owner 已经接受。现行文本是 `prd-v1.md`。旧全文在 [archive/prd-v1-writing-assist-2026-10-26.md](archive/prd-v1-writing-assist-2026-10-26.md)。
 
@@ -54,7 +55,7 @@ Package tip remains **0.5.0**. V1.0 is the product-generation name.
 - 《轨道蜃景》Ch1–10：`project_id=8e30dec7f2ec40c1a9ce54c783981f8c`，`run-33841231`。10/10 accepted；质量门、结算、摘要、导出通过；exit 0。**DG-1 失败**（平均 revision 1.7，十章都有 ContextEmergency，无 AutoHalt）。
 - 那次导出的人工阅读 **未通过**：时间线回滚、Hermes/赫耳墨斯、时间尺度、供氧 / EVA 复读、英文泄漏 `ninety-two 秒`。
 - 真实模型上「导入后再续写」还没有验收。
-- `canon edit` / `triage` / `confirm`、`check`、`variant`、`chapter continue` 都还没有。tech-m1 **已接受**；**M1 步 1**（`rejected` 迁移 + 过滤）编码中（`tasks/205`），尚未合并。
+- `canon edit` 编码中（M1 步 2 / `tasks/206`）；`triage` / `confirm`、`check`、`variant`、`chapter continue` 都还没有。tech-m1 **已接受**；步 1 已在 `main`（`1995181`）。
 
 标识和本机路径：[HANDOFF-mew.md](HANDOFF-mew.md)。书稿不入库。
 
@@ -66,7 +67,7 @@ Package tip remains **0.5.0**. V1.0 is the product-generation name.
 | [AGENTS.md](../AGENTS.md) | 冷启动规则：读什么、何时不许写代码 |
 | [V1.0 PRD](prd-v1.md) | 产品。Owner 已接受这轮文档 |
 | [M0 技术方案](tech-m0.md) | 只读工作台。步 1–4 已进 `main`；§6–7 代码验收 **PASS**（`80f4107`） |
-| [M1 技术方案](tech-m1.md) | 人确认入典 + 规则 `check`。**已接受（Mew 拍板）**；下一刀步 1 |
+| [M1 技术方案](tech-m1.md) | 人确认入典 + 规则 `check`。**已接受（Mew 拍板）**；步 1 已合入；下一刀步 2 |
 | [ADR-0001](adr/0001-plan-first-facts.md) | 事实由计划和人写入 |
 | [HANDOFF](HANDOFF-mew.md) | 当天的下一步 |
 | [INDEX](INDEX.md) | 文档地图 |
@@ -75,6 +76,6 @@ Package tip remains **0.5.0**. V1.0 is the product-generation name.
 
 ## 维护者下一步
 
-1. 审并 COMMENT [tasks/205](../tasks/205-rejected迁移与过滤.md) 对应 PR（M1 步 1），通过后合并。不要合成大 PR。
-2. 合并后再开步 2（`canon edit`）。
+1. 审并 COMMENT [tasks/206](../tasks/206-canon-edit.md) 对应 PR（M1 步 2），通过后合并。不要合成大 PR。
+2. 合并后再开步 3（`confirm` + `dismiss`）。
 3. 不改结算权威、不加题材检查器、不跑无人值守长篇、不升包版本、不声称 V1.0 完成。

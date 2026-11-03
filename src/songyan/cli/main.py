@@ -10,6 +10,7 @@ from typing import Any, Literal, cast
 
 import click
 
+from songyan.cli.commands.canon_write import register_canon_write_commands
 from songyan.cli.commands.import_pipeline import register_import_commands
 from songyan.cli.commands.index import register_index_commands
 from songyan.cli.commands.quality import register_quality_commands
@@ -1319,5 +1320,6 @@ register_quality_commands(cli)
 # ---------------------------------------------------------------------------
 register_import_commands(cli)
 
-# M0 step 1: read-only canon show. No today, no writes.
+# M0: read-only canon show / today. M1 step 2: canon edit writes.
 register_workbench_commands(cli)
+register_canon_write_commands(cli)

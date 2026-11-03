@@ -1,7 +1,8 @@
 """Read-only workbench commands.
 
-M0 steps 1–3: ``canon show`` and ``today`` for approved / pending facts,
-storyline, and counts. Step 4: missing DB / missing project exit 1. No writes.
+M0 steps 1–4: ``canon show`` and ``today`` for approved / pending facts,
+storyline, and counts; missing DB / missing project exit 1.
+M1 write commands (``canon edit``) register beside this group.
 """
 
 from __future__ import annotations
@@ -188,7 +189,7 @@ async def _render_canon_show(project_id: str, *, as_json: bool) -> str:
 
 @click.group(name="canon")
 def canon_group() -> None:
-    """已确认事实与未确认行。只读。"""
+    """已确认事实与未确认行；写入见 ``canon edit``。"""
 
 
 @canon_group.command(name="show")
