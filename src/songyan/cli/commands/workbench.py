@@ -1,7 +1,7 @@
 """Read-only workbench commands.
 
-M0 step 1 prints approved and pending plan facts. Step 2 fills the storyline
-section from ``NarrativeRepository`` and adds ``--json``. Neither step writes.
+M0 steps 1–2: ``canon show`` for approved / pending plan facts and storyline.
+Step 3: ``today`` prints counts and a fixed next sentence. No writes.
 """
 
 from __future__ import annotations
@@ -25,6 +25,7 @@ from songyan.models.plan_facts import (
 _CANON_HEAD = "# Canon（approved）"
 _PENDING_HEAD = "# Pending（不是 Canon）"
 _STORYLINE_HEAD = "# Storyline（规划骨架，不是已确认事实）"
+_NEXT = "M0 只读。确认入典和生成都不在本命令。"
 _KINDS = ("entity", "attribute", "event", "time_anchor", "clue")
 
 _Card = PlanEntity | PlanAttribute | PlanEvent | PlanTimeAnchor | PlanClue
@@ -185,6 +186,69 @@ def canon_show(project_id: str, as_json: bool) -> None:
     click.echo(asyncio.run(_render_canon_show(project_id, as_json=as_json)))
 
 
+
+def _count_rows(bucket: dict) -> int:
+    return sum(len(bucket[kind]) for kind in _KINDS)
+
+
+def _render_today_text(loaded: dict[str, object]) -> str:
+    canon = loaded["canon"]
+    pending = loaded["pending"]
+    arcs = loaded["arcs"]
+    assert isinstance(canon, dict)
+    assert isinstance(pending, dict)
+    assert isinstance(arcs, list)
+    return "\n".join(
+        [
+            f"canon_rows: {_count_rows(canon)}",
+            f"pending_rows: {_count_rows(pending)}",
+            f"storyline_arcs: {len(arcs)}",
+            _NEXT,
+        ]
+    )
+
+
+def _render_today_json(project_id: str, loaded: dict[str, object]) -> str:
+    canon = loaded["canon"]
+    pending = loaded["pending"]
+    outline = loaded["outline"]
+    arcs = loaded["arcs"]
+    thread_counts = loaded["thread_counts"]
+    assert isinstance(canon, dict)
+    assert isinstance(pending, dict)
+    assert outline is None or isinstance(outline, StoryOutline)
+    assert isinstance(arcs, list)
+    assert isinstance(thread_counts, dict)
+    payload = {
+        "project_id": project_id,
+        "canon_counts": {kind: len(canon[kind]) for kind in _KINDS},
+        "pending_counts": {kind: len(pending[kind]) for kind in _KINDS},
+        "storyline": {
+            "has_outline": outline is not None,
+            "arc_count": len(arcs),
+            "thread_counts": thread_counts,
+        },
+        "next": _NEXT,
+    }
+    return json.dumps(payload, ensure_ascii=False)
+
+
+async def _render_today(project_id: str, *, as_json: bool) -> str:
+    loaded = await _load(project_id)
+    if as_json:
+        return _render_today_json(project_id, loaded)
+    return _render_today_text(loaded)
+
+
+@click.command(name="today")
+@click.option("--project-id", required=True, help="项目 ID")
+@click.option("--json", "as_json", is_flag=True, help="输出 JSON")
+def today(project_id: str, as_json: bool) -> None:
+    """打印计数与固定下一步说明。不写库，不生成。"""
+    click.echo(asyncio.run(_render_today(project_id, as_json=as_json)))
+
+
 def register_workbench_commands(cli: click.Group) -> None:
     """Register the read-only workbench commands for this milestone."""
     cli.add_command(canon_group)
+    cli.add_command(today)

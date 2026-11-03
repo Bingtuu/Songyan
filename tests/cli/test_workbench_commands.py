@@ -1,4 +1,4 @@
-"""M0 step 1: read-only ``canon show`` for approved and pending plan facts."""
+"""M0 workbench CLI: ``canon show`` and ``today`` (read-only)."""
 
 from __future__ import annotations
 
@@ -200,3 +200,76 @@ def test_canon_show_json_storyline_filled(
     assert payload["storyline"]["threads"][0]["thread_id"] == _THREAD_ID
     assert payload["storyline"]["threads"][0]["status"] == "opened"
     assert _CONFLICT not in json.dumps(payload["canon"], ensure_ascii=False)
+
+
+_NEXT = "M0 只读。确认入典和生成都不在本命令。"
+_PLAN_TABLES = (
+    "plan_entities",
+    "plan_attributes",
+    "plan_events",
+    "plan_time_anchors",
+    "plan_clues",
+)
+
+
+async def _plan_table_counts() -> dict[str, int]:
+    async with get_db() as conn:
+        out: dict[str, int] = {}
+        for table in _PLAN_TABLES:
+            cursor = await conn.execute(f"SELECT COUNT(*) FROM {table}")
+            row = await cursor.fetchone()
+            assert row is not None
+            out[table] = int(row[0])
+    return out
+
+
+def test_today_counts_and_next_sentence(
+    runner: CliRunner, dushi_with_storyline: Path
+) -> None:
+    before = asyncio.run(_plan_table_counts())
+    result = runner.invoke(
+        cli,
+        ["today", "--project-id", DUSHI_LINGYI_PROJECT_ID],
+    )
+    after = asyncio.run(_plan_table_counts())
+
+    assert result.exit_code == 0, result.output
+    assert "canon_rows" in result.output
+    assert "pending_rows" in result.output
+    assert "storyline_arcs" in result.output
+    assert _NEXT in result.output
+    assert after == before
+
+
+def test_today_json_shape(runner: CliRunner, dushi_with_storyline: Path) -> None:
+    before = asyncio.run(_plan_table_counts())
+    result = runner.invoke(
+        cli,
+        ["today", "--project-id", DUSHI_LINGYI_PROJECT_ID, "--json"],
+    )
+    after = asyncio.run(_plan_table_counts())
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert set(payload) == {
+        "project_id",
+        "canon_counts",
+        "pending_counts",
+        "storyline",
+        "next",
+    }
+    assert payload["project_id"] == DUSHI_LINGYI_PROJECT_ID
+    assert payload["next"] == _NEXT
+    for key in ("entity", "attribute", "event", "time_anchor", "clue"):
+        assert key in payload["canon_counts"]
+        assert key in payload["pending_counts"]
+        assert isinstance(payload["canon_counts"][key], int)
+        assert isinstance(payload["pending_counts"][key], int)
+    assert payload["pending_counts"]["entity"] == 1
+    assert payload["canon_counts"]["entity"] >= 1
+    storyline = payload["storyline"]
+    assert set(storyline) == {"has_outline", "arc_count", "thread_counts"}
+    assert storyline["has_outline"] is True
+    assert storyline["arc_count"] == 1
+    assert storyline["thread_counts"]["opened"] == 1
+    assert after == before
