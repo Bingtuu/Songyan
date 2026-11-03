@@ -482,3 +482,200 @@ class TestPlanFactSchema:
 
         assert "claims" in event_cols
         assert {"label", "mention_terms"} <= clue_cols
+
+
+class TestRejectedApprovalStatus:
+    """tech-m1 step 1: durable rejected is stored but filtered from active queues."""
+
+    async def test_rejected_rows_are_absent_from_canon_and_pending(
+        self, fact_db: Path
+    ) -> None:
+        repo = PlanFactRepository()
+        await repo.write_entity(
+            _knife().model_copy(update={"approval_status": "rejected"})
+        )
+        await repo.write_entity(
+            PlanEntity(
+                entity_id="ent-pending-ok",
+                project_id="p1",
+                entity_type="object",
+                aliases=["还在队列"],
+                approval_status="pending",
+            )
+        )
+        await repo.write_time_anchor(
+            PlanTimeAnchor(
+                anchor_id="ta-rejected",
+                project_id="p1",
+                date="案发当夜",
+                kind="story",
+                approval_status="rejected",
+            )
+        )
+        await repo.write_attribute(
+            PlanAttribute(
+                attribute_id="attr-rejected",
+                project_id="p1",
+                entity_id="ent-pending-ok",
+                key="direction",
+                value="西",
+                source="human",
+                approval_status="rejected",
+            )
+        )
+        await repo.write_event(
+            PlanEvent(
+                event_id="evt-rejected",
+                project_id="p1",
+                ch=1,
+                participants=["ent-pending-ok"],
+                approval_status="rejected",
+            )
+        )
+        await repo.write_clue(
+            PlanClue(
+                clue_id="clue-rejected",
+                project_id="p1",
+                planted_ch=1,
+                must_mention_in=[1],
+                approval_status="rejected",
+            )
+        )
+
+        assert await repo.list_canon_entities("p1") == []
+        assert await repo.list_canon_attributes("p1") == []
+        assert await repo.list_canon_events("p1") == []
+        assert await repo.list_canon_time_anchors("p1") == []
+        assert await repo.list_canon_clues("p1") == []
+
+        assert [row.entity_id for row in await repo.list_pending_entities("p1")] == [
+            "ent-pending-ok"
+        ]
+        assert await repo.list_pending_attributes("p1") == []
+        assert await repo.list_pending_events("p1") == []
+        assert await repo.list_pending_time_anchors("p1") == []
+        assert await repo.list_pending_clues("p1") == []
+
+        loaded = await repo.read_entity("ent-knife")
+        assert loaded is not None
+        assert loaded.approval_status == "rejected"
+
+    async def test_sql_check_accepts_rejected_on_all_plan_tables(
+        self, fact_db: Path
+    ) -> None:
+        async with get_db() as conn:
+            await conn.execute(
+                """INSERT INTO plan_entities (
+                    entity_id, project_id, entity_type, aliases, approval_status
+                ) VALUES (?, ?, ?, ?, ?)""",
+                ("ent-sql-rejected", "p1", "object", "[]", "rejected"),
+            )
+            await conn.execute(
+                """INSERT INTO plan_time_anchors (
+                    anchor_id, project_id, date, kind, approval_status
+                ) VALUES (?, ?, ?, ?, ?)""",
+                ("ta-sql-rejected", "p1", "夜", "story", "rejected"),
+            )
+            await conn.execute(
+                """INSERT INTO plan_attributes (
+                    attribute_id, project_id, entity_id, key, value, source, approval_status
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    "attr-sql-rejected",
+                    "p1",
+                    "ent-sql-rejected",
+                    "color",
+                    "黑",
+                    "human",
+                    "rejected",
+                ),
+            )
+            await conn.execute(
+                """INSERT INTO plan_events (
+                    event_id, project_id, ch, participants, approval_status
+                ) VALUES (?, ?, ?, ?, ?)""",
+                ("evt-sql-rejected", "p1", 1, "[]", "rejected"),
+            )
+            await conn.execute(
+                """INSERT INTO plan_clues (
+                    clue_id, project_id, planted_ch, must_mention_in, approval_status
+                ) VALUES (?, ?, ?, ?, ?)""",
+                ("clue-sql-rejected", "p1", 1, "[]", "rejected"),
+            )
+            await conn.commit()
+
+            for table in _PLAN_TABLES:
+                cursor = await conn.execute(
+                    "SELECT sql FROM sqlite_master WHERE type='table' AND name=?",
+                    (table,),
+                )
+                row = await cursor.fetchone()
+                assert row is not None
+                assert "'rejected'" in row[0]
+
+    async def test_rejected_migration_preserves_rows_and_is_idempotent(
+        self, fact_db: Path
+    ) -> None:
+        import aiosqlite
+
+        from songyan.db.migrations import _migrate_plan_approval_rejected
+
+        repo = PlanFactRepository()
+        await repo.write_entity(_knife())
+        await repo.write_attribute(_direction(approval_status="pending"))
+
+        async with aiosqlite.connect(fact_db) as conn:
+            # Simulate a pre-M1 CHECK, then re-run the rejected migration.
+            await conn.execute("PRAGMA foreign_keys = OFF")
+            await conn.execute(
+                """CREATE TABLE plan_entities_oldcheck (
+                    entity_id        TEXT PRIMARY KEY,
+                    project_id       TEXT NOT NULL,
+                    entity_type      TEXT NOT NULL,
+                    aliases          TEXT NOT NULL DEFAULT '[]',
+                    approval_status  TEXT NOT NULL DEFAULT 'approved'
+                                     CHECK (approval_status IN ('approved', 'pending')),
+                    created_at       TEXT NOT NULL DEFAULT (datetime('now')),
+                    updated_at       TEXT NOT NULL DEFAULT (datetime('now'))
+                )"""
+            )
+            await conn.execute(
+                """INSERT INTO plan_entities_oldcheck
+                   SELECT entity_id, project_id, entity_type, aliases,
+                          approval_status, created_at, updated_at
+                   FROM plan_entities"""
+            )
+            await conn.execute("DROP TABLE plan_entities")
+            await conn.execute(
+                "ALTER TABLE plan_entities_oldcheck RENAME TO plan_entities"
+            )
+            await conn.commit()
+
+            cursor = await conn.execute(
+                "SELECT sql FROM sqlite_master WHERE type='table' AND name='plan_entities'"
+            )
+            sql = (await cursor.fetchone())[0]
+            assert "'rejected'" not in sql
+
+            await _migrate_plan_approval_rejected(conn)
+            await conn.commit()
+            await _migrate_plan_approval_rejected(conn)
+            await conn.commit()
+
+            cursor = await conn.execute(
+                "SELECT sql FROM sqlite_master WHERE type='table' AND name='plan_entities'"
+            )
+            sql = (await cursor.fetchone())[0]
+            assert "'rejected'" in sql
+
+            cursor = await conn.execute(
+                "SELECT entity_id, approval_status FROM plan_entities ORDER BY entity_id"
+            )
+            rows = await cursor.fetchall()
+            assert rows == [("ent-knife", "approved")]
+
+            cursor = await conn.execute(
+                "SELECT attribute_id, approval_status FROM plan_attributes"
+            )
+            attr_rows = await cursor.fetchall()
+            assert attr_rows == [("attr-direction", "pending")]

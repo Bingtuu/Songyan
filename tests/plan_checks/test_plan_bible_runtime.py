@@ -307,6 +307,83 @@ def _failed_report() -> dict[str, object]:
     }
 
 
+
+async def test_rejected_cards_stay_out_of_the_bible(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """S8 / tech-m1 step 1: rejected rows must not enter the chapter bible."""
+    await _gate_db(tmp_path, monkeypatch)
+    await ProjectRepository().create(
+        ProjectSetting(genre_id="scifi", mode_id="webnovel", protagonist_name="陈照"),
+        "p1",
+    )
+    repo = PlanFactRepository()
+    await repo.write_entity(
+        PlanEntity(
+            entity_id="ent-rejected",
+            project_id="p1",
+            entity_type="object",
+            aliases=["驳回刀"],
+            approval_status="rejected",
+        )
+    )
+    await repo.write_attribute(
+        PlanAttribute(
+            attribute_id="attr-rejected",
+            project_id="p1",
+            entity_id="ent-rejected",
+            key="direction",
+            value="西",
+            valid_from_ch=1,
+            valid_to_ch=9,
+            source="human",
+            approval_status="rejected",
+        )
+    )
+    await repo.write_event(
+        PlanEvent(
+            event_id="evt-rejected",
+            project_id="p1",
+            ch=2,
+            participants=["ent-rejected"],
+            claims=[PlanClaim(claim_id="claim-rejected", text="驳回主张")],
+            approval_status="rejected",
+        )
+    )
+    await repo.write_clue(
+        PlanClue(
+            clue_id="clue-rejected",
+            project_id="p1",
+            planted_ch=1,
+            revealed_ch=2,
+            must_mention_in=[2],
+            label="驳回线索",
+            mention_terms=["驳回词"],
+            approval_status="rejected",
+        )
+    )
+    await repo.write_time_anchor(
+        PlanTimeAnchor(
+            anchor_id="ta-rejected",
+            project_id="p1",
+            date="驳回夜",
+            kind="story",
+            approval_status="rejected",
+        )
+    )
+
+    bible = await load_chapter_plan_bible("p1", 2)
+
+    assert bible.text == ""
+    assert bible.entity_ids == []
+    assert bible.attribute_ids == []
+    assert bible.event_ids == []
+    assert bible.clue_ids == []
+    assert bible.time_anchor_ids == []
+    for phrase in ("驳回刀", "西", "驳回主张", "驳回线索", "驳回词", "驳回夜"):
+        assert phrase not in bible.text
+
+
 async def test_bible_reads_approved_cards_for_this_chapter_only(
     tmp_path: Path, monkeypatch
 ) -> None:
