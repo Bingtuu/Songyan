@@ -6,7 +6,7 @@ owner：Bingtuu。包 tip **v0.5**（`0.5.0`）。「V1.0」是产品代际名�
 
 ## 下一刀
 
-**等 owner 书面接受 [tech-m2.md](tech-m2.md)，然后再开 M2 编码。** 草稿已在 docs PR（分支 `docs-tech-m2-draft`）。当前无 DOING 编码任务。接受之前不要写 SettlementExtractor→提案队列 / hardness 列 / variant / continue 代码，不要发明 M2 的 `tasks/21x` 编码文件。
+**等 owner 书面接受 [tech-m2.md](tech-m2.md)，然后再开 M2 编码。** 草稿 PR：[docs#43](https://github.com/Bingtuu/Songyan/pull/43)（分支 `docs-tech-m2-draft`）。当前无 DOING 编码任务。接受之前不要写 SettlementExtractor→提案队列 / hardness 列 / variant / continue 代码，不要发明 M2 的 `tasks/21x` 编码文件。
 
 M0 步 1–4 已全部在 `main`：[#28](https://github.com/Bingtuu/Songyan/pull/28) → `1d8c0c0`；[#29](https://github.com/Bingtuu/Songyan/pull/29) → `8f03453`；[#30](https://github.com/Bingtuu/Songyan/pull/30) → `d5c2cc1`；[#31](https://github.com/Bingtuu/Songyan/pull/31) → `48fa354`。任务分别在 [tasks/done/200.md](../tasks/done/200.md)、[tasks/done/201.md](../tasks/done/201.md)、[tasks/done/202.md](../tasks/done/202.md)、[tasks/done/203.md](../tasks/done/203.md)。
 
@@ -35,7 +35,7 @@ M1 代码验收（步 1–5 + tech-m1 §6–7）在 `main` `69d7ece`：**PASS**�
 | M1 技术方案 | [tech-m1.md](tech-m1.md) — **已接受**（Mew 拍板，2026-11-03 Asia/Shanghai）；§6–7 **PASS** @ `69d7ece` |
 | M1 步 1–5 | 已合入（见上）；[tasks/done/205–209](../tasks/done/) |
 | M1 验收 | **PASS** @ `69d7ece`。[tasks/done/210-m1-acceptance.md](../tasks/done/210-m1-acceptance.md) |
-| M2 技术方案 | [tech-m2.md](tech-m2.md) — **草稿，待 owner 书面接受**（docs PR `docs-tech-m2-draft`） |
+| M2 技术方案 | [tech-m2.md](tech-m2.md) — **草稿，待 owner 书面接受**（[#43](https://github.com/Bingtuu/Songyan/pull/43)） |
 | 当前任务 | 无 DOING 编码。下一闸门：owner 书面接受 tech-m2 → 再开步 1 编码任务 |
 | 架构方向 | [adr/0001-plan-first-facts.md](adr/0001-plan-first-facts.md) |
 | 工程现状 | [STATUS.md](STATUS.md) |

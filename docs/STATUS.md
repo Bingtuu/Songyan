@@ -23,7 +23,7 @@ Package tip remains **0.5.0**. V1.0 is the product-generation name.
 | M1 步 4 `check`（W6） | **已在 `main`。** [#39](https://github.com/Bingtuu/Songyan/pull/39) squash 为 `d3f127c`。任务归档在 [tasks/done/208-check.md](../tasks/done/208-check.md) |
 | M1 步 5 W0 e2e + `today` next | **已在 `main`。** [#41](https://github.com/Bingtuu/Songyan/pull/41) squash 为 `69d7ece`。任务归档在 [tasks/done/209-w0-today-e2e.md](../tasks/done/209-w0-today-e2e.md) |
 | M1 代码验收（步 1–5 + tech-m1 §6–7） | **PASS**（`main` `69d7ece`）。证据见 [tasks/done/210-m1-acceptance.md](../tasks/done/210-m1-acceptance.md)。S1/S2 产品周期日志不在代码验收内 |
-| M2 技术方案 [tech-m2.md](tech-m2.md) | **草稿已起草**（docs PR，待 owner 书面接受）。接受前不开 M2 编码 |
+| M2 技术方案 [tech-m2.md](tech-m2.md) | **草稿已起草**（[#43](https://github.com/Bingtuu/Songyan/pull/43)，待 owner 书面接受）。接受前不开 M2 编码 |
 | 包版本 | 仍是 `0.5.0` |
 
 阻塞：无编码刀。下一闸门 = owner **书面接受** [tech-m2.md](tech-m2.md)；接受前不开 M2 编码、不建 M2 编码任务为 DOING。不要在接受前改结算权威，不要声称 V1.0 完成，不要升包版本。
