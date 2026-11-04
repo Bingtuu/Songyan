@@ -23,9 +23,10 @@ Package tip remains **0.5.0**. V1.0 is the product-generation name.
 | M1 步 4 `check`（W6） | **已在 `main`。** [#39](https://github.com/Bingtuu/Songyan/pull/39) squash 为 `d3f127c`。任务归档在 [tasks/done/208-check.md](../tasks/done/208-check.md) |
 | M1 步 5 W0 e2e + `today` next | **已在 `main`。** [#41](https://github.com/Bingtuu/Songyan/pull/41) squash 为 `69d7ece`。任务归档在 [tasks/done/209-w0-today-e2e.md](../tasks/done/209-w0-today-e2e.md) |
 | M1 代码验收（步 1–5 + tech-m1 §6–7） | **PASS**（`main` `69d7ece`）。证据见 [tasks/done/210-m1-acceptance.md](../tasks/done/210-m1-acceptance.md)。S1/S2 产品周期日志不在代码验收内 |
+| M2 技术方案 [tech-m2.md](tech-m2.md) | **已接受**（2026-11-04 Asia/Shanghai；owner widget t93s804；B1–B6 原样接受；[#43](https://github.com/Bingtuu/Songyan/pull/43)）。下一刀 = M2 步 1 编码 |
 | 包版本 | 仍是 `0.5.0` |
 
-阻塞：无编码刀。下一闸门 = owner 决定是否起草 / 书面接受 [tech-m2.md](tech-m2.md)（**尚未存在**）；接受前不开 M2 编码。不要改结算器，不要声称 V1.0 完成，不要升包版本。
+tech-m2 **已接受**。下一刀 = M2 **步 1** 编码（W5 只读）。不要声称 V1.0 完成，不要升包版本（仍 `0.5.0`）。
 
 上一稿 PRD 的总体框架 owner 已经接受。现行文本是 `prd-v1.md`。旧全文在 [archive/prd-v1-writing-assist-2026-10-26.md](archive/prd-v1-writing-assist-2026-10-26.md)。
 
@@ -62,7 +63,7 @@ Package tip remains **0.5.0**. V1.0 is the product-generation name.
 - 《轨道蜃景》Ch1–10：`project_id=8e30dec7f2ec40c1a9ce54c783981f8c`，`run-33841231`。10/10 accepted；质量门、结算、摘要、导出通过；exit 0。**DG-1 失败**（平均 revision 1.7，十章都有 ContextEmergency，无 AutoHalt）。
 - 那次导出的人工阅读 **未通过**：时间线回滚、Hermes/赫耳墨斯、时间尺度、供氧 / EVA 复读、英文泄漏 `ninety-two 秒`。
 - 真实模型上「导入后再续写」还没有验收。
-- `variant`、`chapter continue` 都还没有。tech-m1 **已接受**；步 1–5 与 §6–7 代码验收已 **PASS**（`69d7ece`）。M2 及以后各自另有被接受的技术方案。
+- `variant`、`chapter continue` 都还没有。tech-m1 **已接受**；步 1–5 与 §6–7 代码验收已 **PASS**（`69d7ece`）。[tech-m2.md](tech-m2.md) **已接受**；下一刀 = M2 步 1 编码。M3/M4 各自另有被接受的技术方案。
 
 标识和本机路径：[HANDOFF-mew.md](HANDOFF-mew.md)。书稿不入库。
 
@@ -75,6 +76,7 @@ Package tip remains **0.5.0**. V1.0 is the product-generation name.
 | [V1.0 PRD](prd-v1.md) | 产品。Owner 已接受这轮文档 |
 | [M0 技术方案](tech-m0.md) | 只读工作台。步 1–4 已进 `main`；§6–7 代码验收 **PASS**（`80f4107`） |
 | [M1 技术方案](tech-m1.md) | 人确认入典 + 规则 `check`。**已接受（Mew 拍板）**；步 1–5 已合入；§6–7 代码验收 **PASS**（`69d7ece`） |
+| [M2 技术方案](tech-m2.md) | 硬事实标脏 + 承诺债务 + 抽取提案。**已接受**（2026-11-04；B1–B6 原样） |
 | [ADR-0001](adr/0001-plan-first-facts.md) | 事实由计划和人写入 |
 | [HANDOFF](HANDOFF-mew.md) | 当天的下一步 |
 | [INDEX](INDEX.md) | 文档地图 |
@@ -83,6 +85,6 @@ Package tip remains **0.5.0**. V1.0 is the product-generation name.
 
 ## 维护者下一步
 
-1. **M1 已代码验收 PASS。** 下一闸门：owner 决定是否起草 / 书面接受 tech-m2；接受前不开 M2 编码。
-2. 不要合成大 PR，不要开 M2 / variant / continue，不要改结算权威。
-3. 不改结算权威、不加题材检查器、不跑无人值守长篇、不升包版本、不声称 V1.0 完成。
+1. **M1 已代码验收 PASS。** [tech-m2.md](tech-m2.md) 草稿已出；下一闸门：owner **书面接受** tech-m2；接受前不开 M2 编码。
+2. 不要合成大 PR，不要在接受前开 M2 / variant / continue 编码，不要在接受前改结算权威。
+3. 不加题材检查器、不跑无人值守长篇、不升包版本、不声称 V1.0 完成。

@@ -2,7 +2,7 @@
 
 本目录是 **V1.0 写作助手**开工之后的任务队列。**先写任务文档，再写代码**；完成任务后归档，并同步 `docs/STATUS.md` 与 `docs/HANDOFF-mew.md`。
 
-**M0 只读工作台步 1–4 已完成；M0 代码验收 PASS（`80f4107`）。tech-m1 已接受（Mew 拍板）。M1 步 1–5 已合入；M1 代码验收 PASS（`69d7ece`）。** 当前无 DOING。下一闸门：owner 决定 / 接受 tech-m2 后再开 M2 编码。归档：`done/200.md`（#28 / `1d8c0c0`）、`done/201.md`（#29 / `8f03453`）、`done/202.md`（#30 / `d5c2cc1`）、`done/203.md`（#31 / `48fa354`）、`done/204-m0-acceptance.md`（M0 验收 PASS）、`done/205-rejected迁移与过滤.md`（#35 / `1995181`）、`done/206-canon-edit.md`（#36 / `5a260a9`）、`done/207-confirm-dismiss.md`（#38 / `7c7ec43`）、`done/208-check.md`（#39 / `d3f127c`）、`done/209-w0-today-e2e.md`（#41 / `69d7ece`）、`done/210-m1-acceptance.md`（M1 验收 PASS）。不要把 `docs/archive/` 里的旧 Task 001–019 或 V13–V15 抄进这里。
+**M0 / M1 代码验收 PASS。tech-m2 **已接受**（2026-11-04；t93s804；B1–B6 原样）。** 下一刀：M2 步 1（W5 只读）→ `tasks/212-m2-step1-w5-readonly.md`。归档：`done/200.md`–`done/211-tech-m2草稿.md`。不要把 `docs/archive/` 里的旧 Task 001–019 或 V13–V15 抄进这里。
 
 ## 文件组织
 
@@ -17,7 +17,7 @@ tasks/
 - 编号 `NNN` 三位数，从 **200** 起，顺序递增，**在本目录内永不复用**。
 - 归档路线图和 `tests/test_<数字>_*.py` 里出现过的旧工程号（大约到 242）不是本队列。不要据此续写测试文件名，也不要把那些旧号当成这里的下一张任务。
 - 任务名用简短中文动宾结构，如 `200-只读展示已确认事实.md`。
-- 产品设计以 `docs/prd-v1.md` 为准。M0 的实现以 `docs/tech-m0.md` 为准；M1 的实现以已接受的 `docs/tech-m1.md` 为准，不得越出 PRD 对应里程碑。任务里发现设计要改，先改 PRD 再继续。
+- 产品设计以 `docs/prd-v1.md` 为准。M0 / M1 / M2 的实现以各自已接受的 `docs/tech-m*.md` 为准，不得越出 PRD 对应里程碑。任务里发现设计要改，先改 PRD 再继续。
 
 ## 任务文档模板
 
@@ -57,4 +57,4 @@ tasks/
 - 验收过不了就不算 DONE。
 - 做不完的任务不删，留 TODO 并写明阻塞。
 - 标了 `[proposed]` 的命令，在对应任务落地之前，README 不得写成已经支持。
-- **里程碑技术方案未经书面接受之前，不建该里程碑的编码任务。** tech-m1 已接受，可以建 M1 步 1 任务。
+- **里程碑技术方案未经书面接受之前，不建该里程碑的编码任务。** tech-m1 已接受（M1 编码已完）。tech-m2 仅草稿：接受前不建 M2 编码任务；可有 docs 任务记录草稿本身。
