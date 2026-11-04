@@ -6,7 +6,7 @@ owner：Bingtuu。包 tip **v0.5**（`0.5.0`）。「V1.0」是产品代际名�
 
 ## 下一刀
 
-**等 owner/parent 授权后再开 M1 步 5（`today` next / W0 e2e）。** 当前无 DOING 编码任务。不要自建 `tasks/20x` 步 5 文件，不要改 `src/` / `tests/`。
+**当前刀 = M1 步 5（`today` next / W0 e2e）。** 任务 [tasks/209-w0-today-e2e.md](../tasks/209-w0-today-e2e.md)（DOING）。本 PR 尚未合入；合入前勿归档。请 **Mew COMMENT** 后再 squash。不要 APPROVE / 不要自合。不要开步 5 以外的刀。
 
 绑定摘要（全文以 tech-m1 为准）：无持久第四态 `accepted`；人写强制 `source=human`；步 1 五表 CHECK 必迁；`check` 正文 = `ChapterVersion.content`，属性侧值 = 注入 `AttributeExtract`；验收最小 kind = entity+attribute；rejected 后同 id 覆盖、无正文史；步 5 更新 `today` 的 `next`。
 
@@ -22,7 +22,7 @@ M1 步 1–4 已在 `main`：[#35](https://github.com/Bingtuu/Songyan/pull/35) �
 - 不重开 plan-first 阶段 C，不加题材专用检查器，不改 SettlementExtractor 的权威。
 - 不把 Ch1–10 写成文学验收。文学质量归人。
 - 正式 git tag 仍由维护者决定。
-- 不要在无 owner/parent 授权时开步 5；不要合成跨步大 PR；不要在无 Mew COMMENT 时自合。
+- 不要合成跨步大 PR；不要在无 Mew COMMENT 时自合；不要开步 5 以外。
 - 不声称 V1.0 完成，不升包版本。
 
 ## 事实指针（短）
@@ -37,7 +37,7 @@ M1 步 1–4 已在 `main`：[#35](https://github.com/Bingtuu/Songyan/pull/35) �
 | M1 步 2 | 已合入 `5a260a9`（#36）；[tasks/done/206-canon-edit.md](../tasks/done/206-canon-edit.md) |
 | M1 步 3 | 已合入 `7c7ec43`（#38）；[tasks/done/207-confirm-dismiss.md](../tasks/done/207-confirm-dismiss.md) |
 | M1 步 4 | 已合入 `d3f127c`（#39）；[tasks/done/208-check.md](../tasks/done/208-check.md) |
-| 当前任务 | **无 DOING**。下一刀 = 步 5 today next / W0 e2e，**仅 owner/parent 授权后** |
+| 当前任务 | **DOING** [tasks/209-w0-today-e2e.md](../tasks/209-w0-today-e2e.md)（M1 步 5；本 PR 尚未合入） |
 | 架构方向 | [adr/0001-plan-first-facts.md](adr/0001-plan-first-facts.md) |
 | 工程现状 | [STATUS.md](STATUS.md) |
 | 阶段 A–C | [ROADMAP-plan-first.md](ROADMAP-plan-first.md)（CLOSED 短指针；全文在 archive，日常不要加载） |

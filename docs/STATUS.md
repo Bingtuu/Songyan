@@ -21,9 +21,10 @@ Package tip remains **0.5.0**. V1.0 is the product-generation name.
 | M1 步 2 `canon edit` | **已在 `main`。** [#36](https://github.com/Bingtuu/Songyan/pull/36) squash 为 `5a260a9`。任务归档在 [tasks/done/206-canon-edit.md](../tasks/done/206-canon-edit.md) |
 | M1 步 3 `confirm` + `dismiss` | **已在 `main`。** [#38](https://github.com/Bingtuu/Songyan/pull/38) squash 为 `7c7ec43`。任务归档在 [tasks/done/207-confirm-dismiss.md](../tasks/done/207-confirm-dismiss.md) |
 | M1 步 4 `check`（W6） | **已在 `main`。** [#39](https://github.com/Bingtuu/Songyan/pull/39) squash 为 `d3f127c`。任务归档在 [tasks/done/208-check.md](../tasks/done/208-check.md) |
+| M1 步 5 W0 e2e + `today` next | **本 PR 进行中（尚未合入）。** 任务 [tasks/209-w0-today-e2e.md](../tasks/209-w0-today-e2e.md) |
 | 包版本 | 仍是 `0.5.0` |
 
-阻塞：无（飞行代码无阻塞）。当前刀 = **无 DOING 编码任务**。下一刀 = [tech-m1.md](tech-m1.md) §5 **步 5**（`today` next / W0 e2e），**仅 owner/parent 授权后**再建任务并编码。不要擅自开步 5，不要改结算器，不要声称 V1.0 完成，不要升包版本。
+阻塞：无。当前刀 = **M1 步 5**（[tasks/209-w0-today-e2e.md](../tasks/209-w0-today-e2e.md)）。合入前勿声称步 5 已在 `main`。不要改结算器，不要声称 V1.0 完成，不要升包版本。不要开步 5 以外的刀。
 
 上一稿 PRD 的总体框架 owner 已经接受。现行文本是 `prd-v1.md`。旧全文在 [archive/prd-v1-writing-assist-2026-10-26.md](archive/prd-v1-writing-assist-2026-10-26.md)。
 
@@ -48,7 +49,7 @@ Package tip remains **0.5.0**. V1.0 is the product-generation name.
 - `import`（`ingest`、`segment`、`confirm`、`status`、`replay`、`synthesize`、`publish`）。`publish` 之前 `run` 保持阻塞。
 - 计划事实表与 `load_chapter_plan_bible`：只读 `approved`。结算写入仍进结算库，不进 plan canon。
 - `canon show` 在 `main` 上能看五类计划事实的 Canon / Pending，以及故事线骨架（有则打印，无则为 `（空）`），并支持 `--json`。
-- `today` 在 `main` 上能打印只读计数与固定 `next` 句。
+- `today` 在 `main` 上能打印只读计数与固定 `next` 句；本 PR 将 `next` 更新为不再暗示 confirm 不可用（合入前以本分支为准）。
 - 缺库 / 缺项目时 `canon show` 与 `today` 退出码 1；缺库时不创建数据库文件。
 - `canon edit` 在 `main` 上能写入 entity / attribute 为 `pending`；attribute 强制 `source=human`；Pending 可见，Canon / 圣经不可见。
 - `canon confirm` / `dismiss` / 非持久 `accept`：在 `main` 上（entity+attribute）。
@@ -60,7 +61,7 @@ Package tip remains **0.5.0**. V1.0 is the product-generation name.
 - 《轨道蜃景》Ch1–10：`project_id=8e30dec7f2ec40c1a9ce54c783981f8c`，`run-33841231`。10/10 accepted；质量门、结算、摘要、导出通过；exit 0。**DG-1 失败**（平均 revision 1.7，十章都有 ContextEmergency，无 AutoHalt）。
 - 那次导出的人工阅读 **未通过**：时间线回滚、Hermes/赫耳墨斯、时间尺度、供氧 / EVA 复读、英文泄漏 `ninety-two 秒`。
 - 真实模型上「导入后再续写」还没有验收。
-- `variant`、`chapter continue`、步 5 `today` 文案都还没有。tech-m1 **已接受**；步 1–4 已在 `main`（`1995181`、`5a260a9`、`7c7ec43`、`d3f127c`）。
+- `variant`、`chapter continue` 都还没有。tech-m1 **已接受**；步 1–4 已在 `main`（`1995181`、`5a260a9`、`7c7ec43`、`d3f127c`）；步 5（W0 e2e + `today` next）在本 PR，尚未合入。
 
 标识和本机路径：[HANDOFF-mew.md](HANDOFF-mew.md)。书稿不入库。
 
@@ -72,7 +73,7 @@ Package tip remains **0.5.0**. V1.0 is the product-generation name.
 | [AGENTS.md](../AGENTS.md) | 冷启动规则：读什么、何时不许写代码 |
 | [V1.0 PRD](prd-v1.md) | 产品。Owner 已接受这轮文档 |
 | [M0 技术方案](tech-m0.md) | 只读工作台。步 1–4 已进 `main`；§6–7 代码验收 **PASS**（`80f4107`） |
-| [M1 技术方案](tech-m1.md) | 人确认入典 + 规则 `check`。**已接受（Mew 拍板）**；步 1–4 已合入；下一刀步 5 **仅授权后** |
+| [M1 技术方案](tech-m1.md) | 人确认入典 + 规则 `check`。**已接受（Mew 拍板）**；步 1–4 已合入；步 5 本 PR 进行中 |
 | [ADR-0001](adr/0001-plan-first-facts.md) | 事实由计划和人写入 |
 | [HANDOFF](HANDOFF-mew.md) | 当天的下一步 |
 | [INDEX](INDEX.md) | 文档地图 |
@@ -81,6 +82,6 @@ Package tip remains **0.5.0**. V1.0 is the product-generation name.
 
 ## 维护者下一步
 
-1. **等 owner/parent 授权**后再建任务并开 M1 步 5（`today` next / W0 e2e）。当前无 DOING 编码。
-2. 授权后：先建 `tasks/20x`，TDD，开 PR，Mew COMMENT 再合并。不要合成大 PR。
+1. **M1 步 5 PR：** Mew COMMENT 审阅后 squash 合入；合入后归档 `tasks/209`。不要 APPROVE / 不要自合。
+2. 合入后下一刀：M1 代码验收（若步 5 已齐）或按 HANDOFF；不要合成大 PR，不要开 M2。
 3. 不改结算权威、不加题材检查器、不跑无人值守长篇、不升包版本、不声称 V1.0 完成。

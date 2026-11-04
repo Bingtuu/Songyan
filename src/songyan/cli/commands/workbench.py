@@ -2,7 +2,8 @@
 
 M0 steps 1–4: ``canon show`` and ``today`` for approved / pending facts,
 storyline, and counts; missing DB / missing project exit 1.
-M1 write commands (``canon edit``) register beside this group.
+M1 step 5 updates ``today`` fixed ``next`` (confirm available via canon confirm).
+M1 write commands (``canon edit`` / confirm / dismiss) register beside this group.
 """
 
 from __future__ import annotations
@@ -28,7 +29,7 @@ from songyan.models.plan_facts import (
 _CANON_HEAD = "# Canon（approved）"
 _PENDING_HEAD = "# Pending（不是 Canon）"
 _STORYLINE_HEAD = "# Storyline（规划骨架，不是已确认事实）"
-_NEXT = "M0 只读。确认入典和生成都不在本命令。"
+_NEXT = "可用 canon confirm 入典；生成不在本命令。"
 _KINDS = ("entity", "attribute", "event", "time_anchor", "clue")
 
 _Card = PlanEntity | PlanAttribute | PlanEvent | PlanTimeAnchor | PlanClue
