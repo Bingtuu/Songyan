@@ -2,7 +2,7 @@
 
 | 项 | 内容 |
 |---|---|
-| 状态 | DOING |
+| 状态 | DONE |
 | 关联 | PRD 6.3 / W0；tech-m1 §5 步 5 / §6；W0 |
 | 预估 | 一个切片 |
 
@@ -25,4 +25,4 @@ M1 步 5：一条端到端 CLI 测试锁定 `show` → `edit` → `confirm`/`dis
 
 ## 完成总结（DONE 时填写）
 
-（合入后填写 PR 与 tip SHA。）
+已合入 `main`：[#41](https://github.com/Bingtuu/Songyan/pull/41) squash 为 `69d7ece`（2026-11-04 Asia/Shanghai）。`tests/cli/test_w0_e2e.py` 锁定 show→edit→confirm/dismiss→show；`today` `_NEXT` 更新为「可用 canon confirm 入典；生成不在本命令。」；故意同步 M0 `test_workbench_commands` 锁文案。未改 workflows / settlement_extractor；包仍 `0.5.0`。

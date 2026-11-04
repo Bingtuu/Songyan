@@ -1,6 +1,6 @@
 # M1 技术方案：人确认入典与规则检查
 
-- **状态：** 2026-11-03 Asia/Shanghai。只覆盖 [prd-v1.md](prd-v1.md) 的 **M1**。**已接受（Mew 拍板）。** 接受注记见文末。接受之后才可按第 5 节开 `tasks/20x` 编码任务；本文件本身不改 `src/` / `tests/` 行为。
+- **状态：** 2026-11-03 Asia/Shanghai。只覆盖 [prd-v1.md](prd-v1.md) 的 **M1**。**已接受（Mew 拍板）。** 步 1–5 已进 `main`；§6–7 代码验收 **PASS**（`main` `69d7ece`，2026-11-04）。接受注记见文末。
 - **本文不做的决定：** 不规划 M2–M4 的实现。那些里程碑以后各写一份技术方案（`docs/tech-m2.md` 起），再开工。不要把本文扩成路线图。
 - **前置：** M0 步 1–4 与 tech-m0 §6–7 代码验收已在 `main` `80f4107` **PASS**（见 [STATUS.md](STATUS.md)）。包版本仍是 `0.5.0`。
 
@@ -268,7 +268,7 @@ python -m pytest tests/cli/test_canon_write_commands.py tests/cli/test_check_com
 
 ## 9. 以后的技术方案
 
-本文已接受；**M1 代码验收通过之前**，不写 M2 的代码，也不在本文件追加 M2 任务清单。
+本文已接受；M1 代码验收已 **PASS**（`69d7ece`）。**在 owner 书面接受 `docs/tech-m2.md` 之前**，不写 M2 的代码，也不在本文件追加 M2 任务清单。
 
 下一份技术文才决定的事（本文故意不定死）：
 

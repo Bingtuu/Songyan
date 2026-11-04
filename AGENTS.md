@@ -28,7 +28,7 @@ Songyan（松烟）是 **人主导的连载写作助手**，接在现有的事�
 
 1. [docs/prd-v1.md](docs/prd-v1.md) — 产品。工作流 W0–W6、路径 P-draft / P-bench、里程碑 M0–M4 只在这里展开。Owner 已接受。
 2. [docs/tech-m0.md](docs/tech-m0.md) — 只规划 M0。步 1–4 已进 `main`；§6–7 代码验收 **PASS**（`80f4107`）。
-3. [docs/tech-m1.md](docs/tech-m1.md) — 只规划 M1（人确认入典 + 规则 `check`）。**已接受（Mew 拍板，2026-11-03 Asia/Shanghai）。** 实现按该文小步推进；不得越出 PRD 的 M1。
+3. [docs/tech-m1.md](docs/tech-m1.md) — 只规划 M1（人确认入典 + 规则 `check`）。**已接受（Mew 拍板，2026-11-03 Asia/Shanghai）。** 步 1–5 已进 `main`；§6–7 代码验收 **PASS**（`69d7ece`）。不得越出 PRD 的 M1。
 4. [docs/adr/0001-plan-first-facts.md](docs/adr/0001-plan-first-facts.md) — 事实写入方向。
 5. [docs/STATUS.md](docs/STATUS.md) — 工程事实（版本、闸门、已知限制）。
 6. [docs/HANDOFF-mew.md](docs/HANDOFF-mew.md) — 当天的下一步。
@@ -36,7 +36,7 @@ Songyan（松烟）是 **人主导的连载写作助手**，接在现有的事�
 
 冲突时，上面的条目压过下面的。产品边界以 PRD 为准；M0 的实现细节以 `tech-m0.md` 为准；M1 的实现细节以**已接受的** `tech-m1.md` 为准，且不得越出 PRD 对应里程碑。不要用归档路线图或 [docs/prd-v1-writing-assist.md](docs/prd-v1-writing-assist.md) 的指针页推翻 PRD。
 
-**开工门（M1）：** `docs/tech-m1.md` 已接受。步 1–4 已合入；当前刀 = 步 5（`today` next / W0 e2e），任务 `tasks/209-w0-today-e2e.md`；TDD；开 PR 后 Mew COMMENT 再合并。不要开步 5 以外。M2 及以后各自另有被接受的技术方案。
+**开工门（M1 已过）：** `docs/tech-m1.md` 已接受；步 1–5 与 §6–7 代码验收 **PASS**（`69d7ece`）。**下一闸门：** owner 书面接受 `docs/tech-m2.md`（尚未起草）之前，不开 M2 编码。M2 及以后各自另有被接受的技术方案。
 
 ## 默认不要读
 

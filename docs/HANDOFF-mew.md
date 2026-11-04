@@ -2,19 +2,19 @@
 
 owner：Bingtuu。包 tip **v0.5**（`0.5.0`）。「V1.0」是产品代际名，不是包版本。本文件不打 tag。
 
-权威顺序见 [AGENTS.md](../AGENTS.md)：[PRD](prd-v1.md) → [M0 技术方案](tech-m0.md) → [M1 技术方案](tech-m1.md)（**已接受**）→ ADR-0001 → STATUS（事实）→ 本文件（当天）→ `tasks/`（有任务文档之后）。
+权威顺序见 [AGENTS.md](../AGENTS.md)：[PRD](prd-v1.md) → [M0 技术方案](tech-m0.md) → [M1 技术方案](tech-m1.md)（**已接受**；§6–7 **PASS**）→ ADR-0001 → STATUS（事实）→ 本文件（当天）→ `tasks/`（有任务文档之后）。
 
 ## 下一刀
 
-**当前刀 = M1 步 5（`today` next / W0 e2e）。** 任务 [tasks/209-w0-today-e2e.md](../tasks/209-w0-today-e2e.md)（DOING）。本 PR 尚未合入；合入前勿归档。请 **Mew COMMENT** 后再 squash。不要 APPROVE / 不要自合。不要开步 5 以外的刀。
-
-绑定摘要（全文以 tech-m1 为准）：无持久第四态 `accepted`；人写强制 `source=human`；步 1 五表 CHECK 必迁；`check` 正文 = `ChapterVersion.content`，属性侧值 = 注入 `AttributeExtract`；验收最小 kind = entity+attribute；rejected 后同 id 覆盖、无正文史；步 5 更新 `today` 的 `next`。
+**等 owner 决定是否起草 / 书面接受 tech-m2（文件尚未存在），然后再开 M2 编码。** 当前无 DOING 编码任务。接受之前不要写 SettlementExtractor→提案队列 / hardness / variant / continue 代码，不要发明 M2 的 `tasks/20x` 编码文件。
 
 M0 步 1–4 已全部在 `main`：[#28](https://github.com/Bingtuu/Songyan/pull/28) → `1d8c0c0`；[#29](https://github.com/Bingtuu/Songyan/pull/29) → `8f03453`；[#30](https://github.com/Bingtuu/Songyan/pull/30) → `d5c2cc1`；[#31](https://github.com/Bingtuu/Songyan/pull/31) → `48fa354`。任务分别在 [tasks/done/200.md](../tasks/done/200.md)、[tasks/done/201.md](../tasks/done/201.md)、[tasks/done/202.md](../tasks/done/202.md)、[tasks/done/203.md](../tasks/done/203.md)。
 
 M0 代码验收（步 1–4 + tech-m0 §6–7）在 `main` `80f4107`：**PASS**。归档说明：[tasks/done/204-m0-acceptance.md](../tasks/done/204-m0-acceptance.md)。S6 不在代码验收内。
 
-M1 步 1–4 已在 `main`：[#35](https://github.com/Bingtuu/Songyan/pull/35) → `1995181`；[#36](https://github.com/Bingtuu/Songyan/pull/36) → `5a260a9`；[#38](https://github.com/Bingtuu/Songyan/pull/38) → `7c7ec43`；[#39](https://github.com/Bingtuu/Songyan/pull/39) → `d3f127c`。任务分别在 [tasks/done/205-rejected迁移与过滤.md](../tasks/done/205-rejected迁移与过滤.md)、[tasks/done/206-canon-edit.md](../tasks/done/206-canon-edit.md)、[tasks/done/207-confirm-dismiss.md](../tasks/done/207-confirm-dismiss.md)、[tasks/done/208-check.md](../tasks/done/208-check.md)。
+M1 步 1–5 已在 `main`：[#35](https://github.com/Bingtuu/Songyan/pull/35) → `1995181`；[#36](https://github.com/Bingtuu/Songyan/pull/36) → `5a260a9`；[#38](https://github.com/Bingtuu/Songyan/pull/38) → `7c7ec43`；[#39](https://github.com/Bingtuu/Songyan/pull/39) → `d3f127c`；[#41](https://github.com/Bingtuu/Songyan/pull/41) → `69d7ece`。任务分别在 [tasks/done/205-rejected迁移与过滤.md](../tasks/done/205-rejected迁移与过滤.md)、[tasks/done/206-canon-edit.md](../tasks/done/206-canon-edit.md)、[tasks/done/207-confirm-dismiss.md](../tasks/done/207-confirm-dismiss.md)、[tasks/done/208-check.md](../tasks/done/208-check.md)、[tasks/done/209-w0-today-e2e.md](../tasks/done/209-w0-today-e2e.md)。
+
+M1 代码验收（步 1–5 + tech-m1 §6–7）在 `main` `69d7ece`：**PASS**。归档说明：[tasks/done/210-m1-acceptance.md](../tasks/done/210-m1-acceptance.md)。S1/S2 产品周期日志不在代码验收内。
 
 不要做的事：
 
@@ -22,7 +22,7 @@ M1 步 1–4 已在 `main`：[#35](https://github.com/Bingtuu/Songyan/pull/35) �
 - 不重开 plan-first 阶段 C，不加题材专用检查器，不改 SettlementExtractor 的权威。
 - 不把 Ch1–10 写成文学验收。文学质量归人。
 - 正式 git tag 仍由维护者决定。
-- 不要合成跨步大 PR；不要在无 Mew COMMENT 时自合；不要开步 5 以外。
+- **tech-m2 未经 owner 书面接受之前，不开 M2 编码、不建 M2 的 `tasks/20x` 编码文件。**
 - 不声称 V1.0 完成，不升包版本。
 
 ## 事实指针（短）
@@ -32,12 +32,10 @@ M1 步 1–4 已在 `main`：[#35](https://github.com/Bingtuu/Songyan/pull/35) �
 | 产品规划 | [prd-v1.md](prd-v1.md)（文档已接受，#27 已进 main） |
 | M0 步 1–4 | 已进 `main`（见上）；[tasks/done/200–203](../tasks/done/) |
 | M0 验收 | **PASS** @ `80f4107`。[tasks/done/204-m0-acceptance.md](../tasks/done/204-m0-acceptance.md) |
-| M1 技术方案 | [tech-m1.md](tech-m1.md) — **已接受**（Mew 拍板，2026-11-03 Asia/Shanghai） |
-| M1 步 1 | 已合入 `1995181`（#35）；[tasks/done/205-rejected迁移与过滤.md](../tasks/done/205-rejected迁移与过滤.md) |
-| M1 步 2 | 已合入 `5a260a9`（#36）；[tasks/done/206-canon-edit.md](../tasks/done/206-canon-edit.md) |
-| M1 步 3 | 已合入 `7c7ec43`（#38）；[tasks/done/207-confirm-dismiss.md](../tasks/done/207-confirm-dismiss.md) |
-| M1 步 4 | 已合入 `d3f127c`（#39）；[tasks/done/208-check.md](../tasks/done/208-check.md) |
-| 当前任务 | **DOING** [tasks/209-w0-today-e2e.md](../tasks/209-w0-today-e2e.md)（M1 步 5；本 PR 尚未合入） |
+| M1 技术方案 | [tech-m1.md](tech-m1.md) — **已接受**（Mew 拍板，2026-11-03 Asia/Shanghai）；§6–7 **PASS** @ `69d7ece` |
+| M1 步 1–5 | 已合入（见上）；[tasks/done/205–209](../tasks/done/) |
+| M1 验收 | **PASS** @ `69d7ece`。[tasks/done/210-m1-acceptance.md](../tasks/done/210-m1-acceptance.md) |
+| 当前任务 | 无 DOING。下一刀：owner 决定 tech-m2 → 第一刀 M2 编码 |
 | 架构方向 | [adr/0001-plan-first-facts.md](adr/0001-plan-first-facts.md) |
 | 工程现状 | [STATUS.md](STATUS.md) |
 | 阶段 A–C | [ROADMAP-plan-first.md](ROADMAP-plan-first.md)（CLOSED 短指针；全文在 archive，日常不要加载） |
