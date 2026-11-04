@@ -6,7 +6,7 @@ owner：Bingtuu。包 tip **v0.5**（`0.5.0`）。「V1.0」是产品代际名�
 
 ## 下一刀
 
-**M1 步 4（`check` / W6）编码中** — 见 [tasks/208-check.md](../tasks/208-check.md)，在本 PR 分支，**尚未合入 main**。合入前勿声称步 4 已在 main。合入后下一刀 = 步 5（`today` next 文案 / W0 e2e，另开任务，需 owner 授权）。
+**等 owner/parent 授权后再开 M1 步 5（`today` next / W0 e2e）。** 当前无 DOING 编码任务。不要自建 `tasks/20x` 步 5 文件，不要改 `src/` / `tests/`。
 
 绑定摘要（全文以 tech-m1 为准）：无持久第四态 `accepted`；人写强制 `source=human`；步 1 五表 CHECK 必迁；`check` 正文 = `ChapterVersion.content`，属性侧值 = 注入 `AttributeExtract`；验收最小 kind = entity+attribute；rejected 后同 id 覆盖、无正文史；步 5 更新 `today` 的 `next`。
 
@@ -14,7 +14,7 @@ M0 步 1–4 已全部在 `main`：[#28](https://github.com/Bingtuu/Songyan/pull
 
 M0 代码验收（步 1–4 + tech-m0 §6–7）在 `main` `80f4107`：**PASS**。归档说明：[tasks/done/204-m0-acceptance.md](../tasks/done/204-m0-acceptance.md)。S6 不在代码验收内。
 
-M1 步 1–3 已在 `main`：[#35](https://github.com/Bingtuu/Songyan/pull/35) → `1995181`；[#36](https://github.com/Bingtuu/Songyan/pull/36) → `5a260a9`；[#38](https://github.com/Bingtuu/Songyan/pull/38) → `7c7ec43`。任务分别在 [tasks/done/205-rejected迁移与过滤.md](../tasks/done/205-rejected迁移与过滤.md)、[tasks/done/206-canon-edit.md](../tasks/done/206-canon-edit.md)、[tasks/done/207-confirm-dismiss.md](../tasks/done/207-confirm-dismiss.md)。
+M1 步 1–4 已在 `main`：[#35](https://github.com/Bingtuu/Songyan/pull/35) → `1995181`；[#36](https://github.com/Bingtuu/Songyan/pull/36) → `5a260a9`；[#38](https://github.com/Bingtuu/Songyan/pull/38) → `7c7ec43`；[#39](https://github.com/Bingtuu/Songyan/pull/39) → `d3f127c`。任务分别在 [tasks/done/205-rejected迁移与过滤.md](../tasks/done/205-rejected迁移与过滤.md)、[tasks/done/206-canon-edit.md](../tasks/done/206-canon-edit.md)、[tasks/done/207-confirm-dismiss.md](../tasks/done/207-confirm-dismiss.md)、[tasks/done/208-check.md](../tasks/done/208-check.md)。
 
 不要做的事：
 
@@ -22,7 +22,7 @@ M1 步 1–3 已在 `main`：[#35](https://github.com/Bingtuu/Songyan/pull/35) �
 - 不重开 plan-first 阶段 C，不加题材专用检查器，不改 SettlementExtractor 的权威。
 - 不把 Ch1–10 写成文学验收。文学质量归人。
 - 正式 git tag 仍由维护者决定。
-- 不要合成跨步大 PR；不要在无 Mew COMMENT 时自合；不要对本 PR APPROVE。
+- 不要在无 owner/parent 授权时开步 5；不要合成跨步大 PR；不要在无 Mew COMMENT 时自合。
 - 不声称 V1.0 完成，不升包版本。
 
 ## 事实指针（短）
@@ -36,7 +36,8 @@ M1 步 1–3 已在 `main`：[#35](https://github.com/Bingtuu/Songyan/pull/35) �
 | M1 步 1 | 已合入 `1995181`（#35）；[tasks/done/205-rejected迁移与过滤.md](../tasks/done/205-rejected迁移与过滤.md) |
 | M1 步 2 | 已合入 `5a260a9`（#36）；[tasks/done/206-canon-edit.md](../tasks/done/206-canon-edit.md) |
 | M1 步 3 | 已合入 `7c7ec43`（#38）；[tasks/done/207-confirm-dismiss.md](../tasks/done/207-confirm-dismiss.md) |
-| 当前任务 | **DOING** [tasks/208-check.md](../tasks/208-check.md)（步 4，本 PR，未合入） |
+| M1 步 4 | 已合入 `d3f127c`（#39）；[tasks/done/208-check.md](../tasks/done/208-check.md) |
+| 当前任务 | **无 DOING**。下一刀 = 步 5 today next / W0 e2e，**仅 owner/parent 授权后** |
 | 架构方向 | [adr/0001-plan-first-facts.md](adr/0001-plan-first-facts.md) |
 | 工程现状 | [STATUS.md](STATUS.md) |
 | 阶段 A–C | [ROADMAP-plan-first.md](ROADMAP-plan-first.md)（CLOSED 短指针；全文在 archive，日常不要加载） |

@@ -2,7 +2,7 @@
 
 本目录是 **V1.0 写作助手**开工之后的任务队列。**先写任务文档，再写代码**；完成任务后归档，并同步 `docs/STATUS.md` 与 `docs/HANDOFF-mew.md`。
 
-**M0 只读工作台步 1–4 已完成；M0 代码验收 PASS（`80f4107`）。tech-m1 已接受（Mew 拍板）。M1 步 1–3 已合入。** 当前 DOING = [208-check.md](208-check.md)（步 4，本 PR，未合入）。归档：`done/200.md`（#28 / `1d8c0c0`）、`done/201.md`（#29 / `8f03453`）、`done/202.md`（#30 / `d5c2cc1`）、`done/203.md`（#31 / `48fa354`）、`done/204-m0-acceptance.md`（验收 PASS）、`done/205-rejected迁移与过滤.md`（#35 / `1995181`）、`done/206-canon-edit.md`（#36 / `5a260a9`）、`done/207-confirm-dismiss.md`（#38 / `7c7ec43`）。不要把 `docs/archive/` 里的旧 Task 001–019 或 V13–V15 抄进这里。
+**M0 只读工作台步 1–4 已完成；M0 代码验收 PASS（`80f4107`）。tech-m1 已接受（Mew 拍板）。M1 步 1–4 已合入。** 当前无 DOING。下一刀 = 步 5（today next / W0 e2e），**仅 owner/parent 授权后**再建任务。归档：`done/200.md`（#28 / `1d8c0c0`）、`done/201.md`（#29 / `8f03453`）、`done/202.md`（#30 / `d5c2cc1`）、`done/203.md`（#31 / `48fa354`）、`done/204-m0-acceptance.md`（验收 PASS）、`done/205-rejected迁移与过滤.md`（#35 / `1995181`）、`done/206-canon-edit.md`（#36 / `5a260a9`）、`done/207-confirm-dismiss.md`（#38 / `7c7ec43`）、`done/208-check.md`（#39 / `d3f127c`）。不要把 `docs/archive/` 里的旧 Task 001–019 或 V13–V15 抄进这里。
 
 ## 文件组织
 

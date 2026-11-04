@@ -2,7 +2,7 @@
 
 | 项 | 内容 |
 |---|---|
-| 状态 | DOING |
+| 状态 | DONE |
 | 关联 | PRD 6.4；tech-m1 §4.3 / §5 步 4 / §6；W6 |
 | 预估 | 一个切片 |
 
@@ -27,4 +27,4 @@
 
 ## 完成总结（DONE 时填写）
 
-（合入后填写）
+PR [#39](https://github.com/Bingtuu/Songyan/pull/39) squash 进 `main` 为 `d3f127c`。`songyan check` 薄包装 `run_plan_fact_gate`；正文取自 accepted `ChapterVersion.content`；`AttributeExtract` 仅夹具注入；未做步 5（today next / W0 e2e）。下一刀（仅 owner/parent 授权后）：步 5。
