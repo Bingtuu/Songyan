@@ -1,4 +1,4 @@
-"""M1 steps 2–3: human ``canon edit`` / ``confirm`` / ``dismiss`` (+ non-persist accept)."""
+"""M1 steps 2–3 + M2 step 2: ``canon edit`` / ``confirm`` / ``dismiss`` (+ promise settle)."""
 
 from __future__ import annotations
 
@@ -10,6 +10,8 @@ import click
 
 from songyan.cli.commands.workbench import _ensure_project_readable
 from songyan.db.plan_fact_repo import PlanFactError, PlanFactRepository
+from songyan.db.repository import ChapterHeadRepository
+from songyan.db.settlement_repo import ForeshadowingRepository
 from songyan.models.plan_facts import PlanAttribute, PlanEntity
 
 _NOT_YET = "尚未入典；需 canon confirm 后才进入 Canon / 圣经。"
@@ -17,6 +19,8 @@ _CONFIRMED = "已入典"
 _ACCEPT_HINT = (
     "尚未入典；accept 不写库。请使用 canon confirm 入典。"
 )
+_SETTLED = "已销账"
+_OPEN_PROMISE_STATUSES = frozenset({"planted", "due", "overdue"})
 
 
 async def _edit_entity(
@@ -161,6 +165,70 @@ async def _accept_attribute(*, project_id: str, attribute_id: str) -> str:
     )
 
 
+class MissingAcceptedVersionError(click.ClickException):
+    """Chapter has no accepted_version_id — process exit 2."""
+
+    exit_code = 2
+
+
+async def _load_open_foreshadowing(
+    *, project_id: str, foreshadowing_id: str
+) -> dict[str, Any]:
+    await _ensure_project_readable(project_id)
+    fid = foreshadowing_id.strip()
+    if not fid:
+        raise click.ClickException("foreshadowing-id 不能为空")
+    row = await ForeshadowingRepository().get_row(fid)
+    if row is None or row.get("project_id") != project_id:
+        raise click.ClickException(f"foreshadowing 不存在: {fid}")
+    return row
+
+
+async def _confirm_promise(
+    *,
+    project_id: str,
+    foreshadowing_id: str,
+    chapter: int,
+    evidence: str,
+) -> str:
+    """Human settle of an open foreshadowing (W5 / tech-m2 §4.1 / B3)."""
+    evidence_text = evidence.strip()
+    if not evidence_text:
+        raise click.ClickException("evidence 不能为空")
+    if chapter < 1:
+        raise click.ClickException("chapter 须为正整数")
+
+    row = await _load_open_foreshadowing(
+        project_id=project_id, foreshadowing_id=foreshadowing_id
+    )
+    status = str(row["status"])
+    lifecycle = str(row.get("lifecycle_status") or "active")
+    if lifecycle != "active" or status not in _OPEN_PROMISE_STATUSES:
+        raise click.ClickException(
+            f"foreshadowing 不在开放承诺集: {row['foreshadowing_id']} "
+            f"(status={status}, lifecycle_status={lifecycle})"
+        )
+
+    head = await ChapterHeadRepository().get(project_id, chapter)
+    if head is None or not head.accepted_version_id:
+        raise MissingAcceptedVersionError(
+            f"第 {chapter} 章没有 accepted_version_id，无法回填 resolved_version_id"
+        )
+
+    await ForeshadowingRepository().update_status(
+        row["foreshadowing_id"],
+        "resolved",
+        resolved_chapter=chapter,
+        resolved_version_id=head.accepted_version_id,
+    )
+    return (
+        f"{_SETTLED} promise {row['foreshadowing_id']} "
+        f"（status=resolved, resolved_chapter={chapter}, "
+        f"resolved_version_id={head.accepted_version_id}；"
+        f"evidence={evidence_text}）"
+    )
+
+
 def _run(coro: Coroutine[Any, Any, str]) -> str:
     try:
         return asyncio.run(coro)
@@ -234,7 +302,7 @@ def edit_attribute(
 
 @click.group(name="confirm")
 def canon_confirm_group() -> None:
-    """将计划行入典为 approved。输出写明已入典。"""
+    """将计划行入典为 approved，或确认销账开放承诺。"""
 
 
 @canon_confirm_group.command(name="entity")
@@ -252,6 +320,27 @@ def confirm_attribute(project_id: str, attribute_id: str) -> None:
     """将 attribute 设为 approved（入典）。"""
     click.echo(
         _run(_confirm_attribute(project_id=project_id, attribute_id=attribute_id))
+    )
+
+
+@canon_confirm_group.command(name="promise")
+@click.option("--project-id", required=True, help="项目 ID")
+@click.option("--foreshadowing-id", required=True, help="伏笔 / 承诺稳定 id")
+@click.option("--chapter", required=True, type=int, help="兑现章号")
+@click.option("--evidence", required=True, help="人给的短证据串")
+def confirm_promise(
+    project_id: str, foreshadowing_id: str, chapter: int, evidence: str
+) -> None:
+    """人确认销账开放承诺：status=resolved 并回填 resolved_*。"""
+    click.echo(
+        _run(
+            _confirm_promise(
+                project_id=project_id,
+                foreshadowing_id=foreshadowing_id,
+                chapter=chapter,
+                evidence=evidence,
+            )
+        )
     )
 
 

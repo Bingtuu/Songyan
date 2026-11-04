@@ -108,6 +108,17 @@ class ForeshadowingRepository:
             foreshadowing_id=foreshadowing_id,
         )
 
+    async def get_row(self, foreshadowing_id: str) -> dict[str, Any] | None:
+        """Load one foreshadowing row (incl. project_id / lifecycle / resolve cols)."""
+        async with get_db() as conn:
+            conn.row_factory = Row
+            cursor = await conn.execute(
+                "SELECT * FROM foreshadowings WHERE foreshadowing_id = ?",
+                (foreshadowing_id,),
+            )
+            row = await cursor.fetchone()
+        return None if row is None else dict(row)
+
     async def list_all(self, project_id: str) -> list[ForeshadowingItem]:
         async with get_db() as conn:
             conn.row_factory = Row
