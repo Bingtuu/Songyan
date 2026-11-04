@@ -2,7 +2,7 @@
 
 本目录是 **V1.0 写作助手**开工之后的任务队列。**先写任务文档，再写代码**；完成任务后归档，并同步 `docs/STATUS.md` 与 `docs/HANDOFF-mew.md`。
 
-**M0 只读工作台步 1–4 已完成；M0 代码验收 PASS（`80f4107`）。tech-m1 已接受（Mew 拍板）。M1 步 1–5 已合入；M1 代码验收 PASS（`69d7ece`）。** 当前无 DOING。下一闸门：owner 决定 / 接受 tech-m2 后再开 M2 编码。归档：`done/200.md`（#28 / `1d8c0c0`）、`done/201.md`（#29 / `8f03453`）、`done/202.md`（#30 / `d5c2cc1`）、`done/203.md`（#31 / `48fa354`）、`done/204-m0-acceptance.md`（M0 验收 PASS）、`done/205-rejected迁移与过滤.md`（#35 / `1995181`）、`done/206-canon-edit.md`（#36 / `5a260a9`）、`done/207-confirm-dismiss.md`（#38 / `7c7ec43`）、`done/208-check.md`（#39 / `d3f127c`）、`done/209-w0-today-e2e.md`（#41 / `69d7ece`）、`done/210-m1-acceptance.md`（M1 验收 PASS）。不要把 `docs/archive/` 里的旧 Task 001–019 或 V13–V15 抄进这里。
+**M0 只读工作台步 1–4 已完成；M0 代码验收 PASS（`80f4107`）。tech-m1 已接受（Mew 拍板）。M1 步 1–5 已合入；M1 代码验收 PASS（`69d7ece`）。tech-m2 **草稿已起草**（待 owner 书面接受）。** 当前无 DOING 编码任务。下一闸门：owner 书面接受 tech-m2 后再开 M2 编码任务。归档：`done/200.md`（#28 / `1d8c0c0`）、`done/201.md`（#29 / `8f03453`）、`done/202.md`（#30 / `d5c2cc1`）、`done/203.md`（#31 / `48fa354`）、`done/204-m0-acceptance.md`（M0 验收 PASS）、`done/205-rejected迁移与过滤.md`（#35 / `1995181`）、`done/206-canon-edit.md`（#36 / `5a260a9`）、`done/207-confirm-dismiss.md`（#38 / `7c7ec43`）、`done/208-check.md`（#39 / `d3f127c`）、`done/209-w0-today-e2e.md`（#41 / `69d7ece`）、`done/210-m1-acceptance.md`（M1 验收 PASS）、`done/211-tech-m2草稿.md`（tech-m2 docs 草稿）。不要把 `docs/archive/` 里的旧 Task 001–019 或 V13–V15 抄进这里。
 
 ## 文件组织
 
@@ -57,4 +57,4 @@ tasks/
 - 验收过不了就不算 DONE。
 - 做不完的任务不删，留 TODO 并写明阻塞。
 - 标了 `[proposed]` 的命令，在对应任务落地之前，README 不得写成已经支持。
-- **里程碑技术方案未经书面接受之前，不建该里程碑的编码任务。** tech-m1 已接受，可以建 M1 步 1 任务。
+- **里程碑技术方案未经书面接受之前，不建该里程碑的编码任务。** tech-m1 已接受（M1 编码已完）。tech-m2 仅草稿：接受前不建 M2 编码任务；可有 docs 任务记录草稿本身。

@@ -29,14 +29,15 @@ Songyan（松烟）是 **人主导的连载写作助手**，接在现有的事�
 1. [docs/prd-v1.md](docs/prd-v1.md) — 产品。工作流 W0–W6、路径 P-draft / P-bench、里程碑 M0–M4 只在这里展开。Owner 已接受。
 2. [docs/tech-m0.md](docs/tech-m0.md) — 只规划 M0。步 1–4 已进 `main`；§6–7 代码验收 **PASS**（`80f4107`）。
 3. [docs/tech-m1.md](docs/tech-m1.md) — 只规划 M1（人确认入典 + 规则 `check`）。**已接受（Mew 拍板，2026-11-03 Asia/Shanghai）。** 步 1–5 已进 `main`；§6–7 代码验收 **PASS**（`69d7ece`）。不得越出 PRD 的 M1。
-4. [docs/adr/0001-plan-first-facts.md](docs/adr/0001-plan-first-facts.md) — 事实写入方向。
-5. [docs/STATUS.md](docs/STATUS.md) — 工程事实（版本、闸门、已知限制）。
-6. [docs/HANDOFF-mew.md](docs/HANDOFF-mew.md) — 当天的下一步。
-7. [tasks/](tasks/README.md) — 队列从 `tasks/200-` 起。没有任务文件就不要口头开工。
+4. [docs/tech-m2.md](docs/tech-m2.md) — 只规划 M2（硬事实标脏、承诺债务、抽取提案）。**草稿，待 owner 书面接受。** 接受前不开 M2 编码。
+5. [docs/adr/0001-plan-first-facts.md](docs/adr/0001-plan-first-facts.md) — 事实写入方向。
+6. [docs/STATUS.md](docs/STATUS.md) — 工程事实（版本、闸门、已知限制）。
+7. [docs/HANDOFF-mew.md](docs/HANDOFF-mew.md) — 当天的下一步。
+8. [tasks/](tasks/README.md) — 队列从 `tasks/200-` 起。没有任务文件就不要口头开工。
 
-冲突时，上面的条目压过下面的。产品边界以 PRD 为准；M0 的实现细节以 `tech-m0.md` 为准；M1 的实现细节以**已接受的** `tech-m1.md` 为准，且不得越出 PRD 对应里程碑。不要用归档路线图或 [docs/prd-v1-writing-assist.md](docs/prd-v1-writing-assist.md) 的指针页推翻 PRD。
+冲突时，上面的条目压过下面的。产品边界以 PRD 为准；M0 的实现细节以 `tech-m0.md` 为准；M1 的实现细节以**已接受的** `tech-m1.md` 为准；M2 的实现细节以**已接受的** `tech-m2.md` 为准，且不得越出 PRD 对应里程碑。不要用归档路线图或 [docs/prd-v1-writing-assist.md](docs/prd-v1-writing-assist.md) 的指针页推翻 PRD。
 
-**开工门（M1 已过）：** `docs/tech-m1.md` 已接受；步 1–5 与 §6–7 代码验收 **PASS**（`69d7ece`）。**下一闸门：** owner 书面接受 `docs/tech-m2.md`（尚未起草）之前，不开 M2 编码。M2 及以后各自另有被接受的技术方案。
+**开工门（M1 已过）：** `docs/tech-m1.md` 已接受；步 1–5 与 §6–7 代码验收 **PASS**（`69d7ece`）。**下一闸门：** owner 书面接受 `docs/tech-m2.md`（草稿已起草）之前，不开 M2 编码。M3 及以后各自另有被接受的技术方案。
 
 ## 默认不要读
 
@@ -53,7 +54,7 @@ Songyan（松烟）是 **人主导的连载写作助手**，接在现有的事�
 - 不要把 extract-then-patch，或 SettlementExtractor 的自动写入，做成助手主路径。
 - 不要为了追召回去加题材专用检查器。窄检查保持薄封装。
 - 不要把质量门通过写成「可发表」或「书写得好」。
-- tech-m1 已接受：按小步做 confirm / check；不得越出该里程碑（M1 **必须**为五表 `rejected` 做 CHECK 迁移，不加 hardness / variant 表；无持久第四态 `accepted`）。抽卡 / 续写仍属更后里程碑。
+- tech-m1 已接受；tech-m2 **草稿待接受**：接受前不按 tech-m2 改 `src/` / `tests/`。抽卡 / 续写仍属更后里程碑。M1 约束仍有效（五表 `rejected`；无持久第四态 `accepted`）。
 - 不要提交 `.env`、密钥、书稿、本地数据库、未脱敏日志。
 
 ## 运行时不变量

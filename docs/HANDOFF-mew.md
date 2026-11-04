@@ -2,11 +2,11 @@
 
 owner：Bingtuu。包 tip **v0.5**（`0.5.0`）。「V1.0」是产品代际名，不是包版本。本文件不打 tag。
 
-权威顺序见 [AGENTS.md](../AGENTS.md)：[PRD](prd-v1.md) → [M0 技术方案](tech-m0.md) → [M1 技术方案](tech-m1.md)（**已接受**；§6–7 **PASS**）→ ADR-0001 → STATUS（事实）→ 本文件（当天）→ `tasks/`（有任务文档之后）。
+权威顺序见 [AGENTS.md](../AGENTS.md)：[PRD](prd-v1.md) → [M0 技术方案](tech-m0.md) → [M1 技术方案](tech-m1.md)（**已接受**；§6–7 **PASS**）→ [M2 技术方案](tech-m2.md)（**草稿，待接受**）→ ADR-0001 → STATUS（事实）→ 本文件（当天）→ `tasks/`（有任务文档之后）。
 
 ## 下一刀
 
-**等 owner 决定是否起草 / 书面接受 tech-m2（文件尚未存在），然后再开 M2 编码。** 当前无 DOING 编码任务。接受之前不要写 SettlementExtractor→提案队列 / hardness / variant / continue 代码，不要发明 M2 的 `tasks/20x` 编码文件。
+**等 owner 书面接受 [tech-m2.md](tech-m2.md)，然后再开 M2 编码。** 草稿已在 docs PR（分支 `docs-tech-m2-draft`）。当前无 DOING 编码任务。接受之前不要写 SettlementExtractor→提案队列 / hardness 列 / variant / continue 代码，不要发明 M2 的 `tasks/21x` 编码文件。
 
 M0 步 1–4 已全部在 `main`：[#28](https://github.com/Bingtuu/Songyan/pull/28) → `1d8c0c0`；[#29](https://github.com/Bingtuu/Songyan/pull/29) → `8f03453`；[#30](https://github.com/Bingtuu/Songyan/pull/30) → `d5c2cc1`；[#31](https://github.com/Bingtuu/Songyan/pull/31) → `48fa354`。任务分别在 [tasks/done/200.md](../tasks/done/200.md)、[tasks/done/201.md](../tasks/done/201.md)、[tasks/done/202.md](../tasks/done/202.md)、[tasks/done/203.md](../tasks/done/203.md)。
 
@@ -22,7 +22,7 @@ M1 代码验收（步 1–5 + tech-m1 §6–7）在 `main` `69d7ece`：**PASS**�
 - 不重开 plan-first 阶段 C，不加题材专用检查器，不改 SettlementExtractor 的权威。
 - 不把 Ch1–10 写成文学验收。文学质量归人。
 - 正式 git tag 仍由维护者决定。
-- **tech-m2 未经 owner 书面接受之前，不开 M2 编码、不建 M2 的 `tasks/20x` 编码文件。**
+- **tech-m2 未经 owner 书面接受之前，不开 M2 编码、不建 M2 的 `tasks/21x` 编码文件。** 草稿已起草，仅 docs。
 - 不声称 V1.0 完成，不升包版本。
 
 ## 事实指针（短）
@@ -35,7 +35,8 @@ M1 代码验收（步 1–5 + tech-m1 §6–7）在 `main` `69d7ece`：**PASS**�
 | M1 技术方案 | [tech-m1.md](tech-m1.md) — **已接受**（Mew 拍板，2026-11-03 Asia/Shanghai）；§6–7 **PASS** @ `69d7ece` |
 | M1 步 1–5 | 已合入（见上）；[tasks/done/205–209](../tasks/done/) |
 | M1 验收 | **PASS** @ `69d7ece`。[tasks/done/210-m1-acceptance.md](../tasks/done/210-m1-acceptance.md) |
-| 当前任务 | 无 DOING。下一刀：owner 决定 tech-m2 → 第一刀 M2 编码 |
+| M2 技术方案 | [tech-m2.md](tech-m2.md) — **草稿，待 owner 书面接受**（docs PR `docs-tech-m2-draft`） |
+| 当前任务 | 无 DOING 编码。下一闸门：owner 书面接受 tech-m2 → 再开步 1 编码任务 |
 | 架构方向 | [adr/0001-plan-first-facts.md](adr/0001-plan-first-facts.md) |
 | 工程现状 | [STATUS.md](STATUS.md) |
 | 阶段 A–C | [ROADMAP-plan-first.md](ROADMAP-plan-first.md)（CLOSED 短指针；全文在 archive，日常不要加载） |
