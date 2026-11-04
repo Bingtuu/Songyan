@@ -6,7 +6,7 @@ owner：Bingtuu。包 tip **v0.5**（`0.5.0`）。「V1.0」是产品代际名�
 
 ## 下一刀
 
-**开 M2 步 1 编码（W5 只读）：** `today` 承诺计数 + `canon show --kind promise`。tech-m2 **已接受**（owner widget t93s804，B1–B6 原样；接受注记在 [#43](https://github.com/Bingtuu/Songyan/pull/43)）。TDD；任务 `tasks/212-m2-step1-w5-readonly.md`。本步不写库、不销账、不加 `--hard` / `content_stale` / extract source。
+**M2 步 1 编码进行中（W5 只读）：** 分支 `m2-step1-w5-readonly`；任务 [tasks/212-m2-step1-w5-readonly.md](../tasks/212-m2-step1-w5-readonly.md)。产出：`today` 承诺计数 + `canon show --kind promise`。tech-m2 **已接受**（t93s804；B1–B6 原样）。本步不写库、不销账、不加 `--hard` / `content_stale` / extract source；包仍 `0.5.0`。开 PR 后等 Mew COMMENT，勿自合。
 
 M0 步 1–4 已全部在 `main`：[#28](https://github.com/Bingtuu/Songyan/pull/28) → `1d8c0c0`；[#29](https://github.com/Bingtuu/Songyan/pull/29) → `8f03453`；[#30](https://github.com/Bingtuu/Songyan/pull/30) → `d5c2cc1`；[#31](https://github.com/Bingtuu/Songyan/pull/31) → `48fa354`。任务分别在 [tasks/done/200.md](../tasks/done/200.md)、[tasks/done/201.md](../tasks/done/201.md)、[tasks/done/202.md](../tasks/done/202.md)、[tasks/done/203.md](../tasks/done/203.md)。
 
@@ -35,8 +35,8 @@ M1 代码验收（步 1–5 + tech-m1 §6–7）在 `main` `69d7ece`：**PASS**�
 | M1 技术方案 | [tech-m1.md](tech-m1.md) — **已接受**（Mew 拍板，2026-11-03 Asia/Shanghai）；§6–7 **PASS** @ `69d7ece` |
 | M1 步 1–5 | 已合入（见上）；[tasks/done/205–209](../tasks/done/) |
 | M1 验收 | **PASS** @ `69d7ece`。[tasks/done/210-m1-acceptance.md](../tasks/done/210-m1-acceptance.md) |
-| M2 技术方案 | [tech-m2.md](tech-m2.md) — **已接受**（2026-11-04；t93s804；B1–B6 原样；[#43](https://github.com/Bingtuu/Songyan/pull/43)） |
-| 当前任务 | 下一刀：M2 步 1 编码（W5 只读）；`tasks/212-m2-step1-w5-readonly.md` |
+| M2 技术方案 | [tech-m2.md](tech-m2.md) — **已接受**（2026-11-04；t93s804；B1–B6 原样；[#43](https://github.com/Bingtuu/Songyan/pull/43) → `a95824a`） |
+| 当前任务 | DOING：M2 步 1（W5 只读）；[tasks/212-m2-step1-w5-readonly.md](../tasks/212-m2-step1-w5-readonly.md) |
 | 架构方向 | [adr/0001-plan-first-facts.md](adr/0001-plan-first-facts.md) |
 | 工程现状 | [STATUS.md](STATUS.md) |
 | 阶段 A–C | [ROADMAP-plan-first.md](ROADMAP-plan-first.md)（CLOSED 短指针；全文在 archive，日常不要加载） |
