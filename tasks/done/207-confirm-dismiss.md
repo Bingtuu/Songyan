@@ -2,7 +2,7 @@
 
 | 项 | 内容 |
 |---|---|
-| 状态 | DOING |
+| 状态 | DONE |
 | 关联 | PRD 6.3；tech-m1 §3.4 / §4.2 / §5 步 3；W0 |
 | 预估 | 一个切片 |
 
@@ -27,4 +27,4 @@
 
 ## 完成总结（DONE 时填写）
 
-（合入后填写）
+PR [#38](https://github.com/Bingtuu/Songyan/pull/38) squash 进 `main` 为 `7c7ec43`。`canon confirm` / `dismiss`（+ 非持久 `accept`）支持 entity + attribute；未做 check / today 文案。下一刀（仅 owner/parent 授权后）：步 4 `check`。
