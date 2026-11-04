@@ -1,6 +1,6 @@
 # M2 技术方案：硬事实标脏、承诺债务与抽取提案
 
-- **状态：** 2026-11-04 Asia/Shanghai。只覆盖 [prd-v1.md](prd-v1.md) 的 **M2**（W4 改典涟漪、W5 承诺债务、SettlementExtractor / import 抽取进提案）。**草稿，待 owner 书面接受。** 接受前不开 M2 编码、不建 M2 的 `tasks/20x` 编码文件。
+- **状态：** 2026-11-04 Asia/Shanghai。只覆盖 [prd-v1.md](prd-v1.md) 的 **M2**（W4 改典涟漪、W5 承诺债务、SettlementExtractor / import 抽取进提案）。**已接受。** 接受注记见文末。包版本仍是 `0.5.0`。
 - **本文不做的决定：** 不规划 M3–M4（`variant *`、`chapter continue` / `review`）。不要把本文扩成整代路线图。
 - **前置：** M1 步 1–5 与 tech-m1 §6–7 代码验收已在 `main` `69d7ece` **PASS**（验收文档 #42 @ `5a6e45b`）。包版本仍是 `0.5.0`。
 
@@ -194,7 +194,7 @@ songyan check --project-id TEXT --chapter INT [--json]   # 报告含 stale 范�
 
 ## 5. 小步
 
-**本文尚未接受。** 接受后按下列小步写 `tasks/21x` **编码**任务（接受前禁止创建编码任务文件）。每步一个可独立拒绝的 PR。不要合成一个大 PR。合并前 Mew COMMENT（不代 owner 点 APPROVE，除非另有授权）。
+**本文已接受。** 按下列小步写 `tasks/21x` **编码**任务。每步一个可独立拒绝的 PR。不要合成一个大 PR。合并前 Mew COMMENT（不代 owner 点 APPROVE，除非另有授权）。
 
 ### 步 1 — W5 只读：today 承诺计数 + `canon show --kind promise`
 
@@ -300,9 +300,7 @@ python -m pytest tests/cli/test_workbench_commands.py tests/cli/test_canon_write
 
 ## 9. 以后的技术方案
 
-在 owner **书面接受**本文之前，不写 M2 代码，也不创建 M2 编码任务文件。
-
-接受并完成 M2 之后，才轮到：
+本文已接受。完成 M2 之后，才轮到：
 
 - Variant 表与 `variant *`（M3）
 - `chapter continue` / `review`（M4）
@@ -316,11 +314,6 @@ python -m pytest tests/cli/test_workbench_commands.py tests/cli/test_canon_write
 
 ## 接受注记
 
-**草稿，待 owner 书面接受。** 本注记占位：接受时写明日期（Asia/Shanghai）、接受人 / 授权依据，以及是否原样接受上文绑定决策 B1–B6。
+**已接受** 2026-11-04 Asia/Shanghai；依据 owner widget t93s804「接受 tech-m2，按 B1–B6 开 M2 编码」；B1–B6 原样接受；下一刀 = M2 步 1。
 
-接受前：
-
-- 不开 M2 编码 PR；不建 `tasks/21x` 编码文件为 DOING。
-- 本文件与配套状态文档的 docs PR **不**合并进行为变更；**不**代 owner APPROVE。
-
-接受后的下一刀：M2 **步 1** 编码（W5 只读），TDD；开 PR 后 Mew COMMENT 再合并。
+**合入本文档 PR 之后的下一刀：** M2 **步 1** 编码（W5 只读：today 承诺计数 + `canon show --kind promise`），TDD；开 PR 后 **Mew COMMENT** 再合并（勿在无 COMMENT 时自合）。本接受注记不授权在本文档 PR 内改 `src/` 行为。
