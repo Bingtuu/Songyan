@@ -1320,6 +1320,6 @@ register_quality_commands(cli)
 # ---------------------------------------------------------------------------
 register_import_commands(cli)
 
-# M0: read-only canon show / today. M1 step 2: canon edit writes.
+# M0: read-only canon show / today. M1 steps 2–3: canon edit/confirm/dismiss/accept.
 register_workbench_commands(cli)
 register_canon_write_commands(cli)
