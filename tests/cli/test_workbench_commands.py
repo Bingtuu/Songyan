@@ -202,7 +202,7 @@ def test_canon_show_json_storyline_filled(
     assert _CONFLICT not in json.dumps(payload["canon"], ensure_ascii=False)
 
 
-_NEXT = "M0 只读。确认入典和生成都不在本命令。"
+_NEXT = "可用 canon confirm 入典；生成不在本命令。"
 _PLAN_TABLES = (
     "plan_entities",
     "plan_attributes",
