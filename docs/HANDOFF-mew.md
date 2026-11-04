@@ -6,7 +6,7 @@ owner：Bingtuu。包 tip **v0.5**（`0.5.0`）。「V1.0」是产品代际名�
 
 ## 下一刀
 
-**M1 步 2 PR：等待 Mew COMMENT 后合并。** 任务 [tasks/206-canon-edit.md](../tasks/206-canon-edit.md)；分支 `m1-step2-canon-edit`。范围仅 `canon edit`（entity + attribute，pending，attribute `source=human`）；不做 confirm/dismiss/check/today 文案。
+**等 owner/parent 授权后再开 M1 步 3（`confirm` + `dismiss`）。** 当前无 DOING 编码任务。不要自建 `tasks/20x` 步 3 文件，不要改 `src/` / `tests/`。
 
 绑定摘要（全文以 tech-m1 为准）：无持久第四态 `accepted`；人写强制 `source=human`；步 1 五表 CHECK 必迁；`check` 正文 = `ChapterVersion.content`，属性侧值 = 注入 `AttributeExtract`；验收最小 kind = entity+attribute；rejected 后同 id 覆盖、无正文史；步 5 更新 `today` 的 `next`。
 
@@ -14,13 +14,15 @@ M0 步 1–4 已全部在 `main`：[#28](https://github.com/Bingtuu/Songyan/pull
 
 M0 代码验收（步 1–4 + tech-m0 §6–7）在 `main` `80f4107`：**PASS**。归档说明：[tasks/done/204-m0-acceptance.md](../tasks/done/204-m0-acceptance.md)。S6 不在代码验收内。
 
+M1 步 1–2 已在 `main`：[#35](https://github.com/Bingtuu/Songyan/pull/35) → `1995181`；[#36](https://github.com/Bingtuu/Songyan/pull/36) → `5a260a9`。任务分别在 [tasks/done/205-rejected迁移与过滤.md](../tasks/done/205-rejected迁移与过滤.md)、[tasks/done/206-canon-edit.md](../tasks/done/206-canon-edit.md)。
+
 不要做的事：
 
 - 不再开 `settlement_review` 修复刀。`11c4c761` / #19 的 Ch1–3 fail 留着；`eaa6bef` / #20 的重跑已 PASS。
 - 不重开 plan-first 阶段 C，不加题材专用检查器，不改 SettlementExtractor 的权威。
 - 不把 Ch1–10 写成文学验收。文学质量归人。
 - 正式 git tag 仍由维护者决定。
-- 不要跳过步 2 直接做 confirm；不要合成跨步大 PR；不要在无 Mew COMMENT 时自合。
+- 不要在无 owner/parent 授权时开步 3；不要合成跨步大 PR；不要在无 Mew COMMENT 时自合。
 - 不声称 V1.0 完成，不升包版本。
 
 ## 事实指针（短）
@@ -31,7 +33,9 @@ M0 代码验收（步 1–4 + tech-m0 §6–7）在 `main` `80f4107`：**PASS**�
 | M0 步 1–4 | 已进 `main`（见上）；[tasks/done/200–203](../tasks/done/) |
 | M0 验收 | **PASS** @ `80f4107`。[tasks/done/204-m0-acceptance.md](../tasks/done/204-m0-acceptance.md) |
 | M1 技术方案 | [tech-m1.md](tech-m1.md) — **已接受**（Mew 拍板，2026-11-03 Asia/Shanghai） |
-| 当前任务 | **DOING** [206](../tasks/206-canon-edit.md)（M1 步 2）；步 1 已合入 `1995181`；PR 待 Mew COMMENT |
+| M1 步 1 | 已合入 `1995181`（#35）；[tasks/done/205-rejected迁移与过滤.md](../tasks/done/205-rejected迁移与过滤.md) |
+| M1 步 2 | 已合入 `5a260a9`（#36）；[tasks/done/206-canon-edit.md](../tasks/done/206-canon-edit.md) |
+| 当前任务 | **无 DOING**。下一刀 = 步 3 confirm+dismiss，**仅 owner/parent 授权后** |
 | 架构方向 | [adr/0001-plan-first-facts.md](adr/0001-plan-first-facts.md) |
 | 工程现状 | [STATUS.md](STATUS.md) |
 | 阶段 A–C | [ROADMAP-plan-first.md](ROADMAP-plan-first.md)（CLOSED 短指针；全文在 archive，日常不要加载） |
