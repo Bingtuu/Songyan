@@ -237,6 +237,9 @@ def test_today_counts_and_next_sentence(
     assert "canon_rows" in result.output
     assert "pending_rows" in result.output
     assert "storyline_arcs" in result.output
+    assert "promise_planted: 0" in result.output
+    assert "promise_due: 0" in result.output
+    assert "promise_overdue: 0" in result.output
     assert _NEXT in result.output
     assert after == before
 
@@ -255,9 +258,11 @@ def test_today_json_shape(runner: CliRunner, dushi_with_storyline: Path) -> None
         "project_id",
         "canon_counts",
         "pending_counts",
+        "promise_counts",
         "storyline",
         "next",
     }
+    assert payload["promise_counts"] == {"planted": 0, "due": 0, "overdue": 0}
     assert payload["project_id"] == DUSHI_LINGYI_PROJECT_ID
     assert payload["next"] == _NEXT
     for key in ("entity", "attribute", "event", "time_anchor", "clue"):

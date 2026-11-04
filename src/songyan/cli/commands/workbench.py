@@ -4,6 +4,7 @@ M0 steps 1–4: ``canon show`` and ``today`` for approved / pending facts,
 storyline, and counts; missing DB / missing project exit 1.
 M1 step 5 updates ``today`` fixed ``next`` (confirm available via canon confirm).
 M1 write commands (``canon edit`` / confirm / dismiss) register beside this group.
+M2 step 1: ``today`` promise counts + ``canon show --kind promise`` (read-only).
 """
 
 from __future__ import annotations
@@ -17,6 +18,8 @@ from songyan.db.connection import get_db_path
 from songyan.db.narrative_repo import NarrativeRepository
 from songyan.db.plan_fact_repo import PlanFactRepository
 from songyan.db.repository import ProjectRepository
+from songyan.db.settlement_repo import ForeshadowingRepository
+from songyan.models.context import ForeshadowingItem
 from songyan.models.narrative import ArcPlan, PlotThread, StoryOutline
 from songyan.models.plan_facts import (
     PlanAttribute,
@@ -29,8 +32,10 @@ from songyan.models.plan_facts import (
 _CANON_HEAD = "# Canon（approved）"
 _PENDING_HEAD = "# Pending（不是 Canon）"
 _STORYLINE_HEAD = "# Storyline（规划骨架，不是已确认事实）"
+_PROMISE_HEAD = "# Promises（开放承诺，不是 Canon）"
 _NEXT = "可用 canon confirm 入典；生成不在本命令。"
 _KINDS = ("entity", "attribute", "event", "time_anchor", "clue")
+_OPEN_PROMISE_STATUSES = ("planted", "due", "overdue")
 
 _Card = PlanEntity | PlanAttribute | PlanEvent | PlanTimeAnchor | PlanClue
 
@@ -180,8 +185,70 @@ def _render_json(project_id: str, loaded: dict[str, object]) -> str:
     return json.dumps(payload, ensure_ascii=False)
 
 
-async def _render_canon_show(project_id: str, *, as_json: bool) -> str:
+
+def _promise_counts(items: list[ForeshadowingItem]) -> dict[str, int]:
+    counts = {status: 0 for status in _OPEN_PROMISE_STATUSES}
+    for item in items:
+        if item.status in counts:
+            counts[item.status] += 1
+    return counts
+
+
+def _render_promise_text(items: list[ForeshadowingItem]) -> str:
+    lines = [_PROMISE_HEAD]
+    by_status: dict[str, list[ForeshadowingItem]] = {
+        status: [] for status in _OPEN_PROMISE_STATUSES
+    }
+    for item in items:
+        if item.status in by_status:
+            by_status[item.status].append(item)
+    for status in _OPEN_PROMISE_STATUSES:
+        lines.append(f"## {status}")
+        bucket = by_status[status]
+        if not bucket:
+            lines.append("（空）")
+            continue
+        for item in bucket:
+            lines.append(
+                f"- {item.foreshadowing_id} status={item.status} "
+                f"planted_in_chapter={item.planted_in_chapter}"
+            )
+    return "\n".join(lines)
+
+
+def _render_promise_json(project_id: str, items: list[ForeshadowingItem]) -> str:
+    payload = {
+        "project_id": project_id,
+        "kind": "promise",
+        "promises": [
+            {
+                "foreshadowing_id": item.foreshadowing_id,
+                "description": item.description,
+                "planted_in_chapter": item.planted_in_chapter,
+                "expected_resolve_chapter": item.expected_resolve_chapter,
+                "status": item.status,
+                "source_version_id": item.source_version_id,
+            }
+            for item in items
+        ],
+    }
+    return json.dumps(payload, ensure_ascii=False)
+
+
+async def _load_open_promises(project_id: str) -> list[ForeshadowingItem]:
+    """Open author-path set: active lifecycle + planted/due/overdue (B3)."""
+    return await ForeshadowingRepository().list_schedulable(project_id)
+
+
+async def _render_canon_show(
+    project_id: str, *, as_json: bool, kind: str | None
+) -> str:
     await _ensure_project_readable(project_id)
+    if kind == "promise":
+        items = await _load_open_promises(project_id)
+        if as_json:
+            return _render_promise_json(project_id, items)
+        return _render_promise_text(items)
     loaded = await _load(project_id)
     if as_json:
         return _render_json(project_id, loaded)
@@ -195,10 +262,18 @@ def canon_group() -> None:
 
 @canon_group.command(name="show")
 @click.option("--project-id", required=True, help="项目 ID")
+@click.option(
+    "--kind",
+    type=click.Choice(["promise"], case_sensitive=False),
+    default=None,
+    help="只打印指定类；promise = 开放承诺（不是 Canon）",
+)
 @click.option("--json", "as_json", is_flag=True, help="输出 JSON")
-def canon_show(project_id: str, as_json: bool) -> None:
-    """打印五类计划事实，以及故事线骨架。不写库。"""
-    click.echo(asyncio.run(_render_canon_show(project_id, as_json=as_json)))
+def canon_show(project_id: str, kind: str | None, as_json: bool) -> None:
+    """打印五类计划事实，以及故事线骨架；``--kind promise`` 只读开放承诺。不写库。"""
+    click.echo(
+        asyncio.run(_render_canon_show(project_id, as_json=as_json, kind=kind))
+    )
 
 
 
@@ -206,7 +281,9 @@ def _count_rows(bucket: dict[str, list[_Card]]) -> int:
     return sum(len(bucket[kind]) for kind in _KINDS)
 
 
-def _render_today_text(loaded: dict[str, object]) -> str:
+def _render_today_text(
+    loaded: dict[str, object], promise_counts: dict[str, int]
+) -> str:
     canon = loaded["canon"]
     pending = loaded["pending"]
     arcs = loaded["arcs"]
@@ -218,12 +295,17 @@ def _render_today_text(loaded: dict[str, object]) -> str:
             f"canon_rows: {_count_rows(canon)}",
             f"pending_rows: {_count_rows(pending)}",
             f"storyline_arcs: {len(arcs)}",
+            f"promise_planted: {promise_counts['planted']}",
+            f"promise_due: {promise_counts['due']}",
+            f"promise_overdue: {promise_counts['overdue']}",
             _NEXT,
         ]
     )
 
 
-def _render_today_json(project_id: str, loaded: dict[str, object]) -> str:
+def _render_today_json(
+    project_id: str, loaded: dict[str, object], promise_counts: dict[str, int]
+) -> str:
     canon = loaded["canon"]
     pending = loaded["pending"]
     outline = loaded["outline"]
@@ -238,6 +320,7 @@ def _render_today_json(project_id: str, loaded: dict[str, object]) -> str:
         "project_id": project_id,
         "canon_counts": {kind: len(canon[kind]) for kind in _KINDS},
         "pending_counts": {kind: len(pending[kind]) for kind in _KINDS},
+        "promise_counts": promise_counts,
         "storyline": {
             "has_outline": outline is not None,
             "arc_count": len(arcs),
@@ -251,9 +334,11 @@ def _render_today_json(project_id: str, loaded: dict[str, object]) -> str:
 async def _render_today(project_id: str, *, as_json: bool) -> str:
     await _ensure_project_readable(project_id)
     loaded = await _load(project_id)
+    promises = await _load_open_promises(project_id)
+    promise_counts = _promise_counts(promises)
     if as_json:
-        return _render_today_json(project_id, loaded)
-    return _render_today_text(loaded)
+        return _render_today_json(project_id, loaded, promise_counts)
+    return _render_today_text(loaded, promise_counts)
 
 
 @click.command(name="today")

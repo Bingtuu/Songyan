@@ -23,10 +23,11 @@ Package tip remains **0.5.0**. V1.0 is the product-generation name.
 | M1 步 4 `check`（W6） | **已在 `main`。** [#39](https://github.com/Bingtuu/Songyan/pull/39) squash 为 `d3f127c`。任务归档在 [tasks/done/208-check.md](../tasks/done/208-check.md) |
 | M1 步 5 W0 e2e + `today` next | **已在 `main`。** [#41](https://github.com/Bingtuu/Songyan/pull/41) squash 为 `69d7ece`。任务归档在 [tasks/done/209-w0-today-e2e.md](../tasks/done/209-w0-today-e2e.md) |
 | M1 代码验收（步 1–5 + tech-m1 §6–7） | **PASS**（`main` `69d7ece`）。证据见 [tasks/done/210-m1-acceptance.md](../tasks/done/210-m1-acceptance.md)。S1/S2 产品周期日志不在代码验收内 |
-| M2 技术方案 [tech-m2.md](tech-m2.md) | **已接受**（2026-11-04 Asia/Shanghai；owner widget t93s804；B1–B6 原样接受；[#43](https://github.com/Bingtuu/Songyan/pull/43)）。下一刀 = M2 步 1 编码 |
+| M2 技术方案 [tech-m2.md](tech-m2.md) | **已接受**（2026-11-04 Asia/Shanghai；owner widget t93s804；B1–B6 原样接受；[#43](https://github.com/Bingtuu/Songyan/pull/43) squash `a95824a`） |
+| M2 步 1 W5 只读 | **PR 待 COMMENT**（分支 `m2-step1-w5-readonly`；任务 [tasks/212-m2-step1-w5-readonly.md](../tasks/212-m2-step1-w5-readonly.md)） |
 | 包版本 | 仍是 `0.5.0` |
 
-tech-m2 **已接受**。下一刀 = M2 **步 1** 编码（W5 只读）。不要声称 V1.0 完成，不要升包版本（仍 `0.5.0`）。
+tech-m2 **已接受**。M2 步 1（W5 只读）进行中。不要声称 V1.0 完成，不要升包版本（仍 `0.5.0`）。不做步 2+。
 
 上一稿 PRD 的总体框架 owner 已经接受。现行文本是 `prd-v1.md`。旧全文在 [archive/prd-v1-writing-assist-2026-10-26.md](archive/prd-v1-writing-assist-2026-10-26.md)。
 
