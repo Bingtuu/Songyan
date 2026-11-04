@@ -6,7 +6,7 @@ owner：Bingtuu。包 tip **v0.5**（`0.5.0`）。「V1.0」是产品代际名�
 
 ## 下一刀
 
-**M2 步 1 编码进行中（W5 只读）：** 分支 `m2-step1-w5-readonly`；任务 [tasks/212-m2-step1-w5-readonly.md](../tasks/212-m2-step1-w5-readonly.md)。产出：`today` 承诺计数 + `canon show --kind promise`。tech-m2 **已接受**（t93s804；B1–B6 原样）。本步不写库、不销账、不加 `--hard` / `content_stale` / extract source；包仍 `0.5.0`。开 PR 后等 Mew COMMENT，勿自合。
+**等 owner/parent 授权后再开 M2 步 2（人确认销账）。** 当前无 DOING 编码任务。不要自建 `tasks/21x` 步 2 文件，不要改 `src/` / `tests/`。tech-m2 **已接受**（t93s804；B1–B6 原样）。M2 步 1 已在 `main`：[#44](https://github.com/Bingtuu/Songyan/pull/44) → `8f7bc77`；任务 [tasks/done/212-m2-step1-w5-readonly.md](../tasks/done/212-m2-step1-w5-readonly.md)。
 
 M0 步 1–4 已全部在 `main`：[#28](https://github.com/Bingtuu/Songyan/pull/28) → `1d8c0c0`；[#29](https://github.com/Bingtuu/Songyan/pull/29) → `8f03453`；[#30](https://github.com/Bingtuu/Songyan/pull/30) → `d5c2cc1`；[#31](https://github.com/Bingtuu/Songyan/pull/31) → `48fa354`。任务分别在 [tasks/done/200.md](../tasks/done/200.md)、[tasks/done/201.md](../tasks/done/201.md)、[tasks/done/202.md](../tasks/done/202.md)、[tasks/done/203.md](../tasks/done/203.md)。
 
@@ -22,7 +22,7 @@ M1 代码验收（步 1–5 + tech-m1 §6–7）在 `main` `69d7ece`：**PASS**�
 - 不重开 plan-first 阶段 C，不加题材专用检查器，不改 SettlementExtractor 的权威。
 - 不把 Ch1–10 写成文学验收。文学质量归人。
 - 正式 git tag 仍由维护者决定。
-- **tech-m2 已接受。** 只做已授权的下一刀（当前 = 步 1 W5 只读）；不做步 2+、不改 SettlementExtractor、不加 `--hard` / variant / continue。
+- **tech-m2 已接受。** 只做已授权的下一刀；当前无授权时不开步 2（人确认销账）；不做步 3+、不改 SettlementExtractor、不加 `--hard` / variant / continue。
 - 不声称 V1.0 完成，不升包版本。
 
 ## 事实指针（短）
@@ -36,7 +36,8 @@ M1 代码验收（步 1–5 + tech-m1 §6–7）在 `main` `69d7ece`：**PASS**�
 | M1 步 1–5 | 已合入（见上）；[tasks/done/205–209](../tasks/done/) |
 | M1 验收 | **PASS** @ `69d7ece`。[tasks/done/210-m1-acceptance.md](../tasks/done/210-m1-acceptance.md) |
 | M2 技术方案 | [tech-m2.md](tech-m2.md) — **已接受**（2026-11-04；t93s804；B1–B6 原样；[#43](https://github.com/Bingtuu/Songyan/pull/43) → `a95824a`） |
-| 当前任务 | DOING：M2 步 1（W5 只读）；[tasks/212-m2-step1-w5-readonly.md](../tasks/212-m2-step1-w5-readonly.md) |
+| M2 步 1 | 已合入 `8f7bc77`（#44）；[tasks/done/212-m2-step1-w5-readonly.md](../tasks/done/212-m2-step1-w5-readonly.md) |
+| 当前任务 | **无 DOING**。下一刀 = 步 2（人确认销账），**仅 owner/parent 授权后** |
 | 架构方向 | [adr/0001-plan-first-facts.md](adr/0001-plan-first-facts.md) |
 | 工程现状 | [STATUS.md](STATUS.md) |
 | 阶段 A–C | [ROADMAP-plan-first.md](ROADMAP-plan-first.md)（CLOSED 短指针；全文在 archive，日常不要加载） |
