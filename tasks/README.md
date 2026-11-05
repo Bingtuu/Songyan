@@ -2,7 +2,7 @@
 
 本目录是 **V1.0 写作助手**开工之后的任务队列。**先写任务文档，再写代码**；完成任务后归档，并同步 `docs/STATUS.md` 与 `docs/HANDOFF-mew.md`。
 
-**M0 / M1 代码验收 PASS。tech-m2 **已接受**（2026-11-04；t93s804；B1–B6 原样）。M2 步 1 已合入。** DOING：M2 步 2（人确认销账）→ `tasks/213-m2-step2-confirm-settle.md`（PR #46）。归档：`done/200.md`–`done/212-m2-step1-w5-readonly.md`（#44 / `8f7bc77`；#45 已归档 212）。不要把 `docs/archive/` 里的旧 Task 001–019 或 V13–V15 抄进这里。
+**M0 / M1 代码验收 PASS。tech-m2 **已接受**（2026-11-04；t93s804；B1–B6 原样）。M2 步 1–2 已合入。** 无 DOING 编码。归档：`done/200.md`–`done/213-m2-step2-confirm-settle.md`（#46 / `8afb7be`；本 PR 归档 213）。下一刀 = M2 步 3（仅 owner/parent 授权后）；不建步 3 任务。不要把 `docs/archive/` 里的旧 Task 001–019 或 V13–V15 抄进这里。
 
 ## 文件组织
 
