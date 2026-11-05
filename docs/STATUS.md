@@ -26,9 +26,10 @@ Package tip remains **0.5.0**. V1.0 is the product-generation name.
 | M2 技术方案 [tech-m2.md](tech-m2.md) | **已接受**（2026-11-04 Asia/Shanghai；owner widget t93s804；B1–B6 原样接受；[#43](https://github.com/Bingtuu/Songyan/pull/43) squash `a95824a`） |
 | M2 步 1 W5 只读 | **已在 `main`。** [#44](https://github.com/Bingtuu/Songyan/pull/44) squash 为 `8f7bc77`。任务归档在 [tasks/done/212-m2-step1-w5-readonly.md](../tasks/done/212-m2-step1-w5-readonly.md) |
 | M2 步 2 W5 人确认销账 | **已在 `main`。** [#46](https://github.com/Bingtuu/Songyan/pull/46) squash 为 `8afb7be`。任务归档在 [tasks/done/213-m2-step2-confirm-settle.md](../tasks/done/213-m2-step2-confirm-settle.md) |
+| M2 步 3 W4 content_stale + `--hard` | **DOING / PR 待 COMMENT**（[#48](https://github.com/Bingtuu/Songyan/pull/48)；分支 `m2-step3-content-stale-hard`；任务 [tasks/214-m2-step3-content-stale-hard.md](../tasks/214-m2-step3-content-stale-hard.md)） |
 | 包版本 | 仍是 `0.5.0` |
 
-tech-m2 **已接受**。M2 步 1（W5 只读）**已在 `main`**（#44 / `8f7bc77`；212 已由 #45 归档）。M2 步 2（人确认销账）**已在 `main`**（#46 / `8afb7be`；213 已归档）。不要声称 V1.0 完成，不要升包版本（仍 `0.5.0`）。不做步 3+（仅 owner/parent 授权后再开）。
+tech-m2 **已接受**。M2 步 1（W5 只读）**已在 `main`**（#44 / `8f7bc77`；212 已由 #45 归档）。M2 步 2（人确认销账）**已在 `main`**（#46 / `8afb7be`；213 已归档）。M2 步 3（`content_stale` + `--hard` / `--mark-stale`）**进行中**（任务 214 + PR #48）。不要声称 V1.0 完成，不要升包版本（仍 `0.5.0`）。不做步 4+。
 
 上一稿 PRD 的总体框架 owner 已经接受。现行文本是 `prd-v1.md`。旧全文在 [archive/prd-v1-writing-assist-2026-10-26.md](archive/prd-v1-writing-assist-2026-10-26.md)。
 
@@ -56,7 +57,7 @@ tech-m2 **已接受**。M2 步 1（W5 只读）**已在 `main`**（#44 / `8f7bc7
 - `today` 在 `main` 上能打印只读计数与固定 `next`（`可用 canon confirm 入典；生成不在本命令。`）。
 - 缺库 / 缺项目时 `canon show` 与 `today` 退出码 1；缺库时不创建数据库文件。
 - `canon edit` 在 `main` 上能写入 entity / attribute 为 `pending`；attribute 强制 `source=human`；Pending 可见，Canon / 圣经不可见。
-- `canon confirm` / `dismiss` / 非持久 `accept`：在 `main` 上（entity+attribute）；`canon confirm promise`（章号+证据）人销账亦在 `main`（#46 / `8afb7be`）。
+- `canon confirm` / `dismiss` / 非持久 `accept`：在 `main` 上（entity+attribute）；`canon confirm promise`（章号+证据）人销账亦在 `main`（#46 / `8afb7be`）。步 3 PR 为 attribute/entity 增加 `--hard` / `--mark-stale` 与 `chapter_heads.content_stale`。
 - `check` 在 `main` 上：只读规则报告；正文取自 accepted `ChapterVersion.content`；属性侧值可经 `--extracts-json` 注入。
 - `today` 在 `main` 上含 `promise_planted` / `promise_due` / `promise_overdue` 只读计数（text + json）。
 - `canon show --kind promise` 在 `main` 上列出开放承诺；默认 `canon show` 不把承诺标成 Canon。
@@ -67,7 +68,7 @@ tech-m2 **已接受**。M2 步 1（W5 只读）**已在 `main`**（#44 / `8f7bc7
 - 《轨道蜃景》Ch1–10：`project_id=8e30dec7f2ec40c1a9ce54c783981f8c`，`run-33841231`。10/10 accepted；质量门、结算、摘要、导出通过；exit 0。**DG-1 失败**（平均 revision 1.7，十章都有 ContextEmergency，无 AutoHalt）。
 - 那次导出的人工阅读 **未通过**：时间线回滚、Hermes/赫耳墨斯、时间尺度、供氧 / EVA 复读、英文泄漏 `ninety-two 秒`。
 - 真实模型上「导入后再续写」还没有验收。
-- `variant`、`chapter continue` 都还没有。tech-m1 **已接受**；步 1–5 与 §6–7 代码验收已 **PASS**（`69d7ece`）。[tech-m2.md](tech-m2.md) **已接受**；步 1–2 已在 `main`（`8f7bc77` / `8afb7be`）；下一刀 = M2 步 3（仅 owner/parent 授权后）。M3/M4 各自另有被接受的技术方案。
+- `variant`、`chapter continue` 都还没有。tech-m1 **已接受**；步 1–5 与 §6–7 代码验收已 **PASS**（`69d7ece`）。[tech-m2.md](tech-m2.md) **已接受**；步 1–2 已在 `main`（`8f7bc77` / `8afb7be`）；下一刀进行中 = M2 步 3（W4 `content_stale`，PR #48）。M3/M4 各自另有被接受的技术方案。
 
 标识和本机路径：[HANDOFF-mew.md](HANDOFF-mew.md)。书稿不入库。
 
@@ -80,7 +81,7 @@ tech-m2 **已接受**。M2 步 1（W5 只读）**已在 `main`**（#44 / `8f7bc7
 | [V1.0 PRD](prd-v1.md) | 产品。Owner 已接受这轮文档 |
 | [M0 技术方案](tech-m0.md) | 只读工作台。步 1–4 已进 `main`；§6–7 代码验收 **PASS**（`80f4107`） |
 | [M1 技术方案](tech-m1.md) | 人确认入典 + 规则 `check`。**已接受（Mew 拍板）**；步 1–5 已合入；§6–7 代码验收 **PASS**（`69d7ece`） |
-| [M2 技术方案](tech-m2.md) | 硬事实标脏 + 承诺债务 + 抽取提案。**已接受**（2026-11-04；B1–B6 原样）；步 1–2 已合入；下一刀 = 步 3（仅授权后） |
+| [M2 技术方案](tech-m2.md) | 硬事实标脏 + 承诺债务 + 抽取提案。**已接受**（2026-11-04；B1–B6 原样）；步 1–2 已合入；步 3 进行中（#48） |
 | [ADR-0001](adr/0001-plan-first-facts.md) | 事实由计划和人写入 |
 | [HANDOFF](HANDOFF-mew.md) | 当天的下一步 |
 | [INDEX](INDEX.md) | 文档地图 |
@@ -89,6 +90,6 @@ tech-m2 **已接受**。M2 步 1（W5 只读）**已在 `main`**（#44 / `8f7bc7
 
 ## 维护者下一步
 
-1. **等 owner/parent 授权后再开 M2 步 3**（`--hard` / `content_stale`）。当前无 DOING 编码任务；不要自建步 3 任务。
-2. 不要做未授权的步 3+ / variant / continue；不要改结算权威；不要合成大 PR。
+1. **M2 步 3 进行中**（任务 214 + PR #48）：等 Mew COMMENT 后再合并。不要自合。
+2. 不要做未授权的步 4+ / variant / continue；不要改结算权威；不要合成大 PR。
 3. 不加题材检查器、不跑无人值守长篇、不升包版本、不声称 V1.0 完成。

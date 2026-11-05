@@ -959,6 +959,26 @@ async def _migrate_foreshadowings_resolved_trace(conn: aiosqlite.Connection) -> 
             )
 
 
+
+async def _migrate_chapter_heads_content_stale(conn: aiosqlite.Connection) -> None:
+    """M2 step 3 / W4: chapter_heads.content_stale (+ optional stale_marked_at).
+
+    Narrow additive migration only. Does not rewrite ChapterHead.status enum,
+    does not add hardness, and does not touch chapter_versions.content.
+    """
+    cursor = await conn.execute("PRAGMA table_info(chapter_heads)")
+    cols = {row[1] for row in await cursor.fetchall()}
+    if "content_stale" not in cols:
+        await conn.execute(
+            "ALTER TABLE chapter_heads ADD COLUMN content_stale "
+            "INTEGER NOT NULL DEFAULT 0"
+        )
+    if "stale_marked_at" not in cols:
+        await conn.execute(
+            "ALTER TABLE chapter_heads ADD COLUMN stale_marked_at TEXT"
+        )
+
+
 async def init_schema(db_path: str | Path | None = None) -> None:
     """读取 schema.sql 并执行，幂等（所有 CREATE 带 IF NOT EXISTS）.
 
@@ -1569,4 +1589,8 @@ _MIGRATIONS: list[tuple[str, Callable[[aiosqlite.Connection], Awaitable[None]]]]
     ("_migrate_plan_fact_cards", _migrate_plan_fact_cards),
     ("_migrate_plan_fact_check_fields", _migrate_plan_fact_check_fields),
     ("_migrate_plan_approval_rejected", _migrate_plan_approval_rejected),
+    (
+        "_migrate_chapter_heads_content_stale",
+        _migrate_chapter_heads_content_stale,
+    ),
 ]

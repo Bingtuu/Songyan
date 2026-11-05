@@ -1,14 +1,15 @@
-"""M1 steps 2–3 + M2 step 2: ``canon edit`` / ``confirm`` / ``dismiss`` (+ promise settle)."""
+"""M1 steps 2–3 + M2 steps 2–3: canon write + promise settle + hard/stale."""
 
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Coroutine
+from collections.abc import Coroutine, Iterable
 from typing import Any
 
 import click
 
 from songyan.cli.commands.workbench import _ensure_project_readable
+from songyan.db.connection import get_db
 from songyan.db.plan_fact_repo import PlanFactError, PlanFactRepository
 from songyan.db.repository import ChapterHeadRepository
 from songyan.db.settlement_repo import ForeshadowingRepository
@@ -21,6 +22,51 @@ _ACCEPT_HINT = (
 )
 _SETTLED = "已销账"
 _OPEN_PROMISE_STATUSES = frozenset({"planted", "due", "overdue"})
+
+
+class UncomputableStaleRangeError(click.ClickException):
+    """Wanted stale mark but chapter range cannot be computed — exit 2."""
+
+    exit_code = 2
+
+
+def compute_stale_chapter_set(
+    *,
+    valid_from_ch: int | None = None,
+    valid_to_ch: int | None = None,
+    evidence_chapters: Iterable[int] = (),
+    explicit_from_ch: int | None = None,
+    explicit_to_ch: int | None = None,
+) -> set[int] | None:
+    """Closed-interval scope for W4 stale marks (tech-m2 §3.1 / B1 / §4.2).
+
+    Returns a chapter set, or ``None`` when uncomputable. Only closed
+    intervals count (explicit ``from``+``to``, else ``valid_from``+
+    ``valid_to``). Evidence chapter nums are unioned when present. A
+    one-sided window does not guess an unbounded set. Both ends empty
+    and no evidence → ``None``.
+    """
+    chapters: set[int] = set()
+
+    if explicit_from_ch is not None and explicit_to_ch is not None:
+        if explicit_from_ch < 1 or explicit_to_ch < 1 or explicit_to_ch < explicit_from_ch:
+            return None
+        chapters.update(range(explicit_from_ch, explicit_to_ch + 1))
+    elif valid_from_ch is not None and valid_to_ch is not None:
+        if valid_from_ch < 1 or valid_to_ch < 1 or valid_to_ch < valid_from_ch:
+            return None
+        chapters.update(range(valid_from_ch, valid_to_ch + 1))
+
+    for ch in evidence_chapters:
+        n = int(ch)
+        if n >= 1:
+            chapters.add(n)
+
+    if not chapters:
+        return None
+    return chapters
+
+
 
 
 async def _edit_entity(
@@ -108,24 +154,90 @@ async def _load_attribute_for_project(
     return row
 
 
-async def _confirm_entity(*, project_id: str, entity_id: str) -> str:
+async def _confirm_entity(
+    *,
+    project_id: str,
+    entity_id: str,
+    hard: bool = False,
+    mark_stale: bool = False,
+    from_ch: int | None = None,
+    to_ch: int | None = None,
+) -> str:
     row = await _load_entity_for_project(project_id, entity_id)
+    want_stale = hard or mark_stale
+    chapters: set[int] | None = None
+    if want_stale:
+        chapters = compute_stale_chapter_set(
+            explicit_from_ch=from_ch,
+            explicit_to_ch=to_ch,
+        )
+        if chapters is None:
+            raise UncomputableStaleRangeError(
+                "要标脏但范围不可算：entity 无 valid 窗口时 --hard / --mark-stale "
+                "须同时提供 --from-ch 与 --to-ch（tech-m2 §4.2）"
+            )
+
     updated = row.model_copy(update={"approval_status": "approved"})
-    await PlanFactRepository().write_entity(updated)
-    return f"{_CONFIRMED} entity {updated.entity_id}（approval_status=approved）"
+    async with get_db() as conn:
+        await PlanFactRepository().write_entity(updated, conn=conn)
+        if want_stale and chapters is not None:
+            await ChapterHeadRepository().mark_content_stale(
+                project_id, sorted(chapters), conn=conn
+            )
+        await conn.commit()
+
+    msg = f"{_CONFIRMED} entity {updated.entity_id}（approval_status=approved）"
+    if want_stale and chapters is not None:
+        span = ",".join(str(c) for c in sorted(chapters))
+        msg += f"；已标脏章 {span}"
+    return msg
 
 
-async def _confirm_attribute(*, project_id: str, attribute_id: str) -> str:
+async def _confirm_attribute(
+    *,
+    project_id: str,
+    attribute_id: str,
+    hard: bool = False,
+    mark_stale: bool = False,
+    from_ch: int | None = None,
+    to_ch: int | None = None,
+) -> str:
     row = await _load_attribute_for_project(project_id, attribute_id)
+    want_stale = hard or mark_stale
+    chapters: set[int] | None = None
+    if want_stale:
+        chapters = compute_stale_chapter_set(
+            valid_from_ch=row.valid_from_ch,
+            valid_to_ch=row.valid_to_ch,
+            explicit_from_ch=from_ch,
+            explicit_to_ch=to_ch,
+        )
+        if chapters is None:
+            raise UncomputableStaleRangeError(
+                "要标脏但范围不可算：两端 valid 皆空且无证据章号时不猜成脏；"
+                "整命令失败（不入典也不标脏）（tech-m2 §4.2）"
+            )
+
     updated = row.model_copy(update={"approval_status": "approved"})
     try:
-        await PlanFactRepository().write_attribute(updated)
+        async with get_db() as conn:
+            await PlanFactRepository().write_attribute(updated, conn=conn)
+            if want_stale and chapters is not None:
+                await ChapterHeadRepository().mark_content_stale(
+                    project_id, sorted(chapters), conn=conn
+                )
+            await conn.commit()
     except PlanFactError as exc:
         raise click.ClickException(str(exc)) from exc
-    return (
+
+    msg = (
         f"{_CONFIRMED} attribute {updated.attribute_id} "
         f"（approval_status=approved, source={updated.source}）"
     )
+    if want_stale and chapters is not None:
+        span = ",".join(str(c) for c in sorted(chapters))
+        msg += f"；已标脏章 {span}"
+    return msg
 
 
 async def _dismiss_entity(*, project_id: str, entity_id: str) -> str:
@@ -308,18 +420,70 @@ def canon_confirm_group() -> None:
 @canon_confirm_group.command(name="entity")
 @click.option("--project-id", required=True, help="项目 ID")
 @click.option("--entity-id", required=True, help="实体稳定 id")
-def confirm_entity(project_id: str, entity_id: str) -> None:
-    """将 entity 设为 approved（入典）。"""
-    click.echo(_run(_confirm_entity(project_id=project_id, entity_id=entity_id)))
+@click.option("--hard", is_flag=True, default=False, help="硬变更：入典并按范围标脏")
+@click.option(
+    "--mark-stale",
+    is_flag=True,
+    default=False,
+    help="显式标脏（软注记也可用；范围算法同 --hard）",
+)
+@click.option("--from-ch", type=int, default=None, help="显式标脏起始章（含）")
+@click.option("--to-ch", type=int, default=None, help="显式标脏结束章（含）")
+def confirm_entity(
+    project_id: str,
+    entity_id: str,
+    hard: bool,
+    mark_stale: bool,
+    from_ch: int | None,
+    to_ch: int | None,
+) -> None:
+    """将 entity 设为 approved（入典）；可选 --hard / --mark-stale 标脏。"""
+    click.echo(
+        _run(
+            _confirm_entity(
+                project_id=project_id,
+                entity_id=entity_id,
+                hard=hard,
+                mark_stale=mark_stale,
+                from_ch=from_ch,
+                to_ch=to_ch,
+            )
+        )
+    )
 
 
 @canon_confirm_group.command(name="attribute")
 @click.option("--project-id", required=True, help="项目 ID")
 @click.option("--attribute-id", required=True, help="属性稳定 id")
-def confirm_attribute(project_id: str, attribute_id: str) -> None:
-    """将 attribute 设为 approved（入典）。"""
+@click.option("--hard", is_flag=True, default=False, help="硬变更：入典并按范围标脏")
+@click.option(
+    "--mark-stale",
+    is_flag=True,
+    default=False,
+    help="显式标脏（软注记也可用；范围算法同 --hard）",
+)
+@click.option("--from-ch", type=int, default=None, help="显式标脏起始章（含；覆盖 valid）")
+@click.option("--to-ch", type=int, default=None, help="显式标脏结束章（含；覆盖 valid）")
+def confirm_attribute(
+    project_id: str,
+    attribute_id: str,
+    hard: bool,
+    mark_stale: bool,
+    from_ch: int | None,
+    to_ch: int | None,
+) -> None:
+    """将 attribute 设为 approved（入典）；可选 --hard / --mark-stale 标脏。"""
     click.echo(
-        _run(_confirm_attribute(project_id=project_id, attribute_id=attribute_id))
+        _run(
+            _confirm_attribute(
+                project_id=project_id,
+                attribute_id=attribute_id,
+                hard=hard,
+                mark_stale=mark_stale,
+                from_ch=from_ch,
+                to_ch=to_ch,
+            )
+        )
     )
 
 
