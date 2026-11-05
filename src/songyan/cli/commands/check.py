@@ -1,4 +1,4 @@
-"""M1 step 4: author-facing ``songyan check`` (W6) — read-only plan fact gate."""
+"""M1 step 4 / M2 step 4: author-facing ``songyan check`` (W6) — read-only plan fact gate."""
 
 from __future__ import annotations
 
@@ -21,6 +21,7 @@ _PASS_LINE = "规则检查通过（只读，不写库、不入典）。"
 _FAIL_LINE = "规则检查未过门（有硬伤）。"
 _HINT = "若要入典，另走 canon confirm。"
 _HARD = "hard"
+_STALE_SECTION = "正文过期标记"
 
 
 class NoChapterError(click.ClickException):
@@ -53,7 +54,36 @@ async def _load_chapter_text(project_id: str, chapter: int) -> str:
     return version.content
 
 
-def _report_to_dict(report: PlanFactGateReport) -> dict[str, Any]:
+async def _list_content_stale_chapters(project_id: str) -> list[int]:
+    """Read-only: chapter numbers with content_stale=1, ascending."""
+    heads = await ChapterHeadRepository().list_by_project(project_id)
+    return sorted(
+        h.chapter_number for h in heads if int(getattr(h, "content_stale", 0) or 0) == 1
+    )
+
+
+def _format_chapter_ranges(chapters: list[int]) -> str:
+    """Collapse sorted ints into human ranges like ``2–4, 7``."""
+    if not chapters:
+        return "无"
+    ordered = sorted({int(n) for n in chapters})
+    ranges: list[str] = []
+    start = prev = ordered[0]
+    for n in ordered[1:]:
+        if n == prev + 1:
+            prev = n
+            continue
+        ranges.append(f"{start}–{prev}" if start != prev else str(start))
+        start = prev = n
+    ranges.append(f"{start}–{prev}" if start != prev else str(start))
+    return "、".join(ranges)
+
+
+def _report_to_dict(
+    report: PlanFactGateReport,
+    *,
+    content_stale_chapters: list[int],
+) -> dict[str, Any]:
     """Align JSON keys with gate return; attach display severity for hard fails."""
     payload = report.model_dump(mode="json")
     for row in payload.get("attribute_mismatches", []):
@@ -63,11 +93,17 @@ def _report_to_dict(report: PlanFactGateReport) -> dict[str, Any]:
     for row in payload.get("claim_verdicts", []):
         if row.get("status") != "supported":
             row["severity"] = _HARD
+    payload["content_stale_chapters"] = list(content_stale_chapters)
+    payload["chapter_content_stale"] = report.chapter in content_stale_chapters
     payload["hint"] = _HINT
     return payload
 
 
-def _render_markdown(report: PlanFactGateReport) -> str:
+def _render_markdown(
+    report: PlanFactGateReport,
+    *,
+    content_stale_chapters: list[int],
+) -> str:
     lines = [
         f"# 规则检查 · 第 {report.chapter} 章",
         "",
@@ -112,6 +148,21 @@ def _render_markdown(report: PlanFactGateReport) -> str:
                 f"（严重度：{_HARD}）"
             )
         lines.append("")
+
+    lines.append(f"## {_STALE_SECTION}")
+    if content_stale_chapters:
+        range_text = _format_chapter_ranges(content_stale_chapters)
+        lines.append(
+            f"受影响章：{range_text}（content_stale=1）"
+        )
+        if report.chapter in content_stale_chapters:
+            lines.append(f"当前第 {report.chapter} 章：过期")
+        else:
+            lines.append(f"当前第 {report.chapter} 章：未标过期")
+    else:
+        lines.append("无（当前项目无 content_stale 章）")
+    lines.append("")
+
     lines.append("## 提示")
     lines.append(_HINT)
     return "\n".join(lines)
@@ -122,17 +173,19 @@ async def _run_check(
     project_id: str,
     chapter: int,
     extracts: list[AttributeExtract],
-) -> PlanFactGateReport:
+) -> tuple[PlanFactGateReport, list[int]]:
     await _ensure_project_readable(project_id)
     if chapter < 1:
         raise click.ClickException("chapter 须为 >= 1 的整数")
     chapter_text = await _load_chapter_text(project_id, chapter)
-    return await run_plan_fact_gate(
+    report = await run_plan_fact_gate(
         project_id,
         chapter,
         chapter_text,
         extracts=extracts,
     )
+    stale_chapters = await _list_content_stale_chapters(project_id)
+    return report, stale_chapters
 
 
 def register_check_commands(cli: click.Group) -> None:
@@ -157,7 +210,7 @@ def register_check_commands(cli: click.Group) -> None:
         """对一章正文做只读规则检查（不写库、不入典）。"""
         try:
             extracts = _load_extracts(extracts_json)
-            report = asyncio.run(
+            report, stale_chapters = asyncio.run(
                 _run_check(
                     project_id=project_id,
                     chapter=chapter,
@@ -173,10 +226,20 @@ def register_check_commands(cli: click.Group) -> None:
 
         if json_output:
             click.echo(
-                json.dumps(_report_to_dict(report), ensure_ascii=False, indent=2)
+                json.dumps(
+                    _report_to_dict(
+                        report, content_stale_chapters=stale_chapters
+                    ),
+                    ensure_ascii=False,
+                    indent=2,
+                )
             )
         else:
-            click.echo(_render_markdown(report))
+            click.echo(
+                _render_markdown(
+                    report, content_stale_chapters=stale_chapters
+                )
+            )
 
         if not report.passed:
             raise click.exceptions.Exit(2)
