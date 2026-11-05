@@ -37,7 +37,7 @@ Songyan（松烟）是 **人主导的连载写作助手**，接在现有的事�
 
 冲突时，上面的条目压过下面的。产品边界以 PRD 为准；M0 的实现细节以 `tech-m0.md` 为准；M1 的实现细节以**已接受的** `tech-m1.md` 为准；M2 的实现细节以**已接受的** `tech-m2.md` 为准，且不得越出 PRD 对应里程碑。不要用归档路线图或 [docs/prd-v1-writing-assist.md](docs/prd-v1-writing-assist.md) 的指针页推翻 PRD。
 
-**开工门（M2 已开）：** `docs/tech-m2.md` **已接受**（2026-11-04；t93s804；B1–B6 原样）。步 1 已合入；下一刀为 M2 步 2（人确认销账），**仅 owner/parent 授权后**：先建 `tasks/21x`，再改 `src/` / `tests/`；TDD；开 PR 后 Mew COMMENT 再合并。M3 及以后各自另有被接受的技术方案。
+**开工门（M2 已开）：** `docs/tech-m2.md` **已接受**（2026-11-04；t93s804；B1–B6 原样）。步 1–2 已合入；下一刀为 M2 步 3（`--hard` / `content_stale`），**仅 owner/parent 授权后**：先建 `tasks/21x`，再改 `src/` / `tests/`；TDD；开 PR 后 Mew COMMENT 再合并。M3 及以后各自另有被接受的技术方案。
 
 ## 默认不要读
 
@@ -54,7 +54,7 @@ Songyan（松烟）是 **人主导的连载写作助手**，接在现有的事�
 - 不要把 extract-then-patch，或 SettlementExtractor 的自动写入，做成助手主路径。
 - 不要为了追召回去加题材专用检查器。窄检查保持薄封装。
 - 不要把质量门通过写成「可发表」或「书写得好」。
-- tech-m2 **已接受**：只按已接受 tech-m2 的**已授权**当前步改 `src/` / `tests/`；不做未授权的步 2+。抽卡 / 续写仍属更后里程碑。M1 约束仍有效（五表 `rejected`；无持久第四态 `accepted`）。
+- tech-m2 **已接受**：只按已接受 tech-m2 的**已授权**当前步改 `src/` / `tests/`；不做未授权的步 3+。抽卡 / 续写仍属更后里程碑。M1 约束仍有效（五表 `rejected`；无持久第四态 `accepted`）。
 - 不要提交 `.env`、密钥、书稿、本地数据库、未脱敏日志。
 
 ## 运行时不变量
@@ -79,4 +79,4 @@ Songyan（松烟）是 **人主导的连载写作助手**，接在现有的事�
 
 ## 命令表面
 
-现网能用的包括 `doctor`、`create-project`、`run`、`report`、`export`、`import`、`bundle-run`，以及 M0 的 `canon show` 与 `today`，以及 M1 的 `canon edit` / `confirm` / `dismiss`（及非持久 `accept`；entity/attribute）与规则 `check`，以及 M2 步 1 的 `today` 承诺计数与 `canon show --kind promise`（只读，不是 Canon）。`variant`、`chapter continue`、`review` 与 M2 步 2 销账仍是更后小步。完整列表以 PRD 第 9 节为准。
+现网能用的包括 `doctor`、`create-project`、`run`、`report`、`export`、`import`、`bundle-run`，以及 M0 的 `canon show` 与 `today`，以及 M1 的 `canon edit` / `confirm` / `dismiss`（及非持久 `accept`；entity/attribute）与规则 `check`，以及 M2 步 1 的 `today` 承诺计数与 `canon show --kind promise`（只读，不是 Canon），以及 M2 步 2 的 `canon confirm promise` 人销账。`variant`、`chapter continue`、`review` 与 M2 步 3+（`--hard` / `content_stale` / extract）仍是更后小步。完整列表以 PRD 第 9 节为准。
