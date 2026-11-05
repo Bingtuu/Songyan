@@ -2,7 +2,7 @@
 
 | 项 | 内容 |
 |---|---|
-| 状态 | DOING |
+| 状态 | DONE |
 | 关联 | PRD §6.5 / W4；tech-m2 §5 步 3 / B1–B2 / §3.1 / §4.2 |
 | 预估 | 一个切片 |
 
@@ -27,4 +27,4 @@ M2 步 3：窄迁移 `chapter_heads.content_stale`；`canon confirm attribute|en
 
 ## 完成总结（DONE 时填写）
 
-（PR 合入后由文档对齐 PR 填写）
+PR [#48](https://github.com/Bingtuu/Songyan/pull/48) squash 进 `main` 为 `2ac1093`。窄迁移 `chapter_heads.content_stale`；`canon confirm attribute|entity` 支持 `--hard` / `--mark-stale`；不可算范围 + 旗标整命令失败 exit 2。未做步 4（`check` 报告 stale）/ extract source。下一刀（仅 owner/parent 授权后）：M2 步 4。
