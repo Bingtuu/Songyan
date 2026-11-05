@@ -716,6 +716,24 @@ class ContextSnapshotRepository:
 class ChapterHeadRepository:
     """Repository for chapter heads."""
 
+    @staticmethod
+    def _from_row(row: Row) -> ChapterHead:
+        keys = row.keys()
+        content_stale = int(row["content_stale"]) if "content_stale" in keys else 0
+        stale_marked_at = (
+            row["stale_marked_at"] if "stale_marked_at" in keys else None
+        )
+        return ChapterHead(
+            project_id=row["project_id"],
+            chapter_number=row["chapter_number"],
+            current_version_id=row["current_version_id"],
+            accepted_version_id=row["accepted_version_id"],
+            status=row["status"],
+            content_stale=content_stale,
+            stale_marked_at=stale_marked_at,
+            updated_at=row["updated_at"],
+        )
+
     async def get(self, project_id: str, chapter_number: int) -> ChapterHead | None:
         async with get_db() as conn:
             conn.row_factory = Row
@@ -726,14 +744,7 @@ class ChapterHeadRepository:
             row = await cursor.fetchone()
         if row is None:
             return None
-        return ChapterHead(
-            project_id=row["project_id"],
-            chapter_number=row["chapter_number"],
-            current_version_id=row["current_version_id"],
-            accepted_version_id=row["accepted_version_id"],
-            status=row["status"],
-            updated_at=row["updated_at"],
-        )
+        return self._from_row(row)
 
     async def list_by_project(self, project_id: str) -> list[ChapterHead]:
         async with get_db() as conn:
@@ -743,17 +754,7 @@ class ChapterHeadRepository:
                 (project_id,),
             )
             rows = await cursor.fetchall()
-        return [
-            ChapterHead(
-                project_id=row["project_id"],
-                chapter_number=row["chapter_number"],
-                current_version_id=row["current_version_id"],
-                accepted_version_id=row["accepted_version_id"],
-                status=row["status"],
-                updated_at=row["updated_at"],
-            )
-            for row in rows
-        ]
+        return [self._from_row(row) for row in rows]
 
     async def update(
         self,
@@ -794,6 +795,54 @@ class ChapterHeadRepository:
             project_id=head.project_id,
             chapter_number=head.chapter_number,
         )
+
+    async def mark_content_stale(
+        self,
+        project_id: str,
+        chapter_numbers: list[int],
+        *,
+        conn: aiosqlite.Connection | None = None,
+        marked_at: str | None = None,
+    ) -> int:
+        """Set content_stale=1 on existing heads in ``chapter_numbers``.
+
+        Does not create missing heads and never touches chapter_versions.
+        Returns the number of rows updated.
+        """
+        chapters = sorted({int(n) for n in chapter_numbers if int(n) >= 1})
+        if not chapters:
+            return 0
+        stamp = marked_at or datetime.now().isoformat(timespec="seconds")
+        placeholders = ",".join("?" for _ in chapters)
+
+        async def _do(c: aiosqlite.Connection) -> int:
+            cursor = await c.execute(
+                f"""UPDATE chapter_heads
+                   SET content_stale = 1,
+                       stale_marked_at = ?,
+                       updated_at = ?
+                 WHERE project_id = ?
+                   AND chapter_number IN ({placeholders})""",
+                (stamp, stamp, project_id, *chapters),
+            )
+            return int(cursor.rowcount)
+
+        if conn is None:
+            async with get_db() as c:
+                updated = await _do(c)
+                await c.commit()
+        else:
+            updated = await _do(conn)
+        logger.info(
+            "repository.write",
+            table="chapter_heads",
+            operation="mark_content_stale",
+            project_id=project_id,
+            chapters=chapters,
+            updated=updated,
+        )
+        return updated
+
 
 
 def _character_from_row(row: Row) -> Character:

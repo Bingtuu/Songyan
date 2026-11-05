@@ -58,4 +58,6 @@ class ChapterHead(BaseModel):
     current_version_id: str | None = None
     accepted_version_id: str | None = None
     status: str = "draft"  # draft | under_review | accepted
+    content_stale: int = 0  # M2 W4: 1 = prose stale vs hard canon
+    stale_marked_at: str | None = None
     updated_at: datetime = Field(default_factory=datetime.now)

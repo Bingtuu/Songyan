@@ -236,6 +236,8 @@ CREATE TABLE IF NOT EXISTS chapter_heads (
     current_version_id  TEXT REFERENCES chapter_versions(version_id) ON DELETE SET NULL,
     accepted_version_id TEXT REFERENCES chapter_versions(version_id) ON DELETE SET NULL,
     status              TEXT DEFAULT 'draft',    -- draft | under_review | accepted
+    content_stale       INTEGER NOT NULL DEFAULT 0,  -- M2 W4: 1=正文相对硬典过期
+    stale_marked_at     TEXT,                       -- optional audit timestamp
     updated_at          TEXT DEFAULT (datetime('now')),
 
     PRIMARY KEY(project_id, chapter_number)
