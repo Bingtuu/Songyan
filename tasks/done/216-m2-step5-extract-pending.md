@@ -2,7 +2,7 @@
 
 | 项 | 内容 |
 |---|---|
-| 状态 | DOING |
+| 状态 | DONE |
 | 关联 | PRD §7.3 / 导入 M2；tech-m2 §5 步 5 / B4–B6 / §3.1 item 6–7 / §4.4；S8 |
 | 预估 | 一个切片 |
 
@@ -28,4 +28,4 @@ M2 步 5：`plan_attributes.source` CHECK 扩 `'extract'`；SettlementExtractor 
 
 ## 完成总结（DONE 时填写）
 
-（开 PR 后填）
+PR [#52](https://github.com/Bingtuu/Songyan/pull/52) squash 进 `main` 为 `2fa8209`（CI 修复 head 曾为 `8004edb`）。抽取 / import 经 `apply_settlement` 入队 `plan_*` pending（`source=extract`）；confirm 前不进 canon / 圣经（S8）；结算表保留 untrusted 对照。未做步 6 / variant / continue；包仍 `0.5.0`。下一刀：M2 步 6（闭环文案与文档同步）。

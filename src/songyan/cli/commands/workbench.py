@@ -5,6 +5,7 @@ storyline, and counts; missing DB / missing project exit 1.
 M1 step 5 updates ``today`` fixed ``next`` (confirm available via canon confirm).
 M1 write commands (``canon edit`` / confirm / dismiss) register beside this group.
 M2 step 1: ``today`` promise counts + ``canon show --kind promise`` (read-only).
+M2 step 6: ``today`` fixed ``next`` hints confirm/promise settle and hard confirm.
 """
 
 from __future__ import annotations
@@ -33,7 +34,7 @@ _CANON_HEAD = "# Canon（approved）"
 _PENDING_HEAD = "# Pending（不是 Canon）"
 _STORYLINE_HEAD = "# Storyline（规划骨架，不是已确认事实）"
 _PROMISE_HEAD = "# Promises（开放承诺，不是 Canon）"
-_NEXT = "可用 canon confirm 入典；生成不在本命令。"
+_NEXT = "可用 canon confirm 入典或销账承诺；硬确认可用 --hard/--mark-stale；生成不在本命令。"
 _KINDS = ("entity", "attribute", "event", "time_anchor", "clue")
 _OPEN_PROMISE_STATUSES = ("planted", "due", "overdue")
 
