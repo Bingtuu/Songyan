@@ -6,7 +6,7 @@ owner：Bingtuu。包 tip **v0.5**（`0.5.0`）。「V1.0」是产品代际名�
 
 ## 下一刀
 
-**本刀 = M2 步 5（extract→pending source=extract + S8；tech-m2 §5；[tasks/216-m2-step5-extract-pending.md](../tasks/216-m2-step5-extract-pending.md)）。** 步 4 已在 `main`（[#50](https://github.com/Bingtuu/Songyan/pull/50) → `5a6e923`）。开 PR 后 **Mew COMMENT** 再合并；勿自合、勿 APPROVE。不做步 6 / variant / continue；包仍 `0.5.0`。
+**本刀 = M2 步 6（闭环文案与文档同步；tech-m2 §5；[tasks/217-m2-step6-docs-copy.md](../tasks/217-m2-step6-docs-copy.md)）。** 步 5 已在 `main`（[#52](https://github.com/Bingtuu/Songyan/pull/52) → `2fa8209`）。开 PR 后 **Mew COMMENT** 再合并；勿自合、勿 APPROVE。合入后 tip 含步 1–6；**下一刀 = M2 代码验收（仅 owner/parent 授权后）**，本 PR 不建验收任务、不声称 PASS。不做 variant / continue；包仍 `0.5.0`。
 
 M0 步 1–4 已全部在 `main`：[#28](https://github.com/Bingtuu/Songyan/pull/28) → `1d8c0c0`；[#29](https://github.com/Bingtuu/Songyan/pull/29) → `8f03453`；[#30](https://github.com/Bingtuu/Songyan/pull/30) → `d5c2cc1`；[#31](https://github.com/Bingtuu/Songyan/pull/31) → `48fa354`。任务分别在 [tasks/done/200.md](../tasks/done/200.md)、[tasks/done/201.md](../tasks/done/201.md)、[tasks/done/202.md](../tasks/done/202.md)、[tasks/done/203.md](../tasks/done/203.md)。
 
@@ -22,7 +22,7 @@ M1 代码验收（步 1–5 + tech-m1 §6–7）在 `main` `69d7ece`：**PASS**�
 - 不重开 plan-first 阶段 C，不加题材专用检查器，不改 SettlementExtractor 的权威。
 - 不把 Ch1–10 写成文学验收。文学质量归人。
 - 正式 git tag 仍由维护者决定。
-- **tech-m2 已接受。** 本刀 = 步 5 extract→pending（已授权）；不做步 6、不加 variant / continue；结算表仍保留为 untrusted 对照，不升格 Canon。
+- **tech-m2 已接受。** 本刀 = 步 6 闭环文案与文档（已授权）；不做 M2 代码验收 / variant / continue；结算表仍保留为 untrusted 对照，不升格 Canon。
 - 不声称 V1.0 完成，不升包版本。
 
 ## 事实指针（短）
@@ -40,7 +40,8 @@ M1 代码验收（步 1–5 + tech-m1 §6–7）在 `main` `69d7ece`：**PASS**�
 | M2 步 2 | 已合入 `8afb7be`（#46）；[tasks/done/213-m2-step2-confirm-settle.md](../tasks/done/213-m2-step2-confirm-settle.md) |
 | M2 步 3 | 已合入 `2ac1093`（#48）；[tasks/done/214-m2-step3-content-stale-hard.md](../tasks/done/214-m2-step3-content-stale-hard.md) |
 | M2 步 4 | 已合入 `5a6e923`（#50）；[tasks/done/215-m2-step4-check-stale-report.md](../tasks/done/215-m2-step4-check-stale-report.md) |
-| 当前任务 | 无 DOING。下一刀 = M2 步 5（仅 owner/parent 授权后）；不建步 5 任务 |
+| M2 步 5 | 已合入 `2fa8209`（#52）；[tasks/done/216-m2-step5-extract-pending.md](../tasks/done/216-m2-step5-extract-pending.md) |
+| 当前任务 | DOING：`217-m2-step6-docs-copy.md`（本 PR）。合入后 tip 含步 1–6；下一刀 = M2 代码验收（仅授权后） |
 | 架构方向 | [adr/0001-plan-first-facts.md](adr/0001-plan-first-facts.md) |
 | 工程现状 | [STATUS.md](STATUS.md) |
 | 阶段 A–C | [ROADMAP-plan-first.md](ROADMAP-plan-first.md)（CLOSED 短指针；全文在 archive，日常不要加载） |
