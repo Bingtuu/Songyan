@@ -24,4 +24,4 @@ M2 步 6：更新 `today` 固定 `next`（提示 confirm/入典、承诺债、�
 
 ## 完成总结（DONE 时填写）
 
-（开 PR 后填）
+PR [#53](https://github.com/Bingtuu/Songyan/pull/53)（head `ad2c83d`；基 tip `2fa8209`）。`today` `_NEXT` 更新为提示 confirm/入典、承诺销账与 `--hard`/`--mark-stale`；文档对齐步 5 已合入并指向步 6。归档 216。未 merge / 未 APPROVE；包仍 `0.5.0`；未开 M2 代码验收 / variant / continue。合入后 tip 含步 1–6；下一刀 = M2 代码验收（仅 owner/parent 授权后）。
