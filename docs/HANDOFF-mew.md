@@ -2,11 +2,11 @@
 
 owner：Bingtuu。包 tip **v0.5**（`0.5.0`）。「V1.0」是产品代际名，不是包版本。本文件不打 tag。
 
-权威顺序见 [AGENTS.md](../AGENTS.md)：[PRD](prd-v1.md) → [M0 技术方案](tech-m0.md) → [M1 技术方案](tech-m1.md)（**已接受**；§6–7 **PASS**）→ [M2 技术方案](tech-m2.md)（**已接受**）→ ADR-0001 → STATUS（事实）→ 本文件（当天）→ `tasks/`（有任务文档之后）。
+权威顺序见 [AGENTS.md](../AGENTS.md)：[PRD](prd-v1.md) → [M0 技术方案](tech-m0.md) → [M1 技术方案](tech-m1.md)（**已接受**；§6–7 **PASS**）→ [M2 技术方案](tech-m2.md)（**已接受**；§6–7 **PASS** @ `f1c3093`）→ ADR-0001 → STATUS（事实）→ 本文件（当天）→ `tasks/`（有任务文档之后）。
 
 ## 下一刀
 
-**本刀 = M2 步 6（闭环文案与文档同步；tech-m2 §5；[tasks/217-m2-step6-docs-copy.md](../tasks/217-m2-step6-docs-copy.md)）。** 步 5 已在 `main`（[#52](https://github.com/Bingtuu/Songyan/pull/52) → `2fa8209`）。开 PR 后 **Mew COMMENT** 再合并；勿自合、勿 APPROVE。合入后 tip 含步 1–6；**下一刀 = M2 代码验收（仅 owner/parent 授权后）**，本 PR 不建验收任务、不声称 PASS。不做 variant / continue；包仍 `0.5.0`。
+**M2 代码验收已 PASS**（证据 tip `main` `f1c3093`；归档 [tasks/done/218-m2-acceptance.md](../tasks/done/218-m2-acceptance.md)；本 PR 仅文档）。步 1–6 已在 `main`（#44→`8f7bc77` … #53→`f1c3093`）。**下一闸门 = owner 决定是否起草/接受 tech-m3（或下一工作）**；未书面接受并授权前不开 M3 / variant / continue。包仍 `0.5.0`。开本 PR 后 **Mew COMMENT** 再合并；勿自合、勿 APPROVE。
 
 M0 步 1–4 已全部在 `main`：[#28](https://github.com/Bingtuu/Songyan/pull/28) → `1d8c0c0`；[#29](https://github.com/Bingtuu/Songyan/pull/29) → `8f03453`；[#30](https://github.com/Bingtuu/Songyan/pull/30) → `d5c2cc1`；[#31](https://github.com/Bingtuu/Songyan/pull/31) → `48fa354`。任务分别在 [tasks/done/200.md](../tasks/done/200.md)、[tasks/done/201.md](../tasks/done/201.md)、[tasks/done/202.md](../tasks/done/202.md)、[tasks/done/203.md](../tasks/done/203.md)。
 
@@ -22,7 +22,7 @@ M1 代码验收（步 1–5 + tech-m1 §6–7）在 `main` `69d7ece`：**PASS**�
 - 不重开 plan-first 阶段 C，不加题材专用检查器，不改 SettlementExtractor 的权威。
 - 不把 Ch1–10 写成文学验收。文学质量归人。
 - 正式 git tag 仍由维护者决定。
-- **tech-m2 已接受。** 本刀 = 步 6 闭环文案与文档（已授权）；不做 M2 代码验收 / variant / continue；结算表仍保留为 untrusted 对照，不升格 Canon。
+- **tech-m2 已接受；§6–7 代码验收 PASS（`f1c3093`）。** 不做 variant / continue / M3（仅授权后）；结算表仍保留为 untrusted 对照，不升格 Canon。
 - 不声称 V1.0 完成，不升包版本。
 
 ## 事实指针（短）
@@ -41,7 +41,9 @@ M1 代码验收（步 1–5 + tech-m1 §6–7）在 `main` `69d7ece`：**PASS**�
 | M2 步 3 | 已合入 `2ac1093`（#48）；[tasks/done/214-m2-step3-content-stale-hard.md](../tasks/done/214-m2-step3-content-stale-hard.md) |
 | M2 步 4 | 已合入 `5a6e923`（#50）；[tasks/done/215-m2-step4-check-stale-report.md](../tasks/done/215-m2-step4-check-stale-report.md) |
 | M2 步 5 | 已合入 `2fa8209`（#52）；[tasks/done/216-m2-step5-extract-pending.md](../tasks/done/216-m2-step5-extract-pending.md) |
-| 当前任务 | DOING：`217-m2-step6-docs-copy.md`（本 PR）。合入后 tip 含步 1–6；下一刀 = M2 代码验收（仅授权后） |
+| M2 步 6 | 已合入 `f1c3093`（#53）；[tasks/done/217-m2-step6-docs-copy.md](../tasks/done/217-m2-step6-docs-copy.md) |
+| M2 验收 | **PASS** @ 证据 tip `f1c3093`。[tasks/done/218-m2-acceptance.md](../tasks/done/218-m2-acceptance.md) |
+| 当前任务 | 无 DOING。下一闸门 = owner 决定是否起草/接受 tech-m3（或下一工作） |
 | 架构方向 | [adr/0001-plan-first-facts.md](adr/0001-plan-first-facts.md) |
 | 工程现状 | [STATUS.md](STATUS.md) |
 | 阶段 A–C | [ROADMAP-plan-first.md](ROADMAP-plan-first.md)（CLOSED 短指针；全文在 archive，日常不要加载） |
