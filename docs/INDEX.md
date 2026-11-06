@@ -10,10 +10,10 @@
 | [V1.0 PRD](prd-v1.md) | 产品权威。两条主路径、W0–W6、里程碑 M0–M4。Owner 已接受这轮文档 |
 | [M0 技术方案](tech-m0.md) | 只读工作台。步 1–4 已进 `main`；§6–7 代码验收 PASS（`80f4107`） |
 | [M1 技术方案](tech-m1.md) | 人确认入典 + 规则 `check`。**已接受**（Mew 拍板）；步 1–5 已进 `main`；§6–7 代码验收 PASS（`69d7ece`） |
-| [M2 技术方案](tech-m2.md) | 硬事实标脏 + 承诺债务 + 抽取提案。**已接受**（2026-11-04；B1–B6 原样）；步 1–5 已在 `main`；本 PR = 步 6；合入后 tip 含步 1–6，下一刀 = M2 代码验收（仅授权后） |
+| [M2 技术方案](tech-m2.md) | 硬事实标脏 + 承诺债务 + 抽取提案。**已接受**（2026-11-04；B1–B6 原样）；步 1–6 已在 `main`；§6–7 代码验收 PASS（证据 tip `f1c3093`） |
 | [ADR-0001](adr/0001-plan-first-facts.md) | 事实写入方向。阶段 A–C 已关闭，不重开召回 KPI |
-| [STATUS](STATUS.md) | 工程事实：包仍是 0.5.0；M0 / M1 代码验收 PASS；tech-m2 已接受；步 1–5 已合入；本 PR = 步 6；合入后 tip 含步 1–6，下一刀 = M2 代码验收（仅授权后） |
-| [HANDOFF](HANDOFF-mew.md) | 当天下一步：本刀 = M2 步 6（闭环文案与文档）；合入后 tip 含步 1–6，下一刀 = M2 代码验收（仅授权后） |
+| [STATUS](STATUS.md) | 工程事实：包仍是 0.5.0；M0 / M1 / M2 代码验收 PASS；tech-m2 已接受；步 1–6 已合入；下一闸门 = owner 决定 tech-m3 / 下一工作 |
+| [HANDOFF](HANDOFF-mew.md) | 当天下一步：M2 验收 PASS；下一闸门 = owner 决定是否起草/接受 tech-m3（或下一工作） |
 | [Quickstart](quickstart.md) | 安装、配置、短窗口、导出 |
 | [Troubleshooting](troubleshooting.md) | 失败恢复 |
 | [Release Checklist](release-checklist.md) | 维护者发布门 |

@@ -29,7 +29,7 @@ Songyan（松烟）是 **人主导的连载写作助手**，接在现有的事�
 1. [docs/prd-v1.md](docs/prd-v1.md) — 产品。工作流 W0–W6、路径 P-draft / P-bench、里程碑 M0–M4 只在这里展开。Owner 已接受。
 2. [docs/tech-m0.md](docs/tech-m0.md) — 只规划 M0。步 1–4 已进 `main`；§6–7 代码验收 **PASS**（`80f4107`）。
 3. [docs/tech-m1.md](docs/tech-m1.md) — 只规划 M1（人确认入典 + 规则 `check`）。**已接受（Mew 拍板，2026-11-03 Asia/Shanghai）。** 步 1–5 已进 `main`；§6–7 代码验收 **PASS**（`69d7ece`）。不得越出 PRD 的 M1。
-4. [docs/tech-m2.md](docs/tech-m2.md) — 只规划 M2（硬事实标脏、承诺债务、抽取提案）。**已接受**（2026-11-04 Asia/Shanghai；owner widget t93s804；B1–B6 原样）。不得越出 PRD 的 M2。
+4. [docs/tech-m2.md](docs/tech-m2.md) — 只规划 M2（硬事实标脏、承诺债务、抽取提案）。**已接受**（2026-11-04 Asia/Shanghai；owner widget t93s804；B1–B6 原样）。步 1–6 已进 `main`；§6–7 代码验收 **PASS**（证据 tip `f1c3093`）。不得越出 PRD 的 M2。
 5. [docs/adr/0001-plan-first-facts.md](docs/adr/0001-plan-first-facts.md) — 事实写入方向。
 6. [docs/STATUS.md](docs/STATUS.md) — 工程事实（版本、闸门、已知限制）。
 7. [docs/HANDOFF-mew.md](docs/HANDOFF-mew.md) — 当天的下一步。
@@ -37,7 +37,7 @@ Songyan（松烟）是 **人主导的连载写作助手**，接在现有的事�
 
 冲突时，上面的条目压过下面的。产品边界以 PRD 为准；M0 的实现细节以 `tech-m0.md` 为准；M1 的实现细节以**已接受的** `tech-m1.md` 为准；M2 的实现细节以**已接受的** `tech-m2.md` 为准，且不得越出 PRD 对应里程碑。不要用归档路线图或 [docs/prd-v1-writing-assist.md](docs/prd-v1-writing-assist.md) 的指针页推翻 PRD。
 
-**开工门（M2 已开）：** `docs/tech-m2.md` **已接受**（2026-11-04；t93s804；B1–B6 原样）。步 1–5 已合入；本刀为 M2 步 6（闭环文案与文档同步）。合入后 tip 含步 1–6；**下一刀 = M2 代码验收，仅 owner/parent 授权后**：先建 `tasks/21x`，再验收；开 PR 后 Mew COMMENT 再合并。未授权则空闲。M3 及以后各自另有被接受的技术方案。
+**开工门（M2 已验收）：** `docs/tech-m2.md` **已接受**；步 1–6 已合入；§6–7 代码验收 **PASS**（证据 tip `f1c3093`）。**下一闸门 = owner 决定是否起草/接受 tech-m3（或下一工作）**。未书面接受对应技术方案并授权前，不开 M3 / variant / continue 编码。开 PR 后 Mew COMMENT 再合并。
 
 ## 默认不要读
 
@@ -54,7 +54,7 @@ Songyan（松烟）是 **人主导的连载写作助手**，接在现有的事�
 - 不要把 extract-then-patch，或 SettlementExtractor 的自动写入，做成助手主路径。
 - 不要为了追召回去加题材专用检查器。窄检查保持薄封装。
 - 不要把质量门通过写成「可发表」或「书写得好」。
-- tech-m2 **已接受**：只按已接受 tech-m2 的**已授权**当前步改 `src/` / `tests/`；不做未授权的验收 / M3。抽卡 / 续写仍属更后里程碑。M1 约束仍有效（五表 `rejected`；无持久第四态 `accepted`）。
+- tech-m2 **已接受且 §6–7 PASS**：不再扩 M2 编码范围。不做未授权的 M3 / variant / continue。抽卡 / 续写仍属更后里程碑。M1 约束仍有效（五表 `rejected`；无持久第四态 `accepted`）。
 - 不要提交 `.env`、密钥、书稿、本地数据库、未脱敏日志。
 
 ## 运行时不变量
@@ -79,4 +79,4 @@ Songyan（松烟）是 **人主导的连载写作助手**，接在现有的事�
 
 ## 命令表面
 
-现网能用的包括 `doctor`、`create-project`、`run`、`report`、`export`、`import`、`bundle-run`，以及 M0 的 `canon show` 与 `today`，以及 M1 的 `canon edit` / `confirm` / `dismiss`（及非持久 `accept`；entity/attribute）与规则 `check`，以及 M2 步 1 的 `today` 承诺计数与 `canon show --kind promise`（只读，不是 Canon），以及 M2 步 2 的 `canon confirm promise` 人销账，以及 M2 步 3 的 `canon confirm` `--hard` / `--mark-stale` 与 `chapter_heads.content_stale`，以及 M2 步 4 的 `check` 报告 `content_stale` / 受影响章范围，以及 M2 步 5 的抽取 / import → `plan_*` pending（`source=extract`；confirm 前不进 canon）。`variant`、`chapter continue`、`review` 与 M2 代码验收 / M3 仍是更后小步。完整列表以 PRD 第 9 节为准。
+现网能用的包括 `doctor`、`create-project`、`run`、`report`、`export`、`import`、`bundle-run`，以及 M0 的 `canon show` 与 `today`，以及 M1 的 `canon edit` / `confirm` / `dismiss`（及非持久 `accept`；entity/attribute）与规则 `check`，以及 M2 的 `today` 承诺计数、`canon show --kind promise`、`canon confirm promise`、`canon confirm` `--hard` / `--mark-stale`、`chapter_heads.content_stale`、`check` 报告 stale 范围、抽取 / import → `plan_*` pending（`source=extract`；confirm 前不进 canon）。`variant`、`chapter continue`、`review` 与 M3 仍是更后小步。完整列表以 PRD 第 9 节为准。

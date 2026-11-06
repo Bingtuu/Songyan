@@ -1,6 +1,6 @@
 # M2 技术方案：硬事实标脏、承诺债务与抽取提案
 
-- **状态：** 2026-11-04 Asia/Shanghai。只覆盖 [prd-v1.md](prd-v1.md) 的 **M2**（W4 改典涟漪、W5 承诺债务、SettlementExtractor / import 抽取进提案）。**已接受。** 接受注记见文末。包版本仍是 `0.5.0`。
+- **状态：** 2026-11-04 Asia/Shanghai。只覆盖 [prd-v1.md](prd-v1.md) 的 **M2**（W4 改典涟漪、W5 承诺债务、SettlementExtractor / import 抽取进提案）。**已接受。** 步 1–6 已进 `main`；§6–7 代码验收 **PASS**（`main` `f1c3093`，2026-11-06）。接受注记见文末。包版本仍是 `0.5.0`。
 - **本文不做的决定：** 不规划 M3–M4（`variant *`、`chapter continue` / `review`）。不要把本文扩成整代路线图。
 - **前置：** M1 步 1–5 与 tech-m1 §6–7 代码验收已在 `main` `69d7ece` **PASS**（验收文档 #42 @ `5a6e45b`）。包版本仍是 `0.5.0`。
 
