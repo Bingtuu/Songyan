@@ -38,6 +38,18 @@ class ChapterPlanBible(BaseModel):
     time_anchor_ids: list[str] = Field(default_factory=list)
 
 
+class ChapterPlanBibleCards(BaseModel):
+    """Bible-visible approved card objects (same selection as ChapterPlanBible)."""
+
+    project_id: str
+    chapter: int
+    entities: list[PlanEntity] = Field(default_factory=list)
+    attributes: list[PlanAttribute] = Field(default_factory=list)
+    events: list[PlanEvent] = Field(default_factory=list)
+    clues: list[PlanClue] = Field(default_factory=list)
+    time_anchors: list[PlanTimeAnchor] = Field(default_factory=list)
+
+
 def wrap_writing_prompt(prompt: str, bible_text: str) -> str:
     """Put the approved bible ahead of an existing writing or revision prompt.
 
@@ -133,7 +145,7 @@ async def load_chapter_plan_bible(project_id: str, chapter: int) -> ChapterPlanB
     )
 
 
-def _select_bible(
+def select_chapter_plan_bible_cards(
     *,
     project_id: str,
     chapter: int,
@@ -142,7 +154,8 @@ def _select_bible(
     events: list[PlanEvent],
     clues: list[PlanClue],
     time_anchors: list[PlanTimeAnchor],
-) -> ChapterPlanBible:
+) -> ChapterPlanBibleCards:
+    """Pick the same approved card objects ``load_chapter_plan_bible`` would show."""
     chapter_events = sorted(
         (row for row in events if row.ch == chapter),
         key=lambda row: row.event_id,
@@ -180,22 +193,52 @@ def _select_bible(
         (anchor_by_id[anchor_id] for anchor_id in anchor_ids if anchor_id in anchor_by_id),
         key=lambda row: row.anchor_id,
     )
-    text = _render(
+    return ChapterPlanBibleCards(
+        project_id=project_id,
+        chapter=chapter,
         entities=chosen_entities,
         attributes=chosen_attributes,
-        anchors=chosen_anchors,
         events=chapter_events,
         clues=chapter_clues,
+        time_anchors=chosen_anchors,
+    )
+
+
+def _select_bible(
+    *,
+    project_id: str,
+    chapter: int,
+    entities: list[PlanEntity],
+    attributes: list[PlanAttribute],
+    events: list[PlanEvent],
+    clues: list[PlanClue],
+    time_anchors: list[PlanTimeAnchor],
+) -> ChapterPlanBible:
+    cards = select_chapter_plan_bible_cards(
+        project_id=project_id,
+        chapter=chapter,
+        entities=entities,
+        attributes=attributes,
+        events=events,
+        clues=clues,
+        time_anchors=time_anchors,
+    )
+    text = _render(
+        entities=cards.entities,
+        attributes=cards.attributes,
+        anchors=cards.time_anchors,
+        events=cards.events,
+        clues=cards.clues,
     )
     return ChapterPlanBible(
         project_id=project_id,
         chapter=chapter,
         text=text,
-        entity_ids=[row.entity_id for row in chosen_entities],
-        attribute_ids=[row.attribute_id for row in chosen_attributes],
-        event_ids=[row.event_id for row in chapter_events],
-        clue_ids=[row.clue_id for row in chapter_clues],
-        time_anchor_ids=[row.anchor_id for row in chosen_anchors],
+        entity_ids=[row.entity_id for row in cards.entities],
+        attribute_ids=[row.attribute_id for row in cards.attributes],
+        event_ids=[row.event_id for row in cards.events],
+        clue_ids=[row.clue_id for row in cards.clues],
+        time_anchor_ids=[row.anchor_id for row in cards.time_anchors],
     )
 
 

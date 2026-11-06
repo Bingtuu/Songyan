@@ -166,6 +166,7 @@ from songyan.models.supervision import (
     SupervisionSpec,
     WordCountPolicy,
 )
+from songyan.models.variant import ChapterVariant
 
 __all__ = [
     # project
@@ -182,6 +183,7 @@ __all__ = [
     # chapter
     "ChapterGoal",
     "ChapterVersion",
+    "ChapterVariant",
     "ChapterHead",
     # genre
     "GenreProfile",

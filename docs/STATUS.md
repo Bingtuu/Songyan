@@ -31,10 +31,10 @@ Package tip remains **0.5.0**. V1.0 is the product-generation name.
 | M2 步 5 extract→pending | **已在 `main`。** [#52](https://github.com/Bingtuu/Songyan/pull/52) squash 为 `2fa8209`。任务归档在 [tasks/done/216-m2-step5-extract-pending.md](../tasks/done/216-m2-step5-extract-pending.md) |
 | M2 步 6 闭环文案与文档同步 | **已在 `main`。** [#53](https://github.com/Bingtuu/Songyan/pull/53) squash 为 `f1c3093`。任务归档在 [tasks/done/217-m2-step6-docs-copy.md](../tasks/done/217-m2-step6-docs-copy.md) |
 | M2 代码验收（步 1–6 + tech-m2 §6–7） | **PASS**（证据 tip `main` `f1c3093`）。证据见 [tasks/done/218-m2-acceptance.md](../tasks/done/218-m2-acceptance.md)。S3 产品周期数值不在代码验收内 |
-| M3 技术方案 [tech-m3.md](tech-m3.md) | **草稿，待 owner 书面接受**（绑定决策 B1–B7）。未接受前不开 M3 编码 |
+| M3 技术方案 [tech-m3.md](tech-m3.md) | **已接受**（2026-11-06 Asia/Shanghai；owner widget t104s937；B1–B7 原样）。下一刀 = M3 步 1 编码 |
 | 包版本 | 仍是 `0.5.0` |
 
-tech-m2 **已接受**。M2 步 1–6 **已在 `main`**（#44 / `8f7bc77`；#46 / `8afb7be`；#48 / `2ac1093`；#50 / `5a6e923`；#52 / `2fa8209`；#53 / `f1c3093`）。§6–7 代码验收 **PASS**（证据 tip `f1c3093`；见 [tasks/done/218-m2-acceptance.md](../tasks/done/218-m2-acceptance.md)）。[tech-m3.md](tech-m3.md) 为 **草稿，待 owner 书面接受**（B1–B7）。不要声称 V1.0 完成，不要升包版本（仍 `0.5.0`）。不要开 variant / continue / M3 编码（仅 owner 书面接受 tech-m3 并授权后）。
+tech-m2 **已接受**。M2 步 1–6 **已在 `main`**（#44 / `8f7bc77`；#46 / `8afb7be`；#48 / `2ac1093`；#50 / `5a6e923`；#52 / `2fa8209`；#53 / `f1c3093`）。§6–7 代码验收 **PASS**（证据 tip `f1c3093`；见 [tasks/done/218-m2-acceptance.md](../tasks/done/218-m2-acceptance.md)）。[tech-m3.md](tech-m3.md) **已接受**（2026-11-06；t104s937；B1–B7 原样）。**M3 步 1 编码进行中**（本 PR）。不要声称 V1.0 完成，不要升包版本（仍 `0.5.0`）。不要开 continue / review / 步 2+（仅步 1 合入且再授权后）。
 
 上一稿 PRD 的总体框架 owner 已经接受。现行文本是 `prd-v1.md`。旧全文在 [archive/prd-v1-writing-assist-2026-10-26.md](archive/prd-v1-writing-assist-2026-10-26.md)。
 
@@ -73,7 +73,7 @@ tech-m2 **已接受**。M2 步 1–6 **已在 `main`**（#44 / `8f7bc77`；#46 /
 - 《轨道蜃景》Ch1–10：`project_id=8e30dec7f2ec40c1a9ce54c783981f8c`，`run-33841231`。10/10 accepted；质量门、结算、摘要、导出通过；exit 0。**DG-1 失败**（平均 revision 1.7，十章都有 ContextEmergency，无 AutoHalt）。
 - 那次导出的人工阅读 **未通过**：时间线回滚、Hermes/赫耳墨斯、时间尺度、供氧 / EVA 复读、英文泄漏 `ninety-two 秒`。
 - 真实模型上「导入后再续写」还没有验收。
-- `variant`、`chapter continue` 都还没有。tech-m1 **已接受**；步 1–5 与 §6–7 代码验收已 **PASS**（`69d7ece`）。[tech-m2.md](tech-m2.md) **已接受**；步 1–6 已在 `main`；§6–7 代码验收 **PASS**（证据 tip `f1c3093`）。[tech-m3.md](tech-m3.md) **草稿，待 owner 书面接受**。M3/M4 各自另有被接受的技术方案并授权之后才开工。
+- `variant list`（空章返回空列表）随 M3 步 1 落地；`variant generate` / `pick` / `diff` / `abandon` 与 `chapter continue` 都还没有。tech-m1 **已接受**；步 1–5 与 §6–7 代码验收已 **PASS**（`69d7ece`）。[tech-m2.md](tech-m2.md) **已接受**；步 1–6 已在 `main`；§6–7 代码验收 **PASS**（证据 tip `f1c3093`）。[tech-m3.md](tech-m3.md) **已接受**（t104s937；B1–B7）；**步 1 进行中**。M4 另有被接受的技术方案并授权之后才开工。
 
 标识和本机路径：[HANDOFF-mew.md](HANDOFF-mew.md)。书稿不入库。
 
@@ -87,7 +87,7 @@ tech-m2 **已接受**。M2 步 1–6 **已在 `main`**（#44 / `8f7bc77`；#46 /
 | [M0 技术方案](tech-m0.md) | 只读工作台。步 1–4 已进 `main`；§6–7 代码验收 **PASS**（`80f4107`） |
 | [M1 技术方案](tech-m1.md) | 人确认入典 + 规则 `check`。**已接受（Mew 拍板）**；步 1–5 已合入；§6–7 代码验收 **PASS**（`69d7ece`） |
 | [M2 技术方案](tech-m2.md) | 硬事实标脏 + 承诺债务 + 抽取提案。**已接受**（2026-11-04；B1–B6 原样）；步 1–6 已合入；§6–7 代码验收 **PASS**（证据 tip `f1c3093`） |
-| [M3 技术方案](tech-m3.md) | 章内 Variant / 抽卡。**草稿，待 owner 书面接受**（B1–B7）；未接受前不开编码 |
+| [M3 技术方案](tech-m3.md) | 章内 Variant / 抽卡。**已接受**（2026-11-06；t104s937；B1–B7 原样）；步 1 编码进行中 |
 | [ADR-0001](adr/0001-plan-first-facts.md) | 事实由计划和人写入 |
 | [HANDOFF](HANDOFF-mew.md) | 当天的下一步 |
 | [INDEX](INDEX.md) | 文档地图 |
@@ -96,6 +96,6 @@ tech-m2 **已接受**。M2 步 1–6 **已在 `main`**（#44 / `8f7bc77`；#46 /
 
 ## 维护者下一步
 
-1. **M2 代码验收已 PASS**（证据 tip `f1c3093`）。[tech-m3.md](tech-m3.md) **草稿已开，待 owner 书面接受**（绑定决策 B1–B7）。**下一闸门 = owner 书面接受 tech-m3** 后再开 M3 步 1 编码；未接受并授权前，不开 M3 / variant / continue 编码。
-2. 不要改结算权威；不要合成大 PR。
+1. **tech-m3 已接受**（t104s937；B1–B7 原样）。**当前 = M3 步 1**（`chapter_variants` + fingerprint + 仓库 + 可选 `variant list`）。步 1 合入后，下一闸门 = owner/parent 授权再开步 2（`variant generate`）。
+2. 不要改结算权威；不要合成大 PR；不做步 2+ / continue / review。
 3. 不加题材检查器、不跑无人值守长篇、不升包版本、不声称 V1.0 完成。

@@ -1,6 +1,6 @@
 # M3 技术方案：章内 Variant（抽卡）
 
-- **状态：** 2026-11-06 Asia/Shanghai。只覆盖 [prd-v1.md](prd-v1.md) 的 **M3**（章内 Variant / 抽卡；默认 N=2；`pick` 不改 Canon）。**草稿，待 owner 书面接受。** 包版本仍是 `0.5.0`。
+- **状态：** 2026-11-06 Asia/Shanghai。只覆盖 [prd-v1.md](prd-v1.md) 的 **M3**（章内 Variant / 抽卡；默认 N=2；`pick` 不改 Canon）。**已接受**（2026-11-06 Asia/Shanghai；owner widget t104s937「接受 tech-m3，按 B1–B7 开 M3 编码」；B1–B7 原样）。包版本仍是 `0.5.0`。
 - **本文不做的决定：** 不规划 M4（`chapter continue` / `review`）的实现步骤。不要把本文扩成整代路线图。
 - **前置：** M2 步 1–6 与 tech-m2 §6–7 代码验收已在证据 tip `main` `f1c3093` **PASS**（验收文档 #54 @ `1fa7fb0`）。包版本仍是 `0.5.0`。
 
@@ -208,7 +208,7 @@ songyan variant abandon  --project-id TEXT --chapter INT --slot INT [--json]
 
 ## 5. 小步
 
-**本文尚未接受。** 接受并授权后，再按下列小步写 `tasks/22x` **编码**任务。每步一个可独立拒绝的 PR。不要合成一个大 PR。合并前 Mew COMMENT（不代 owner 点 APPROVE，除非另有授权）。
+**本文已接受。** 按下列小步写 `tasks/22x` **编码**任务。每步一个可独立拒绝的 PR。不要合成一个大 PR。合并前 Mew COMMENT（不代 owner 点 APPROVE，除非另有授权）。
 
 ### 步 1 — 表 + fingerprint + 仓库（无作者 generate 调用）
 
@@ -331,6 +331,6 @@ python -m pytest tests/cli/test_workbench_commands.py tests/cli/test_canon_write
 
 ## 接受注记
 
-**尚未接受。** 待 owner 书面接受本文（含 B1–B7，或书面点名修改项）后，再开 M3 步 1 编码任务。
+**已接受**（2026-11-06 Asia/Shanghai）。依据 owner widget **t104s937**：「接受 tech-m3，按 B1–B7 开 M3 编码」。**B1–B7 原样接受**，无点名修改项。
 
-本注记不授权在本文档 PR 内改 `src/` / `tests/` 行为；不授权合并后自动开工编码。接受并授权前：**无 M3 编码 DOING**；包仍 `0.5.0`。
+接受后下一刀 = **M3 步 1**（本编码切片：表 + fingerprint + 仓库；可选 `variant list`）。步 1 合入后，下一步 = **步 2**（仅 owner/parent 再授权后开）。包仍 `0.5.0`；不声称 V1.0 完成。
