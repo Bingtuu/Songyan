@@ -1992,6 +1992,24 @@ class TestValidateSettlement:
 # Apply Settlement Tests
 # ---------------------------------------------------------------------------
 class TestApplySettlement:
+    """Pure unit tests for settlement-table writes (mocked repos/conn).
+
+    M2 step 5 enqueue of plan_* pending is covered by
+    tests/cli/test_extract_pending_proposals.py against a real DB. These
+    tests pass AsyncMock conn, so enqueue must be stubbed here rather than
+    hitting PlanFactRepository / get_db (or weakening production S8).
+    """
+
+    @pytest.fixture(autouse=True)
+    def _stub_extract_enqueue(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        async def _noop(*_args: object, **_kwargs: object) -> list[str]:
+            return []
+
+        monkeypatch.setattr(
+            "songyan.agents.settlement_extractor._apply.enqueue_extract_proposals",
+            _noop,
+        )
+
     async def test_applies_character_updates(self) -> None:
         mock_char = AsyncMock()
         mock_char.add_state_snapshot.return_value = 1

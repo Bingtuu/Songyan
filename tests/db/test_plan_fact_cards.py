@@ -84,7 +84,7 @@ def _direction(*, approval_status: str = "approved", source: str = "plan") -> Pl
 
 
 class TestPlanFactModels:
-    def test_attribute_source_must_be_plan_or_human(self) -> None:
+    def test_attribute_source_rejects_extracted_typo(self) -> None:
         with pytest.raises(ValidationError):
             PlanAttribute.model_validate(
                 {

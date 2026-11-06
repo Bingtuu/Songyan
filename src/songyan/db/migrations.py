@@ -960,6 +960,83 @@ async def _migrate_foreshadowings_resolved_trace(conn: aiosqlite.Connection) -> 
 
 
 
+async def _migrate_plan_attribute_source_extract(conn: aiosqlite.Connection) -> None:
+    """Expand plan_attributes.source CHECK to include extract (tech-m2 B5 / step 5).
+
+    SQLite cannot ALTER a CHECK in place. Rebuild plan_attributes when the
+    live CREATE SQL still lacks extract. Idempotent. Existing rows are copied
+    unchanged. Does not touch other plan_* tables.
+    """
+    existing = await _plan_table_sql(conn, "plan_attributes")
+    if existing is None:
+        return
+    if "'extract'" in existing:
+        return
+
+    fk_cursor = await conn.execute("PRAGMA foreign_keys")
+    fk_row = await fk_cursor.fetchone()
+    fk_was_on = bool(fk_row[0]) if fk_row is not None else False
+    await conn.execute("PRAGMA foreign_keys = OFF")
+    try:
+        new_table = "plan_attributes__m2_extract"
+        await conn.execute(
+            f"""CREATE TABLE {new_table} (
+            attribute_id     TEXT PRIMARY KEY,
+            project_id       TEXT NOT NULL REFERENCES projects(project_id) ON DELETE CASCADE,
+            entity_id        TEXT NOT NULL REFERENCES plan_entities(entity_id) ON DELETE CASCADE,
+            key              TEXT NOT NULL,
+            value            TEXT NOT NULL,
+            valid_from_ch    INTEGER,
+            valid_to_ch      INTEGER,
+            source           TEXT NOT NULL CHECK (source IN ('plan', 'human', 'extract')),
+            approval_status  TEXT NOT NULL DEFAULT 'approved'
+                             CHECK (approval_status IN ('approved', 'pending', 'rejected')),
+            created_at       TEXT NOT NULL DEFAULT (datetime('now')),
+            updated_at       TEXT NOT NULL DEFAULT (datetime('now')),
+            CHECK (valid_from_ch IS NULL OR valid_from_ch >= 1),
+            CHECK (valid_to_ch IS NULL OR valid_to_ch >= 1),
+            CHECK (
+                valid_from_ch IS NULL
+                OR valid_to_ch IS NULL
+                OR valid_to_ch >= valid_from_ch
+            )
+        )"""
+        )
+        columns = (
+            "attribute_id",
+            "project_id",
+            "entity_id",
+            "key",
+            "value",
+            "valid_from_ch",
+            "valid_to_ch",
+            "source",
+            "approval_status",
+            "created_at",
+            "updated_at",
+        )
+        col_list = ", ".join(columns)
+        await conn.execute(
+            f"INSERT INTO {new_table} ({col_list}) "
+            f"SELECT {col_list} FROM plan_attributes"
+        )
+        await conn.execute("DROP TABLE plan_attributes")
+        await conn.execute(f"ALTER TABLE {new_table} RENAME TO plan_attributes")
+        await conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_plan_attributes_project "
+            "ON plan_attributes(project_id, approval_status)"
+        )
+        await conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_plan_attributes_entity "
+            "ON plan_attributes(entity_id)"
+        )
+    finally:
+        if fk_was_on:
+            await conn.execute("PRAGMA foreign_keys = ON")
+        else:
+            await conn.execute("PRAGMA foreign_keys = OFF")
+
+
 async def _migrate_chapter_heads_content_stale(conn: aiosqlite.Connection) -> None:
     """M2 step 3 / W4: chapter_heads.content_stale (+ optional stale_marked_at).
 
@@ -1124,7 +1201,8 @@ async def _migrate_plan_fact_cards(conn: aiosqlite.Connection) -> None:
     """创建 plan-first 事实卡五张表（ADR-0001 / Phase B 第一刀）.
 
     权威行由计划层或人写入。``approval_status`` 区分已批准 canon（approved）、
-    待审（pending）与驳回（rejected）。attribute.source 只允许 plan|human。
+    待审（pending）与驳回（rejected）。attribute.source 允许
+    plan|human|extract（extract 由后续窄迁移保证既有库）。
     本迁移不读取、不改写 SettlementExtractor 的结算表。
     既有库若仍是两态 CHECK，由后续重建迁移扩到含 rejected。
     """
@@ -1157,7 +1235,7 @@ async def _migrate_plan_fact_cards(conn: aiosqlite.Connection) -> None:
             value            TEXT NOT NULL,
             valid_from_ch    INTEGER,
             valid_to_ch      INTEGER,
-            source           TEXT NOT NULL CHECK (source IN ('plan', 'human')),
+            source           TEXT NOT NULL CHECK (source IN ('plan', 'human', 'extract')),
             approval_status  TEXT NOT NULL DEFAULT 'approved'
                              CHECK (approval_status IN ('approved', 'pending', 'rejected')),
             created_at       TEXT NOT NULL DEFAULT (datetime('now')),
@@ -1373,7 +1451,7 @@ async def _migrate_plan_approval_rejected(conn: aiosqlite.Connection) -> None:
             value            TEXT NOT NULL,
             valid_from_ch    INTEGER,
             valid_to_ch      INTEGER,
-            source           TEXT NOT NULL CHECK (source IN ('plan', 'human')),
+            source           TEXT NOT NULL CHECK (source IN ('plan', 'human', 'extract')),
             approval_status  TEXT NOT NULL DEFAULT 'approved'
                              CHECK (approval_status IN ('approved', 'pending', 'rejected')),
             created_at       TEXT NOT NULL DEFAULT (datetime('now')),
@@ -1592,5 +1670,9 @@ _MIGRATIONS: list[tuple[str, Callable[[aiosqlite.Connection], Awaitable[None]]]]
     (
         "_migrate_chapter_heads_content_stale",
         _migrate_chapter_heads_content_stale,
+    ),
+    (
+        "_migrate_plan_attribute_source_extract",
+        _migrate_plan_attribute_source_extract,
     ),
 ]

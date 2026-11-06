@@ -38,6 +38,7 @@ from songyan.models import (
     StateSettlement,
 )
 
+from ._proposals import enqueue_extract_proposals
 from ._setting_quality import (
     _archive_previous_setting_version,
     _normalize_setting_key,
@@ -612,6 +613,9 @@ async def apply_settlement(
 ) -> None:
     """将验证通过的结算结果应用到数据库 — INSERT 新快照，不 UPDATE 旧记录.
 
+    Also enqueues plan_* pending proposals with source=extract (M2 step 5).
+    Does not write approval_status=approved into plan_*.
+
     所有写入操作绑定到传入的 ``conn``，由调用方管理事务生命周期
     （BEGIN / COMMIT / ROLLBACK）。满足规则 53（Agent 不直接拿
     DB connection）和规则 56（settlement 写入使用事务）。
@@ -833,6 +837,17 @@ async def apply_settlement(
     # 核心写入（同一连接，调用方管理事务）
     try:
         await _apply_core(conn)
+        # M2 step 5: map extracts → plan_* pending (source=extract). Never approve.
+        character_names = {
+            c.character_id: c.name for c in project_characters if c.name
+        }
+        await enqueue_extract_proposals(
+            settlement,
+            project_id=project_id,
+            chapter_number=chapter_number,
+            conn=conn,
+            character_names=character_names,
+        )
         logger.info("settlement.applied", project_id=project_id, chapter_number=chapter_number)
     except (RuntimeError, OSError, ConnectionError, ValueError, TypeError, sqlite3.Error):
         logger.error(

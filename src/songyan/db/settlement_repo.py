@@ -18,6 +18,10 @@ from songyan.utils.json_helpers import model_json as _model_json
 
 logger = structlog.get_logger(__name__)
 
+# Author-path Canon is confirmed plan_*. Settlement rows are observational
+# contrast only until a human confirms a matching proposal (tech-m2 B6).
+UNTRUSTED_UNTIL_CONFIRMED = "untrusted_until_confirmed"
+
 
 class ForeshadowingRepository:
     """Repository for foreshadowing records."""
@@ -493,7 +497,10 @@ class SettingSnapshotRepository:
         )
 
     async def list_by_project(self, project_id: str) -> list[NewSetting]:
-        """只返回 lifecycle_status='active' 的 setting_snapshots."""
+        """只返回 lifecycle_status='active' 的 setting_snapshots.
+
+        Observational contrast only: untrusted_until_confirmed. Not Canon.
+        """
         async with get_db() as conn:
             conn.row_factory = Row
             cursor = await conn.execute(

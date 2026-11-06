@@ -699,6 +699,11 @@ async def test_human_gate_omits_failures_when_the_gate_passed_or_is_absent() -> 
 
 
 def test_settlement_extractor_does_not_reference_plan_canon() -> None:
+    """Settlement may enqueue plan_* pending (M2 step 5 / source=extract).
+
+    It must not import plan_checks bible/gate helpers or treat settlement
+    tables as plan canon readers.
+    """
     root = Path("src/songyan/agents/settlement_extractor")
     for path in root.glob("*.py"):
         tree = ast.parse(path.read_text(encoding="utf-8"))
@@ -709,6 +714,5 @@ def test_settlement_extractor_does_not_reference_plan_canon() -> None:
             elif isinstance(node, ast.ImportFrom) and node.module:
                 imported.append(node.module)
         joined = " ".join(imported)
-        assert "plan_fact" not in joined
         assert "plan_checks" not in joined
-        assert "plan_entities" not in joined
+        assert "load_chapter_plan_bible" not in path.read_text(encoding="utf-8")

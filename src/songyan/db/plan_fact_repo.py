@@ -2,7 +2,7 @@
 
 Create, read, and write entity / attribute / event / time-anchor / clue
 rows. Canon lists return ``approval_status='approved'`` only. Attribute
-canon rows also require ``source`` of ``plan`` or ``human``.
+canon rows also require ``source`` of ``plan``, ``human``, or ``extract``.
 
 Pending lists return ``approval_status='pending'`` only; ``rejected``
 rows are stored for dismiss audit but stay out of active queues.
@@ -43,7 +43,7 @@ _APPROVAL: dict[str, PlanApprovalStatus] = {
     "pending": "pending",
     "rejected": "rejected",
 }
-_SOURCE: dict[str, PlanFactSource] = {"plan": "plan", "human": "human"}
+_SOURCE: dict[str, PlanFactSource] = {"plan": "plan", "human": "human", "extract": "extract"}
 _KIND: dict[str, TimeAnchorKind] = {"story": "story", "history": "history"}
 
 
@@ -313,7 +313,7 @@ class PlanFactRepository:
         return _attribute_from_row(row)
 
     async def list_canon_attributes(self, project_id: str) -> list[PlanAttribute]:
-        """Approved plan|human attributes. Pending and rejected rows are excluded."""
+        """Approved plan|human|extract attributes. Pending and rejected rows are excluded."""
         return await self._list_attributes(project_id, "approved")
 
     async def list_pending_attributes(self, project_id: str) -> list[PlanAttribute]:
@@ -508,7 +508,7 @@ class PlanFactRepository:
     ) -> list[PlanAttribute]:
         source_clause = ""
         if approval_status == "approved":
-            source_clause = " AND source IN ('plan', 'human')"
+            source_clause = " AND source IN ('plan', 'human', 'extract')"
         rows = await self._fetch_all(
             f"""SELECT * FROM plan_attributes
             WHERE project_id = ? AND approval_status = ?{source_clause}

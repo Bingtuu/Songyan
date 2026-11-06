@@ -6,7 +6,7 @@ owner：Bingtuu。包 tip **v0.5**（`0.5.0`）。「V1.0」是产品代际名�
 
 ## 下一刀
 
-**等 owner/parent 授权后再开 M2 步 5（extract→pending source=extract + S8；tech-m2 §5）。** 步 4 已在 `main`（[#50](https://github.com/Bingtuu/Songyan/pull/50) → `5a6e923`；[tasks/done/215-m2-step4-check-stale-report.md](../tasks/done/215-m2-step4-check-stale-report.md)）。步 3 已在 `main`（[#48](https://github.com/Bingtuu/Songyan/pull/48) → `2ac1093`；[tasks/done/214-m2-step3-content-stale-hard.md](../tasks/done/214-m2-step3-content-stale-hard.md)）。步 2 已在 `main`（[#46](https://github.com/Bingtuu/Songyan/pull/46) → `8afb7be`；[tasks/done/213-m2-step2-confirm-settle.md](../tasks/done/213-m2-step2-confirm-settle.md)）。步 1 已在 `main`（[#44](https://github.com/Bingtuu/Songyan/pull/44) → `8f7bc77`）。授权后：先建 `tasks/21x`，TDD，开 PR 后 Mew COMMENT 再合并；不做 SettlementExtractor 权威漂移 / variant / continue；包仍 `0.5.0`。勿自合。
+**本刀 = M2 步 5（extract→pending source=extract + S8；tech-m2 §5；[tasks/216-m2-step5-extract-pending.md](../tasks/216-m2-step5-extract-pending.md)）。** 步 4 已在 `main`（[#50](https://github.com/Bingtuu/Songyan/pull/50) → `5a6e923`）。开 PR 后 **Mew COMMENT** 再合并；勿自合、勿 APPROVE。不做步 6 / variant / continue；包仍 `0.5.0`。
 
 M0 步 1–4 已全部在 `main`：[#28](https://github.com/Bingtuu/Songyan/pull/28) → `1d8c0c0`；[#29](https://github.com/Bingtuu/Songyan/pull/29) → `8f03453`；[#30](https://github.com/Bingtuu/Songyan/pull/30) → `d5c2cc1`；[#31](https://github.com/Bingtuu/Songyan/pull/31) → `48fa354`。任务分别在 [tasks/done/200.md](../tasks/done/200.md)、[tasks/done/201.md](../tasks/done/201.md)、[tasks/done/202.md](../tasks/done/202.md)、[tasks/done/203.md](../tasks/done/203.md)。
 
@@ -22,7 +22,7 @@ M1 代码验收（步 1–5 + tech-m1 §6–7）在 `main` `69d7ece`：**PASS**�
 - 不重开 plan-first 阶段 C，不加题材专用检查器，不改 SettlementExtractor 的权威。
 - 不把 Ch1–10 写成文学验收。文学质量归人。
 - 正式 git tag 仍由维护者决定。
-- **tech-m2 已接受。** 只做已授权的下一刀（下一刀 = 步 5 extract→pending，仅授权后）；不做未授权的步 5+、不改 SettlementExtractor、不加 variant / continue。
+- **tech-m2 已接受。** 本刀 = 步 5 extract→pending（已授权）；不做步 6、不加 variant / continue；结算表仍保留为 untrusted 对照，不升格 Canon。
 - 不声称 V1.0 完成，不升包版本。
 
 ## 事实指针（短）
