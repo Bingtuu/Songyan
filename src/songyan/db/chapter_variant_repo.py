@@ -23,7 +23,7 @@ def _row_to_variant(row: Row) -> ChapterVariant:
         project_id=row["project_id"],
         chapter_number=int(row["chapter_number"]),
         slot_index=int(row["slot_index"]),
-        status=row["status"],  # type: ignore[arg-type]
+        status=row["status"],
         parent_canon_fingerprint=row["parent_canon_fingerprint"],
         content_ref=row["content_ref"],
         stale_vs_canon=int(row["stale_vs_canon"] or 0),
