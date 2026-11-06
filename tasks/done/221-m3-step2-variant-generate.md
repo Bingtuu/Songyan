@@ -27,4 +27,4 @@ M3 步 2：`variant generate` 写 N 条 `ChapterVersion` + `chapter_variants`；
 
 ## 完成总结（DONE 时填写）
 
-PR 见本切片开出的 PR；未 merge / 未 APPROVE。包仍 `0.5.0`。下一刀（仅 owner/parent 授权后）：M3 步 3 `variant list`/`diff` 增强。
+PR [#57](https://github.com/Bingtuu/Songyan/pull/57)；head `d50ec6f`；base tip `main` `b9bbf98`（#56）。未 merge / 未 APPROVE。包仍 `0.5.0`。下一刀（仅 owner/parent 授权后）：M3 步 3 `variant list`/`diff` 增强。
