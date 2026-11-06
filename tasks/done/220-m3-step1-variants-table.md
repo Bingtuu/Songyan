@@ -26,4 +26,4 @@ M3 步 1：迁移 `chapter_variants`；`parent_canon_fingerprint` 纯函数 + �
 
 ## 完成总结（DONE 时填写）
 
-本 PR 开出后填写：PR 号、head SHA、base tip。下一刀（仅 owner/parent 授权后）：M3 步 2 `variant generate`。
+PR [#56](https://github.com/Bingtuu/Songyan/pull/56)；head `85b6bc7`；base tip `main` `5101555`（#55）。未 merge / 未 APPROVE。下一刀（仅 owner/parent 授权后）：M3 步 2 `variant generate`。
