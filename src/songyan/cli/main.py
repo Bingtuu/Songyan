@@ -15,6 +15,7 @@ from songyan.cli.commands.check import register_check_commands
 from songyan.cli.commands.import_pipeline import register_import_commands
 from songyan.cli.commands.index import register_index_commands
 from songyan.cli.commands.quality import register_quality_commands
+from songyan.cli.commands.variant import register_variant_commands
 from songyan.cli.commands.workbench import register_workbench_commands
 from songyan.cli.outline_import import load_outline_file
 from songyan.config import settings
@@ -1324,4 +1325,5 @@ register_import_commands(cli)
 # M0: read-only canon show / today. M1 steps 2–3: canon edit/confirm/dismiss/accept.
 register_workbench_commands(cli)
 register_canon_write_commands(cli)
+register_variant_commands(cli)
 register_check_commands(cli)

@@ -107,3 +107,10 @@ class ImportSegmentError(SongyanError):
 
 class ImportReplayError(SongyanError):
     """V15 导入：回放执行失败（preflight、指纹失配、事务写入等）."""
+
+
+class DuplicatePickedVariantError(SongyanError):
+    """Same chapter already has a ``picked`` variant (tech-m3 B1 / B4)."""
+
+    exit_code = 2
+

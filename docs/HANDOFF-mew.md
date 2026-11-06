@@ -2,11 +2,11 @@
 
 owner：Bingtuu。包 tip **v0.5**（`0.5.0`）。「V1.0」是产品代际名，不是包版本。本文件不打 tag。
 
-权威顺序见 [AGENTS.md](../AGENTS.md)：[PRD](prd-v1.md) → [M0 技术方案](tech-m0.md) → [M1 技术方案](tech-m1.md)（**已接受**；§6–7 **PASS**）→ [M2 技术方案](tech-m2.md)（**已接受**；§6–7 **PASS** @ `f1c3093`）→ [M3 技术方案](tech-m3.md)（**草稿，待 owner 书面接受**）→ ADR-0001 → STATUS（事实）→ 本文件（当天）→ `tasks/`（有任务文档之后）。
+权威顺序见 [AGENTS.md](../AGENTS.md)：[PRD](prd-v1.md) → [M0 技术方案](tech-m0.md) → [M1 技术方案](tech-m1.md)（**已接受**；§6–7 **PASS**）→ [M2 技术方案](tech-m2.md)（**已接受**；§6–7 **PASS** @ `f1c3093`）→ [M3 技术方案](tech-m3.md)（**已接受**；t104s937；B1–B7 原样）→ ADR-0001 → STATUS（事实）→ 本文件（当天）→ `tasks/`（有任务文档之后）。
 
 ## 下一刀
 
-**tech-m3 草稿已开**（[docs/tech-m3.md](tech-m3.md)；任务 [tasks/done/219-tech-m3草稿.md](../tasks/done/219-tech-m3草稿.md)）。M2 代码验收已 PASS（证据 tip `main` `f1c3093`；归档 [tasks/done/218-m2-acceptance.md](../tasks/done/218-m2-acceptance.md)）。**下一闸门 = owner 书面接受 tech-m3（绑定决策 B1–B7）** 后再开 M3 步 1 编码；未接受并授权前不开 M3 / variant / continue。包仍 `0.5.0`。开本 docs PR 后 **Mew COMMENT** 再合并；勿自合、勿 APPROVE；本 PR **不**含 `src/` / `tests/`。
+**tech-m3 已接受**（[docs/tech-m3.md](tech-m3.md)；t104s937；B1–B7 原样）。**当前 DOING = M3 步 1**（`chapter_variants` 表 + `parent_canon_fingerprint` + 仓库插入/列表/单 picked 守卫；可选 `variant list` 空列表）。任务 [tasks/done/220-m3-step1-variants-table.md](../tasks/done/220-m3-step1-variants-table.md)（开 PR 后归档）。包仍 `0.5.0`。开 PR 后 **Mew COMMENT** 再合并；勿自合、勿 APPROVE。步 1 合入后下一闸门 = 授权再开步 2（generate）；不做 continue / review。
 
 M0 步 1–4 已全部在 `main`：[#28](https://github.com/Bingtuu/Songyan/pull/28) → `1d8c0c0`；[#29](https://github.com/Bingtuu/Songyan/pull/29) → `8f03453`；[#30](https://github.com/Bingtuu/Songyan/pull/30) → `d5c2cc1`；[#31](https://github.com/Bingtuu/Songyan/pull/31) → `48fa354`。任务分别在 [tasks/done/200.md](../tasks/done/200.md)、[tasks/done/201.md](../tasks/done/201.md)、[tasks/done/202.md](../tasks/done/202.md)、[tasks/done/203.md](../tasks/done/203.md)。
 
@@ -22,7 +22,7 @@ M1 代码验收（步 1–5 + tech-m1 §6–7）在 `main` `69d7ece`：**PASS**�
 - 不重开 plan-first 阶段 C，不加题材专用检查器，不改 SettlementExtractor 的权威。
 - 不把 Ch1–10 写成文学验收。文学质量归人。
 - 正式 git tag 仍由维护者决定。
-- **tech-m2 已接受；§6–7 代码验收 PASS（`f1c3093`）。** [tech-m3.md](tech-m3.md) **草稿，待书面接受**。不做 variant / continue / M3 编码（仅接受并授权后）；结算表仍保留为 untrusted 对照，不升格 Canon。
+- **tech-m3 已接受（t104s937；B1–B7）。** 当前只做 **步 1**；不做步 2+ / continue / review；结算表仍保留为 untrusted 对照，不升格 Canon。
 - 不声称 V1.0 完成，不升包版本。
 
 ## 事实指针（短）
@@ -43,8 +43,9 @@ M1 代码验收（步 1–5 + tech-m1 §6–7）在 `main` `69d7ece`：**PASS**�
 | M2 步 5 | 已合入 `2fa8209`（#52）；[tasks/done/216-m2-step5-extract-pending.md](../tasks/done/216-m2-step5-extract-pending.md) |
 | M2 步 6 | 已合入 `f1c3093`（#53）；[tasks/done/217-m2-step6-docs-copy.md](../tasks/done/217-m2-step6-docs-copy.md) |
 | M2 验收 | **PASS** @ 证据 tip `f1c3093`。[tasks/done/218-m2-acceptance.md](../tasks/done/218-m2-acceptance.md) |
-| M3 技术方案 | [tech-m3.md](tech-m3.md) — **草稿，待 owner 书面接受**（B1–B7）；[tasks/done/219-tech-m3草稿.md](../tasks/done/219-tech-m3草稿.md) |
-| 当前任务 | 无 DOING。下一闸门 = owner 书面接受 tech-m3 后再开 M3 步 1 编码 |
+| M3 技术方案 | [tech-m3.md](tech-m3.md) — **已接受**（2026-11-06；t104s937；B1–B7 原样）；草稿任务 [tasks/done/219-tech-m3草稿.md](../tasks/done/219-tech-m3草稿.md) |
+| M3 步 1 | 进行中 → 本 PR；[tasks/done/220-m3-step1-variants-table.md](../tasks/done/220-m3-step1-variants-table.md) |
+| 当前任务 | M3 步 1。合入后下一闸门 = 授权再开步 2 |
 | 架构方向 | [adr/0001-plan-first-facts.md](adr/0001-plan-first-facts.md) |
 | 工程现状 | [STATUS.md](STATUS.md) |
 | 阶段 A–C | [ROADMAP-plan-first.md](ROADMAP-plan-first.md)（CLOSED 短指针；全文在 archive，日常不要加载） |

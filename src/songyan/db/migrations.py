@@ -85,6 +85,8 @@ _EXPECTED_TABLES: list[str] = [
     "plan_events",
     "plan_time_anchors",
     "plan_clues",
+    # M3 step 1: chapter-internal Variant slots
+    "chapter_variants",
 ]
 
 
@@ -1599,6 +1601,49 @@ async def get_schema_version(conn: aiosqlite.Connection) -> int:
     missing = await verify_schema(conn)
     return len(_EXPECTED_TABLES) - len(missing)
 
+
+async def _migrate_chapter_variants(conn: aiosqlite.Connection) -> None:
+    """M3 step 1 / B1: chapter_variants table for章内 Variant slots.
+
+    Narrow additive migration. Body stays in chapter_versions via content_ref.
+    Partial unique indexes: one active slot_index; at most one picked per chapter.
+    """
+    await conn.execute(
+        """CREATE TABLE IF NOT EXISTS chapter_variants (
+            variant_id TEXT PRIMARY KEY,
+            project_id TEXT NOT NULL,
+            chapter_number INTEGER NOT NULL,
+            slot_index INTEGER NOT NULL,
+            status TEXT NOT NULL
+                CHECK (status IN ('generated', 'picked', 'abandoned', 'archived')),
+            parent_canon_fingerprint TEXT NOT NULL,
+            content_ref TEXT NOT NULL,
+            stale_vs_canon INTEGER NOT NULL DEFAULT 0,
+            score_card_json TEXT,
+            cost_cny_estimate REAL NOT NULL DEFAULT 0,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            CHECK (chapter_number >= 1),
+            CHECK (slot_index >= 1),
+            CHECK (stale_vs_canon IN (0, 1))
+        )"""
+    )
+    await conn.execute(
+        """CREATE INDEX IF NOT EXISTS idx_chapter_variants_chapter
+            ON chapter_variants(project_id, chapter_number)"""
+    )
+    await conn.execute(
+        """CREATE UNIQUE INDEX IF NOT EXISTS idx_chapter_variants_active_slot
+            ON chapter_variants(project_id, chapter_number, slot_index)
+            WHERE status IN ('generated', 'picked')"""
+    )
+    await conn.execute(
+        """CREATE UNIQUE INDEX IF NOT EXISTS idx_chapter_variants_single_picked
+            ON chapter_variants(project_id, chapter_number)
+            WHERE status = 'picked'"""
+    )
+
+
 async def run_migrations(conn: aiosqlite.Connection) -> None:
     """执行注册表中的所有迁移（与 init_schema 共用 _MIGRATIONS 单一事实源）."""
     for _name, _migrate in _MIGRATIONS:
@@ -1674,5 +1719,9 @@ _MIGRATIONS: list[tuple[str, Callable[[aiosqlite.Connection], Awaitable[None]]]]
     (
         "_migrate_plan_attribute_source_extract",
         _migrate_plan_attribute_source_extract,
+    ),
+    (
+        "_migrate_chapter_variants",
+        _migrate_chapter_variants,
     ),
 ]
