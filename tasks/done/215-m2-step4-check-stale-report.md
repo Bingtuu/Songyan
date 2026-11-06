@@ -2,7 +2,7 @@
 
 | 项 | 内容 |
 |---|---|
-| 状态 | DOING |
+| 状态 | DONE |
 | 关联 | PRD §6.5 / W4；tech-m2 §5 步 4 / §3.1 item 3 / §4.1 / §6 |
 | 预估 | 一个切片 |
 
@@ -25,4 +25,4 @@ M2 步 4：`songyan check` 在 `chapter_heads.content_stale=1` 时报告受影�
 
 ## 完成总结（DONE 时填写）
 
-（合并后由 docs-align 归档；本 PR 仅实现步 4。）
+PR [#50](https://github.com/Bingtuu/Songyan/pull/50) squash 进 `main` 为 `5a6e923`。`songyan check` 在 human / `--json` 中报告 `content_stale` / 受影响章范围；check 仍只读。未做步 5（extract→pending / SettlementExtractor）。下一刀（仅 owner/parent 授权后）：M2 步 5（extract→pending source=extract + S8）。
