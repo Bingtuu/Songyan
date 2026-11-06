@@ -6,9 +6,9 @@ against them later; this module does not absorb settlement extracts.
 ``approval_status`` is the queue flag. ``approved`` rows are canon.
 ``pending`` rows may be stored, but canon readers must ignore them.
 ``rejected`` rows stay for dismiss audit (tech-m1); canon and pending
-list readers must ignore them. An attribute's ``source`` stays ``plan``
-or ``human`` even while the row is pending or rejected: that value is
-the intended authority, not a third source type.
+list readers must ignore them. An attribute's ``source`` is ``plan``, ``human``, or ``extract``
+(M2 tech-m2 B5). That value is the intended authority provenance;
+``approval_status`` still gates canon visibility.
 """
 
 from __future__ import annotations
@@ -17,7 +17,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-PlanFactSource = Literal["plan", "human"]
+PlanFactSource = Literal["plan", "human", "extract"]
 PlanApprovalStatus = Literal["approved", "pending", "rejected"]
 TimeAnchorKind = Literal["story", "history"]
 

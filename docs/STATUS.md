@@ -28,9 +28,10 @@ Package tip remains **0.5.0**. V1.0 is the product-generation name.
 | M2 步 2 W5 人确认销账 | **已在 `main`。** [#46](https://github.com/Bingtuu/Songyan/pull/46) squash 为 `8afb7be`。任务归档在 [tasks/done/213-m2-step2-confirm-settle.md](../tasks/done/213-m2-step2-confirm-settle.md) |
 | M2 步 3 W4 content_stale + `--hard` | **已在 `main`。** [#48](https://github.com/Bingtuu/Songyan/pull/48) squash 为 `2ac1093`。任务归档在 [tasks/done/214-m2-step3-content-stale-hard.md](../tasks/done/214-m2-step3-content-stale-hard.md) |
 | M2 步 4 check 报告 stale 范围 | **已在 `main`。** [#50](https://github.com/Bingtuu/Songyan/pull/50) squash 为 `5a6e923`。任务归档在 [tasks/done/215-m2-step4-check-stale-report.md](../tasks/done/215-m2-step4-check-stale-report.md) |
+| M2 步 5 extract→pending | **编码中（本 PR）。** [tasks/216-m2-step5-extract-pending.md](../tasks/216-m2-step5-extract-pending.md) |
 | 包版本 | 仍是 `0.5.0` |
 
-tech-m2 **已接受**。M2 步 1（W5 只读）**已在 `main`**（#44 / `8f7bc77`；212 已由 #45 归档）。M2 步 2（人确认销账）**已在 `main`**（#46 / `8afb7be`；213 已归档）。M2 步 3（`content_stale` + `--hard` / `--mark-stale`）**已在 `main`**（#48 / `2ac1093`；214 已归档）。M2 步 4（`check` 报告 `content_stale` / 受影响章）**已在 `main`**（#50 / `5a6e923`；215 已归档）。不要声称 V1.0 完成，不要升包版本（仍 `0.5.0`）。不做步 5+（仅 owner/parent 授权后）。
+tech-m2 **已接受**。M2 步 1（W5 只读）**已在 `main`**（#44 / `8f7bc77`；212 已由 #45 归档）。M2 步 2（人确认销账）**已在 `main`**（#46 / `8afb7be`；213 已归档）。M2 步 3（`content_stale` + `--hard` / `--mark-stale`）**已在 `main`**（#48 / `2ac1093`；214 已归档）。M2 步 4（`check` 报告 `content_stale` / 受影响章）**已在 `main`**（#50 / `5a6e923`；215 已归档）。不要声称 V1.0 完成，不要升包版本（仍 `0.5.0`）。本 PR 做步 5（extract→pending）；不做步 6 / variant / continue。
 
 上一稿 PRD 的总体框架 owner 已经接受。现行文本是 `prd-v1.md`。旧全文在 [archive/prd-v1-writing-assist-2026-10-26.md](archive/prd-v1-writing-assist-2026-10-26.md)。
 
@@ -53,7 +54,7 @@ tech-m2 **已接受**。M2 步 1（W5 只读）**已在 `main`**（#44 / `8f7bc7
 - `create-project`、`run`、`report`、`metrics`、`five-gate`、`t9`、`bundle-run`、`export`、`backup`、`restore`。
 - `profile` 的 `validate` / `upsert --dry-run` / `history` / `rollback`。按角色的 `LLM_<ROLE>_*` 路由。
 - `import`（`ingest`、`segment`、`confirm`、`status`、`replay`、`synthesize`、`publish`）。`publish` 之前 `run` 保持阻塞。
-- 计划事实表与 `load_chapter_plan_bible`：只读 `approved`。结算写入仍进结算库，不进 plan canon。
+- 计划事实表与 `load_chapter_plan_bible`：只读 `approved`（属性 source 含 plan|human|extract）。结算写入仍进结算库（`untrusted_until_confirmed`），并另入队 `plan_*` pending（source=extract）；confirm 前不进 canon。
 - `canon show` 在 `main` 上能看五类计划事实的 Canon / Pending，以及故事线骨架（有则打印，无则为 `（空）`），并支持 `--json`。
 - `today` 在 `main` 上能打印只读计数与固定 `next`（`可用 canon confirm 入典；生成不在本命令。`）。
 - 缺库 / 缺项目时 `canon show` 与 `today` 退出码 1；缺库时不创建数据库文件。
@@ -69,7 +70,7 @@ tech-m2 **已接受**。M2 步 1（W5 只读）**已在 `main`**（#44 / `8f7bc7
 - 《轨道蜃景》Ch1–10：`project_id=8e30dec7f2ec40c1a9ce54c783981f8c`，`run-33841231`。10/10 accepted；质量门、结算、摘要、导出通过；exit 0。**DG-1 失败**（平均 revision 1.7，十章都有 ContextEmergency，无 AutoHalt）。
 - 那次导出的人工阅读 **未通过**：时间线回滚、Hermes/赫耳墨斯、时间尺度、供氧 / EVA 复读、英文泄漏 `ninety-two 秒`。
 - 真实模型上「导入后再续写」还没有验收。
-- `variant`、`chapter continue` 都还没有。tech-m1 **已接受**；步 1–5 与 §6–7 代码验收已 **PASS**（`69d7ece`）。[tech-m2.md](tech-m2.md) **已接受**；步 1–4 已在 `main`（`8f7bc77` / `8afb7be` / `2ac1093` / `5a6e923`）；下一刀 = M2 步 5（extract→pending，仅授权后）。M3/M4 各自另有被接受的技术方案。
+- `variant`、`chapter continue` 都还没有。tech-m1 **已接受**；步 1–5 与 §6–7 代码验收已 **PASS**（`69d7ece`）。[tech-m2.md](tech-m2.md) **已接受**；步 1–4 已在 `main`（`8f7bc77` / `8afb7be` / `2ac1093` / `5a6e923`）；步 5 本 PR 编码中。M3/M4 各自另有被接受的技术方案。
 
 标识和本机路径：[HANDOFF-mew.md](HANDOFF-mew.md)。书稿不入库。
 
