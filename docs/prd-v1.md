@@ -1,6 +1,6 @@
 # Songyan V1.0 产品需求
 
-- **状态：** 2026-11-01 重写稿。待 owner（Bingtuu）书面接受。接受之前不开实现，不写 `tasks/200`。
+- **状态：** 2026-11-01 重写稿。**Owner 已书面接受**（总体框架继承 2026-10-26 已接受稿；#27 已进 main）。本文是现行产品需求。
 - **本文做什么：** 把已接受的总体框架写成可审的完整需求：两条主路径、每步的目标与分支、里程碑边界、可测验收。
 - **本文不做什么：** 不改应用代码，不把包版本升到 `1.0.0`，不打名为 `v1.0` 的 git tag。当前 tip 仍是 **v0.5**（`pyproject.toml` 的 `0.5.0`）。
 - **产品代际名 vs 包版本：** 「V1.0」是写作助手这一代产品的名字，不是包版本号。
@@ -112,21 +112,21 @@ Git 式整树 `branch` 不在 V1.0。口语里的「分支」写成「草稿变�
 | 对象 | 定义 | 现码 | 权威？ |
 |------|------|------|--------|
 | **Project** | 一部小说工程 | `projects`；`create-project` / `list-projects` | 工程元数据 |
-| **Canon** | 已确认事实：实体、属性、事件、时间锚、线索卡 | `plan_entities` / `plan_attributes` / `plan_events` / `plan_time_anchors` / `plan_clues`。读路径 `list_canon_*` 只返回 `approved`，属性还要求 `source` 为 `plan` 或 `human` | **是** |
+| **Canon** | 已确认事实：实体、属性、事件、时间锚、线索卡 | `plan_entities` / `plan_attributes` / `plan_events` / `plan_time_anchors` / `plan_clues`。读路径 `list_canon_*` 只返回 `approved`，属性还要求 `source` 为 `plan`、`human` 或 `extract`（extract 口径 = tech-m2 B5） | **是** |
 | **Pending** | 同一批表里尚未确认的行 | `list_pending_*`；`approval_status=pending` | **否** |
 | **Storyline** | 全书大纲、弧、剧情线索 | `StoryOutline` / `ArcPlan` / `PlotThread`（`NarrativeRepository`） | 规划骨架，不是 Canon |
 | **Promises** | 叙事承诺。作者看见现网状态 `planted` / `due` / `overdue` / `resolved` / `archived` | `foreshadowings`（结算库；`resolved_chapter` / `resolved_version_id` 现为可追溯列） | 运行时债务。销账要人确认之后才算 Canon 侧承诺 |
 | **Character / 数值 / 道具** | 人物切片、数值账、设定快照 | 结算写入的角色状态、`NumericalLedger`、setting 快照 | 运行时观测，不是 plan canon |
 | **Chapter / Version** | 章槽与只追加的正文版本 | 现有章节表 | 正文历史，不是事实权威 |
-| **Variant** | 章内抽卡槽 | **还没有** | 草稿。`pick` 不入典 |
+| **Variant** | 章内抽卡槽 | `chapter_variants`；`variant generate / list / diff / pick / abandon`（M3 步 1–5 已落地） | 草稿。`pick` 不入典 |
 | **Plan Card / Bible** | 注入本章的已批准卡 | `load_chapter_plan_bible` | 只读 approved |
-| **ConsistencyReport** | 结构化问题：证据、严重度、建议动作 | `plan_fact_gate`（必须提及、主张、类型化属性）已有；作者向 `check` 还没有 | 报告不写库 |
-| **Proposal** | 抽取或审读产生的待确认项 | 语义要建。今天 `SettlementExtractor` 写结算库，不写 plan 表 | 确认前不是 Canon |
+| **ConsistencyReport** | 结构化问题：证据、严重度、建议动作 | `plan_fact_gate`（必须提及、主张、类型化属性）已有；作者向 `check` 已有（M1，只读不写库） | 报告不写库 |
+| **Proposal** | 抽取或审读产生的待确认项 | `plan_*` 的 `pending` 行（`source=extract`，M2 步 5）；`SettlementExtractor` 另写结算库（观测层，`untrusted_until_confirmed`） | 确认前不是 Canon |
 | **质量门** | CED / T9 / 五门 / 文学审查 | `report`、`five-gate`、`t9`、LangGraph 审查节点 | 过程信号。通过 ≠ 可发表 |
 
-现码 `approval_status` 只有 `approved` 和 `pending`。上一稿写过 `rejected` / `superseded` 和 `hardness=hard|soft`。那些字段 **M0 不加**。M1 的技术方案再决定「驳回」是删掉 pending 行，还是加状态；在那之前不得把未确认行读成 Canon。
+M1 起 `approval_status` 为三态：`approved` / `pending` / `rejected`（五表 CHECK；`rejected` = `dismiss` 的落点）。上一稿写过的 `superseded` 和 `hardness=hard|soft` 列未采用：「硬」用命令旗标承载，不加列（tech-m2 B1）。任何时刻不得把未确认行读成 Canon。
 
-### 4.2 Chapter 与 Variant（目标语义，表还未建）
+### 4.2 Chapter 与 Variant（目标语义；`chapter_variants` 已于 M3 落地）
 
 章节作者状态（解释层，不是现网列）：
 
@@ -151,6 +151,8 @@ proposed → accepted → approved（进入 Canon）
 
 没有自动边进入 `approved`。`accepted` 是人在 triage 里点头；`approved` 是已经写入 Canon。一次 confirm 可以连续完成这两步。还没写入 Canon 的提案，下一章上下文读不到。`dismiss` 用来压误报，不是为了把召回数字做高去加题材硬规则。
 
+M1 锁定落地口径：物理态只有 `pending / approved / rejected` 三态（五表 CHECK）；`accepted` 是非持久提示（`canon accept`，不落盘），无持久第四态。`dismiss` 落 `rejected`。
+
 M1 只做人直接写入的计划行。把 `SettlementExtractor` 的输出接进提案队列是 **M2**，避免同一步又改 CLI 又翻结算权威。
 
 ---
@@ -164,7 +166,7 @@ M1 只做人直接写入的计划行。把 `SettlementExtractor` 的输出接进
 | 里程碑 | 边界内 | 边界外 |
 |--------|--------|--------|
 | **M0** | 只读工作台：`canon show`、`today`。看见 approved、pending、故事线骨架。零生成，零写入 | 不 confirm、不 check、不抽卡、不续写、不改结算器、不加表、不加迁移 |
-| **M1** | 人确认入典（edit / triage / confirm）+ 规则型 `check`。W0 能走完「看见 → 人确认 → 再看见」。W6：`check` 不写库 | 不接结算抽取进提案，不抽卡，不 `continue`，不自动标脏 |
+| **M1** | 人确认入典（`edit / confirm / dismiss`；`accept` 非持久）+ 规则型 `check`。W0 能走完「看见 → 人确认 → 再看见」。W6：`check` 不写库 | 不接结算抽取进提案，不抽卡，不 `continue`，不自动标脏 |
 | **M2** | 硬事实标脏（不改文）；承诺队列可读，销账要人确认；导入 / 抽取结果进提案而不是 Canon | 不抽卡，不把短续写当主路径，不自动重写脏章 |
 | **M3** | 章内 Variant。默认 N=2。`pick` 不改 Canon | 不自动选优，不做 Git `branch`，不无人值守连载 |
 | **M4** | `chapter continue` 默认 1 章。W2 短环：计划卡 → 一章 → 共审 → 人确认 → 下一章 | 不把 10 章以上无审连跑写成作者路径；不宣称文学可连载 |
@@ -278,7 +280,7 @@ today --project-id <id>
 
 ```text
 canon edit（人写出一条计划行，默认 pending）
-  → canon triage（accept / edit / dismiss）
+  → triage 语义由 accept（非持久提示）/ edit / dismiss 承载
   → canon confirm
   → canon show 的 Canon 段出现该行
   → load_chapter_plan_bible 能读到它
@@ -558,7 +560,7 @@ songyan
 ├── chapter list | status | continue   # continue 是 M4
 ├── variant generate | list | diff | pick | abandon   # M3
 ├── canon show                    # M0
-├── canon edit | triage | confirm # M1
+├── canon edit | accept | confirm | dismiss   # M1（triage 语义由这三者承载，未注册 triage 子命令）
 ├── check                         # M1
 ├── review                        # M4
 ├── today                         # M0 起，只读
@@ -672,7 +674,7 @@ Git 式 Canon Branch、全屏 TUI、本地 Web、MCP 暴露 Canon、多书共用
 
 | 文档 | 关系 |
 |------|------|
-| 本文 | 现行产品需求（待书面接受） |
+| 本文 | 现行产品需求（owner 已书面接受，2026-11-01） |
 | [tech-m0.md](tech-m0.md) | 只规划 M0。以后的里程碑不在那里展开 |
 | [archive/prd-v1-writing-assist-2026-10-26.md](archive/prd-v1-writing-assist-2026-10-26.md) | 上一稿全文。总体框架已接受；实现以本文为准 |
 | [ADR-0001](adr/0001-plan-first-facts.md) | 事实由计划和人写入；抽取不自动成为权威 |

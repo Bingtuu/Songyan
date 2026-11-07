@@ -51,9 +51,19 @@ These five modules carry an explicit module docstring `LEGACY — taskNNN; keep 
 
 They were not moved to `tests/legacy/`. A mass move would still collect them, but it would churn imports and fixture scope for no gain. Nothing in this pass was deleted.
 
+## Legacy semantics vs accepted M-docs（裁决规则）
+
+旧 lineage 测试（`test_<数字>_*.py` 等，见上节）断言的是当年引擎语义。当某条旧断言与**已接受的 PRD / tech-m* 文档**冲突时，已接受文档胜出，按下述规则处理：
+
+1. 在引入新语义的同一切片（同一提交）内，把测试改写到新语义。
+2. 任务完成总结里记录：被改测试名、旧断言、新断言、依据的文档条款。
+3. 禁止把测试改弱（删断言、放宽条件）来迁就实现；改写后必须覆盖同一路径。
+
+先例：task 226（`tests/test_172cr_foreshadowing_resolve.py`、`tests/test_241_foreshadowing_resolved_trace.py`、`tests/test_settlement_extractor.py` 的 resolve 直写 `resolved` 断言 → 提案语义，依据 tech-m2 §3.2 / §4.3.3 / B3）。
+
 ## Where V1.0 tests go
 
-After the owner accepts the PRD, put new tests next to the behavior:
+After the owner accepted the PRD (2026-11-01), put new tests next to the behavior:
 
 ```text
 tests/<area>/test_<behavior>.py
