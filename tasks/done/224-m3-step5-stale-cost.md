@@ -26,4 +26,4 @@ M3 步 5：Canon 变更后自动标 `stale_vs_canon`；pick 默认拒 stale；li
 
 ## 完成总结（DONE 时填写）
 
-PR 待开；head 见 PR；base tip `main` `c38ee31`（#59）。未 merge / 未 APPROVE。包仍 `0.5.0`。下一刀（仅 owner/parent 授权后）：M3 步 6（闭环文案与文档同步）。
+PR [#60](https://github.com/Bingtuu/Songyan/pull/60)；head `0bd3112`；base tip `main` `c38ee31`（#59）。未 merge / 未 APPROVE。包仍 `0.5.0`。下一刀（仅 owner/parent 授权后）：M3 步 6（闭环文案与文档同步）。
