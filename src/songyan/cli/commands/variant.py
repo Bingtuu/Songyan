@@ -174,7 +174,7 @@ def variant_list(project_id: str, chapter: int, as_json: bool) -> None:
         click.echo(
             f"- slot={row['slot_index']} status={row['status']} "
             f"fp={row['fingerprint']} "
-            f"ref={row['content_ref']} stale={row['stale_vs_canon']} "
+            f"ref={row['content_ref']} stale_vs_canon={row['stale_vs_canon']} "
             f"cost={row['cost_cny_estimate']}"
         )
 
@@ -298,7 +298,7 @@ def variant_pick(
         f"picked slot={payload['slot_index']} "
         f"ref={payload['content_ref']} "
         f"current_version_id={payload['current_version_id']} "
-        f"stale={payload['stale_vs_canon']}"
+        f"stale_vs_canon={payload['stale_vs_canon']}"
     )
 
 

@@ -1376,6 +1376,8 @@ async def _rebuild_plan_table_approval_check(
         return
 
     new_table = f"{table}__m1_rejected"
+    # task 231: 上次迁移死在 CREATE 之后会残留同名临时表；先清再建。
+    await conn.execute(f"DROP TABLE IF EXISTS {new_table}")
     await conn.execute(create_sql.format(table=new_table))
     col_list = ", ".join(columns)
     await conn.execute(

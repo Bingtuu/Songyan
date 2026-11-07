@@ -120,3 +120,33 @@ async def test_run_migrations_adds_human_mark_extra_fields(tmp_path: Path) -> No
 
     assert "version_id" in columns
     assert "severity" in columns
+
+
+@pytest.mark.asyncio
+async def test_plan_approval_rebuild_tolerates_orphan_temp_table(tmp_path: Path) -> None:
+    """task 231：上次崩溃残留的 __m1_rejected 孤儿表不得卡死迁移。"""
+    import aiosqlite
+
+    db_path = tmp_path / "orphan_temp.db"
+    await init_schema(str(db_path))
+    async with aiosqlite.connect(str(db_path)) as conn:
+        cursor = await conn.execute(
+            "SELECT sql FROM sqlite_master WHERE type='table' AND name='plan_entities'"
+        )
+        create_sql = (await cursor.fetchone())[0]
+        # 模拟 pre-rejected 时代的 CREATE（CHECK 不含 rejected）
+        old_sql = create_sql.replace("'rejected'", "'pending'")
+        await conn.execute("DROP TABLE plan_entities")
+        await conn.execute(old_sql)
+        # 上次迁移死在 CREATE 之后：残留同名临时表
+        await conn.execute(old_sql.replace("plan_entities", "plan_entities__m1_rejected"))
+        await conn.commit()
+
+        await run_migrations(conn)
+        await conn.commit()
+
+        cursor = await conn.execute(
+            "SELECT sql FROM sqlite_master WHERE type='table' AND name='plan_entities'"
+        )
+        rebuilt = (await cursor.fetchone())[0]
+        assert "'rejected'" in rebuilt

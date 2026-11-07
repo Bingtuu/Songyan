@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 import click
+from pydantic import ValidationError
 
 from songyan.cli.commands.workbench import _ensure_project_readable
 from songyan.db.repository import ChapterHeadRepository, ChapterVersionRepository
@@ -39,7 +40,7 @@ def _load_extracts(path: Path | None) -> list[AttributeExtract]:
         raise click.ClickException("--extracts-json 须为 AttributeExtract 对象数组")
     try:
         return [AttributeExtract.model_validate(item) for item in raw]
-    except Exception as exc:  # pydantic ValidationError / TypeError
+    except (ValidationError, TypeError, ValueError) as exc:
         raise click.ClickException(f"--extracts-json 无效: {exc}") from exc
 
 

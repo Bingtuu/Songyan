@@ -156,6 +156,7 @@ class ChapterVariantRepository:
                 """
                 SELECT * FROM chapter_variants
                 WHERE project_id = ? AND chapter_number = ? AND slot_index = ?
+                ORDER BY created_at ASC
                 LIMIT 1
                 """,
                 (project_id, chapter_number, slot_index),
@@ -195,6 +196,7 @@ class ChapterVariantRepository:
                 """
                 SELECT * FROM chapter_variants
                 WHERE project_id = ? AND chapter_number = ? AND slot_index = ?
+                ORDER BY created_at ASC
                 LIMIT 1
                 """,
                 (project_id, chapter_number, slot_index),
@@ -278,6 +280,7 @@ class ChapterVariantRepository:
                 """
                 SELECT * FROM chapter_variants
                 WHERE project_id = ? AND chapter_number = ? AND slot_index = ?
+                ORDER BY created_at ASC
                 LIMIT 1
                 """,
                 (project_id, chapter_number, slot_index),

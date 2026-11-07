@@ -89,13 +89,19 @@ async def default_slot_draft(
     content = await call_llm(prompt, role="writer")
     prompt_tokens = count_tokens(prompt)
     completion_tokens = count_tokens(content)
-    cost = estimate_cost_from_tokens(prompt_tokens, completion_tokens)
+    # task 231: 按 writer 角色解析出的实际模型计价/回填（路由到别的模型时不低估）。
+    from songyan.llm.client import resolve_llm_config
+
+    resolved_model = resolve_llm_config("writer").model
+    cost = estimate_cost_from_tokens(
+        prompt_tokens, completion_tokens, resolved_model
+    )
     return SlotDraft(
         content=content,
         cost_cny_estimate=float(cost),
         prompt_tokens=prompt_tokens,
         completion_tokens=completion_tokens,
-        model="writer",
+        model=resolved_model,
     )
 
 

@@ -57,3 +57,28 @@ def test_variant_list_empty_text(runner: CliRunner, project_db: Path) -> None:
     assert result.exit_code == 0, result.output
     assert "（空）" in result.output
     assert "未实现" not in result.output
+
+
+def test_variant_list_text_uses_stale_vs_canon_column_name(
+    runner: CliRunner, project_db: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """task 231：文本输出列名 stale_vs_canon，与 content_stale 防混（STATUS 文案纪律）。"""
+    from songyan.services.variant_generate import SlotDraft
+
+    async def _draft(**_kwargs: object) -> SlotDraft:
+        return SlotDraft(content="草稿一", cost_cny_estimate=0.01)
+
+    monkeypatch.setattr(
+        "songyan.services.variant_generate.default_slot_draft", _draft
+    )
+    gen = runner.invoke(
+        cli,
+        ["variant", "generate", "--project-id", _PROJECT, "--chapter", "1", "--json"],
+    )
+    assert gen.exit_code == 0, gen.output
+
+    result = runner.invoke(
+        cli, ["variant", "list", "--project-id", _PROJECT, "--chapter", "1"]
+    )
+    assert result.exit_code == 0, result.output
+    assert "stale_vs_canon=" in result.output
