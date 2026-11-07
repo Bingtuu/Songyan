@@ -28,4 +28,4 @@ M3 步 4：`variant pick` / `variant abandon`（+ JSON）。pick 只移动工作
 
 ## 完成总结（DONE 时填写）
 
-PR 待填（开 PR 后由本切片写入）；base tip `main` `0b47410`（#58）。未 merge / 未 APPROVE。包仍 `0.5.0`。下一刀（仅 owner/parent 授权后）：M3 步 5（stale 自动标脏 + 费用可见）。
+PR [#59](https://github.com/Bingtuu/Songyan/pull/59)；head `d9de192`；base tip `main` `0b47410`（#58）。未 merge / 未 APPROVE。包仍 `0.5.0`。下一刀（仅 owner/parent 授权后）：M3 步 5（stale 自动标脏 + 费用可见）。
