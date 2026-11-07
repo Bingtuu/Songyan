@@ -5,6 +5,7 @@ from __future__ import annotations
 import difflib
 import json
 from dataclasses import dataclass
+from typing import cast
 
 from songyan.db.chapter_variant_repo import ChapterVariantRepository
 from songyan.db.repository import ChapterVersionRepository
@@ -24,7 +25,7 @@ def _optional_score(score_card_json: str | None) -> object | None:
     if not score_card_json:
         return None
     try:
-        return json.loads(score_card_json)
+        return cast(object, json.loads(score_card_json))
     except json.JSONDecodeError:
         return None
 
