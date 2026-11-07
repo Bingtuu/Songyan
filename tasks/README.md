@@ -2,7 +2,7 @@
 
 本目录是 **V1.0 写作助手**开工之后的任务队列。**先写任务文档，再写代码**；完成任务后归档，并同步 `docs/STATUS.md` 与 `docs/HANDOFF-mew.md`。
 
-**M0 / M1 / M2 代码验收 PASS。tech-m3 **已接受**（2026-11-06；t104s937；B1–B7 原样）。** M3 步 1–4 已归档 `done/220-…`–`done/223-…`。当前：M3 步 5（`done/224-m3-step5-stale-cost.md` 开 PR 后归档）。归档：`done/200.md`–`done/224-…`。不做步 6+ / continue / review（仅再授权后）。不要把 `docs/archive/` 里的旧 Task 001–019 或 V13–V15 抄进这里。
+**M0 / M1 / M2 代码验收 PASS。tech-m3 **已接受**（2026-11-06；t104s937；B1–B7 原样）。** M3 步 1–5 已归档 `done/220-…`–`done/224-…`（tip `1b0e323` / #60）。下一闸门：owner 授权再开步 6。归档：`done/200.md`–`done/225-…`（含本 handoff docs）。不做步 6+ / continue / review（仅再授权后）。不要把 `docs/archive/` 里的旧 Task 001–019 或 V13–V15 抄进这里。
 
 ## 文件组织
 
