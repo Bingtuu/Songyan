@@ -1,4 +1,4 @@
-"""M3 variant CLI — step 1 ``list``; step 2 ``generate``; step 3 ``diff`` (no stubs)."""
+"""M3 variant CLI — list / generate / diff / pick / abandon (no stubs)."""
 
 from __future__ import annotations
 
@@ -15,10 +15,16 @@ from songyan.services.variant_diff import (
     list_variant_rows,
 )
 from songyan.services.variant_generate import generate_chapter_variants
+from songyan.services.variant_pick import (
+    AbandonPickedVariantError,
+    StaleVariantPickError,
+    abandon_variant_slot,
+    pick_variant_slot,
+)
 
 
-class VariantSlotMissing(click.ClickException):
-    """Missing variant slot — process exit 2 (tech-m3 §4.1 business reject)."""
+class VariantBusinessReject(click.ClickException):
+    """Business reject — process exit 2 (tech-m3 §4.1)."""
 
     exit_code = 2
 
@@ -68,7 +74,7 @@ async def _diff_variants(
     try:
         result = await diff_variant_slots(project_id, chapter, slot_a, slot_b)
     except MissingVariantSlotError as exc:
-        raise VariantSlotMissing(str(exc)) from exc
+        raise VariantBusinessReject(str(exc)) from exc
     return {
         "chapter": result.chapter,
         "a": result.a,
@@ -76,6 +82,56 @@ async def _diff_variants(
         "content_ref_a": result.content_ref_a,
         "content_ref_b": result.content_ref_b,
         "diff": result.diff,
+    }
+
+
+async def _pick_variant(
+    project_id: str,
+    chapter: int,
+    slot: int,
+    *,
+    allow_stale: bool,
+) -> dict[str, object]:
+    await _ensure_project_readable(project_id)
+    try:
+        result = await pick_variant_slot(
+            project_id, chapter, slot, allow_stale=allow_stale
+        )
+    except MissingVariantSlotError as exc:
+        raise VariantBusinessReject(str(exc)) from exc
+    except StaleVariantPickError as exc:
+        raise VariantBusinessReject(str(exc)) from exc
+    row = result.variant
+    return {
+        "slot_index": row.slot_index,
+        "status": row.status,
+        "content_ref": row.content_ref,
+        "current_version_id": result.current_version_id,
+        "variant_id": row.variant_id,
+        "stale_vs_canon": row.stale_vs_canon,
+        "archived_variant_id": result.archived_variant_id,
+        "allow_stale": allow_stale,
+    }
+
+
+async def _abandon_variant(
+    project_id: str,
+    chapter: int,
+    slot: int,
+) -> dict[str, object]:
+    await _ensure_project_readable(project_id)
+    try:
+        result = await abandon_variant_slot(project_id, chapter, slot)
+    except MissingVariantSlotError as exc:
+        raise VariantBusinessReject(str(exc)) from exc
+    except AbandonPickedVariantError as exc:
+        raise VariantBusinessReject(str(exc)) from exc
+    row = result.variant
+    return {
+        "slot_index": row.slot_index,
+        "status": row.status,
+        "content_ref": row.content_ref,
+        "variant_id": row.variant_id,
     }
 
 
@@ -192,6 +248,69 @@ def variant_diff(
     click.echo(payload["diff"], nl=False)
     if not str(payload["diff"]).endswith("\n"):
         click.echo("")
+
+
+@variant_group.command(name="pick")
+@click.option("--project-id", required=True, help="项目 ID")
+@click.option("--chapter", required=True, type=int, help="章号")
+@click.option("--slot", required=True, type=int, help="槽号（slot_index）")
+@click.option(
+    "--allow-stale",
+    is_flag=True,
+    help="允许 pick 已 stale_vs_canon=1 的槽（仍不写 Canon）",
+)
+@click.option("--json", "as_json", is_flag=True, help="JSON 输出")
+def variant_pick(
+    project_id: str,
+    chapter: int,
+    slot: int,
+    allow_stale: bool,
+    as_json: bool,
+) -> None:
+    """选用一槽：移动工作正文指针；不写 Canon / plan_*。"""
+    if chapter < 1:
+        raise click.ClickException("chapter 必须 >= 1")
+    if slot < 1:
+        raise click.ClickException("slot 必须 >= 1")
+
+    payload = asyncio.run(
+        _pick_variant(project_id, chapter, slot, allow_stale=allow_stale)
+    )
+    if as_json:
+        click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+        return
+    click.echo(
+        f"picked slot={payload['slot_index']} "
+        f"ref={payload['content_ref']} "
+        f"current_version_id={payload['current_version_id']} "
+        f"stale={payload['stale_vs_canon']}"
+    )
+
+
+@variant_group.command(name="abandon")
+@click.option("--project-id", required=True, help="项目 ID")
+@click.option("--chapter", required=True, type=int, help="章号")
+@click.option("--slot", required=True, type=int, help="槽号（slot_index）")
+@click.option("--json", "as_json", is_flag=True, help="JSON 输出")
+def variant_abandon(
+    project_id: str,
+    chapter: int,
+    slot: int,
+    as_json: bool,
+) -> None:
+    """软删除一槽（status→abandoned）；不清空正文；拒 abandon 当前 picked。"""
+    if chapter < 1:
+        raise click.ClickException("chapter 必须 >= 1")
+    if slot < 1:
+        raise click.ClickException("slot 必须 >= 1")
+
+    payload = asyncio.run(_abandon_variant(project_id, chapter, slot))
+    if as_json:
+        click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+        return
+    click.echo(
+        f"abandoned slot={payload['slot_index']} ref={payload['content_ref']}"
+    )
 
 
 def register_variant_commands(cli: click.Group) -> None:

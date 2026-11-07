@@ -1,7 +1,8 @@
-"""Repository for ``chapter_variants`` (tech-m3 B1 / step 1)."""
+"""Repository for ``chapter_variants`` (tech-m3 B1 / step 1; pick/abandon step 4)."""
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from sqlite3 import IntegrityError, Row
 
@@ -12,6 +13,7 @@ from songyan.exceptions import DuplicatePickedVariantError
 from songyan.models.variant import ChapterVariant, VariantStatus
 
 logger = structlog.get_logger(__name__)
+
 
 def _utc_now() -> str:
     return datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
@@ -34,8 +36,16 @@ def _row_to_variant(row: Row) -> ChapterVariant:
     )
 
 
+@dataclass(frozen=True)
+class PickSlotOutcome:
+    """Result of transactional pick: new picked row + optional archived prior."""
+
+    picked: ChapterVariant
+    archived_variant_id: str | None
+
+
 class ChapterVariantRepository:
-    """Insert / list chapter variants; enforce one ``picked`` per chapter."""
+    """Insert / list / pick / abandon chapter variants; one ``picked`` per chapter."""
 
     async def insert(self, variant: ChapterVariant) -> None:
         """Insert one variant row.
@@ -154,3 +164,137 @@ class ChapterVariantRepository:
             )
             row = await cursor.fetchone()
         return _row_to_variant(row) if row is not None else None
+
+    async def pick_slot(
+        self, project_id: str, chapter_number: int, slot_index: int
+    ) -> PickSlotOutcome:
+        """Archive prior picked (if any) then mark ``slot_index`` as picked.
+
+        Runs in one transaction so the single-picked unique index never sees
+        two ``picked`` rows. Does not touch ``plan_*`` or chapter_versions.
+        """
+        now = _utc_now()
+        async with get_db() as conn:
+            conn.row_factory = Row
+            cursor = await conn.execute(
+                """
+                SELECT * FROM chapter_variants
+                WHERE project_id = ? AND chapter_number = ? AND slot_index = ?
+                LIMIT 1
+                """,
+                (project_id, chapter_number, slot_index),
+            )
+            target_row = await cursor.fetchone()
+            if target_row is None:
+                raise LookupError(
+                    f"variant slot missing: chapter={chapter_number} slot={slot_index}"
+                )
+            target = _row_to_variant(target_row)
+
+            archived_id: str | None = None
+            cursor = await conn.execute(
+                """
+                SELECT variant_id FROM chapter_variants
+                WHERE project_id = ? AND chapter_number = ? AND status = 'picked'
+                  AND slot_index != ?
+                """,
+                (project_id, chapter_number, slot_index),
+            )
+            prior_rows = await cursor.fetchall()
+            for prior in prior_rows:
+                await conn.execute(
+                    """
+                    UPDATE chapter_variants
+                    SET status = 'archived', updated_at = ?
+                    WHERE variant_id = ?
+                    """,
+                    (now, prior["variant_id"]),
+                )
+                archived_id = prior["variant_id"]
+
+            if target.status != "picked":
+                try:
+                    await conn.execute(
+                        """
+                        UPDATE chapter_variants
+                        SET status = 'picked', updated_at = ?
+                        WHERE variant_id = ?
+                        """,
+                        (now, target.variant_id),
+                    )
+                except IntegrityError as exc:
+                    raise DuplicatePickedVariantError(
+                        f"chapter {chapter_number} already has a picked variant"
+                    ) from exc
+
+            await conn.commit()
+
+            cursor = await conn.execute(
+                "SELECT * FROM chapter_variants WHERE variant_id = ?",
+                (target.variant_id,),
+            )
+            fresh = await cursor.fetchone()
+            assert fresh is not None
+            picked = _row_to_variant(fresh)
+
+        logger.info(
+            "chapter_variants.pick_slot",
+            project_id=project_id,
+            chapter_number=chapter_number,
+            slot_index=slot_index,
+            variant_id=picked.variant_id,
+            archived_variant_id=archived_id,
+        )
+        return PickSlotOutcome(picked=picked, archived_variant_id=archived_id)
+
+    async def set_status(
+        self,
+        project_id: str,
+        chapter_number: int,
+        slot_index: int,
+        *,
+        status: VariantStatus,
+    ) -> ChapterVariant:
+        """Set status for one slot; returns the updated row."""
+        now = _utc_now()
+        async with get_db() as conn:
+            conn.row_factory = Row
+            cursor = await conn.execute(
+                """
+                SELECT * FROM chapter_variants
+                WHERE project_id = ? AND chapter_number = ? AND slot_index = ?
+                LIMIT 1
+                """,
+                (project_id, chapter_number, slot_index),
+            )
+            row = await cursor.fetchone()
+            if row is None:
+                raise LookupError(
+                    f"variant slot missing: chapter={chapter_number} slot={slot_index}"
+                )
+            variant_id = row["variant_id"]
+            await conn.execute(
+                """
+                UPDATE chapter_variants
+                SET status = ?, updated_at = ?
+                WHERE variant_id = ?
+                """,
+                (status, now, variant_id),
+            )
+            await conn.commit()
+            cursor = await conn.execute(
+                "SELECT * FROM chapter_variants WHERE variant_id = ?",
+                (variant_id,),
+            )
+            fresh = await cursor.fetchone()
+            assert fresh is not None
+            updated = _row_to_variant(fresh)
+        logger.info(
+            "chapter_variants.set_status",
+            project_id=project_id,
+            chapter_number=chapter_number,
+            slot_index=slot_index,
+            status=status,
+            variant_id=updated.variant_id,
+        )
+        return updated
