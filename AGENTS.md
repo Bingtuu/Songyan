@@ -38,7 +38,7 @@ Songyan（松烟）是 **人主导的连载写作助手**，接在现有的事�
 
 冲突时，上面的条目压过下面的。产品边界以 PRD 为准；M0 的实现细节以 `tech-m0.md` 为准；M1 的实现细节以**已接受的** `tech-m1.md` 为准；M2 的实现细节以**已接受的** `tech-m2.md` 为准；M3 的实现细节以**已接受的** `tech-m3.md` 为准，且不得越出 PRD 对应里程碑。不要用归档路线图或 [docs/prd-v1-writing-assist.md](docs/prd-v1-writing-assist.md) 的指针页推翻 PRD。
 
-**开工门（tech-m3 已接受；M3 步 3）：** `docs/tech-m2.md` **已接受**；§6–7 **PASS**（`f1c3093`）。`docs/tech-m3.md` **已接受**（t104s937；B1–B7 原样）。M3 步 1–2 已在 `main`（#56 / `b9bbf98`；#57 / `135fcfb`）。**当前 = M3 步 3**（`variant list`/`diff`；owner t104s965）。步 3 合入后下一闸门 = 授权再开步 4。不做 continue / review / 步 4+ 超范围。开 PR 后 Mew COMMENT 再合并。
+**开工门（tech-m3 已接受；M3 步 4）：** `docs/tech-m2.md` **已接受**；§6–7 **PASS**（`f1c3093`）。`docs/tech-m3.md` **已接受**（t104s937；B1–B7 原样）。M3 步 1–3 已在 `main`（#56 / `b9bbf98`；#57 / `135fcfb`；#58 / `0b47410`）。**当前 = M3 步 4**（`variant pick`/`abandon`；owner t104s981）。步 4 合入后下一闸门 = 授权再开步 5。不做 continue / review / 步 5+ 超范围。开 PR 后 Mew COMMENT 再合并。
 
 ## 默认不要读
 
@@ -55,7 +55,7 @@ Songyan（松烟）是 **人主导的连载写作助手**，接在现有的事�
 - 不要把 extract-then-patch，或 SettlementExtractor 的自动写入，做成助手主路径。
 - 不要为了追召回去加题材专用检查器。窄检查保持薄封装。
 - 不要把质量门通过写成「可发表」或「书写得好」。
-- tech-m2 **已接受且 §6–7 PASS**：不再扩 M2 编码范围。tech-m3 **已接受**：只按 §5 小步推进；当前步 3，不做步 4+ / continue / review。续写仍属 M4。M1 约束仍有效（五表 `rejected`；无持久第四态 `accepted`）。
+- tech-m2 **已接受且 §6–7 PASS**：不再扩 M2 编码范围。tech-m3 **已接受**：只按 §5 小步推进；当前步 4，不做步 5+ / continue / review。续写仍属 M4。M1 约束仍有效（五表 `rejected`；无持久第四态 `accepted`）。
 - 不要提交 `.env`、密钥、书稿、本地数据库、未脱敏日志。
 
 ## 运行时不变量
@@ -80,4 +80,4 @@ Songyan（松烟）是 **人主导的连载写作助手**，接在现有的事�
 
 ## 命令表面
 
-现网能用的包括 `doctor`、`create-project`、`run`、`report`、`export`、`import`、`bundle-run`，以及 M0 的 `canon show` 与 `today`，以及 M1 的 `canon edit` / `confirm` / `dismiss`（及非持久 `accept`；entity/attribute）与规则 `check`，以及 M2 的 `today` 承诺计数、`canon show --kind promise`、`canon confirm promise`、`canon confirm` `--hard` / `--mark-stale`、`chapter_heads.content_stale`、`check` 报告 stale 范围、抽取 / import → `plan_*` pending（`source=extract`；confirm 前不进 canon）。M3 步 1 起注册 `variant list`；步 2 起注册 `variant generate`；步 3 起注册 `variant diff` 并增强 `list`；`pick` / `abandon` 随后续小步落地。`chapter continue` / `review`（M4）在对应技术方案被接受并授权前不注册。完整列表以 PRD 第 9 节为准。
+现网能用的包括 `doctor`、`create-project`、`run`、`report`、`export`、`import`、`bundle-run`，以及 M0 的 `canon show` 与 `today`，以及 M1 的 `canon edit` / `confirm` / `dismiss`（及非持久 `accept`；entity/attribute）与规则 `check`，以及 M2 的 `today` 承诺计数、`canon show --kind promise`、`canon confirm promise`、`canon confirm` `--hard` / `--mark-stale`、`chapter_heads.content_stale`、`check` 报告 stale 范围、抽取 / import → `plan_*` pending（`source=extract`；confirm 前不进 canon）。M3 步 1 起注册 `variant list`；步 2 起注册 `variant generate`；步 3 起注册 `variant diff` 并增强 `list`；步 4 起注册 `variant pick` / `abandon`。`chapter continue` / `review`（M4）在对应技术方案被接受并授权前不注册。完整列表以 PRD 第 9 节为准。
