@@ -78,6 +78,9 @@ class ForeshadowingRepository:
 
         ``resolved_chapter`` / ``resolved_version_id`` 仅在 ``status == "resolved"``
         且两者均提供时回填；其余状态翻转（due/overdue 等）不触碰这两列。
+
+        注（task 228）：``status="resolved"`` 的写径是 ``settle_resolved``
+        （原子开放集守卫 + evidence 落库）；本方法不再用于 resolved。
         """
         backfill = (
             status == "resolved"
@@ -111,6 +114,41 @@ class ForeshadowingRepository:
             operation="update_status",
             foreshadowing_id=foreshadowing_id,
         )
+
+    async def settle_resolved(
+        self,
+        foreshadowing_id: str,
+        *,
+        resolved_chapter: int,
+        resolved_version_id: str,
+        evidence: str,
+        open_statuses: tuple[str, ...],
+        conn: aiosqlite.Connection,
+    ) -> bool:
+        """原子守卫 + 销账写入（task 228）：WHERE 自带开放集条件，恰命中一行才成交。
+
+        守卫与 UPDATE 同语句，并发/重入下第二个调用者拿到 rowcount=0。
+        调用方拥有事务（caller commits）。
+        """
+        placeholders = ", ".join("?" for _ in open_statuses)
+        cursor = await conn.execute(
+            f"""UPDATE foreshadowings
+                SET status = 'resolved',
+                    resolved_chapter = ?,
+                    resolved_version_id = ?,
+                    resolved_evidence = ?
+                WHERE foreshadowing_id = ?
+                  AND lifecycle_status = 'active'
+                  AND status IN ({placeholders})""",
+            (
+                resolved_chapter,
+                resolved_version_id,
+                evidence,
+                foreshadowing_id,
+                *open_statuses,
+            ),
+        )
+        return cursor.rowcount == 1
 
     async def get_row(self, foreshadowing_id: str) -> dict[str, Any] | None:
         """Load one foreshadowing row (incl. project_id / lifecycle / resolve cols)."""

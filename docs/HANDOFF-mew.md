@@ -49,7 +49,7 @@ M1 代码验收（步 1–5 + tech-m1 §6–7）在 `main` `69d7ece`：**PASS**�
 | M3 步 3 | 已合入 `0b47410`（#58）；[tasks/done/222-m3-step3-variant-list-diff.md](../tasks/done/222-m3-step3-variant-list-diff.md) |
 | M3 步 4 | 已合入 `c38ee31`（#59）；[tasks/done/223-m3-step4-variant-pick-abandon.md](../tasks/done/223-m3-step4-variant-pick-abandon.md) |
 | M3 步 5 | 已合入 `1b0e323`（#60）；[tasks/done/224-m3-step5-stale-cost.md](../tasks/done/224-m3-step5-stale-cost.md) |
-| 当前任务 | [tasks/done/227-prd-alignment-revision.md](../tasks/done/227-prd-alignment-revision.md)（DONE 2026-11-07）— PRD 对齐修订 + 旧测试裁决规则成文。下一刀建议：P0-2 promise evidence 落库、P0-3 plan 模型默认值（需 owner 拍板）、P1-5 旧工作区文件清理；M3 步 6 仍等 owner 授权 |
+| 当前任务 | [tasks/done/228-promise-evidence-audit.md](../tasks/done/228-promise-evidence-audit.md)（DONE 2026-11-07）。进行中：229（P0-3 默认值，auto 模式记录搁置）、230（旧文件隔离）、231（观察项批） |
 | 架构方向 | [adr/0001-plan-first-facts.md](adr/0001-plan-first-facts.md) |
 | 工程现状 | [STATUS.md](STATUS.md) |
 | 阶段 A–C | [ROADMAP-plan-first.md](ROADMAP-plan-first.md)（CLOSED 短指针；全文在 archive，日常不要加载） |

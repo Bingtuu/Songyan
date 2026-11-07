@@ -315,6 +315,7 @@ CREATE TABLE IF NOT EXISTS foreshadowings (
     source_version_id       TEXT NOT NULL REFERENCES chapter_versions(version_id) ON DELETE CASCADE,  -- ⭐
     resolved_chapter        INTEGER,                 -- Task 241: resolve 发生竫（可追溯，NULL=未回收/历史）
     resolved_version_id     TEXT,                    -- Task 241: resolve 关联版本
+    resolved_evidence       TEXT,                    -- task 228: 人确认销账时给的证据（写-only 审计）
     created_at              TEXT DEFAULT (datetime('now'))
 );
 

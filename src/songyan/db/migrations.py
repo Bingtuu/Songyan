@@ -961,6 +961,19 @@ async def _migrate_foreshadowings_resolved_trace(conn: aiosqlite.Connection) -> 
             )
 
 
+async def _migrate_foreshadowings_resolved_evidence(conn: aiosqlite.Connection) -> None:
+    """task 228: foreshadowings 增加 resolved_evidence 列（人确认销账的审计证据）.
+
+    写-only：不改任何读口径与 open 集；历史行保持 NULL。
+    """
+    cursor = await conn.execute("PRAGMA table_info(foreshadowings)")
+    cols = {row[1] for row in await cursor.fetchall()}
+    if "resolved_evidence" not in cols:
+        await conn.execute(
+            "ALTER TABLE foreshadowings ADD COLUMN resolved_evidence TEXT"
+        )
+
+
 
 async def _migrate_plan_attribute_source_extract(conn: aiosqlite.Connection) -> None:
     """Expand plan_attributes.source CHECK to include extract (tech-m2 B5 / step 5).
@@ -1723,5 +1736,9 @@ _MIGRATIONS: list[tuple[str, Callable[[aiosqlite.Connection], Awaitable[None]]]]
     (
         "_migrate_chapter_variants",
         _migrate_chapter_variants,
+    ),
+    (
+        "_migrate_foreshadowings_resolved_evidence",
+        _migrate_foreshadowings_resolved_evidence,
     ),
 ]

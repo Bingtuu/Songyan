@@ -397,3 +397,113 @@ def test_s3_uses_existing_foreshadowings_table_only(
     assert "foreshadowings" in names
     promise_like = {n for n in names if "promise" in n.lower()}
     assert promise_like == set()
+
+
+def test_confirm_promise_persists_evidence(
+    runner: CliRunner, settle_db: Path
+) -> None:
+    """task 228：人给的 --evidence 持久化到 resolved_evidence（审计留痕）。"""
+    result = runner.invoke(
+        cli,
+        [
+            "canon", "confirm", "promise",
+            "--project-id", DUSHI_LINGYI_PROJECT_ID,
+            "--foreshadowing-id", _OVERDUE_ID,
+            "--chapter", str(_RESOLVE_CHAPTER),
+            "--evidence", _EVIDENCE,
+        ],
+    )
+    assert result.exit_code == 0, result.output
+
+    async def _read_evidence() -> str | None:
+        async with get_db() as conn:
+            cursor = await conn.execute(
+                "SELECT resolved_evidence FROM foreshadowings WHERE foreshadowing_id = ?",
+                (_OVERDUE_ID,),
+            )
+            row = await cursor.fetchone()
+        return None if row is None else row[0]
+
+    assert asyncio.run(_read_evidence()) == _EVIDENCE
+
+
+def test_confirm_promise_concurrent_double_settle_guarded(
+    settle_db: Path,
+) -> None:
+    """task 228：并发双销账同一伏笔——守卫与写入同事务，恰一个成功。"""
+    from click import ClickException
+
+    from songyan.cli.commands.canon_write import _confirm_promise
+
+    async def _one(tag: str) -> str:
+        return await _confirm_promise(
+            project_id=DUSHI_LINGYI_PROJECT_ID,
+            foreshadowing_id=_PLANTED_ID,
+            chapter=_RESOLVE_CHAPTER,
+            evidence=f"并发证据{tag}",
+        )
+
+    async def _race() -> tuple[list[str], list[BaseException]]:
+        ok: list[str] = []
+        errs: list[BaseException] = []
+        results = await asyncio.gather(
+            _one("A"), _one("B"), return_exceptions=True
+        )
+        for r in results:
+            if isinstance(r, BaseException):
+                errs.append(r)
+            else:
+                ok.append(r)
+        return ok, errs
+
+    ok, errs = asyncio.run(_race())
+    assert len(ok) == 1, f"expect exactly one winner, got {ok}"
+    assert len(errs) == 1
+    assert isinstance(errs[0], ClickException)
+    assert "不在开放承诺集" in str(errs[0])
+
+
+async def test_migration_adds_resolved_evidence_column(
+    tmp_path: Path,
+) -> None:
+    """task 228：旧库（无 resolved_evidence 列）跑迁移补列，既有行保持 NULL。"""
+    import aiosqlite
+
+    from songyan.db.migrations import init_schema, run_migrations
+
+    db_path = tmp_path / "old-evidence.db"
+    await init_schema(str(db_path))
+    async with aiosqlite.connect(str(db_path)) as conn:
+        await conn.execute("DROP TABLE foreshadowings")
+        await conn.execute(
+            """CREATE TABLE foreshadowings (
+                foreshadowing_id        TEXT PRIMARY KEY,
+                project_id              TEXT NOT NULL,
+                description             TEXT NOT NULL,
+                planted_in_chapter      INTEGER NOT NULL,
+                expected_resolve_chapter INTEGER,
+                status                  TEXT DEFAULT 'planted',
+                lifecycle_status        TEXT DEFAULT 'active',
+                source_version_id       TEXT NOT NULL,
+                created_at              TEXT DEFAULT (datetime('now'))
+            )"""
+        )
+        await conn.execute(
+            "INSERT INTO foreshadowings ("
+            "foreshadowing_id, project_id, description, planted_in_chapter,"
+            " status, source_version_id"
+            ") VALUES ('fs-old', 'proj-1', '旧伏笔', 1, 'resolved', 'v-old')"
+        )
+        await conn.commit()
+
+        await run_migrations(conn)
+        await conn.commit()
+
+        cursor = await conn.execute("PRAGMA table_info(foreshadowings)")
+        columns = {row[1] for row in await cursor.fetchall()}
+        assert "resolved_evidence" in columns
+
+        cursor = await conn.execute(
+            "SELECT resolved_evidence FROM foreshadowings WHERE foreshadowing_id = 'fs-old'"
+        )
+        assert (await cursor.fetchone())[0] is None

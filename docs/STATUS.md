@@ -89,6 +89,7 @@ songyan variant abandon  --project-id TEXT --chapter INT --slot INT [--json]
 - **未做：** M3 步 6；`chapter continue` / `review`；M3 §6–7 验收声称；M4+。
 - `today` 的固定 `next` 文案仍是 M2 口径；若要改成「可抽卡」提示，属于**步 6**，需 owner 授权后再改。
 - **2026-11-07 评审修复（task 226，已归档 `tasks/done/`）**：全量 code review 的 1 blocker + 4 major + minor 批已修复——settlement 声称的伏笔 resolve 只进提案（不再直写 `resolved`；唯一写径 = `canon confirm promise`）；`variant generate` 成本记账去重且归因 project/agent；pick 拒绝 abandoned 槽；LLM 失败保留已写槽并报 stderr；rejected 行不可被 confirm 直接转正；extract 提案跳过 rejected。详见 `tasks/done/226-review-findings-fix.md` 与 `docs/superpowers/plans/2026-11-07-m0-m3-review-audit.md`。
+- **2026-11-07 审计补强（task 228，已归档 `tasks/done/`）**：`canon confirm promise` 的人证 evidence 落库（`foreshadowings.resolved_evidence`，写-only 审计列）；销账守卫与写入合并为原子 UPDATE（并发双销账恰一成交）。读口径与 open 集不变。
 
 标识与助手交接：[HANDOFF-mew.md](HANDOFF-mew.md)。书稿不入库。
 

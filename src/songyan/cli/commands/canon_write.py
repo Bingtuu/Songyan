@@ -341,12 +341,31 @@ async def _confirm_promise(
             f"第 {chapter} 章没有 accepted_version_id，无法回填 resolved_version_id"
         )
 
-    await ForeshadowingRepository().update_status(
-        row["foreshadowing_id"],
-        "resolved",
-        resolved_chapter=chapter,
-        resolved_version_id=head.accepted_version_id,
-    )
+    # task 228：守卫与写入同一事务（原子 UPDATE 自带开放集条件），evidence 落库。
+    async with get_db() as conn:
+        settled = await ForeshadowingRepository().settle_resolved(
+            row["foreshadowing_id"],
+            resolved_chapter=chapter,
+            resolved_version_id=head.accepted_version_id,
+            evidence=evidence_text,
+            open_statuses=tuple(sorted(_OPEN_PROMISE_STATUSES)),
+            conn=conn,
+        )
+        if not settled:
+            cursor = await conn.execute(
+                "SELECT status, lifecycle_status FROM foreshadowings "
+                "WHERE foreshadowing_id = ?",
+                (row["foreshadowing_id"],),
+            )
+            current = await cursor.fetchone()
+            cur_status = current[0] if current else "?"
+            cur_lifecycle = current[1] if current else "?"
+            raise click.ClickException(
+                f"foreshadowing 不在开放承诺集（并发或状态已变）: "
+                f"{row['foreshadowing_id']} "
+                f"(当前 status={cur_status}, lifecycle_status={cur_lifecycle})"
+            )
+        await conn.commit()
     return (
         f"{_SETTLED} promise {row['foreshadowing_id']} "
         f"（status=resolved, resolved_chapter={chapter}, "
