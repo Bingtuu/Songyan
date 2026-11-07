@@ -26,4 +26,4 @@ M3 步 3：增强 `variant list`（槽字段 + fingerprint 短显 + JSON）；�
 
 ## 完成总结（DONE 时填写）
 
-PR 开出后填号；head SHA；base tip `main` `135fcfb`（#57）。未 merge / 未 APPROVE。包仍 `0.5.0`。下一刀（仅 owner/parent 授权后）：M3 步 4 `variant pick` / `abandon`。
+PR [#58](https://github.com/Bingtuu/Songyan/pull/58)；head `6026419`；base tip `main` `135fcfb`（#57）。未 merge / 未 APPROVE。包仍 `0.5.0`。下一刀（仅 owner/parent 授权后）：M3 步 4 `variant pick` / `abandon`。
