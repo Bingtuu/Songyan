@@ -49,7 +49,7 @@ M1 代码验收（步 1–5 + tech-m1 §6–7）在 `main` `69d7ece`：**PASS**�
 | M3 步 3 | 已合入 `0b47410`（#58）；[tasks/done/222-m3-step3-variant-list-diff.md](../tasks/done/222-m3-step3-variant-list-diff.md) |
 | M3 步 4 | 已合入 `c38ee31`（#59）；[tasks/done/223-m3-step4-variant-pick-abandon.md](../tasks/done/223-m3-step4-variant-pick-abandon.md) |
 | M3 步 5 | 已合入 `1b0e323`（#60）；[tasks/done/224-m3-step5-stale-cost.md](../tasks/done/224-m3-step5-stale-cost.md) |
-| 当前任务 | tip `1b0e323`。步 1–5 已合入；下一闸门 = owner 授权再开步 6 |
+| 当前任务 | [tasks/done/226-review-findings-fix.md](../tasks/done/226-review-findings-fix.md)（DONE 2026-11-07）— 评审发现修复：blocker + 4 major + minor 批，全量验证绿（除既有 flaky `test_llm_http_timeout`）。下一刀建议：评审观察项清理任务（待立项）；M3 步 6 仍等 owner 授权 |
 | 架构方向 | [adr/0001-plan-first-facts.md](adr/0001-plan-first-facts.md) |
 | 工程现状 | [STATUS.md](STATUS.md) |
 | 阶段 A–C | [ROADMAP-plan-first.md](ROADMAP-plan-first.md)（CLOSED 短指针；全文在 archive，日常不要加载） |

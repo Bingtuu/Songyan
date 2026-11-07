@@ -5,12 +5,16 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from sqlite3 import IntegrityError, Row
+from typing import TYPE_CHECKING
 
 import structlog
 
 from songyan.db.connection import get_db
 from songyan.exceptions import DuplicatePickedVariantError
 from songyan.models.variant import ChapterVariant, VariantStatus
+
+if TYPE_CHECKING:
+    import aiosqlite
 
 logger = structlog.get_logger(__name__)
 
@@ -47,18 +51,23 @@ class PickSlotOutcome:
 class ChapterVariantRepository:
     """Insert / list / pick / abandon chapter variants; one ``picked`` per chapter."""
 
-    async def insert(self, variant: ChapterVariant) -> None:
+    async def insert(
+        self, variant: ChapterVariant, conn: aiosqlite.Connection | None = None
+    ) -> None:
         """Insert one variant row.
 
         Raises ``DuplicatePickedVariantError`` when status is ``picked`` and the
         chapter already has a picked row (application guard + unique index).
+        When ``conn`` is given, writes on it without committing (caller owns
+        the transaction).
         """
         now = variant.created_at or _utc_now()
         updated = variant.updated_at or now
         status: VariantStatus = variant.status
-        async with get_db() as conn:
+
+        async def _do(c: aiosqlite.Connection) -> None:
             if status == "picked":
-                cursor = await conn.execute(
+                cursor = await c.execute(
                     """
                     SELECT variant_id FROM chapter_variants
                     WHERE project_id = ? AND chapter_number = ? AND status = 'picked'
@@ -73,7 +82,7 @@ class ChapterVariantRepository:
                         f"variant {existing[0]}"
                     )
             try:
-                await conn.execute(
+                await c.execute(
                     """
                     INSERT INTO chapter_variants (
                         variant_id, project_id, chapter_number, slot_index,
@@ -97,7 +106,6 @@ class ChapterVariantRepository:
                         updated,
                     ),
                 )
-                await conn.commit()
             except IntegrityError as exc:
                 msg = str(exc).lower()
                 if status == "picked" or "picked" in msg or "single_picked" in msg:
@@ -105,6 +113,13 @@ class ChapterVariantRepository:
                         f"chapter {variant.chapter_number} already has a picked variant"
                     ) from exc
                 raise
+
+        if conn is None:
+            async with get_db() as own:
+                await _do(own)
+                await own.commit()
+        else:
+            await _do(conn)
         logger.info(
             "chapter_variants.insert",
             variant_id=variant.variant_id,

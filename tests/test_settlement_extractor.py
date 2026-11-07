@@ -2167,7 +2167,8 @@ class TestApplySettlement:
         )
         mock_fs.create.assert_called_once()
 
-    async def test_applies_foreshadowing_resolve(self) -> None:
+    async def test_applies_foreshadowing_resolve_as_proposal(self) -> None:
+        """tech-m2 §3.2/§4.3.3/B3：resolve 只是提案——不写 resolved，只留痕。"""
         mock_fs = AsyncMock()
         settlement = StateSettlement(
             foreshadowing_updates=[
@@ -2186,11 +2187,8 @@ class TestApplySettlement:
             foreshadowing_repo=mock_fs,
             numerical_repo=AsyncMock(),
         )
-        from unittest.mock import ANY
-        # Task 241: resolve 分支回填可追溯列（章号 + 关联版本）
-        mock_fs.update_status.assert_called_once_with(
-            "fs1", "resolved", conn=ANY, resolved_chapter=3, resolved_version_id="v1"
-        )
+        mock_fs.update_status.assert_not_called()
+        assert settlement.observation_counts["foreshadowing_resolve_proposed"] == 1
 
     async def test_applies_numerical_updates(self) -> None:
         mock_num = AsyncMock()

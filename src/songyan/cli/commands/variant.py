@@ -9,14 +9,19 @@ import click
 
 from songyan.db.connection import get_db_path
 from songyan.db.repository import ProjectRepository
+from songyan.exceptions import DuplicatePickedVariantError
 from songyan.services.variant_diff import (
     MissingVariantSlotError,
     diff_variant_slots,
     list_variant_rows,
 )
-from songyan.services.variant_generate import generate_chapter_variants
+from songyan.services.variant_generate import (
+    VariantGenerateLLMError,
+    generate_chapter_variants,
+)
 from songyan.services.variant_pick import (
     AbandonPickedVariantError,
+    PickAbandonedVariantError,
     StaleVariantPickError,
     abandon_variant_slot,
     pick_variant_slot,
@@ -50,12 +55,18 @@ async def _generate_variants(
     budget_cny: float | None,
 ) -> dict[str, object]:
     await _ensure_project_readable(project_id)
-    result = await generate_chapter_variants(
-        project_id,
-        chapter,
-        n=n,
-        budget_cny=budget_cny,
-    )
+    try:
+        result = await generate_chapter_variants(
+            project_id,
+            chapter,
+            n=n,
+            budget_cny=budget_cny,
+        )
+    except VariantGenerateLLMError as exc:
+        # tech-m3 §4.2 #4：失败信息进退出码/stderr；已写槽已保留（exit 1）
+        raise click.ClickException(
+            f"模型调用失败（已保留 {exc.written_slots} 个已生成槽）：{exc}"
+        ) from exc
     return {
         "n": result.n_requested,
         "fingerprint": result.fingerprint,
@@ -100,6 +111,10 @@ async def _pick_variant(
     except MissingVariantSlotError as exc:
         raise VariantBusinessReject(str(exc)) from exc
     except StaleVariantPickError as exc:
+        raise VariantBusinessReject(str(exc)) from exc
+    except PickAbandonedVariantError as exc:
+        raise VariantBusinessReject(str(exc)) from exc
+    except DuplicatePickedVariantError as exc:
         raise VariantBusinessReject(str(exc)) from exc
     row = result.variant
     return {

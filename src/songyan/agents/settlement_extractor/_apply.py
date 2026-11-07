@@ -790,17 +790,23 @@ async def apply_settlement(
                 logger.info("settlement.foreshadowing_planted", foreshadowing_id=fs_id)
             elif fs.operation == "resolve":
                 if fs.foreshadowing_id:
-                    # Task 241: resolve 回填可追溯列（章号 + 关联版本）
-                    await foreshadowing_repo.update_status(
-                        fs.foreshadowing_id,
-                        "resolved",
-                        conn=c,
-                        resolved_chapter=chapter_number,
-                        resolved_version_id=version_id,
+                    # tech-m2 §3.2/§4.3.3/B3：模型声称的 resolve 只是提案；未经
+                    # human confirm（canon confirm promise）不得移出 open 集。
+                    settlement.observation_counts[
+                        "foreshadowing_resolve_proposed"
+                    ] = (
+                        settlement.observation_counts.get(
+                            "foreshadowing_resolve_proposed", 0
+                        )
+                        + 1
                     )
                     logger.info(
-                        "settlement.foreshadowing_resolved",
+                        "settlement.foreshadowing_resolve_proposed",
                         foreshadowing_id=fs.foreshadowing_id,
+                        project_id=project_id,
+                        chapter_number=chapter_number,
+                        suggested_chapter=chapter_number,
+                        version_id=version_id,
                     )
                 else:
                     # 172c.r: 原静默跳过——resolve 缺 id 时无任何线索。

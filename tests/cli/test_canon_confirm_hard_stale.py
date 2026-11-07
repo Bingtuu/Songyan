@@ -359,3 +359,88 @@ def test_migration_adds_content_stale_default_zero(stale_db: Path) -> None:
             assert all(v == 0 for v in values)
 
     asyncio.run(_check())
+
+
+def test_confirm_rejected_attribute_refused(runner: CliRunner, stale_db: Path) -> None:
+    """task 226 切片 5（owner 拍板）：rejected 不能直接 confirm 转正。"""
+    _edit_entity(runner)
+    _edit_attribute(runner, attribute_id=_ATTR_ID, valid_from="2", valid_to="4")
+    dismissed = runner.invoke(
+        cli,
+        [
+            "canon", "dismiss", "attribute",
+            "--project-id", DUSHI_LINGYI_PROJECT_ID,
+            "--attribute-id", _ATTR_ID,
+        ],
+    )
+    assert dismissed.exit_code == 0, dismissed.output
+
+    result = runner.invoke(
+        cli,
+        [
+            "canon", "confirm", "attribute",
+            "--project-id", DUSHI_LINGYI_PROJECT_ID,
+            "--attribute-id", _ATTR_ID,
+        ],
+    )
+    assert result.exit_code == 2
+    assert "rejected" in result.output
+
+    row = asyncio.run(PlanFactRepository().read_attribute(_ATTR_ID))
+    assert row is not None
+    assert row.approval_status == "rejected"
+
+
+def test_confirm_rejected_entity_refused(runner: CliRunner, stale_db: Path) -> None:
+    """task 226 切片 5（owner 拍板）：rejected entity 同样不可直接转正。"""
+    _edit_entity(runner)
+    dismissed = runner.invoke(
+        cli,
+        [
+            "canon", "dismiss", "entity",
+            "--project-id", DUSHI_LINGYI_PROJECT_ID,
+            "--entity-id", _ENTITY_ID,
+        ],
+    )
+    assert dismissed.exit_code == 0, dismissed.output
+
+    result = runner.invoke(
+        cli,
+        [
+            "canon", "confirm", "entity",
+            "--project-id", DUSHI_LINGYI_PROJECT_ID,
+            "--entity-id", _ENTITY_ID,
+        ],
+    )
+    assert result.exit_code == 2
+    assert "rejected" in result.output
+
+    row = asyncio.run(PlanFactRepository().read_entity(_ENTITY_ID))
+    assert row is not None
+    assert row.approval_status == "rejected"
+
+
+def test_hard_with_one_sided_explicit_range_fails_whole_command(
+    runner: CliRunner, stale_db: Path
+) -> None:
+    """task 226 切片 5：单边 --from-ch 不显式回退 valid 窗口——不猜，整命令失败。"""
+    _edit_entity(runner)
+    _edit_attribute(runner, attribute_id=_ATTR_ID, valid_from="2", valid_to="4")
+
+    result = runner.invoke(
+        cli,
+        [
+            "canon", "confirm", "attribute",
+            "--project-id", DUSHI_LINGYI_PROJECT_ID,
+            "--attribute-id", _ATTR_ID,
+            "--hard",
+            "--from-ch", "3",
+        ],
+    )
+    assert result.exit_code == 2, result.output
+
+    row = asyncio.run(PlanFactRepository().read_attribute(_ATTR_ID))
+    assert row is not None
+    assert row.approval_status == "pending"
+    stale = asyncio.run(_stale_map(DUSHI_LINGYI_PROJECT_ID))
+    assert all(v == 0 for v in stale.values())

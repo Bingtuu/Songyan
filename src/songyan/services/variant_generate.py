@@ -12,10 +12,12 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 
 import structlog
+from structlog.contextvars import bound_contextvars
 
 from songyan.db.chapter_variant_repo import ChapterVariantRepository
-from songyan.db.llm_call_usage_repo import LlmCallUsageRepository
+from songyan.db.connection import get_db
 from songyan.db.repository import ChapterVersionRepository
+from songyan.exceptions import LLMError, SongyanError
 from songyan.models.chapter import ChapterVersion
 from songyan.models.variant import ChapterVariant
 from songyan.plan_checks.bible import load_chapter_plan_bible
@@ -26,6 +28,14 @@ from songyan.utils.cost_estimator import count_tokens, estimate_cost_from_tokens
 logger = structlog.get_logger(__name__)
 
 DraftFn = Callable[..., Awaitable["SlotDraft"]]
+
+
+class VariantGenerateLLMError(SongyanError):
+    """模型调用失败；已成功 slot 已保留（tech-m3 §4.2 #4）。"""
+
+    def __init__(self, message: str, *, written_slots: int) -> None:
+        super().__init__(message)
+        self.written_slots = written_slots
 
 
 def _utc_now() -> str:
@@ -112,7 +122,28 @@ async def generate_chapter_variants(
     - Does not write ``plan_*``; does not UPDATE existing version content.
     - When ``budget_cny`` is set and spent already meets/exceeds it before a
       slot, stop; keep written slots; ``budget_exhausted=True``.
+
+    LLM 成本归因（task 226 切片 2）：client 遥测按 structlog contextvars 落库，
+    这里绑定 project/chapter/agent，由 ``call_llm`` 内部记唯一一行——
+    本函数不再显式写 ``llm_call_usage``（避免双重记账）。
     """
+    with bound_contextvars(
+        project_id=project_id, chapter_number=chapter, agent="variant.generate"
+    ):
+        return await _generate_variants_impl(
+            project_id, chapter, n=n, budget_cny=budget_cny, draft_fn=draft_fn
+        )
+
+
+async def _generate_variants_impl(
+    project_id: str,
+    chapter: int,
+    *,
+    n: int = 2,
+    budget_cny: float | None = None,
+    draft_fn: DraftFn | None = None,
+) -> GenerateResult:
+    """Orchestration body; see :func:`generate_chapter_variants`."""
     if n < 1:
         raise ValueError("n must be >= 1")
     if chapter < 1:
@@ -128,7 +159,6 @@ async def generate_chapter_variants(
     start_slot = await _next_slot_start(project_id, chapter)
     version_repo = ChapterVersionRepository()
     variant_repo = ChapterVariantRepository()
-    usage_repo = LlmCallUsageRepository()
 
     written: list[ChapterVariant] = []
     spent = 0.0
@@ -140,13 +170,18 @@ async def generate_chapter_variants(
             break
 
         slot_index = start_slot + offset
-        slot_draft = await draft(
-            project_id=project_id,
-            chapter=chapter,
-            slot_index=slot_index,
-            bible_text=bible_text,
-            fingerprint=fingerprint,
-        )
+        try:
+            slot_draft = await draft(
+                project_id=project_id,
+                chapter=chapter,
+                slot_index=slot_index,
+                bible_text=bible_text,
+                fingerprint=fingerprint,
+            )
+        except LLMError as exc:
+            raise VariantGenerateLLMError(
+                str(exc), written_slots=len(written)
+            ) from exc
         cost = float(slot_draft.cost_cny_estimate)
         content = slot_draft.content or ""
         word_count = len(content)
@@ -156,50 +191,41 @@ async def generate_chapter_variants(
         variant_id = f"var-{uuid.uuid4().hex[:12]}"
         now = _utc_now()
 
-        await version_repo.create(
-            ChapterVersion(
-                version_id=version_id,
+        # 每槽两行写入（version + variant）同一事务：variant insert 失败时
+        # 不留孤儿 draft version（task 226 切片 4）。
+        async with get_db() as conn:
+            await version_repo.create(
+                ChapterVersion(
+                    version_id=version_id,
+                    project_id=project_id,
+                    chapter_number=chapter,
+                    version_number=version_number,
+                    version_type="draft",
+                    content=content,
+                    word_count=word_count,
+                    generation_metadata={
+                        "source": "variant.generate",
+                        "slot_index": slot_index,
+                        "parent_canon_fingerprint": fingerprint,
+                    },
+                ),
+                conn=conn,
+            )
+            variant = ChapterVariant(
+                variant_id=variant_id,
                 project_id=project_id,
                 chapter_number=chapter,
-                version_number=version_number,
-                version_type="draft",
-                content=content,
-                word_count=word_count,
-                generation_metadata={
-                    "source": "variant.generate",
-                    "slot_index": slot_index,
-                    "parent_canon_fingerprint": fingerprint,
-                },
+                slot_index=slot_index,
+                status="generated",
+                parent_canon_fingerprint=fingerprint,
+                content_ref=version_id,
+                stale_vs_canon=0,
+                cost_cny_estimate=cost,
+                created_at=now,
+                updated_at=now,
             )
-        )
-        variant = ChapterVariant(
-            variant_id=variant_id,
-            project_id=project_id,
-            chapter_number=chapter,
-            slot_index=slot_index,
-            status="generated",
-            parent_canon_fingerprint=fingerprint,
-            content_ref=version_id,
-            stale_vs_canon=0,
-            cost_cny_estimate=cost,
-            created_at=now,
-            updated_at=now,
-        )
-        await variant_repo.insert(variant)
-        await usage_repo.record(
-            model=slot_draft.model,
-            token_source="estimate",
-            cost_source="pricing_estimate",
-            project_id=project_id,
-            chapter_number=chapter,
-            agent="variant.generate",
-            stage=f"slot-{slot_index}",
-            version_id=version_id,
-            prompt_tokens=int(slot_draft.prompt_tokens),
-            completion_tokens=int(slot_draft.completion_tokens),
-            cost_cny=cost,
-            success=True,
-        )
+            await variant_repo.insert(variant, conn=conn)
+            await conn.commit()
         written.append(variant)
         spent += cost
         logger.info(

@@ -1,107 +1,152 @@
 # Songyan 状态
 
-给冷启动的人：现在能跑的是什么，V1.0 文档走到哪，什么还没做。
+给冷启动 / **owner 短暂接手开发** 的人：现在 tip 在哪、能跑什么、下一闸门是什么、什么还没做。
 
 包版本 **0.5.0**（owner 称之为 v0.5）。**V1.0** 是写作助手这一代的产品名，不是这个包版本。本页不打 git tag，也不改 `pyproject.toml`。
 
-Package tip remains **0.5.0**. V1.0 is the product-generation name.
+## 接手节点（2026-11-07 Asia/Shanghai）
 
-## 这一轮
+| 项 | 值 |
+|----|----|
+| **git tip（`main`）** | `f72590b` — docs handoff [#61](https://github.com/Bingtuu/Songyan/pull/61)（STATUS/README 对齐） |
+| **功能 tip（M3 步 1–5）** | `1b0e323` — [#60](https://github.com/Bingtuu/Songyan/pull/60)（`stale_vs_canon` + list 费用） |
+| **包版本** | 仍是 `0.5.0`（不 bump） |
+| **里程碑** | M0 / M1 / M2 代码验收 **PASS**；M3 技术方案已接受；**M3 步 1–5 已在 `main`** |
+| **下一闸门** | **M3 步 6**（闭环文案与文档同步，见 [tech-m3.md](tech-m3.md) §5）— **仅 owner 授权后才开**；当前 owner 选择「先等等」 |
+| **本 handoff** | 文档对齐便于接手；**不是**步 6 编码 |
 
-| 项 | 状态 |
-|----|------|
-| 产品需求 [prd-v1.md](prd-v1.md) 与 [tech-m0.md](tech-m0.md) | Owner 已接受文档切分。[#27](https://github.com/Bingtuu/Songyan/pull/27) 已 squash 进 `main` |
-| M0 步 1 `canon show` | **已在 `main`。** [#28](https://github.com/Bingtuu/Songyan/pull/28) squash 为 `1d8c0c0`。任务归档在 [tasks/done/200.md](../tasks/done/200.md) |
-| M0 步 2 故事线 | **已在 `main`。** [#29](https://github.com/Bingtuu/Songyan/pull/29) squash 为 `8f03453`。任务归档在 [tasks/done/201.md](../tasks/done/201.md) |
-| M0 步 3 `today` | **已在 `main`。** [#30](https://github.com/Bingtuu/Songyan/pull/30) squash 为 `d5c2cc1`。任务归档在 [tasks/done/202.md](../tasks/done/202.md) |
-| M0 步 4 缺库 / 缺项目退出码 | **已在 `main`。** [#31](https://github.com/Bingtuu/Songyan/pull/31) squash 为 `48fa354`。任务归档在 [tasks/done/203.md](../tasks/done/203.md) |
-| M0 代码验收（步 1–4 + tech-m0 §6–7） | **PASS**（`main` `80f4107`）。证据见 [tasks/done/204-m0-acceptance.md](../tasks/done/204-m0-acceptance.md)。S6（一周打开 3 天）不在代码验收内 |
-| M1 技术方案 [tech-m1.md](tech-m1.md) | **已接受（Mew 拍板，2026-11-03 Asia/Shanghai，owner t82u 授权）。** 绑定决策已写入正文 |
-| M1 步 1 `rejected` 迁移 + 过滤 | **已在 `main`。** [#35](https://github.com/Bingtuu/Songyan/pull/35) squash 为 `1995181`。任务归档在 [tasks/done/205-rejected迁移与过滤.md](../tasks/done/205-rejected迁移与过滤.md) |
-| M1 步 2 `canon edit` | **已在 `main`。** [#36](https://github.com/Bingtuu/Songyan/pull/36) squash 为 `5a260a9`。任务归档在 [tasks/done/206-canon-edit.md](../tasks/done/206-canon-edit.md) |
-| M1 步 3 `confirm` + `dismiss` | **已在 `main`。** [#38](https://github.com/Bingtuu/Songyan/pull/38) squash 为 `7c7ec43`。任务归档在 [tasks/done/207-confirm-dismiss.md](../tasks/done/207-confirm-dismiss.md) |
-| M1 步 4 `check`（W6） | **已在 `main`。** [#39](https://github.com/Bingtuu/Songyan/pull/39) squash 为 `d3f127c`。任务归档在 [tasks/done/208-check.md](../tasks/done/208-check.md) |
-| M1 步 5 W0 e2e + `today` next | **已在 `main`。** [#41](https://github.com/Bingtuu/Songyan/pull/41) squash 为 `69d7ece`。任务归档在 [tasks/done/209-w0-today-e2e.md](../tasks/done/209-w0-today-e2e.md) |
-| M1 代码验收（步 1–5 + tech-m1 §6–7） | **PASS**（`main` `69d7ece`）。证据见 [tasks/done/210-m1-acceptance.md](../tasks/done/210-m1-acceptance.md)。S1/S2 产品周期日志不在代码验收内 |
-| M2 技术方案 [tech-m2.md](tech-m2.md) | **已接受**（2026-11-04 Asia/Shanghai；owner widget t93s804；B1–B6 原样接受；[#43](https://github.com/Bingtuu/Songyan/pull/43) squash `a95824a`） |
-| M2 步 1 W5 只读 | **已在 `main`。** [#44](https://github.com/Bingtuu/Songyan/pull/44) squash 为 `8f7bc77`。任务归档在 [tasks/done/212-m2-step1-w5-readonly.md](../tasks/done/212-m2-step1-w5-readonly.md) |
-| M2 步 2 W5 人确认销账 | **已在 `main`。** [#46](https://github.com/Bingtuu/Songyan/pull/46) squash 为 `8afb7be`。任务归档在 [tasks/done/213-m2-step2-confirm-settle.md](../tasks/done/213-m2-step2-confirm-settle.md) |
-| M2 步 3 W4 content_stale + `--hard` | **已在 `main`。** [#48](https://github.com/Bingtuu/Songyan/pull/48) squash 为 `2ac1093`。任务归档在 [tasks/done/214-m2-step3-content-stale-hard.md](../tasks/done/214-m2-step3-content-stale-hard.md) |
-| M2 步 4 check 报告 stale 范围 | **已在 `main`。** [#50](https://github.com/Bingtuu/Songyan/pull/50) squash 为 `5a6e923`。任务归档在 [tasks/done/215-m2-step4-check-stale-report.md](../tasks/done/215-m2-step4-check-stale-report.md) |
-| M2 步 5 extract→pending | **已在 `main`。** [#52](https://github.com/Bingtuu/Songyan/pull/52) squash 为 `2fa8209`。任务归档在 [tasks/done/216-m2-step5-extract-pending.md](../tasks/done/216-m2-step5-extract-pending.md) |
-| M2 步 6 闭环文案与文档同步 | **已在 `main`。** [#53](https://github.com/Bingtuu/Songyan/pull/53) squash 为 `f1c3093`。任务归档在 [tasks/done/217-m2-step6-docs-copy.md](../tasks/done/217-m2-step6-docs-copy.md) |
-| M2 代码验收（步 1–6 + tech-m2 §6–7） | **PASS**（证据 tip `main` `f1c3093`）。证据见 [tasks/done/218-m2-acceptance.md](../tasks/done/218-m2-acceptance.md)。S3 产品周期数值不在代码验收内 |
-| M3 技术方案 [tech-m3.md](tech-m3.md) | **已接受**（2026-11-06 Asia/Shanghai；owner widget t104s937；B1–B7 原样） |
-| M3 步 1 表 + fingerprint + 仓库 + `variant list` | **已在 `main`。** [#56](https://github.com/Bingtuu/Songyan/pull/56) squash 为 `b9bbf98`。任务归档在 [tasks/done/220-m3-step1-variants-table.md](../tasks/done/220-m3-step1-variants-table.md) |
-| M3 步 2 `variant generate` | **已在 `main`。** [#57](https://github.com/Bingtuu/Songyan/pull/57) squash 为 `135fcfb`。任务归档在 [tasks/done/221-m3-step2-variant-generate.md](../tasks/done/221-m3-step2-variant-generate.md) |
-| M3 步 3 `variant list` / `diff` | **已在 `main`。** [#58](https://github.com/Bingtuu/Songyan/pull/58) squash 为 `0b47410`。任务归档在 [tasks/done/222-m3-step3-variant-list-diff.md](../tasks/done/222-m3-step3-variant-list-diff.md) |
-| M3 步 4 `variant pick` / `abandon` | **已在 `main`。** [#59](https://github.com/Bingtuu/Songyan/pull/59) squash 为 `c38ee31`。任务归档在 [tasks/done/223-m3-step4-variant-pick-abandon.md](../tasks/done/223-m3-step4-variant-pick-abandon.md) |
-| M3 步 5 `stale_vs_canon` + 费用可见 | **已在 `main`。** [#60](https://github.com/Bingtuu/Songyan/pull/60) squash 为 `1b0e323`。任务归档在 [tasks/done/224-m3-step5-stale-cost.md](../tasks/done/224-m3-step5-stale-cost.md) |
-| 包版本 | 仍是 `0.5.0` |
+硬约束（接手期间同样适用）：
 
-tech-m2 **已接受**。M2 步 1–6 **已在 `main`**（#44 / `8f7bc77`；#46 / `8afb7be`；#48 / `2ac1093`；#50 / `5a6e923`；#52 / `2fa8209`；#53 / `f1c3093`）。§6–7 代码验收 **PASS**（证据 tip `f1c3093`；见 [tasks/done/218-m2-acceptance.md](../tasks/done/218-m2-acceptance.md)）。[tech-m3.md](tech-m3.md) **已接受**（2026-11-06；t104s937；B1–B7 原样）。M3 步 1–5 **已在 `main`**（#56 / `b9bbf98`；#57 / `135fcfb`；#58 / `0b47410`；#59 / `c38ee31`；#60 / `1b0e323`）。tip `1b0e323`。包仍 `0.5.0`。**下一闸门 = owner 授权再开 M3 步 6**（闭环文案与文档同步，per tech-m3 §5）。不要开 continue / review；不要声称 V1.0 完成；不要升包版本。本文件是 handoff 文档对齐，**不是**步 6 编码。
+- 不声称 V1.0 完成；不升包版本；不合成大 PR。
+- 不改结算权威；结算库仍是 `untrusted_until_confirmed` 对照，不升格 Canon。
+- 不开 `chapter continue` / `review`（M3 范围外）。
+- 不加题材检查器；不跑无人值守长篇。
+- 编码刀仍建议 TDD + 审阅后再合；小步 PR。
 
-上一稿 PRD 的总体框架 owner 已经接受。现行文本是 `prd-v1.md`。旧全文在 [archive/prd-v1-writing-assist-2026-10-26.md](archive/prd-v1-writing-assist-2026-10-26.md)。
+## 一眼进度
 
-## 发布就绪（v0.5 引擎）
+| 里程碑 | 状态 | tip / 证据 |
+|--------|------|-----------|
+| M0 只读工作台 | **PASS** | `80f4107` · [204](../tasks/done/204-m0-acceptance.md) |
+| M1 人确认 + `check` | **PASS** | `69d7ece` · [210](../tasks/done/210-m1-acceptance.md) |
+| M2 标脏 / 承诺 / extract→pending | **PASS** | `f1c3093` · [218](../tasks/done/218-m2-acceptance.md) |
+| M3 技术方案 [tech-m3.md](tech-m3.md) | **已接受**（t104s937；B1–B7 原样） | #55 → `5101555` |
+| M3 步 1–5 抽卡表面 | **已在 `main`** | 功能 tip `1b0e323`（#56–#60） |
+| M3 步 6 闭环文案 | **未开**（等 owner） | tech-m3 §5 |
+| M3 §6–7 代码验收 | **未声称** | — |
+| M4+ | **未开** | 另需被接受的技术方案 |
 
-这些是既有工程事实，不是 V1.0 里程碑。
+## 现在能用（作者主路径）
 
-| 项 | 状态 |
-|----|:----:|
-| 源码安装、wheel、非仓库目录的 CLI、包资源 | PASS |
-| SQLite 初始化、模板建项、已接收书稿导出冒烟 | PASS |
-| CLI 测试 / 默认 pytest / ruff / 运行时 mypy | PASS |
-| 真实模型冒烟 | Ch1–3 在 `eaa6bef`（#20）**PASS**。Ch1–10 在 `47954cb`：**管线 PASS，DG-1 失败，文学失败** |
+工作台 / Canon / 检查（均已在 `main`）：
 
-**v0.5** 是能用的技术预览。闸门在 `47954cb` 上验证到第 10 章；文学没有过。正式 tag 仍由维护者决定。
+- `canon show` / `today`（只读；缺库缺项目 exit 1）
+- `canon edit` → Pending；`confirm` / `dismiss` / 非持久 `accept`
+- `canon confirm promise`；`confirm --hard` / `--mark-stale`（`content_stale`）
+- `check`（只读规则报告；可报 `content_stale` 范围）
 
-## 现在能用
+M3 章内抽卡（#56–#60 / 功能 tip `1b0e323`）：
 
-- 本机 Python CLI、SQLite、模板、`doctor`。
-- `create-project`、`run`、`report`、`metrics`、`five-gate`、`t9`、`bundle-run`、`export`、`backup`、`restore`。
-- `profile` 的 `validate` / `upsert --dry-run` / `history` / `rollback`。按角色的 `LLM_<ROLE>_*` 路由。
-- `import`（`ingest`、`segment`、`confirm`、`status`、`replay`、`synthesize`、`publish`）。`publish` 之前 `run` 保持阻塞。
-- 计划事实表与 `load_chapter_plan_bible`：只读 `approved`（属性 source 含 plan|human|extract）。结算写入仍进结算库（`untrusted_until_confirmed`），并另入队 `plan_*` pending（source=extract）；confirm 前不进 canon。
-- `canon show` 在 `main` 上能看五类计划事实的 Canon / Pending，以及故事线骨架（有则打印，无则为 `（空）`），并支持 `--json`。
-- `today` 在 `main` 上能打印只读计数与固定 `next`（`可用 canon confirm 入典或销账承诺；硬确认可用 --hard/--mark-stale；生成不在本命令。`）。
-- 缺库 / 缺项目时 `canon show` 与 `today` 退出码 1；缺库时不创建数据库文件。
-- `canon edit` 在 `main` 上能写入 entity / attribute 为 `pending`；attribute 强制 `source=human`；Pending 可见，Canon / 圣经不可见。
-- `canon confirm` / `dismiss` / 非持久 `accept`：在 `main` 上（entity+attribute）；`canon confirm promise`（章号+证据）人销账亦在 `main`（#46 / `8afb7be`）。`canon confirm` `--hard` / `--mark-stale` 与 `chapter_heads.content_stale` 亦在 `main`（#48 / `2ac1093`）。
-- `check` 在 `main` 上：只读规则报告；正文取自 accepted `ChapterVersion.content`；属性侧值可经 `--extracts-json` 注入；亦报告 `content_stale` / 受影响章范围（#50 / `5a6e923`）。
-- `today` 在 `main` 上含 `promise_planted` / `promise_due` / `promise_overdue` 只读计数（text + json）。
-- `canon show --kind promise` 在 `main` 上列出开放承诺；默认 `canon show` 不把承诺标成 Canon。
-- M3 抽卡表面已在 `main`（#56–#60 / tip `1b0e323`）：`variant list` / `generate` / `diff` / `pick` / `abandon`。list / diff / pick / generate 前懒标 `stale_vs_canon`；`variant list` 暴露 per-slot `cost_cny_estimate`。stale pick 默认 exit 2，`--allow-stale` 才放行（仍不写 Canon / 不改 `content_stale`）。
+```text
+songyan variant generate --project-id TEXT --chapter INT [--n 2] [--budget-cny FLOAT] [--json]
+songyan variant list     --project-id TEXT --chapter INT [--json]
+songyan variant diff     --project-id TEXT --chapter INT --a INT --b INT [--json]
+songyan variant pick     --project-id TEXT --chapter INT --slot INT [--allow-stale] [--json]
+songyan variant abandon  --project-id TEXT --chapter INT --slot INT [--json]
+```
+
+语义要点（实现已落地，详见 tech-m3）：
+
+- 默认 N=2；**不** auto-pick；`pick` **只**改 `ChapterHead.current_version_id`，**不**写 `plan_*` / Canon。
+- `abandon` 软删；不物理清已 pick 正文。
+- list / diff / pick / generate 前懒刷新 `stale_vs_canon`；stale pick 默认 exit 2，需 `--allow-stale`。
+- `variant list` 暴露 per-slot `cost_cny_estimate`。
+- `content_stale`（正文相对硬典）与 `stale_vs_canon`（草稿相对生成时 Canon 指纹）**并存**，文案勿混成一列。
+
+既有管线仍可用：`create-project` / `run` / `report` / `import` / `doctor` / `backup` 等（`run --auto-confirm` 是冒烟路径，**不是**作者主路径）。
+
+## 接手开发时先看这些
+
+| 目的 | 文件 |
+|------|------|
+| 产品边界 | [prd-v1.md](prd-v1.md) |
+| M3 做什么 / 不做什么 / 小步定义 | [tech-m3.md](tech-m3.md)（尤其 §3、§4、§5） |
+| 当天下一步（给助手） | [HANDOFF-mew.md](HANDOFF-mew.md) |
+| 冷启动规则 | [AGENTS.md](../AGENTS.md) |
+| CLI 入口 | `src/songyan/cli/commands/variant.py`、`canon_write.py`、`workbench.py`、`check.py` |
+| M3 服务 | `src/songyan/services/variant_{fingerprint,generate,diff,pick,stale}.py` |
+| M3 仓库 | `src/songyan/db/chapter_variant_repo.py` |
+| 步 5 归档 | [tasks/done/224-m3-step5-stale-cost.md](../tasks/done/224-m3-step5-stale-cost.md) |
+| 本地回归（抽卡相关） | `tests/cli/test_variant_*.py`、`tests/services/test_variant_fingerprint.py`、`tests/db/test_chapter_variants.py` |
+
+本地仓库路径（Diupi-Yun）：`C:\Vibe Project\Songyan`，应对齐 `origin/main` @ `f72590b`。
 
 ## 已知限制
 
 - 只有 CLI，不是托管服务。真实生成要 API key，并且花钱。
-- 《轨道蜃景》Ch1–10：`project_id=8e30dec7f2ec40c1a9ce54c783981f8c`，`run-33841231`。10/10 accepted；质量门、结算、摘要、导出通过；exit 0。**DG-1 失败**（平均 revision 1.7，十章都有 ContextEmergency，无 AutoHalt）。
-- 那次导出的人工阅读 **未通过**：时间线回滚、Hermes/赫耳墨斯、时间尺度、供氧 / EVA 复读、英文泄漏 `ninety-two 秒`。
+- 《轨道蜃景》Ch1–10 管线曾 PASS、文学未过（DG-1 失败等）；细节见历史冒烟记录，不作 V1.0 文学验收。
 - 真实模型上「导入后再续写」还没有验收。
-- M3 步 1–5 已在 `main`（#56–#60 / tip `1b0e323`）：`variant list` / `generate` / `diff` / `pick` / `abandon`，以及懒标 `stale_vs_canon` + list `cost_cny_estimate`。步 6（闭环文案与文档同步）、`chapter continue` / `review` 尚未开工；M3 §6–7 代码验收尚未声称。tech-m1 **已接受**；步 1–5 与 §6–7 代码验收已 **PASS**（`69d7ece`）。[tech-m2.md](tech-m2.md) **已接受**；步 1–6 已在 `main`；§6–7 代码验收 **PASS**（证据 tip `f1c3093`）。[tech-m3.md](tech-m3.md) **已接受**（t104s937；B1–B7）。M4 另有被接受的技术方案并授权之后才开工。
+- **未做：** M3 步 6；`chapter continue` / `review`；M3 §6–7 验收声称；M4+。
+- `today` 的固定 `next` 文案仍是 M2 口径；若要改成「可抽卡」提示，属于**步 6**，需 owner 授权后再改。
+- **2026-11-07 评审修复（task 226，已归档 `tasks/done/`）**：全量 code review 的 1 blocker + 4 major + minor 批已修复——settlement 声称的伏笔 resolve 只进提案（不再直写 `resolved`；唯一写径 = `canon confirm promise`）；`variant generate` 成本记账去重且归因 project/agent；pick 拒绝 abandoned 槽；LLM 失败保留已写槽并报 stderr；rejected 行不可被 confirm 直接转正；extract 提案跳过 rejected。详见 `tasks/done/226-review-findings-fix.md` 与 `docs/superpowers/plans/2026-11-07-m0-m3-review-audit.md`。
 
-标识和本机路径：[HANDOFF-mew.md](HANDOFF-mew.md)。书稿不入库。
+标识与助手交接：[HANDOFF-mew.md](HANDOFF-mew.md)。书稿不入库。
 
 ## 文档
 
 | 文件 | 用途 |
 |------|------|
-| [README](../README.md) | 给访客的概览 |
-| [AGENTS.md](../AGENTS.md) | 冷启动规则：读什么、何时不许写代码 |
-| [V1.0 PRD](prd-v1.md) | 产品。Owner 已接受这轮文档 |
-| [M0 技术方案](tech-m0.md) | 只读工作台。步 1–4 已进 `main`；§6–7 代码验收 **PASS**（`80f4107`） |
-| [M1 技术方案](tech-m1.md) | 人确认入典 + 规则 `check`。**已接受（Mew 拍板）**；步 1–5 已合入；§6–7 代码验收 **PASS**（`69d7ece`） |
-| [M2 技术方案](tech-m2.md) | 硬事实标脏 + 承诺债务 + 抽取提案。**已接受**（2026-11-04；B1–B6 原样）；步 1–6 已合入；§6–7 代码验收 **PASS**（证据 tip `f1c3093`） |
-| [M3 技术方案](tech-m3.md) | 章内 Variant / 抽卡。**已接受**（2026-11-06；t104s937；B1–B7 原样）；步 1–5 已合入（tip `1b0e323`）；下一闸门步 6 |
+| [README](../README.md) | 访客概览 |
+| [AGENTS.md](../AGENTS.md) | 冷启动：读什么、何时不许写代码 |
+| [prd-v1.md](prd-v1.md) | V1.0 产品需求（已接受） |
+| [tech-m0.md](tech-m0.md) / [tech-m1.md](tech-m1.md) / [tech-m2.md](tech-m2.md) | 已验收里程碑方案 |
+| [tech-m3.md](tech-m3.md) | 抽卡；已接受；步 1–5 已合；步 6 待授权 |
 | [ADR-0001](adr/0001-plan-first-facts.md) | 事实由计划和人写入 |
-| [HANDOFF](HANDOFF-mew.md) | 当天的下一步 |
 | [INDEX](INDEX.md) | 文档地图 |
-| [Quickstart](quickstart.md) | 安装和短窗口 |
-| [质量门](quality-gates.md) | CED / T9 / 五门。通过不等于写得好 |
+| [quickstart.md](quickstart.md) | 安装短窗口 |
 
 ## 维护者下一步
 
-1. **tip `1b0e323`。** tech-m3 **已接受**（t104s937；B1–B7 原样）。M3 步 1–5 **已在 `main`**（#56 / `b9bbf98`；#57 / `135fcfb`；#58 / `0b47410`；#59 / `c38ee31`；#60 / `1b0e323`）。**下一闸门 = owner 授权再开步 6**（闭环文案与文档同步）。未授权前不要开步 6+ / continue / review。
-2. 不要改结算权威；不要合成大 PR；不要升包版本（仍 `0.5.0`）；不要声称 V1.0 完成。
-3. 不加题材检查器、不跑无人值守长篇。本 handoff 文档对齐不是步 6。
+1. **当前 tip `f72590b`（功能面 `1b0e323`）。** 步 6 等 owner 点头；未授权前不要开步 6+ / continue / review。
+2. 不改结算权威；不大 PR；不 bump；不声称 V1.0 完成。
+3. owner 本地接手期间：以本页 + tech-m3 为准；助手侧默认待命，不抢开步 6。
+
+## 附录：里程碑流水（合入记录）
+
+<details>
+<summary>M0–M3 各步 PR / tip（展开）</summary>
+
+| 项 | 状态 |
+|----|------|
+| 文档切分 PRD + tech-m0 | [#27](https://github.com/Bingtuu/Songyan/pull/27) → main |
+| M0 步 1 `canon show` | [#28](https://github.com/Bingtuu/Songyan/pull/28) → `1d8c0c0` · [200](../tasks/done/200.md) |
+| M0 步 2 故事线 | [#29](https://github.com/Bingtuu/Songyan/pull/29) → `8f03453` · [201](../tasks/done/201.md) |
+| M0 步 3 `today` | [#30](https://github.com/Bingtuu/Songyan/pull/30) → `d5c2cc1` · [202](../tasks/done/202.md) |
+| M0 步 4 退出码 | [#31](https://github.com/Bingtuu/Songyan/pull/31) → `48fa354` · [203](../tasks/done/203.md) |
+| M0 验收 | **PASS** @ `80f4107` · [204](../tasks/done/204-m0-acceptance.md) |
+| M1 方案 | [tech-m1.md](tech-m1.md) 已接受 |
+| M1 步 1–5 | #35→`1995181`；#36→`5a260a9`；#38→`7c7ec43`；#39→`d3f127c`；#41→`69d7ece` |
+| M1 验收 | **PASS** @ `69d7ece` · [210](../tasks/done/210-m1-acceptance.md) |
+| M2 方案 | [tech-m2.md](tech-m2.md) 已接受（#43→`a95824a`） |
+| M2 步 1–6 | #44→`8f7bc77`；#46→`8afb7be`；#48→`2ac1093`；#50→`5a6e923`；#52→`2fa8209`；#53→`f1c3093` |
+| M2 验收 | **PASS** @ `f1c3093` · [218](../tasks/done/218-m2-acceptance.md) |
+| M3 方案 | [tech-m3.md](tech-m3.md) 已接受（#55→`5101555`） |
+| M3 步 1 | [#56](https://github.com/Bingtuu/Songyan/pull/56) → `b9bbf98` · [220](../tasks/done/220-m3-step1-variants-table.md) |
+| M3 步 2 | [#57](https://github.com/Bingtuu/Songyan/pull/57) → `135fcfb` · [221](../tasks/done/221-m3-step2-variant-generate.md) |
+| M3 步 3 | [#58](https://github.com/Bingtuu/Songyan/pull/58) → `0b47410` · [222](../tasks/done/222-m3-step3-variant-list-diff.md) |
+| M3 步 4 | [#59](https://github.com/Bingtuu/Songyan/pull/59) → `c38ee31` · [223](../tasks/done/223-m3-step4-variant-pick-abandon.md) |
+| M3 步 5 | [#60](https://github.com/Bingtuu/Songyan/pull/60) → `1b0e323` · [224](../tasks/done/224-m3-step5-stale-cost.md) |
+| docs handoff | [#61](https://github.com/Bingtuu/Songyan/pull/61) → `f72590b` · [225](../tasks/done/225-docs-handoff-status-readme.md) |
+
+</details>
+
+## 发布就绪（v0.5 引擎，历史）
+
+| 项 | 状态 |
+|----|:----:|
+| 源码安装、wheel、非仓库目录 CLI、包资源 | PASS |
+| SQLite 初始化、模板建项、已接收书稿导出冒烟 | PASS |
+| CLI 测试 / 默认 pytest / ruff / 运行时 mypy | PASS |
+| 真实模型冒烟 | Ch1–3 @ `eaa6bef` **PASS**；Ch1–10 @ `47954cb` 管线 PASS、DG-1/文学失败 |
+
+**v0.5** 是能用的技术预览。正式 tag 仍由维护者决定。

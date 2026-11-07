@@ -1,7 +1,11 @@
 """Task 241: foreshadowings resolve 可追溯列（resolved_chapter / resolved_version_id）.
 
-新列只写不读：resolve 时回填回收发生的章号与版本，不改任何 SELECT 口径；
-due/overdue 自动翻转不回填；历史行保持 NULL。
+新列只写不读：人确认销账（canon confirm promise）时回填回收发生的章号与版本，
+不改任何 SELECT 口径；due/overdue 自动翻转不回填；历史行保持 NULL。
+
+注（2026-11 评审修复，tech-m2 §3.2/§4.3.3/B3）：apply_settlement / import 回放
+对模型声称的 resolve 只留提案，不再写 resolved——本文件 TestApplyResolveTrace /
+TestReplayResolveTrace 已按提案语义改写；repo 层 update_status 行为不变。
 """
 
 from __future__ import annotations
@@ -195,11 +199,11 @@ class TestUpdateStatusBackfill:
 
 
 class TestApplyResolveTrace:
-    """apply 层：resolve 分支把章号与版本号传给 update_status."""
+    """apply 层：resolve 只是提案——不调 update_status，只留痕（tech-m2 B3）。"""
 
     pytestmark = pytest.mark.asyncio
 
-    async def test_apply_resolve_passes_trace_columns(self) -> None:
+    async def test_apply_resolve_records_proposal_only(self) -> None:
         from songyan.agents.settlement_extractor._apply import apply_settlement
 
         foreshadowing_repo = AsyncMock()
@@ -224,17 +228,12 @@ class TestApplyResolveTrace:
             foreshadowing_repo=foreshadowing_repo,
             numerical_repo=AsyncMock(),
         )
-        foreshadowing_repo.update_status.assert_called_once_with(
-            "fs-1",
-            "resolved",
-            conn=foreshadowing_repo.update_status.call_args.kwargs["conn"],
-            resolved_chapter=3,
-            resolved_version_id="v1",
-        )
+        foreshadowing_repo.update_status.assert_not_called()
+        assert settlement.observation_counts["foreshadowing_resolve_proposed"] == 1
 
 
 class TestReplayResolveTrace:
-    """回放路径（Task 236 脚手架）：resolve 章写入可追溯列."""
+    """回放路径：resolve 只进提案（open 集不变），resolved 唯有人确认销账可写。"""
 
     pytestmark = pytest.mark.asyncio
 
@@ -255,7 +254,7 @@ class TestReplayResolveTrace:
             mock.return_value = ("sum-test", None, [])
             yield mock
 
-    async def test_replay_resolve_backfills_trace_columns(
+    async def test_replay_resolve_records_proposal_keeps_open_set(
         self, test_db: Path, tmp_path: Path, mock_extract, mock_summary
     ) -> None:
         from songyan.services.import_replay_service import replay_import
@@ -314,12 +313,12 @@ class TestReplayResolveTrace:
         report = await replay_import("proj-1", manifest_path)
         assert [o.status for o in report.outcomes] == ["applied"] * 3
 
+        # 提案语义：回放不直写 resolved；行仍在 open 集，追溯列为 NULL
         status, resolved_chapter, resolved_version_id = await _read_foreshadowing(
             test_db, "fs-trace"
         )
-        assert status == "resolved"
-        assert resolved_chapter == 2
-        # 回放路径 apply_settlement 的 version_id 是该章 draft 版本
+        assert status in ("planted", "due", "overdue")
+        assert resolved_chapter is None
+        assert resolved_version_id is None
         mark = await ImportReplayRepository().get_mark("proj-1", 2)
         assert mark is not None
-        assert resolved_version_id == mark.draft_version_id

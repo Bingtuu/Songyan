@@ -1,13 +1,17 @@
 """Task 172c.r: 伏笔 resolve 机制修复 + continuity 健康度口径修复 — 单元测试.
 
 覆盖任务书 §4.1：
-- resolve 端到端（parse → validate → apply → DB resolved）
-- resolve 目标为 overdue（含 dormant/archived）伏笔时同样生效
+- resolve 端到端（parse → validate → apply → 提案留痕，不直写 resolved）
+- resolve 目标为 overdue（含 dormant/archived）伏笔时同样只进提案
 - resolve 缺 foreshadowing_id / 目标 id 不存在 → 丢弃 + warning，其余 updates 正常应用
 - 未知 operation → 丢弃 + warning
 - _load_current_foreshadowings 新口径：overdue 伏笔进入 prompt 事实源
 - _find_overdue_foreshadowings 新口径：archived/dormant/active-overdue 全部计入
   （对齐 vdim 冻结口径）
+
+注（tech-m2 §3.2/§4.3.3/B3，2026-11 评审修复）：apply_settlement 对 resolve
+只留提案（日志 + observation_counts），foreshadowings 行不变；
+status='resolved' 的唯一写径是 canon confirm promise（人确认销账）。
 """
 
 from __future__ import annotations
@@ -377,8 +381,8 @@ class TestSilentDropLogging:
 
 
 # =============================================================================
-# 端到端：extract → validate → apply → DB resolved
-# =============================================================================
+# 端到端：extract → validate → apply → resolve 只进提案（不直写 resolved）
+# ============================================================================
 
 
 class TestResolveEndToEnd:
@@ -412,11 +416,13 @@ class TestResolveEndToEnd:
             await apply_settlement(result, "p1", 12, "v1", conn=conn)
             await conn.commit()
 
-        assert await _get_status("fs-1") == "resolved"
+        # 提案语义：行不变（仍在 open 集、无 resolved 追溯列），只留痕
+        assert await _get_status("fs-1") in ("planted", "due", "overdue")
+        assert result.observation_counts.get("foreshadowing_resolve_proposed") == 1
 
     async def test_resolve_overdue_foreshadowing(self, fs_db: Path) -> None:
         """overdue 伏笔必须同时：(a) 进入 prompt 事实源；(b) 通过 resolve 校验；
-        (c) 落库 resolved."""
+        (c) apply 后仍留在 open 集（提案语义，resolved 唯有人确认销账可写）。"""
         await _seed_project("p1")
         await _seed_version("p1")
         repo = ForeshadowingRepository()
@@ -449,10 +455,12 @@ class TestResolveEndToEnd:
             await apply_settlement(result, "p1", 12, "v1", conn=conn)
             await conn.commit()
 
-        assert await _get_status("fs-2") == "resolved"
+        # (c) 提案语义：仍是 open 状态，不直写 resolved
+        assert await _get_status("fs-2") in ("planted", "due", "overdue")
+        assert result.observation_counts.get("foreshadowing_resolve_proposed") == 1
 
     async def test_resolve_dormant_foreshadowing_applies(self, fs_db: Path) -> None:
-        """dormant/archived 伏笔的 resolve 直接落库（update_status 不按 lifecycle 过滤）."""
+        """dormant/archived 伏笔的 resolve 同样只进提案（行不变，不落 resolved）。"""
         await _seed_project("p1")
         await _seed_version("p1")
         repo = ForeshadowingRepository()
@@ -473,4 +481,5 @@ class TestResolveEndToEnd:
             await apply_settlement(settlement, "p1", 12, "v1", conn=conn)
             await conn.commit()
 
-        assert await _get_status("fs-3") == "resolved"
+        assert await _get_status("fs-3") in ("planted", "due", "overdue")
+        assert settlement.observation_counts.get("foreshadowing_resolve_proposed") == 1

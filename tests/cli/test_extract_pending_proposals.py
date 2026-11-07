@@ -237,3 +237,66 @@ async def _seed_and_attr_id() -> str:
     await _apply(2, "v-extract-2")
     pending = await PlanFactRepository().list_pending_attributes(_PROJECT_ID)
     return next(a.attribute_id for a in pending if a.key == _ATTR_KEY)
+
+
+async def test_extract_proposal_skips_rejected_attribute(
+    extract_db: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """task 226 切片 5（owner 拍板）：人 dismissed 的提案不被 settlement 复活回 pending。"""
+    from songyan.agents.settlement_extractor._proposals import (
+        _attribute_id,
+        enqueue_extract_proposals,
+    )
+    from songyan.models.plan_facts import PlanAttribute, PlanEntity
+
+    repo = PlanFactRepository()
+    await repo.write_entity(
+        PlanEntity(
+            entity_id=_CHAR_ID,
+            project_id=_PROJECT_ID,
+            entity_type="character",
+            aliases=["陈照"],
+            approval_status="approved",
+        )
+    )
+    attr_id = _attribute_id(
+        project_id=_PROJECT_ID,
+        entity_id=_CHAR_ID,
+        key=_ATTR_KEY,
+        chapter_number=3,
+    )
+    await repo.write_attribute(
+        PlanAttribute(
+            attribute_id=attr_id,
+            project_id=_PROJECT_ID,
+            entity_id=_CHAR_ID,
+            key=_ATTR_KEY,
+            value="旧值",
+            source="extract",
+            approval_status="rejected",
+            valid_from_ch=3,
+            valid_to_ch=None,
+        )
+    )
+
+    settlement = StateSettlement(
+        character_updates=[
+            CharacterUpdate(
+                character_id=_CHAR_ID,
+                field=_ATTR_KEY,
+                old_value="旧值",
+                new_value="南门",
+                source_quote="原文引用",
+            )
+        ]
+    )
+    async with get_db() as conn:
+        written = await enqueue_extract_proposals(
+            settlement, project_id=_PROJECT_ID, chapter_number=3, conn=conn
+        )
+        await conn.commit()
+
+    assert written == []
+    row = await repo.read_attribute(attr_id)
+    assert row is not None
+    assert row.approval_status == "rejected"

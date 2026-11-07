@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Coroutine, Iterable
+from collections.abc import Coroutine
 from typing import Any
 
 import click
@@ -34,7 +34,6 @@ def compute_stale_chapter_set(
     *,
     valid_from_ch: int | None = None,
     valid_to_ch: int | None = None,
-    evidence_chapters: Iterable[int] = (),
     explicit_from_ch: int | None = None,
     explicit_to_ch: int | None = None,
 ) -> set[int] | None:
@@ -42,10 +41,14 @@ def compute_stale_chapter_set(
 
     Returns a chapter set, or ``None`` when uncomputable. Only closed
     intervals count (explicit ``from``+``to``, else ``valid_from``+
-    ``valid_to``). Evidence chapter nums are unioned when present. A
-    one-sided window does not guess an unbounded set. Both ends empty
-    and no evidence → ``None``.
+    ``valid_to``). A one-sided explicit window fails loud instead of
+    silently falling back to the valid window (task 226 切片 5).
+    A one-sided valid window does not guess an unbounded set.
+    Both ends empty → ``None``.
     """
+    if (explicit_from_ch is None) != (explicit_to_ch is None):
+        return None
+
     chapters: set[int] = set()
 
     if explicit_from_ch is not None and explicit_to_ch is not None:
@@ -56,11 +59,6 @@ def compute_stale_chapter_set(
         if valid_from_ch < 1 or valid_to_ch < 1 or valid_to_ch < valid_from_ch:
             return None
         chapters.update(range(valid_from_ch, valid_to_ch + 1))
-
-    for ch in evidence_chapters:
-        n = int(ch)
-        if n >= 1:
-            chapters.add(n)
 
     if not chapters:
         return None
@@ -164,6 +162,11 @@ async def _confirm_entity(
     to_ch: int | None = None,
 ) -> str:
     row = await _load_entity_for_project(project_id, entity_id)
+    if row.approval_status == "rejected":
+        raise ConfirmRejectedError(
+            f"entity {row.entity_id} 已 rejected，不能直接 confirm 转正；"
+            "如需恢复请 canon edit 重新进 pending 队列（task 226 切片 5）"
+        )
     want_stale = hard or mark_stale
     chapters: set[int] | None = None
     if want_stale:
@@ -203,6 +206,11 @@ async def _confirm_attribute(
     to_ch: int | None = None,
 ) -> str:
     row = await _load_attribute_for_project(project_id, attribute_id)
+    if row.approval_status == "rejected":
+        raise ConfirmRejectedError(
+            f"attribute {row.attribute_id} 已 rejected，不能直接 confirm 转正；"
+            "如需恢复请 canon edit 重新进 pending 队列（task 226 切片 5）"
+        )
     want_stale = hard or mark_stale
     chapters: set[int] | None = None
     if want_stale:
@@ -279,6 +287,12 @@ async def _accept_attribute(*, project_id: str, attribute_id: str) -> str:
 
 class MissingAcceptedVersionError(click.ClickException):
     """Chapter has no accepted_version_id — process exit 2."""
+
+    exit_code = 2
+
+
+class ConfirmRejectedError(click.ClickException):
+    """Row already rejected; revive via canon edit, not confirm — exit 2."""
 
     exit_code = 2
 

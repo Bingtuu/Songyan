@@ -34,6 +34,12 @@ class AbandonPickedVariantError(SongyanError):
     exit_code = 2
 
 
+class PickAbandonedVariantError(SongyanError):
+    """Refuse to pick an abandoned slot (its draft was soft-deleted)."""
+
+    exit_code = 2
+
+
 @dataclass(frozen=True)
 class PickResult:
     """Outcome of ``variant pick``."""
@@ -77,6 +83,11 @@ async def pick_variant_slot(
         raise StaleVariantPickError(
             f"slot {slot} 相对 Canon 已过期（stale_vs_canon=1）；"
             f"如需仍选用请加 --allow-stale"
+        )
+    if target.status == "abandoned":
+        raise PickAbandonedVariantError(
+            f"slot {slot} 已 abandon（草稿已软删，正文 is_abandoned=1）；"
+            f"不可 pick 复活，如需新草稿请重新 generate"
         )
 
     archived_id: str | None = None

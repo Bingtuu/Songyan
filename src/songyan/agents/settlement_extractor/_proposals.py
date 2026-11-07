@@ -190,10 +190,13 @@ async def _write_pending_extract_attribute(
         chapter_number=chapter_number,
     )
     existing = await repo.read_attribute(attribute_id)
-    if existing is not None and existing.approval_status == "approved":
+    if existing is not None and existing.approval_status in ("approved", "rejected"):
+        # approved：confirm 不可被静默降级；rejected：人 dismissed 的提案不被
+        # settlement 复活（task 226 切片 5，owner 拍板）。
         logger.info(
-            "settlement.extract_proposal_skip_approved",
+            "settlement.extract_proposal_skip_final",
             attribute_id=attribute_id,
+            approval_status=existing.approval_status,
             project_id=project_id,
         )
         return None

@@ -392,3 +392,36 @@ def test_variant_list_still_works_after_generate(
     payload = json.loads(listed.stdout)
     assert len(payload["variants"]) == 2
     assert "未实现" not in listed.output
+
+
+def test_generate_llm_failure_keeps_written_slots_and_reports(
+    runner: CliRunner, gen_db: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """tech-m3 §4.2 #4：模型失败——已写 slot 保留；失败信息进 stderr/退出码，无 traceback。"""
+    from songyan.exceptions import LLMError
+
+    calls = {"i": 0}
+
+    async def _flaky(**_kwargs: Any) -> SlotDraft:
+        calls["i"] += 1
+        if calls["i"] >= 2:
+            raise LLMError("model exploded")
+        return SlotDraft(content="草稿一", cost_cny_estimate=0.01)
+
+    monkeypatch.setattr(
+        "songyan.services.variant_generate.default_slot_draft", _flaky
+    )
+    result = runner.invoke(
+        cli,
+        [
+            "variant", "generate",
+            "--project-id", _PROJECT,
+            "--chapter", str(_CHAPTER),
+        ],
+    )
+    assert result.exit_code == 1
+    assert "Traceback" not in result.output
+    assert "已保留 1" in result.output
+
+    rows = asyncio.run(ChapterVariantRepository().list_for_chapter(_PROJECT, _CHAPTER))
+    assert [r.slot_index for r in rows] == [1]

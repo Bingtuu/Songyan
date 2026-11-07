@@ -606,3 +606,120 @@ def test_pick_preserves_existing_head_accepted_and_status(
     assert head.current_version_id == ref2
     assert head.accepted_version_id == "v-accepted-keep"
     assert head.status == "under_review"
+
+
+def test_pick_abandoned_slot_rejected_cleanly(
+    runner: CliRunner, pick_db: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """task 226 切片 3：abandoned 槽不可被 pick 复活——干净拒绝 exit 2，头指针不动。"""
+    _generate_two(runner, monkeypatch)
+    abandon = runner.invoke(
+        cli,
+        [
+            "variant", "abandon",
+            "--project-id", _PROJECT,
+            "--chapter", str(_CHAPTER),
+            "--slot", "1",
+            "--json",
+        ],
+    )
+    assert abandon.exit_code == 0, abandon.output
+
+    result = runner.invoke(
+        cli,
+        [
+            "variant", "pick",
+            "--project-id", _PROJECT,
+            "--chapter", str(_CHAPTER),
+            "--slot", "1",
+            "--json",
+        ],
+    )
+    assert result.exit_code == 2
+    assert "abandon" in result.output.lower() or "已放弃" in result.output
+
+    # 工作指针不得指向被 abandon 的正文；is_abandoned 残留不被复活
+    head = asyncio.run(ChapterHeadRepository().get(_PROJECT, _CHAPTER))
+    assert head is None
+
+    async def _slot_flag() -> tuple[str, int]:
+        row = await ChapterVariantRepository().get_by_slot(_PROJECT, _CHAPTER, 1)
+        assert row is not None
+        version = await ChapterVersionRepository().get(row.content_ref)
+        assert version is not None
+        return row.status, int(version.is_abandoned)
+
+    status, flag = asyncio.run(_slot_flag())
+    assert status == "abandoned"
+    assert flag == 1
+
+
+def test_pick_archived_slot_revives_head(
+    runner: CliRunner, pick_db: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """task 226 切片 3：archived（被顶替的 picked）槽允许重新 pick，正文标记不残留。"""
+    payload = _generate_two(runner, monkeypatch)
+    by_slot = {v["slot_index"]: v for v in payload["variants"]}
+    ref1 = by_slot[1]["content_ref"]
+
+    for slot in ("1", "2"):
+        r = runner.invoke(
+            cli,
+            [
+                "variant", "pick",
+                "--project-id", _PROJECT,
+                "--chapter", str(_CHAPTER),
+                "--slot", slot,
+                "--json",
+            ],
+        )
+        assert r.exit_code == 0, r.output
+
+    # 回头 pick 已被顶替为 archived 的 slot 1
+    result = runner.invoke(
+        cli,
+        [
+            "variant", "pick",
+            "--project-id", _PROJECT,
+            "--chapter", str(_CHAPTER),
+            "--slot", "1",
+            "--json",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    head = asyncio.run(ChapterHeadRepository().get(_PROJECT, _CHAPTER))
+    assert head is not None
+    assert head.current_version_id == ref1
+
+    async def _flag() -> int:
+        version = await ChapterVersionRepository().get(ref1)
+        assert version is not None
+        return int(version.is_abandoned)
+
+    assert asyncio.run(_flag()) == 0
+
+
+def test_pick_duplicate_picked_race_reports_exit_2(
+    runner: CliRunner, pick_db: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """task 226 切片 4：pick 撞单 picked 唯一守卫（并发种族）→ 干净业务拒绝 exit 2。"""
+    from songyan.exceptions import DuplicatePickedVariantError
+
+    _generate_two(runner, monkeypatch)
+
+    async def _boom(self: Any, project_id: str, chapter: int, slot: int) -> Any:
+        raise DuplicatePickedVariantError("race: chapter already has a picked variant")
+
+    monkeypatch.setattr(ChapterVariantRepository, "pick_slot", _boom)
+    result = runner.invoke(
+        cli,
+        [
+            "variant", "pick",
+            "--project-id", _PROJECT,
+            "--chapter", str(_CHAPTER),
+            "--slot", "1",
+            "--json",
+        ],
+    )
+    assert result.exit_code == 2
+    assert "Traceback" not in result.output
