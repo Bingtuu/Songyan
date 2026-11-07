@@ -121,6 +121,23 @@ class ChapterVariantRepository:
             rows = await cursor.fetchall()
         return [_row_to_variant(row) for row in rows]
 
+    async def get_by_slot(
+        self, project_id: str, chapter_number: int, slot_index: int
+    ) -> ChapterVariant | None:
+        """Return the variant for one slot_index, if any."""
+        async with get_db() as conn:
+            conn.row_factory = Row
+            cursor = await conn.execute(
+                """
+                SELECT * FROM chapter_variants
+                WHERE project_id = ? AND chapter_number = ? AND slot_index = ?
+                LIMIT 1
+                """,
+                (project_id, chapter_number, slot_index),
+            )
+            row = await cursor.fetchone()
+        return _row_to_variant(row) if row is not None else None
+
     async def get_picked(
         self, project_id: str, chapter_number: int
     ) -> ChapterVariant | None:

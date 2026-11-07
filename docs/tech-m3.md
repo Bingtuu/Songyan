@@ -333,4 +333,4 @@ python -m pytest tests/cli/test_workbench_commands.py tests/cli/test_canon_write
 
 **已接受**（2026-11-06 Asia/Shanghai）。依据 owner widget **t104s937**：「接受 tech-m3，按 B1–B7 开 M3 编码」。**B1–B7 原样接受**，无点名修改项。
 
-接受后按 §5 小步推进。步 1 已在 `main`（#56 / `b9bbf98`）。**当前切片 = 步 2**（`variant generate`；owner t104s953）。包仍 `0.5.0`；不声称 V1.0 完成。
+接受后按 §5 小步推进。步 1–2 已在 `main`（#56 / `b9bbf98`；#57 / `135fcfb`）。**当前切片 = 步 3**（`variant list`/`diff`；owner t104s965）。包仍 `0.5.0`；不声称 V1.0 完成。

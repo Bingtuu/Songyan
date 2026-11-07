@@ -1,4 +1,4 @@
-"""M3 variant CLI — step 1 ``list``; step 2 ``generate`` (no stubs)."""
+"""M3 variant CLI — step 1 ``list``; step 2 ``generate``; step 3 ``diff`` (no stubs)."""
 
 from __future__ import annotations
 
@@ -7,10 +7,20 @@ import json
 
 import click
 
-from songyan.db.chapter_variant_repo import ChapterVariantRepository
 from songyan.db.connection import get_db_path
 from songyan.db.repository import ProjectRepository
+from songyan.services.variant_diff import (
+    MissingVariantSlotError,
+    diff_variant_slots,
+    list_variant_rows,
+)
 from songyan.services.variant_generate import generate_chapter_variants
+
+
+class VariantSlotMissing(click.ClickException):
+    """Missing variant slot — process exit 2 (tech-m3 §4.1 business reject)."""
+
+    exit_code = 2
 
 
 async def _ensure_project_readable(project_id: str) -> None:
@@ -24,8 +34,7 @@ async def _ensure_project_readable(project_id: str) -> None:
 
 async def _list_variants(project_id: str, chapter: int) -> list[dict[str, object]]:
     await _ensure_project_readable(project_id)
-    rows = await ChapterVariantRepository().list_for_chapter(project_id, chapter)
-    return [row.model_dump(mode="json") for row in rows]
+    return await list_variant_rows(project_id, chapter)
 
 
 async def _generate_variants(
@@ -46,6 +55,27 @@ async def _generate_variants(
         "fingerprint": result.fingerprint,
         "budget_exhausted": result.budget_exhausted,
         "variants": [row.model_dump(mode="json") for row in result.variants],
+    }
+
+
+async def _diff_variants(
+    project_id: str,
+    chapter: int,
+    slot_a: int,
+    slot_b: int,
+) -> dict[str, object]:
+    await _ensure_project_readable(project_id)
+    try:
+        result = await diff_variant_slots(project_id, chapter, slot_a, slot_b)
+    except MissingVariantSlotError as exc:
+        raise VariantSlotMissing(str(exc)) from exc
+    return {
+        "chapter": result.chapter,
+        "a": result.a,
+        "b": result.b,
+        "content_ref_a": result.content_ref_a,
+        "content_ref_b": result.content_ref_b,
+        "diff": result.diff,
     }
 
 
@@ -72,6 +102,7 @@ def variant_list(project_id: str, chapter: int, as_json: bool) -> None:
     for row in rows:
         click.echo(
             f"- slot={row['slot_index']} status={row['status']} "
+            f"fp={row['fingerprint']} "
             f"ref={row['content_ref']} stale={row['stale_vs_canon']} "
             f"cost={row['cost_cny_estimate']}"
         )
@@ -133,6 +164,34 @@ def variant_generate(
                 err=True,
             )
         ctx.exit(3)
+
+
+@variant_group.command(name="diff")
+@click.option("--project-id", required=True, help="项目 ID")
+@click.option("--chapter", required=True, type=int, help="章号")
+@click.option("--a", "slot_a", required=True, type=int, help="槽 A（slot_index）")
+@click.option("--b", "slot_b", required=True, type=int, help="槽 B（slot_index）")
+@click.option("--json", "as_json", is_flag=True, help="JSON 输出")
+def variant_diff(
+    project_id: str,
+    chapter: int,
+    slot_a: int,
+    slot_b: int,
+    as_json: bool,
+) -> None:
+    """两槽正文 unified diff（只读）；缺槽退出码 2。"""
+    if chapter < 1:
+        raise click.ClickException("chapter 必须 >= 1")
+    if slot_a < 1 or slot_b < 1:
+        raise click.ClickException("slot --a/--b 必须 >= 1")
+
+    payload = asyncio.run(_diff_variants(project_id, chapter, slot_a, slot_b))
+    if as_json:
+        click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+        return
+    click.echo(payload["diff"], nl=False)
+    if not str(payload["diff"]).endswith("\n"):
+        click.echo("")
 
 
 def register_variant_commands(cli: click.Group) -> None:
