@@ -20,6 +20,7 @@ from songyan.models.chapter import ChapterVersion
 from songyan.models.variant import ChapterVariant
 from songyan.plan_checks.bible import load_chapter_plan_bible
 from songyan.services.variant_fingerprint import fingerprint_chapter_parent_canon
+from songyan.services.variant_stale import refresh_stale_vs_canon
 from songyan.utils.cost_estimator import count_tokens, estimate_cost_from_tokens
 
 logger = structlog.get_logger(__name__)
@@ -118,6 +119,8 @@ async def generate_chapter_variants(
         raise ValueError("chapter must be >= 1")
 
     draft = draft_fn or default_slot_draft
+    # Lazy mark prior slots before writing new ones (B3 / step 5).
+    await refresh_stale_vs_canon(project_id, chapter)
     fingerprint = await fingerprint_chapter_parent_canon(project_id, chapter)
     bible = await load_chapter_plan_bible(project_id, chapter)
     bible_text = bible.text

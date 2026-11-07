@@ -1,4 +1,4 @@
-"""M3 step 3: ``variant list`` shaping + ``variant diff`` (unified, read-only)."""
+"""M3 step 3 list/diff shaping; step 5 lazy stale refresh before list/diff."""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ from typing import cast
 from songyan.db.chapter_variant_repo import ChapterVariantRepository
 from songyan.db.repository import ChapterVersionRepository
 from songyan.models.variant import ChapterVariant
+from songyan.services.variant_stale import refresh_stale_vs_canon
 
 _FP_SHORT = 12
 
@@ -67,6 +68,7 @@ class MissingVariantSlotError(Exception):
 
 
 async def list_variant_rows(project_id: str, chapter: int) -> list[dict[str, object]]:
+    await refresh_stale_vs_canon(project_id, chapter)
     rows = await ChapterVariantRepository().list_for_chapter(project_id, chapter)
     return [shape_list_row(row) for row in rows]
 
@@ -110,6 +112,7 @@ async def diff_variant_slots(
     slot_b: int,
 ) -> VariantDiffResult:
     """Read-only unified diff of two slots' ``chapter_versions`` content."""
+    await refresh_stale_vs_canon(project_id, chapter)
     variant_a, content_a = await _content_for_slot(project_id, chapter, slot_a)
     variant_b, content_b = await _content_for_slot(project_id, chapter, slot_b)
     diff_text = unified_content_diff(

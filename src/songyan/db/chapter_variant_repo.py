@@ -1,4 +1,4 @@
-"""Repository for ``chapter_variants`` (tech-m3 B1 / step 1; pick/abandon step 4)."""
+"""Repository for ``chapter_variants`` (tech-m3 B1; pick/abandon; stale step 5)."""
 
 from __future__ import annotations
 
@@ -298,3 +298,27 @@ class ChapterVariantRepository:
             variant_id=updated.variant_id,
         )
         return updated
+
+    async def set_stale_flags(self, updates: list[tuple[str, int]]) -> None:
+        """Set ``stale_vs_canon`` for ``(variant_id, flag)`` pairs in one transaction.
+
+        Does not touch status, content_ref, or ``chapter_heads.content_stale``.
+        """
+        if not updates:
+            return
+        now = _utc_now()
+        async with get_db() as conn:
+            for variant_id, flag in updates:
+                await conn.execute(
+                    """
+                    UPDATE chapter_variants
+                    SET stale_vs_canon = ?, updated_at = ?
+                    WHERE variant_id = ?
+                    """,
+                    (int(flag), now, variant_id),
+                )
+            await conn.commit()
+        logger.info(
+            "chapter_variants.set_stale_flags",
+            count=len(updates),
+        )

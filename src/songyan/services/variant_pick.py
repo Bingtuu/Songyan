@@ -1,4 +1,4 @@
-"""M3 step 4: ``variant pick`` / ``abandon`` (tech-m3 §5 步4 / B4 / B5).
+"""M3 step 4 pick/abandon; step 5 lazy stale refresh before pick (B3).
 
 pick moves ``ChapterHead.current_version_id`` only; never writes ``plan_*``.
 abandon soft-deletes (status→abandoned); never clears content.
@@ -17,6 +17,7 @@ from songyan.exceptions import SongyanError
 from songyan.models.chapter import ChapterHead
 from songyan.models.variant import ChapterVariant
 from songyan.services.variant_diff import MissingVariantSlotError
+from songyan.services.variant_stale import refresh_stale_vs_canon
 
 logger = structlog.get_logger(__name__)
 
@@ -65,6 +66,8 @@ async def pick_variant_slot(
         raise ValueError("chapter must be >= 1")
     if slot < 1:
         raise ValueError("slot must be >= 1")
+
+    await refresh_stale_vs_canon(project_id, chapter)
 
     repo = ChapterVariantRepository()
     target = await repo.get_by_slot(project_id, chapter, slot)
