@@ -208,7 +208,8 @@ def test_canon_show_json_storyline_filled(
 
 _NEXT = (
     "可用 canon confirm 入典或销账承诺；硬确认可用 --hard/--mark-stale；"
-    "章内草稿走 variant generate 抽卡（默认 N=2，不 auto-pick）。"
+    "续写下一章走 chapter continue，"
+    "章内草稿可 variant generate 抽卡（默认 N=2，不 auto-pick）。"
 )
 _PLAN_TABLES = (
     "plan_entities",
