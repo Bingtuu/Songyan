@@ -3,7 +3,7 @@
 | 项 | 内容 |
 |---|---|
 | 日期 | 2026-11-08 |
-| 状态 | DONE（task 236，owner 评审已吸收修订：Q2 复用条件、Q4 钉死 status、N7 验收分列、接口三线钉死、行号修正） |
+| 状态 | DONE（task 236，owner 两轮评审已吸收：Q2 复用条件、Q4 钉死 status、N7 验收分列、接口三线钉死、行号修正、§9 P0/P1 缺口评估与四条写死句建议） |
 | 用途 | 为 `docs/tech-m4.md` 草稿备料；本报告是方案前的调研层，不是方案本身 |
 | 方法 | A 需求面（PRD 精读）/ B 代码现状面（thorough 考古）/ C 历史经验面（评审审计）/ D 外部调研面（同类工具） |
 
@@ -197,3 +197,40 @@
 | `load_latest_audits` / `ReviewReportRepository` / `LiteraryObservationRepository` | `workflows/_helpers.py:417`、`db/review_repo.py:165, 234` | review 读取聚合 |
 | `ContextSnapshotRepository` + `context_snapshots` | `db/repository.py:647`、`schema.sql:213` | ContextEmergency 露出数据源 |
 | `call_llm` / `resolve_llm_config` / 预算守卫 / `llm_call_usage` | `llm/client.py:426` 等 | continue/review 的 LLM 与计费复用 |
+
+---
+
+## 9. 缺口评估（owner 二轮评审，2026-11-08）
+
+P0 = 不写进 tech-m4 就会形成语义破口；P1 = 草稿应写但可合并成节。逐条结论与建议归属：
+
+### P0（5 条，全部要改，草稿必写）
+
+| # | 缺口 | 评估 | 建议答案（供 owner 否决） |
+|---|------|------|--------------------------|
+| P0-1 | 确认命令产品面（新 CLI vs LangGraph resume） | 要改——这是 Q2 决策点本身 | **新 `chapter accept` 命令**：CLI 单次语义与 thread-resume 交互模型冲突；resume 机制保留给 `run` 管线内部；`chapter accept` 与 `canon confirm` 构成对称产品面（章级确认 vs 事实级确认）。命名空间 `chapter` 与 M1 非持久 `canon accept` 不冲突 |
+| P0-2 | continue 与 `run`/`--auto-confirm` 并存、谁能动游标 | 要改——N7 的正面表述 | accepted 游标写径收口到**单一服务函数**（与 `accept_with_settlement_boundary` 同事务语义），`continue` 与 `run` 都经它；`run --auto-confirm` 定位不变（引擎冒烟，不是作者路径）；**不存在第三条 accepted 写径**，import replay 为历史路径、方案中列为豁免 |
+| P0-3 | `--count>1` / 无审连跑上限硬行为 | 要改——PRD 边界（:172）的硬执行 | 结构上消灭「无审连跑」：`continue --count N` **逐章过确认闸**（N 只减少命令次数，不跳过确认）；上限不靠魔法数，靠「每章必须 accept 才推进」这一结构保证 |
+| P0-4 | N7 验收豁免句 | **已改**（本轮 §6 N7 已分列「无自动 Canon approved」/「import 可自动 chapter accepted」） | 草稿验收节照抄分列句 |
+| P0-5 | `--variants` 与 M3 pick/stale/`--allow-stale` 交接 | 要改——不写清必出两套语义 | `--variants N` = **转调 M3**（函数级 `generate_chapter_variants`，同进程，退出码与 M3 一致）；pick/abandon 仍由人显式调 M3 命令；continue 只在「上一章已 accepted」时启动；stale 规则沿用 M3（`--allow-stale` 语义不变，continue 不另造） |
+
+### P1（8 条，7 要改 1 已决）
+
+| # | 缺口 | 评估 |
+|---|------|------|
+| P1-1 | exit 码表 | 要改——审计教训（`check` 无章可查与未过门共用 exit 2 不可分辩）；草稿给 `continue`/`accept`/`review`/`status` 一张显式 exit 码表 |
+| P1-2 | `--json` / 费用可见 | 要改——延续 M3 步 5 口径；continue 打印本章实际费用（`llm_call_usage` 按章可查），`--json` 含 cost 字段 |
+| P1-3 | `--require-plan` 拒绝 vs 警告判定 | 要改——建议：默认**警告**（exit 0，文案明示缺哪类硬约束）；`--require-plan` 时**拒绝**（exit 2，锁死测试） |
+| P1-4 | 副作用路径 TDD 切片 | 要改——审计 blocker #1 的直接教训：accept 写径、游标推进必须「先红测试锁死再实现」 |
+| P1-5 | ContextEmergency 挂哪个命令 | **已决**——Q4 已拍板 `songyan status` |
+| P1-6 | continue 中断后的失败恢复 | 要改——continue 若不挂 `project_runs` 壳，中断即丢上下文；建议 continue 复用 run 壳（`_find_resume_run`/`pause_reason` 语义），中断后可恢复或幂等重跑，二选一写死 |
+| P1-7 | 报告归档路径（引用链） | **不改**——`docs/236-m4-preresearch.md` 已 tracked 且四处引用已更新；tech-m4 完成后也不移动本报告（历史调研记录，引用链保持） |
+
+### 四条写死句（owner 点名，草稿必须逐字回答）
+
+| # | 问题 | 调研建议答案 |
+|---|------|--------------|
+| S1 | 可续写判定：严格 accepted vs picked+显式确认 | **严格 accepted**——与现网 resume 判定同口径避免双真源；picked → `chapter accept` 即成 accepted，衔接成本低 |
+| S2 | `--variants N`：转调 M3 vs 内嵌 generate | **转调 M3**（见 P0-5），不内嵌第二套生成逻辑 |
+| S3 | 上一章上下文：120 字摘要 vs 正文节选 | **正文结尾节选 + 预算硬顶**（如 ≤800 字）与 120 字摘要并存——Ch1–10 衔接弱与 ContextEmergency 超预算的教训各管一半；节选受 Context Diet 预算约束，不裸注入全文 |
+| S4 | review 默认是否写任何表 | **默认零写库**——纯只读聚合，与 PRD :586 字面一致；`merge_reviews` 不得进入 review 路径 |

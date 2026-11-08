@@ -57,4 +57,6 @@ M0–M3 代码验收 PASS @ `594144b`。M4 主要交付 `chapter continue` / `re
 5. 交付修正：`docs/reports/` 被 gitignore、远程不可见——报告移至 tracked 的 `docs/236-m4-preresearch.md`；STATUS/HANDOFF/任务文档引用同步更新。
 6. 行号修正两处（emergency 触发 362-367；excellence 复读 646-715），语义不变。
 
+**owner 二轮评审（P0×5 / P1×8 / 写死句×4，已入报告 §9）**：全部要改项中 P0-4 与 P1-5 已先行改完；其余结论——新 `chapter accept` 命令（P0-1）、accepted 游标唯一写径（P0-2）、`--count N` 逐章确认消灭无审连跑（P0-3）、`--variants` 转调 M3（P0-5/S2）、严格 accepted 判定（S1）、正文节选+预算硬顶（S3）、review 默认零写库（S4）——均已作为建议答案写入 §9 供草稿采纳或 owner 否决。
+
 **验证**：报告经只读 review + owner 两轮评审修订后无 blocker / 未修 major；无代码改动，无需回归。
