@@ -64,6 +64,7 @@ def _knife() -> PlanEntity:
         project_id="p1",
         entity_type="object",
         aliases=["银刀", "那把刀"],
+        approval_status="approved",
     )
 
 
@@ -255,6 +256,7 @@ class TestCanonVersusPending:
             value="陈照",
             valid_from_ch=1,
             source="human",
+            approval_status="approved",
         )
 
         await repo.write_attribute(pending)
@@ -341,6 +343,7 @@ class TestCanonVersusPending:
                 project_id="p2",
                 entity_type="person",
                 aliases=["别人"],
+                approval_status="approved",
             )
         )
 

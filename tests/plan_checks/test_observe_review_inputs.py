@@ -48,6 +48,7 @@ def test_negated_claim_phrase_becomes_ownership_extract_and_anchor() -> None:
                 valid_from_ch=2,
                 valid_to_ch=3,
                 source="human",
+                approval_status="approved",
             )
         ],
         events=[_event("claim-hook", "钩状弧线属于门框暗处，不在横杆拓片上")],
@@ -74,6 +75,7 @@ def test_phrase_only_under_negation_is_not_a_contradiction() -> None:
                 key="ownership",
                 value="门框暗处",
                 source="human",
+                approval_status="approved",
             )
         ],
         events=[_event("claim-hook", "钩状弧线属于门框暗处，不在横杆拓片上")],
@@ -94,6 +96,7 @@ def test_governed_direction_alternative_is_visible() -> None:
                 project_id="p",
                 entity_type="mechanism",
                 aliases=["拉闩"],
+                approval_status="approved",
             )
         ],
     )
@@ -115,6 +118,7 @@ def test_hedged_opposite_direction_is_not_extracted() -> None:
                 project_id="p",
                 entity_type="object",
                 aliases=["刮痕"],
+                approval_status="approved",
             )
         ],
     )
@@ -137,6 +141,7 @@ def test_recorded_name_in_a_naming_slot_is_an_ownership_extract() -> None:
                 valid_from_ch=1,
                 valid_to_ch=3,
                 source="human",
+                approval_status="approved",
             )
         ],
         events=[
@@ -145,6 +150,7 @@ def test_recorded_name_in_a_naming_slot_is_an_ownership_extract() -> None:
                 project_id="p",
                 ch=2,
                 claims=[PlanClaim(claim_id="claim-name", text="灵印记名仍是周晚宁")],
+                approval_status="approved",
             )
         ],
         entities=[
@@ -153,6 +159,7 @@ def test_recorded_name_in_a_naming_slot_is_an_ownership_extract() -> None:
                 project_id="p",
                 entity_type="person",
                 aliases=["沈酌"],
+                approval_status="approved",
             )
         ],
     )
@@ -174,6 +181,7 @@ def test_count_change_beside_the_alias_is_numeric() -> None:
                 key="count",
                 value="1",
                 source="human",
+                approval_status="approved",
             )
         ],
         events=[],
@@ -183,6 +191,7 @@ def test_count_change_beside_the_alias_is_numeric() -> None:
                 project_id="p",
                 entity_type="object",
                 aliases=["刻痕"],
+                approval_status="approved",
             )
         ],
     )
@@ -234,6 +243,7 @@ def test_negated_phrase_on_the_participant_time_anchor() -> None:
                 key="time_anchor",
                 value="1931-09-18前",
                 source="plan",
+                approval_status="approved",
             )
         ],
         events=[
@@ -248,6 +258,7 @@ def test_negated_phrase_on_the_participant_time_anchor() -> None:
                         text="本案当下在九一八之前，报纸报道的不是日军进逼锦州",
                     )
                 ],
+                approval_status="approved",
             )
         ],
     )

@@ -5,6 +5,8 @@ against them later; this module does not absorb settlement extracts.
 
 ``approval_status`` is the queue flag. ``approved`` rows are canon.
 ``pending`` rows may be stored, but canon readers must ignore them.
+The field defaults to ``pending``: a card built without an explicit
+status lands in the queue, never silently in canon.
 ``rejected`` rows stay for dismiss audit (tech-m1); canon and pending
 list readers must ignore them. An attribute's ``source`` is ``plan``, ``human``, or ``extract``
 (M2 tech-m2 B5). That value is the intended authority provenance;
@@ -29,7 +31,7 @@ class PlanEntity(BaseModel):
     project_id: str
     entity_type: str
     aliases: list[str] = Field(default_factory=list)
-    approval_status: PlanApprovalStatus = "approved"
+    approval_status: PlanApprovalStatus = "pending"
 
 
 class PlanAttribute(BaseModel):
@@ -43,7 +45,7 @@ class PlanAttribute(BaseModel):
     valid_from_ch: int | None = Field(default=None, ge=1)
     valid_to_ch: int | None = Field(default=None, ge=1)
     source: PlanFactSource
-    approval_status: PlanApprovalStatus = "approved"
+    approval_status: PlanApprovalStatus = "pending"
 
     @model_validator(mode="after")
     def validate_validity_window(self) -> PlanAttribute:
@@ -64,7 +66,7 @@ class PlanTimeAnchor(BaseModel):
     project_id: str
     date: str
     kind: TimeAnchorKind
-    approval_status: PlanApprovalStatus = "approved"
+    approval_status: PlanApprovalStatus = "pending"
 
 
 class PlanClaim(BaseModel):
@@ -102,7 +104,7 @@ class PlanEvent(BaseModel):
     causes: list[str] = Field(default_factory=list)
     reveals_evidence: list[str] = Field(default_factory=list)
     claims: list[PlanClaim] = Field(default_factory=list)
-    approval_status: PlanApprovalStatus = "approved"
+    approval_status: PlanApprovalStatus = "pending"
 
     @model_validator(mode="after")
     def unique_claim_ids(self) -> PlanEvent:
@@ -127,7 +129,7 @@ class PlanClue(BaseModel):
     must_mention_in: list[int] = Field(default_factory=list)
     label: str = ""
     mention_terms: list[str] = Field(default_factory=list)
-    approval_status: PlanApprovalStatus = "approved"
+    approval_status: PlanApprovalStatus = "pending"
 
     @field_validator("must_mention_in")
     @classmethod

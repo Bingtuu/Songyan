@@ -16,6 +16,7 @@ def _clue(**updates: object) -> PlanClue:
         "must_mention_in": [1, 2],
         "label": "后脑钝器伤",
         "mention_terms": ["钝器伤"],
+        "approval_status": "approved",
     }
     base.update(updates)
     return PlanClue.model_validate(base)

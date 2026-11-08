@@ -86,6 +86,7 @@ async def _seed_name_drift_cards() -> None:
             project_id="p1",
             entity_type="object",
             aliases=["灵印", "记名"],
+            approval_status="approved",
         )
     )
     await repo.write_entity(
@@ -94,6 +95,7 @@ async def _seed_name_drift_cards() -> None:
             project_id="p1",
             entity_type="person",
             aliases=["沈酌"],
+            approval_status="approved",
         )
     )
     await repo.write_attribute(
@@ -134,6 +136,7 @@ async def _seed_mixed_cards() -> None:
             project_id="p1",
             entity_type="object",
             aliases=["刮痕"],
+            approval_status="approved",
         )
     )
     await repo.write_attribute(

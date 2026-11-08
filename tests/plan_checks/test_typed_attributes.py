@@ -41,6 +41,7 @@ class TestTypedAttributes:
             valid_from_ch=1,
             valid_to_ch=3,
             source="human",
+            approval_status="approved",
         )
         mismatches = compare_typed_attributes(
             [_direction(), count],
@@ -75,6 +76,7 @@ class TestTypedAttributes:
             valid_from_ch=2,
             valid_to_ch=3,
             source="human",
+            approval_status="approved",
         )
 
         mismatches = compare_typed_attributes(
@@ -93,6 +95,7 @@ class TestTypedAttributes:
             key="note",
             value="直线",
             source="plan",
+            approval_status="approved",
         )
 
         mismatches = compare_typed_attributes(
@@ -120,6 +123,7 @@ class TestTypedAttributes:
             valid_from_ch=1,
             valid_to_ch=3,
             source="plan",
+            approval_status="approved",
         )
 
         mismatches = compare_typed_attributes(

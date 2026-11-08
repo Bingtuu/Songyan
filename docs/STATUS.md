@@ -90,6 +90,8 @@ songyan variant abandon  --project-id TEXT --chapter INT --slot INT [--json]
 - `today` 的固定 `next` 文案仍是 M2 口径；若要改成「可抽卡」提示，属于**步 6**，需 owner 授权后再改。
 - **2026-11-07 评审修复（task 226，已归档 `tasks/done/`）**：全量 code review 的 1 blocker + 4 major + minor 批已修复——settlement 声称的伏笔 resolve 只进提案（不再直写 `resolved`；唯一写径 = `canon confirm promise`）；`variant generate` 成本记账去重且归因 project/agent；pick 拒绝 abandoned 槽；LLM 失败保留已写槽并报 stderr；rejected 行不可被 confirm 直接转正；extract 提案跳过 rejected。详见 `tasks/done/226-review-findings-fix.md` 与 `docs/superpowers/plans/2026-11-07-m0-m3-review-audit.md`。
 - **2026-11-07 审计补强（task 228，已归档 `tasks/done/`）**：`canon confirm promise` 的人证 evidence 落库（`foreshadowings.resolved_evidence`，写-only 审计列）；销账守卫与写入合并为原子 UPDATE（并发双销账恰一成交）。读口径与 open 集不变。
+- **2026-11-08 P0-3 收口（task 232，已归档 `tasks/done/232-plan-default-pending.md`）**：plan 五模型 `approval_status` 默认值 `"approved"` → `"pending"`（owner 拍板方案 A）。不显式传状态构造的卡从此落入 pending 队列，不再静默直写 Canon；生产写入方与种子夹具本就显式传值，零行为变化。测试侧 26 处夹具语义卡显式补 `approved`，新增模型级默认行为锁。
+- **环境项（留维护者调查）**：`test_llm_http_timeout`（litellm/httpx 在 Windows 下不对悬挂 socket 应用 request_timeout）；`test_191_ch200_harness.py`（子进程 `text=True` 按 cp936 解码 UTF-8 输出；`PYTHONUTF8=1` 下通过，与本机 locale 相关）。本机全量回归建议带 `PYTHONUTF8=1`。
 
 标识与助手交接：[HANDOFF-mew.md](HANDOFF-mew.md)。书稿不入库。
 

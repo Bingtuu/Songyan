@@ -38,12 +38,14 @@ def _cards() -> tuple[
             project_id="p1",
             entity_type="person",
             aliases=["乙", "B"],
+            approval_status="approved",
         ),
         PlanEntity(
             entity_id="ent-a",
             project_id="p1",
             entity_type="person",
             aliases=["甲"],
+            approval_status="approved",
         ),
     ]
     anchors = [
@@ -52,6 +54,7 @@ def _cards() -> tuple[
             project_id="p1",
             date="第一天黄昏",
             kind="story",
+            approval_status="approved",
         )
     ]
     events = [
@@ -64,6 +67,7 @@ def _cards() -> tuple[
             causes=["ent-a"],
             reveals_evidence=[],
             claims=[PlanClaim(claim_id="c1", text="甲见到乙")],
+            approval_status="approved",
         )
     ]
     attributes = [
@@ -76,6 +80,7 @@ def _cards() -> tuple[
             source="plan",
             valid_from_ch=1,
             valid_to_ch=3,
+            approval_status="approved",
         )
     ]
     clues = [
@@ -86,6 +91,7 @@ def _cards() -> tuple[
             must_mention_in=[1],
             label="铜牌缺口",
             mention_terms=["缺口", "铜牌"],
+            approval_status="approved",
         )
     ]
     return entities, attributes, events, clues, anchors

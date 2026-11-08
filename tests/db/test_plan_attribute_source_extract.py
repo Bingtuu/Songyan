@@ -49,6 +49,7 @@ def _knife() -> PlanEntity:
         project_id="p1",
         entity_type="object",
         aliases=["银刀"],
+        approval_status="approved",
     )
 
 

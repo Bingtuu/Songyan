@@ -23,6 +23,7 @@ def _event() -> PlanEvent:
         claims=[
             PlanClaim(claim_id="claim-scratch", text="刮痕方向为右向左"),
         ],
+        approval_status="approved",
     )
 
 
