@@ -23,7 +23,7 @@
 
 Songyan 是人主导的连载写作助手。已确认的 Canon 是事实；需要探索写法时，再用本机引擎出草稿。终稿由人定。
 
-当前能跑的包是 **v0.5 技术预览 / 引擎**（`0.5.0`）。多个 Agent 在 LangGraph 上分工，长期记录在 SQLite。下一阶段的产品方向在 [V1.0 PRD](docs/prd-v1.md)（已接受）。M0–M2 与 tech-m3 已接受；M3 步 1–5 已在 `main`（tip `1b0e323`）。文中标了 `[proposed]`、且尚未落地的命令（如 `chapter continue` / `review`）不要当成已支持。
+当前能跑的包是 **v0.5 技术预览 / 引擎**（`0.5.0`）。多个 Agent 在 LangGraph 上分工，长期记录在 SQLite。下一阶段的产品方向在 [V1.0 PRD](docs/prd-v1.md)（已接受）。M0–M2 与 tech-m3 已接受；**M3 步 1–6 已落地，§6–7 代码验收 PASS @ `594144b`**。文中标了 `[proposed]`、且尚未落地的命令（如 `chapter continue` / `review`）不要当成已支持。
 
 - **Canon 由你确认。** 人物、物件、时间和已经发生的事，以你批准的事实为准。
 - **生成可选。** 模型可以按已批准的计划卡起草，审查标出写偏的地方。
@@ -35,7 +35,7 @@ Songyan 是人主导的连载写作助手。已确认的 Canon 是事实；需�
 
 ### 系统
 
-下图是 **v0.5 引擎**。命令行可以一次跑很多章，写完的章节、日志和导出回到本机的 SQLite。这是管线能力。作者路径（`today` / `canon` / `check` / `variant`）已随 M0–M3 步 5 部分落地，细节见 [STATUS](docs/STATUS.md)。
+下图是 **v0.5 引擎**。命令行可以一次跑很多章，写完的章节、日志和导出回到本机的 SQLite。这是管线能力。作者路径（`today` / `canon` / `check` / `variant`）已随 M0–M3 落地，细节见 [STATUS](docs/STATUS.md)。
 
 ```mermaid
 flowchart TB
@@ -57,7 +57,7 @@ flowchart TB
 
 计划卡只进入当前这一章。还没批准的卡、别的章、别的项目不会混进来。
 
-从正文抽出的细节写进结算库。结算库是**运行时观测**，已经批准的计划卡保持原样。V1.0 作者路径（提案 → 人确认入典）已随 M1–M2 部分落地；章内抽卡（`variant`）随 M3 步 1–5 落地。未落地的仍以 PRD `[proposed]` 为准。
+从正文抽出的细节写进结算库。结算库是**运行时观测**，已经批准的计划卡保持原样。V1.0 作者路径（提案 → 人确认入典）已随 M1–M2 落地；章内抽卡（`variant`）随 M3 落地。未落地的仍以 PRD `[proposed]` 为准。
 
 ```mermaid
 flowchart LR
@@ -122,13 +122,13 @@ songyan report --run-id <run_id>
 songyan export --project-id <project_id> --chapters 1-3 --format md --output exports/
 ```
 
-`run` 会打印 `run_id`，这是**引擎冒烟路径**。作者路径命令（`today`、`canon`、`check`、`variant list|generate|diff|pick|abandon`）已部分落地（M0–M3 步 5，tip `1b0e323`）；`chapter continue` / `review` 等仍见 [V1.0 PRD](docs/prd-v1.md) 的 `[proposed]`。备份、导入已有小说、质量门和排错都在 [Quickstart](docs/quickstart.md)。
+`run` 会打印 `run_id`，这是**引擎冒烟路径**。作者路径命令（`today`、`canon`、`check`、`variant list|generate|diff|pick|abandon`）已落地（M0–M3 代码验收 PASS @ `594144b`）；`chapter continue` / `review` 等仍见 [V1.0 PRD](docs/prd-v1.md) 的 `[proposed]`。备份、导入已有小说、质量门和排错都在 [Quickstart](docs/quickstart.md)。
 
 报告里的费用按这个口径估算：输入 **¥2/M**，输出 **¥8/M**，单章停线 **¥7.66**。这是估算，不是供应商账单。
 
 ## 进展
 
-**v0.5**（包版本 `0.5.0`）是技术预览。「V1.0」是下一阶段的产品代际名，不是这个包版本。M0–M2 代码验收 **PASS**；tech-m3 **已接受**；M3 步 1–5 已在 `main`（tip `1b0e323`）。包仍 `0.5.0`。下一闸门是 owner 授权的 M3 步 6，之后才是 M3 验收与 M4。科幻模板的真实模型前三章已经跑通。Ch1–10 在 `47954cb` 上只是管线证据：过程门通过，人工阅读未通过，不能当成可读长篇。详见 [STATUS](docs/STATUS.md)。
+**v0.5**（包版本 `0.5.0`）是技术预览。「V1.0」是下一阶段的产品代际名，不是这个包版本。M0–M2 代码验收 **PASS**；tech-m3 **已接受**；**M3 步 1–6 已落地，§6–7 代码验收 PASS @ `594144b`（全量 3532 passed 零失败）**。包仍 `0.5.0`。下一闸门是 M4+ 技术方案（另需被接受）。科幻模板的真实模型前三章已经跑通。Ch1–10 在 `47954cb` 上只是管线证据：过程门通过，人工阅读未通过，不能当成可读长篇。详见 [STATUS](docs/STATUS.md)。
 
 把现成书稿导入后再接着写，自动化测试已经有了；用真实书稿续写，还没有验收。
 
@@ -142,10 +142,10 @@ songyan export --project-id <project_id> --chapters 1-3 --format md --output exp
 | [M0 技术方案](docs/tech-m0.md) | 只读工作台。已接受；步 1–4 与 §6–7 代码验收 PASS |
 | [M1 技术方案](docs/tech-m1.md) | 人确认入典 + 规则 `check`。已接受；步 1–5 与 §6–7 PASS |
 | [M2 技术方案](docs/tech-m2.md) | 硬事实标脏 + 承诺债务 + 抽取提案。已接受；步 1–6 与 §6–7 PASS |
-| [M3 技术方案](docs/tech-m3.md) | 章内 Variant / 抽卡。已接受；步 1–5 已合入（tip `1b0e323`）；下一闸门步 6 |
+| [M3 技术方案](docs/tech-m3.md) | 章内 Variant / 抽卡。已接受；步 1–6 已落地；§6–7 代码验收 PASS @ `594144b` |
 | [AGENTS.md](AGENTS.md) | 贡献者和代理先读：现在是什么、不要加载哪些历史文档 |
 | [Quickstart](docs/quickstart.md) | 安装、配置、短窗口、导出 |
-| [STATUS](docs/STATUS.md) | 现在能用什么、限制、tip `1b0e323` 闸门 |
+| [STATUS](docs/STATUS.md) | 现在能用什么、限制、M3 PASS 后的下一闸门（M4+ 技术方案） |
 | [Release Checklist](docs/release-checklist.md) | 发布前要核对的项 |
 | [baseline 摘要](docs/baseline-results.md) | 更早长窗口的公开数字 |
 | [Troubleshooting](docs/troubleshooting.md) | 失败了怎么恢复 |

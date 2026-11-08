@@ -4,14 +4,14 @@
 
 包版本 **0.5.0**（owner 称之为 v0.5）。**V1.0** 是写作助手这一代的产品名，不是这个包版本。本页不打 git tag，也不改 `pyproject.toml`。
 
-## 接手节点（2026-11-07 Asia/Shanghai）
+## 接手节点（2026-11-08 Asia/Shanghai）
 
 | 项 | 值 |
 |----|----|
-| **git tip（`main`）** | `f72590b` — docs handoff [#61](https://github.com/Bingtuu/Songyan/pull/61)（STATUS/README 对齐） |
+| **git tip（`main`）** | `e3c7c7c`（本地；origin/main @ `a389d10`，233–235 待 push） |
 | **功能 tip（M3 步 1–5）** | `1b0e323` — [#60](https://github.com/Bingtuu/Songyan/pull/60)（`stale_vs_canon` + list 费用） |
 | **包版本** | 仍是 `0.5.0`（不 bump） |
-| **里程碑** | M0 / M1 / M2 代码验收 **PASS**；M3 技术方案已接受；**M3 步 1–6 已落地；M3 §6–7 代码验收 PASS** @ `594144b` |
+| **里程碑** | M0 / M1 / M2 / M3 代码验收 **PASS**（M3 @ `594144b`） |
 | **下一闸门** | **M4+ 技术方案**（另需被接受的技术方案；chapter continue / review 未开）；真实模型冒烟另开维护者任务 |
 | **本 handoff** | 文档对齐 + 步 6 闭环文案已落地（task 233）；§6–7 验收未声称 |
 
@@ -78,7 +78,7 @@ songyan variant abandon  --project-id TEXT --chapter INT --slot INT [--json]
 | 步 5 归档 | [tasks/done/224-m3-step5-stale-cost.md](../tasks/done/224-m3-step5-stale-cost.md) |
 | 本地回归（抽卡相关） | `tests/cli/test_variant_*.py`、`tests/services/test_variant_fingerprint.py`、`tests/db/test_chapter_variants.py` |
 
-本地仓库路径（Diupi-Yun）：`C:\Vibe Project\Songyan`，应对齐 `origin/main` @ `f72590b`。
+本地仓库路径（Diupi-Yun）：`C:\Vibe Project\Songyan`，origin/main @ `a389d10`；本地 main @ `e3c7c7c`（233/234/235 三笔待 push）。
 
 ## 已知限制
 
@@ -109,7 +109,7 @@ songyan variant abandon  --project-id TEXT --chapter INT --slot INT [--json]
 
 ## 维护者下一步
 
-1. **当前 tip `f72590b`（功能面 `1b0e323` + 本地 226–235）。** M3 全里程碑代码验收 **PASS** @ `594144b`；下一闸门 = M4+ 技术方案（另需被接受）；continue / review 未开。
+1. **当前本地 tip `e3c7c7c`（功能面 `1b0e323` + 226–235；origin @ `a389d10`）。** M3 全里程碑代码验收 **PASS** @ `594144b`；下一闸门 = M4+ 技术方案（另需被接受）；continue / review 未开。
 2. 不改结算权威；不大 PR；不 bump；不声称 V1.0 完成。
 3. owner 本地接手期间：以本页 + tech-m3 为准；助手侧默认待命，不抢开 §6–7 声称 / M4。
 

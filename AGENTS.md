@@ -30,7 +30,7 @@ Songyan（松烟）是 **人主导的连载写作助手**，接在现有的事�
 2. [docs/tech-m0.md](docs/tech-m0.md) — 只规划 M0。步 1–4 已进 `main`；§6–7 代码验收 **PASS**（`80f4107`）。
 3. [docs/tech-m1.md](docs/tech-m1.md) — 只规划 M1（人确认入典 + 规则 `check`）。**已接受（Mew 拍板，2026-11-03 Asia/Shanghai）。** 步 1–5 已进 `main`；§6–7 代码验收 **PASS**（`69d7ece`）。不得越出 PRD 的 M1。
 4. [docs/tech-m2.md](docs/tech-m2.md) — 只规划 M2（硬事实标脏、承诺债务、抽取提案）。**已接受**（2026-11-04 Asia/Shanghai；owner widget t93s804；B1–B6 原样）。步 1–6 已进 `main`；§6–7 代码验收 **PASS**（证据 tip `f1c3093`）。不得越出 PRD 的 M2。
-5. [docs/tech-m3.md](docs/tech-m3.md) — 只规划 M3（章内 Variant / 抽卡）。**已接受**（2026-11-06 Asia/Shanghai；owner widget t104s937；B1–B7 原样）。按 §5 小步推进；不得越出 PRD 的 M3。
+5. [docs/tech-m3.md](docs/tech-m3.md) — 只规划 M3（章内 Variant / 抽卡）。**已接受**（2026-11-06 Asia/Shanghai；owner widget t104s937；B1–B7 原样）。步 1–6 已进 `main`；§6–7 代码验收 **PASS**（`594144b`）。不得越出 PRD 的 M3。
 6. [docs/adr/0001-plan-first-facts.md](docs/adr/0001-plan-first-facts.md) — 事实写入方向。
 7. [docs/STATUS.md](docs/STATUS.md) — 工程事实（版本、闸门、已知限制）。
 8. [docs/HANDOFF-mew.md](docs/HANDOFF-mew.md) — 当天的下一步。
@@ -38,7 +38,7 @@ Songyan（松烟）是 **人主导的连载写作助手**，接在现有的事�
 
 冲突时，上面的条目压过下面的。产品边界以 PRD 为准；M0 的实现细节以 `tech-m0.md` 为准；M1 的实现细节以**已接受的** `tech-m1.md` 为准；M2 的实现细节以**已接受的** `tech-m2.md` 为准；M3 的实现细节以**已接受的** `tech-m3.md` 为准，且不得越出 PRD 对应里程碑。不要用归档路线图或 [docs/prd-v1-writing-assist.md](docs/prd-v1-writing-assist.md) 的指针页推翻 PRD。
 
-**开工门（tech-m3 已接受；tip `1b0e323`）：** `docs/tech-m2.md` **已接受**；§6–7 **PASS**（`f1c3093`）。`docs/tech-m3.md` **已接受**（t104s937；B1–B7 原样）。M3 步 1–5 已在 `main`（#56 / `b9bbf98`；#57 / `135fcfb`；#58 / `0b47410`；#59 / `c38ee31`；#60 / `1b0e323`）。**下一闸门 = owner 授权再开步 6**（闭环文案与文档同步）。未授权前不做 continue / review / 步 6+。开 PR 后 Mew COMMENT 再合并。
+**开工门（tech-m3 已接受；M3 全里程碑 PASS）：** `docs/tech-m2.md` **已接受**；§6–7 **PASS**（`f1c3093`）。`docs/tech-m3.md` **已接受**（t104s937；B1–B7 原样）；步 1–6 已落地，§6–7 代码验收 **PASS @ `594144b`**（#56–#60 → tip `1b0e323`；步 6 = task 233）。**下一闸门 = M4+ 技术方案**（另需被接受的技术方案）；`chapter continue` / `review` 在对应方案被接受并授权前不做。开 PR 后 Mew COMMENT 再合并。
 
 ## 默认不要读
 
@@ -55,7 +55,7 @@ Songyan（松烟）是 **人主导的连载写作助手**，接在现有的事�
 - 不要把 extract-then-patch，或 SettlementExtractor 的自动写入，做成助手主路径。
 - 不要为了追召回去加题材专用检查器。窄检查保持薄封装。
 - 不要把质量门通过写成「可发表」或「书写得好」。
-- tech-m2 **已接受且 §6–7 PASS**：不再扩 M2 编码范围。tech-m3 **已接受**：步 1–5 已在 `main`（tip `1b0e323`）；只按 §5 小步推进；未授权前不做步 6+ / continue / review。续写仍属 M4。M1 约束仍有效（五表 `rejected`；无持久第四态 `accepted`）。
+- tech-m2 **已接受且 §6–7 PASS**：不再扩 M2 编码范围。tech-m3 **已接受且 §6–7 PASS @ `594144b`**：步 1–6 已落地，不再扩 M3 编码范围；不做 continue / review（续写仍属 M4）。M1 约束仍有效（五表 `rejected`；无持久第四态 `accepted`）。
 - 不要提交 `.env`、密钥、书稿、本地数据库、未脱敏日志。
 
 ## 运行时不变量
@@ -80,4 +80,4 @@ Songyan（松烟）是 **人主导的连载写作助手**，接在现有的事�
 
 ## 命令表面
 
-现网能用的包括 `doctor`、`create-project`、`run`、`report`、`export`、`import`、`bundle-run`，以及 M0 的 `canon show` 与 `today`，以及 M1 的 `canon edit` / `confirm` / `dismiss`（及非持久 `accept`；entity/attribute）与规则 `check`，以及 M2 的 `today` 承诺计数、`canon show --kind promise`、`canon confirm promise`、`canon confirm` `--hard` / `--mark-stale`、`chapter_heads.content_stale`、`check` 报告 stale 范围、抽取 / import → `plan_*` pending（`source=extract`；confirm 前不进 canon）。M3 步 1 起注册 `variant list`；步 2 起注册 `variant generate`；步 3 起注册 `variant diff` 并增强 `list`；步 4 起注册 `variant pick` / `abandon`；步 5 起 list/diff/pick/generate 前懒标 `stale_vs_canon`，list 暴露 per-slot `cost_cny_estimate`。`chapter continue` / `review`（M4）在对应技术方案被接受并授权前不注册。完整列表以 PRD 第 9 节为准。
+现网能用的包括 `doctor`、`create-project`、`run`、`report`、`export`、`import`、`bundle-run`，以及 M0 的 `canon show` 与 `today`，以及 M1 的 `canon edit` / `confirm` / `dismiss`（及非持久 `accept`；entity/attribute）与规则 `check`，以及 M2 的 `today` 承诺计数、`canon show --kind promise`、`canon confirm promise`、`canon confirm` `--hard` / `--mark-stale`、`chapter_heads.content_stale`、`check` 报告 stale 范围、抽取 / import → `plan_*` pending（`source=extract`；confirm 前不进 canon）。M3 步 1 起注册 `variant list`；步 2 起注册 `variant generate`；步 3 起注册 `variant diff` 并增强 `list`；步 4 起注册 `variant pick` / `abandon`；步 5 起 list/diff/pick/generate 前懒标 `stale_vs_canon`，list 暴露 per-slot `cost_cny_estimate`；步 6 起 `today` 的 `next` 文案提示抽卡。`chapter continue` / `review`（M4）在对应技术方案被接受并授权前不注册。完整列表以 PRD 第 9 节为准。
