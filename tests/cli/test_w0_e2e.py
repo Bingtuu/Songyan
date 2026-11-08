@@ -18,7 +18,10 @@ from songyan.db.plan_fact_loader import (
 
 _E2E_ENTITY_ID = "m1-w0-entity-loop"
 _E2E_ATTR_ID = "m1-w0-attr-loop"
-_NEXT = "可用 canon confirm 入典或销账承诺；硬确认可用 --hard/--mark-stale；生成不在本命令。"
+_NEXT = (
+    "可用 canon confirm 入典或销账承诺；硬确认可用 --hard/--mark-stale；"
+    "章内草稿走 variant generate 抽卡（默认 N=2，不 auto-pick）。"
+)
 _CANON_HEAD = "# Canon（approved）"
 _PENDING_HEAD = "# Pending（不是 Canon）"
 _STORYLINE_HEAD = "# Storyline（规划骨架，不是已确认事实）"

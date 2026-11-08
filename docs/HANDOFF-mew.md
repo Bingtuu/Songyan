@@ -6,7 +6,7 @@ owner：Bingtuu。包 tip **v0.5**（`0.5.0`）。「V1.0」是产品代际名�
 
 ## 下一刀
 
-**tip `1b0e323`。** tech-m3 **已接受**（[docs/tech-m3.md](tech-m3.md)；t104s937；B1–B7 原样）。M3 步 1–5 **已在 `main`**（#56 / `b9bbf98`；#57 / `135fcfb`；#58 / `0b47410`；#59 / `c38ee31`；#60 / `1b0e323`）。任务 [tasks/done/224-m3-step5-stale-cost.md](../tasks/done/224-m3-step5-stale-cost.md)。包仍 `0.5.0`。**下一闸门 = owner 授权再开步 6**（闭环文案与文档同步）。未授权前不要开步 6+ / continue / review；不要升包版本；不要声称 V1.0 完成。本 handoff 文档对齐不是步 6。
+**tip `1b0e323`。** tech-m3 **已接受**（[docs/tech-m3.md](tech-m3.md)；t104s937；B1–B7 原样）。M3 步 1–5 **已在 `main`**（#56 / `b9bbf98`；#57 / `135fcfb`；#58 / `0b47410`；#59 / `c38ee31`；#60 / `1b0e323`）；**步 6 闭环文案已落地**（task 233，`today next` 提示抽卡 + STATUS/HANDOFF 同步）。任务 [tasks/done/224-m3-step5-stale-cost.md](../tasks/done/224-m3-step5-stale-cost.md)、[tasks/done/233-m3-step6-closure-copy.md](../tasks/done/233-m3-step6-closure-copy.md)。包仍 `0.5.0`。**下一闸门 = M3 §6–7 代码验收声称**（何时声称由 owner 拍板）。未拍板前不要开 continue / review / M4；不要升包版本；不要声称 V1.0 完成。
 
 M0 步 1–4 已全部在 `main`：[#28](https://github.com/Bingtuu/Songyan/pull/28) → `1d8c0c0`；[#29](https://github.com/Bingtuu/Songyan/pull/29) → `8f03453`；[#30](https://github.com/Bingtuu/Songyan/pull/30) → `d5c2cc1`；[#31](https://github.com/Bingtuu/Songyan/pull/31) → `48fa354`。任务分别在 [tasks/done/200.md](../tasks/done/200.md)、[tasks/done/201.md](../tasks/done/201.md)、[tasks/done/202.md](../tasks/done/202.md)、[tasks/done/203.md](../tasks/done/203.md)。
 
@@ -22,7 +22,7 @@ M1 代码验收（步 1–5 + tech-m1 §6–7）在 `main` `69d7ece`：**PASS**�
 - 不重开 plan-first 阶段 C，不加题材专用检查器，不改 SettlementExtractor 的权威。
 - 不把 Ch1–10 写成文学验收。文学质量归人。
 - 正式 git tag 仍由维护者决定。
-- **tech-m3 已接受（t104s937；B1–B7）。** 步 1–5 已在 `main`（tip `1b0e323`）。未授权前不做步 6+ / continue / review；结算表仍保留为 untrusted 对照，不升格 Canon。
+- **tech-m3 已接受（t104s937；B1–B7）。** 步 1–6 已落地（1–5 tip `1b0e323`；步 6 = task 233）。不做 continue / review（M3 范围外）；结算表仍保留为 untrusted 对照，不升格 Canon。
 - 不声称 V1.0 完成，不升包版本。
 
 ## 事实指针（短）
@@ -49,7 +49,7 @@ M1 代码验收（步 1–5 + tech-m1 §6–7）在 `main` `69d7ece`：**PASS**�
 | M3 步 3 | 已合入 `0b47410`（#58）；[tasks/done/222-m3-step3-variant-list-diff.md](../tasks/done/222-m3-step3-variant-list-diff.md) |
 | M3 步 4 | 已合入 `c38ee31`（#59）；[tasks/done/223-m3-step4-variant-pick-abandon.md](../tasks/done/223-m3-step4-variant-pick-abandon.md) |
 | M3 步 5 | 已合入 `1b0e323`（#60）；[tasks/done/224-m3-step5-stale-cost.md](../tasks/done/224-m3-step5-stale-cost.md) |
-| 当前任务 | [tasks/done/232-plan-default-pending.md](../tasks/done/232-plan-default-pending.md)（DONE 2026-11-08）。228–232 全部 DONE（P0-3 默认值拍板方案 A 已收口；231 = 观察项批）。遗留待 owner：`test_llm_http_timeout` / `test_191_ch200_harness.py` 环境项调查、M3 步 6 授权、push 决定 |
+| 当前任务 | [tasks/done/233-m3-step6-closure-copy.md](../tasks/done/233-m3-step6-closure-copy.md)（DONE 2026-11-08）。228–233 全部 DONE；M3 步 1–6 全落地。遗留待 owner：M3 §6–7 验收声称拍板、`test_llm_http_timeout` / `test_191_ch200_harness.py` 环境项（评估见 STATUS）、push 决定 |
 | 架构方向 | [adr/0001-plan-first-facts.md](adr/0001-plan-first-facts.md) |
 | 工程现状 | [STATUS.md](STATUS.md) |
 | 阶段 A–C | [ROADMAP-plan-first.md](ROADMAP-plan-first.md)（CLOSED 短指针；全文在 archive，日常不要加载） |
