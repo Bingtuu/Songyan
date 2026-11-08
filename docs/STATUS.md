@@ -12,14 +12,14 @@
 | **功能 tip（M3 步 1–5）** | `1b0e323` — [#60](https://github.com/Bingtuu/Songyan/pull/60)（`stale_vs_canon` + list 费用） |
 | **包版本** | 仍是 `0.5.0`（不 bump） |
 | **里程碑** | M0 / M1 / M2 / M3 代码验收 **PASS**（M3 @ `594144b`）；**tech-m4 已接受（B1–B12 原样），M4 编码进行中（task 238 起）** |
-| **下一闸门** | **M4 步 4（task 241，`review`）** → 按 tech-m4 §5 顺序推进 242；真实模型冒烟另开维护者任务 |
+| **下一闸门** | **M4 步 5（task 242，收口验收）**——跑 §6 验收清单 + today 文案收口；真实模型冒烟另开维护者任务 |
 | **本 handoff** | 文档对齐 + 步 6 闭环文案已落地（task 233）；§6–7 验收未声称 |
 
 硬约束（接手期间同样适用）：
 
 - 不声称 V1.0 完成；不升包版本；不合成大 PR。
 - 不改结算权威；结算库仍是 `untrusted_until_confirmed` 对照，不升格 Canon。
-- 不开 `review`（M4 步 4 未编码）。
+- `review` 已编码（task 241）：只读共审（B8 七源并集、零写库、复读/专名启发式）。
 - 不加题材检查器；不跑无人值守长篇。
 - 编码刀仍建议 TDD + 审阅后再合；小步 PR。
 
@@ -33,7 +33,7 @@
 | M3 技术方案 [tech-m3.md](tech-m3.md) | **已接受**（t104s937；B1–B7 原样） | #55 → `5101555` |
 | M3 步 1–6 抽卡表面 | **已在 `main`** | 功能 tip `1b0e323`（#56–#60）；步 6 闭环文案 task 233 |
 | M3 §6–7 代码验收 | **PASS** | `594144b` · [234](../tasks/done/234-m3-code-acceptance.md) |
-| M4+ | **tech-m4 已接受**（B1–B12 原样）；**步 1–3 已落地**（238 章进度视图+status / 239 chapter accept / 240 chapter continue）；步 4–5 进行中（241–242） | [tech-m4.md](tech-m4.md) · [238](../tasks/done/238-m4-step1-progress-status.md) · [239](../tasks/done/239-m4-step2-chapter-accept.md) · [240](../tasks/done/240-m4-step3-chapter-continue.md) |
+| M4+ | **tech-m4 已接受**（B1–B12 原样）；**步 1–4 已落地**（238 章进度视图+status / 239 chapter accept / 240 chapter continue / 241 review 只读共审）；步 5 收口（242）进行中 | [tech-m4.md](tech-m4.md) · [238](../tasks/done/238-m4-step1-progress-status.md) · [239](../tasks/done/239-m4-step2-chapter-accept.md) · [240](../tasks/done/240-m4-step3-chapter-continue.md) · [241](../tasks/done/241-m4-step4-review.md) |
 
 ## 现在能用（作者主路径）
 
