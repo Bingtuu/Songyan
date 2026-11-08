@@ -437,8 +437,14 @@ async def assemble_context_package(
     character_focus: list[dict[str, Any]] | None = None,
     foreshadowing_due: list[str] | None = None,
     focal_distance: str = "mid",
+    last_chapter_ending: str = "",
 ) -> ContextPackage:
-    """组装 ContextPackage — 从 DB 加载所有依赖."""
+    """组装 ContextPackage — 从 DB 加载所有依赖.
+
+    ``last_chapter_ending`` 默认空串 = ``run`` 管线行为不变（M4 步 3 / B6：
+    ``chapter continue`` 传入上一章 accepted 正文结尾节选，走现网
+    ``RecentPlot.last_chapter_ending`` 通道）。
+    """
     from songyan.agents.context_manager import assemble_context_package as _assemble
     from songyan.creative_modes.registry import load_creative_mode_profile
 
@@ -578,6 +584,7 @@ async def assemble_context_package(
         character_focus=character_focus,
         foreshadowing_due=foreshadowing_due,
         focal_distance=focal_distance,
+        last_chapter_ending=last_chapter_ending,
         last_appeared_chapters=last_appeared,
         mandatory_references=mandatory_references,
         runtime_profile=runtime_profile,

@@ -12,14 +12,14 @@
 | **功能 tip（M3 步 1–5）** | `1b0e323` — [#60](https://github.com/Bingtuu/Songyan/pull/60)（`stale_vs_canon` + list 费用） |
 | **包版本** | 仍是 `0.5.0`（不 bump） |
 | **里程碑** | M0 / M1 / M2 / M3 代码验收 **PASS**（M3 @ `594144b`）；**tech-m4 已接受（B1–B12 原样），M4 编码进行中（task 238 起）** |
-| **下一闸门** | **M4 步 3（task 240，`chapter continue`）** → 按 tech-m4 §5 顺序推进 241–242；真实模型冒烟另开维护者任务 |
+| **下一闸门** | **M4 步 4（task 241，`review`）** → 按 tech-m4 §5 顺序推进 242；真实模型冒烟另开维护者任务 |
 | **本 handoff** | 文档对齐 + 步 6 闭环文案已落地（task 233）；§6–7 验收未声称 |
 
 硬约束（接手期间同样适用）：
 
 - 不声称 V1.0 完成；不升包版本；不合成大 PR。
 - 不改结算权威；结算库仍是 `untrusted_until_confirmed` 对照，不升格 Canon。
-- 不开 `chapter continue` / `review`（M3 范围外）。
+- 不开 `review`（M4 步 4 未编码）。
 - 不加题材检查器；不跑无人值守长篇。
 - 编码刀仍建议 TDD + 审阅后再合；小步 PR。
 
@@ -33,7 +33,7 @@
 | M3 技术方案 [tech-m3.md](tech-m3.md) | **已接受**（t104s937；B1–B7 原样） | #55 → `5101555` |
 | M3 步 1–6 抽卡表面 | **已在 `main`** | 功能 tip `1b0e323`（#56–#60）；步 6 闭环文案 task 233 |
 | M3 §6–7 代码验收 | **PASS** | `594144b` · [234](../tasks/done/234-m3-code-acceptance.md) |
-| M4+ | **tech-m4 已接受**（B1–B12 原样）；**步 1–2 已落地**（238 章进度视图+status / 239 chapter accept）；步 3–5 进行中（240–242） | [tech-m4.md](tech-m4.md) · [238](../tasks/done/238-m4-step1-progress-status.md) · [239](../tasks/done/239-m4-step2-chapter-accept.md) |
+| M4+ | **tech-m4 已接受**（B1–B12 原样）；**步 1–3 已落地**（238 章进度视图+status / 239 chapter accept / 240 chapter continue）；步 4–5 进行中（241–242） | [tech-m4.md](tech-m4.md) · [238](../tasks/done/238-m4-step1-progress-status.md) · [239](../tasks/done/239-m4-step2-chapter-accept.md) · [240](../tasks/done/240-m4-step3-chapter-continue.md) |
 
 ## 现在能用（作者主路径）
 
@@ -72,6 +72,22 @@ songyan status --project-id TEXT [--json]
 - `today` 文本与 `--json` 同步增加 `chapter_progress` 摘要行（下一章 = B1 口径第一个非 accepted 章；`_NEXT` 文案未动）。
 - exit 0 / 1（缺库缺项目）；usage 错误 exit 2（B11 口径）。`chapter status` 不做。
 
+M4 步 2 `chapter accept`（task 239）/ 步 3 `chapter continue`（task 240）：
+
+```text
+songyan chapter accept   --project-id TEXT --chapter INT [--from-file PATH] [--json]
+songyan chapter continue --project-id TEXT [--count 1] [--variants N] [--require-plan] [--json]
+```
+
+- accept：单事务仅 accepted 副本 + head 双指针（B5 拆开；不跑 settlement、不动 `plan_*` / variant 行）。
+- continue：B1 目标章 = 第一个非 accepted 章（步 1 视图同口径）；两前置 exit 2（之前存在 picked 未 accept 的章 / 目标章已有未确认工作稿；无自动重生成旗标）；空项目 / 全 accepted exit 0 提示。
+- 准备阶段（B5）：上一章 accepted 未 settlement（`summaries` 无该章记录 **且** `character_states.source_version_id` 无该版本行的复合判定）→ 补跑 extract + apply + summaries 行（RAG / lifecycle / SettingEvaporator 不进本步序列）；只产 `plan_*` pending 提案，approved 集不变。
+- B6 衔接段：上一章 accepted 正文结尾 ≤800 字经 `workflows/_helpers.assemble_context_package` 新增 `last_chapter_ending` 透传（默认空串 = `run` 行为不变）+ 既有 120 字 `plot_summary` 注入；`chapter_goal` 无行 → `words_per_chapter` 兜底；brief 缺失 `None` 继续。
+- B7：`--variants N` 函数级转调 `generate_chapter_variants`（M3 语义原样：不 auto-pick、不写 `plan_*`）。
+- B9 run 壳：单章壳（`chapter_range_start == end == 目标章`）；收养仅限 status ∈ running/paused 的匹配单章壳（engine 多章壳不收养）；LLM 失败 / 预算熔断 → `paused` + `pause_reason`，再 continue 续跑只追加新版本。
+- exit（B11）：0 = 生成待确认 / 停闸 / 全部完成；1 = 缺库 / 缺项目 / 参数非法（`--count` 越界）/ LLM 与 settlement 失败；2 = B1 两前置 / `--require-plan` 拒绝；3 = 预算耗尽（已写保留）。`--count N` 逐章停闸，单次 invocation 最多生成一章。
+- 费用归因：全程 `bound_contextvars(project_id, chapter_number, run_id, agent)`；`--json` 含 `chapter / version_id / word_count / cost_cny / next_hint`。
+
 既有管线仍可用：`create-project` / `run` / `report` / `import` / `doctor` / `backup` 等（`run --auto-confirm` 是冒烟路径，**不是**作者主路径）。
 
 ## 接手开发时先看这些
@@ -95,7 +111,7 @@ songyan status --project-id TEXT [--json]
 - 只有 CLI，不是托管服务。真实生成要 API key，并且花钱。
 - 《轨道蜃景》Ch1–10 管线曾 PASS、文学未过（DG-1 失败等）；细节见历史冒烟记录，不作 V1.0 文学验收。
 - 真实模型上「导入后再续写」还没有验收。
-- **未做：** `chapter accept|continue` / `review`（M4 步 2–4 未编码）；真实模型冒烟另开维护者任务。
+- **未做：** `review`（M4 步 4 未编码）；`chapter accept|continue` 已编码（步 2 已合入；步 3 工作区待 review/合入）；真实模型冒烟另开维护者任务。
 - `today` 的固定 `next` 文案已更新为 M3 口径（提示 `variant generate` 抽卡，默认 N=2、不 auto-pick；task 233，2026-11-08）。
 - **2026-11-07 评审修复（task 226，已归档 `tasks/done/`）**：全量 code review 的 1 blocker + 4 major + minor 批已修复——settlement 声称的伏笔 resolve 只进提案（不再直写 `resolved`；唯一写径 = `canon confirm promise`）；`variant generate` 成本记账去重且归因 project/agent；pick 拒绝 abandoned 槽；LLM 失败保留已写槽并报 stderr；rejected 行不可被 confirm 直接转正；extract 提案跳过 rejected。详见 `tasks/done/226-review-findings-fix.md` 与 `docs/superpowers/plans/2026-11-07-m0-m3-review-audit.md`。
 - **2026-11-07 审计补强（task 228，已归档 `tasks/done/`）**：`canon confirm promise` 的人证 evidence 落库（`foreshadowings.resolved_evidence`，写-only 审计列）；销账守卫与写入合并为原子 UPDATE（并发双销账恰一成交）。读口径与 open 集不变。

@@ -107,6 +107,31 @@ class CreativeBriefRepository:
             row = await cursor.fetchone()
         if row is None:
             return None
+        return self._from_row(row)
+
+    async def get_by_chapter(
+        self, project_id: str, chapter_number: int
+    ) -> CreativeBrief | None:
+        """按项目 + 章号取最新 brief（只读窄查询；M4 步 3 chapter continue 用）。
+
+        缺失 → ``None``（调用方按「无 brief 继续」处理）。
+        """
+        async with get_db() as conn:
+            conn.row_factory = Row
+            cursor = await conn.execute(
+                """SELECT * FROM creative_briefs
+                WHERE project_id = ? AND chapter_number = ?
+                ORDER BY created_at DESC, brief_id DESC
+                LIMIT 1""",
+                (project_id, chapter_number),
+            )
+            row = await cursor.fetchone()
+        if row is None:
+            return None
+        return self._from_row(row)
+
+    @staticmethod
+    def _from_row(row: Row) -> CreativeBrief:
         goal_data = _from_json(row["chapter_goal"], {})
         chapter_goal = (
             ChapterGoal.model_validate(goal_data)
