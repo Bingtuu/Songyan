@@ -12,7 +12,7 @@
 | **功能 tip（M3 步 1–5）** | `1b0e323` — [#60](https://github.com/Bingtuu/Songyan/pull/60)（`stale_vs_canon` + list 费用） |
 | **包版本** | 仍是 `0.5.0`（不 bump） |
 | **里程碑** | M0 / M1 / M2 / M3 代码验收 **PASS**（M3 @ `594144b`）；**tech-m4 已接受（B1–B12 原样），M4 编码进行中（task 238 起）** |
-| **下一闸门** | **M4 步 2（task 239，`chapter accept`）** → 按 tech-m4 §5 顺序推进 240–242；真实模型冒烟另开维护者任务 |
+| **下一闸门** | **M4 步 3（task 240，`chapter continue`）** → 按 tech-m4 §5 顺序推进 241–242；真实模型冒烟另开维护者任务 |
 | **本 handoff** | 文档对齐 + 步 6 闭环文案已落地（task 233）；§6–7 验收未声称 |
 
 硬约束（接手期间同样适用）：
@@ -33,7 +33,7 @@
 | M3 技术方案 [tech-m3.md](tech-m3.md) | **已接受**（t104s937；B1–B7 原样） | #55 → `5101555` |
 | M3 步 1–6 抽卡表面 | **已在 `main`** | 功能 tip `1b0e323`（#56–#60）；步 6 闭环文案 task 233 |
 | M3 §6–7 代码验收 | **PASS** | `594144b` · [234](../tasks/done/234-m3-code-acceptance.md) |
-| M4+ | **tech-m4 已接受**（B1–B12 原样）；**步 1 已落地**（task 238）；步 2–5 进行中（239–242） | [tech-m4.md](tech-m4.md) · [237](../tasks/done/237-tech-m4-draft.md) · [238](../tasks/done/238-m4-step1-progress-status.md) |
+| M4+ | **tech-m4 已接受**（B1–B12 原样）；**步 1–2 已落地**（238 章进度视图+status / 239 chapter accept）；步 3–5 进行中（240–242） | [tech-m4.md](tech-m4.md) · [238](../tasks/done/238-m4-step1-progress-status.md) · [239](../tasks/done/239-m4-step2-chapter-accept.md) |
 
 ## 现在能用（作者主路径）
 
@@ -100,7 +100,7 @@ songyan status --project-id TEXT [--json]
 - **2026-11-07 评审修复（task 226，已归档 `tasks/done/`）**：全量 code review 的 1 blocker + 4 major + minor 批已修复——settlement 声称的伏笔 resolve 只进提案（不再直写 `resolved`；唯一写径 = `canon confirm promise`）；`variant generate` 成本记账去重且归因 project/agent；pick 拒绝 abandoned 槽；LLM 失败保留已写槽并报 stderr；rejected 行不可被 confirm 直接转正；extract 提案跳过 rejected。详见 `tasks/done/226-review-findings-fix.md` 与 `docs/superpowers/plans/2026-11-07-m0-m3-review-audit.md`。
 - **2026-11-07 审计补强（task 228，已归档 `tasks/done/`）**：`canon confirm promise` 的人证 evidence 落库（`foreshadowings.resolved_evidence`，写-only 审计列）；销账守卫与写入合并为原子 UPDATE（并发双销账恰一成交）。读口径与 open 集不变。
 - **2026-11-08 P0-3 收口（task 232，已归档 `tasks/done/232-plan-default-pending.md`）**：plan 五模型 `approval_status` 默认值 `"approved"` → `"pending"`（owner 拍板方案 A）。不显式传状态构造的卡从此落入 pending 队列，不再静默直写 Canon；生产写入方与种子夹具本就显式传值，零行为变化。测试侧 26 处夹具语义卡显式补 `approved`，新增模型级默认行为锁。
-- **环境项（2026-11-08 修复，task 235）**：~~`test_llm_http_timeout`~~ 断言窗口 8s→20s（hold 15s→30s 保判别性，重载 flake 根治）；~~`test_191_ch200_harness.py`~~ `_run_harness` 双端固定编码（父 `encoding="utf-8"` + 子 `PYTHONUTF8=1`/`PYTHONIOENCODING=utf-8`），不带 PYTHONUTF8 也绿。本机全量回归不再需要 `PYTHONUTF8=1`。
+- **环境项（2026-11-08 修复，task 235；2026-11-09 根因修正）**：~~`test_llm_http_timeout`~~ 断言窗口 8s→20s（hold 15s→30s 保判别性）。**根因修正**：该测试当天的「通过」多为假通过——`ChatLiteLLM` 无 `base_url` 字段（只有 `api_base`，extra=ignore 静默丢弃），请求实际落到 litellm 默认地址；上午断网时 ConnectTimeout 恰好匹配「超时」断言。2026-11-09 网络恢复后 401 暴露真相，已在 task 239 修复（`api_base=base_url` + 防回归断言）；负载敏感性结论作废。~~`test_191_ch200_harness.py`~~ `_run_harness` 双端固定编码（父 `encoding="utf-8"` + 子 `PYTHONUTF8=1`/`PYTHONIOENCODING=utf-8`），不带 PYTHONUTF8 也绿。本机全量回归不再需要 `PYTHONUTF8=1`。
 - **2026-11-08 M4 前置调研（task 236，已归档 `tasks/done/`）**：`docs/236-m4-preresearch.md` 交付——四路调研（PRD 需求 / 代码现状 / 历史审计 / 外部同类工具）+ 四大设计问题深化（chapter 状态机、continue↔variant、review 输入并集、ContextEmergency 露出）+ 新问题 N1–N7（含 import replay 自动 accepted 写径与 M4 确认闸的并存口径）。
 - **2026-11-08 M4 技术方案草稿（task 237）**：`docs/tech-m4.md` 已交付（B1–B12 绑定决策 + 5 小步对应 task 238–242），review 无 blocker。**待 owner 书面接受（开工门）；接受前不进入 M4 编码。**
 

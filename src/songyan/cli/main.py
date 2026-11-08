@@ -11,6 +11,7 @@ from typing import Any, Literal, cast
 import click
 
 from songyan.cli.commands.canon_write import register_canon_write_commands
+from songyan.cli.commands.chapter import register_chapter_commands
 from songyan.cli.commands.check import register_check_commands
 from songyan.cli.commands.import_pipeline import register_import_commands
 from songyan.cli.commands.index import register_index_commands
@@ -1330,3 +1331,5 @@ register_variant_commands(cli)
 register_check_commands(cli)
 # M4 步 1: 项目级计数面（章进度 / ContextEmergency；B10/B11）。
 register_status_commands(cli)
+# M4 步 2: 章级人确认写径（chapter accept；B2/B3/B5/B11）。
+register_chapter_commands(cli)

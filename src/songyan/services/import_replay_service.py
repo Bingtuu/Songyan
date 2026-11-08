@@ -510,7 +510,7 @@ async def _accept_with_replay_mark(
 
     镜像 workflows/_nodes.py 的 accept_with_settlement_boundary 事务序列，
     把幂等标记并入同一事务（crash 在边界提交后不会产生无标记的重复回放）。
-    draft 必须先独立提交：accept_version 内部另开连接读 draft。
+    draft 必须先独立提交：replay 调用侧的事务约定（accept 前 draft 已在库中）。
     """
     # 对齐 _nodes.py：按体裁解析伏笔 horizon 下限（load_profile 永不抛错，
     # 无匹配返回 scifi baseline → floor=0 → 旧行为不变）。

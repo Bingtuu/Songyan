@@ -39,6 +39,26 @@ class TestGetLlm:
                 with pytest.raises(LLMError):
                     get_llm()
 
+    @pytest.mark.asyncio
+    async def test_get_llm_forwards_base_url_as_api_base(self) -> None:
+        """ChatLiteLLM 只有 api_base 字段；base_url 必须经 api_base 生效。
+
+        回归锁（2026-11-09）：曾传 base_url= 被 Pydantic extra=ignore 静默
+        丢弃，请求落到 litellm 提供商默认地址（假 key 吃 401）；上午断网时
+        ConnectTimeout 反而让超时测试「假通过」，掩盖了此 bug 一整天。
+        """
+        from songyan.llm import client as llm_client
+
+        llm_client._get_llm_cached.cache_clear()
+        with patch("songyan.llm.client.settings") as mock_settings:
+            mock_settings.llm_api_key = "test-key"
+            mock_settings.llm_base_url = "https://example.test/v1"
+            mock_settings.llm_model = "deepseek/deepseek-chat"
+
+            llm = get_llm(temperature=0, timeout=5)
+            assert llm.api_base == "https://example.test/v1"
+        await llm_client.aclose_llm_clients()
+
 
 class TestCallLlm:
     """LLM 调用测试."""

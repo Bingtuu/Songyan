@@ -332,10 +332,13 @@ def _get_llm_cached(
     # ``timeout=`` is not a ChatLiteLLM field (Pydantic extra=ignore drops it),
     # so the HTTP client never saw it and fell back to litellm's 600s default.
     # ``request_timeout`` is what _default_params sends as the completion timeout.
-    client = ChatLiteLLM(  # type: ignore[call-arg]  # langchain_litellm stub: base_url
+    # 同理 ``base_url`` 不是字段（只有 ``api_base`` 是）——被静默丢弃后请求
+    # 落到 litellm 提供商默认地址（2026-11-09 实锤：假 key 在默认地址吃 401，
+    # 上午断网时 ConnectTimeout 反而让超时测试「假通过」掩盖了此 bug）。
+    client = ChatLiteLLM(
         model=model,
         api_key=api_key,
-        base_url=base_url,
+        api_base=base_url,
         temperature=temperature,
         max_tokens=max_tokens,
         request_timeout=timeout,

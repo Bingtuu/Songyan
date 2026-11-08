@@ -564,7 +564,20 @@ class ChapterVersionRepository:
         """
 
         async def _do(c: aiosqlite.Connection) -> str:
-            old_version = await self.get(version_id)
+            # 传入 conn 时必须在同一连接上读原稿：自建连接看不到本事务未提交写入
+            # （M4 chapter accept 的 --from-file 先物化 edited 行再走副本链）。
+            if conn is None:
+                old_version = await self.get(version_id)
+            else:
+                # row_factory 设为 Row 且不恢复：调用方 conn 在本函数后通常只做写；
+                # 若未来在同 conn 上还有取行调用，需显式重设 row_factory。
+                c.row_factory = Row
+                cur = await c.execute(
+                    "SELECT * FROM chapter_versions WHERE version_id = ?",
+                    (version_id,),
+                )
+                row = await cur.fetchone()
+                old_version = _version_from_row(row) if row is not None else None
             if old_version is None:
                 msg = f"Version not found: {version_id}"
                 raise ValueError(msg)
