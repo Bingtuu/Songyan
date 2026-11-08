@@ -11,6 +11,7 @@ from click.testing import CliRunner
 
 from songyan.cli.main import cli
 from songyan.config import settings
+from songyan.db.chapter_variant_repo import ChapterVariantRepository
 from songyan.db.connection import get_db
 from songyan.db.migrations import init_schema
 from songyan.db.narrative_repo import NarrativeRepository
@@ -20,8 +21,11 @@ from songyan.db.plan_fact_loader import (
     load_plan_fact_fixture,
 )
 from songyan.db.plan_fact_repo import PlanFactRepository
+from songyan.db.repository import ChapterHeadRepository, ChapterVersionRepository
+from songyan.models.chapter import ChapterHead, ChapterVersion
 from songyan.models.narrative import ArcPlan, PlotThread, StoryOutline
 from songyan.models.plan_facts import PlanEntity
+from songyan.models.variant import ChapterVariant
 from songyan.plan_checks.bible import load_chapter_plan_bible
 
 _PENDING_ID = "dly-pending-not-canon"
@@ -264,6 +268,20 @@ def test_today_json_shape(runner: CliRunner, dushi_with_storyline: Path) -> None
         "promise_counts",
         "storyline",
         "next",
+        "chapter_progress",
+    }
+    assert payload["chapter_progress"] == {
+        "next_chapter": None,
+        "next_state": None,
+        "pending_confirm": 0,
+        "counts": {
+            "stale": 0,
+            "settled": 0,
+            "picked": 0,
+            "variants_ready": 0,
+            "drafting": 0,
+            "empty": 0,
+        },
     }
     assert payload["promise_counts"] == {"planted": 0, "due": 0, "overdue": 0}
     assert payload["project_id"] == DUSHI_LINGYI_PROJECT_ID
@@ -341,3 +359,120 @@ def test_today_missing_project_exits_1(
     assert result.exit_code == 1, result.output
     assert "项目不存在" in result.output
     assert "no-such-project" in result.output
+
+
+# --- M4 步 1: today 章进度摘要（task 238；next 文案不动） --------------------
+
+_PROGRESS_TABLES = (
+    "chapter_heads",
+    "chapter_variants",
+    "chapter_versions",
+    "context_snapshots",
+)
+
+
+async def _chapter_table_counts() -> dict[str, int]:
+    async with get_db() as conn:
+        out: dict[str, int] = {}
+        for table in _PROGRESS_TABLES:
+            cursor = await conn.execute(f"SELECT COUNT(*) FROM {table}")
+            row = await cursor.fetchone()
+            assert row is not None
+            out[table] = int(row[0])
+    return out
+
+
+async def _seed_chapter_progress() -> None:
+    """ch1 accepted；ch2 两个 generated 槽（无 head）。"""
+    await ChapterVersionRepository().create(
+        ChapterVersion(
+            version_id="v-acc",
+            project_id=DUSHI_LINGYI_PROJECT_ID,
+            chapter_number=1,
+            version_number=1,
+            content="第1章定稿",
+        )
+    )
+    await ChapterHeadRepository().update(
+        ChapterHead(
+            project_id=DUSHI_LINGYI_PROJECT_ID,
+            chapter_number=1,
+            current_version_id="v-acc",
+            accepted_version_id="v-acc",
+            content_stale=0,
+        )
+    )
+    for slot in (1, 2):
+        await ChapterVersionRepository().create(
+            ChapterVersion(
+                version_id=f"v-ch2-{slot}",
+                project_id=DUSHI_LINGYI_PROJECT_ID,
+                chapter_number=2,
+                version_number=slot,
+                content=f"第2章槽{slot}",
+            )
+        )
+        await ChapterVariantRepository().insert(
+            ChapterVariant(
+                variant_id=f"var-ch2-{slot}",
+                project_id=DUSHI_LINGYI_PROJECT_ID,
+                chapter_number=2,
+                slot_index=slot,
+                status="generated",
+                parent_canon_fingerprint="fp",
+                content_ref=f"v-ch2-{slot}",
+                created_at="2026-11-08T00:00:00Z",
+                updated_at="2026-11-08T00:00:00Z",
+            )
+        )
+
+
+@pytest.fixture
+async def dushi_with_progress(dushi_db: Path) -> Path:
+    await _seed_chapter_progress()
+    return dushi_db
+
+
+def test_today_chapter_progress_line(runner: CliRunner, dushi_with_progress: Path) -> None:
+    before = asyncio.run(_chapter_table_counts())
+    result = runner.invoke(
+        cli,
+        ["today", "--project-id", DUSHI_LINGYI_PROJECT_ID],
+    )
+    after = asyncio.run(_chapter_table_counts())
+
+    assert result.exit_code == 0, result.output
+    assert (
+        "chapter_progress: next_chapter=2 next_state=variants_ready "
+        "pending_confirm=0 stale=0 settled=1 picked=0 variants_ready=1 "
+        "drafting=0 empty=0"
+    ) in result.output
+    assert _NEXT in result.output
+    assert after == before
+
+
+def test_today_json_chapter_progress(runner: CliRunner, dushi_with_progress: Path) -> None:
+    before = asyncio.run(_chapter_table_counts())
+    result = runner.invoke(
+        cli,
+        ["today", "--project-id", DUSHI_LINGYI_PROJECT_ID, "--json"],
+    )
+    after = asyncio.run(_chapter_table_counts())
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert payload["chapter_progress"] == {
+        "next_chapter": 2,
+        "next_state": "variants_ready",
+        "pending_confirm": 0,
+        "counts": {
+            "stale": 0,
+            "settled": 1,
+            "picked": 0,
+            "variants_ready": 1,
+            "drafting": 0,
+            "empty": 0,
+        },
+    }
+    assert payload["next"] == _NEXT
+    assert after == before

@@ -20,6 +20,10 @@ from songyan.db.narrative_repo import NarrativeRepository
 from songyan.db.plan_fact_repo import PlanFactRepository
 from songyan.db.repository import ProjectRepository
 from songyan.db.settlement_repo import ForeshadowingRepository
+from songyan.models.chapter_progress import (
+    STATE_PRIORITY,
+    ChapterProgressSummary,
+)
 from songyan.models.context import ForeshadowingItem
 from songyan.models.narrative import ArcPlan, PlotThread, StoryOutline
 from songyan.models.plan_facts import (
@@ -29,6 +33,7 @@ from songyan.models.plan_facts import (
     PlanEvent,
     PlanTimeAnchor,
 )
+from songyan.services.chapter_progress import load_chapter_progress
 
 _CANON_HEAD = "# Canon（approved）"
 _PENDING_HEAD = "# Pending（不是 Canon）"
@@ -286,7 +291,9 @@ def _count_rows(bucket: dict[str, list[_Card]]) -> int:
 
 
 def _render_today_text(
-    loaded: dict[str, object], promise_counts: dict[str, int]
+    loaded: dict[str, object],
+    promise_counts: dict[str, int],
+    progress: ChapterProgressSummary,
 ) -> str:
     canon = loaded["canon"]
     pending = loaded["pending"]
@@ -294,6 +301,11 @@ def _render_today_text(
     assert isinstance(canon, dict)
     assert isinstance(pending, dict)
     assert isinstance(arcs, list)
+    counts = " ".join(
+        f"{state.value}={progress.distribution.get(state, 0)}" for state in STATE_PRIORITY
+    )
+    next_chapter = "-" if progress.next_chapter is None else str(progress.next_chapter)
+    next_state = "-" if progress.next_state is None else progress.next_state.value
     return "\n".join(
         [
             f"canon_rows: {_count_rows(canon)}",
@@ -302,13 +314,18 @@ def _render_today_text(
             f"promise_planted: {promise_counts['planted']}",
             f"promise_due: {promise_counts['due']}",
             f"promise_overdue: {promise_counts['overdue']}",
+            f"chapter_progress: next_chapter={next_chapter} "
+            f"next_state={next_state} pending_confirm={progress.pending_confirm} {counts}",
             _NEXT,
         ]
     )
 
 
 def _render_today_json(
-    project_id: str, loaded: dict[str, object], promise_counts: dict[str, int]
+    project_id: str,
+    loaded: dict[str, object],
+    promise_counts: dict[str, int],
+    progress: ChapterProgressSummary,
 ) -> str:
     canon = loaded["canon"]
     pending = loaded["pending"]
@@ -330,6 +347,17 @@ def _render_today_json(
             "arc_count": len(arcs),
             "thread_counts": thread_counts,
         },
+        "chapter_progress": {
+            "next_chapter": progress.next_chapter,
+            "next_state": (
+                None if progress.next_state is None else progress.next_state.value
+            ),
+            "pending_confirm": progress.pending_confirm,
+            "counts": {
+                state.value: progress.distribution.get(state, 0)
+                for state in STATE_PRIORITY
+            },
+        },
         "next": _NEXT,
     }
     return json.dumps(payload, ensure_ascii=False)
@@ -340,9 +368,10 @@ async def _render_today(project_id: str, *, as_json: bool) -> str:
     loaded = await _load(project_id)
     promises = await _load_open_promises(project_id)
     promise_counts = _promise_counts(promises)
+    progress = await load_chapter_progress(project_id)
     if as_json:
-        return _render_today_json(project_id, loaded, promise_counts)
-    return _render_today_text(loaded, promise_counts)
+        return _render_today_json(project_id, loaded, promise_counts, progress)
+    return _render_today_text(loaded, promise_counts, progress)
 
 
 @click.command(name="today")

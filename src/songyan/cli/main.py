@@ -15,6 +15,7 @@ from songyan.cli.commands.check import register_check_commands
 from songyan.cli.commands.import_pipeline import register_import_commands
 from songyan.cli.commands.index import register_index_commands
 from songyan.cli.commands.quality import register_quality_commands
+from songyan.cli.commands.status import register_status_commands
 from songyan.cli.commands.variant import register_variant_commands
 from songyan.cli.commands.workbench import register_workbench_commands
 from songyan.cli.outline_import import load_outline_file
@@ -1327,3 +1328,5 @@ register_workbench_commands(cli)
 register_canon_write_commands(cli)
 register_variant_commands(cli)
 register_check_commands(cli)
+# M4 步 1: 项目级计数面（章进度 / ContextEmergency；B10/B11）。
+register_status_commands(cli)

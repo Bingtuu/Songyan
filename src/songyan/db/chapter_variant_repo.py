@@ -146,6 +146,24 @@ class ChapterVariantRepository:
             rows = await cursor.fetchall()
         return [_row_to_variant(row) for row in rows]
 
+    async def list_by_project(self, project_id: str) -> list[ChapterVariant]:
+        """该项目全部 variant 行（任意状态，含 abandoned/archived），章号+槽号升序。
+
+        只读；章进度视图需要全量状态做六态推导（活动槽判定在视图层）。
+        """
+        async with get_db() as conn:
+            conn.row_factory = Row
+            cursor = await conn.execute(
+                """
+                SELECT * FROM chapter_variants
+                WHERE project_id = ?
+                ORDER BY chapter_number ASC, slot_index ASC, created_at ASC
+                """,
+                (project_id,),
+            )
+            rows = await cursor.fetchall()
+        return [_row_to_variant(row) for row in rows]
+
     async def get_by_slot(
         self, project_id: str, chapter_number: int, slot_index: int
     ) -> ChapterVariant | None:

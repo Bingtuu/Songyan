@@ -527,6 +527,17 @@ class ChapterVersionRepository:
             rows = await cursor.fetchall()
         return [_version_from_row(row) for row in rows]
 
+    async def list_chapter_numbers_by_project(self, project_id: str) -> list[int]:
+        """章宇宙口径的版本源：该项目出现过的章号（含废弃版本，升序）。只读。"""
+        async with get_db() as conn:
+            cursor = await conn.execute(
+                """SELECT DISTINCT chapter_number FROM chapter_versions
+                    WHERE project_id = ? ORDER BY chapter_number""",
+                (project_id,),
+            )
+            rows = await cursor.fetchall()
+        return [int(row[0]) for row in rows]
+
     async def mark_abandoned(self, version_id: str) -> None:
         async with get_db() as conn:
             await conn.execute(
@@ -688,16 +699,8 @@ class ContextSnapshotRepository:
             snapshot_id=snapshot.snapshot_id,
         )
 
-    async def get(self, snapshot_id: str) -> ContextSnapshot | None:
-        async with get_db() as conn:
-            conn.row_factory = Row
-            cursor = await conn.execute(
-                "SELECT * FROM context_snapshots WHERE snapshot_id = ?",
-                (snapshot_id,),
-            )
-            row = await cursor.fetchone()
-        if row is None:
-            return None
+    @staticmethod
+    def _from_row(row: Row) -> ContextSnapshot:
         return ContextSnapshot(
             snapshot_id=row["snapshot_id"],
             project_id=row["project_id"],
@@ -711,6 +714,30 @@ class ContextSnapshotRepository:
             payload=_from_json(row["payload"], {}),
             created_at=row["created_at"],
         )
+
+    async def get(self, snapshot_id: str) -> ContextSnapshot | None:
+        async with get_db() as conn:
+            conn.row_factory = Row
+            cursor = await conn.execute(
+                "SELECT * FROM context_snapshots WHERE snapshot_id = ?",
+                (snapshot_id,),
+            )
+            row = await cursor.fetchone()
+        if row is None:
+            return None
+        return self._from_row(row)
+
+    async def list_by_project(self, project_id: str) -> list[ContextSnapshot]:
+        """该项目全部快照（created_at 升序）；status 命令的 B10 统计源。只读。"""
+        async with get_db() as conn:
+            conn.row_factory = Row
+            cursor = await conn.execute(
+                """SELECT * FROM context_snapshots WHERE project_id = ?
+                    ORDER BY created_at ASC, chapter_number ASC""",
+                (project_id,),
+            )
+            rows = await cursor.fetchall()
+        return [self._from_row(row) for row in rows]
 
 
 class ChapterHeadRepository:

@@ -62,6 +62,16 @@ songyan variant abandon  --project-id TEXT --chapter INT --slot INT [--json]
 - `variant list` 暴露 per-slot `cost_cny_estimate`。
 - `content_stale`（正文相对硬典）与 `stale_vs_canon`（草稿相对生成时 Canon 指纹）**并存**，文案勿混成一列。
 
+M4 步 1 章进度视图 + `status`（task 238；tech-m4 §5 步 1）：
+
+```text
+songyan status --project-id TEXT [--json]
+```
+
+- 纯只读项目级计数面：章进度六态分布（章宇宙 = heads ∪ variants ∪ versions 章号并集；`stale`/`settled` = accepted ± `content_stale`，`picked` / `variants_ready` / `drafting` / `empty`）+ 待确认 picked 数 + ContextEmergency 触发次数 / 最近触发章 / `budget_used_before_emergency`（B10）。
+- `today` 文本与 `--json` 同步增加 `chapter_progress` 摘要行（下一章 = B1 口径第一个非 accepted 章；`_NEXT` 文案未动）。
+- exit 0 / 1（缺库缺项目）；usage 错误 exit 2（B11 口径）。`chapter status` 不做。
+
 既有管线仍可用：`create-project` / `run` / `report` / `import` / `doctor` / `backup` 等（`run --auto-confirm` 是冒烟路径，**不是**作者主路径）。
 
 ## 接手开发时先看这些
