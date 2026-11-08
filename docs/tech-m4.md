@@ -324,6 +324,6 @@ python -m pytest tests/cli/test_review*.py tests/plan_checks/test_repetition*.py
 
 ## 接受注记
 
-**待接受**（草稿，2026-11-08 Asia/Shanghai）。接受需 owner 书面拍板（对照 tech-m3 先例：widget 编号 + 「接受 tech-m4，按 B1–B12 开 M4 编码」）。**B1–B12 原样接受**或点名修改项；接受前不对编码产生约束力。
+**已接受**（2026-11-08 Asia/Shanghai）。Owner 书面拍板：「接受 tech-m4，按 B1–B12 开 M4 编码」。**B1–B12 原样接受**，无点名修改项。
 
-接受后按 §5 小步推进（task 238–242）。包仍 `0.5.0`；不声称 V1.0 完成。
+接受后按 §5 小步推进（task 238–242），每步走「任务文档 → 任务文档 review → TDD → review → 更新文档 → 提交」循环；步 2（`chapter accept`）在步 3（`chapter continue`）前。包仍 `0.5.0`；不声称 V1.0 完成。

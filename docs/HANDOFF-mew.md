@@ -6,7 +6,7 @@ owner：Bingtuu。包 tip **v0.5**（`0.5.0`）。「V1.0」是产品代际名�
 
 ## 下一刀
 
-**tip `1b0e323`**（M3 步 1–5）/ 步 6 = task 233。**M3 §6–7 代码验收 PASS @ `594144b`**（task 234：§6 清单 11 条逐条有证据，§7 命令 + 全量回归 3532 passed 零失败）。tech-m3 **已接受**（[docs/tech-m3.md](tech-m3.md)；t104s937；B1–B7 原样）。包仍 `0.5.0`。**下一闸门 = M4+ 技术方案**（另需被接受的技术方案）。不做 continue / review（M3 范围外）；不要升包版本；不要声称 V1.0 完成（真实模型冒烟另开维护者任务，§7 原文）。
+**tech-m4 已接受（2026-11-08，owner 拍板「接受 tech-m4，按 B1–B12 开 M4 编码」，B1–B12 原样）。** 按 §5 小步推进：task 238（章进度视图 + `status`）→ 239（`chapter accept`）→ 240（`chapter continue`）→ 241（`review`）→ 242（收口验收）；每步走「任务文档 → 任务文档 review → TDD → review → 更新文档 → 提交」循环；步 2 在步 3 前。调研底稿 [docs/236-m4-preresearch.md](236-m4-preresearch.md)。包仍 `0.5.0`。**下一闸门 = M4 步 1 验收（task 238）。** 不做 M4 之外的事（自动选优 / `chapter status` / review 深审 / continue 自动重生成旗标）；不要升包版本；不要声称 V1.0 完成。
 
 M0 步 1–4 已全部在 `main`：[#28](https://github.com/Bingtuu/Songyan/pull/28) → `1d8c0c0`；[#29](https://github.com/Bingtuu/Songyan/pull/29) → `8f03453`；[#30](https://github.com/Bingtuu/Songyan/pull/30) → `d5c2cc1`；[#31](https://github.com/Bingtuu/Songyan/pull/31) → `48fa354`。任务分别在 [tasks/done/200.md](../tasks/done/200.md)、[tasks/done/201.md](../tasks/done/201.md)、[tasks/done/202.md](../tasks/done/202.md)、[tasks/done/203.md](../tasks/done/203.md)。
 
@@ -49,7 +49,7 @@ M1 代码验收（步 1–5 + tech-m1 §6–7）在 `main` `69d7ece`：**PASS**�
 | M3 步 3 | 已合入 `0b47410`（#58）；[tasks/done/222-m3-step3-variant-list-diff.md](../tasks/done/222-m3-step3-variant-list-diff.md) |
 | M3 步 4 | 已合入 `c38ee31`（#59）；[tasks/done/223-m3-step4-variant-pick-abandon.md](../tasks/done/223-m3-step4-variant-pick-abandon.md) |
 | M3 步 5 | 已合入 `1b0e323`（#60）；[tasks/done/224-m3-step5-stale-cost.md](../tasks/done/224-m3-step5-stale-cost.md) |
-| 当前任务 | [tasks/done/236-m4-preresearch.md](../tasks/done/236-m4-preresearch.md)（DONE 2026-11-08）。228–236 全部 DONE；M3 全里程碑代码验收 PASS @ `594144b`；环境项已修复。**M4 前置调研已交付并定稿（`docs/236-m4-preresearch.md`，owner 三轮评审吸收）；`docs/tech-m4.md` 草稿已交付（task 237，B1–B12 + 5 小步 → task 238–242），review 无 blocker——待 owner 书面接受（开工门），接受前不做 M4 编码。** 遗留待 owner：tech-m4 拍板、真实模型冒烟 |
+| 当前任务 | task 238（M4 步 1：章进度视图 + `status`）DOING——tech-m4 已接受、M4 编码进行中；228–237 全部 DONE。遗留待 owner：M4 各步验收、真实模型冒烟 |
 | 架构方向 | [adr/0001-plan-first-facts.md](adr/0001-plan-first-facts.md) |
 | 工程现状 | [STATUS.md](STATUS.md) |
 | 阶段 A–C | [ROADMAP-plan-first.md](ROADMAP-plan-first.md)（CLOSED 短指针；全文在 archive，日常不要加载） |
