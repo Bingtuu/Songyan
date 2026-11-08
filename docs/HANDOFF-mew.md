@@ -6,7 +6,7 @@ owner：Bingtuu。包 tip **v0.5**（`0.5.0`）。「V1.0」是产品代际名�
 
 ## 下一刀
 
-**tip `1b0e323`。** tech-m3 **已接受**（[docs/tech-m3.md](tech-m3.md)；t104s937；B1–B7 原样）。M3 步 1–5 **已在 `main`**（#56 / `b9bbf98`；#57 / `135fcfb`；#58 / `0b47410`；#59 / `c38ee31`；#60 / `1b0e323`）；**步 6 闭环文案已落地**（task 233，`today next` 提示抽卡 + STATUS/HANDOFF 同步）。任务 [tasks/done/224-m3-step5-stale-cost.md](../tasks/done/224-m3-step5-stale-cost.md)、[tasks/done/233-m3-step6-closure-copy.md](../tasks/done/233-m3-step6-closure-copy.md)。包仍 `0.5.0`。**下一闸门 = M3 §6–7 代码验收声称**（何时声称由 owner 拍板）。未拍板前不要开 continue / review / M4；不要升包版本；不要声称 V1.0 完成。
+**tip `1b0e323`**（M3 步 1–5）/ 步 6 = task 233。**M3 §6–7 代码验收 PASS @ `594144b`**（task 234：§6 清单 11 条逐条有证据，§7 命令 + 全量回归 3532 passed 零失败）。tech-m3 **已接受**（[docs/tech-m3.md](tech-m3.md)；t104s937；B1–B7 原样）。包仍 `0.5.0`。**下一闸门 = M4+ 技术方案**（另需被接受的技术方案）。不做 continue / review（M3 范围外）；不要升包版本；不要声称 V1.0 完成（真实模型冒烟另开维护者任务，§7 原文）。
 
 M0 步 1–4 已全部在 `main`：[#28](https://github.com/Bingtuu/Songyan/pull/28) → `1d8c0c0`；[#29](https://github.com/Bingtuu/Songyan/pull/29) → `8f03453`；[#30](https://github.com/Bingtuu/Songyan/pull/30) → `d5c2cc1`；[#31](https://github.com/Bingtuu/Songyan/pull/31) → `48fa354`。任务分别在 [tasks/done/200.md](../tasks/done/200.md)、[tasks/done/201.md](../tasks/done/201.md)、[tasks/done/202.md](../tasks/done/202.md)、[tasks/done/203.md](../tasks/done/203.md)。
 
@@ -49,7 +49,7 @@ M1 代码验收（步 1–5 + tech-m1 §6–7）在 `main` `69d7ece`：**PASS**�
 | M3 步 3 | 已合入 `0b47410`（#58）；[tasks/done/222-m3-step3-variant-list-diff.md](../tasks/done/222-m3-step3-variant-list-diff.md) |
 | M3 步 4 | 已合入 `c38ee31`（#59）；[tasks/done/223-m3-step4-variant-pick-abandon.md](../tasks/done/223-m3-step4-variant-pick-abandon.md) |
 | M3 步 5 | 已合入 `1b0e323`（#60）；[tasks/done/224-m3-step5-stale-cost.md](../tasks/done/224-m3-step5-stale-cost.md) |
-| 当前任务 | [tasks/done/233-m3-step6-closure-copy.md](../tasks/done/233-m3-step6-closure-copy.md)（DONE 2026-11-08）。228–233 全部 DONE；M3 步 1–6 全落地。遗留待 owner：M3 §6–7 验收声称拍板、`test_llm_http_timeout` / `test_191_ch200_harness.py` 环境项（评估见 STATUS）、push 决定 |
+| 当前任务 | [tasks/done/234-m3-code-acceptance.md](../tasks/done/234-m3-code-acceptance.md) + [235](../tasks/done/235-env-test-fixes.md)（DONE 2026-11-08）。228–235 全部 DONE；**M3 全里程碑代码验收 PASS @ `594144b`**；两个环境项已修复（全量零失败，不再需要 PYTHONUTF8）。遗留待 owner：M4+ 技术方案立项、真实模型冒烟、push 决定 |
 | 架构方向 | [adr/0001-plan-first-facts.md](adr/0001-plan-first-facts.md) |
 | 工程现状 | [STATUS.md](STATUS.md) |
 | 阶段 A–C | [ROADMAP-plan-first.md](ROADMAP-plan-first.md)（CLOSED 短指针；全文在 archive，日常不要加载） |

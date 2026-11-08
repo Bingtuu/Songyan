@@ -11,8 +11,8 @@
 | **git tip（`main`）** | `f72590b` — docs handoff [#61](https://github.com/Bingtuu/Songyan/pull/61)（STATUS/README 对齐） |
 | **功能 tip（M3 步 1–5）** | `1b0e323` — [#60](https://github.com/Bingtuu/Songyan/pull/60)（`stale_vs_canon` + list 费用） |
 | **包版本** | 仍是 `0.5.0`（不 bump） |
-| **里程碑** | M0 / M1 / M2 代码验收 **PASS**；M3 技术方案已接受；**M3 步 1–6 已落地**（步 6 = task 233） |
-| **下一闸门** | **M3 §6–7 代码验收**（未声称，见下表）——何时声称由 owner 拍板；步 6 闭环文案已落地（task 233） |
+| **里程碑** | M0 / M1 / M2 代码验收 **PASS**；M3 技术方案已接受；**M3 步 1–6 已落地；M3 §6–7 代码验收 PASS** @ `594144b` |
+| **下一闸门** | **M4+ 技术方案**（另需被接受的技术方案；chapter continue / review 未开）；真实模型冒烟另开维护者任务 |
 | **本 handoff** | 文档对齐 + 步 6 闭环文案已落地（task 233）；§6–7 验收未声称 |
 
 硬约束（接手期间同样适用）：
@@ -32,7 +32,7 @@
 | M2 标脏 / 承诺 / extract→pending | **PASS** | `f1c3093` · [218](../tasks/done/218-m2-acceptance.md) |
 | M3 技术方案 [tech-m3.md](tech-m3.md) | **已接受**（t104s937；B1–B7 原样） | #55 → `5101555` |
 | M3 步 1–6 抽卡表面 | **已在 `main`** | 功能 tip `1b0e323`（#56–#60）；步 6 闭环文案 task 233 |
-| M3 §6–7 代码验收 | **未声称** | — |
+| M3 §6–7 代码验收 | **PASS** | `594144b` · [234](../tasks/done/234-m3-code-acceptance.md) |
 | M4+ | **未开** | 另需被接受的技术方案 |
 
 ## 现在能用（作者主路径）
@@ -85,7 +85,7 @@ songyan variant abandon  --project-id TEXT --chapter INT --slot INT [--json]
 - 只有 CLI，不是托管服务。真实生成要 API key，并且花钱。
 - 《轨道蜃景》Ch1–10 管线曾 PASS、文学未过（DG-1 失败等）；细节见历史冒烟记录，不作 V1.0 文学验收。
 - 真实模型上「导入后再续写」还没有验收。
-- **未做：** M3 §6–7 验收声称；`chapter continue` / `review`；M4+。
+- **未做：** `chapter continue` / `review`；M4+ 技术方案。真实模型冒烟另开维护者任务。
 - `today` 的固定 `next` 文案已更新为 M3 口径（提示 `variant generate` 抽卡，默认 N=2、不 auto-pick；task 233，2026-11-08）。
 - **2026-11-07 评审修复（task 226，已归档 `tasks/done/`）**：全量 code review 的 1 blocker + 4 major + minor 批已修复——settlement 声称的伏笔 resolve 只进提案（不再直写 `resolved`；唯一写径 = `canon confirm promise`）；`variant generate` 成本记账去重且归因 project/agent；pick 拒绝 abandoned 槽；LLM 失败保留已写槽并报 stderr；rejected 行不可被 confirm 直接转正；extract 提案跳过 rejected。详见 `tasks/done/226-review-findings-fix.md` 与 `docs/superpowers/plans/2026-11-07-m0-m3-review-audit.md`。
 - **2026-11-07 审计补强（task 228，已归档 `tasks/done/`）**：`canon confirm promise` 的人证 evidence 落库（`foreshadowings.resolved_evidence`，写-only 审计列）；销账守卫与写入合并为原子 UPDATE（并发双销账恰一成交）。读口径与 open 集不变。
@@ -109,7 +109,7 @@ songyan variant abandon  --project-id TEXT --chapter INT --slot INT [--json]
 
 ## 维护者下一步
 
-1. **当前 tip `f72590b`（功能面 `1b0e323` + 本地 226–233）。** M3 步 6 已落地（task 233，闭环文案）；§6–7 验收声称等 owner 拍板；未拍板前不要开 continue / review / M4。
+1. **当前 tip `f72590b`（功能面 `1b0e323` + 本地 226–235）。** M3 全里程碑代码验收 **PASS** @ `594144b`；下一闸门 = M4+ 技术方案（另需被接受）；continue / review 未开。
 2. 不改结算权威；不大 PR；不 bump；不声称 V1.0 完成。
 3. owner 本地接手期间：以本页 + tech-m3 为准；助手侧默认待命，不抢开 §6–7 声称 / M4。
 
