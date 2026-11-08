@@ -59,4 +59,6 @@ M0–M3 代码验收 PASS @ `594144b`。M4 主要交付 `chapter continue` / `re
 
 **owner 二轮评审（P0×5 / P1×8 / 写死句×4，已入报告 §9）**：全部要改项中 P0-4 与 P1-5 已先行改完；其余结论——新 `chapter accept` 命令（P0-1）、accepted 游标唯一写径（P0-2）、`--count N` 逐章确认消灭无审连跑（P0-3）、`--variants` 转调 M3（P0-5/S2）、严格 accepted 判定（S1）、正文节选+预算硬顶（S3）、review 默认零写库（S4）——均已作为建议答案写入 §9 供草稿采纳或 owner 否决。
 
-**验证**：报告经只读 review + owner 两轮评审修订后无 blocker / 未修 major；无代码改动，无需回归。
+**owner 三轮评审（§8 表述矛盾 / §7 编号 / 命令树分工 / settlement 边界 / S3 量化，已修入）**：§8 `resume_human_confirm` 改为「run 内确认机制，作者路径不复用」；§7 验收草案改编号 6、Q4 删重复建议段；顶层 `status` vs `chapter status` 分工一句话划清；新增 P0-6（chapter accept 与 settlement 拆开，建议 accept 只动游标）；S3 的 ≤800 数值移至 tech-m4 接口节定死（计入口径 / 降级策略）。
+
+**验证**：报告经只读 review + owner 三轮评审修订后无 blocker / 未修 major；无代码改动，无需回归。

@@ -3,7 +3,7 @@
 | 项 | 内容 |
 |---|---|
 | 日期 | 2026-11-08 |
-| 状态 | DONE（task 236，owner 两轮评审已吸收：Q2 复用条件、Q4 钉死 status、N7 验收分列、接口三线钉死、行号修正、§9 P0/P1 缺口评估与四条写死句建议） |
+| 状态 | DONE（task 236，owner 三轮评审已吸收：Q2 复用条件、Q4 钉死 status、N7 验收分列、接口三线钉死、P0-6 settlement 边界、行号修正、§9 P0/P1 缺口评估与四条写死句建议） |
 | 用途 | 为 `docs/tech-m4.md` 草稿备料；本报告是方案前的调研层，不是方案本身 |
 | 方法 | A 需求面（PRD 精读）/ B 代码现状面（thorough 考古）/ C 历史经验面（评审审计）/ D 外部调研面（同类工具） |
 
@@ -131,6 +131,7 @@
 - **方案 A（continue = 单章管线 + 内嵌确认闸）**：`chapter continue` 跑一章（初稿或 `--variants N` 转抽卡），结束后停在「待确认」态，人确认（accept）后才推进游标。确认前再 continue = 提示先确认。**这把 N1（确认写径缺失）一并解决**。
   - **⚠ owner 评审钉死的复用条件（2026-11-08）**：现网确认机制是 **LangGraph interrupt + thread 恢复**（`resume_human_confirm`），不是一次性 CLI 确认——**不能直接当 CLI 确认闸复用**。tech-m4 必须先定两件事：① 新 `chapter accept` 命令 vs 复用 thread resume，二选一并写清交互模型；② `--json` / 非交互模式下 accept 怎么办（拒绝？生成待确认令牌？）。不定这两点，极易做出「能跑但绕过 W2 人确认」的实现。
   - 另：**accepted 游标 / import 自动 accept / `--variants`+stale 三条线的接口语义必须在接口层钉死**（见 N7 与 §7），不能只停在原则描述。
+  - 另：**`chapter accept` 与 settlement 的边界必须先写清**（owner 评审补充，见 §9 P0-6）——否则 N1 补上后会把结算副作用带进作者确认。
 - **方案 B（continue 要求上一章已 accepted）**：缺确认时拒绝并指向确认命令/流程（需要新命令或复用 run 的 resume 交互）。简单但 CLI 单次执行的交互模型与 `resume_human_confirm` 的 thread 恢复模型耦合深。
 - **方案 C（continue 不认 variant，只管 outlined→draft）**：抽卡与续写完全分裂，违背 PRD `--variants` 口径。不推荐。
 - **衔接细节（两方案都要回答）**：`_get_previous_summary` 只读 120 字摘要——M4 若要正文级衔接（读上一章 accepted/picked 正文节选），是新增组装函数还是沿用摘要链，方案需定。
@@ -148,8 +149,7 @@
 - **现状证据**：数据已在 `context_snapshots`（§3.4）；无 DB 读取面给人。
 - **方案 A（钉死挂 `songyan status`，owner 2026-11-08 拍板）**：PRD 点名的命令就是 `status`——新建 `songyan status`，输出含「ContextEmergency 触发次数 / 最近触发章 / budget_used_before」段（读 `context_snapshots`，需新增按 project/chapter 查询方法，见 §3.4）。`today` 不承载此职责。
 - **方案 B（章级 drill-down）**：`songyan review` / `check` 输出附带各章 emergency 标记（与 Q3 聚合合并）。信息更全，与 review 耦合；可作后续增强。
-- **结论**：A 为 M4 必做（PRD :442）；B 随 Q3 一起设计为可选附加段。
-- **建议**：A 为 M4 必做（PRD :442 明确要求「status 露出次数」）；B 作为 review 的附加段，随 Q3 一起设计。
+- **结论**：A 为 M4 必做（PRD :442），钉死挂顶层 `songyan status`；B 随 Q3 一起设计为可选附加段。命令树划清（owner 评审补充）：PRD §9.2 同时有顶层 `status`（「与 today 分工：today 是下一步，status 是本会话计数」）与 `chapter ... status`；**顶层 `status` 承载 ContextEmergency 次数露出；若未来做 `chapter status`，只读章进度，不承载 ContextEmergency**——tech-m4 用一句话写死此分工。
 
 ### 新发现问题（调研产出，方案必须回答）
 
@@ -178,7 +178,7 @@
    - 步 2：`chapter continue` 单章执行 + 内嵌确认闸（Q2A + N1/N2）+ `--require-plan`；
    - 步 3：`review` 只读聚合（Q3A）+ 复读/专名启发式（N5）；
    - 步 4：验收与 today 文案收口（N6）。
-4. **验收草案**：连续 3 章 W2 无自动 approved（PRD :448）；review 测试里 approved 行数不变（PRD :501）；`--require-plan` 拒绝路径锁死。
+6. **验收草案**：连续 3 章 W2 无自动 approved（PRD :448）；review 测试里 approved 行数不变（PRD :501）；`--require-plan` 拒绝路径锁死。
 
 ---
 
@@ -186,7 +186,7 @@
 
 | 零件 | 位置 | M4 用途 |
 |------|------|---------|
-| `run_chapter_pipeline` / `resume_human_confirm` | `workflows/phase1_graph.py:408, 531` | continue 的单章执行器与确认闸 |
+| `run_chapter_pipeline` / `resume_human_confirm` | `workflows/phase1_graph.py:408, 531` | continue 的单章执行器；`resume_human_confirm` 是 **run 管线内**确认/恢复机制（LangGraph interrupt + thread），作者路径确认**不**复用它——用 `chapter accept`（见 §6 Q2） |
 | `_compute_resume_start` / `_find_resume_run` / `_get_previous_summary` | `workflows/phase2_graph.py:586, 561, 66` | 下一章判定 / resume / 上一章摘要（N4 相关） |
 | `ProjectRunRepository` + `project_runs` | `db/project_run_repo.py` | run 级断点与暂停语义 |
 | `accept_with_settlement_boundary` | `workflows/_nodes.py:2958-2970` | accepted 写径参考（N1 相关） |
@@ -213,6 +213,7 @@ P0 = 不写进 tech-m4 就会形成语义破口；P1 = 草稿应写但可合并�
 | P0-3 | `--count>1` / 无审连跑上限硬行为 | 要改——PRD 边界（:172）的硬执行 | 结构上消灭「无审连跑」：`continue --count N` **逐章过确认闸**（N 只减少命令次数，不跳过确认）；上限不靠魔法数，靠「每章必须 accept 才推进」这一结构保证 |
 | P0-4 | N7 验收豁免句 | **已改**（本轮 §6 N7 已分列「无自动 Canon approved」/「import 可自动 chapter accepted」） | 草稿验收节照抄分列句 |
 | P0-5 | `--variants` 与 M3 pick/stale/`--allow-stale` 交接 | 要改——不写清必出两套语义 | `--variants N` = **转调 M3**（函数级 `generate_chapter_variants`，同进程，退出码与 M3 一致）；pick/abandon 仍由人显式调 M3 命令；continue 只在「上一章已 accepted」时启动；stale 规则沿用 M3（`--allow-stale` 语义不变，continue 不另造） |
+| P0-6 | `chapter accept` 与 settlement 边界（owner 评审新增） | 要改——N1 补上后若沿用 `accept_with_settlement_boundary` 会把结算副作用（LLM 成本、提案写库）带进作者确认时刻 | **建议拆开**：`chapter accept` = 只移动 accepted 游标（`version_type=accepted` 副本，事务内仅此）；settlement 提案属审后步骤（PRD 4.2 目标语义即 `... → in_review → needs_settlement → settled`，结算在审后；run 管线绑事务是 auto 路径的历史耦合）。备选：沿用同一事务边界（与 run 行为一致，但结算副作用进确认时刻）——tech-m4 二选一写死 |
 
 ### P1（8 条，7 要改 1 已决）
 
@@ -232,5 +233,5 @@ P0 = 不写进 tech-m4 就会形成语义破口；P1 = 草稿应写但可合并�
 |---|------|--------------|
 | S1 | 可续写判定：严格 accepted vs picked+显式确认 | **严格 accepted**——与现网 resume 判定同口径避免双真源；picked → `chapter accept` 即成 accepted，衔接成本低 |
 | S2 | `--variants N`：转调 M3 vs 内嵌 generate | **转调 M3**（见 P0-5），不内嵌第二套生成逻辑 |
-| S3 | 上一章上下文：120 字摘要 vs 正文节选 | **正文结尾节选 + 预算硬顶**（如 ≤800 字）与 120 字摘要并存——Ch1–10 衔接弱与 ContextEmergency 超预算的教训各管一半；节选受 Context Diet 预算约束，不裸注入全文 |
+| S3 | 上一章上下文：120 字摘要 vs 正文节选 | **正文结尾节选（预算硬顶）+ 120 字摘要并存**。数值不在调研层钉死：节选是否计入 Context Diet `budget_used`、超预算时降级策略（截断 / 退回纯摘要 / 标记 emergency），由 **tech-m4 接口节写死**（owner 评审决定） |
 | S4 | review 默认是否写任何表 | **默认零写库**——纯只读聚合，与 PRD :586 字面一致；`merge_reviews` 不得进入 review 路径 |
