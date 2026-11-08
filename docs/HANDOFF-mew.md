@@ -49,7 +49,7 @@ M1 代码验收（步 1–5 + tech-m1 §6–7）在 `main` `69d7ece`：**PASS**�
 | M3 步 3 | 已合入 `0b47410`（#58）；[tasks/done/222-m3-step3-variant-list-diff.md](../tasks/done/222-m3-step3-variant-list-diff.md) |
 | M3 步 4 | 已合入 `c38ee31`（#59）；[tasks/done/223-m3-step4-variant-pick-abandon.md](../tasks/done/223-m3-step4-variant-pick-abandon.md) |
 | M3 步 5 | 已合入 `1b0e323`（#60）；[tasks/done/224-m3-step5-stale-cost.md](../tasks/done/224-m3-step5-stale-cost.md) |
-| 当前任务 | [tasks/done/236-m4-preresearch.md](../tasks/done/236-m4-preresearch.md)（DONE 2026-11-08）。228–236 全部 DONE；M3 全里程碑代码验收 PASS @ `594144b`；环境项已修复。**M4 前置调研已交付（`docs/reports/236-m4-preresearch.md`，Q1–Q4 深化 + N1–N7），tech-m4 草稿待 owner 审调研报告后启动。** 遗留待 owner：M4 方案拍板、真实模型冒烟 |
+| 当前任务 | [tasks/done/236-m4-preresearch.md](../tasks/done/236-m4-preresearch.md)（DONE 2026-11-08）。228–236 全部 DONE；M3 全里程碑代码验收 PASS @ `594144b`；环境项已修复。**M4 前置调研已交付（`docs/236-m4-preresearch.md`，Q1–Q4 深化 + N1–N7），tech-m4 草稿待 owner 审调研报告后启动。** 遗留待 owner：M4 方案拍板、真实模型冒烟 |
 | 架构方向 | [adr/0001-plan-first-facts.md](adr/0001-plan-first-facts.md) |
 | 工程现状 | [STATUS.md](STATUS.md) |
 | 阶段 A–C | [ROADMAP-plan-first.md](ROADMAP-plan-first.md)（CLOSED 短指针；全文在 archive，日常不要加载） |

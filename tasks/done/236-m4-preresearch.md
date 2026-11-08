@@ -24,7 +24,7 @@ M0–M3 代码验收 PASS @ `594144b`。M4 主要交付 `chapter continue` / `re
 
 ## 产出
 
-- [x] `docs/reports/236-m4-preresearch.md`：四路发现 + 四大设计问题逐一深化（现状证据 → 约束 → 可选方案 → 建议）+ 新问题清单（N1–N7）
+- [x] `docs/236-m4-preresearch.md`：四路发现 + 四大设计问题逐一深化（现状证据 → 约束 → 可选方案 → 建议）+ 新问题清单（N1–N7）
 - [x] 只读 review → 归档 → STATUS/HANDOFF 同步 → 本地提交
 
 ## 验收标准
@@ -37,7 +37,7 @@ M0–M3 代码验收 PASS @ `594144b`。M4 主要交付 `chapter continue` / `re
 
 **状态**：DONE（2026-11-08）。
 
-**产出**：`docs/reports/236-m4-preresearch.md`（A 需求 / B 代码现状 / C 历史经验 / D 外部调研四路；Q1–Q4 深化各含 2–3 方案；新问题 N1–N7；tech-m4 草稿结构建议与四步草案；可复用零件清单 12 项）。
+**产出**：`docs/236-m4-preresearch.md`（A 需求 / B 代码现状 / C 历史经验 / D 外部调研四路；Q1–Q4 深化各含 2–3 方案；新问题 N1–N7；tech-m4 草稿结构建议与四步草案；可复用零件清单 12 项）。
 
 **关键发现（供 owner 快速决策）**：
 
@@ -48,4 +48,13 @@ M0–M3 代码验收 PASS @ `594144b`。M4 主要交付 `chapter continue` / `re
 
 **review**：agent-13 抽查 20+ 代码引用与 16 处 PRD 行号；major 1（N1 遗漏 import replay 写径，已修订入 §1/§3.2/§6 N7）；minor 5（profile 覆盖注记 / snapshot 查询方法需新建 / evals 复读信号可复用 / 行号微调 / Q4 措辞）已同切片修入。
 
-**验证**：报告经只读 review 修订后无 blocker / 未修 major；无代码改动，无需回归。
+**owner 评审（2026-11-08，第二轮，已吸收入报告）**：
+
+1. Q2A 复用条件钉死：`resume_human_confirm` = LangGraph interrupt + thread 恢复，**不能直接当 CLI 确认闸**；tech-m4 必须先定「新 `chapter accept` vs thread resume」与 `--json`/非交互 accept 语义（已写入 §6 Q2 与 §7 新增「确认交互模型」节）。
+2. accepted 游标 / import 自动 accept / `--variants`+stale 三线须在**接口层**钉死（§7）。
+3. Q4 钉死挂 PRD 点名的 `songyan status` 命令（§6 Q4 改「待定」为拍板）。
+4. N7 验收分列「无自动 Canon approved」与「import 可自动 chapter accepted」（§6 N7）。
+5. 交付修正：`docs/reports/` 被 gitignore、远程不可见——报告移至 tracked 的 `docs/236-m4-preresearch.md`；STATUS/HANDOFF/任务文档引用同步更新。
+6. 行号修正两处（emergency 触发 362-367；excellence 复读 646-715），语义不变。
+
+**验证**：报告经只读 review + owner 两轮评审修订后无 blocker / 未修 major；无代码改动，无需回归。
