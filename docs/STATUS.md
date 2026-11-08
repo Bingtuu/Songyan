@@ -12,7 +12,7 @@
 | **功能 tip（M3 步 1–5）** | `1b0e323` — [#60](https://github.com/Bingtuu/Songyan/pull/60)（`stale_vs_canon` + list 费用） |
 | **包版本** | 仍是 `0.5.0`（不 bump） |
 | **里程碑** | M0 / M1 / M2 / M3 代码验收 **PASS**（M3 @ `594144b`）；**tech-m4 已接受（B1–B12 原样），M4 编码进行中（task 238 起）** |
-| **下一闸门** | **M4 步 1 验收（task 238）** → 按 tech-m4 §5 顺序推进 239–242；真实模型冒烟另开维护者任务 |
+| **下一闸门** | **M4 步 2（task 239，`chapter accept`）** → 按 tech-m4 §5 顺序推进 240–242；真实模型冒烟另开维护者任务 |
 | **本 handoff** | 文档对齐 + 步 6 闭环文案已落地（task 233）；§6–7 验收未声称 |
 
 硬约束（接手期间同样适用）：
@@ -33,7 +33,7 @@
 | M3 技术方案 [tech-m3.md](tech-m3.md) | **已接受**（t104s937；B1–B7 原样） | #55 → `5101555` |
 | M3 步 1–6 抽卡表面 | **已在 `main`** | 功能 tip `1b0e323`（#56–#60）；步 6 闭环文案 task 233 |
 | M3 §6–7 代码验收 | **PASS** | `594144b` · [234](../tasks/done/234-m3-code-acceptance.md) |
-| M4+ | **tech-m4 已接受**（B1–B12 原样）；编码进行中（task 238–242） | [tech-m4.md](tech-m4.md) · [237](../tasks/done/237-tech-m4-draft.md) |
+| M4+ | **tech-m4 已接受**（B1–B12 原样）；**步 1 已落地**（task 238）；步 2–5 进行中（239–242） | [tech-m4.md](tech-m4.md) · [237](../tasks/done/237-tech-m4-draft.md) · [238](../tasks/done/238-m4-step1-progress-status.md) |
 
 ## 现在能用（作者主路径）
 
@@ -95,7 +95,7 @@ songyan status --project-id TEXT [--json]
 - 只有 CLI，不是托管服务。真实生成要 API key，并且花钱。
 - 《轨道蜃景》Ch1–10 管线曾 PASS、文学未过（DG-1 失败等）；细节见历史冒烟记录，不作 V1.0 文学验收。
 - 真实模型上「导入后再续写」还没有验收。
-- **未做：** `chapter continue` / `review`；M4+ 技术方案。真实模型冒烟另开维护者任务。
+- **未做：** `chapter accept|continue` / `review`（M4 步 2–4 未编码）；真实模型冒烟另开维护者任务。
 - `today` 的固定 `next` 文案已更新为 M3 口径（提示 `variant generate` 抽卡，默认 N=2、不 auto-pick；task 233，2026-11-08）。
 - **2026-11-07 评审修复（task 226，已归档 `tasks/done/`）**：全量 code review 的 1 blocker + 4 major + minor 批已修复——settlement 声称的伏笔 resolve 只进提案（不再直写 `resolved`；唯一写径 = `canon confirm promise`）；`variant generate` 成本记账去重且归因 project/agent；pick 拒绝 abandoned 槽；LLM 失败保留已写槽并报 stderr；rejected 行不可被 confirm 直接转正；extract 提案跳过 rejected。详见 `tasks/done/226-review-findings-fix.md` 与 `docs/superpowers/plans/2026-11-07-m0-m3-review-audit.md`。
 - **2026-11-07 审计补强（task 228，已归档 `tasks/done/`）**：`canon confirm promise` 的人证 evidence 落库（`foreshadowings.resolved_evidence`，写-only 审计列）；销账守卫与写入合并为原子 UPDATE（并发双销账恰一成交）。读口径与 open 集不变。
