@@ -91,6 +91,7 @@ songyan variant abandon  --project-id TEXT --chapter INT --slot INT [--json]
 - **2026-11-07 审计补强（task 228，已归档 `tasks/done/`）**：`canon confirm promise` 的人证 evidence 落库（`foreshadowings.resolved_evidence`，写-only 审计列）；销账守卫与写入合并为原子 UPDATE（并发双销账恰一成交）。读口径与 open 集不变。
 - **2026-11-08 P0-3 收口（task 232，已归档 `tasks/done/232-plan-default-pending.md`）**：plan 五模型 `approval_status` 默认值 `"approved"` → `"pending"`（owner 拍板方案 A）。不显式传状态构造的卡从此落入 pending 队列，不再静默直写 Canon；生产写入方与种子夹具本就显式传值，零行为变化。测试侧 26 处夹具语义卡显式补 `approved`，新增模型级默认行为锁。
 - **环境项（2026-11-08 修复，task 235）**：~~`test_llm_http_timeout`~~ 断言窗口 8s→20s（hold 15s→30s 保判别性，重载 flake 根治）；~~`test_191_ch200_harness.py`~~ `_run_harness` 双端固定编码（父 `encoding="utf-8"` + 子 `PYTHONUTF8=1`/`PYTHONIOENCODING=utf-8`），不带 PYTHONUTF8 也绿。本机全量回归不再需要 `PYTHONUTF8=1`。
+- **2026-11-08 M4 前置调研（task 236，已归档 `tasks/done/`）**：`docs/reports/236-m4-preresearch.md` 交付——四路调研（PRD 需求 / 代码现状 / 历史审计 / 外部同类工具）+ 四大设计问题深化（chapter 状态机、continue↔variant、review 输入并集、ContextEmergency 露出）+ 新问题 N1–N7（含 import replay 自动 accepted 写径与 M4 确认闸的并存口径）。**tech-m4 草稿待 owner 审调研报告后启动。**
 
 标识与助手交接：[HANDOFF-mew.md](HANDOFF-mew.md)。书稿不入库。
 
