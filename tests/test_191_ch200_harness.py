@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sqlite3
 import subprocess
 import sys
@@ -14,12 +15,18 @@ SCRIPT = ROOT / "scripts" / "run_v10_ch200_climb.py"
 
 
 def _run_harness(*args: str) -> subprocess.CompletedProcess[str]:
+    # 子进程输出含中文。父进程按 UTF-8 解码；同时给子进程强制
+    # PYTHONUTF8=1，否则 Windows 下子进程 stdout=pipe 时按 locale（cp936）
+    # 编码，非 UTF-8 locale 下父进程解码必炸。两侧都固定，不依赖外部环境。
+    env = {**os.environ, "PYTHONUTF8": "1", "PYTHONIOENCODING": "utf-8"}
     return subprocess.run(
         [sys.executable, str(SCRIPT), *args],
         cwd=ROOT,
         check=False,
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        env=env,
     )
 
 

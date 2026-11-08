@@ -20,8 +20,11 @@ from songyan.exceptions import LLMError
 from songyan.llm.client import aclose_llm_clients, call_llm
 
 # Longer than the assertion bound: an unwired timeout waits the server out.
-_SERVER_HOLD_SECONDS = 15.0
-_ASSERT_BOUND_SECONDS = 8.0
+# Hold 必须 > 断言窗口，窗口内被切断 = 超时机制生效；两者余量拉大
+# （2026-11-08，task 235）：全量套件重载下 litellm 的 1s 单次超时会被
+# 推迟，原 8s 窗口余量不足偶发 flake；窗口内仍是「真坏必失败」的判别结构。
+_SERVER_HOLD_SECONDS = 30.0
+_ASSERT_BOUND_SECONDS = 20.0
 
 
 class _SilentHangHandler(BaseHTTPRequestHandler):
