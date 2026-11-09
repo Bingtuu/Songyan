@@ -4,22 +4,22 @@
 
 包版本 **0.5.0**（owner 称之为 v0.5）。**V1.0** 是写作助手这一代的产品名，不是这个包版本。本页不打 git tag，也不改 `pyproject.toml`。
 
-## 接手节点（2026-11-08 Asia/Shanghai）
+## 接手节点（2026-11-09 Asia/Shanghai）
 
 | 项 | 值 |
 |----|----|
-| **git tip（`main`）** | `1d9cce5`（本地；origin/main @ `e1ce33c`，236 待 push） |
-| **功能 tip（M3 步 1–5）** | `1b0e323` — [#60](https://github.com/Bingtuu/Songyan/pull/60)（`stale_vs_canon` + list 费用） |
+| **git tip（`main`）** | `e5a33bd`（M4 步 5）+ 本页文档提交；push 后 origin/main 同步（此前 @ `8da4cd0`，tech-m4 接受 + M4 步 1–5 待 push） |
+| **功能 tip（M4 步 1–5）** | `e5a33bd` — 238 章进度视图+`status` / 239 `chapter accept` / 240 `chapter continue` / 241 `review` / 242 收口（3 章 W2 连走集成测试 + `today` M4 文案） |
 | **包版本** | 仍是 `0.5.0`（不 bump） |
-| **里程碑** | M0 / M1 / M2 / M3 代码验收 **PASS**（M3 @ `594144b`）；**tech-m4 已接受（B1–B12 原样），M4 编码进行中（task 238 起）** |
-| **下一闸门** | **M4 §6–7 验收声称（owner 拍板）**——证据已齐（task 242 完成总结八条映射）；真实模型冒烟另开维护者任务 |
-| **本 handoff** | 文档对齐 + 步 6 闭环文案已落地（task 233）；§6–7 验收未声称 |
+| **里程碑** | **M0 / M1 / M2 / M3 / M4 代码验收全量 PASS**（M4 @ `e5a33bd`，task 243 声称）；tech-m4 已接受（B1–B12 原样） |
+| **下一闸门** | **真实模型冒烟（维护者任务，花真钱）**；M4 之后事项（`chapter status` / `review --deep` / 导入后再续写验收）属 tech-m4 §9「以后」清单，需 owner 新授权立项 |
+| **本 handoff** | M4 §6–7 验收已声称 PASS（task 243 @ `e5a33bd`）；PRD 内里程碑全部闭环 |
 
 硬约束（接手期间同样适用）：
 
 - 不声称 V1.0 完成；不升包版本；不合成大 PR。
 - 不改结算权威；结算库仍是 `untrusted_until_confirmed` 对照，不升格 Canon。
-- `review` 已编码（task 241）：只读共审（B8 七源并集、零写库、复读/专名启发式）。
+- `review`（task 241）只读共审：B8 七源并集、零写库、复读/专名启发式；review 发现问题 exit 0（B11）。
 - 不加题材检查器；不跑无人值守长篇。
 - 编码刀仍建议 TDD + 审阅后再合；小步 PR。
 
@@ -33,7 +33,9 @@
 | M3 技术方案 [tech-m3.md](tech-m3.md) | **已接受**（t104s937；B1–B7 原样） | #55 → `5101555` |
 | M3 步 1–6 抽卡表面 | **已在 `main`** | 功能 tip `1b0e323`（#56–#60）；步 6 闭环文案 task 233 |
 | M3 §6–7 代码验收 | **PASS** | `594144b` · [234](../tasks/done/234-m3-code-acceptance.md) |
-| M4+ | **tech-m4 已接受**（B1–B12 原样）；**步 1–5 全部落地**（238 章进度视图+status / 239 chapter accept / 240 chapter continue / 241 review 只读共审 / 242 收口验收——3 章 W2 连走集成测试 + today M4 文案） | [tech-m4.md](tech-m4.md) · [238](../tasks/done/238-m4-step1-progress-status.md) · [239](../tasks/done/239-m4-step2-chapter-accept.md) · [240](../tasks/done/240-m4-step3-chapter-continue.md) · [241](../tasks/done/241-m4-step4-review.md) · [242](../tasks/done/242-m4-step5-closure.md) |
+| M4 技术方案 [tech-m4.md](tech-m4.md) | **已接受**（2026-11-08；B1–B12 原样） | `dd25f30` |
+| M4 步 1–5 W2 短环 | **已在 `main`** | 238 `c55a714` · 239 `f205f8a` · 240 `23bd3f3` · 241 `b857e8b` · 242 `e5a33bd` |
+| M4 §6–7 代码验收 | **PASS** | `e5a33bd` · [243](../tasks/done/243-m4-code-acceptance.md) |
 
 ## 现在能用（作者主路径）
 
@@ -69,7 +71,7 @@ songyan status --project-id TEXT [--json]
 ```
 
 - 纯只读项目级计数面：章进度六态分布（章宇宙 = heads ∪ variants ∪ versions 章号并集；`stale`/`settled` = accepted ± `content_stale`，`picked` / `variants_ready` / `drafting` / `empty`）+ 待确认 picked 数 + ContextEmergency 触发次数 / 最近触发章 / `budget_used_before_emergency`（B10）。
-- `today` 文本与 `--json` 同步增加 `chapter_progress` 摘要行（下一章 = B1 口径第一个非 accepted 章；`_NEXT` 文案未动）。
+- `today` 文本与 `--json` 同步增加 `chapter_progress` 摘要行（下一章 = B1 口径第一个非 accepted 章）；`_NEXT` 文案在 task 242 更新为 M4 口径（continue 短环 + 抽卡提示）。
 - exit 0 / 1（缺库缺项目）；usage 错误 exit 2（B11 口径）。`chapter status` 不做。
 
 M4 步 2 `chapter accept`（task 239）/ 步 3 `chapter continue`（task 240）：
@@ -88,6 +90,15 @@ songyan chapter continue --project-id TEXT [--count 1] [--variants N] [--require
 - exit（B11）：0 = 生成待确认 / 停闸 / 全部完成；1 = 缺库 / 缺项目 / 参数非法（`--count` 越界）/ LLM 与 settlement 失败；2 = B1 两前置 / `--require-plan` 拒绝；3 = 预算耗尽（已写保留）。`--count N` 逐章停闸，单次 invocation 最多生成一章。
 - 费用归因：全程 `bound_contextvars(project_id, chapter_number, run_id, agent)`；`--json` 含 `chapter / version_id / word_count / cost_cny / next_hint`。
 
+M4 步 4 `songyan review`（task 241；tech-m4 §5 步 4）：
+
+```text
+songyan review --project-id TEXT --chapter INT [--json]
+```
+
+- 只读共审：被审正文 = current 工作稿；七源聚合（B8）；复读三腿阈值 12/40/14 与专名漂移为 info 级启发式，不阻塞。
+- 零写库：12 表行数不变断言 + `merge_reviews` 未调用；approved 行数不变（PRD :501）。
+
 既有管线仍可用：`create-project` / `run` / `report` / `import` / `doctor` / `backup` 等（`run --auto-confirm` 是冒烟路径，**不是**作者主路径）。
 
 ## 接手开发时先看这些
@@ -96,29 +107,32 @@ songyan chapter continue --project-id TEXT [--count 1] [--variants N] [--require
 |------|------|
 | 产品边界 | [prd-v1.md](prd-v1.md) |
 | M3 做什么 / 不做什么 / 小步定义 | [tech-m3.md](tech-m3.md)（尤其 §3、§4、§5） |
+| M4 做什么 / 不做什么 / B1–B12 | [tech-m4.md](tech-m4.md)（尤其 §3、§5、§6） |
 | 当天下一步（给助手） | [HANDOFF-mew.md](HANDOFF-mew.md) |
 | 冷启动规则 | [AGENTS.md](../AGENTS.md) |
-| CLI 入口 | `src/songyan/cli/commands/variant.py`、`canon_write.py`、`workbench.py`、`check.py` |
+| CLI 入口 | `src/songyan/cli/commands/variant.py`、`canon_write.py`、`workbench.py`、`check.py`、`chapter.py`、`review.py`、`status.py` |
 | M3 服务 | `src/songyan/services/variant_{fingerprint,generate,diff,pick,stale}.py` |
 | M3 仓库 | `src/songyan/db/chapter_variant_repo.py` |
+| M4 服务 | `src/songyan/services/chapter_{accept,continue}.py`、`review_report.py`、`chapter_progress.py` |
 | 步 5 归档 | [tasks/done/224-m3-step5-stale-cost.md](../tasks/done/224-m3-step5-stale-cost.md) |
 | 本地回归（抽卡相关） | `tests/cli/test_variant_*.py`、`tests/services/test_variant_fingerprint.py`、`tests/db/test_chapter_variants.py` |
+| 本地回归（M4 相关） | `tests/cli/test_chapter_*.py`、`tests/cli/test_review*.py`、`tests/cli/test_status_command.py`、`tests/services/test_review_report.py` |
 
-本地仓库路径（Diupi-Yun）：`C:\Vibe Project\Songyan`，origin/main @ `a389d10`；本地 main @ `e3c7c7c`（233/234/235 三笔待 push）。
+本地仓库路径（Diupi-Yun）：`C:\Vibe Project\Songyan`；origin/main 随本页提交 push 后同步（此前 @ `8da4cd0`）。
 
 ## 已知限制
 
 - 只有 CLI，不是托管服务。真实生成要 API key，并且花钱。
 - 《轨道蜃景》Ch1–10 管线曾 PASS、文学未过（DG-1 失败等）；细节见历史冒烟记录，不作 V1.0 文学验收。
 - 真实模型上「导入后再续写」还没有验收。
-- **未做：** `review`（M4 步 4 未编码）；`chapter accept|continue` 已编码（步 2 已合入；步 3 工作区待 review/合入）；真实模型冒烟另开维护者任务。
-- `today` 的固定 `next` 文案已更新为 M3 口径（提示 `variant generate` 抽卡，默认 N=2、不 auto-pick；task 233，2026-11-08）。
+- **未做：** 真实模型冒烟（维护者任务，不挡代码验收）；M4 之后事项（`chapter status` / `review --deep` / 导入后再续写验收）属 tech-m4 §9「以后」清单，需 owner 新授权立项。
+- `today` 的固定 `next` 文案已更新为 M4 口径（提示 `chapter continue` 短环 + `variant generate` 抽卡；task 242，2026-11-09）。
 - **2026-11-07 评审修复（task 226，已归档 `tasks/done/`）**：全量 code review 的 1 blocker + 4 major + minor 批已修复——settlement 声称的伏笔 resolve 只进提案（不再直写 `resolved`；唯一写径 = `canon confirm promise`）；`variant generate` 成本记账去重且归因 project/agent；pick 拒绝 abandoned 槽；LLM 失败保留已写槽并报 stderr；rejected 行不可被 confirm 直接转正；extract 提案跳过 rejected。详见 `tasks/done/226-review-findings-fix.md` 与 `docs/superpowers/plans/2026-11-07-m0-m3-review-audit.md`。
 - **2026-11-07 审计补强（task 228，已归档 `tasks/done/`）**：`canon confirm promise` 的人证 evidence 落库（`foreshadowings.resolved_evidence`，写-only 审计列）；销账守卫与写入合并为原子 UPDATE（并发双销账恰一成交）。读口径与 open 集不变。
 - **2026-11-08 P0-3 收口（task 232，已归档 `tasks/done/232-plan-default-pending.md`）**：plan 五模型 `approval_status` 默认值 `"approved"` → `"pending"`（owner 拍板方案 A）。不显式传状态构造的卡从此落入 pending 队列，不再静默直写 Canon；生产写入方与种子夹具本就显式传值，零行为变化。测试侧 26 处夹具语义卡显式补 `approved`，新增模型级默认行为锁。
 - **环境项（2026-11-08 修复，task 235；2026-11-09 根因修正）**：~~`test_llm_http_timeout`~~ 断言窗口 8s→20s（hold 15s→30s 保判别性）。**根因修正**：该测试当天的「通过」多为假通过——`ChatLiteLLM` 无 `base_url` 字段（只有 `api_base`，extra=ignore 静默丢弃），请求实际落到 litellm 默认地址；上午断网时 ConnectTimeout 恰好匹配「超时」断言。2026-11-09 网络恢复后 401 暴露真相，已在 task 239 修复（`api_base=base_url` + 防回归断言）；负载敏感性结论作废。~~`test_191_ch200_harness.py`~~ `_run_harness` 双端固定编码（父 `encoding="utf-8"` + 子 `PYTHONUTF8=1`/`PYTHONIOENCODING=utf-8`），不带 PYTHONUTF8 也绿。本机全量回归不再需要 `PYTHONUTF8=1`。
 - **2026-11-08 M4 前置调研（task 236，已归档 `tasks/done/`）**：`docs/236-m4-preresearch.md` 交付——四路调研（PRD 需求 / 代码现状 / 历史审计 / 外部同类工具）+ 四大设计问题深化（chapter 状态机、continue↔variant、review 输入并集、ContextEmergency 露出）+ 新问题 N1–N7（含 import replay 自动 accepted 写径与 M4 确认闸的并存口径）。
-- **2026-11-08 M4 技术方案草稿（task 237）**：`docs/tech-m4.md` 已交付（B1–B12 绑定决策 + 5 小步对应 task 238–242），review 无 blocker。**待 owner 书面接受（开工门）；接受前不进入 M4 编码。**
+- **2026-11-08 M4 技术方案（task 237）→ 2026-11-09 M4 全量闭环（task 243）**：`docs/tech-m4.md` 已接受（owner 拍板「接受 tech-m4，按 B1–B12 开 M4 编码」）；步 1–5 全部落地（238–242）；**§6–7 代码验收 PASS @ `e5a33bd`**（8 条证据映射见 task 243；实跑数见 task 242 完成总结）。文档层偏差记录：tech-m4 §7 引用的 `tests/cli/test_chapter_continue.py` 已拆为五个 `test_chapter_continue_*` 文件，以实际文件名跑。
 
 标识与助手交接：[HANDOFF-mew.md](HANDOFF-mew.md)。书稿不入库。
 
@@ -130,16 +144,17 @@ songyan chapter continue --project-id TEXT [--count 1] [--variants N] [--require
 | [AGENTS.md](../AGENTS.md) | 冷启动：读什么、何时不许写代码 |
 | [prd-v1.md](prd-v1.md) | V1.0 产品需求（已接受） |
 | [tech-m0.md](tech-m0.md) / [tech-m1.md](tech-m1.md) / [tech-m2.md](tech-m2.md) | 已验收里程碑方案 |
-| [tech-m3.md](tech-m3.md) | 抽卡；已接受；步 1–6 已落地（§6–7 验收未声称） |
+| [tech-m3.md](tech-m3.md) | 抽卡；已接受；步 1–6 已落地；§6–7 PASS（`594144b`） |
+| [tech-m4.md](tech-m4.md) | W2 短环；已接受（B1–B12 原样）；步 1–5 已落地；§6–7 PASS（`e5a33bd`） |
 | [ADR-0001](adr/0001-plan-first-facts.md) | 事实由计划和人写入 |
 | [INDEX](INDEX.md) | 文档地图 |
 | [quickstart.md](quickstart.md) | 安装短窗口 |
 
 ## 维护者下一步
 
-1. **当前本地 tip `e3c7c7c`（功能面 `1b0e323` + 226–235；origin @ `a389d10`）。** M3 全里程碑代码验收 **PASS** @ `594144b`；下一闸门 = M4+ 技术方案（另需被接受）；continue / review 未开。
+1. **当前 tip `e5a33bd` + 本页文档提交（push 后 origin 同步）。** M0–M4 代码验收全量 **PASS**；PRD 内里程碑全部闭环。下一闸门 = 真实模型冒烟（维护者任务，花真钱）；「以后」清单（tech-m4 §9：`chapter status` / `review --deep` / 导入后再续写验收）需 owner 新授权立项。
 2. 不改结算权威；不大 PR；不 bump；不声称 V1.0 完成。
-3. owner 本地接手期间：以本页 + tech-m3 为准；助手侧默认待命，不抢开 §6–7 声称 / M4。
+3. owner 本地接手期间：以本页 + tech-m3 / tech-m4 为准；助手侧默认待命，不抢开「以后」清单。
 
 ## 附录：里程碑流水（合入记录）
 

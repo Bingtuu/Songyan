@@ -2,11 +2,13 @@
 
 owner：Bingtuu。包 tip **v0.5**（`0.5.0`）。「V1.0」是产品代际名，不是包版本。本文件不打 tag。
 
-权威顺序见 [AGENTS.md](../AGENTS.md)：[PRD](prd-v1.md) → [M0 技术方案](tech-m0.md) → [M1 技术方案](tech-m1.md)（**已接受**；§6–7 **PASS**）→ [M2 技术方案](tech-m2.md)（**已接受**；§6–7 **PASS** @ `f1c3093`）→ [M3 技术方案](tech-m3.md)（**已接受**；t104s937；B1–B7 原样）→ ADR-0001 → STATUS（事实）→ 本文件（当天）→ `tasks/`（有任务文档之后）。
+权威顺序见 [AGENTS.md](../AGENTS.md)：[PRD](prd-v1.md) → [M0 技术方案](tech-m0.md) → [M1 技术方案](tech-m1.md)（**已接受**；§6–7 **PASS**）→ [M2 技术方案](tech-m2.md)（**已接受**；§6–7 **PASS** @ `f1c3093`）→ [M3 技术方案](tech-m3.md)（**已接受**；t104s937；B1–B7 原样；§6–7 **PASS** @ `594144b`）→ [M4 技术方案](tech-m4.md)（**已接受**；2026-11-08；B1–B12 原样；§6–7 **PASS** @ `e5a33bd`）→ ADR-0001 → STATUS（事实）→ 本文件（当天）→ `tasks/`（有任务文档之后）。
 
 ## 下一刀
 
-**tech-m4 已接受（2026-11-08，owner 拍板「接受 tech-m4，按 B1–B12 开 M4 编码」，B1–B12 原样）。** 按 §5 小步推进：task 238（章进度视图 + `status`）→ 239（`chapter accept`）→ 240（`chapter continue`）→ 241（`review`）→ 242（收口验收）；每步走「任务文档 → 任务文档 review → TDD → review → 更新文档 → 提交」循环；步 2 在步 3 前。调研底稿 [docs/236-m4-preresearch.md](236-m4-preresearch.md)。包仍 `0.5.0`。**M4 步 5（task 242）已提交：3 章 W2 连走集成测试（approved 五表快照零变化、accepted 集仅显式 accept 递增、settlement 自动补跑只产 pending、pending 指向种子角色）+ `today` `_NEXT` M4 口径。** M4 步 1–5 全部落地；§6 八条证据映射在 task 242 完成总结；**§6–7 验收声称待 owner 拍板**（不在 STATUS 写 PASS）。下一闸门 = M4 验收声称（owner）或真实模型冒烟（维护者任务）。 不做 M4 之外的事（自动选优 / `chapter status` / review 深审 / continue 自动重生成旗标）；不要升包版本；不要声称 V1.0 完成。
+**M4 已全量闭环（2026-11-09）；PRD M0–M4 全部里程碑代码验收 PASS。** tech-m4 已接受（2026-11-08，owner 拍板「接受 tech-m4，按 B1–B12 开 M4 编码」，B1–B12 原样）；步 1–5 全部落地并提交：238 章进度视图 + `status`（`c55a714`）→ 239 `chapter accept`（`f205f8a`）→ 240 `chapter continue` W2 短环编排（`23bd3f3`）→ 241 `review` 只读共审（`b857e8b`）→ 242 收口：3 章 W2 连走集成测试 + `today` M4 文案（`e5a33bd`）。§6 八条证据映射在 task 242 完成总结；**§6–7 代码验收 PASS @ `e5a33bd`（task 243，owner 拍板声称）**。全量回归 3593 passed 零失败。
+
+**下一闸门（均需 owner 侧动作，助手默认待命）：** ① 真实模型冒烟（维护者任务，花真钱，需 API key）；② tech-m4 §9「以后」清单立项——`chapter status`（若做：只读章进度，不承载 ContextEmergency）/ `review --deep`（显式 LLM 深审，成本前置提示）/ 导入后再续写真实验收。不要升包版本；不要声称 V1.0 完成；不做 M4 之外的事（自动选优 / continue 自动重生成旗标）。
 
 M0 步 1–4 已全部在 `main`：[#28](https://github.com/Bingtuu/Songyan/pull/28) → `1d8c0c0`；[#29](https://github.com/Bingtuu/Songyan/pull/29) → `8f03453`；[#30](https://github.com/Bingtuu/Songyan/pull/30) → `d5c2cc1`；[#31](https://github.com/Bingtuu/Songyan/pull/31) → `48fa354`。任务分别在 [tasks/done/200.md](../tasks/done/200.md)、[tasks/done/201.md](../tasks/done/201.md)、[tasks/done/202.md](../tasks/done/202.md)、[tasks/done/203.md](../tasks/done/203.md)。
 
@@ -22,7 +24,7 @@ M1 代码验收（步 1–5 + tech-m1 §6–7）在 `main` `69d7ece`：**PASS**�
 - 不重开 plan-first 阶段 C，不加题材专用检查器，不改 SettlementExtractor 的权威。
 - 不把 Ch1–10 写成文学验收。文学质量归人。
 - 正式 git tag 仍由维护者决定。
-- **tech-m3 已接受（t104s937；B1–B7）。** 步 1–6 已落地（1–5 tip `1b0e323`；步 6 = task 233）。不做 continue / review（M3 范围外）；结算表仍保留为 untrusted 对照，不升格 Canon。
+- **M0–M4 编码范围全部闭环**：不扩 M3（continue / review 已由 M4 交付）、不扩 M4（步 1–5 + §6–7 PASS @ `e5a33bd`，task 243）；结算表仍保留为 untrusted 对照，不升格 Canon。tech-m4 §9「以后」事项需 owner 新授权立项。
 - 不声称 V1.0 完成，不升包版本。
 
 ## 事实指针（短）
@@ -49,7 +51,14 @@ M1 代码验收（步 1–5 + tech-m1 §6–7）在 `main` `69d7ece`：**PASS**�
 | M3 步 3 | 已合入 `0b47410`（#58）；[tasks/done/222-m3-step3-variant-list-diff.md](../tasks/done/222-m3-step3-variant-list-diff.md) |
 | M3 步 4 | 已合入 `c38ee31`（#59）；[tasks/done/223-m3-step4-variant-pick-abandon.md](../tasks/done/223-m3-step4-variant-pick-abandon.md) |
 | M3 步 5 | 已合入 `1b0e323`（#60）；[tasks/done/224-m3-step5-stale-cost.md](../tasks/done/224-m3-step5-stale-cost.md) |
-| 当前任务 | task 238（M4 步 1：章进度视图 + `status`）DOING——tech-m4 已接受、M4 编码进行中；228–237 全部 DONE。遗留待 owner：M4 各步验收、真实模型冒烟 |
+| M3 §6–7 验收 | **PASS** @ `594144b`（task 234）；步 6 = task 233 |
+| M4 技术方案 | [tech-m4.md](tech-m4.md) — **已接受**（2026-11-08；owner 拍板「按 B1–B12 开 M4 编码」；B1–B12 原样）；调研底稿 [docs/236-m4-preresearch.md](236-m4-preresearch.md) |
+| M4 步 1 | 已提交 `c55a714`（章进度视图 + `status`）；[tasks/done/238-m4-step1-progress-status.md](../tasks/done/238-m4-step1-progress-status.md) |
+| M4 步 2 | 已提交 `f205f8a`（`chapter accept`）；[tasks/done/239-m4-step2-chapter-accept.md](../tasks/done/239-m4-step2-chapter-accept.md) |
+| M4 步 3 | 已提交 `23bd3f3`（`chapter continue`）；[tasks/done/240-m4-step3-chapter-continue.md](../tasks/done/240-m4-step3-chapter-continue.md) |
+| M4 步 4 | 已提交 `b857e8b`（`review` 只读共审）；[tasks/done/241-m4-step4-review.md](../tasks/done/241-m4-step4-review.md) |
+| M4 步 5 + §6–7 验收 | 步 5 已提交 `e5a33bd`（W2 连走集成测试 + `today` M4 文案）；**§6–7 PASS @ `e5a33bd`**（[tasks/done/242-m4-step5-closure.md](../tasks/done/242-m4-step5-closure.md) · [tasks/done/243-m4-code-acceptance.md](../tasks/done/243-m4-code-acceptance.md)） |
+| 当前任务 | 无进行中。**M0–M4 全量闭环（2026-11-09）。** 待 owner：真实模型冒烟（维护者任务）、tech-m4 §9「以后」清单立项 |
 | 架构方向 | [adr/0001-plan-first-facts.md](adr/0001-plan-first-facts.md) |
 | 工程现状 | [STATUS.md](STATUS.md) |
 | 阶段 A–C | [ROADMAP-plan-first.md](ROADMAP-plan-first.md)（CLOSED 短指针；全文在 archive，日常不要加载） |

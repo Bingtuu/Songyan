@@ -11,10 +11,11 @@
 | [M0 技术方案](tech-m0.md) | 只读工作台。步 1–4 已进 `main`；§6–7 代码验收 PASS（`80f4107`） |
 | [M1 技术方案](tech-m1.md) | 人确认入典 + 规则 `check`。**已接受**（Mew 拍板）；步 1–5 已进 `main`；§6–7 代码验收 PASS（`69d7ece`） |
 | [M2 技术方案](tech-m2.md) | 硬事实标脏 + 承诺债务 + 抽取提案。**已接受**（2026-11-04；B1–B6 原样）；步 1–6 已在 `main`；§6–7 代码验收 PASS（证据 tip `f1c3093`） |
-| [M3 技术方案](tech-m3.md) | 章内 Variant / 抽卡。**已接受**（2026-11-06；t104s937；B1–B7 原样）；步 1–5 已合入（tip `1b0e323`）；下一闸门步 6 |
+| [M3 技术方案](tech-m3.md) | 章内 Variant / 抽卡。**已接受**（2026-11-06；t104s937；B1–B7 原样）；步 1–6 已合入（功能 tip `1b0e323`）；§6–7 代码验收 PASS（`594144b`） |
+| [M4 技术方案](tech-m4.md) | W2 短环（`chapter accept` / `chapter continue` / `review` / `status`）。**已接受**（2026-11-08；B1–B12 原样）；步 1–5 已合入（tip `e5a33bd`）；§6–7 代码验收 PASS（`e5a33bd`） |
 | [ADR-0001](adr/0001-plan-first-facts.md) | 事实写入方向。阶段 A–C 已关闭，不重开召回 KPI |
-| [STATUS](STATUS.md) | 工程事实：包仍是 0.5.0；M0 / M1 / M2 代码验收 PASS；tech-m3 **已接受**；M3 步 1–5 已合入（tip `1b0e323`）；下一闸门步 6 |
-| [HANDOFF](HANDOFF-mew.md) | 当天下一步：tip `1b0e323`；等 owner 授权再开 M3 步 6 |
+| [STATUS](STATUS.md) | 工程事实：包仍是 0.5.0；M0–M4 代码验收全量 PASS；下一闸门 = 真实模型冒烟（维护者任务） |
+| [HANDOFF](HANDOFF-mew.md) | 当天下一步：M0–M4 全量闭环（tip `e5a33bd`）；待 owner：真实模型冒烟 / tech-m4 §9「以后」清单立项 |
 | [Quickstart](quickstart.md) | 安装、配置、短窗口、导出 |
 | [Troubleshooting](troubleshooting.md) | 失败恢复 |
 | [Release Checklist](release-checklist.md) | 维护者发布门 |
