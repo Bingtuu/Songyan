@@ -2,13 +2,13 @@
 
 owner：Bingtuu。包 tip **v0.5**（`0.5.0`）。「V1.0」是产品代际名，不是包版本。本文件不打 tag。
 
-权威顺序见 [AGENTS.md](../AGENTS.md)：[PRD](prd-v1.md) → [M0 技术方案](tech-m0.md) → [M1 技术方案](tech-m1.md)（**已接受**；§6–7 **PASS**）→ [M2 技术方案](tech-m2.md)（**已接受**；§6–7 **PASS** @ `f1c3093`）→ [M3 技术方案](tech-m3.md)（**已接受**；t104s937；B1–B7 原样；§6–7 **PASS** @ `594144b`）→ [M4 技术方案](tech-m4.md)（**已接受**；2026-11-08；B1–B12 原样；§6–7 **PASS** @ `e5a33bd`）→ ADR-0001 → STATUS（事实）→ 本文件（当天）→ `tasks/`（有任务文档之后）。
+权威顺序见 [AGENTS.md](../AGENTS.md)：[PRD](prd-v1.md) → [M0 技术方案](tech-m0.md) → [M1 技术方案](tech-m1.md)（**已接受**；§6–7 **PASS**）→ [M2 技术方案](tech-m2.md)（**已接受**；§6–7 **PASS** @ `f1c3093`）→ [M3 技术方案](tech-m3.md)（**已接受**；t104s937；B1–B7 原样；§6–7 **PASS** @ `594144b`）→ [M4 技术方案](tech-m4.md)（**已接受**；2026-11-08；B1–B12 原样；§6–7 **PASS** @ `e5a33bd`）→ ADR-0001 → STATUS（事实）→ [task 244](../tasks/244-修复抽卡死锁与圣经空渲染.md)（2026-11-11 冒烟 P1 修复，代码 @ `120012c`）→ 本文件（当天）→ `tasks/`（有任务文档之后）。
 
 ## 下一刀
 
-**M4 已全量闭环（2026-11-09）；PRD M0–M4 全部里程碑代码验收 PASS。** tech-m4 已接受（2026-11-08，owner 拍板「接受 tech-m4，按 B1–B12 开 M4 编码」，B1–B12 原样）；步 1–5 全部落地并提交：238 章进度视图 + `status`（`c55a714`）→ 239 `chapter accept`（`f205f8a`）→ 240 `chapter continue` W2 短环编排（`23bd3f3`）→ 241 `review` 只读共审（`b857e8b`）→ 242 收口：3 章 W2 连走集成测试 + `today` M4 文案（`e5a33bd`）。§6 八条证据映射在 task 242 完成总结；**§6–7 代码验收 PASS @ `e5a33bd`（task 243，owner 拍板声称）**。全量回归 3593 passed 零失败。
+**task 244 进行中（2026-11-11）**：真实模型冒烟暴露的两个 P1 修复。切片 1–4 已进 `main` @ `120012c`（B1 前置①章级化——`_prior_unaccepted_picked`；圣经入选 R1 + `_render` 去早退；continue 空项目/全 accepted 分文案；全量 3598 passed + ruff 绿）。**切片 5 = 真实模型复验（唯一未收口项）**，复跑 pick→accept→continue 链路与实体/属性 Canon 抽卡两路径，结果写回 task 244 完成总结后归档。
 
-**下一闸门（均需 owner 侧动作，助手默认待命）：** ① 真实模型冒烟（维护者任务，花真钱，需 API key）；② tech-m4 §9「以后」清单立项——`chapter status`（若做：只读章进度，不承载 ContextEmergency）/ `review --deep`（显式 LLM 深审，成本前置提示）/ 导入后再续写真实验收。不要升包版本；不要声称 V1.0 完成；不做 M4 之外的事（自动选优 / continue 自动重生成旗标）。
+**task 244 之后（均需 owner 侧动作，助手默认待命）：** ① 发现 3/4 立项——写手拒写/占位文本不判失败、N=2 部分槽垃圾、失败重试策略（需产品决策）；② `run` 收尾 `db_maintenance_failed: database table is locked` 环境项（Windows + memory checkpointer）；③ tech-m4 §9「以后」清单原项（`chapter status` / `review --deep` / 导入后再续写验收）。不升包版本；不声称 V1.0 完成；M0–M4 编码范围之外不开新口。
 
 M0 步 1–4 已全部在 `main`：[#28](https://github.com/Bingtuu/Songyan/pull/28) → `1d8c0c0`；[#29](https://github.com/Bingtuu/Songyan/pull/29) → `8f03453`；[#30](https://github.com/Bingtuu/Songyan/pull/30) → `d5c2cc1`；[#31](https://github.com/Bingtuu/Songyan/pull/31) → `48fa354`。任务分别在 [tasks/done/200.md](../tasks/done/200.md)、[tasks/done/201.md](../tasks/done/201.md)、[tasks/done/202.md](../tasks/done/202.md)、[tasks/done/203.md](../tasks/done/203.md)。
 
@@ -58,7 +58,7 @@ M1 代码验收（步 1–5 + tech-m1 §6–7）在 `main` `69d7ece`：**PASS**�
 | M4 步 3 | 已提交 `23bd3f3`（`chapter continue`）；[tasks/done/240-m4-step3-chapter-continue.md](../tasks/done/240-m4-step3-chapter-continue.md) |
 | M4 步 4 | 已提交 `b857e8b`（`review` 只读共审）；[tasks/done/241-m4-step4-review.md](../tasks/done/241-m4-step4-review.md) |
 | M4 步 5 + §6–7 验收 | 步 5 已提交 `e5a33bd`（W2 连走集成测试 + `today` M4 文案）；**§6–7 PASS @ `e5a33bd`**（[tasks/done/242-m4-step5-closure.md](../tasks/done/242-m4-step5-closure.md) · [tasks/done/243-m4-code-acceptance.md](../tasks/done/243-m4-code-acceptance.md)） |
-| 当前任务 | 无进行中。**M0–M4 全量闭环（2026-11-09）。** 待 owner：真实模型冒烟（维护者任务）、tech-m4 §9「以后」清单立项 |
+| 当前任务 | [244 修复抽卡死锁与圣经空渲染](../tasks/244-修复抽卡死锁与圣经空渲染.md)：切片 1–4 已进 `main` @ `120012c`；切片 5 真实模型复验进行中。**M0–M4 里程碑全量闭环（2026-11-09）。** 待 owner：task 244 收口确认；发现 3/4 拒写检测立项；tech-m4 §9「以后」清单立项 |
 | 架构方向 | [adr/0001-plan-first-facts.md](adr/0001-plan-first-facts.md) |
 | 工程现状 | [STATUS.md](STATUS.md) |
 | 阶段 A–C | [ROADMAP-plan-first.md](ROADMAP-plan-first.md)（CLOSED 短指针；全文在 archive，日常不要加载） |

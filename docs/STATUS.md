@@ -8,11 +8,12 @@
 
 | 项 | 值 |
 |----|----|
-| **git tip（`main`）** | `e5a33bd`（M4 步 5）+ 本页文档提交；push 后 origin/main 同步（此前 @ `8da4cd0`，tech-m4 接受 + M4 步 1–5 待 push） |
+| **git tip（`main`）** | `120012c`（task 244：修复抽卡死锁与圣经空渲染）+ STATUS/HANDOFF 同步提交；此前 @ `9f75569`（M4 闭环文档） |
 | **功能 tip（M4 步 1–5）** | `e5a33bd` — 238 章进度视图+`status` / 239 `chapter accept` / 240 `chapter continue` / 241 `review` / 242 收口（3 章 W2 连走集成测试 + `today` M4 文案） |
 | **包版本** | 仍是 `0.5.0`（不 bump） |
 | **里程碑** | **M0 / M1 / M2 / M3 / M4 代码验收全量 PASS**（M4 @ `e5a33bd`，task 243 声称）；tech-m4 已接受（B1–B12 原样） |
-| **下一闸门** | **真实模型冒烟（维护者任务，花真钱）**；M4 之后事项（`chapter status` / `review --deep` / 导入后再续写验收）属 tech-m4 §9「以后」清单，需 owner 新授权立项 |
+| **进行中** | [task 244](../tasks/244-修复抽卡死锁与圣经空渲染.md)（2026-11-11 真实模型冒烟发现 5/6 两个 P1 的修复；代码已进 `main` @ `120012c`，真实模型复验为切片 5） |
+| **下一闸门** | task 244 切片 5 真实模型复验收口；其余同 tech-m4 §9「以后」清单（需 owner 新授权立项） |
 | **本 handoff** | M4 §6–7 验收已声称 PASS（task 243 @ `e5a33bd`）；PRD 内里程碑全部闭环 |
 
 硬约束（接手期间同样适用）：
@@ -36,6 +37,7 @@
 | M4 技术方案 [tech-m4.md](tech-m4.md) | **已接受**（2026-11-08；B1–B12 原样） | `dd25f30` |
 | M4 步 1–5 W2 短环 | **已在 `main`** | 238 `c55a714` · 239 `f205f8a` · 240 `23bd3f3` · 241 `b857e8b` · 242 `e5a33bd` |
 | M4 §6–7 代码验收 | **PASS** | `e5a33bd` · [243](../tasks/done/243-m4-code-acceptance.md) |
+| task 244 冒烟 P1 修复 | **代码已进 main（切片 1–4）** | `120012c` · [244](../tasks/244-修复抽卡死锁与圣经空渲染.md)（切片 5 真实模型复验收口） |
 
 ## 现在能用（作者主路径）
 
@@ -133,6 +135,7 @@ songyan review --project-id TEXT --chapter INT [--json]
 - **环境项（2026-11-08 修复，task 235；2026-11-09 根因修正）**：~~`test_llm_http_timeout`~~ 断言窗口 8s→20s（hold 15s→30s 保判别性）。**根因修正**：该测试当天的「通过」多为假通过——`ChatLiteLLM` 无 `base_url` 字段（只有 `api_base`，extra=ignore 静默丢弃），请求实际落到 litellm 默认地址；上午断网时 ConnectTimeout 恰好匹配「超时」断言。2026-11-09 网络恢复后 401 暴露真相，已在 task 239 修复（`api_base=base_url` + 防回归断言）；负载敏感性结论作废。~~`test_191_ch200_harness.py`~~ `_run_harness` 双端固定编码（父 `encoding="utf-8"` + 子 `PYTHONUTF8=1`/`PYTHONIOENCODING=utf-8`），不带 PYTHONUTF8 也绿。本机全量回归不再需要 `PYTHONUTF8=1`。
 - **2026-11-08 M4 前置调研（task 236，已归档 `tasks/done/`）**：`docs/236-m4-preresearch.md` 交付——四路调研（PRD 需求 / 代码现状 / 历史审计 / 外部同类工具）+ 四大设计问题深化（chapter 状态机、continue↔variant、review 输入并集、ContextEmergency 露出）+ 新问题 N1–N7（含 import replay 自动 accepted 写径与 M4 确认闸的并存口径）。
 - **2026-11-08 M4 技术方案（task 237）→ 2026-11-09 M4 全量闭环（task 243）**：`docs/tech-m4.md` 已接受（owner 拍板「接受 tech-m4，按 B1–B12 开 M4 编码」）；步 1–5 全部落地（238–242）；**§6–7 代码验收 PASS @ `e5a33bd`**（8 条证据映射见 task 243；实跑数见 task 242 完成总结）。文档层偏差记录：tech-m4 §7 引用的 `tests/cli/test_chapter_continue.py` 已拆为五个 `test_chapter_continue_*` 文件，以实际文件名跑。
+- **2026-11-11 真实模型冒烟（`.tmp/smoke-m4-20261111/`，不入库）**：W2 短环管线在 DeepSeek 真模型下 PASS（`run` / continue 单稿与 --variants / accept / review 零写库 / status / today / check，费用 ¥0.7747 / 41 次调用）；暴露 2 个 P1（发现 5：pick→accept 后 continue 对后续章永久 exit 2 死锁——B1 前置①按 variant 行级判定误伤 accepted 章残留槽，而 abandon 又拒绝 picked 槽；发现 6：`_render` 无 events/clues 即空串 + 实体仅 event 引用入选，导致 extract→confirm 流的实体/属性型 Canon 圣经文本恒空、抽卡必产垃圾）。**task 244 修复已进 main @ `120012c`**（B1 前置①章级化；圣经入选 R1 + 渲染去早退；空项目/全 accepted 分文案；全量 3598 passed + ruff 绿）；切片 5 真实模型复验进行中。遗留（未立项）：发现 3/4 写手拒写/占位不判失败与重试策略（需产品决策）；`run` 收尾 `db_maintenance_failed: database table is locked`（Windows + memory checkpointer，非阻塞）。
 
 标识与助手交接：[HANDOFF-mew.md](HANDOFF-mew.md)。书稿不入库。
 
