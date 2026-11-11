@@ -172,6 +172,8 @@ async def _seed_chapter_two() -> None:
             entity_id="ent-other",
             key="color",
             value="不相关的颜色",
+            valid_from_ch=1,
+            valid_to_ch=1,
             source="plan",
             approval_status="approved",
         )
@@ -430,6 +432,71 @@ async def test_chapter_without_approved_cards_has_an_empty_bible(
     assert bible.event_ids == []
     assert bible.clue_ids == []
     assert bible.attribute_ids == []
+
+
+async def test_entity_attribute_only_canon_renders_bible(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """纯 approved 实体+属性（无 events/clues，extract→confirm 主路径形态）也进圣经。
+
+    PRD :76「只有 approval_status=approved 的行进入本章事实圣经」（不限 kind）；
+    PRD :415「写作和修订看见的事实圣经等于本章 approved 计划卡」。
+    task 244 / 冒烟发现 6： settlement extract → canon confirm 只产 entity/attribute，
+    旧实现圣经文本恒空，导致 variant generate 写手无事实可引。
+    """
+    await _gate_db(tmp_path, monkeypatch)
+    projects = ProjectRepository()
+    setting = ProjectSetting(genre_id="urban", mode_id="webnovel", protagonist_name="陈屿")
+    await projects.create(setting, "p-ent-attr")
+    repo = PlanFactRepository()
+    await repo.write_entity(
+        PlanEntity(
+            entity_id="ent-chenyu",
+            project_id="p-ent-attr",
+            entity_type="character",
+            aliases=["陈屿"],
+            approval_status="approved",
+        )
+    )
+    await repo.write_attribute(
+        PlanAttribute(
+            attribute_id="attr-chenyu-state",
+            project_id="p-ent-attr",
+            entity_id="ent-chenyu",
+            key="emotional_state",
+            value="疲惫但警觉",
+            valid_from_ch=1,
+            valid_to_ch=None,
+            source="extract",
+            approval_status="approved",
+        )
+    )
+
+    bible = await load_chapter_plan_bible("p-ent-attr", 2)
+
+    assert bible.entity_ids == ["ent-chenyu"]
+    assert bible.attribute_ids == ["attr-chenyu-state"]
+    assert "陈屿" in bible.text
+    assert "emotional_state" in bible.text
+    assert "疲惫但警觉" in bible.text
+    # 章窗口仍生效：valid_from_ch=3 的属性不进第 2 章圣经
+    await repo.write_attribute(
+        PlanAttribute(
+            attribute_id="attr-chenyu-later",
+            project_id="p-ent-attr",
+            entity_id="ent-chenyu",
+            key="employment_status",
+            value="以后才失业",
+            valid_from_ch=3,
+            valid_to_ch=None,
+            source="extract",
+            approval_status="approved",
+        )
+    )
+    bible2 = await load_chapter_plan_bible("p-ent-attr", 2)
+    assert bible2.attribute_ids == ["attr-chenyu-state"]
+    bible3 = await load_chapter_plan_bible("p-ent-attr", 3)
+    assert sorted(bible3.attribute_ids) == ["attr-chenyu-later", "attr-chenyu-state"]
 
 
 async def test_missing_database_does_not_create_a_file(tmp_path: Path, monkeypatch) -> None:

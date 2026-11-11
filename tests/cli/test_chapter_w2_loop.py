@@ -254,3 +254,54 @@ def test_w2_loop_three_chapters(
     assert mocks["writer"].await_count == 3
     assert mocks["settlement"].await_count == 2
     assert mocks["summary"].await_count == 2
+
+
+def test_w2_loop_pick_then_accept_does_not_block_continue(
+    runner: CliRunner, loop_db: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """抽卡路 pick→accept 后 continue 下一章照常生成（冒烟发现 5 回归锁）。
+
+    M3 pick 只改 head 工作指针、variant 行残留 picked；accept（B2/B5）不动
+    variant 行。tech-m4 B1：picked 稿进入可续写态唯一路径 = chapter accept，
+    故 accepted 章的残留 picked 槽不得阻塞后续章（task 244）。
+    """
+    from songyan.services.variant_generate import SlotDraft
+
+    writer = AsyncMock(side_effect=[_BODY_1, _BODY_3])
+    monkeypatch.setattr("songyan.agents.writer.call_llm", writer)
+    monkeypatch.setattr(
+        "songyan.agents.settlement_extractor.call_llm",
+        AsyncMock(return_value=_SETTLEMENT_JSON),
+    )
+    monkeypatch.setattr(
+        "songyan.agents.summary_writer.call_llm",
+        AsyncMock(return_value=_SUMMARY_JSON),
+    )
+    monkeypatch.setattr(
+        "songyan.services.variant_generate.default_slot_draft",
+        AsyncMock(return_value=SlotDraft(content=_BODY_2, cost_cny_estimate=0.01)),
+    )
+
+    # ch1：continue 单稿 → accept
+    assert _invoke_continue(runner).exit_code == 0
+    assert _invoke_accept(runner, 1).exit_code == 0
+
+    # ch2：抽卡 generate → pick → accept（残留 picked 槽）
+    result = runner.invoke(
+        cli, ["variant", "generate", "--project-id", _PROJECT, "--chapter", "2", "--n", "1"]
+    )
+    assert result.exit_code == 0, result.output
+    result = runner.invoke(
+        cli, ["variant", "pick", "--project-id", _PROJECT, "--chapter", "2", "--slot", "1"]
+    )
+    assert result.exit_code == 0, result.output
+    result = _invoke_accept(runner, 2)
+    assert result.exit_code == 0, result.output
+    head_2 = asyncio.run(ChapterHeadRepository().get(_PROJECT, 2))
+    assert head_2 is not None and head_2.accepted_version_id is not None
+
+    # ch3：continue 应照常生成（修复前此处 B1 前置① exit 2 死锁）
+    result = _invoke_continue(runner)
+    assert result.exit_code == 0, result.output
+    assert asyncio.run(_draft_content(3)) == _BODY_3
+    assert writer.await_count == 2

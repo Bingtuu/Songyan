@@ -164,7 +164,18 @@ def chapter_continue_cmd(
         raise click.ClickException(f"--variants 必须 >= 1（收到 {variants}）")
     payload = asyncio.run(_continue_chapters(project_id, count, variants, require_plan))
     if payload is None:
-        click.echo("全部章已 accepted")
+        # 区分「空项目（章宇宙为空）」与「全部 accepted」——前者并非已确认完成
+        # （task 244 / 冒烟发现 2）。
+        from songyan.services.chapter_progress import load_chapter_progress
+
+        progress = asyncio.run(load_chapter_progress(project_id))
+        if not progress.chapters:
+            click.echo(
+                "项目尚无章节工作稿；开章走 run --chapters N 或 "
+                "variant generate --chapter N"
+            )
+        else:
+            click.echo("全部章已 accepted")
         return
     if as_json:
         click.echo(json.dumps(payload, ensure_ascii=False, indent=2))

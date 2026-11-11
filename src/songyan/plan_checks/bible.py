@@ -171,8 +171,20 @@ def select_chapter_plan_bible_cards(
                 if entity_id not in referenced:
                     referenced.append(entity_id)
     entity_by_id = {row.entity_id: row for row in entities}
+    # PRD :76/:415 — approved 行即本章圣经，不限 kind。extract→confirm 主路径的
+    # 事实载体是 attribute（实体可能不被任何 event 引用）；拥有 ≥1 张章窗口内
+    # approved attribute 的实体同样入选（task 244 / 冒烟发现 6）。
+    attribute_backed = {
+        row.entity_id
+        for row in attributes
+        if _in_window(row, chapter) and row.entity_id in entity_by_id
+    }
+    chosen_ids = list(referenced)
+    for entity_id in sorted(attribute_backed):
+        if entity_id not in chosen_ids:
+            chosen_ids.append(entity_id)
     chosen_entities = sorted(
-        (entity_by_id[entity_id] for entity_id in referenced if entity_id in entity_by_id),
+        (entity_by_id[entity_id] for entity_id in chosen_ids if entity_id in entity_by_id),
         key=lambda row: row.entity_id,
     )
     referenced_ids = {row.entity_id for row in chosen_entities}
@@ -250,8 +262,6 @@ def _render(
     events: list[PlanEvent],
     clues: list[PlanClue],
 ) -> str:
-    if not events and not clues:
-        return ""
     lines: list[str] = []
     for entity in entities:
         aliases = "、".join(alias for alias in entity.aliases if alias.strip())

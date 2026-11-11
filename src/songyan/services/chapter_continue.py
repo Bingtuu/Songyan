@@ -10,7 +10,8 @@ B7 ``--variants`` 转调 / B9 run 壳 / B11 exit 语义 / B12 ``--require-plan``
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
+from collections.abc import Set as AbstractSet
 from dataclasses import dataclass
 
 import structlog
@@ -41,6 +42,7 @@ from songyan.exceptions import (
 from songyan.models.chapter import ChapterGoal
 from songyan.models.project import ProjectSetting
 from songyan.models.project_run import ProjectRunState
+from songyan.models.variant import ChapterVariant
 from songyan.plan_checks.bible import select_chapter_plan_bible_cards
 from songyan.services.chapter_progress import load_chapter_progress
 from songyan.services.variant_generate import VariantGenerateLLMError, generate_chapter_variants
@@ -54,6 +56,30 @@ MAX_ENDING_CHARS = 800
 
 #: run 壳可收养状态（现网值；completed/failed 不收养）。
 _ADOPTABLE_STATUSES = ("running", "paused")
+
+
+def _prior_unaccepted_picked(
+    picked_slots: Sequence[ChapterVariant],
+    *,
+    accepted_chapters: AbstractSet[int],
+    target: int,
+) -> ChapterVariant | None:
+    """B1 前置①（章级）：目标章之前**未 accepted**且残留 picked 槽的章。
+
+    tech-m4 B1：picked 稿进入可续写态的唯一路径 = ``chapter accept``；accept 完成后
+    该章即续写就绪，M3 pick 留下的 picked 槽（pick 只改 head 工作指针）不再阻塞。
+    B1 口径下章号 < target 必已 accepted，本守卫仅防御未来章宇宙口径变化
+    （task 244 / 冒烟发现 5）。
+    """
+    return next(
+        (
+            row
+            for row in picked_slots
+            if row.chapter_number < target
+            and row.chapter_number not in accepted_chapters
+        ),
+        None,
+    )
 
 
 class ContinueGateError(SongyanError):
@@ -129,9 +155,16 @@ async def continue_chapters(
         for row in await ChapterVariantRepository().list_by_project(project_id)
         if row.status == "picked"
     ]
-    # B1 前置①：目标章之前存在 picked 未 accept 的章（章号 < target 必已 accepted，
-    # 可达形态 = accepted 章残留 picked 槽；M3 pick 不拦 accepted 章）。
-    prior_picked = next((v for v in picked_slots if v.chapter_number < target), None)
+    # B1 前置①（章级）：目标章之前存在**未 accepted**且 picked 的章 → 拒绝。
+    # accepted 章的残留 picked 槽（M3 pick 不改 variant 行）不阻塞——B1：picked 稿
+    # 进入可续写态唯一路径 = chapter accept（task 244 / 冒烟发现 5）。
+    heads = await ChapterHeadRepository().list_by_project(project_id)
+    accepted_chapters = {
+        h.chapter_number for h in heads if h.accepted_version_id is not None
+    }
+    prior_picked = _prior_unaccepted_picked(
+        picked_slots, accepted_chapters=accepted_chapters, target=target
+    )
     if prior_picked is not None:
         raise ContinueGateError(
             f"章 {target} 之前存在 picked 未 accept 的章"

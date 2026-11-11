@@ -225,24 +225,33 @@ async def _zero_writes(extra_check: bool = False) -> None:
     assert not extra_check
 
 
-# --- B1 前置 ①：目标章之前 picked 未 accept（accepted 章残留 picked 槽） ------
+# --- B1 前置 ①：accepted 章残留 picked 槽不阻塞（tech-m4 B1 章级口径） -------
 
 
-def test_picked_slot_before_target_exit_2_zero_writes(
+def test_residual_picked_on_accepted_chapter_does_not_block(
     runner: CliRunner, gates_db: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """ch1 accepted 但残留 picked 槽；目标 ch2 → exit 2 且全程零写入。"""
-    accepted_id = asyncio.run(_seed_accepted(1))
-    asyncio.run(_seed_picked_slot(1, 1, accepted_id))
+    """ch1 accepted 且残留 picked 槽（M3 pick 不改 variant 行）；目标 ch2 → 照常生成。
+
+    tech-m4 B1：picked 稿进入可续写态的唯一路径 = chapter accept；accept 完成后
+    残留 picked 槽不再阻塞后续章（task 244 / 冒烟发现 5 回归锁）。
+    """
+    asyncio.run(_seed_accepted(1))
+    asyncio.run(_seed_picked_slot(1, 1, "v-gates-1-accepted"))
     asyncio.run(_seed_empty_head(2))
     before_approved = asyncio.run(_approved_snapshot())
     before_accepted = asyncio.run(_accepted_snapshot())
+    _install_mocks(monkeypatch)
 
-    result = _invoke_continue(runner)
-    assert result.exit_code == 2, result.output
-    assert "picked" in result.output
+    result = _invoke_continue(runner, "--json")
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.stdout)
+    assert payload["chapter"] == 2
 
-    asyncio.run(_zero_writes())
+    head = asyncio.run(ChapterHeadRepository().get(_PROJECT, 2))
+    assert head is not None
+    assert head.current_version_id == payload["version_id"]
+    assert head.accepted_version_id is None
     assert asyncio.run(_approved_snapshot()) == before_approved
     assert asyncio.run(_accepted_snapshot()) == before_accepted
 
@@ -327,7 +336,8 @@ def test_count_zero_exit_1(runner: CliRunner, gates_db: Path) -> None:
 def test_empty_project_exit_0(runner: CliRunner, gates_db: Path) -> None:
     result = _invoke_continue(runner)
     assert result.exit_code == 0, result.output
-    assert "全部章已 accepted" in result.output
+    # 空项目 ≠ 全部 accepted：给出开章指引（task 244 / 冒烟发现 2）
+    assert "尚无章节工作稿" in result.output
 
 
 def test_all_accepted_exit_0(runner: CliRunner, gates_db: Path) -> None:
