@@ -35,8 +35,8 @@ from songyan.services.variant_generate import SlotDraft
 
 _PROJECT = "p-pick-m3"
 _CHAPTER = 1
-_CONTENT_1 = "草稿槽一：南站夜色。"
-_CONTENT_2 = "草稿槽二：南站雨幕。"
+_CONTENT_1 = "草稿槽一：南站夜色。" * 15
+_CONTENT_2 = "草稿槽二：南站雨幕。" * 15
 
 
 @pytest.fixture
@@ -429,7 +429,10 @@ def test_after_pick_generate_does_not_update_picked_content(
     assert locked is not None
     locked_body = locked.content
 
-    _install_draft_mock(monkeypatch, contents=["新槽三", "新槽四"])
+    _install_draft_mock(
+        monkeypatch,
+        contents=["新槽三：南城风急。" * 15, "新槽四：北巷灯深。" * 15],
+    )
     gen = runner.invoke(
         cli,
         [

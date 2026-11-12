@@ -29,8 +29,8 @@ from songyan.services.variant_generate import SlotDraft
 
 _PROJECT = "p-stale-cost-m3"
 _CHAPTER = 1
-_CONTENT_1 = "槽一：南站夜色。"
-_CONTENT_2 = "槽二：南站雨幕。"
+_CONTENT_1 = "槽一：南站夜色。" * 15
+_CONTENT_2 = "槽二：南站雨幕。" * 15
 
 
 @pytest.fixture

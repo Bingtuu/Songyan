@@ -66,7 +66,7 @@ def test_variant_list_text_uses_stale_vs_canon_column_name(
     from songyan.services.variant_generate import SlotDraft
 
     async def _draft(**_kwargs: object) -> SlotDraft:
-        return SlotDraft(content="草稿一", cost_cny_estimate=0.01)
+        return SlotDraft(content="草稿一。" * 30, cost_cny_estimate=0.01)
 
     monkeypatch.setattr(
         "songyan.services.variant_generate.default_slot_draft", _draft

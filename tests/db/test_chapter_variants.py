@@ -111,3 +111,49 @@ async def test_generated_then_one_picked_ok(variant_db: Path) -> None:
     await repo.insert(_row(variant_id="v-p1", slot=2, status="picked"))
     rows = await repo.list_for_chapter("p-var", 1)
     assert {r.status for r in rows} == {"generated", "picked"}
+
+
+@pytest.mark.asyncio
+async def test_quality_flag_column_exists(variant_db: Path) -> None:
+    """task 245: chapter_variants.quality_flag 可空列（NULL = 通过质量门）。"""
+    async with get_db() as conn:
+        cursor = await conn.execute("PRAGMA table_info(chapter_variants)")
+        cols = {row[1] for row in await cursor.fetchall()}
+    assert "quality_flag" in cols
+
+
+@pytest.mark.asyncio
+async def test_quality_flag_migration_repairs_dropped_column(
+    variant_db: Path,
+) -> None:
+    """旧库（无该列）重跑 run_migrations 后列被补回；幂等。"""
+    async with get_db() as conn:
+        await conn.execute(
+            "ALTER TABLE chapter_variants DROP COLUMN quality_flag"
+        )
+        await conn.commit()
+        await run_migrations(conn)
+        await conn.commit()
+        cursor = await conn.execute("PRAGMA table_info(chapter_variants)")
+        cols = {row[1] for row in await cursor.fetchall()}
+        assert "quality_flag" in cols
+        # 幂等：再跑一次不炸
+        await run_migrations(conn)
+        await conn.commit()
+
+
+@pytest.mark.asyncio
+async def test_quality_flag_roundtrip(variant_db: Path) -> None:
+    repo = ChapterVariantRepository()
+    flagged = _row(variant_id="var-q1", slot=1)
+    flagged.quality_flag = "too_short"
+    await repo.insert(flagged)
+    plain = _row(variant_id="var-q2", slot=2)
+    await repo.insert(plain)
+
+    loaded = await repo.get_by_slot("p-var", 1, 1)
+    assert loaded is not None
+    assert loaded.quality_flag == "too_short"
+    loaded_plain = await repo.get_by_slot("p-var", 1, 2)
+    assert loaded_plain is not None
+    assert loaded_plain.quality_flag is None

@@ -31,8 +31,8 @@ from songyan.services.chapter_accept import accept_chapter
 from songyan.services.variant_generate import SlotDraft
 
 _PROJECT = "p-m4-cont-variants"
-_CONTENT_1 = "槽一：南站夜色。"
-_CONTENT_2 = "槽二：南站雨幕。"
+_CONTENT_1 = "槽一：南站夜色。" * 15
+_CONTENT_2 = "槽二：南站雨幕。" * 15
 _SUMMARY_JSON = (
     '{"plot_summary": "陈照抵达北站。", "key_events": ["陈照到北站"], '
     '"characters_appeared": ["陈照"], "emotional_tone": "沉静"}'

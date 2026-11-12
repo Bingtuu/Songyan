@@ -39,7 +39,7 @@ from songyan.models.project import ProjectSetting
 _PROJECT = "p-m4-w2-loop"
 _CHARACTER_ID = "char-s1"
 _BODY_1 = "第一章正文：陈照到了北站，铜镜在口袋里发烫。"
-_BODY_2 = "第二章正文：陈照走进雨里，末班车进站。"
+_BODY_2 = "第二章正文：陈照走进雨里，末班车进站。" * 6
 _BODY_3 = "第三章正文：陈照在车厢里坐下，铜镜渐渐冷却。"
 # 同一 JSON 服务 ch1 / ch2 两次 settlement；source_quote 须在两次正文中都可命中。
 _SETTLEMENT_JSON = json.dumps(

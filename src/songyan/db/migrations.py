@@ -1659,6 +1659,25 @@ async def _migrate_chapter_variants(conn: aiosqlite.Connection) -> None:
     )
 
 
+async def _migrate_chapter_variants_quality_flag(conn: aiosqlite.Connection) -> None:
+    """task 245: chapter_variants.quality_flag — 拒写质量门标记（可空，NULL=通过）。
+
+    窄加列迁移；不动三态 CHECK 与 partial unique 索引。表不存在时跳过
+    （由 _migrate_chapter_variants 负责建表，注册顺序保证其先执行）。
+    """
+    cursor = await conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='chapter_variants'"
+    )
+    if await cursor.fetchone() is None:
+        return
+    await _add_column_if_missing(
+        conn,
+        table="chapter_variants",
+        column="quality_flag",
+        ddl="ALTER TABLE chapter_variants ADD COLUMN quality_flag TEXT",
+    )
+
+
 async def run_migrations(conn: aiosqlite.Connection) -> None:
     """执行注册表中的所有迁移（与 init_schema 共用 _MIGRATIONS 单一事实源）."""
     for _name, _migrate in _MIGRATIONS:
@@ -1738,6 +1757,10 @@ _MIGRATIONS: list[tuple[str, Callable[[aiosqlite.Connection], Awaitable[None]]]]
     (
         "_migrate_chapter_variants",
         _migrate_chapter_variants,
+    ),
+    (
+        "_migrate_chapter_variants_quality_flag",
+        _migrate_chapter_variants_quality_flag,
     ),
     (
         "_migrate_foreshadowings_resolved_evidence",

@@ -26,5 +26,6 @@ class ChapterVariant(BaseModel):
     stale_vs_canon: int = Field(default=0, ge=0, le=1)
     score_card_json: str | None = None
     cost_cny_estimate: float = 0.0
+    quality_flag: str | None = None
     created_at: str
     updated_at: str

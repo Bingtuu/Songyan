@@ -40,6 +40,12 @@ class PickAbandonedVariantError(SongyanError):
     exit_code = 2
 
 
+class FlaggedVariantPickError(SongyanError):
+    """Refuse to pick a quality-flagged slot (task 245 拒写/占位判定失败)."""
+
+    exit_code = 2
+
+
 @dataclass(frozen=True)
 class PickResult:
     """Outcome of ``variant pick``."""
@@ -88,6 +94,11 @@ async def pick_variant_slot(
         raise PickAbandonedVariantError(
             f"slot {slot} 已 abandon（草稿已软删，正文 is_abandoned=1）；"
             f"不可 pick 复活，如需新草稿请重新 generate"
+        )
+    if target.quality_flag:
+        raise FlaggedVariantPickError(
+            f"slot {slot} 被判拒写/占位（quality_flag={target.quality_flag}）；"
+            f"不可 pick，请重新 generate 或选其它槽"
         )
 
     archived_id: str | None = None

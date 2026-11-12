@@ -22,6 +22,7 @@ from songyan.models.chapter import ChapterVersion
 from songyan.models.variant import ChapterVariant
 from songyan.plan_checks.bible import load_chapter_plan_bible
 from songyan.services.variant_fingerprint import fingerprint_chapter_parent_canon
+from songyan.services.variant_quality import classify_variant_draft
 from songyan.services.variant_stale import refresh_stale_vs_canon
 from songyan.utils.cost_estimator import count_tokens, estimate_cost_from_tokens
 
@@ -70,11 +71,15 @@ async def default_slot_draft(
     slot_index: int,
     bible_text: str,
     fingerprint: str,
+    retry_reason: str | None = None,
 ) -> SlotDraft:
     """Thin LLM draft for one slot. Tests monkeypatch this symbol.
 
     Uses approved bible text only (caller must pass ``load_chapter_plan_bible``
     output). Cost estimate uses S7 owner rates (¥2/M in, ¥8/M out).
+
+    ``retry_reason``（task 245）：上一版输出被判拒写/占位的原因码；携带时
+    prompt 注入坚持指令——圣经有限也必须成稿，严禁占位/拒写说明。
     """
     from songyan.llm import call_llm
 
@@ -86,6 +91,12 @@ async def default_slot_draft(
         f"【圣经】\n{bible_text or '（空）'}\n\n"
         f"请直接输出章节正文，不要前言后语。"
     )
+    if retry_reason is not None:
+        prompt += (
+            f"\n\n【重试要求】上一版输出被判无效（原因码：{retry_reason}）。"
+            f"即使事实圣经内容有限，也必须输出完整章节正文；"
+            f"严禁输出占位文本、拒写说明或「（空）」。"
+        )
     content = await call_llm(prompt, role="writer")
     prompt_tokens = count_tokens(prompt)
     completion_tokens = count_tokens(content)
@@ -128,6 +139,9 @@ async def generate_chapter_variants(
     - Does not write ``plan_*``; does not UPDATE existing version content.
     - When ``budget_cny`` is set and spent already meets/exceeds it before a
       slot, stop; keep written slots; ``budget_exhausted=True``.
+    - task 245 质量门：每槽产出先过 ``classify_variant_draft``；拒写/占位则
+      同槽重试 1 次（注入坚持指令），仍失败落槽打 ``quality_flag``
+      （``variant pick`` 拒绝打标槽）。重试成本并入该槽成本。
 
     LLM 成本归因（task 226 切片 2）：client 遥测按 structlog contextvars 落库，
     这里绑定 project/chapter/agent，由 ``call_llm`` 内部记唯一一行——
@@ -184,11 +198,33 @@ async def _generate_variants_impl(
                 bible_text=bible_text,
                 fingerprint=fingerprint,
             )
+            # task 245：拒写/占位质量门——判失败则同槽重试 1 次（注入坚持
+            # 指令），仍失败落槽打 quality_flag；LLM 层异常仍走 tech-m3 §4.2 #4。
+            quality_flag = classify_variant_draft(slot_draft.content)
+            total_cost = float(slot_draft.cost_cny_estimate)
+            if quality_flag is not None:
+                logger.info(
+                    "variant.generate.retry",
+                    project_id=project_id,
+                    chapter=chapter,
+                    slot_index=slot_index,
+                    quality_flag=quality_flag,
+                )
+                slot_draft = await draft(
+                    project_id=project_id,
+                    chapter=chapter,
+                    slot_index=slot_index,
+                    bible_text=bible_text,
+                    fingerprint=fingerprint,
+                    retry_reason=quality_flag,
+                )
+                total_cost += float(slot_draft.cost_cny_estimate)
+                quality_flag = classify_variant_draft(slot_draft.content)
         except LLMError as exc:
             raise VariantGenerateLLMError(
                 str(exc), written_slots=len(written)
             ) from exc
-        cost = float(slot_draft.cost_cny_estimate)
+        cost = total_cost
         content = slot_draft.content or ""
         word_count = len(content)
 
@@ -227,6 +263,7 @@ async def _generate_variants_impl(
                 content_ref=version_id,
                 stale_vs_canon=0,
                 cost_cny_estimate=cost,
+                quality_flag=quality_flag,
                 created_at=now,
                 updated_at=now,
             )
@@ -241,6 +278,7 @@ async def _generate_variants_impl(
             slot_index=slot_index,
             version_id=version_id,
             cost_cny_estimate=cost,
+            quality_flag=quality_flag,
             spent=spent,
         )
 

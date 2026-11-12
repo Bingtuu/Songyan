@@ -31,7 +31,7 @@ _REAL_RECORD_USAGE = llm_client._record_llm_call_usage
 class _FakeResponse:
     """模拟 langchain AIMessage：仅暴露 content（usage 提取走零值兜底）。"""
 
-    def __init__(self, content: str = "草稿正文。") -> None:
+    def __init__(self, content: str = "草稿正文。" * 25) -> None:
         self.content = content
 
 

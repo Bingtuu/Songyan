@@ -28,8 +28,16 @@ from songyan.services.variant_generate import SlotDraft
 
 _PROJECT = "p-list-diff"
 _CHAPTER = 1
-_CONTENT_A = "第一行甲\n第二行甲\n共用行\n"
-_CONTENT_B = "第一行乙\n第二行乙\n共用行\n"
+_CONTENT_A = (
+    "第一行甲：" + "甲槽正文。" * 15 + "\n"
+    "第二行甲：" + "甲槽更多。" * 15 + "\n"
+    "共用行：尾声。\n"
+)
+_CONTENT_B = (
+    "第一行乙：" + "乙槽正文。" * 15 + "\n"
+    "第二行乙：" + "乙槽更多。" * 15 + "\n"
+    "共用行：尾声。\n"
+)
 
 
 @pytest.fixture

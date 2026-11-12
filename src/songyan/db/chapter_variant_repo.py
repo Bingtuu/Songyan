@@ -35,6 +35,7 @@ def _row_to_variant(row: Row) -> ChapterVariant:
         stale_vs_canon=int(row["stale_vs_canon"] or 0),
         score_card_json=row["score_card_json"],
         cost_cny_estimate=float(row["cost_cny_estimate"] or 0.0),
+        quality_flag=row["quality_flag"],
         created_at=row["created_at"],
         updated_at=row["updated_at"],
     )
@@ -88,8 +89,8 @@ class ChapterVariantRepository:
                         variant_id, project_id, chapter_number, slot_index,
                         status, parent_canon_fingerprint, content_ref,
                         stale_vs_canon, score_card_json, cost_cny_estimate,
-                        created_at, updated_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        quality_flag, created_at, updated_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     (
                         variant.variant_id,
@@ -102,6 +103,7 @@ class ChapterVariantRepository:
                         int(variant.stale_vs_canon),
                         variant.score_card_json,
                         float(variant.cost_cny_estimate),
+                        variant.quality_flag,
                         now,
                         updated,
                     ),

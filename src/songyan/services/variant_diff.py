@@ -43,6 +43,7 @@ def shape_list_row(row: ChapterVariant) -> dict[str, object]:
         "content_ref": row.content_ref,
         "score": _optional_score(row.score_card_json),
         "variant_id": row.variant_id,
+        "quality_flag": row.quality_flag,
     }
 
 

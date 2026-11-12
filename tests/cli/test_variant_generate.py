@@ -149,7 +149,7 @@ def _install_draft_mock(
     cost: float = 0.01,
     contents: list[str] | None = None,
 ) -> AsyncMock:
-    texts = contents or ["草稿甲：南站夜色。", "草稿乙：南站雨幕。"]
+    texts = contents or ["草稿甲：南站夜色。" * 15, "草稿乙：南站雨幕。" * 15]
     calls = {"i": 0}
 
     async def _draft(**_kwargs: Any) -> SlotDraft:
@@ -223,7 +223,7 @@ def test_generate_s8_pending_not_in_bible_or_draft_kwargs(
 
     async def _draft(*, bible_text: str, **_kwargs: Any) -> SlotDraft:
         seen_bibles.append(bible_text)
-        return SlotDraft(content="仅草稿", cost_cny_estimate=0.0)
+        return SlotDraft(content="仅草稿。" * 30, cost_cny_estimate=0.0)
 
     monkeypatch.setattr(
         "songyan.services.variant_generate.default_slot_draft",
@@ -328,7 +328,7 @@ def test_generate_does_not_update_existing_picked_content(
     asyncio.run(_seed_picked())
     _install_draft_mock(
         monkeypatch,
-        contents=["新槽草稿一", "新槽草稿二"],
+        contents=["新槽草稿一：南城夜雨。" * 15, "新槽草稿二：北站晨雾。" * 15],
     )
     result = runner.invoke(
         cli,
@@ -406,7 +406,7 @@ def test_generate_llm_failure_keeps_written_slots_and_reports(
         calls["i"] += 1
         if calls["i"] >= 2:
             raise LLMError("model exploded")
-        return SlotDraft(content="草稿一", cost_cny_estimate=0.01)
+        return SlotDraft(content="草稿一。" * 30, cost_cny_estimate=0.01)
 
     monkeypatch.setattr(
         "songyan.services.variant_generate.default_slot_draft", _flaky

@@ -21,6 +21,7 @@ from songyan.services.variant_generate import (
 )
 from songyan.services.variant_pick import (
     AbandonPickedVariantError,
+    FlaggedVariantPickError,
     PickAbandonedVariantError,
     StaleVariantPickError,
     abandon_variant_slot,
@@ -114,6 +115,8 @@ async def _pick_variant(
         raise VariantBusinessReject(str(exc)) from exc
     except PickAbandonedVariantError as exc:
         raise VariantBusinessReject(str(exc)) from exc
+    except FlaggedVariantPickError as exc:
+        raise VariantBusinessReject(str(exc)) from exc
     except DuplicatePickedVariantError as exc:
         raise VariantBusinessReject(str(exc)) from exc
     row = result.variant
@@ -171,11 +174,12 @@ def variant_list(project_id: str, chapter: int, as_json: bool) -> None:
         click.echo("（空）")
         return
     for row in rows:
+        flag = f" flag={row['quality_flag']}" if row.get("quality_flag") else ""
         click.echo(
             f"- slot={row['slot_index']} status={row['status']} "
             f"fp={row['fingerprint']} "
             f"ref={row['content_ref']} stale_vs_canon={row['stale_vs_canon']} "
-            f"cost={row['cost_cny_estimate']}"
+            f"cost={row['cost_cny_estimate']}{flag}"
         )
 
 
@@ -223,10 +227,31 @@ def variant_generate(
         )
         for row in variants:
             assert isinstance(row, dict)
+            flag = f" flag={row['quality_flag']}" if row.get("quality_flag") else ""
             click.echo(
                 f"- slot={row['slot_index']} status={row['status']} "
-                f"ref={row['content_ref']} cost={row['cost_cny_estimate']}"
+                f"ref={row['content_ref']} cost={row['cost_cny_estimate']}{flag}"
             )
+
+    # task 245：拒写/占位质量门——全槽失败 exit 2；部分失败 stderr 列出失败槽。
+    failed_slots = [
+        row for row in variants
+        if isinstance(row, dict) and row.get("quality_flag")
+    ]
+    if variants and len(failed_slots) == len(variants):
+        click.echo(
+            f"全部 {len(failed_slots)} 槽被拒写/占位判定拒绝"
+            f"（quality_flag："
+            f"{', '.join(str(r['quality_flag']) for r in failed_slots)}）；"
+            f"请补充事实后重抽",
+            err=True,
+        )
+        ctx.exit(2)
+    for row in failed_slots:
+        click.echo(
+            f"slot {row['slot_index']} 判失败：{row['quality_flag']}",
+            err=True,
+        )
 
     if payload["budget_exhausted"]:
         if not as_json:

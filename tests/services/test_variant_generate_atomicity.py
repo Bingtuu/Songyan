@@ -49,8 +49,8 @@ async def test_slot_write_is_atomic_no_orphan_version(
     """第二槽 variant insert 撞唯一索引时，第一槽保留、第二槽 version 不留孤儿。"""
     drafts = iter(
         [
-            SlotDraft(content="草稿一", cost_cny_estimate=0.01),
-            SlotDraft(content="草稿二", cost_cny_estimate=0.01),
+            SlotDraft(content="草稿一。" * 30, cost_cny_estimate=0.01),
+            SlotDraft(content="草稿二。" * 30, cost_cny_estimate=0.01),
         ]
     )
 
