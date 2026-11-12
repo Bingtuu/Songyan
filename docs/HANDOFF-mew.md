@@ -8,7 +8,9 @@ owner：Bingtuu。包 tip **v0.5**（`0.5.0`）。「V1.0」是产品代际名�
 
 **task 244 已 DONE 归档（2026-11-11）**：真实模型冒烟发现 5/6 两个 P1 修复，代码 @ `120012c`，切片 5 真实模型复验 PASS（`.tmp/smoke-244-verify-20261111/`：pick→accept 后 continue exit 0；圣经 text_len 0→1664；抽卡两槽真实正文 1602/2075 字；canon confirm 后 stale_vs_canon=1；费用 ¥0.4823 / 24 次调用）。归档：[tasks/done/244](../tasks/done/244-修复抽卡死锁与圣经空渲染.md)。
 
-**下一刀（均需 owner 侧动作，助手默认待命）：** ① [task 245](../tasks/245-变体拒写判失败与重试策略.md)（TODO）——发现 3/4 写手拒写/占位文本不判失败、N=2 部分槽垃圾、失败重试策略，方案设计的 5 个决策点待 owner 拍板；② [task 246](../tasks/246-修复run收尾db-maintenance锁表失败.md)（TODO）——`run` 收尾 `db_maintenance_failed: database table is locked`（Windows + memory checkpointer，非阻塞），调查与修复切片已列好，拍板即开工；③ tech-m4 §9「以后」清单原项（`chapter status` / `review --deep` / 导入后再续写验收）——新功能授权项，未建任务文件，需 owner 新授权立项。不升包版本；不声称 V1.0 完成；M0–M4 编码范围之外不开新口。
+**task 245 已 DONE 归档（2026-11-12）**：变体拒写质量门（owner 拍板 P1–P3）——判定纯函数 + 同槽重试 1 次 + `quality_flag` 打标 + 全败 exit 2；代码 @ `8c26105`；真实模型复验 ¥0.3491（`.tmp/smoke-245-verify-20261112/`）。归档：[tasks/done/245](../tasks/done/245-变体拒写判失败与重试策略.md)。
+
+**下一刀：task 246 DOING（run 收尾 db-maintenance 锁表）。** 245 调查铺垫已实证两点：① `PRAGMA wal_checkpoint(TRUNCATE)` 的 busy 结果行（1,3,3）被 `_run_db_maintenance` 静默吞掉（从不 fetch），维护可能无声 no-op；② Windows + WAL 下并发读游标/未提交写事务时连接关闭可挂起。真实 run 报的是 `database table is locked`（final=True），精确语句待 246 用插桩实锤——不升包版本；不声称 V1.0 完成；M0–M4 编码范围之外不开新口。
 
 M0 步 1–4 已全部在 `main`：[#28](https://github.com/Bingtuu/Songyan/pull/28) → `1d8c0c0`；[#29](https://github.com/Bingtuu/Songyan/pull/29) → `8f03453`；[#30](https://github.com/Bingtuu/Songyan/pull/30) → `d5c2cc1`；[#31](https://github.com/Bingtuu/Songyan/pull/31) → `48fa354`。任务分别在 [tasks/done/200.md](../tasks/done/200.md)、[tasks/done/201.md](../tasks/done/201.md)、[tasks/done/202.md](../tasks/done/202.md)、[tasks/done/203.md](../tasks/done/203.md)。
 
@@ -58,7 +60,7 @@ M1 代码验收（步 1–5 + tech-m1 §6–7）在 `main` `69d7ece`：**PASS**�
 | M4 步 3 | 已提交 `23bd3f3`（`chapter continue`）；[tasks/done/240-m4-step3-chapter-continue.md](../tasks/done/240-m4-step3-chapter-continue.md) |
 | M4 步 4 | 已提交 `b857e8b`（`review` 只读共审）；[tasks/done/241-m4-step4-review.md](../tasks/done/241-m4-step4-review.md) |
 | M4 步 5 + §6–7 验收 | 步 5 已提交 `e5a33bd`（W2 连走集成测试 + `today` M4 文案）；**§6–7 PASS @ `e5a33bd`**（[tasks/done/242-m4-step5-closure.md](../tasks/done/242-m4-step5-closure.md) · [tasks/done/243-m4-code-acceptance.md](../tasks/done/243-m4-code-acceptance.md)） |
-| 当前任务 | **task 245 DOING**（变体拒写判失败与重试策略；2026-11-11 owner 已拍板判定口径 / 重试 / exit 码，方案 P1–P3 定稿见任务文档）。task 246（run 收尾 db-maintenance 锁表）排队，245 完工后开工。tech-m4 §9「以后」清单（`chapter status` / `review --deep` / 导入后再续写验收）未立项 |
+| 当前任务 | **task 246 DOING**（run 收尾 db-maintenance 锁表；背景实证见上一节）。task 245 已 DONE 归档（2026-11-12，代码 @ `8c26105`，复验 ¥0.3491）。tech-m4 §9「以后」清单（`chapter status` / `review --deep` / 导入后再续写验收）未立项 |
 | 架构方向 | [adr/0001-plan-first-facts.md](adr/0001-plan-first-facts.md) |
 | 工程现状 | [STATUS.md](STATUS.md) |
 | 阶段 A–C | [ROADMAP-plan-first.md](ROADMAP-plan-first.md)（CLOSED 短指针；全文在 archive，日常不要加载） |
