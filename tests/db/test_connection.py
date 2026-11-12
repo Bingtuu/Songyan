@@ -123,3 +123,31 @@ class TestConnectionWithSchema:
                 assert "chapter_versions" in tables
         finally:
             conn_mod.settings = original_settings
+
+
+@pytest.mark.asyncio
+class TestQuickCheckCheckpointRegression:
+    """task 246 根因回归：get_db 连接必须能执行 wal_checkpoint。
+
+    根因：get_db 曾发出 ``PRAGMA quick_check`` 却从不消费结果——
+    prepare 期启动的完整性扫描持有的锁伴随未完结语句，使同一连接上后续
+    ``wal_checkpoint`` 抛 ``OperationalError: database table is locked``
+    （真实 Windows run 收尾 db_maintenance_failed 的元凶，3/3 复现）。
+    """
+
+    async def test_wal_checkpoint_on_get_db_connection(self, test_db: Path) -> None:
+        async with get_db() as conn:
+            row = await (
+                await conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+            ).fetchone()
+        assert row is not None
+        assert int(row[0]) == 0, f"checkpoint 应成功，实际 busy 行：{row}"
+
+    async def test_quick_check_actually_runs(self, test_db: Path) -> None:
+        """quick_check 必须真正执行并消费完结果（RES-03 初衷），而非挂着半成品语句。"""
+        async with get_db() as conn:
+            cursor = await conn.execute("PRAGMA quick_check")
+            rows = await cursor.fetchall()
+            await cursor.close()
+        assert rows, "quick_check 应返回至少一行结果"
+        assert rows[0][0] == "ok", f"完整性检查应通过，实际：{rows[0][0]}"

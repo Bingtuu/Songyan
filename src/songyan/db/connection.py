@@ -49,9 +49,22 @@ async def get_db() -> AsyncGenerator[aiosqlite.Connection, None]:
         await conn.execute("PRAGMA synchronous = NORMAL")
         await conn.execute("PRAGMA busy_timeout = 30000")
 
-        # RES-03: 启动时数据库完整性检查
+        # RES-03: 启动时数据库完整性检查。必须消费完结果集并关闭游标——
+        # 未完结的 quick_check 语句（prepare 期启动的完整性扫描持锁）会让
+        # 同一连接后续的 wal_checkpoint 抛 SQLITE_LOCKED
+        # 「database table is locked」（task 246 根因实证：run 收尾
+        # db_maintenance_failed step=wal_checkpoint，Windows 3/3 复现）。
         try:
-            await conn.execute("PRAGMA quick_check")
+            cursor = await conn.execute("PRAGMA quick_check")
+            rows = await cursor.fetchall()
+            await cursor.close()
+            problems = [r[0] for r in rows if r and r[0] != "ok"]
+            if problems:
+                import structlog
+
+                structlog.get_logger(__name__).warning(
+                    "db.integrity_check_failed", problems=problems[:5]
+                )
         except Exception:
             import structlog
 

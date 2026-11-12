@@ -230,3 +230,154 @@ class TestPeriodicTrigger:
         # 应在第 10 章触发一次，收尾（第 15 章）再触发一次
         assert _DB_MAINTENANCE_INTERVAL in calls
         assert (_DB_MAINTENANCE_INTERVAL + 5) in calls
+
+
+class TestTruncateCheckpointFallback:
+    """task 246：Windows 真实 run 实证收尾 `wal_checkpoint(TRUNCATE)` 抛
+    ``database table is locked``（step=wal_checkpoint, final=True）。
+
+    修复口径：TRUNCATE 抛错或 busy 行 → 回退 ``wal_checkpoint(PASSIVE)``
+    （不截断但不会硬失败，仍可把 WAL 帧并入主库）；后续步骤（optimize 等）
+    不得被跳过；整体仍非阻塞。
+    """
+
+    async def test_truncate_raise_falls_back_to_passive(
+        self, isolated_db: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from contextlib import asynccontextmanager
+        from sqlite3 import OperationalError
+
+        import songyan.workflows.phase2_graph as phase2_graph
+
+        await _seed_setting_tracking(isolated_db, "proj-156", 3)
+        run_id = new_id("run")
+        await _create_run_record(run_id, "proj-156")
+        statements: list[str] = []
+
+        class _Cur:
+            def __init__(self, rows: list[tuple[int, int, int]]) -> None:
+                self._rows = rows
+
+            async def fetchone(self) -> tuple[int, int, int] | None:
+                return self._rows[0] if self._rows else None
+
+            async def fetchall(self) -> list[tuple[int, int, int]]:
+                return list(self._rows)
+
+        class _Conn:
+            async def execute(self, sql: str, *_a: Any) -> _Cur:
+                statements.append(sql)
+                if "wal_checkpoint(TRUNCATE)" in sql:
+                    raise OperationalError("database table is locked")
+                if "wal_checkpoint(PASSIVE)" in sql:
+                    return _Cur([(0, 3, 3)])
+                return _Cur([])
+
+            async def commit(self) -> None:
+                return None
+
+        @asynccontextmanager
+        async def _fake_get_db() -> Any:
+            yield _Conn()
+
+        monkeypatch.setattr(phase2_graph, "get_db", _fake_get_db)
+
+        await _run_db_maintenance(run_id, "proj-156", chapter_number=10)
+
+        assert any("wal_checkpoint(PASSIVE)" in s for s in statements), (
+            f"TRUNCATE 抛错后应回退 PASSIVE，实际语句：{statements}"
+        )
+        assert any("PRAGMA optimize" in s for s in statements), "回退后不得跳过 optimize"
+        samples = await RunDbMetricsRepository().list_by_run(run_id)
+        assert len(samples) == 1
+
+    async def test_truncate_busy_row_falls_back_to_passive(
+        self, isolated_db: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """TRUNCATE 返回 busy 行 (1,3,3)（并发读者持有 WAL）→ 同样回退 PASSIVE。"""
+        from contextlib import asynccontextmanager
+
+        import songyan.workflows.phase2_graph as phase2_graph
+
+        await _seed_setting_tracking(isolated_db, "proj-156", 3)
+        run_id = new_id("run")
+        await _create_run_record(run_id, "proj-156")
+        statements: list[str] = []
+
+        class _Cur:
+            def __init__(self, rows: list[tuple[int, int, int]]) -> None:
+                self._rows = rows
+
+            async def fetchone(self) -> tuple[int, int, int] | None:
+                return self._rows[0] if self._rows else None
+
+            async def fetchall(self) -> list[tuple[int, int, int]]:
+                return list(self._rows)
+
+        class _Conn:
+            async def execute(self, sql: str, *_a: Any) -> _Cur:
+                statements.append(sql)
+                if "wal_checkpoint(TRUNCATE)" in sql:
+                    return _Cur([(1, 3, 3)])  # busy=1：有读者持有 WAL
+                if "wal_checkpoint(PASSIVE)" in sql:
+                    return _Cur([(0, 3, 3)])
+                return _Cur([])
+
+            async def commit(self) -> None:
+                return None
+
+        @asynccontextmanager
+        async def _fake_get_db() -> Any:
+            yield _Conn()
+
+        monkeypatch.setattr(phase2_graph, "get_db", _fake_get_db)
+
+        await _run_db_maintenance(run_id, "proj-156", chapter_number=10)
+
+        assert any("wal_checkpoint(PASSIVE)" in s for s in statements), (
+            f"TRUNCATE busy 行应回退 PASSIVE，实际语句：{statements}"
+        )
+
+    async def test_truncate_success_no_passive(
+        self, isolated_db: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """安静场景 TRUNCATE 成功（busy=0）→ 不发 PASSIVE（无回退噪音）。"""
+        from contextlib import asynccontextmanager
+
+        import songyan.workflows.phase2_graph as phase2_graph
+
+        await _seed_setting_tracking(isolated_db, "proj-156", 3)
+        run_id = new_id("run")
+        await _create_run_record(run_id, "proj-156")
+        statements: list[str] = []
+
+        class _Cur:
+            def __init__(self, rows: list[tuple[int, int, int]]) -> None:
+                self._rows = rows
+
+            async def fetchone(self) -> tuple[int, int, int] | None:
+                return self._rows[0] if self._rows else None
+
+            async def fetchall(self) -> list[tuple[int, int, int]]:
+                return list(self._rows)
+
+        class _Conn:
+            async def execute(self, sql: str, *_a: Any) -> _Cur:
+                statements.append(sql)
+                if "wal_checkpoint(TRUNCATE)" in sql:
+                    return _Cur([(0, 0, 0)])
+                return _Cur([])
+
+            async def commit(self) -> None:
+                return None
+
+        @asynccontextmanager
+        async def _fake_get_db() -> Any:
+            yield _Conn()
+
+        monkeypatch.setattr(phase2_graph, "get_db", _fake_get_db)
+
+        await _run_db_maintenance(run_id, "proj-156", chapter_number=10)
+
+        assert any("wal_checkpoint(TRUNCATE)" in s for s in statements)
+        assert not any("wal_checkpoint(PASSIVE)" in s for s in statements)

@@ -273,10 +273,11 @@ async def _run_db_maintenance(
     """章节边界的物理层维护（非阻塞）：采样遥测 + wal_checkpoint(TRUNCATE) + optimize.
 
     用独立短连接，避开写事务；失败仅告警不中断 run。VACUUM 仅在收尾且尺寸超阈时
-    尝试，避免长跑中途做整库重写。
+    尝试，避免长跑中途做整库重写。各步骤独立容错：单步失败不跳过其余步骤
+    （task 246 调查：真实 run 报 ``database table is locked``，需定位到具体语句）。
     """
+    # 1) 采样 DB 尺寸与连续性扫描耗时遥测
     try:
-        # 1) 采样 DB 尺寸与连续性扫描耗时遥测
         size_metrics = await collect_db_size_metrics()
         scan_latency_ms = await measure_continuity_scan_latency(
             project_id, chapter_number
@@ -301,13 +302,114 @@ async def _run_db_maintenance(
             scan_latency_ms=round(scan_latency_ms, 3),
             t5_size_redline=check_t5_size_redline(size_metrics),
         )
+    except (
+        RuntimeError,
+        OSError,
+        ConnectionError,
+        OperationalError,
+        ValueError,
+    ) as exc:
+        logger.warning(
+            "project_pipeline.db_maintenance_failed",
+            run_id=run_id,
+            chapter_number=chapter_number,
+            final=final,
+            step="telemetry",
+            error=str(exc),
+        )
 
-        # 2) 物理维护：截断 WAL + 优化查询计划
+    # 2) 物理维护：截断 WAL + 优化查询计划。busy 结果行必须取出——
+    # 不 fetch 时 TRUNCATE 失败（busy=1）会被静默吞掉（task 246 实证）。
+    # Windows 真实 run 收尾时 TRUNCATE 会抛 ``database table is locked``
+    # （进程内仍有连接持有 WAL）；回退 PASSIVE（不截断但不硬失败，仍把
+    # WAL 帧并入主库，配合 autocheckpoint 控制 WAL 增长）。
+    checkpoint_ok = False
+    try:
         async with get_db() as conn:
-            await conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+            row = await (
+                await conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+            ).fetchone()
+            if row is not None and int(row[0]) == 0:
+                checkpoint_ok = True
+            elif row is not None:
+                logger.warning(
+                    "project_pipeline.db_checkpoint_busy",
+                    run_id=run_id,
+                    chapter_number=chapter_number,
+                    final=final,
+                    busy=int(row[0]),
+                    log_frames=int(row[1]),
+                    checkpointed_frames=int(row[2]),
+                )
+    except (
+        RuntimeError,
+        OSError,
+        ConnectionError,
+        OperationalError,
+        ValueError,
+    ) as exc:
+        logger.warning(
+            "project_pipeline.db_maintenance_failed",
+            run_id=run_id,
+            chapter_number=chapter_number,
+            final=final,
+            step="wal_checkpoint",
+            error=str(exc),
+        )
+    if not checkpoint_ok:
+        try:
+            async with get_db() as conn:
+                row = await (
+                    await conn.execute("PRAGMA wal_checkpoint(PASSIVE)")
+                ).fetchone()
+                if row is not None and int(row[0]) != 0:
+                    logger.warning(
+                        "project_pipeline.db_checkpoint_busy",
+                        run_id=run_id,
+                        chapter_number=chapter_number,
+                        final=final,
+                        mode="passive",
+                        busy=int(row[0]),
+                        log_frames=int(row[1]),
+                        checkpointed_frames=int(row[2]),
+                    )
+        except (
+            RuntimeError,
+            OSError,
+            ConnectionError,
+            OperationalError,
+            ValueError,
+        ) as exc:
+            logger.warning(
+                "project_pipeline.db_maintenance_failed",
+                run_id=run_id,
+                chapter_number=chapter_number,
+                final=final,
+                step="wal_checkpoint_passive",
+                error=str(exc),
+            )
+    try:
+        async with get_db() as conn:
             await conn.execute("PRAGMA optimize")
+    except (
+        RuntimeError,
+        OSError,
+        ConnectionError,
+        OperationalError,
+        ValueError,
+    ) as exc:
+        logger.warning(
+            "project_pipeline.db_maintenance_failed",
+            run_id=run_id,
+            chapter_number=chapter_number,
+            final=final,
+            step="optimize",
+            error=str(exc),
+        )
 
-        # 3) 收尾阶段且尺寸超阈时尝试整库 VACUUM（不在中途执行）
+    # 3) 收尾阶段且尺寸超阈时尝试整库 VACUUM（不在中途执行）
+    try:
+        size_metrics = await collect_db_size_metrics()
         if final and check_t5_size_redline(
             size_metrics, max_db_bytes=_DB_VACUUM_SIZE_THRESHOLD_BYTES
         ):
@@ -330,6 +432,7 @@ async def _run_db_maintenance(
             run_id=run_id,
             chapter_number=chapter_number,
             final=final,
+            step="vacuum",
             error=str(exc),
         )
 
