@@ -13,7 +13,7 @@
 | **包版本** | 仍是 `0.5.0`（不 bump） |
 | **里程碑** | **M0 / M1 / M2 / M3 / M4 代码验收全量 PASS**（M4 @ `e5a33bd`，task 243 声称）；tech-m4 已接受（B1–B12 原样） |
 | **进行中** | 无（task 244 已 DONE 归档，2026-11-11） |
-| **下一闸门** | task 245（变体拒写判失败与重试策略）与 task 246（run 收尾 db-maintenance 锁表）已建任务文档，**待 owner 拍板后开工**；tech-m4 §9「以后」清单（`chapter status` / `review --deep` / 导入后再续写验收）仍需 owner 新授权立项 |
+| **下一闸门** | task 245 DOING（变体拒写判失败与重试策略；owner 已拍板方案 P1–P3）；task 246（run 收尾 db-maintenance 锁表）排队待开工；tech-m4 §9「以后」清单（`chapter status` / `review --deep` / 导入后再续写验收）仍需 owner 新授权立项 |
 | **本 handoff** | M4 §6–7 验收已声称 PASS（task 243 @ `e5a33bd`）；PRD 内里程碑全部闭环 |
 
 硬约束（接手期间同样适用）：
