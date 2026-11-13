@@ -127,6 +127,7 @@ async def _pick_variant(
         "current_version_id": result.current_version_id,
         "variant_id": row.variant_id,
         "stale_vs_canon": row.stale_vs_canon,
+        "stale_vs_storyline": row.stale_vs_storyline,
         "archived_variant_id": result.archived_variant_id,
         "allow_stale": allow_stale,
     }
@@ -179,6 +180,7 @@ def variant_list(project_id: str, chapter: int, as_json: bool) -> None:
             f"- slot={row['slot_index']} status={row['status']} "
             f"fp={row['fingerprint']} "
             f"ref={row['content_ref']} stale_vs_canon={row['stale_vs_canon']} "
+            f"slStale={row['stale_vs_storyline']} "
             f"cost={row['cost_cny_estimate']}{flag}"
         )
 
@@ -325,6 +327,11 @@ def variant_pick(
         f"current_version_id={payload['current_version_id']} "
         f"stale_vs_canon={payload['stale_vs_canon']}"
     )
+    if int(payload.get("stale_vs_storyline") or 0) == 1:
+        click.echo(
+            "提醒：该槽基于已演进的故事线草稿（stale_vs_storyline=1），请人工斟酌",
+            err=True,
+        )
 
 
 @variant_group.command(name="abandon")

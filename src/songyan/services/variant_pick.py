@@ -17,7 +17,10 @@ from songyan.exceptions import SongyanError
 from songyan.models.chapter import ChapterHead
 from songyan.models.variant import ChapterVariant
 from songyan.services.variant_diff import MissingVariantSlotError
-from songyan.services.variant_stale import refresh_stale_vs_canon
+from songyan.services.variant_stale import (
+    refresh_stale_vs_canon,
+    refresh_stale_vs_storyline,
+)
 
 logger = structlog.get_logger(__name__)
 
@@ -80,6 +83,7 @@ async def pick_variant_slot(
         raise ValueError("slot must be >= 1")
 
     await refresh_stale_vs_canon(project_id, chapter)
+    await refresh_stale_vs_storyline(project_id, chapter)
 
     repo = ChapterVariantRepository()
     target = await repo.get_by_slot(project_id, chapter, slot)

@@ -10,7 +10,10 @@ from typing import cast
 from songyan.db.chapter_variant_repo import ChapterVariantRepository
 from songyan.db.repository import ChapterVersionRepository
 from songyan.models.variant import ChapterVariant
-from songyan.services.variant_stale import refresh_stale_vs_canon
+from songyan.services.variant_stale import (
+    refresh_stale_vs_canon,
+    refresh_stale_vs_storyline,
+)
 
 _FP_SHORT = 12
 
@@ -44,6 +47,7 @@ def shape_list_row(row: ChapterVariant) -> dict[str, object]:
         "score": _optional_score(row.score_card_json),
         "variant_id": row.variant_id,
         "quality_flag": row.quality_flag,
+        "stale_vs_storyline": row.stale_vs_storyline,
     }
 
 
@@ -70,6 +74,7 @@ class MissingVariantSlotError(Exception):
 
 async def list_variant_rows(project_id: str, chapter: int) -> list[dict[str, object]]:
     await refresh_stale_vs_canon(project_id, chapter)
+    await refresh_stale_vs_storyline(project_id, chapter)
     rows = await ChapterVariantRepository().list_for_chapter(project_id, chapter)
     return [shape_list_row(row) for row in rows]
 
@@ -114,6 +119,7 @@ async def diff_variant_slots(
 ) -> VariantDiffResult:
     """Read-only unified diff of two slots' ``chapter_versions`` content."""
     await refresh_stale_vs_canon(project_id, chapter)
+    await refresh_stale_vs_storyline(project_id, chapter)
     variant_a, content_a = await _content_for_slot(project_id, chapter, slot_a)
     variant_b, content_b = await _content_for_slot(project_id, chapter, slot_b)
     diff_text = unified_content_diff(

@@ -27,5 +27,7 @@ class ChapterVariant(BaseModel):
     score_card_json: str | None = None
     cost_cny_estimate: float = 0.0
     quality_flag: str | None = None
+    stale_vs_storyline: int = Field(default=0, ge=0, le=1)
+    storyline_fingerprint: str | None = None
     created_at: str
     updated_at: str

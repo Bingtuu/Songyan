@@ -157,3 +157,58 @@ async def test_quality_flag_roundtrip(variant_db: Path) -> None:
     loaded_plain = await repo.get_by_slot("p-var", 1, 2)
     assert loaded_plain is not None
     assert loaded_plain.quality_flag is None
+
+
+@pytest.mark.asyncio
+async def test_storyline_columns_exist(variant_db: Path) -> None:
+    """task 252：chapter_variants.stale_vs_storyline / storyline_fingerprint。"""
+    async with get_db() as conn:
+        cursor = await conn.execute("PRAGMA table_info(chapter_variants)")
+        cols = {row[1] for row in await cursor.fetchall()}
+    assert "stale_vs_storyline" in cols
+    assert "storyline_fingerprint" in cols
+
+
+@pytest.mark.asyncio
+async def test_storyline_columns_migration_repairs_dropped(
+    variant_db: Path,
+) -> None:
+    async with get_db() as conn:
+        await conn.execute(
+            "ALTER TABLE chapter_variants DROP COLUMN stale_vs_storyline"
+        )
+        await conn.execute(
+            "ALTER TABLE chapter_variants DROP COLUMN storyline_fingerprint"
+        )
+        await conn.commit()
+        await run_migrations(conn)
+        await conn.commit()
+        cursor = await conn.execute("PRAGMA table_info(chapter_variants)")
+        cols = {row[1] for row in await cursor.fetchall()}
+        assert "stale_vs_storyline" in cols
+        assert "storyline_fingerprint" in cols
+        await run_migrations(conn)  # 幂等
+        await conn.commit()
+
+
+@pytest.mark.asyncio
+async def test_storyline_fields_roundtrip(variant_db: Path) -> None:
+    repo = ChapterVariantRepository()
+    row = _row(variant_id="var-s1", slot=1)
+    row.stale_vs_storyline = 1
+    row.storyline_fingerprint = "fp-story"
+    await repo.insert(row)
+    loaded = await repo.get_by_slot("p-var", 1, 1)
+    assert loaded is not None
+    assert loaded.stale_vs_storyline == 1
+    assert loaded.storyline_fingerprint == "fp-story"
+    plain = await repo.get_by_slot("p-var", 1, 1)
+    assert plain is not None
+    assert plain.stale_vs_storyline == 1
+    # 默认零值
+    fresh = _row(variant_id="var-s2", slot=2)
+    await repo.insert(fresh)
+    loaded2 = await repo.get_by_slot("p-var", 1, 2)
+    assert loaded2 is not None
+    assert loaded2.stale_vs_storyline == 0
+    assert loaded2.storyline_fingerprint is None

@@ -245,6 +245,7 @@ def chapter_status_cmd(project_id: str, chapter: int, as_json: bool) -> None:
             click.echo(
                 f"- slot={row['slot_index']} status={row['status']}"
                 f"{flag} stale_vs_canon={row['stale_vs_canon']}"
+                f" slStale={row['stale_vs_storyline']}"
                 f" cost={row['cost_cny_estimate']}"
             )
     else:

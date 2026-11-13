@@ -23,7 +23,10 @@ from songyan.models.variant import ChapterVariant
 from songyan.plan_checks.bible import load_chapter_plan_bible
 from songyan.services.variant_fingerprint import fingerprint_chapter_parent_canon
 from songyan.services.variant_quality import classify_variant_draft
-from songyan.services.variant_stale import refresh_stale_vs_canon
+from songyan.services.variant_stale import (
+    refresh_stale_vs_canon,
+    refresh_stale_vs_storyline,
+)
 from songyan.utils.cost_estimator import count_tokens, estimate_cost_from_tokens
 
 logger = structlog.get_logger(__name__)
@@ -172,10 +175,14 @@ async def _generate_variants_impl(
     draft = draft_fn or default_slot_draft
     # Lazy mark prior slots before writing new ones (B3 / step 5).
     await refresh_stale_vs_canon(project_id, chapter)
+    await refresh_stale_vs_storyline(project_id, chapter)
     fingerprint = await fingerprint_chapter_parent_canon(project_id, chapter)
     bible = await load_chapter_plan_bible(project_id, chapter)
     bible_text = bible.text
 
+    from songyan.services.storyline_fingerprint import storyline_fingerprint
+
+    story_fp = await storyline_fingerprint(project_id, chapter)
     start_slot = await _next_slot_start(project_id, chapter)
     version_repo = ChapterVersionRepository()
     variant_repo = ChapterVariantRepository()
@@ -264,6 +271,8 @@ async def _generate_variants_impl(
                 stale_vs_canon=0,
                 cost_cny_estimate=cost,
                 quality_flag=quality_flag,
+                stale_vs_storyline=0,
+                storyline_fingerprint=story_fp,
                 created_at=now,
                 updated_at=now,
             )

@@ -36,6 +36,8 @@ def _row_to_variant(row: Row) -> ChapterVariant:
         score_card_json=row["score_card_json"],
         cost_cny_estimate=float(row["cost_cny_estimate"] or 0.0),
         quality_flag=row["quality_flag"],
+        stale_vs_storyline=int(row["stale_vs_storyline"] or 0),
+        storyline_fingerprint=row["storyline_fingerprint"],
         created_at=row["created_at"],
         updated_at=row["updated_at"],
     )
@@ -89,8 +91,9 @@ class ChapterVariantRepository:
                         variant_id, project_id, chapter_number, slot_index,
                         status, parent_canon_fingerprint, content_ref,
                         stale_vs_canon, score_card_json, cost_cny_estimate,
-                        quality_flag, created_at, updated_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        quality_flag, stale_vs_storyline,
+                        storyline_fingerprint, created_at, updated_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     (
                         variant.variant_id,
@@ -104,6 +107,8 @@ class ChapterVariantRepository:
                         variant.score_card_json,
                         float(variant.cost_cny_estimate),
                         variant.quality_flag,
+                        int(variant.stale_vs_storyline),
+                        variant.storyline_fingerprint,
                         now,
                         updated,
                     ),
@@ -358,5 +363,32 @@ class ChapterVariantRepository:
             await conn.commit()
         logger.info(
             "chapter_variants.set_stale_flags",
+            count=len(updates),
+        )
+
+    async def sync_storyline_state(
+        self, updates: list[tuple[str, int, str]]
+    ) -> None:
+        """task 252：写 ``(variant_id, stale_vs_storyline, storyline_fingerprint)``。
+
+        指纹过期/缺失的行一并补记为当前值（含已标脏行）；同事务。
+        """
+        if not updates:
+            return
+        now = _utc_now()
+        async with get_db() as conn:
+            for variant_id, stale, fingerprint in updates:
+                await conn.execute(
+                    """
+                    UPDATE chapter_variants
+                    SET stale_vs_storyline = ?, storyline_fingerprint = ?,
+                        updated_at = ?
+                    WHERE variant_id = ?
+                    """,
+                    (int(stale), fingerprint, now, variant_id),
+                )
+            await conn.commit()
+        logger.info(
+            "chapter_variants.sync_storyline_state",
             count=len(updates),
         )
