@@ -12,8 +12,8 @@
 | **功能 tip（M4 步 1–5）** | `e5a33bd` — 238 章进度视图+`status` / 239 `chapter accept` / 240 `chapter continue` / 241 `review` / 242 收口（3 章 W2 连走集成测试 + `today` M4 文案） |
 | **包版本** | 仍是 `0.5.0`（不 bump） |
 | **里程碑** | **M0 / M1 / M2 / M3 / M4 代码验收全量 PASS**（M4 @ `e5a33bd`，task 243 声称）；tech-m4 已接受（B1–B12 原样） |
-| **进行中** | 无（task 245 / 246 均已 DONE 归档，2026-11-12） |
-| **下一闸门** | tech-m4-followup（B1–B8）已接受（2026-11-12「开工」）——编码任务 248 chapter status → 249 导入后再续写验收 → 250 review --deep；§9 剩余 S5 产品向项（故事线纳入 fingerprint）另行立项 |
+| **进行中** | task 250（review --deep）；248/249 已 DONE 归档（2026-11-12/13） |
+| **下一闸门** | tech-m4-followup 步 3 `review --deep`（task 250）进行中；步 1/2 已交付。§9 仅剩 S5 产品向项（故事线纳入 fingerprint）另行立项 |
 | **本 handoff** | M4 §6–7 验收已声称 PASS（task 243 @ `e5a33bd`）；PRD 内里程碑全部闭环 |
 
 硬约束（接手期间同样适用）：
@@ -138,7 +138,7 @@ songyan review --project-id TEXT --chapter INT [--json]
 - **2026-11-11 真实模型冒烟（`.tmp/smoke-m4-20261111/`，不入库）**：W2 短环管线在 DeepSeek 真模型下 PASS（`run` / continue 单稿与 --variants / accept / review 零写库 / status / today / check，费用 ¥0.7747 / 41 次调用）；暴露 2 个 P1（发现 5：pick→accept 后 continue 对后续章永久 exit 2 死锁——B1 前置①按 variant 行级判定误伤 accepted 章残留槽，而 abandon 又拒绝 picked 槽；发现 6：`_render` 无 events/clues 即空串 + 实体仅 event 引用入选，导致 extract→confirm 流的实体/属性型 Canon 圣经文本恒空、抽卡必产垃圾）。**task 244 修复已进 main @ `120012c`**（B1 前置①章级化；圣经入选 R1 + 渲染去早退；空项目/全 accepted 分文案；全量 3598 passed + ruff 绿）；切片 5 真实模型复验进行中。遗留（未立项）：发现 3/4 写手拒写/占位不判失败与重试策略（需产品决策）；`run` 收尾 `db_maintenance_failed: database table is locked`（Windows + memory checkpointer，非阻塞）。
 - **2026-11-12 变体拒写质量门（task 245，已归档 `tasks/done/`）**：真实模型冒烟发现 3/4 修复——`classify_variant_draft` 纯函数（<100 字兜底 +「（空）」/拒写关键词硬信号，>500 字不查防长文台词误伤）；拒写槽同槽自动重试 1 次（注入坚持指令）后落槽打 `quality_flag`；`variant list` 露出、`variant pick` 拒绝打标槽（exit 2）；全败 exit 2 / 部分成功 exit 0 列失败槽；`chapter_variants.quality_flag` 幂等迁移。代码 @ `8c26105`；全量 3618 passed + ruff 绿；真实模型复验 ¥0.3491 / 20 次调用（空圣经与 confirm 后两场景均零误伤）。遗留：task 246（run 收尾 db-maintenance 锁表）转 DOING；§9「以后」清单未立项；2 个既有 flake（doctor 子进程 / canon promise 并发，与本案无关）。
 - **2026-11-12 db-maintenance 锁表修复（task 246，已归档 `tasks/done/`）**：真实 run 收尾 `database table is locked`（Windows 3/3 必现）根因实锤——`get_db()` 的 `PRAGMA quick_check` 从不消费结果，prepare 期启动的完整性扫描持锁悬挂，同连接后续 `wal_checkpoint` 吃 SQLITE_LOCKED。修复：quick_check 结果取尽 + 游标关闭（RES-03 从此真正执行）；防御层：维护分步容错 + checkpoint busy 行落日志（原从不 fetch、busy 被静默吞掉）+ TRUNCATE 失败回退 PASSIVE。最终实测收尾 0 告警、WAL 截断 0 字节（¥0.4203）；全量 3623 passed + ruff 绿。
-- **2026-11-12 tech-m4-followup 落地中**：方案 `docs/tech-m4-followup.md`（B1–B8）已接受（「开工」@ `928de90`）。**步 1 `chapter status` 已交付**（只读章进度面：章态/head 指针/variant 槽含 quality_flag/本章费用对照/共审计数；不承载 ContextEmergency，零写库；tests/cli 8 新测全绿，真实库手测对齐）。步 2 导入后再续写验收（task 249）进行中；步 3 `review --deep`（task 250）排队。
+- **2026-11-12 tech-m4-followup 落地中**：方案 `docs/tech-m4-followup.md`（B1–B8）已接受（「开工」@ `928de90`）。**步 1 `chapter status` 已交付**（只读章进度面；tests/cli 8 新测全绿）。**步 2 导入后再续写验收 PASS（task 249，2026-11-13，¥0.4995）**：import replay 自动 accepted 与零自动 Canon approved 分列验证；imported 项目 continue 单稿 3048 字 + 抽卡两槽全通；零代码修改。步 3 `review --deep`（task 250）进行中。
 
 标识与助手交接：[HANDOFF-mew.md](HANDOFF-mew.md)。书稿不入库。
 
