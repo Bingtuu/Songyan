@@ -164,13 +164,17 @@ class NarrativeRepository:
             arc_id=arc.arc_id,
         )
 
-    async def list_arc_plans(self, project_id: str) -> list[ArcPlan]:
+    async def list_arc_plans(
+        self, project_id: str, *, include_archived: bool = False
+    ) -> list[ArcPlan]:
+        """列出项目的弧规划（按 arc_index 升序）；task 255 起默认排除软删行."""
+        sql = "SELECT * FROM arc_plans WHERE project_id = ?"
+        if not include_archived:
+            sql += " AND archived = 0"
+        sql += " ORDER BY arc_index"
         async with get_db() as conn:
             conn.row_factory = Row
-            cursor = await conn.execute(
-                "SELECT * FROM arc_plans WHERE project_id = ? ORDER BY arc_index",
-                (project_id,),
-            )
+            cursor = await conn.execute(sql, (project_id,))
             rows = await cursor.fetchall()
         return [self._row_to_arc(row) for row in rows]
 
@@ -274,6 +278,85 @@ class NarrativeRepository:
             arc_id=arc_id,
         )
 
+    async def upsert_arc(
+        self, arc: ArcPlan, conn: aiosqlite.Connection | None = None
+    ) -> None:
+        """task 255：按 arc_id 全行 upsert（存在即更新，不存在即建）。"""
+
+        async def _do(c: aiosqlite.Connection) -> None:
+            await c.execute(
+                """INSERT INTO arc_plans (
+                    arc_id, project_id, arc_index, start_chapter, end_chapter,
+                    arc_goal, threads_to_open, threads_to_resolve, is_mainline
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(arc_id) DO UPDATE SET
+                    arc_index = excluded.arc_index,
+                    start_chapter = excluded.start_chapter,
+                    end_chapter = excluded.end_chapter,
+                    arc_goal = excluded.arc_goal,
+                    threads_to_open = excluded.threads_to_open,
+                    threads_to_resolve = excluded.threads_to_resolve,
+                    is_mainline = excluded.is_mainline""",
+                (
+                    arc.arc_id,
+                    arc.project_id,
+                    arc.arc_index,
+                    arc.start_chapter,
+                    arc.end_chapter,
+                    arc.arc_goal,
+                    _json.dumps(arc.threads_to_open, ensure_ascii=False),
+                    _json.dumps(arc.threads_to_resolve, ensure_ascii=False),
+                    int(arc.is_mainline),
+                ),
+            )
+
+        if conn is None:
+            async with get_db() as c:
+                await _do(c)
+                await c.commit()
+        else:
+            await _do(conn)
+
+    async def upsert_thread(
+        self, thread: PlotThread, conn: aiosqlite.Connection | None = None
+    ) -> None:
+        """task 255：按 thread_id 全行 upsert（保留 last_status_* 等既有字段）。"""
+
+        async def _do(c: aiosqlite.Connection) -> None:
+            await c.execute(
+                """INSERT INTO plot_threads (
+                    thread_id, project_id, title, description, is_mainline,
+                    opened_chapter, expected_resolve_arc, status,
+                    last_status_chapter, last_status_version_id
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(thread_id) DO UPDATE SET
+                    title = excluded.title,
+                    description = excluded.description,
+                    is_mainline = excluded.is_mainline,
+                    opened_chapter = excluded.opened_chapter,
+                    expected_resolve_arc = excluded.expected_resolve_arc,
+                    status = excluded.status""",
+                (
+                    thread.thread_id,
+                    thread.project_id,
+                    thread.title,
+                    thread.description,
+                    int(thread.is_mainline),
+                    thread.opened_chapter,
+                    thread.expected_resolve_arc,
+                    thread.status,
+                    thread.last_status_chapter,
+                    thread.last_status_version_id,
+                ),
+            )
+
+        if conn is None:
+            async with get_db() as c:
+                await _do(c)
+                await c.commit()
+        else:
+            await _do(conn)
+
     @staticmethod
     def _row_to_arc(row: Row) -> ArcPlan:
         return ArcPlan(
@@ -286,6 +369,7 @@ class NarrativeRepository:
             threads_to_open=_json.loads(row["threads_to_open"] or "[]"),
             threads_to_resolve=_json.loads(row["threads_to_resolve"] or "[]"),
             is_mainline=bool(row["is_mainline"]),
+            archived=bool(row["archived"]) if "archived" in row.keys() else False,
             created_at=_parse_dt(row["created_at"]),
         )
 
@@ -330,13 +414,20 @@ class NarrativeRepository:
         )
 
     async def list_threads(
-        self, project_id: str, status: PlotThreadStatus | None = None
+        self,
+        project_id: str,
+        status: PlotThreadStatus | None = None,
+        *,
+        include_archived: bool = False,
     ) -> list[PlotThread]:
+        """列出项目的线索；task 255 起默认排除软删行."""
         query = "SELECT * FROM plot_threads WHERE project_id = ?"
         params: list[object] = [project_id]
         if status is not None:
             query += " AND status = ?"
             params.append(status)
+        if not include_archived:
+            query += " AND archived = 0"
         query += " ORDER BY created_at, thread_id"
         async with get_db() as conn:
             conn.row_factory = Row
@@ -482,6 +573,7 @@ class NarrativeRepository:
             status=row["status"],
             last_status_chapter=row["last_status_chapter"],
             last_status_version_id=row["last_status_version_id"],
+            archived=bool(row["archived"]) if "archived" in row.keys() else False,
             created_at=_parse_dt(row["created_at"]),
             updated_at=_parse_dt(row["updated_at"]),
         )
@@ -489,6 +581,84 @@ class NarrativeRepository:
     # ------------------------------------------------------------------ #
     # 原子导入（Task 142）
     # ------------------------------------------------------------------ #
+    async def set_arc_archived(
+        self, arc_id: str, archived: bool, conn: aiosqlite.Connection | None = None
+    ) -> None:
+        """task 255：弧软删标志（幂等）。"""
+
+        async def _do(c: aiosqlite.Connection) -> None:
+            await c.execute(
+                "UPDATE arc_plans SET archived = ? WHERE arc_id = ?",
+                (int(archived), arc_id),
+            )
+
+        if conn is None:
+            async with get_db() as c:
+                await _do(c)
+                await c.commit()
+        else:
+            await _do(conn)
+
+    async def set_thread_archived(
+        self,
+        thread_id: str,
+        archived: bool,
+        conn: aiosqlite.Connection | None = None,
+    ) -> None:
+        """task 255：线索软删标志（幂等）。"""
+
+        async def _do(c: aiosqlite.Connection) -> None:
+            await c.execute(
+                "UPDATE plot_threads SET archived = ? WHERE thread_id = ?",
+                (int(archived), thread_id),
+            )
+
+        if conn is None:
+            async with get_db() as c:
+                await _do(c)
+                await c.commit()
+        else:
+            await _do(conn)
+
+    async def record_history(
+        self,
+        *,
+        project_id: str,
+        target_type: str,
+        target_id: str,
+        action: str,
+        before_json: str | None,
+        after_json: str | None,
+        conn: aiosqlite.Connection | None = None,
+    ) -> None:
+        """task 255：写一条 storyline 编辑审计（与目标行同事务）。"""
+
+        async def _do(c: aiosqlite.Connection) -> None:
+            import uuid
+
+            await c.execute(
+                """INSERT INTO storyline_edit_history (
+                    history_id, project_id, target_type, target_id,
+                    action, before_json, after_json
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    f"seh-{uuid.uuid4().hex[:12]}",
+                    project_id,
+                    target_type,
+                    target_id,
+                    action,
+                    before_json,
+                    after_json,
+                ),
+            )
+
+        if conn is None:
+            async with get_db() as c:
+                await _do(c)
+                await c.commit()
+        else:
+            await _do(conn)
+
     async def import_outline(
         self,
         project_id: str,

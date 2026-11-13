@@ -18,6 +18,7 @@ from songyan.cli.commands.index import register_index_commands
 from songyan.cli.commands.quality import register_quality_commands
 from songyan.cli.commands.review import register_review_commands
 from songyan.cli.commands.status import register_status_commands
+from songyan.cli.commands.storyline import register_storyline_commands
 from songyan.cli.commands.variant import register_variant_commands
 from songyan.cli.commands.workbench import register_workbench_commands
 from songyan.cli.outline_import import load_outline_file
@@ -1328,6 +1329,7 @@ register_import_commands(cli)
 # M0: read-only canon show / today. M1 steps 2–3: canon edit/confirm/dismiss/accept.
 register_workbench_commands(cli)
 register_canon_write_commands(cli)
+register_storyline_commands(cli)
 register_variant_commands(cli)
 register_check_commands(cli)
 # M4 步 1: 项目级计数面（章进度 / ContextEmergency；B10/B11）。

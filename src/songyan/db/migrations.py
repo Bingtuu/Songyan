@@ -87,6 +87,8 @@ _EXPECTED_TABLES: list[str] = [
     "plan_clues",
     # M3 step 1: chapter-internal Variant slots
     "chapter_variants",
+    # task 255: storyline 编辑审计
+    "storyline_edit_history",
 ]
 
 
@@ -1678,6 +1680,31 @@ async def _migrate_chapter_variants_quality_flag(conn: aiosqlite.Connection) -> 
     )
 
 
+async def _migrate_storyline_edit_history(conn: aiosqlite.Connection) -> None:
+    """task 255：storyline 编辑审计表（tech-post-m4 v2 §A.2）。
+
+    仿 genre_runtime_profile_history 先例；与目标行同事务写。
+    """
+    await conn.execute(
+        """CREATE TABLE IF NOT EXISTS storyline_edit_history (
+            history_id  TEXT PRIMARY KEY,
+            project_id  TEXT NOT NULL,
+            target_type TEXT NOT NULL
+                        CHECK (target_type IN ('outline', 'arc', 'thread')),
+            target_id   TEXT NOT NULL,
+            action      TEXT NOT NULL
+                        CHECK (action IN ('create', 'update', 'remove')),
+            before_json TEXT,
+            after_json  TEXT,
+            created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+        )"""
+    )
+    await conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_storyline_history_project "
+        "ON storyline_edit_history(project_id, created_at)"
+    )
+
+
 async def _migrate_chapter_variants_storyline(conn: aiosqlite.Connection) -> None:
     """task 252：chapter_variants.stale_vs_storyline + storyline_fingerprint。
 
@@ -1702,6 +1729,21 @@ async def _migrate_chapter_variants_storyline(conn: aiosqlite.Connection) -> Non
         column="storyline_fingerprint",
         ddl="ALTER TABLE chapter_variants ADD COLUMN storyline_fingerprint TEXT",
     )
+
+
+async def _migrate_storyline_archived(conn: aiosqlite.Connection) -> None:
+    """task 255：arc_plans / plot_threads 加 archived 软删标志（tech-post-m4 v2 §A.2）。
+
+    与 plot_threads.status 状态机正交（abandoned 是线索生命周期语义，
+    archived 是编辑面软删）；故事线切片指纹选择排除 archived 行。
+    """
+    for table in ("arc_plans", "plot_threads"):
+        await _add_column_if_missing(
+            conn,
+            table=table,
+            column="archived",
+            ddl=f"ALTER TABLE {table} ADD COLUMN archived INTEGER NOT NULL DEFAULT 0",
+        )
 
 
 async def run_migrations(conn: aiosqlite.Connection) -> None:
@@ -1791,6 +1833,14 @@ _MIGRATIONS: list[tuple[str, Callable[[aiosqlite.Connection], Awaitable[None]]]]
     (
         "_migrate_chapter_variants_storyline",
         _migrate_chapter_variants_storyline,
+    ),
+    (
+        "_migrate_storyline_edit_history",
+        _migrate_storyline_edit_history,
+    ),
+    (
+        "_migrate_storyline_archived",
+        _migrate_storyline_archived,
     ),
     (
         "_migrate_foreshadowings_resolved_evidence",

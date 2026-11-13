@@ -39,6 +39,7 @@ class ArcPlan(BaseModel):
     threads_to_open: list[str] = Field(default_factory=list)   # 应开启的 thread_id
     threads_to_resolve: list[str] = Field(default_factory=list)  # 应收束的 thread_id
     is_mainline: bool = False          # 是否主线弧（T1 判据依赖）
+    archived: bool = False             # task 255：编辑面软删（与 status 正交）
     created_at: datetime = Field(default_factory=datetime.now)
 
 
@@ -55,5 +56,6 @@ class PlotThread(BaseModel):
     status: PlotThreadStatus = "planned"
     last_status_chapter: int | None = None    # 最近一次状态变更章
     last_status_version_id: str | None = None  # 变更来源 version（T1 可追溯要求）
+    archived: bool = False             # task 255：编辑面软删（与 status 正交）
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(default_factory=datetime.now)
