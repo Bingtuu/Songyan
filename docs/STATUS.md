@@ -125,6 +125,7 @@ songyan review --project-id TEXT --chapter INT [--json]
 ## 已知限制
 
 - 只有 CLI，不是托管服务。真实生成要 API key，并且花钱。
+- **升级后先跑 `songyan doctor --init-db`**：窄加列迁移（quality_flag / stale_vs_storyline 等）只在 init/doctor 路径执行；直接对旧库跑 list/status 会以 IndexError 提示缺列（2026-11-13 真实库核对实证，既有契约非新缺陷）。
 - 《轨道蜃景》Ch1–10 管线曾 PASS、文学未过（DG-1 失败等）；细节见历史冒烟记录，不作 V1.0 文学验收。
 - 真实模型上「导入后再续写」还没有验收。
 - **未做：** 真实模型冒烟（维护者任务，不挡代码验收）；M4 之后事项（`chapter status` / `review --deep` / 导入后再续写验收）属 tech-m4 §9「以后」清单，需 owner 新授权立项。
