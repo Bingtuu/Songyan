@@ -143,7 +143,7 @@ songyan review --project-id TEXT --chapter INT [--json]
 - **2026-11-13 tech-m4-followup-s5 落地中**：方案（B1–B8）已接受（「按照目前方案开工」@ `f3d5403`）。**项 ① `stale_vs_storyline` 已交付（task 252）**：故事线切片指纹（全书 outline + 覆盖弧含边界 + 相关线索三条件并集）驱动独立新鲜度标记，与 stale_vs_canon 完全隔离（PRD「故事线不是 Canon」红线三不混：分表/分指纹/分标记）；旧行升级不标脏、只标不消；list/status 露出、pick 软提醒不拦。**项 ② S5 人改率警告已交付（task 253，2026-11-13）**：accept 现算行级 edit_ratio（<5% stderr 所有权提醒，exit 0 不拦，--json 露字段，不落表）；chapter status 现算露出；--from-file 口径上溯一级比原工作稿。**tech-m4-followup-s5 两项闭环，tech-m4 §9 全部清零（含 S5 产品向项）。**全量 3654 passed / 2 skipped / 1 xpassed + ruff 绿。
 - **2026-11-13 post-M4 路线落地中**：路线（`docs/tech-roadmap-post-m4.md`）与技术方案（`docs/tech-post-m4.md` v2）已接受。**方向 A storyline 编辑 CLI 已交付（task 255 @ `657d019`）**：`storyline show|edit|remove` 命令族（直写+审计表+软删 archived+窄校验 exit 2），故事线切片指纹排除软删行（252 标脏联动入口打通）。方向 C（256）进行中；B（257）排队；D dogfood（258）并行。
 - **2026-11-13 post-M4 方向 C 质量小项交付（task 256 @ `f9d84e2`）**：`chapter accept --no-edit-warn`（PRD :473「可以关掉」）+ `project list`（:559）。**既有 flake 清账**：doctor 子进程测试根因 = Windows 子进程 GBK 管道编码（修后三连稳）；canon promise 并发 flake 五连不复现、留观察。方向 B（257）进行中。
-- **2026-11-13 post-M4 方向 B S 信号交付（task 257 @ `0e0cfc8`）**：`chapter_heads.edit_ratio` 落列 + 独立 `songyan signals` 命令（S1/S3/S4/S5/S7 口径单测；S2 冲突关闭周期 gap 明示——需 owner 决定是否立冲突记账面）。**tech-post-m4 三方向（A/C/B）全部闭环**；tests/cli 306 全绿（doctor flake 修复后首次零失败）。余 258 dogfood（owner 侧）。
+- **2026-11-13 post-M4 方向 B S 信号交付（task 257 @ `0e0cfc8`）**：`chapter_heads.edit_ratio` 落列 + 独立 `songyan signals` 命令（S1/S3/S4/S5/S7 口径单测；S2 冲突关闭周期 gap 明示——需 owner 决定是否立冲突记账面）。**tech-post-m4 三方向（A/C/B）全部闭环**；tests/cli 306 全绿（doctor flake 修复后首次零失败）。余 258 dogfood（owner 侧）。 258 助手侧 runbook + 复盘模板已备（`.tmp/dogfood-w2.sh`），等 owner 执行（预算 ¥3）。
 
 标识与助手交接：[HANDOFF-mew.md](HANDOFF-mew.md)。书稿不入库。
 
