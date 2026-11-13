@@ -53,6 +53,7 @@ class AcceptOutcome:
     source_version_id: str
     edited_version_id: str | None
     word_count: int
+    edit_ratio: float = 0.0
 
 
 async def accept_chapter(
@@ -132,6 +133,30 @@ async def accept_chapter(
 
     accepted = await version_repo.get(accepted_version_id)
     assert accepted is not None
+    # task 253 / S5：人改率现算（事务外只读，不落表）。
+    # 源稿口径：纯复制 = accepted.parent（draft，比值恒 0）；--from-file =
+    # edited 物化行 vs 其 parent（原工作稿）——edited 行的 content 与
+    # accepted 副本相同，直接比会恒 0，必须上溯一级。
+    edit_ratio = 0.0
+    parent_row = (
+        await version_repo.get(accepted.parent_version_id)
+        if accepted.parent_version_id
+        else None
+    )
+    if parent_row is not None and parent_row.version_type == "edited":
+        original = (
+            await version_repo.get(parent_row.parent_version_id)
+            if parent_row.parent_version_id
+            else None
+        )
+        if original is not None:
+            from songyan.services.human_edit import compute_edit_ratio
+
+            edit_ratio = compute_edit_ratio(original.content, parent_row.content)
+    elif parent_row is not None:
+        from songyan.services.human_edit import compute_edit_ratio
+
+        edit_ratio = compute_edit_ratio(parent_row.content, accepted.content)
     logger.info(
         "chapter.accept",
         project_id=project_id,
@@ -140,6 +165,7 @@ async def accept_chapter(
         source_version_id=source_version_id,
         edited_version_id=edited_version_id,
         word_count=accepted.word_count,
+        edit_ratio=edit_ratio,
     )
     return AcceptOutcome(
         chapter_number=chapter_number,
@@ -147,6 +173,7 @@ async def accept_chapter(
         source_version_id=source_version_id,
         edited_version_id=edited_version_id,
         word_count=accepted.word_count,
+        edit_ratio=edit_ratio,
     )
 
 

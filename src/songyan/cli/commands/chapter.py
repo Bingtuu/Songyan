@@ -69,6 +69,7 @@ async def _accept_chapter(
         "source_version_id": outcome.source_version_id,
         "edited_version_id": outcome.edited_version_id,
         "word_count": outcome.word_count,
+        "edit_ratio": outcome.edit_ratio,
     }
 
 
@@ -97,6 +98,14 @@ def chapter_accept_cmd(
     if chapter < 1:
         raise click.ClickException("chapter 必须 >= 1")
     payload = asyncio.run(_accept_chapter(project_id, chapter, from_file))
+    # task 253 / S5：几乎没改就标 settled 的所有权提醒（<5%，不拦，exit 0）。
+    edit_warn_threshold = 0.05
+    if float(payload.get("edit_ratio") or 0.0) < edit_warn_threshold:
+        click.echo(
+            f"人改率 {float(payload['edit_ratio']):.1%}：本章几乎未改动工作稿即确认"
+            f"——所有权提醒（S5），不影响确认",
+            err=True,
+        )
     if as_json:
         click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
         return

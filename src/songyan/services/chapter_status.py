@@ -39,6 +39,7 @@ class ChapterStatusReport(BaseModel):
     slot_cost_sum: float = 0.0
     llm_cost_sum: float = 0.0
     review_findings: dict[str, int] = Field(default_factory=dict)
+    edit_ratio: float | None = None
 
 
 async def load_chapter_status(
@@ -80,6 +81,31 @@ async def load_chapter_status(
     for finding in review.findings:
         findings[finding.severity] = findings.get(finding.severity, 0) + 1
 
+    # task 253 / S5：settled/stale 章现算人改率（同 accept 口径：edited 行
+    # 上溯一级比原工作稿；纯复制比 parent draft 恒 0）。
+    edit_ratio: float | None = None
+    if head is not None and head.accepted_version_id:
+        versions = ChapterVersionRepository()
+        accepted_row = await versions.get(head.accepted_version_id)
+        if accepted_row is not None and accepted_row.parent_version_id:
+            from songyan.services.human_edit import compute_edit_ratio
+
+            parent_row = await versions.get(accepted_row.parent_version_id)
+            if parent_row is not None and parent_row.version_type == "edited":
+                original = (
+                    await versions.get(parent_row.parent_version_id)
+                    if parent_row.parent_version_id
+                    else None
+                )
+                if original is not None:
+                    edit_ratio = compute_edit_ratio(
+                        original.content, parent_row.content
+                    )
+            elif parent_row is not None:
+                edit_ratio = compute_edit_ratio(
+                    parent_row.content, accepted_row.content
+                )
+
     return ChapterStatusReport(
         project_id=project_id,
         chapter=chapter,
@@ -92,4 +118,5 @@ async def load_chapter_status(
         slot_cost_sum=sum(v.cost_cny_estimate for v in variants),
         llm_cost_sum=llm_cost_sum,
         review_findings=findings,
+        edit_ratio=edit_ratio,
     )
