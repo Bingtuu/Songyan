@@ -10,6 +10,7 @@
 from __future__ import annotations
 
 import json as _json
+import uuid
 from datetime import datetime
 from sqlite3 import Row
 from typing import TYPE_CHECKING, Literal
@@ -287,8 +288,9 @@ class NarrativeRepository:
             await c.execute(
                 """INSERT INTO arc_plans (
                     arc_id, project_id, arc_index, start_chapter, end_chapter,
-                    arc_goal, threads_to_open, threads_to_resolve, is_mainline
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    arc_goal, threads_to_open, threads_to_resolve, is_mainline,
+                    archived
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(arc_id) DO UPDATE SET
                     arc_index = excluded.arc_index,
                     start_chapter = excluded.start_chapter,
@@ -296,7 +298,8 @@ class NarrativeRepository:
                     arc_goal = excluded.arc_goal,
                     threads_to_open = excluded.threads_to_open,
                     threads_to_resolve = excluded.threads_to_resolve,
-                    is_mainline = excluded.is_mainline""",
+                    is_mainline = excluded.is_mainline,
+                    archived = excluded.archived""",
                 (
                     arc.arc_id,
                     arc.project_id,
@@ -307,6 +310,7 @@ class NarrativeRepository:
                     _json.dumps(arc.threads_to_open, ensure_ascii=False),
                     _json.dumps(arc.threads_to_resolve, ensure_ascii=False),
                     int(arc.is_mainline),
+                    int(arc.archived),
                 ),
             )
 
@@ -327,15 +331,16 @@ class NarrativeRepository:
                 """INSERT INTO plot_threads (
                     thread_id, project_id, title, description, is_mainline,
                     opened_chapter, expected_resolve_arc, status,
-                    last_status_chapter, last_status_version_id
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    last_status_chapter, last_status_version_id, archived
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(thread_id) DO UPDATE SET
                     title = excluded.title,
                     description = excluded.description,
                     is_mainline = excluded.is_mainline,
                     opened_chapter = excluded.opened_chapter,
                     expected_resolve_arc = excluded.expected_resolve_arc,
-                    status = excluded.status""",
+                    status = excluded.status,
+                    archived = excluded.archived""",
                 (
                     thread.thread_id,
                     thread.project_id,
@@ -347,6 +352,7 @@ class NarrativeRepository:
                     thread.status,
                     thread.last_status_chapter,
                     thread.last_status_version_id,
+                    int(thread.archived),
                 ),
             )
 
@@ -455,6 +461,7 @@ class NarrativeRepository:
         return await _do(conn)
 
     async def count_threads_by_status(self, project_id: str) -> dict[str, int]:
+        """按状态计数（含软删行——today 的历史计数口径；列表展示才排除 archived）。"""
         """按状态统计线索数量（供 report 与阶段 A 弧级兑现率使用）."""
         async with get_db() as conn:
             cursor = await conn.execute(
@@ -634,8 +641,6 @@ class NarrativeRepository:
         """task 255：写一条 storyline 编辑审计（与目标行同事务）。"""
 
         async def _do(c: aiosqlite.Connection) -> None:
-            import uuid
-
             await c.execute(
                 """INSERT INTO storyline_edit_history (
                     history_id, project_id, target_type, target_id,

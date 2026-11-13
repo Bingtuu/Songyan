@@ -391,3 +391,134 @@ class TestRemove:
         payload = json.loads(result.stdout)
         arc = payload["arcs"][0]
         assert arc["archived"] is True
+
+
+class TestReviewC1SoftDeleteLifecycle:
+    """task 258 review-C1 回归：软删引用方不锁死 / edit 已软删 id = 复活 / action 准确。"""
+
+    def _mk_arc_with_ref(self, runner: CliRunner) -> None:
+        assert runner.invoke(
+            cli,
+            [
+                "storyline", "edit", "thread",
+                "--project-id", _PROJECT, "--thread-id", "t-1",
+            ],
+        ).exit_code == 0
+        assert runner.invoke(
+            cli,
+            [
+                "storyline", "edit", "arc",
+                "--project-id", _PROJECT, "--arc-id", "arc-r",
+                "--arc-index", "5",
+                "--open-thread", "t-1",
+            ],
+        ).exit_code == 0
+
+    def test_edit_arc_with_archived_ref_not_locked(
+        self, runner: CliRunner, story_db: Path
+    ) -> None:
+        """弧引用 t-1 → 软删 t-1 → 弧仍可编辑（历史引用保留不动，spec A.2）。"""
+        self._mk_arc_with_ref(runner)
+        assert runner.invoke(
+            cli,
+            [
+                "storyline", "remove", "thread",
+                "--project-id", _PROJECT, "--thread-id", "t-1",
+            ],
+        ).exit_code == 0
+        result = runner.invoke(
+            cli,
+            [
+                "storyline", "edit", "arc",
+                "--project-id", _PROJECT, "--arc-id", "arc-r",
+                "--arc-goal", "改目标",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        con = sqlite3.connect(story_db)
+        goal = con.execute(
+            "SELECT arc_goal FROM arc_plans WHERE arc_id='arc-r'"
+        ).fetchone()[0]
+        con.close()
+        assert goal == "改目标"
+
+    def test_edit_archived_arc_resurrects_with_update_action(
+        self, runner: CliRunner, story_db: Path
+    ) -> None:
+        self._mk_arc_with_ref(runner)
+        assert runner.invoke(
+            cli,
+            [
+                "storyline", "remove", "arc",
+                "--project-id", _PROJECT, "--arc-id", "arc-r",
+            ],
+        ).exit_code == 0
+        result = runner.invoke(
+            cli,
+            [
+                "storyline", "edit", "arc",
+                "--project-id", _PROJECT, "--arc-id", "arc-r",
+                "--arc-goal", "复活",
+                "--json",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        assert json.loads(result.stdout)["action"] == "update"  # 不误报 create
+        con = sqlite3.connect(story_db)
+        row = con.execute(
+            "SELECT arc_goal, archived FROM arc_plans WHERE arc_id='arc-r'"
+        ).fetchone()
+        con.close()
+        assert row == ("复活", 0)
+
+    def test_edit_thread_with_archived_resolve_arc_ok(
+        self, runner: CliRunner, story_db: Path
+    ) -> None:
+        """expected_resolve_arc 指向已软删弧的线索仍可编辑。"""
+        assert runner.invoke(
+            cli,
+            [
+                "storyline", "edit", "arc",
+                "--project-id", _PROJECT, "--arc-id", "arc-x", "--arc-index", "7",
+            ],
+        ).exit_code == 0
+        assert runner.invoke(
+            cli,
+            [
+                "storyline", "edit", "thread",
+                "--project-id", _PROJECT, "--thread-id", "t-r",
+                "--expected-resolve-arc", "7",
+            ],
+        ).exit_code == 0
+        assert runner.invoke(
+            cli,
+            [
+                "storyline", "remove", "arc",
+                "--project-id", _PROJECT, "--arc-id", "arc-x",
+            ],
+        ).exit_code == 0
+        result = runner.invoke(
+            cli,
+            [
+                "storyline", "edit", "thread",
+                "--project-id", _PROJECT, "--thread-id", "t-r",
+                "--title", "仍可调",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+
+
+class TestReviewI4OutlineMissingProject:
+    def test_edit_outline_missing_project_exit_1(
+        self, runner: CliRunner, story_db: Path
+    ) -> None:
+        result = runner.invoke(
+            cli,
+            [
+                "storyline", "edit", "outline",
+                "--project-id", "no-such-project",
+                "--core-conflict", "x",
+            ],
+        )
+        assert result.exit_code == 1
+        assert "项目不存在" in result.output

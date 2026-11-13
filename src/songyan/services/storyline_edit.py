@@ -100,7 +100,10 @@ async def upsert_arc(
 ) -> str:
     """按 arc_id upsert；校验拒绝（范围/重复 arc_index/幽灵线索引用）。"""
     repo = NarrativeRepository()
-    arcs = await repo.list_arc_plans(project_id)
+    # task 258 review-C1：校验与 before 查找都基于含软删快照——引用存在性
+    # 不等于「未软删」（悬空历史引用保留不动，spec A.2）；edit 已软删 id =
+    # 复活（archived=False 进 merged，repo upsert 落列）。
+    arcs = await repo.list_arc_plans(project_id, include_archived=True)
     before = next((a for a in arcs if a.arc_id == arc_id), None)
     merged = ArcPlan(
         arc_id=arc_id,
@@ -128,6 +131,7 @@ async def upsert_arc(
             if is_mainline is not None
             else (before.is_mainline if before else False)
         ),
+        archived=False,
     )
     if merged.start_chapter > merged.end_chapter:
         raise StorylineEditError(
@@ -140,7 +144,10 @@ async def upsert_arc(
             )
     refs = set(merged.threads_to_open) | set(merged.threads_to_resolve)
     if refs:
-        existing = {th.thread_id for th in await repo.list_threads(project_id)}
+        existing = {
+            th.thread_id
+            for th in await repo.list_threads(project_id, include_archived=True)
+        }
         missing = sorted(refs - existing)
         if missing:
             raise StorylineEditError(f"弧引用了不存在的线索: {missing}")
@@ -173,7 +180,8 @@ async def upsert_thread(
 ) -> str:
     """按 thread_id upsert；status 白名单校验；expected_resolve_arc 须指向存在弧。"""
     repo = NarrativeRepository()
-    threads = await repo.list_threads(project_id)
+    # 同 upsert_arc：含软删快照（review-C1）。
+    threads = await repo.list_threads(project_id, include_archived=True)
     before = next((th for th in threads if th.thread_id == thread_id), None)
     merged = PlotThread(
         thread_id=thread_id,
@@ -196,13 +204,17 @@ async def upsert_thread(
         status=status if status is not None else (before.status if before else "planned"),
         last_status_chapter=before.last_status_chapter if before else None,
         last_status_version_id=before.last_status_version_id if before else None,
+        archived=False,
     )
     if merged.status not in THREAD_STATUSES:
         raise StorylineEditError(
             f"status 非法：{merged.status}（允许 {list(THREAD_STATUSES)}）"
         )
     if merged.expected_resolve_arc is not None:
-        arc_indexes = {a.arc_index for a in await repo.list_arc_plans(project_id)}
+        arc_indexes = {
+            a.arc_index
+            for a in await repo.list_arc_plans(project_id, include_archived=True)
+        }
         if merged.expected_resolve_arc not in arc_indexes:
             raise StorylineEditError(
                 f"expected_resolve_arc {merged.expected_resolve_arc} 不存在"
