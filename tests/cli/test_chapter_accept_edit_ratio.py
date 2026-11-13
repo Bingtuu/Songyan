@@ -182,7 +182,7 @@ def test_no_edit_warn_flag_skips_warning(
     )
     assert result.exit_code == 0, result.output
     assert "所有权提醒" not in result.stderr
-    # edit_ratio 字段照常露出
+    # edit_ratio 字段照常露出（--json 同旗标组合）
     result_json = runner.invoke(
         cli,
         [
@@ -191,10 +191,36 @@ def test_no_edit_warn_flag_skips_warning(
             "--project-id",
             _PROJECT,
             "--chapter",
-            "2",
+            str(_CHAPTER),
             "--no-edit-warn",
             "--json",
         ],
     )
-    # 章 2 无工作稿 → exit 2（幂等拒绝），仅验证旗标被接受不报错即可
-    assert result_json.exit_code in (0, 2)
+    # 章 1 已确认 → 重复 accept exit 2（幂等拒绝）；旗标被接受不报错
+    assert result_json.exit_code == 2
+
+
+def test_no_edit_warn_with_from_file(
+    runner: CliRunner, ratio_db: Path, tmp_path: Path
+) -> None:
+    """M2：旗标 × --from-file 组合——大改稿本就无警告，旗标不改变行为与 exit。"""
+    edited = tmp_path / "edited-heavy.txt"
+    edited.write_text(
+        ("清晨的南站没什么人。" + chr(10)) * 12, encoding="utf-8"
+    )
+    result = runner.invoke(
+        cli,
+        [
+            "chapter",
+            "accept",
+            "--project-id",
+            _PROJECT,
+            "--chapter",
+            str(_CHAPTER),
+            "--from-file",
+            str(edited),
+            "--no-edit-warn",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert "所有权提醒" not in result.stderr

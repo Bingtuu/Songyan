@@ -75,7 +75,9 @@ def test_list_json_structure(runner: CliRunner, multi_db: Path) -> None:
     assert by_id["proj-aaa"]["title"] == "甲项目"
     assert by_id["proj-aaa"]["genre_id"] == "mystery"
     assert by_id["proj-aaa"]["heads"] == 1
+    assert by_id["proj-aaa"]["settled"] == 0  # empty head 未 accepted
     assert by_id["proj-bbb"]["heads"] == 0
+    assert by_id["proj-bbb"]["settled"] == 0
 
 
 def test_list_empty_db_exit_0(

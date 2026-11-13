@@ -29,6 +29,7 @@ async def _list_payload() -> dict[str, object]:
                 "estimated_chapters": project.get("estimated_chapters"),
                 "words_per_chapter": project.get("words_per_chapter"),
                 "heads": int(row["heads"]),  # type: ignore[arg-type]
+                "settled": int(row["settled"]),  # type: ignore[arg-type]
             }
         )
     return {"projects": projects}
@@ -55,8 +56,9 @@ def project_list(as_json: bool) -> None:
     for row in projects:
         click.echo(
             f"- {row['project_id']} title={row['title'] or '-'} "
-            f"genre={row['genre_id']} lifecycle={row['lifecycle_status']} "
-            f"heads={row['heads']}"
+            f"genre={row['genre_id']} mode={row['mode_id']} "
+            f"lifecycle={row['lifecycle_status']} "
+            f"heads={row['heads']} settled={row['settled']}"
         )
 
 

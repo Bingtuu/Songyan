@@ -6,18 +6,20 @@
 
 from __future__ import annotations
 
+from sqlite3 import OperationalError
 from statistics import median
 from typing import Any
 
 from songyan.db.connection import get_db
 
-_PLAN_TABLES = {
-    "entities": ("plan_entities", "entity_id"),
-    "attributes": ("plan_attributes", "attribute_id"),
-    "events": ("plan_events", "event_id"),
-    "clues": ("plan_clues", "clue_id"),
-    "time_anchors": ("plan_time_anchors", "anchor_id"),
-}
+#: S1 数据源五表（表名硬编码，用户输入全走参数绑定）。
+_PLAN_TABLES = (
+    "plan_entities",
+    "plan_attributes",
+    "plan_events",
+    "plan_clues",
+    "plan_time_anchors",
+)
 
 
 async def _current_progress_chapter(project_id: str) -> int:
@@ -42,7 +44,7 @@ async def _s1(project_id: str) -> dict[str, Any]:
     approved = 0
     rejected = 0
     async with get_db() as conn:
-        for table, _id_col in _PLAN_TABLES.values():
+        for table in _PLAN_TABLES:
             cursor = await conn.execute(
                 f"SELECT COUNT(*) FROM {table} WHERE project_id = ? "
                 "AND approval_status = 'approved' "
@@ -106,14 +108,21 @@ async def _s4(project_id: str) -> dict[str, Any]:
 
 
 async def _s5(project_id: str) -> dict[str, Any]:
-    """S5 人改率分布（chapter_heads.edit_ratio 列；NULL = 未记，单列口径）。"""
+    """S5 人改率分布（chapter_heads.edit_ratio 列；NULL = 未记，单列口径）。
+
+    未迁移的旧库（无该列）整体按 NULL 处理——与 _from_row 的 content_stale
+    守卫同一降级口径；升级路径 = doctor --init-db。
+    """
     async with get_db() as conn:
-        cursor = await conn.execute(
-            "SELECT edit_ratio FROM chapter_heads "
-            "WHERE project_id = ? AND accepted_version_id IS NOT NULL",
-            (project_id,),
-        )
-        rows = [r[0] for r in await cursor.fetchall()]
+        try:
+            cursor = await conn.execute(
+                "SELECT edit_ratio FROM chapter_heads "
+                "WHERE project_id = ? AND accepted_version_id IS NOT NULL",
+                (project_id,),
+            )
+            rows = [r[0] for r in await cursor.fetchall()]
+        except OperationalError:
+            rows = []
     values = [float(v) for v in rows if v is not None]
     low = sum(1 for v in values if v < 0.05)
     return {
@@ -140,11 +149,27 @@ async def _s7(project_id: str) -> dict[str, Any]:
             (project_id,),
         )
         settled = (await cursor.fetchone())[0]
+    per_chapter: dict[str, float] = {}
+    async with get_db() as conn:
+        cursor = await conn.execute(
+            "SELECT chapter_number, COALESCE(SUM(cost_cny), 0.0) "
+            "FROM llm_call_usage WHERE project_id = ? AND chapter_number IS NOT NULL "
+            "GROUP BY chapter_number ORDER BY chapter_number",
+            (project_id,),
+        )
+        per_chapter = {
+            str(int(r[0])): round(float(r[1]), 4) for r in await cursor.fetchall()
+        }
     return {
         "total_cost_cny": round(float(row[0]), 4),
         "chapters_with_usage": int(row[1] or 0),
         "settled_chapters": int(settled or 0),
-        "note": "口径 ¥2/M 输入 ¥8/M 输出，是估算不是账单（PRD §5.2）",
+        "mean_per_settled_chapter": (
+            round(float(row[0]) / int(settled or 0), 4) if settled else 0.0
+        ),
+        "per_chapter": per_chapter,
+        "note": "口径 ¥2/M 输入 ¥8/M 输出，是估算不是账单（PRD §5.2）；"
+        "「对预算完成率」的每章预算线无现成定义，待 owner 拍板后补",
     }
 
 

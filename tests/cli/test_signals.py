@@ -55,6 +55,30 @@ async def signals_db(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     heads = ChapterHeadRepository()
     variants = ChapterVariantRepository()
 
+    # S1 构造数据：窗口内 1 条 approved（updated_at=now）、窗口外 1 条、rejected 1 条
+    con = sqlite3.connect(db_path)
+    con.execute(
+        "INSERT INTO plan_entities (entity_id, project_id, entity_type, aliases, "
+        "approval_status, created_at, updated_at) VALUES "
+        "('e-win', ?, 'person', '[]', 'approved', datetime('now'), datetime('now'))",
+        (_PROJECT,),
+    )
+    con.execute(
+        "INSERT INTO plan_entities (entity_id, project_id, entity_type, aliases, "
+        "approval_status, created_at, updated_at) VALUES "
+        "('e-old', ?, 'person', '[]', 'approved', datetime('now','-30 days'), "
+        "datetime('now','-30 days'))",
+        (_PROJECT,),
+    )
+    con.execute(
+        "INSERT INTO plan_entities (entity_id, project_id, entity_type, aliases, "
+        "approval_status, created_at, updated_at) VALUES "
+        "('e-rej', ?, 'prop', '[]', 'rejected', datetime('now'), datetime('now'))",
+        (_PROJECT,),
+    )
+    con.commit()
+    con.close()
+
     async def _settled(ch: int, edit_ratio_col: float | None) -> None:
         vid = f"ver-s{ch}"
         aid = f"ver-s{ch}-acc"
@@ -198,8 +222,8 @@ class TestSignalsCommand:
     ) -> None:
         payload = self._payload(runner)
         s1 = payload["signals"]["S1"]
-        assert "weekly_confirms" in s1
-        assert "dismiss_ratio" in s1
+        assert s1["weekly_confirms"] == 1  # 仅 e-win 落在 7 天窗口
+        assert s1["dismiss_ratio"] == pytest.approx(1 / 3, abs=1e-4)  # 实现侧 4 位舍入
 
     def test_s3_foreshadow_age_p50(
         self, runner: CliRunner, signals_db: Path
@@ -231,6 +255,8 @@ class TestSignalsCommand:
         s7 = payload["signals"]["S7"]
         assert s7["total_cost_cny"] == pytest.approx(0.07)
         assert s7["settled_chapters"] == 3
+        assert s7["per_chapter"] == {"1": 0.03, "2": 0.04}
+        assert s7["mean_per_settled_chapter"] == pytest.approx(0.07 / 3, abs=1e-4)
 
     def test_s2_gap_marked(self, runner: CliRunner, signals_db: Path) -> None:
         payload = self._payload(runner)

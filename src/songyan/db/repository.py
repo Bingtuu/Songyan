@@ -114,10 +114,13 @@ class ProjectRepository:
             conn.row_factory = Row
             cursor = await conn.execute(
                 """
-                SELECT p.*, COALESCE(h.heads, 0) AS heads
+                SELECT p.*, COALESCE(h.heads, 0) AS heads,
+                       COALESCE(h.settled, 0) AS settled
                 FROM projects p
                 LEFT JOIN (
-                    SELECT project_id, COUNT(*) AS heads
+                    SELECT project_id, COUNT(*) AS heads,
+                           SUM(CASE WHEN accepted_version_id IS NOT NULL
+                                    THEN 1 ELSE 0 END) AS settled
                     FROM chapter_heads GROUP BY project_id
                 ) h ON h.project_id = p.project_id
                 ORDER BY p.project_id
@@ -127,8 +130,11 @@ class ProjectRepository:
         out: list[dict[str, object]] = []
         for row in rows:
             d = dict(row)
+            heads = row["heads"]
+            settled = row["settled"]
             d.pop("heads", None)
-            out.append({"project": d, "heads": row["heads"]})
+            d.pop("settled", None)
+            out.append({"project": d, "heads": heads, "settled": settled})
         return out
 
     async def get(self, project_id: str) -> ProjectSetting | None:

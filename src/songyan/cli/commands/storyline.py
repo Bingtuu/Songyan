@@ -67,14 +67,16 @@ def storyline_show(project_id: str, as_json: bool) -> None:
     counts = asyncio.run(_counts())
     click.echo(_storyline_text(outline, arcs, counts))
     for arc in payload["arcs"]:
+        mark = " [archived]" if arc.get("archived") else ""
         click.echo(
             f"- arc={arc['arc_id']} ch{arc['start_chapter']}-{arc['end_chapter']} "
-            f"goal={arc['arc_goal'] or '-'}"
+            f"goal={arc['arc_goal'] or '-'}{mark}"
         )
     for thread in payload["threads"]:
+        mark = " [archived]" if thread.get("archived") else ""
         click.echo(
             f"- thread={thread['thread_id']} status={thread['status']} "
-            f"title={thread['title'] or '-'}"
+            f"title={thread['title'] or '-'}{mark}"
         )
 
 
@@ -99,6 +101,9 @@ def storyline_edit_outline(
     as_json: bool,
 ) -> None:
     """创建/更新全书大纲行（每项目一行）；未传字段保持原值。"""
+    from songyan.cli.commands.workbench import _ensure_project_readable as _ensure
+
+    asyncio.run(_ensure(project_id))
     themes_list: list[str] | None = None
     if themes is not None:
         try:
