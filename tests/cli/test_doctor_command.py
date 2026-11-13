@@ -174,6 +174,11 @@ def test_doctor_subprocess_reports_invalid_checkpointer_without_traceback(
     env["CHECKPOINTER_MODE"] = "invalid"
     env["LLM_API_KEY"] = "task210-dummy-key"
     env["DATABASE_URL"] = f"sqlite:///{tmp_path / 'doctor.db'}"
+    # task 256：Windows 子进程管道默认 GBK（cp936），中文日志会让父进程
+    # text=True 解码炸掉（reader thread UnicodeDecodeError → stdout None）。
+    # 固定子进程 UTF-8（仿 task 191 harness 先例）。
+    env["PYTHONUTF8"] = "1"
+    env["PYTHONIOENCODING"] = "utf-8"
 
     result = subprocess.run(
         [
@@ -187,6 +192,8 @@ def test_doctor_subprocess_reports_invalid_checkpointer_without_traceback(
         env=env,
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         check=False,
     )
 

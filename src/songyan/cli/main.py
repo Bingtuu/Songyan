@@ -15,6 +15,7 @@ from songyan.cli.commands.chapter import register_chapter_commands
 from songyan.cli.commands.check import register_check_commands
 from songyan.cli.commands.import_pipeline import register_import_commands
 from songyan.cli.commands.index import register_index_commands
+from songyan.cli.commands.project import register_project_commands
 from songyan.cli.commands.quality import register_quality_commands
 from songyan.cli.commands.review import register_review_commands
 from songyan.cli.commands.status import register_status_commands
@@ -1336,5 +1337,6 @@ register_check_commands(cli)
 register_status_commands(cli)
 # M4 步 2: 章级人确认写径（chapter accept；B2/B3/B5/B11）。
 register_chapter_commands(cli)
+register_project_commands(cli)
 # M4 步 4: review 只读共审（B8/B11；七源输入并集，零写库）。
 register_review_commands(cli)

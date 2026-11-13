@@ -108,6 +108,29 @@ class ProjectRepository:
             await _do(conn)
         logger.info("repository.write", table="projects", operation="insert", project_id=project_id)
 
+    async def list_projects(self) -> list[dict[str, object]]:
+        """task 256：项目清单（project list 命令数据源；每项目附章头计数）。"""
+        async with get_db() as conn:
+            conn.row_factory = Row
+            cursor = await conn.execute(
+                """
+                SELECT p.*, COALESCE(h.heads, 0) AS heads
+                FROM projects p
+                LEFT JOIN (
+                    SELECT project_id, COUNT(*) AS heads
+                    FROM chapter_heads GROUP BY project_id
+                ) h ON h.project_id = p.project_id
+                ORDER BY p.project_id
+                """
+            )
+            rows = await cursor.fetchall()
+        out: list[dict[str, object]] = []
+        for row in rows:
+            d = dict(row)
+            d.pop("heads", None)
+            out.append({"project": d, "heads": row["heads"]})
+        return out
+
     async def get(self, project_id: str) -> ProjectSetting | None:
         async with get_db() as conn:
             conn.row_factory = Row

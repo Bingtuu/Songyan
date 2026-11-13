@@ -87,20 +87,27 @@ def chapter_group() -> None:
     default=None,
     help="外置编辑稿路径；传入则以该稿为 accepted 副本来源（先物化 edited 行）",
 )
+@click.option(
+    "--no-edit-warn",
+    is_flag=True,
+    help="关闭「几乎未改动」人改率提醒（S5 所有权提醒可关，PRD :473）",
+)
 @click.option("--json", "as_json", is_flag=True, help="JSON 输出")
 def chapter_accept_cmd(
     project_id: str,
     chapter: int,
     from_file: Path | None,
+    no_edit_warn: bool,
     as_json: bool,
 ) -> None:
     """确认一章工作稿为 accepted（picked / 人改稿 → accepted）；不写结算库。"""
     if chapter < 1:
         raise click.ClickException("chapter 必须 >= 1")
     payload = asyncio.run(_accept_chapter(project_id, chapter, from_file))
-    # task 253 / S5：几乎没改就标 settled 的所有权提醒（<5%，不拦，exit 0）。
+    # task 253 / S5：几乎没改就标 settled 的所有权提醒（<5%，不拦，exit 0）；
+    # task 256：--no-edit-warn 可关（PRD :473）。
     edit_warn_threshold = 0.05
-    if float(payload.get("edit_ratio") or 0.0) < edit_warn_threshold:
+    if not no_edit_warn and float(payload.get("edit_ratio") or 0.0) < edit_warn_threshold:
         click.echo(
             f"人改率 {float(payload['edit_ratio']):.1%}：本章几乎未改动工作稿即确认"
             f"——所有权提醒（S5），不影响确认",

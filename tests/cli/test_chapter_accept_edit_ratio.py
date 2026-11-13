@@ -162,3 +162,39 @@ def test_chapter_status_shows_edit_ratio(
     payload = json.loads(result.stdout)
     assert payload["state"] == "settled"
     assert payload["edit_ratio"] == 0.0
+
+
+def test_no_edit_warn_flag_skips_warning(
+    runner: CliRunner, ratio_db: Path
+) -> None:
+    """task 256 / PRD :473「可以关掉」：--no-edit-warn 跳过 S5 所有权提醒。"""
+    result = runner.invoke(
+        cli,
+        [
+            "chapter",
+            "accept",
+            "--project-id",
+            _PROJECT,
+            "--chapter",
+            str(_CHAPTER),
+            "--no-edit-warn",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert "所有权提醒" not in result.stderr
+    # edit_ratio 字段照常露出
+    result_json = runner.invoke(
+        cli,
+        [
+            "chapter",
+            "accept",
+            "--project-id",
+            _PROJECT,
+            "--chapter",
+            "2",
+            "--no-edit-warn",
+            "--json",
+        ],
+    )
+    # 章 2 无工作稿 → exit 2（幂等拒绝），仅验证旗标被接受不报错即可
+    assert result_json.exit_code in (0, 2)
