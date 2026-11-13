@@ -13,7 +13,7 @@
 | **包版本** | 仍是 `0.5.0`（不 bump） |
 | **里程碑** | **M0 / M1 / M2 / M3 / M4 代码验收全量 PASS**（M4 @ `e5a33bd`，task 243 声称）；tech-m4 已接受（B1–B12 原样） |
 | **进行中** | 无（task 245 / 246 均已 DONE 归档，2026-11-12） |
-| **下一闸门** | tech-m4 §9「以后」清单（`chapter status` / `review --deep` / 导入后再续写验收）——需 owner 新授权立项；冒烟遗留项 245/246 已清零 |
+| **下一闸门** | tech-m4-followup（B1–B8）已接受（2026-11-12「开工」）——编码任务 248 chapter status → 249 导入后再续写验收 → 250 review --deep；§9 剩余 S5 产品向项（故事线纳入 fingerprint）另行立项 |
 | **本 handoff** | M4 §6–7 验收已声称 PASS（task 243 @ `e5a33bd`）；PRD 内里程碑全部闭环 |
 
 硬约束（接手期间同样适用）：

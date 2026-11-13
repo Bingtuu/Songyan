@@ -2,7 +2,7 @@
 
 | 项 | 内容 |
 |---|---|
-| 状态 | DOING（2026-11-12；owner 授权「立项 tech-m4 §9 后续」） |
+| 状态 | DONE（2026-11-12；方案 v1 被 owner 接受——拍板「开工」，B1–B8 原样） |
 | 关联 | tech-m4 §9「以后的技术方案」；PRD §9.2 命令树；task 236 前置调研（N1–N7）；task 243（M4 §6–7 PASS） |
 | 预估 | 调研 + 方案文档一版（本文档）；拍板后再拆编码任务 |
 
@@ -15,8 +15,8 @@
 - [x] 重读 tech-m4 §9 原文、task 236 调研（N1–N7）、PRD §9.2 分工句。
 - [x] 现状面取证：`status` / `review` / `import replay` / `chapter_progress` 服务。
 - [x] owner 预拍板三个方向性问题（立项形态 / --deep 成本门 / status 字段面）。
-- [ ] 产出 `docs/tech-m4-followup.md`（调研结论 + B 决策点 + 三步设计 + 验收分列），commit 后请 owner review。
-- [ ] owner 书面接受后拆编码任务（预计 248 chapter status / 249 导入验收 / 250 review --deep）；未接受不编码。
+- [x] 产出 `docs/tech-m4-followup.md`（调研结论 + B 决策点 + 三步设计 + 验收分列）@ `928de90`，owner 已接受（「开工」，B1–B8 原样）。
+- [x] owner 书面接受后拆编码任务：248 chapter status / 249 导入验收 / 250 review --deep（已建，见 tasks/ 平铺）。
 
 ## 验收标准
 
@@ -28,4 +28,4 @@
 
 ## 完成总结
 
-（待 DONE 时填写）
+**状态**：DONE（2026-11-12）。方案 `docs/tech-m4-followup.md` v1 @ `928de90`；owner 拍板「开工」，B1–B8 原样接受。编码任务 248/249/250 已建。

@@ -2,7 +2,7 @@
 
 | 项 | 内容 |
 |---|---|
-| 状态 | 草稿（task 247，2026-11-12）——**待 owner 书面接受后才拆编码任务** |
+| 状态 | **已接受**（2026-11-12；owner 拍板「开工」；B1–B8 原样） |
 | 关联 | tech-m4 §9「以后的技术方案」；PRD §9.2 命令树与分工句；task 236 前置调研（N1–N7，尤其 N7 验收分列口径）；task 243（M4 §6–7 PASS @ `e5a33bd`） |
 | 范围 | 三项一案三步：**步 1 `chapter status` → 步 2 导入后再续写验收 → 步 3 `review --deep`**。owner 已预拍板：一案三步按此顺序；--deep 成本门 = 交互确认 + `--yes` + `--budget-cny`；chapter status 字段面 = 中薄面 |
 
@@ -205,4 +205,6 @@ songyan review --project-id TEXT [--chapter INT] --deep [--yes] [--budget-cny FL
 
 ## 接受注记
 
-（待 owner 书面拍板：「接受 tech-m4-followup，按 B1–B8 开编码」或点名修改。未接受前不建编码任务。）
+**已接受**（2026-11-12 Asia/Shanghai）。Owner 拍板：「开工」。**B1–B8 原样接受**，无点名修改项。
+
+接受后按 §9 拆 task 248（chapter status）/ 249（导入后再续写验收）/ 250（review --deep），每步走「任务文档 → TDD → 全量回归 + ruff → 完工同步 STATUS/HANDOFF → 提交」循环。包仍 `0.5.0`；不声称 V1.0 完成。
