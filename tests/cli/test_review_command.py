@@ -31,6 +31,7 @@ _JSON_KEYS = {
     "project_id",
     "chapter",
     "workdraft_version_id",
+    "deep_count",  # task 250：--deep 深审条数（默认 0，不带 --deep 也在）
     "gate",
     "gate_note",
     "audits",

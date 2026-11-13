@@ -62,7 +62,7 @@ M1 代码验收（步 1–5 + tech-m1 §6–7）在 `main` `69d7ece`：**PASS**�
 | M4 步 3 | 已提交 `23bd3f3`（`chapter continue`）；[tasks/done/240-m4-step3-chapter-continue.md](../tasks/done/240-m4-step3-chapter-continue.md) |
 | M4 步 4 | 已提交 `b857e8b`（`review` 只读共审）；[tasks/done/241-m4-step4-review.md](../tasks/done/241-m4-step4-review.md) |
 | M4 步 5 + §6–7 验收 | 步 5 已提交 `e5a33bd`（W2 连走集成测试 + `today` M4 文案）；**§6–7 PASS @ `e5a33bd`**（[tasks/done/242-m4-step5-closure.md](../tasks/done/242-m4-step5-closure.md) · [tasks/done/243-m4-code-acceptance.md](../tasks/done/243-m4-code-acceptance.md)） |
-| 当前任务 | **task 250 DOING**（review --deep，成本门 + 深审 + ¥1 复验；tech-m4-followup 步 3，最后一步）。248/249 已 DONE；245/246/247 均归档（2026-11-12/13） |
+| 当前任务 | 无进行中。**tech-m4-followup 三步全部闭环（2026-11-13）**：248 chapter status / 249 导入后再续写验收 / 250 review --deep 均 DONE 归档。§9 仅剩 S5 产品向项（故事线纳入 fingerprint）另行立项 |
 | 架构方向 | [adr/0001-plan-first-facts.md](adr/0001-plan-first-facts.md) |
 | 工程现状 | [STATUS.md](STATUS.md) |
 | 阶段 A–C | [ROADMAP-plan-first.md](ROADMAP-plan-first.md)（CLOSED 短指针；全文在 archive，日常不要加载） |

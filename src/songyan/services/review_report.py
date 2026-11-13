@@ -96,6 +96,7 @@ class ChapterReviewReport(BaseModel):
     project_id: str
     chapter: int
     workdraft_version_id: str | None = None
+    deep_count: int = 0
     gate: PlanFactGateReport | None = None
     gate_note: str = ""
     audits: list[AuditSnapshot] = Field(default_factory=list)

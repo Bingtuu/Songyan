@@ -9,8 +9,8 @@
 
 from __future__ import annotations
 
-#: 可路由角色清单（10 个）。rule_auditor / continuity_auditor 为纯代码检测不调 LLM，
-#: embedding 走本地模型，均不在清单内。
+#: 可路由角色清单（11 个）。rule_auditor / continuity_auditor 为纯代码检测不调 LLM，
+#: embedding 走本地模型，均不在清单内。reviewer = review --deep 深审（tech-m4-followup 步 3）。
 LLM_ROLE_NAMES: frozenset[str] = frozenset(
     {
         "writer",
@@ -23,6 +23,7 @@ LLM_ROLE_NAMES: frozenset[str] = frozenset(
         "creative_director",
         "arc_summary_generator",
         "volume_summary_generator",
+        "reviewer",
     }
 )
 
