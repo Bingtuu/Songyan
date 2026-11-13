@@ -105,6 +105,10 @@ async def upsert_arc(
     # 复活（archived=False 进 merged，repo upsert 落列）。
     arcs = await repo.list_arc_plans(project_id, include_archived=True)
     before = next((a for a in arcs if a.arc_id == arc_id), None)
+    if arc_index is None and before is None:
+        # F1：create 省略 arc_index 时自动分配 max+1（含软删，与唯一性校验
+        # 同口径）；expected_resolve_arc 按 index 引用，输出须回显分配值。
+        arc_index = max((a.arc_index for a in arcs), default=-1) + 1
     merged = ArcPlan(
         arc_id=arc_id,
         project_id=project_id,

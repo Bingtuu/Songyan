@@ -522,3 +522,90 @@ class TestReviewI4OutlineMissingProject:
         )
         assert result.exit_code == 1
         assert "项目不存在" in result.output
+
+
+class TestArcIndexAutoAssign:
+    """F1：省略 --arc-index 时自动分配 max+1（create 路径；显式传值仍校验唯一）。"""
+
+    def test_auto_assigns_next_index(self, runner: CliRunner, story_db: Path) -> None:
+        for idx, aid in ((5, "arc-i5"), (7, "arc-i7")):
+            assert runner.invoke(
+                cli,
+                [
+                    "storyline", "edit", "arc",
+                    "--project-id", _PROJECT, "--arc-id", aid,
+                    "--arc-index", str(idx),
+                ],
+            ).exit_code == 0
+        result = runner.invoke(
+            cli,
+            [
+                "storyline", "edit", "arc",
+                "--project-id", _PROJECT, "--arc-id", "arc-auto",
+                "--json",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        assert json.loads(result.stdout)["arc_index"] == 8
+        text = runner.invoke(
+            cli,
+            [
+                "storyline", "edit", "arc",
+                "--project-id", _PROJECT, "--arc-id", "arc-auto2",
+            ],
+        )
+        assert "(arc_index=9)" in text.output
+
+    def test_auto_assign_counts_archived(self, runner: CliRunner, story_db: Path) -> None:
+        """已软删弧占用的 index 也计入（唯一性口径一致）。"""
+        assert runner.invoke(
+            cli,
+            [
+                "storyline", "edit", "arc",
+                "--project-id", _PROJECT, "--arc-id", "arc-hi",
+                "--arc-index", "9",
+            ],
+        ).exit_code == 0
+        assert runner.invoke(
+            cli,
+            [
+                "storyline", "remove", "arc",
+                "--project-id", _PROJECT, "--arc-id", "arc-hi",
+            ],
+        ).exit_code == 0
+        result = runner.invoke(
+            cli,
+            [
+                "storyline", "edit", "arc",
+                "--project-id", _PROJECT, "--arc-id", "arc-next",
+                "--json",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        assert json.loads(result.stdout)["arc_index"] == 10
+
+
+class TestRemoveMissingIdPinned:
+    """M3：remove 不存在的 id = 域级拒绝 exit 2（与 variant pick/abandon 缺槽同口径）。"""
+
+    def test_remove_missing_arc_exit_2(self, runner: CliRunner, story_db: Path) -> None:
+        result = runner.invoke(
+            cli,
+            [
+                "storyline", "remove", "arc",
+                "--project-id", _PROJECT, "--arc-id", "no-such",
+            ],
+        )
+        assert result.exit_code == 2
+        assert "不存在" in result.stderr
+
+    def test_remove_missing_thread_exit_2(self, runner: CliRunner, story_db: Path) -> None:
+        result = runner.invoke(
+            cli,
+            [
+                "storyline", "remove", "thread",
+                "--project-id", _PROJECT, "--thread-id", "no-such",
+            ],
+        )
+        assert result.exit_code == 2
+        assert "不存在" in result.stderr

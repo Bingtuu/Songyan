@@ -176,11 +176,15 @@ def storyline_edit_arc(
         )
     except StorylineEditError as exc:
         raise StorylineBusinessReject(str(exc)) from exc
-    payload = {"arc_id": arc_id, "action": action}
+    from songyan.db.narrative_repo import NarrativeRepository
+
+    arc_row = asyncio.run(NarrativeRepository().get_arc_by_id(arc_id))
+    arc_index = arc_row.arc_index if arc_row is not None else None
+    payload = {"arc_id": arc_id, "action": action, "arc_index": arc_index}
     if as_json:
         click.echo(json.dumps(payload, ensure_ascii=False))
         return
-    click.echo(f"arc {arc_id} {action}")
+    click.echo(f"arc {arc_id} {action} (arc_index={arc_index})")
 
 
 @storyline_edit_group.command(name="thread")
