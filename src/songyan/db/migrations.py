@@ -1746,6 +1746,19 @@ async def _migrate_storyline_archived(conn: aiosqlite.Connection) -> None:
         )
 
 
+async def _migrate_chapter_heads_edit_ratio(conn: aiosqlite.Connection) -> None:
+    """task 257：chapter_heads.edit_ratio（S5 人改率落表；tech-post-m4 v2 §B.1）。
+
+    照 content_stale 先例走独立写入方法；历史行 NULL = 未记，不回填。
+    """
+    await _add_column_if_missing(
+        conn,
+        table="chapter_heads",
+        column="edit_ratio",
+        ddl="ALTER TABLE chapter_heads ADD COLUMN edit_ratio REAL",
+    )
+
+
 async def run_migrations(conn: aiosqlite.Connection) -> None:
     """执行注册表中的所有迁移（与 init_schema 共用 _MIGRATIONS 单一事实源）."""
     for _name, _migrate in _MIGRATIONS:
@@ -1841,6 +1854,10 @@ _MIGRATIONS: list[tuple[str, Callable[[aiosqlite.Connection], Awaitable[None]]]]
     (
         "_migrate_storyline_archived",
         _migrate_storyline_archived,
+    ),
+    (
+        "_migrate_chapter_heads_edit_ratio",
+        _migrate_chapter_heads_edit_ratio,
     ),
     (
         "_migrate_foreshadowings_resolved_evidence",

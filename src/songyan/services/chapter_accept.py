@@ -99,6 +99,15 @@ async def accept_chapter(
 
     version_repo = ChapterVersionRepository()
     source_version_id = head.current_version_id
+    # task 257 / S5：人改率在事务前现算（editted 对原工作稿；纯复制 = 0），
+    # 事务内经 set_edit_ratio 落 chapter_heads.edit_ratio 列（照 content_stale 先例）。
+    edit_ratio = 0.0
+    if edited_content is not None:
+        source_version = await version_repo.get(head.current_version_id)
+        if source_version is not None:
+            from songyan.services.human_edit import compute_edit_ratio
+
+            edit_ratio = compute_edit_ratio(source_version.content, edited_content)
     async with get_db() as conn:
         try:
             edited_version_id: str | None = None
@@ -126,6 +135,9 @@ async def accept_chapter(
                 ),
                 conn=conn,
             )
+            await head_repo.set_edit_ratio(
+                project_id, chapter_number, edit_ratio, conn=conn
+            )
             await conn.commit()
         except Exception:
             await conn.rollback()
@@ -133,30 +145,6 @@ async def accept_chapter(
 
     accepted = await version_repo.get(accepted_version_id)
     assert accepted is not None
-    # task 253 / S5：人改率现算（事务外只读，不落表）。
-    # 源稿口径：纯复制 = accepted.parent（draft，比值恒 0）；--from-file =
-    # edited 物化行 vs 其 parent（原工作稿）——edited 行的 content 与
-    # accepted 副本相同，直接比会恒 0，必须上溯一级。
-    edit_ratio = 0.0
-    parent_row = (
-        await version_repo.get(accepted.parent_version_id)
-        if accepted.parent_version_id
-        else None
-    )
-    if parent_row is not None and parent_row.version_type == "edited":
-        original = (
-            await version_repo.get(parent_row.parent_version_id)
-            if parent_row.parent_version_id
-            else None
-        )
-        if original is not None:
-            from songyan.services.human_edit import compute_edit_ratio
-
-            edit_ratio = compute_edit_ratio(original.content, parent_row.content)
-    elif parent_row is not None:
-        from songyan.services.human_edit import compute_edit_ratio
-
-        edit_ratio = compute_edit_ratio(parent_row.content, accepted.content)
     logger.info(
         "chapter.accept",
         project_id=project_id,

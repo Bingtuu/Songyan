@@ -18,6 +18,7 @@ from songyan.cli.commands.index import register_index_commands
 from songyan.cli.commands.project import register_project_commands
 from songyan.cli.commands.quality import register_quality_commands
 from songyan.cli.commands.review import register_review_commands
+from songyan.cli.commands.signals import register_signals_commands
 from songyan.cli.commands.status import register_status_commands
 from songyan.cli.commands.storyline import register_storyline_commands
 from songyan.cli.commands.variant import register_variant_commands
@@ -1340,3 +1341,4 @@ register_chapter_commands(cli)
 register_project_commands(cli)
 # M4 步 4: review 只读共审（B8/B11；七源输入并集，零写库）。
 register_review_commands(cli)
+register_signals_commands(cli)

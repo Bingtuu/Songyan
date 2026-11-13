@@ -81,10 +81,10 @@ async def load_chapter_status(
     for finding in review.findings:
         findings[finding.severity] = findings.get(finding.severity, 0) + 1
 
-    # task 253 / S5：settled/stale 章现算人改率（同 accept 口径：edited 行
-    # 上溯一级比原工作稿；纯复制比 parent draft 恒 0）。
-    edit_ratio: float | None = None
-    if head is not None and head.accepted_version_id:
+    # task 253 / S5 + task 257：edit_ratio 优先读落列值（accept 事务内写入）；
+    # 旧项目 NULL 时回落 253 现算口径（edited 行上溯一级比原工作稿）。
+    edit_ratio: float | None = head.edit_ratio if head is not None else None
+    if edit_ratio is None and head is not None and head.accepted_version_id:
         versions = ChapterVersionRepository()
         accepted_row = await versions.get(head.accepted_version_id)
         if accepted_row is not None and accepted_row.parent_version_id:

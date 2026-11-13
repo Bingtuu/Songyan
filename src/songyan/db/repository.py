@@ -786,6 +786,7 @@ class ChapterHeadRepository:
         stale_marked_at = (
             row["stale_marked_at"] if "stale_marked_at" in keys else None
         )
+        edit_ratio = row["edit_ratio"] if "edit_ratio" in keys else None
         return ChapterHead(
             project_id=row["project_id"],
             chapter_number=row["chapter_number"],
@@ -794,6 +795,7 @@ class ChapterHeadRepository:
             status=row["status"],
             content_stale=content_stale,
             stale_marked_at=stale_marked_at,
+            edit_ratio=edit_ratio,
             updated_at=row["updated_at"],
         )
 
@@ -858,6 +860,31 @@ class ChapterHeadRepository:
             project_id=head.project_id,
             chapter_number=head.chapter_number,
         )
+
+    async def set_edit_ratio(
+        self,
+        project_id: str,
+        chapter_number: int,
+        edit_ratio: float,
+        conn: aiosqlite.Connection | None = None,
+    ) -> None:
+        """task 257 / S5：人改率落列（照 content_stale 先例的独立小方法）。"""
+
+        async def _do(c: aiosqlite.Connection) -> None:
+            await c.execute(
+                """
+                UPDATE chapter_heads SET edit_ratio = ?
+                WHERE project_id = ? AND chapter_number = ?
+                """,
+                (float(edit_ratio), project_id, chapter_number),
+            )
+
+        if conn is None:
+            async with get_db() as c:
+                await _do(c)
+                await c.commit()
+        else:
+            await _do(conn)
 
     async def mark_content_stale(
         self,
