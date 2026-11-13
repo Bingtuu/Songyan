@@ -2,7 +2,7 @@
 
 | 项 | 内容 |
 |---|---|
-| 状态 | TODO（tech-post-m4 §A；路线 B1–B7 已接受，2026-11-13） |
+| 状态 | DOING（2026-11-13；tech-post-m4 v2 §A，B6 修订已随「开工」确认） |
 | 关联 | `docs/tech-post-m4.md` §A / B2 / B3；PRD :17/:48 P-bench；task 252（标脏联动） |
 | 预估 | 三个编码切片（TDD）+ tests/cli 套件 |
 
