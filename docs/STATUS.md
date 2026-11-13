@@ -4,17 +4,17 @@
 
 包版本 **0.5.0**（owner 称之为 v0.5）。**V1.0** 是写作助手这一代的产品名，不是这个包版本。本页不打 git tag，也不改 `pyproject.toml`。
 
-## 接手节点（2026-11-09 Asia/Shanghai）
+## 接手节点（2026-11-13 Asia/Shanghai）
 
 | 项 | 值 |
 |----|----|
-| **git tip（`main`）** | `120012c`（task 244：修复抽卡死锁与圣经空渲染）+ STATUS/HANDOFF 同步提交；此前 @ `9f75569`（M4 闭环文档） |
-| **功能 tip（M4 步 1–5）** | `e5a33bd` — 238 章进度视图+`status` / 239 `chapter accept` / 240 `chapter continue` / 241 `review` / 242 收口（3 章 W2 连走集成测试 + `today` M4 文案） |
+| **git tip（`main`）** | `131116d`（M3/F1 评估闭环：remove 不存在 id 钉死 exit 2 + arc_index 自动分配）；本地领先 origin 17 提交未 push；此前 @ `ede0931`（已 push） |
+| **功能面** | M0–M4（@ `e5a33bd`）+ post-M4：`chapter status`(248) / `review --deep`(250) / `stale_vs_storyline`(252) / S5 人改率(253) / storyline CLI(255) / `--no-edit-warn`+`project list`(256) / `signals`(257)；质量门(245)、db-maintenance 根因(246) |
 | **包版本** | 仍是 `0.5.0`（不 bump） |
-| **里程碑** | **M0 / M1 / M2 / M3 / M4 代码验收全量 PASS**（M4 @ `e5a33bd`，task 243 声称）；tech-m4 已接受（B1–B12 原样） |
-| **进行中** | 无（tech-m4-followup 248/249/250 全部 DONE 归档，2026-11-13） |
-| **下一闸门** | tech-m4 §9 全清零（248–250 + 252/253，2026-11-13）。新方向需 owner 另行立项 |
-| **本 handoff** | M4 §6–7 验收已声称 PASS（task 243 @ `e5a33bd`）；PRD 内里程碑全部闭环 |
+| **里程碑** | **M0–M4 代码验收全量 PASS；tech-m4 §9 四项全清零；post-M4 路线方向 A/C/B 闭环**（均 2026-11-13）；回归基线 3654 passed / 2 skipped / 1 xpassed |
+| **进行中** | task 258 dogfood——助手侧 runbook + 复盘模板已备（`.tmp/dogfood-w2.sh`），**等 owner 执行**（预算 ¥3） |
+| **下一闸门** | ① owner 执行 dogfood 并填复盘；② push 决策；③ S7 预算线定义（signals 的「对预算完成率」待拍板） |
+| **本 handoff** | post-M4 三方向 + review 修复轮（1C+4I+5M）全闭环；`tests/cli` 315 全绿（doctor flake 已根修） |
 
 硬约束（接手期间同样适用）：
 

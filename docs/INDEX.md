@@ -13,9 +13,12 @@
 | [M2 技术方案](tech-m2.md) | 硬事实标脏 + 承诺债务 + 抽取提案。**已接受**（2026-11-04；B1–B6 原样）；步 1–6 已在 `main`；§6–7 代码验收 PASS（证据 tip `f1c3093`） |
 | [M3 技术方案](tech-m3.md) | 章内 Variant / 抽卡。**已接受**（2026-11-06；t104s937；B1–B7 原样）；步 1–6 已合入（功能 tip `1b0e323`）；§6–7 代码验收 PASS（`594144b`） |
 | [M4 技术方案](tech-m4.md) | W2 短环（`chapter accept` / `chapter continue` / `review` / `status`）。**已接受**（2026-11-08；B1–B12 原样）；步 1–5 已合入（tip `e5a33bd`）；§6–7 代码验收 PASS（`e5a33bd`） |
+| [tech-m4-followup](tech-m4-followup.md) | §9 后续三项：`chapter status` / 导入后再续写验收 / `review --deep`。**已接受**（2026-11-12）；task 248–250 全量闭环 |
+| [tech-m4-followup-s5](tech-m4-followup-s5.md) | S5 产品向：`stale_vs_storyline`（故事线切片指纹）/ 人改率警告。**已接受**（2026-11-13）；task 252/253 闭环 |
+| [tech-roadmap-post-m4](tech-roadmap-post-m4.md) + [tech-post-m4](tech-post-m4.md) | M4/§9 清零后的路线与技术方案。**已接受**（2026-11-13）；方向 A storyline CLI（255）/ C 质量小项（256）/ B S 信号（257）闭环，D dogfood（258）owner 侧 |
 | [ADR-0001](adr/0001-plan-first-facts.md) | 事实写入方向。阶段 A–C 已关闭，不重开召回 KPI |
-| [STATUS](STATUS.md) | 工程事实：包仍是 0.5.0；M0–M4 代码验收全量 PASS；下一闸门 = 真实模型冒烟（维护者任务） |
-| [HANDOFF](HANDOFF-mew.md) | 当天下一步：M0–M4 全量闭环（tip `e5a33bd`）；待 owner：真实模型冒烟 / tech-m4 §9「以后」清单立项 |
+| [STATUS](STATUS.md) | 工程事实：包仍是 0.5.0；M0–M4 PASS + §9 清零 + post-M4 A/C/B 闭环；待 owner：dogfood 执行 / push / S7 预算线 |
+| [HANDOFF](HANDOFF-mew.md) | 当天下一步：258 dogfood 等 owner 执行；本地 main 领先 origin 17 提交 |
 | [Quickstart](quickstart.md) | 安装、配置、短窗口、导出 |
 | [Troubleshooting](troubleshooting.md) | 失败恢复 |
 | [Release Checklist](release-checklist.md) | 维护者发布门 |

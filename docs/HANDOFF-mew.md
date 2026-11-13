@@ -2,7 +2,7 @@
 
 owner：Bingtuu。包 tip **v0.5**（`0.5.0`）。「V1.0」是产品代际名，不是包版本。本文件不打 tag。
 
-权威顺序见 [AGENTS.md](../AGENTS.md)：[PRD](prd-v1.md) → [M0 技术方案](tech-m0.md) → [M1 技术方案](tech-m1.md)（**已接受**；§6–7 **PASS**）→ [M2 技术方案](tech-m2.md)（**已接受**；§6–7 **PASS** @ `f1c3093`）→ [M3 技术方案](tech-m3.md)（**已接受**；t104s937；B1–B7 原样；§6–7 **PASS** @ `594144b`）→ [M4 技术方案](tech-m4.md)（**已接受**；2026-11-08；B1–B12 原样；§6–7 **PASS** @ `e5a33bd`）→ ADR-0001 → STATUS（事实）→ [task 244](../tasks/done/244-修复抽卡死锁与圣经空渲染.md)（2026-11-11 冒烟 P1 修复，DONE 归档；代码 @ `120012c`）→ 本文件（当天）→ `tasks/`（有任务文档之后）。
+权威顺序见 [AGENTS.md](../AGENTS.md)：[PRD](prd-v1.md) → [M0 技术方案](tech-m0.md) → [M1 技术方案](tech-m1.md)（**已接受**；§6–7 **PASS**）→ [M2 技术方案](tech-m2.md)（**已接受**；§6–7 **PASS** @ `f1c3093`）→ [M3 技术方案](tech-m3.md)（**已接受**；t104s937；B1–B7 原样；§6–7 **PASS** @ `594144b`）→ [M4 技术方案](tech-m4.md)（**已接受**；2026-11-08；B1–B12 原样；§6–7 **PASS** @ `e5a33bd`）→ [tech-m4-followup](tech-m4-followup.md)（§9 后续三项，已接受；248–250 闭环）→ [tech-m4-followup-s5](tech-m4-followup-s5.md)（S5 产品向，已接受；252/253 闭环）→ [tech-roadmap-post-m4](tech-roadmap-post-m4.md) + [tech-post-m4](tech-post-m4.md)（post-M4 路线，已接受；A/C/B 闭环 255–257）→ ADR-0001 → STATUS（事实）→ 本文件（当天）→ `tasks/`（有任务文档之后）。
 
 ## 下一刀
 

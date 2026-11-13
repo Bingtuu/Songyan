@@ -23,7 +23,7 @@
 
 Songyan 是人主导的连载写作助手。已确认的 Canon 是事实；需要探索写法时，再用本机引擎出草稿。终稿由人定。
 
-当前能跑的包是 **v0.5 技术预览 / 引擎**（`0.5.0`）。多个 Agent 在 LangGraph 上分工，长期记录在 SQLite。下一阶段的产品方向在 [V1.0 PRD](docs/prd-v1.md)（已接受）。M0–M2 与 tech-m3 已接受；**M3 步 1–6 已落地，§6–7 代码验收 PASS @ `594144b`**。文中标了 `[proposed]`、且尚未落地的命令（如 `chapter continue` / `review`）不要当成已支持。
+当前能跑的包是 **v0.5**（`0.5.0`）。多个 Agent 在 LangGraph 上分工，长期记录在 SQLite。产品方向在 [V1.0 PRD](docs/prd-v1.md)（已接受）。**M0–M4 代码验收全量 PASS（M4 @ `e5a33bd`）；tech-m4 §9 与 S5 产品向、post-M4 路线方向 A/C/B 均已闭环**——细节与命令全表见 [STATUS](docs/STATUS.md) / [AGENTS.md](AGENTS.md)。文中标了 `[proposed]`、且尚未落地的命令不要当成已支持。
 
 - **Canon 由你确认。** 人物、物件、时间和已经发生的事，以你批准的事实为准。
 - **生成可选。** 模型可以按已批准的计划卡起草，审查标出写偏的地方。
@@ -122,7 +122,7 @@ songyan report --run-id <run_id>
 songyan export --project-id <project_id> --chapters 1-3 --format md --output exports/
 ```
 
-`run` 会打印 `run_id`，这是**引擎冒烟路径**。作者路径命令（`today`、`canon`、`check`、`variant list|generate|diff|pick|abandon`）已落地（M0–M3 代码验收 PASS @ `594144b`）；`chapter continue` / `review` 等仍见 [V1.0 PRD](docs/prd-v1.md) 的 `[proposed]`。备份、导入已有小说、质量门和排错都在 [Quickstart](docs/quickstart.md)。
+`run` 会打印 `run_id`，这是**引擎冒烟路径**。作者路径命令均已落地：工作台（`today`、`canon`、`check`、`storyline show|edit|remove`、`project list`、`signals`）、抽卡（`variant list|generate|diff|pick|abandon`）、W2 短环（`chapter continue|accept|status`、`review [--deep]`）。备份、导入已有小说、质量门和排错都在 [Quickstart](docs/quickstart.md)。
 
 报告里的费用按这个口径估算：输入 **¥2/M**，输出 **¥8/M**，单章停线 **¥7.66**。这是估算，不是供应商账单。
 

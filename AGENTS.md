@@ -32,14 +32,17 @@ Songyan（松烟）是 **人主导的连载写作助手**，接在现有的事�
 4. [docs/tech-m2.md](docs/tech-m2.md) — 只规划 M2（硬事实标脏、承诺债务、抽取提案）。**已接受**（2026-11-04 Asia/Shanghai；owner widget t93s804；B1–B6 原样）。步 1–6 已进 `main`；§6–7 代码验收 **PASS**（证据 tip `f1c3093`）。不得越出 PRD 的 M2。
 5. [docs/tech-m3.md](docs/tech-m3.md) — 只规划 M3（章内 Variant / 抽卡）。**已接受**（2026-11-06 Asia/Shanghai；owner widget t104s937；B1–B7 原样）。步 1–6 已进 `main`；§6–7 代码验收 **PASS**（`594144b`）。不得越出 PRD 的 M3。
 6. [docs/tech-m4.md](docs/tech-m4.md) — 只规划 M4（`chapter continue` / `chapter accept` / `review` / `status`）。**已接受**（2026-11-08 Asia/Shanghai；owner 拍板「接受 tech-m4，按 B1–B12 开 M4 编码」；B1–B12 原样）。步 1–5 已进 `main`（task 238–242）；§6–7 代码验收 **PASS**（`e5a33bd`，task 243）。不得越出 PRD 的 M4。
-7. [docs/adr/0001-plan-first-facts.md](docs/adr/0001-plan-first-facts.md) — 事实写入方向。
-8. [docs/STATUS.md](docs/STATUS.md) — 工程事实（版本、闸门、已知限制）。
-9. [docs/HANDOFF-mew.md](docs/HANDOFF-mew.md) — 当天的下一步。
-10. [tasks/](tasks/README.md) — 队列从 `tasks/200-` 起。没有任务文件就不要口头开工。
+7. [docs/tech-m4-followup.md](docs/tech-m4-followup.md) — tech-m4 §9 后续三项（`chapter status` / 导入后再续写验收 / `review --deep`）。**已接受**（2026-11-12「开工」；B1–B8 原样）；task 248–250 全量闭环。
+8. [docs/tech-m4-followup-s5.md](docs/tech-m4-followup-s5.md) — S5 产品向（`stale_vs_storyline` / 人改率警告）。**已接受**（2026-11-13「按照目前方案开工」；B1–B8 原样）；task 252/253 闭环（M3/F1 小修订随 255 迭代）。
+9. [docs/tech-roadmap-post-m4.md](docs/tech-roadmap-post-m4.md) + [docs/tech-post-m4.md](docs/tech-post-m4.md) — M4/§9 清零后的路线与技术方案。**已接受**（2026-11-13）；方向 A（storyline CLI，task 255）/ C（质量小项，256）/ B（S 信号，257）已闭环，D（dogfood，258）owner 侧进行中。
+10. [docs/adr/0001-plan-first-facts.md](docs/adr/0001-plan-first-facts.md) — 事实写入方向。
+11. [docs/STATUS.md](docs/STATUS.md) — 工程事实（版本、闸门、已知限制）。
+12. [docs/HANDOFF-mew.md](docs/HANDOFF-mew.md) — 当天的下一步。
+13. [tasks/](tasks/README.md) — 队列从 `tasks/200-` 起。没有任务文件就不要口头开工。
 
-冲突时，上面的条目压过下面的。产品边界以 PRD 为准；M0 的实现细节以 `tech-m0.md` 为准；M1 的实现细节以**已接受的** `tech-m1.md` 为准；M2 的实现细节以**已接受的** `tech-m2.md` 为准；M3 的实现细节以**已接受的** `tech-m3.md` 为准；M4 的实现细节以**已接受的** `tech-m4.md` 为准（B1–B12 有约束力）；各里程碑不得越出 PRD 对应边界。不要用归档路线图或 [docs/prd-v1-writing-assist.md](docs/prd-v1-writing-assist.md) 的指针页推翻 PRD。
+冲突时，上面的条目压过下面的。产品边界以 PRD 为准；M0 的实现细节以 `tech-m0.md` 为准；M1 的实现细节以**已接受的** `tech-m1.md` 为准；M2 的实现细节以**已接受的** `tech-m2.md` 为准；M3 的实现细节以**已接受的** `tech-m3.md` 为准；M4 的实现细节以**已接受的** `tech-m4.md` 为准（B1–B12 有约束力）；各里程碑不得越出 PRD 对应边界；post-M4 三项按各自已接受方案执行，不越其 B 决策。不要用归档路线图或 [docs/prd-v1-writing-assist.md](docs/prd-v1-writing-assist.md) 的指针页推翻 PRD。
 
-**里程碑闸门（M0–M4 全量 PASS，2026-11-09）：** tech-m4 已接受（2026-11-08；owner 拍板「接受 tech-m4，按 B1–B12 开 M4 编码」；B1–B12 原样）；M4 步 1–5 已落地（task 238–242），§6–7 代码验收 **PASS** @ `e5a33bd`（task 243）。**PRD 内里程碑已全部闭环，不再扩 M0–M4 编码范围。** tech-m4 §9「以后」事项（真实模型冒烟 / `chapter status` / `review --deep` / 导入后再续写验收）需 owner 新授权立项，没有任务文件不要口头开工。开 PR 后 Mew COMMENT 再合并。
+**里程碑闸门（M0–M4 全量 PASS，2026-11-09；§9 清零，2026-11-13）：** tech-m4 已接受（2026-11-08；B1–B12 原样）；M4 步 1–5 已落地（task 238–242），§6–7 代码验收 **PASS** @ `e5a33bd`（task 243）。**PRD 内里程碑已全部闭环，不再扩 M0–M4 编码范围。** tech-m4 §9 四项全部交付：真实模型冒烟与导入后再续写验收（task 249，¥0.4995）、`chapter status`（248）、`review --deep`（250）、S5 产品向（252/253）。post-M4 路线（tech-roadmap-post-m4）方向 A/C/B 已闭环（255–257），D dogfood（258）owner 侧进行中。没有任务文件不要口头开工。开 PR 后 Mew COMMENT 再合并。
 
 ## 默认不要读
 
@@ -81,4 +84,4 @@ Songyan（松烟）是 **人主导的连载写作助手**，接在现有的事�
 
 ## 命令表面
 
-现网能用的包括 `doctor`、`create-project`、`run`、`report`、`export`、`import`、`backup`、`bundle-run`，以及 M0 的 `canon show` 与 `today`，以及 M1 的 `canon edit` / `confirm` / `dismiss`（及非持久 `accept`；entity/attribute）与规则 `check`，以及 M2 的 `today` 承诺计数、`canon show --kind promise`、`canon confirm promise`、`canon confirm` `--hard` / `--mark-stale`、`chapter_heads.content_stale`、`check` 报告 stale 范围、抽取 / import → `plan_*` pending（`source=extract`；confirm 前不进 canon）。M3 步 1 起注册 `variant list`；步 2 起注册 `variant generate`；步 3 起注册 `variant diff` 并增强 `list`；步 4 起注册 `variant pick` / `abandon`；步 5 起 list/diff/pick/generate 前懒标 `stale_vs_canon`，list 暴露 per-slot `cost_cny_estimate`；步 6 起 `today` 的 `next` 文案提示抽卡。M4 步 1 起注册 `status`（章进度六态 + ContextEmergency 露出）；步 2 起注册 `chapter accept`；步 3 起注册 `chapter continue`（W2 短环）；步 4 起注册 `review`（只读共审）；步 5 起 `today` 的 `next` 文案提示 continue 短环。`chapter status` / `branch` 不做。完整列表以 PRD 第 9 节为准。
+现网能用的包括 `doctor`、`create-project`、`run`、`report`、`export`、`import`、`backup`、`bundle-run`，以及 M0 的 `canon show` 与 `today`，以及 M1 的 `canon edit` / `confirm` / `dismiss`（及非持久 `accept`；entity/attribute）与规则 `check`，以及 M2 的 `today` 承诺计数、`canon show --kind promise`、`canon confirm promise`、`canon confirm` `--hard` / `--mark-stale`、`chapter_heads.content_stale`、`check` 报告 stale 范围、抽取 / import → `plan_*` pending（`source=extract`；confirm 前不进 canon）。M3 步 1 起注册 `variant list`；步 2 起注册 `variant generate`；步 3 起注册 `variant diff` 并增强 `list`；步 4 起注册 `variant pick` / `abandon`；步 5 起 list/diff/pick/generate 前懒标 `stale_vs_canon`，list 暴露 per-slot `cost_cny_estimate`；步 6 起 `today` 的 `next` 文案提示抽卡。M4 步 1 起注册 `status`（章进度六态 + ContextEmergency 露出）；步 2 起注册 `chapter accept`；步 3 起注册 `chapter continue`（W2 短环）；步 4 起注册 `review`（只读共审）；步 5 起 `today` 的 `next` 文案提示 continue 短环。post-M4：`chapter status`（248，只读章进度面，不承载 ContextEmergency）；`review --deep [--yes] [--budget-cny]`（250，显式 LLM 深审，成本前置交互门，非 TTY 须 --yes）；`storyline show | edit outline|arc|thread | remove arc|thread`（255，故事线人编辑写径，直写+审计+软删，edit = upsert/复活，省略 --arc-index 自动分配）；`chapter accept --no-edit-warn`（256，S5 提醒可关，PRD :473）；`project list`（256）；`signals`（257，S1/S3/S4/S5/S7 聚合，S2 gap 明示）。Git 式整树 `branch` 不做。完整列表以 PRD 第 9 节为准。
