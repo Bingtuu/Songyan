@@ -191,6 +191,74 @@ def chapter_continue_cmd(
     click.echo(payload["next_hint"])
 
 
+async def _chapter_status_payload(
+    project_id: str, chapter: int
+) -> dict[str, object] | None:
+    """None = 章不在章宇宙（调用方按 exit 2 处理）。"""
+    db_path = get_db_path()
+    if not db_path.is_file():
+        raise click.ClickException(f"找不到数据库文件: {db_path}")
+    project = await ProjectRepository().get(project_id)
+    if project is None:
+        raise click.ClickException(f"项目不存在: {project_id}")
+    from songyan.services.chapter_status import load_chapter_status
+
+    report = await load_chapter_status(project_id, chapter)
+    if report is None:
+        return None
+    return report.model_dump(mode="json")
+
+
+@chapter_group.command(name="status")
+@click.option("--project-id", required=True, help="项目 ID")
+@click.option("--chapter", required=True, type=int, help="章号")
+@click.option("--json", "as_json", is_flag=True, help="JSON 输出")
+def chapter_status_cmd(project_id: str, chapter: int, as_json: bool) -> None:
+    """只读章进度面：章态 / head 指针 / variant 槽 / 费用 / 共审计数。
+
+    不承载 ContextEmergency（tech-m4 B10 分工句）；零写库。
+    """
+    if chapter < 1:
+        raise click.ClickException("chapter 必须 >= 1")
+    payload = asyncio.run(_chapter_status_payload(project_id, chapter))
+    if payload is None:
+        raise ChapterBusinessReject(
+            f"指定章不存在（不在章宇宙）：第 {chapter} 章"
+        )
+    if as_json:
+        click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+        return
+    counts = payload["review_findings"]
+    click.echo(
+        f"chapter: {payload['chapter']}  state: {payload['state']}"
+    )
+    click.echo(
+        f"head: current={payload['current_version_id'] or '-'} "
+        f"accepted={payload['accepted_version_id'] or '-'} "
+        f"content_stale={payload['content_stale']}"
+    )
+    variants = payload["variants"]
+    if variants:
+        click.echo("variants:")
+        for row in variants:
+            flag = f" flag={row['quality_flag']}" if row["quality_flag"] else ""
+            click.echo(
+                f"- slot={row['slot_index']} status={row['status']}"
+                f"{flag} stale_vs_canon={row['stale_vs_canon']}"
+                f" cost={row['cost_cny_estimate']}"
+            )
+    else:
+        click.echo("variants: （无槽）")
+    click.echo(
+        f"cost: slots=¥{payload['slot_cost_sum']:.4f} "
+        f"llm=¥{payload['llm_cost_sum']:.4f}"
+    )
+    click.echo(
+        f"review: hard={counts.get('hard', 0)} "
+        f"warning={counts.get('warning', 0)} info={counts.get('info', 0)}"
+    )
+
+
 def register_chapter_commands(cli: click.Group) -> None:
     """Mount the ``chapter`` group (only implemented subcommands)."""
     cli.add_command(chapter_group)

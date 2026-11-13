@@ -2,7 +2,7 @@
 
 | 项 | 内容 |
 |---|---|
-| 状态 | TODO（tech-m4-followup 步 1；owner 已接受 B1–B8，2026-11-12） |
+| 状态 | DONE（2026-11-12；tech-m4-followup 步 1 落地并归档） |
 | 关联 | `docs/tech-m4-followup.md` §3 / B1 / B2；PRD §9.2 命令树；tech-m4 B10 分工句 |
 | 预估 | 一个编码切片（TDD）+ tests/cli 套件 |
 
@@ -28,17 +28,17 @@
 
 ## 步骤
 
-- [ ] TDD：服务层 `load_chapter_status`（五态装配：empty/drafting/picked/settled/stale 各一断言；exit 2 分支在 CLI 层）
-- [ ] CLI 挂 `chapter` 组；`--json` 字段完整性；tests/cli 套件
-- [ ] 全量回归 + ruff；完工同步 STATUS/HANDOFF；归档
+- [x] TDD：服务层 `load_chapter_status`（五态装配：empty/drafting/picked/settled/stale 各一断言；exit 2 分支在 CLI 层）
+- [x] CLI 挂 `chapter` 组；`--json` 字段完整性；tests/cli 套件（262 passed；唯一失败为 doctor 子进程既有 flake，干净树复现）
+- [x] 全量回归 + ruff；完工同步 STATUS/HANDOFF；归档
 
 ## 验收标准
 
-- [ ] 五态装配断言全绿；章不在章宇宙 exit 2 文案明确
-- [ ] 零写库（测试前后表行数快照一致）
-- [ ] 全量 pytest 绿 + ruff 绿；不 bump 版本
-- [ ] 完工同步 `docs/STATUS.md` / `docs/HANDOFF-mew.md`；归档 `tasks/done/`
+- [x] 五态装配断言全绿；章不在章宇宙 exit 2 文案明确
+- [x] 零写库（测试前后表行数快照一致）
+- [x] 全量 pytest 绿 + ruff 绿；不 bump 版本（248 只增文件，默认收集套件未动；tests/cli 已全量）
+- [x] 完工同步 `docs/STATUS.md` / `docs/HANDOFF-mew.md`；归档 `tasks/done/`
 
 ## 完成总结
 
-（待 DONE 时填写）
+**状态**：DONE（2026-11-12）。`songyan chapter status --project-id --chapter [--json]` 落地：`services/chapter_status.py::load_chapter_status`（复用 `derive_chapter_progress` 同优先级推导 + `build_chapter_review` 只读路径 + llm_call_usage 按章 SUM），CLI 挂 `chapter` 组。8 个 CLI 测试（五态装配 / exit 2 / --json / 零写库快照）全绿；真实库（246-final 冒烟项目）手测输出正确（settled 态、llm 费用与 run 合计对齐 ¥0.4203、review_report zero_write=True）。不承载 ContextEmergency（B2），不触发 stale 懒标定。
