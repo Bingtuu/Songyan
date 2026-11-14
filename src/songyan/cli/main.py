@@ -530,6 +530,18 @@ async def _create_project_from_template(
     return project_id, project
 
 
+async def _apply_title(project_id: str, title: str) -> None:
+    """task 261：--title 覆盖书名（模板建项后落库）。"""
+    from songyan.db.connection import get_db
+
+    async with get_db() as conn:
+        await conn.execute(
+            "UPDATE projects SET title = ? WHERE project_id = ?",
+            (title, project_id),
+        )
+        await conn.commit()
+
+
 @cli.command()
 @click.option(
     "--outline-file",
@@ -543,7 +555,14 @@ async def _create_project_from_template(
     default=None,
     help="使用项目模板 ID 一键创建",
 )
-def create_project(outline_file: str | None, template_id: str | None) -> None:
+@click.option(
+    "--title",
+    default=None,
+    help="项目书名（缺省取模板/交互默认值；task 261）",
+)
+def create_project(
+    outline_file: str | None, template_id: str | None, title: str | None
+) -> None:
     """交互式创建小说项目，或 --template 使用模板."""
     try:
         if template_id:
@@ -552,6 +571,8 @@ def create_project(outline_file: str | None, template_id: str | None) -> None:
             )
         else:
             project_id, project = asyncio.run(_create_project_async(outline_file))
+        if title:
+            asyncio.run(_apply_title(project_id, title))
     except click.Abort:
         raise
     except SongyanError as exc:
