@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 from collections.abc import Coroutine
 from typing import Any
 
@@ -518,6 +519,85 @@ def confirm_attribute(
             )
         )
     )
+
+
+def _stdin_isatty() -> bool:
+    """独立小函数便于测试 monkeypatch（task 259）。"""
+    import sys
+
+    return sys.stdin.isatty()
+
+
+class BatchConfirmReject(click.ClickException):
+    """批量确认拒绝（人取消 / 非交互缺 --yes）— exit 2。"""
+
+    exit_code = 2
+
+
+@canon_confirm_group.command(name="batch")
+@click.option("--project-id", required=True, help="项目 ID")
+@click.option("--yes", is_flag=True, help="跳过交互确认（脚本/CI 用）")
+@click.option("--json", "as_json", is_flag=True, help="JSON 输出")
+def confirm_batch(project_id: str, yes: bool, as_json: bool) -> None:
+    """批量确认全部 pending 提案（entity/attribute；软确认不带标脏）。
+
+    人确认语义不稀释：摘要 y/N 或 --yes；非 TTY 须显式 --yes（exit 2）。
+    批量前请先 `canon pending` 过目。task 259。
+    """
+    from songyan.cli.commands.workbench import _ensure_project_readable as _ensure
+    from songyan.cli.commands.workbench import _load_pending
+
+    _run(_ensure(project_id))
+    entities, attributes = _run(_load_pending(project_id))
+    if not entities and not attributes:
+        click.echo("无 pending 提案")
+        return
+    note = (
+        f"batch confirm：entity={len(entities)} attribute={len(attributes)}"
+        f"（软确认不带 --hard/--mark-stale）"
+    )
+    if not yes:
+        if not _stdin_isatty():
+            raise BatchConfirmReject(
+                f"{note}；非交互环境须显式 --yes 才会执行（防脚本静默入典）"
+            )
+        click.echo(note, err=True)
+        if not click.confirm("确认全部入典？", default=False):
+            raise BatchConfirmReject("已取消批量确认")
+    else:
+        click.echo(f"{note}（--yes 跳过确认）", err=True)
+
+    ok = 0
+    failed: list[str] = []
+    for row in entities:
+        try:
+            _run(_confirm_entity(project_id=project_id, entity_id=row.entity_id))
+            ok += 1
+        except Exception as exc:  # noqa: BLE001 - 逐条隔离，保住已确认
+            failed.append(f"entity {row.entity_id}: {exc}")
+    for row in attributes:
+        try:
+            _run(_confirm_attribute(project_id=project_id, attribute_id=row.attribute_id))
+            ok += 1
+        except Exception as exc:  # noqa: BLE001
+            failed.append(f"attribute {row.attribute_id}: {exc}")
+
+    payload = {
+        "confirmed": ok,
+        "failed": len(failed),
+        "entity": len(entities),
+        "attribute": len(attributes),
+    }
+    if as_json:
+        click.echo(json.dumps(payload, ensure_ascii=False))
+    else:
+        click.echo(f"confirmed={ok} failed={len(failed)}")
+    for item in failed:
+        click.echo(f"失败：{item}", err=True)
+    if failed:
+        raise click.ClickException(
+            f"批量确认部分失败（{len(failed)} 条）；已确认的保留"
+        ) from None
 
 
 @canon_confirm_group.command(name="promise")

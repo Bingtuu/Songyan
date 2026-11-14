@@ -270,6 +270,52 @@ def canon_group() -> None:
     """已确认事实与未确认行；写入见 ``canon edit``。"""
 
 
+@canon_group.command(name="pending")
+@click.option("--project-id", required=True, help="项目 ID")
+@click.option("--json", "as_json", is_flag=True, help="JSON 输出")
+def canon_pending(project_id: str, as_json: bool) -> None:
+    """列出 pending 提案（entity/attribute 分节；attribute 带 key=值预览）。task 259。"""
+    import asyncio as _asyncio
+    import json as _json
+
+    from songyan.cli.commands.workbench import _ensure_project_readable as _ensure
+
+    _asyncio.run(_ensure(project_id))
+    entities, attributes = _asyncio.run(_load_pending(project_id))
+    if as_json:
+        click.echo(
+            _json.dumps(
+                {
+                    "project_id": project_id,
+                    "entities": [e.model_dump(mode="json") for e in entities],
+                    "attributes": [a.model_dump(mode="json") for a in attributes],
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
+        return
+    if not entities and not attributes:
+        click.echo("无 pending 提案")
+        return
+    click.echo(f"entities ({len(entities)}):")
+    for row in entities:
+        click.echo(f"- {row.entity_id} type={row.entity_type} alias={row.aliases}")
+    click.echo(f"attributes ({len(attributes)}):")
+    for row in attributes:
+        click.echo(f"- {row.attribute_id} {row.key}={row.value}")
+
+
+async def _load_pending(project_id: str):
+    """task 259：读 pending 提案（entity/attribute 两表）。"""
+    from songyan.db.plan_fact_repo import PlanFactRepository
+
+    repo = PlanFactRepository()
+    entities = await repo.list_pending_entities(project_id)
+    attributes = await repo.list_pending_attributes(project_id)
+    return entities, attributes
+
+
 @canon_group.command(name="show")
 @click.option("--project-id", required=True, help="项目 ID")
 @click.option(
