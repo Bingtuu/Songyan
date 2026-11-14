@@ -4,17 +4,18 @@
 
 包版本 **0.5.0**（owner 称之为 v0.5）。**V1.0** 是写作助手这一代的产品名，不是这个包版本。本页不打 git tag，也不改 `pyproject.toml`。
 
-## 接手节点（2026-11-13 Asia/Shanghai）
+## 接手节点（2026-11-15 Asia/Shanghai）
 
 | 项 | 值 |
 |----|----|
-| **git tip（`main`）** | `96ba4e2`（已 push；此前 `131116d`） |（M3/F1 评估闭环：remove 不存在 id 钉死 exit 2 + arc_index 自动分配）；本地领先 origin 17 提交未 push；此前 @ `ede0931`（已 push） |
-| **功能面** | M0–M4（@ `e5a33bd`）+ post-M4：`chapter status`(248) / `review --deep`(250) / `stale_vs_storyline`(252) / S5 人改率(253) / storyline CLI(255) / `--no-edit-warn`+`project list`(256) / `signals`(257)；质量门(245)、db-maintenance 根因(246) |
+| **git tip（`main`）** | `43eca48`（已 push；265 context 断链修复；此前 `29dcd72`） |
+| **功能面** | M0–M4（@ `e5a33bd`）+ post-M4：248–257 批次 + 263 开章语义转正 + 264 术语治理 + **265 故事定向注入**（writer 卡 1.1.2：story_brief/角色名册/世界观设定三版面；`chapter continue` 四路定向全空时可见提醒 + JSON `orientation_notice`；`storyline edit outline --core-hook/--protagonist-background` 同步 projects；`variant generate` 字数门 `quality_flag=short`；`create-project --title` 回显修正） |
 | **包版本** | 仍是 `0.5.0`（不 bump） |
-| **里程碑** | **M0–M4 代码验收全量 PASS；tech-m4 §9 四项全清零；post-M4 路线方向 A/C/B 闭环**（均 2026-11-13）；回归基线 3654 passed / 2 skipped / 1 xpassed |
-| **进行中** | 无（263 开章语义转正闭环；待 owner：真人 dogfood 体验 / 新方向立项） |
-| **下一闸门** | ① owner 执行 dogfood 并填复盘；② push 决策；③ S7 预算线定义（signals 的「对预算完成率」待拍板） |
-| **本 handoff** | post-M4 三方向 + review 修复轮（1C+4I+5M）全闭环；`tests/cli` 315 全绿（doctor flake 已根修） |
+| **里程碑** | **M0–M4 代码验收全量 PASS；tech-m4 §9 清零；post-M4 A/C/B 闭环；265 dogfood 复测 PASS**（都市恐怖 ch1 2726 字 ¥0.0245：storyline 全 CLI 无 canon 预置，恐怖要素全命中、职场零泄漏） |
+| **回归基线** | 默认收集 3663 passed / 2 skipped / 1 xpassed；`tests/cli` 339 全绿；ruff 零告警 |
+| **进行中** | 无（265 已归档） |
+| **下一闸门** | owner 真人 dogfood（写一章评估会）；F1/F2（模板缺口/角色编辑面）与选项 A（W2 调规划器，涉 B12）待 owner 立项 |
+| **本 handoff** | 265 五切片全交付：context 断链 C2/C3/C4 修复 + C5 编辑面 + F9 字数门 + F3 回显 |
 
 硬约束（接手期间同样适用）：
 

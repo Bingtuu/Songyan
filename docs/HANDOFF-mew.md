@@ -6,6 +6,10 @@ owner：Bingtuu。包 tip **v0.5**（`0.5.0`）。「V1.0」是产品代际名�
 
 ## 下一刀
 
+**task 265 已 DONE 归档（2026-11-15）**：context 断链修复（owner 拍板选项 B）——writer 卡 1.1.2 注入故事定向（story_brief/角色名册/世界观设定，断链 C2/C3/C4）；`chapter continue` 四路定向全空可见提醒（`orientation_notice`，不越 B12）；`storyline edit outline --core-hook/--protagonist-background`（C5）；抽卡字数门 `quality_flag=short`（F9）；`--title` 回显（F3）。代码 @ `43eca48`；dogfood 复测 PASS（`.tmp/dogfood-265-末班电梯-003233/`：纯 CLI storyline、零 canon 预置，ch1 2726 字 ¥0.0245 恐怖要素全命中零泄漏）；回归：默认收集 3663 passed，tests/cli 339 全绿，ruff 零告警。评估文档：[docs/experiments/265-context-disconnect-eval.md](experiments/265-context-disconnect-eval.md)；归档：[tasks/done/265](../tasks/done/265-context-disconnect.md)。
+
+**下一刀（均需 owner 侧动作，助手默认待命）**：① owner 真人 dogfood 写一章（评估会输入）；② F1/F2（无 horror/empty 模板、characters 表无编辑 CLI）立项决策；③ 选项 A（W2 缺失 goal/brief 时自动调规划器，涉推翻 B12）产品决策。未建任务文件，不口头开工。
+
 **task 244 已 DONE 归档（2026-11-11）**：真实模型冒烟发现 5/6 两个 P1 修复，代码 @ `120012c`，切片 5 真实模型复验 PASS（`.tmp/smoke-244-verify-20261111/`：pick→accept 后 continue exit 0；圣经 text_len 0→1664；抽卡两槽真实正文 1602/2075 字；canon confirm 后 stale_vs_canon=1；费用 ¥0.4823 / 24 次调用）。归档：[tasks/done/244](../tasks/done/244-修复抽卡死锁与圣经空渲染.md)。
 
 **task 245 已 DONE 归档（2026-11-12）**：变体拒写质量门（owner 拍板 P1–P3）——判定纯函数 + 同槽重试 1 次 + `quality_flag` 打标 + 全败 exit 2；代码 @ `8c26105`；真实模型复验 ¥0.3491（`.tmp/smoke-245-verify-20261112/`）。归档：[tasks/done/245](../tasks/done/245-变体拒写判失败与重试策略.md)。
