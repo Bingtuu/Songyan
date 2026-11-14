@@ -62,7 +62,7 @@ M1 代码验收（步 1–5 + tech-m1 §6–7）在 `main` `69d7ece`：**PASS**�
 | M4 步 3 | 已提交 `23bd3f3`（`chapter continue`）；[tasks/done/240-m4-step3-chapter-continue.md](../tasks/done/240-m4-step3-chapter-continue.md) |
 | M4 步 4 | 已提交 `b857e8b`（`review` 只读共审）；[tasks/done/241-m4-step4-review.md](../tasks/done/241-m4-step4-review.md) |
 | M4 步 5 + §6–7 验收 | 步 5 已提交 `e5a33bd`（W2 连走集成测试 + `today` M4 文案）；**§6–7 PASS @ `e5a33bd`**（[tasks/done/242-m4-step5-closure.md](../tasks/done/242-m4-step5-closure.md) · [tasks/done/243-m4-code-acceptance.md](../tasks/done/243-m4-code-acceptance.md)） |
-| 当前任务 | **task 259 DOING**（canon pending/batch 批量确认；dogfood 洞察批次 259→260→261，goal loop）。258 dogfood 助手已代跑两轮（Run A/B，¥0.90），洞察转立项 |
+| 当前任务 | 无进行中。**dogfood 洞察批次 259/260/261 全部闭环（2026-11-13，goal loop）**：canon pending/batch、S5 收窄纯复制、create-project --title。待 owner：push（本地领先 20+ 提交）/ S7 预算线 / 真人 dogfood 体验 |
 | 架构方向 | [adr/0001-plan-first-facts.md](adr/0001-plan-first-facts.md) |
 | 工程现状 | [STATUS.md](STATUS.md) |
 | 阶段 A–C | [ROADMAP-plan-first.md](ROADMAP-plan-first.md)（CLOSED 短指针；全文在 archive，日常不要加载） |

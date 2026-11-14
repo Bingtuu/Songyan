@@ -2,7 +2,7 @@
 
 | 项 | 内容 |
 |---|---|
-| 状态 | DOING（2026-11-13；goal loop 批次首项） |
+| 状态 | DONE（2026-11-13；goal loop 批次首项闭环） |
 | 关联 | dogfood 复盘（每章 settlement 产 8–16 条 pending，逐条 confirm 是最大高频摩擦）；tech-m4 B11；B4 成本门交互先例 |
 | 预估 | 一个编码切片（TDD） |
 
@@ -19,17 +19,17 @@
 
 ## 步骤
 
-- [ ] TDD：pending 列出（分节 + --json）；batch --yes 全确认 + approved 集增长断言
-- [ ] TDD：交互 y 过 / n 拒（exit 2 零写入）；非 TTY 无 --yes exit 2；空 pending exit 0
-- [ ] 全量回归 + ruff；归档；STATUS/HANDOFF 同步
+- [x] TDD：pending 列出（分节 + key=值预览 + --json）；batch --yes 全确认 + approved 集增长断言（7 测）
+- [x] TDD：交互 y 过 / n 拒（exit 2 零写入）；非 TTY 无 --yes exit 2（B4 同形）；空 pending exit 0。部分失败逐条隔离报错 exit 1 已确认的保留（实现含，夹具未构造失败例——记录在案）
+- [x] 全量 3654 passed + tests/cli 325 全绿 + ruff 绿；归档；STATUS/HANDOFF 同步
 
 ## 验收标准
 
-- [ ] batch 仍是显式人写径（交互或 --yes），Canon 三态语义零变化
-- [ ] 部分失败（中途某行 confirm 失败）报错 exit 1 且已确认的保留（stderr 列出失败项）
-- [ ] 全量 pytest 绿 + ruff 绿；不 bump
-- [ ] 归档 + 文档同步
+- [x] batch 仍是显式人写径；Canon 三态零变化（复用 _confirm_entity/_confirm_attribute 软确认）
+- [x] 部分失败 exit 1 已确认保留（代码路径；无夹具构造）
+- [x] 全量 pytest 绿 + ruff 绿；不 bump
+- [x] 归档 + 文档同步
 
 ## 完成总结
 
-（待 DONE 时填写）
+**状态**：DONE（2026-11-13）。`canon pending`（分节列出 + key=值预览）+ `canon confirm batch [--yes]`（摘要 y/N / --yes / 非 TTY 拒绝 exit 2；逐条隔离失败 exit 1 已确认保留）。7 新测；**真实库实证**：dogfood Run A 积压 26 条 pending 一条命令全确认（confirmed=26 failed=0）——本任务要消灭的摩擦原地演示。tests/cli 325 全绿 + 全量 3654 passed。
