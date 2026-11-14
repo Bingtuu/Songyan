@@ -118,6 +118,8 @@ class ContinueOutcome:
     next_hint: str
     settled_previous: bool
     generated_variants: int
+    # task 265 S2：生成时四路定向（圣经/goal/brief/story_brief）全空的可见提醒
+    orientation_notice: bool = False
 
 
 async def _resolve_explicit_target(
@@ -335,6 +337,7 @@ async def _generate_one(
 
     # chapter_goal 回退（B12 默认模式可继续）：无行 → words_per_chapter 兜底。
     goal = await ChapterGoalRepository().get_by_chapter(project_id, target)
+    goal_missing = goal is None
     if goal is None:
         goal = ChapterGoal(
             chapter_number=target,
@@ -352,6 +355,13 @@ async def _generate_one(
         brief,
         last_chapter_ending=ending,
     )
+    # task 265 S2：四路定向全空 → 给作者一行可见提醒（不阻断；B12 兜底语义不变）
+    orientation_notice = (
+        goal_missing
+        and brief is None
+        and not (package.plan_bible or "").strip()
+        and not (package.story_brief or "").strip()
+    )
     version = await write_chapter(
         ChapterVersionRepository(),
         ChapterHeadRepository(),
@@ -367,6 +377,7 @@ async def _generate_one(
         next_hint=f"先 chapter accept --chapter {target} 后再 continue",
         settled_previous=settled_previous,
         generated_variants=0,
+        orientation_notice=orientation_notice,
     )
 
 

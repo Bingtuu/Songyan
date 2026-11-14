@@ -26,7 +26,7 @@ from songyan.services.variant_generate import SlotDraft, default_slot_draft
 _PROJECT = "p-qgate"
 _CHAPTER = 2
 
-GOOD = "末班铜牌在指间发沉，" * 12  # 108 字
+GOOD = "末班铜牌在指间发沉，" * 300  # 3900 字，通过质量门与字数门
 REFUSAL = "事实圣经不足，无法完成草稿。"
 REFUSAL_B = "仍无法完成，事实集缺项。"
 

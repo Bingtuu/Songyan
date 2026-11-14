@@ -22,7 +22,7 @@ from songyan.models.chapter import ChapterVersion
 from songyan.models.variant import ChapterVariant
 from songyan.plan_checks.bible import load_chapter_plan_bible
 from songyan.services.variant_fingerprint import fingerprint_chapter_parent_canon
-from songyan.services.variant_quality import classify_variant_draft
+from songyan.services.variant_quality import REASON_SHORT, classify_variant_draft
 from songyan.services.variant_stale import (
     refresh_stale_vs_canon,
     refresh_stale_vs_storyline,
@@ -187,6 +187,15 @@ async def _generate_variants_impl(
     version_repo = ChapterVersionRepository()
     variant_repo = ChapterVariantRepository()
 
+    # task 265 S4：字数门目标（项目每章字数 → 校准下限）
+    from songyan.db.repository import ProjectRepository
+    from songyan.utils.calibration import min_word_count_for_chapter
+    from songyan.utils.word_count import count_chinese_words
+
+    project_row = await ProjectRepository().get(project_id)
+    _words_target = project_row.words_per_chapter if project_row else 3000
+    _min_words = min_word_count_for_chapter(chapter, _words_target)
+
     written: list[ChapterVariant] = []
     spent = 0.0
     budget_exhausted = False
@@ -227,6 +236,20 @@ async def _generate_variants_impl(
                 )
                 total_cost += float(slot_draft.cost_cny_estimate)
                 quality_flag = classify_variant_draft(slot_draft.content)
+            # task 265 S4：字数门——拒写判定通过但低于校准下限 → short（不重试；
+            # variant pick 拒选打标槽，提示补方向后重抽）
+            if quality_flag is None:
+                _content = slot_draft.content or ""
+                if count_chinese_words(_content) < _min_words:
+                    quality_flag = REASON_SHORT
+                    logger.info(
+                        "variant.generate.short",
+                        project_id=project_id,
+                        chapter=chapter,
+                        slot_index=slot_index,
+                        word_count=count_chinese_words(_content),
+                        min_words=_min_words,
+                    )
         except LLMError as exc:
             raise VariantGenerateLLMError(
                 str(exc), written_slots=len(written)

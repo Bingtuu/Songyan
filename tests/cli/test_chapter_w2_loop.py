@@ -40,6 +40,7 @@ _PROJECT = "p-m4-w2-loop"
 _CHARACTER_ID = "char-s1"
 _BODY_1 = "第一章正文：陈照到了北站，铜镜在口袋里发烫。"
 _BODY_2 = "第二章正文：陈照走进雨里，末班车进站。" * 6
+_VARIANT_BODY = "第二章正文：陈照走进雨里，末班车进站。" * 1000  # 抽卡草稿：过字数门
 _BODY_3 = "第三章正文：陈照在车厢里坐下，铜镜渐渐冷却。"
 # 同一 JSON 服务 ch1 / ch2 两次 settlement；source_quote 须在两次正文中都可命中。
 _SETTLEMENT_JSON = json.dumps(
@@ -279,7 +280,7 @@ def test_w2_loop_pick_then_accept_does_not_block_continue(
     )
     monkeypatch.setattr(
         "songyan.services.variant_generate.default_slot_draft",
-        AsyncMock(return_value=SlotDraft(content=_BODY_2, cost_cny_estimate=0.01)),
+        AsyncMock(return_value=SlotDraft(content=_VARIANT_BODY, cost_cny_estimate=0.01)),
     )
 
     # ch1：continue 单稿 → accept

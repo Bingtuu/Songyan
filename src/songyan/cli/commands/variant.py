@@ -33,6 +33,7 @@ _QUALITY_REASONS = {
     "empty": "空",
     "empty_echo": "空回显",
     "refusal_keyword": "拒写关键词",
+    "short": "低于本章字数下限",
 }
 
 
@@ -258,7 +259,7 @@ def variant_generate(
             f"全部 {len(failed_slots)} 槽被拒写/占位判定拒绝"
             f"（quality_flag："
             f"{', '.join(str(r['quality_flag']) for r in failed_slots)}）；"
-            f"请补充事实后重抽",
+            f"请补充事实或故事定向后重抽",
             err=True,
         )
         ctx.exit(2)

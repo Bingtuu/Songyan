@@ -91,6 +91,16 @@ def storyline_edit_group() -> None:
 @click.option("--mainline-synopsis", default=None, help="主线梗概")
 @click.option("--themes", default=None, help='JSON 数组，如 ["都市","灵异"]')
 @click.option("--intended-ending", default=None, help="预期结局方向")
+@click.option(
+    "--core-hook",
+    default=None,
+    help="核心钩子（同步 projects.core_hook，供规划与生成定向）",
+)
+@click.option(
+    "--protagonist-background",
+    default=None,
+    help="主角背景（同步 projects.protagonist_background）",
+)
 @click.option("--json", "as_json", is_flag=True, help="JSON 输出")
 def storyline_edit_outline(
     project_id: str,
@@ -98,6 +108,8 @@ def storyline_edit_outline(
     mainline_synopsis: str | None,
     themes: str | None,
     intended_ending: str | None,
+    core_hook: str | None,
+    protagonist_background: str | None,
     as_json: bool,
 ) -> None:
     """创建/更新全书大纲行（每项目一行）；未传字段保持原值。"""
@@ -120,6 +132,8 @@ def storyline_edit_outline(
             mainline_synopsis=mainline_synopsis,
             themes=themes_list,
             intended_ending=intended_ending,
+            core_hook=core_hook,
+            protagonist_background=protagonist_background,
         )
     )
     payload = {"outline": True, "action": action}

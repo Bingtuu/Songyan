@@ -30,6 +30,8 @@ REASON_EMPTY = "empty"
 REASON_TOO_SHORT = "too_short"
 REASON_EMPTY_ECHO = "empty_echo"
 REASON_REFUSAL_KEYWORD = "refusal_keyword"
+# task 265 S4：字数门——通过拒写判定但低于校准字数下限（不属拒写，不重试）
+REASON_SHORT = "short"
 
 
 def classify_variant_draft(text: str | None) -> str | None:

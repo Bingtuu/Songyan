@@ -14,7 +14,8 @@ from songyan.db.migrations import init_schema
 from songyan.models import ProjectSetting
 from songyan.services.variant_generate import SlotDraft, generate_chapter_variants
 
-GOOD = "夜色沉得像一块铁，" * 12  # 108 字，通过质量门
+GOOD = "夜色沉得像一块铁，" * 400  # 3200 字，通过质量门与字数门（ch1-3 下限 2700）
+MEDIUM = "雨落在站台上。" * 40  # 360 字，通过质量门但低于字数门
 REFUSAL = "事实圣经不足，无法完成草稿。"  # <100 字 + 关键词
 REFUSAL_2 = "仍然无法完成：缺少事实，暂不生成。"
 
@@ -128,3 +129,21 @@ async def test_slot_cost_sums_retry_attempts(isolated_db: Path) -> None:
     result = await generate_chapter_variants("p-qg", 3, n=1, draft_fn=draft_fn)
 
     assert result.variants[0].cost_cny_estimate == pytest.approx(0.03)
+
+@pytest.mark.asyncio
+async def test_below_calibration_min_gets_short_flag(
+    isolated_db: Path,
+) -> None:
+    """task 265 S4：低于校准字数下限 → quality_flag=short（pick 拒选）。"""
+    seen: list[dict[str, Any]] = []
+    draft_fn = _seq_draft(
+        [SlotDraft(content=MEDIUM, cost_cny_estimate=0.01)], seen
+    )
+
+    result = await generate_chapter_variants("p-qg", 3, n=1, draft_fn=draft_fn)
+
+    assert result.variants[0].quality_flag == "short"
+    assert len(seen) == 1  # 字数门不重试
+    loaded = await ChapterVariantRepository().get_by_slot("p-qg", 3, 1)
+    assert loaded is not None
+    assert loaded.quality_flag == "short"

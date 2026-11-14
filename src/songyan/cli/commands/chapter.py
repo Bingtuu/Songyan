@@ -160,6 +160,7 @@ async def _continue_chapters(
         "word_count": outcome.word_count,
         "cost_cny": outcome.cost_cny,
         "next_hint": outcome.next_hint,
+        "orientation_notice": outcome.orientation_notice,
     }
 
 
@@ -220,6 +221,11 @@ def chapter_continue_cmd(
     else:
         click.echo(f"已生成 章 {payload['chapter']} 抽卡槽（见 variant list）{progress}")
     click.echo(payload["next_hint"])
+    if payload.get("orientation_notice"):
+        click.echo(
+            "提醒：本章缺少故事定向（故事线/角色/设定/事实圣经均空），"
+            "生成内容可能偏离你的设想——用 storyline edit 或 canon edit 补方向。"
+        )
 
 
 async def _chapter_status_payload(

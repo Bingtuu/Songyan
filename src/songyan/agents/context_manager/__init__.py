@@ -488,6 +488,9 @@ class BudgetPruner:
         # Phase 7 新增
         total += self.estimator.estimate_model(ctx.human_marks)
         total += self.estimator.estimate_model(ctx.dialogue_style_cards)
+        # task 265: 故事定向注入（纯文本）
+        total += self.estimator.estimate_model(ctx.story_brief or None)
+        total += self.estimator.estimate_model(ctx.character_roster or None)
         return total
 
     def _prune_soft_references(
@@ -1052,6 +1055,8 @@ def assemble_context_package(
     last_appeared_chapters: dict[str, int] | None = None,
     mandatory_references: list[dict[str, Any]] | None = None,
     runtime_profile: GenreRuntimeProfile | None = None,
+    story_brief: str = "",
+    character_roster: str = "",
 ) -> ContextPackage:
     """组装上下文包并按 Token 预算裁剪.
 
@@ -1263,6 +1268,9 @@ def assemble_context_package(
         character_states_total=len(character_states),
         # Task 138h: 强制连续性约束
         mandatory_references=list(mandatory_references or []),
+        # task 265: 故事定向注入
+        story_brief=story_brief,
+        character_roster=character_roster,
     )
 
     # Phase 5: 注入风格样本（如果提供）

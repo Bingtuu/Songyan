@@ -295,7 +295,10 @@ def test_json_output_fields_locked(
     result = _invoke_continue(runner, "--json")
     assert result.exit_code == 0, result.output
     payload = json.loads(result.stdout)
-    assert set(payload.keys()) == {"chapter", "version_id", "word_count", "cost_cny", "next_hint"}
+    assert set(payload.keys()) == {
+        "chapter", "version_id", "word_count", "cost_cny",
+        "next_hint", "orientation_notice",
+    }
     assert payload["chapter"] == 2
     assert payload["version_id"]
     assert payload["word_count"] > 0

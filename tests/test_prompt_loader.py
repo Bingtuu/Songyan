@@ -20,7 +20,7 @@ class TestPromptLoaderBasics:
         card = loader.load_card("writer")
         assert card.metadata.agent == "writer"
         # Writer 1.1.1 (V12-224d 5-layer beat contract) 已注册为默认版本
-        assert card.metadata.version in ("1.0.7", "1.0.8", "1.0.9", "1.1.0", "1.1.1")
+        assert card.metadata.version in ("1.0.7", "1.0.8", "1.0.9", "1.1.0", "1.1.1", "1.1.2")
         assert len(card.sections) == 10  # 1.1.0: 9 original + scene_interaction (170f)
 
     def test_load_goal_planner_card(self) -> None:
@@ -42,7 +42,7 @@ class TestPromptLoaderBasics:
         loader = get_prompt_loader()
         versions = loader.list_versions("writer")
         # Writer 当前保留 7 个版本（1.0.5 ~ 1.1.1，含 V12-224d 5-layer beat contract）
-        assert len(versions) == 7
+        assert len(versions) == 8
         assert versions[0].version == "1.0.5"
         assert versions[1].version == "1.0.6"
         assert versions[2].version == "1.0.7"

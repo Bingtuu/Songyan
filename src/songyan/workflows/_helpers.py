@@ -32,6 +32,7 @@ from songyan.models import (
     ChapterGoal,
     ChapterSummary,
     ChapterVersion,
+    Character,
     ContextPackage,
     CreativeBrief,
     LLMAuditResult,
@@ -409,6 +410,69 @@ async def trigger_layered_summaries(
             )
 
 
+# ---------------------------------------------------------------------------
+# task 265: 故事定向注入（story_brief / character_roster 纯文本构建）
+# ---------------------------------------------------------------------------
+
+_ROSTER_ROLE_CN = {"protagonist": "主角", "supporting": "配角", "antagonist": "反派"}
+_ROSTER_BG_CAP = 200  # 非主角背景裁剪上限（字符）
+
+
+async def _build_story_brief(
+    project_id: str,
+    chapter_number: int,
+    project: ProjectSetting,
+) -> str:
+    """从故事线工作台 + 项目设定构建 writer 定向文本；无内容时返回空串。"""
+    from songyan.db.narrative_repo import NarrativeRepository
+
+    lines: list[str] = []
+    if project.title:
+        lines.append(f"- 书名：《{project.title}》")
+    repo = NarrativeRepository()
+    outline = await repo.get_outline(project_id)
+    if outline is not None:
+        if outline.core_conflict:
+            lines.append(f"- 核心冲突：{outline.core_conflict}")
+        if outline.mainline_synopsis:
+            lines.append(f"- 主线梗概：{outline.mainline_synopsis}")
+        if outline.themes:
+            lines.append(f"- 主题：{'、'.join(outline.themes)}")
+        if outline.intended_ending:
+            lines.append(f"- 预期结局：{outline.intended_ending}")
+    if project.protagonist_name:
+        bg = f"——{project.protagonist_background}" if project.protagonist_background else ""
+        lines.append(f"- 主角：{project.protagonist_name}{bg}")
+    if project.core_hook:
+        lines.append(f"- 核心钩子：{project.core_hook}")
+    arc = await repo.get_arc_for_chapter(project_id, chapter_number)
+    if arc is not None and arc.arc_goal:
+        lines.append(
+            f"- 当前弧目标（第{arc.start_chapter}-{arc.end_chapter}章）：{arc.arc_goal}"
+        )
+    threads = await repo.list_threads(project_id)
+    open_titles = [
+        t.title
+        for t in threads
+        if t.title and not t.archived and t.status not in ("resolved", "abandoned")
+    ]
+    if open_titles:
+        lines.append(f"- 开放线索：{'；'.join(open_titles)}")
+    return "\n".join(lines)
+
+
+def _build_character_roster(characters: list[Character]) -> str:
+    """从角色档案构建名册文本；主角背景全量，其余裁剪到 _ROSTER_BG_CAP。"""
+    lines: list[str] = []
+    for ch in characters:
+        role = _ROSTER_ROLE_CN.get(ch.role_type, ch.role_type or "角色")
+        bg = (ch.background or "").strip()
+        if ch.role_type != "protagonist" and len(bg) > _ROSTER_BG_CAP:
+            bg = bg[:_ROSTER_BG_CAP] + "…"
+        lines.append(f"- {ch.name}（{role}）：{bg or '背景未设定'}")
+    return "\n".join(lines)
+
+
 async def load_merged_report(version_id: str) -> MergedReviewReport | None:
     """加载指定版本的最新合并审查报告."""
     return await ReviewReportRepository().get_by_version(version_id)
@@ -588,6 +652,8 @@ async def assemble_context_package(
         last_appeared_chapters=last_appeared,
         mandatory_references=mandatory_references,
         runtime_profile=runtime_profile,
+        story_brief=await _build_story_brief(project_id, chapter_number, project),
+        character_roster=_build_character_roster(characters),
     )
 
 

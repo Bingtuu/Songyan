@@ -108,6 +108,18 @@ def _render_prompt(ctx: ContextPackage) -> str:
     obligations = "\n".join(f"- {o}" for o in goal.obligations) or "（无）"
     startup_beat_sheet = _render_startup_beat_sheet(ctx)
 
+    # task 265 故事定向注入
+    story_brief = ctx.story_brief or "（无）"
+    character_roster = ctx.character_roster or "（无）"
+    world_settings = "（无）"
+    _world_lines = [
+        f"- {ref.content}"
+        for ref in ctx.soft_references
+        if ref.type == "world_setting" and ref.content
+    ]
+    if _world_lines:
+        world_settings = "\n".join(_world_lines)
+
     creative_intent = brief.creative_intent if brief else "（无）"
 
     tensions = "（无）"
@@ -465,6 +477,9 @@ def _render_prompt(ctx: ContextPackage) -> str:
         "hooks": hooks,
         "obligations": obligations,
         "startup_beat_sheet": startup_beat_sheet,
+        "story_brief": story_brief,
+        "character_roster": character_roster,
+        "world_settings": world_settings,
         "creative_intent": creative_intent,
         "required_tensions": tensions,
         "forbidden_patterns": forbidden,

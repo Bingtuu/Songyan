@@ -573,6 +573,8 @@ def create_project(
             project_id, project = asyncio.run(_create_project_async(outline_file))
         if title:
             asyncio.run(_apply_title(project_id, title))
+            # task 265 S5：回显打印应用后的书名，不得回退模板默认名
+            project = project.model_copy(update={"title": title})
     except click.Abort:
         raise
     except SongyanError as exc:

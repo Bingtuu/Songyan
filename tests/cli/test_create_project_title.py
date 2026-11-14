@@ -45,6 +45,8 @@ def test_create_with_title(
 
     pid = re.search(r"[0-9a-f]{32}", result.output).group(0)
     assert _title_of(db_path, pid) == "夜班回声"
+    # task 265 S5：成功回显必须打印应用后的书名（不得回退模板默认名）
+    assert "标题: 夜班回声" in result.output
 
 
 def test_create_without_title_keeps_template_default(

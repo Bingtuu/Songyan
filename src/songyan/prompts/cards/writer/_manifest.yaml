@@ -1,5 +1,5 @@
 agent: "writer"
-default_version: "1.1.1"
+default_version: "1.1.2"
 versions:
   - version: "1.0.5"
     description: "Phase 5：新增风格参考分区，扩充疲劳词覆盖"
@@ -29,3 +29,7 @@ versions:
     description: "V12-224d A+：引入 5-layer beat contract（动作→反馈→生理情绪→决策→落点），强制补齐每个 Beat 的情绪停留层，修复 V12-224c 字数不足 2700 硬下限问题。"
     tags: ["webnovel", "xuanhuan", "urban", "scifi", "urban_fantasy", "post_apocalyptic", "mystery_noir", "wuxia"]
     created_at: "2026-08-09"
+  - version: "1.1.2"
+    description: "task 265：故事定向注入（故事线/角色名册/世界观设定），修复 context 断链"
+    tags: ["webnovel", "xuanhuan", "urban", "scifi", "urban_fantasy", "post_apocalyptic", "mystery_noir", "wuxia"]
+    created_at: "2026-11-14"

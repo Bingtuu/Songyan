@@ -33,8 +33,14 @@ async def edit_outline(
     mainline_synopsis: str | None = None,
     themes: list[str] | None = None,
     intended_ending: str | None = None,
+    core_hook: str | None = None,
+    protagonist_background: str | None = None,
 ) -> str:
-    """读-改-写 upsert 全书大纲；审计行同事务。返回 action(create|update)。"""
+    """读-改-写 upsert 全书大纲；审计行同事务。返回 action(create|update)。
+
+    task 265 S3：``core_hook`` / ``protagonist_background`` 提供时在同一事务
+    同步 ``projects`` 对应字段（C5——project 钩子此前只在建项时写入、无编辑面）。
+    """
     repo = NarrativeRepository()
     before = await repo.get_outline(project_id)
     after = StoryOutline(
@@ -59,6 +65,20 @@ async def edit_outline(
     action = "update" if before is not None else "create"
     async with get_db() as conn:
         await repo.upsert_outline(after, conn=conn)
+        if core_hook is not None or protagonist_background is not None:
+            sets: list[str] = []
+            params: list[object] = []
+            if core_hook is not None:
+                sets.append("core_hook = ?")
+                params.append(core_hook)
+            if protagonist_background is not None:
+                sets.append("protagonist_background = ?")
+                params.append(protagonist_background)
+            params.append(project_id)
+            await conn.execute(
+                f"UPDATE projects SET {', '.join(sets)} WHERE project_id = ?",
+                params,
+            )
         await repo.record_history(
             project_id=project_id,
             target_type="outline",

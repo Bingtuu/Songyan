@@ -216,6 +216,10 @@ class ContextPackage(BaseModel):
     # === V12 startup beat sheet（Writer 正向施工单）===
     startup_beat_sheet: list[BeatSpec] = Field(default_factory=list)
 
+    # === task 265：故事定向注入（人编辑的故事线/角色档案，纯文本）===
+    story_brief: str = ""
+    character_roster: str = ""
+
     # === Phase 4 新增：分层上下文 ===
     arc_context: ArcSummary | None = None
     volume_context: VolumeSummary | None = None

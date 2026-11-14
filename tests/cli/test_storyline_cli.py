@@ -132,6 +132,51 @@ class TestEditOutline:
         assert "旧冲突" in history[1][3]  # before_json
         assert "新冲突" in history[1][4]  # after_json
 
+    def test_core_hook_and_protagonist_background_sync_to_project(
+        self, runner: CliRunner, story_db: Path
+    ) -> None:
+        """task 265 S3：--core-hook / --protagonist-background 同步 projects 行。"""
+        result = runner.invoke(
+            cli,
+            [
+                "storyline", "edit", "outline",
+                "--project-id", _PROJECT,
+                "--core-conflict", "冲突",
+                "--core-hook", "零点十三分电梯开门",
+                "--protagonist-background", "夜班保安，长期失眠",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        con = sqlite3.connect(story_db)
+        row = con.execute(
+            "SELECT core_hook, protagonist_background FROM projects "
+            "WHERE project_id=?",
+            (_PROJECT,),
+        ).fetchone()
+        con.close()
+        assert row == ("零点十三分电梯开门", "夜班保安，长期失眠")
+
+    def test_project_hook_fields_unchanged_without_flags(
+        self, runner: CliRunner, story_db: Path
+    ) -> None:
+        result = runner.invoke(
+            cli,
+            [
+                "storyline", "edit", "outline",
+                "--project-id", _PROJECT,
+                "--core-conflict", "冲突",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        con = sqlite3.connect(story_db)
+        row = con.execute(
+            "SELECT core_hook, protagonist_background FROM projects "
+            "WHERE project_id=?",
+            (_PROJECT,),
+        ).fetchone()
+        con.close()
+        assert row == ("", "")
+
 
 class TestShow:
     def test_show_json_structure(
