@@ -241,7 +241,7 @@ def storyline_edit_thread(
 
 @storyline_group.group(name="remove")
 def storyline_remove_group() -> None:
-    """软删（archived=1，可审计、不进指纹切片）；幂等。"""
+    """软删（保留审计记录，不再影响新鲜度判定）；幂等。"""
 
 
 @storyline_remove_group.command(name="arc")
@@ -249,7 +249,7 @@ def storyline_remove_group() -> None:
 @click.option("--arc-id", required=True, help="弧 ID")
 @click.option("--json", "as_json", is_flag=True, help="JSON 输出")
 def storyline_remove_arc(project_id: str, arc_id: str, as_json: bool) -> None:
-    """软删一条弧；重复删除为 no-op（exit 0）。"""
+    """软删一条弧（保留审计记录，不再影响新鲜度判定）；重复删除为 no-op。"""
     from songyan.cli.commands.workbench import _ensure_project_readable as _ensure
     from songyan.services.storyline_edit import StorylineEditError, remove_arc
 
@@ -270,7 +270,7 @@ def storyline_remove_arc(project_id: str, arc_id: str, as_json: bool) -> None:
 @click.option("--thread-id", required=True, help="线索 ID")
 @click.option("--json", "as_json", is_flag=True, help="JSON 输出")
 def storyline_remove_thread(project_id: str, thread_id: str, as_json: bool) -> None:
-    """软删一条线索；重复删除为 no-op（exit 0）。"""
+    """软删一条线索（保留审计记录，不再影响新鲜度判定）；重复删除为 no-op。"""
     from songyan.cli.commands.workbench import _ensure_project_readable as _ensure
     from songyan.services.storyline_edit import StorylineEditError, remove_thread
 

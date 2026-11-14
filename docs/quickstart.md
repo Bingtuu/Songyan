@@ -204,7 +204,7 @@ songyan export --project-id <project_id> --by arc --format md --output exports/
 songyan export --project-id <project_id> --by volume --format txt --output exports/
 ```
 
-如果没有 accepted 章节，`export` 会失败并提示没有可导出的 accepted 章节。这不是数据丢失，而是说明项目还没有通过接收门槛的正文。
+如果没有已确认（accepted）的章节，`export` 会失败并提示没有可导出的章节。这不是数据丢失，而是项目还没有已确认的正文。
 
 ## 备份与恢复
 

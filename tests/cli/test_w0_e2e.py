@@ -19,13 +19,15 @@ from songyan.db.plan_fact_loader import (
 _E2E_ENTITY_ID = "m1-w0-entity-loop"
 _E2E_ATTR_ID = "m1-w0-attr-loop"
 _NEXT = (
-    "可用 canon confirm 入典或销账承诺；硬确认可用 --hard/--mark-stale；"
-    "续写下一章走 chapter continue，"
-    "章内草稿可 variant generate 抽卡（默认 N=2，不 auto-pick）。"
+    "入典先 canon pending 过目提案，canon confirm 入典"
+    "（batch --yes 可批量）；硬确认可用 --hard/--mark-stale；"
+    "续写或开新章走 chapter continue（--chapter N 显式开章）；"
+    "章内草稿可 variant generate 抽卡（默认 N=2，不自动选用）；"
+    "生成后先 chapter accept 再 continue。"
 )
-_CANON_HEAD = "# Canon（approved）"
-_PENDING_HEAD = "# Pending（不是 Canon）"
-_STORYLINE_HEAD = "# Storyline（规划骨架，不是已确认事实）"
+_CANON_HEAD = "# 已确认事实（Canon / approved）"
+_PENDING_HEAD = "# 待确认提案（pending，不是已确认事实）"
+_STORYLINE_HEAD = "# 故事线（规划，不是已确认事实）"
 
 
 @pytest.fixture

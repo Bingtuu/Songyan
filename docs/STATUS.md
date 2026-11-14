@@ -146,6 +146,7 @@ songyan review --project-id TEXT --chapter INT [--json]
 - **2026-11-13 post-M4 方向 B S 信号交付（task 257 @ `0e0cfc8`）**：`chapter_heads.edit_ratio` 落列 + 独立 `songyan signals` 命令（S1/S3/S4/S5/S7 口径单测；S2 冲突关闭周期 gap 明示——需 owner 决定是否立冲突记账面）。**tech-post-m4 三方向（A/C/B）全部闭环**；tests/cli 306 全绿（doctor flake 修复后首次零失败）。余 258 dogfood（owner 侧）。 **2026-11-13 整体 review 一轮**（子代理审查 + 零 API 场景测试）：修复软删生命周期三连环（C1）、S7 每章成本口径、project list settled、signals 未迁移库守卫等 1C+4I+5M @ `7cfb91b`/`4f6a0a9`；全量 3654 passed。M3/F1 已闭环（remove 不存在 id 钉死 exit 2 同族口径；省略 --arc-index 自动分配 max+1 并回显）。遗留待 owner：S7 预算线定义。 258 助手侧 runbook + 复盘模板已备（`.tmp/dogfood-w2.sh`），等 owner 执行（预算 ¥3）。
 - **2026-11-13 dogfood 洞察批次闭环（goal loop；259/260/261）**：两轮 dogfood（Run A/B，¥0.90）驱动的三个高频摩擦修复——`canon pending` + `canon confirm batch`（26 条积压一条命令清，真实库实证）；S5 警告收窄为仅纯复制触发（Run B 实证 0.83% 一行润色触发疲劳）；`create-project --title`。tests/cli 325 全绿 + 全量 3654 passed。
 - **2026-11-14 S 信号闭环（task 262 @ `e455207`）**：S2 落地（human_marks 周期口径）+ S7 预算线（默认 ¥0.5/章，超预算章列表 + 预算内占比）——**S1–S7 七信号全部可算**。
+- **2026-11-14 术语与文案治理（task 264）**：`docs/glossary.md` 术语表 v1 落地；today next、variant/chapter status 输出、错误与帮助文案全面去内部术语（章宇宙/fp/slStale/task 号等）；README/quickstart 刷新。tests/cli 334 全绿 + 全量 3654 passed。
 - **2026-11-14 开章语义转正（task 263 @ `bdb5c39`）**：`chapter continue --chapter N` 显式开章——内联铺 empty head 替代 dogfood 里反复出现的 SQL seeding；跳跃/已 accepted 拒绝；真实模型复验一步开书（新项目 --chapter 1 → 3266 字草稿 ¥0.0314，无需 run 先跑）。
 
 标识与助手交接：[HANDOFF-mew.md](HANDOFF-mew.md)。书稿不入库。

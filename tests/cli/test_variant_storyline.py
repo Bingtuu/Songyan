@@ -106,7 +106,7 @@ def test_list_text_shows_storyline_stale(
         ],
     )
     assert result.exit_code == 0, result.output
-    assert "slStale=1" in result.output
+    assert "相对故事线已演进" in result.output
 
 
 def test_pick_warns_but_exit_0(runner: CliRunner, sl_db: Path) -> None:
@@ -126,7 +126,7 @@ def test_pick_warns_but_exit_0(runner: CliRunner, sl_db: Path) -> None:
     )
     assert result.exit_code == 0, result.output
     assert "故事线" in result.stderr
-    assert "stale_vs_storyline=1" in result.stderr
+    assert "已演进的故事线草稿" in result.stderr
 
 
 def test_list_lazy_refresh_marks_after_storyline_change(

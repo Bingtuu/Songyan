@@ -268,7 +268,9 @@ class TestSignalsCommand:
         assert result.exit_code == 0, result.output
         for key in ("S1", "S2", "S3", "S4", "S5", "S7"):
             assert key in result.output
-        assert "gap" in result.output
+        for label in ("确认入典", "问题关闭周期", "开放承诺年龄"):
+            assert label in result.output
+        assert "暂不可算" not in result.output  # 262 后 S2 可算
 
 
 class TestS2HumanMarkCycle:

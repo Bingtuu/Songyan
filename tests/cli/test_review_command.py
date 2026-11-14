@@ -176,7 +176,7 @@ def test_empty_universe_reports_empty(
     """章宇宙为空 → 空报告 exit 0，不炸。"""
     result = _invoke(runner)
     assert result.exit_code == 0, result.output
-    assert "章宇宙为空" in result.output
+    assert "还没有任何章节工作记录" in result.output
 
 
 # --- 呈现切片 -------------------------------------------------------------------

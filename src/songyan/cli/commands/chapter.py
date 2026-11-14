@@ -90,7 +90,7 @@ def chapter_group() -> None:
 @click.option(
     "--no-edit-warn",
     is_flag=True,
-    help="关闭「几乎未改动」人改率提醒（S5 所有权提醒可关，PRD :473）",
+    help="关闭「几乎未改动」人改率提醒",
 )
 @click.option("--json", "as_json", is_flag=True, help="JSON 输出")
 def chapter_accept_cmd(
@@ -165,15 +165,15 @@ async def _continue_chapters(
 
 @chapter_group.command(name="continue")
 @click.option("--project-id", required=True, help="项目 ID")
-@click.option("--count", default=1, type=int, help="批命令次数 1..3（逐章停闸，非跳过确认）")
-@click.option("--variants", type=int, default=None, help="转调 M3 抽卡生成 N 槽（不 auto-pick）")
+@click.option("--count", default=1, type=int, help="批命令次数 1..3（逐章停下等确认，不跳过确认）")
+@click.option("--variants", type=int, default=None, help="转调抽卡生成 N 个草稿槽（不自动选用）")
 @click.option("--require-plan", is_flag=True, help="本章计划缺失时拒绝执行（默认仅警告）")
 @click.option(
     "--chapter",
     type=int,
     default=None,
-    help="显式目标章（task 263 开章语义）：不在章宇宙则内联铺 empty head；"
-    "前面有未写章或已 accepted 则拒绝（exit 2）；省略 = 自动 targeting",
+    help="显式目标章（开新章）：不在章节列表则直接开章；"
+    "前面有未写的章或本章已确认则拒绝（exit 2）；省略 = 自动选下一章",
 )
 @click.option("--json", "as_json", is_flag=True, help="JSON 输出")
 def chapter_continue_cmd(
@@ -184,7 +184,10 @@ def chapter_continue_cmd(
     chapter: int | None,
     as_json: bool,
 ) -> None:
-    """推进下一章（或 --chapter 显式开章）：准备 → 组装 → 生成草稿或抽卡；每章生成即停闸。"""
+    """推进下一章（或 --chapter 显式开新章）。
+
+    准备 → 组装 → 生成草稿或抽卡；每章生成后停下等确认。
+    """
     if count < 1 or count > 3:
         raise click.ClickException(f"--count 必须在 1..3 之间（收到 {count}）")
     if variants is not None and variants < 1:
@@ -200,8 +203,7 @@ def chapter_continue_cmd(
         progress = asyncio.run(load_chapter_progress(project_id))
         if not progress.chapters:
             click.echo(
-                "项目尚无章节工作稿；开章走 run --chapters N 或 "
-                "variant generate --chapter N"
+                "项目尚无章节工作稿；开书走 chapter continue --chapter 1"
             )
         else:
             click.echo("全部章已 accepted")
@@ -243,49 +245,52 @@ async def _chapter_status_payload(
 @click.option("--chapter", required=True, type=int, help="章号")
 @click.option("--json", "as_json", is_flag=True, help="JSON 输出")
 def chapter_status_cmd(project_id: str, chapter: int, as_json: bool) -> None:
-    """只读章进度面：章态 / head 指针 / variant 槽 / 费用 / 共审计数。
+    """只读章进度面：章态 / 工作稿 / 抽卡槽 / 费用 / 共审计数。
 
-    不承载 ContextEmergency（tech-m4 B10 分工句）；零写库。
+    不承载 ContextEmergency（项目级 status 才有）；零写库。
     """
     if chapter < 1:
         raise click.ClickException("chapter 必须 >= 1")
     payload = asyncio.run(_chapter_status_payload(project_id, chapter))
     if payload is None:
         raise ChapterBusinessReject(
-            f"指定章不存在（不在章宇宙）：第 {chapter} 章"
+            f"该章还没有章节工作记录：第 {chapter} 章"
+            f"（开新章走 chapter continue --chapter {chapter}）"
         )
     if as_json:
         click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
         return
     counts = payload["review_findings"]
+    click.echo(f"章 {payload['chapter']}  状态={payload['state']}")
     click.echo(
-        f"chapter: {payload['chapter']}  state: {payload['state']}"
-    )
-    click.echo(
-        f"head: current={payload['current_version_id'] or '-'} "
-        f"accepted={payload['accepted_version_id'] or '-'} "
-        f"content_stale={payload['content_stale']}"
+        f"工作稿 当前={payload['current_version_id'] or '-'} "
+        f"已确认={payload['accepted_version_id'] or '-'} "
+        f"相对事实已过期={'是' if payload['content_stale'] else '否'}"
     )
     variants = payload["variants"]
     if variants:
         click.echo("variants:")
         for row in variants:
-            flag = f" flag={row['quality_flag']}" if row["quality_flag"] else ""
+            marks = ""
+            if row["quality_flag"]:
+                marks += f" [判失败={row['quality_flag']}]"
+            if int(row["stale_vs_canon"] or 0) == 1:
+                marks += " [相对事实已过期]"
+            if int(row["stale_vs_storyline"] or 0) == 1:
+                marks += " [相对故事线已演进]"
             click.echo(
-                f"- slot={row['slot_index']} status={row['status']}"
-                f"{flag} stale_vs_canon={row['stale_vs_canon']}"
-                f" slStale={row['stale_vs_storyline']}"
-                f" cost={row['cost_cny_estimate']}"
+                f"- 槽{row['slot_index']} 状态={row['status']}"
+                f" 费用=¥{row['cost_cny_estimate']:.4f}{marks}"
             )
     else:
-        click.echo("variants: （无槽）")
+        click.echo("抽卡槽：（无）")
     click.echo(
-        f"cost: slots=¥{payload['slot_cost_sum']:.4f} "
-        f"llm=¥{payload['llm_cost_sum']:.4f}"
+        f"费用 抽卡槽合计=¥{payload['slot_cost_sum']:.4f} "
+        f"模型调用=¥{payload['llm_cost_sum']:.4f}"
     )
     click.echo(
-        f"review: hard={counts.get('hard', 0)} "
-        f"warning={counts.get('warning', 0)} info={counts.get('info', 0)}"
+        f"共审 硬伤={counts.get('hard', 0)} "
+        f"警告={counts.get('warning', 0)} 提示={counts.get('info', 0)}"
     )
 
 

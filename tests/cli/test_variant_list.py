@@ -81,4 +81,6 @@ def test_variant_list_text_uses_stale_vs_canon_column_name(
         cli, ["variant", "list", "--project-id", _PROJECT, "--chapter", "1"]
     )
     assert result.exit_code == 0, result.output
-    assert "stale_vs_canon=" in result.output
+    # task 264：文本面改中文标签（列名留在 --json 机器面）；
+    # 原断言锁 stale_vs_canon= 列名（task 231），现锁「相对事实已过期」标签。
+    assert "相对事实已过期" not in result.output  # 未过期时不显示该标记

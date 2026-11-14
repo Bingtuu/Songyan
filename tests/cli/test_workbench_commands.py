@@ -130,13 +130,17 @@ def test_canon_show_splits_approved_and_pending(
     after = asyncio.run(_entity_count())
 
     assert result.exit_code == 0, result.output
-    canon = _between(result.output, "# Canon（approved）", "# Pending（不是 Canon）")
+    canon = _between(
+        result.output,
+        "# 已确认事实（Canon / approved）",
+        "# 待确认提案（pending，不是已确认事实）",
+    )
     pending = _between(
         result.output,
-        "# Pending（不是 Canon）",
-        "# Storyline（规划骨架，不是已确认事实）",
+        "# 待确认提案（pending，不是已确认事实）",
+        "# 故事线（规划，不是已确认事实）",
     )
-    storyline = _between(result.output, "# Storyline（规划骨架，不是已确认事实）", None)
+    storyline = _between(result.output, "# 故事线（规划，不是已确认事实）", None)
 
     for kind, card_id in _APPROVED.items():
         assert f"## {kind}" in canon
@@ -166,8 +170,12 @@ def test_canon_show_storyline_is_not_canon(
     after = asyncio.run(_storyline_counts())
 
     assert result.exit_code == 0, result.output
-    canon = _between(result.output, "# Canon（approved）", "# Pending（不是 Canon）")
-    storyline = _between(result.output, "# Storyline（规划骨架，不是已确认事实）", None)
+    canon = _between(
+        result.output,
+        "# 已确认事实（Canon / approved）",
+        "# 待确认提案（pending，不是已确认事实）",
+    )
+    storyline = _between(result.output, "# 故事线（规划，不是已确认事实）", None)
     assert _CONFLICT in storyline
     assert "arcs: 1" in storyline
     assert "opened=1" in storyline
@@ -207,9 +215,11 @@ def test_canon_show_json_storyline_filled(
 
 
 _NEXT = (
-    "可用 canon confirm 入典或销账承诺；硬确认可用 --hard/--mark-stale；"
-    "续写下一章走 chapter continue，"
-    "章内草稿可 variant generate 抽卡（默认 N=2，不 auto-pick）。"
+    "入典先 canon pending 过目提案，canon confirm 入典"
+    "（batch --yes 可批量）；硬确认可用 --hard/--mark-stale；"
+    "续写或开新章走 chapter continue（--chapter N 显式开章）；"
+    "章内草稿可 variant generate 抽卡（默认 N=2，不自动选用）；"
+    "生成后先 chapter accept 再 continue。"
 )
 _PLAN_TABLES = (
     "plan_entities",

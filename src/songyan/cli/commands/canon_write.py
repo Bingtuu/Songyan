@@ -16,7 +16,7 @@ from songyan.db.repository import ChapterHeadRepository
 from songyan.db.settlement_repo import ForeshadowingRepository
 from songyan.models.plan_facts import PlanAttribute, PlanEntity
 
-_NOT_YET = "尚未入典；需 canon confirm 后才进入 Canon / 圣经。"
+_NOT_YET = "尚未入典；需 canon confirm 后才成为已确认事实。"
 _CONFIRMED = "已入典"
 _ACCEPT_HINT = (
     "尚未入典；accept 不写库。请使用 canon confirm 入典。"
@@ -166,7 +166,7 @@ async def _confirm_entity(
     if row.approval_status == "rejected":
         raise ConfirmRejectedError(
             f"entity {row.entity_id} 已 rejected，不能直接 confirm 转正；"
-            "如需恢复请 canon edit 重新进 pending 队列（task 226 切片 5）"
+            "如需恢复请 canon edit 重新进 pending 队列"
         )
     want_stale = hard or mark_stale
     chapters: set[int] | None = None
@@ -177,8 +177,8 @@ async def _confirm_entity(
         )
         if chapters is None:
             raise UncomputableStaleRangeError(
-                "要标脏但范围不可算：entity 无 valid 窗口时 --hard / --mark-stale "
-                "须同时提供 --from-ch 与 --to-ch（tech-m2 §4.2）"
+                "要标脏但范围不可算：实体无有效章范围时，"
+                "--hard / --mark-stale 须同时提供 --from-ch 与 --to-ch"
             )
 
     updated = row.model_copy(update={"approval_status": "approved"})
@@ -223,8 +223,8 @@ async def _confirm_attribute(
         )
         if chapters is None:
             raise UncomputableStaleRangeError(
-                "要标脏但范围不可算：两端 valid 皆空且无证据章号时不猜成脏；"
-                "整命令失败（不入典也不标脏）（tech-m2 §4.2）"
+                "要标脏但范围不可算：两端有效章范围皆空且无证据章号时不猜范围；"
+                "整命令失败（不入典也不标脏）"
             )
 
     updated = row.model_copy(update={"approval_status": "approved"})
@@ -255,7 +255,7 @@ async def _dismiss_entity(*, project_id: str, entity_id: str) -> str:
     await PlanFactRepository().write_entity(updated)
     return (
         f"已驳回 entity {updated.entity_id}（approval_status=rejected；"
-        "不进 Canon / Pending / 圣经）"
+        "不进已确认事实库）"
     )
 
 
@@ -623,7 +623,7 @@ def confirm_promise(
 
 @click.group(name="dismiss")
 def canon_dismiss_group() -> None:
-    """驳回计划行：approval_status=rejected（保留行，不进 Canon）。"""
+    """驳回计划行：approval_status=rejected（保留行，不进已确认事实库）。"""
 
 
 @canon_dismiss_group.command(name="entity")

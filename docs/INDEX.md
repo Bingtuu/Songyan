@@ -19,6 +19,7 @@
 | [ADR-0001](adr/0001-plan-first-facts.md) | 事实写入方向。阶段 A–C 已关闭，不重开召回 KPI |
 | [STATUS](STATUS.md) | 工程事实：包仍是 0.5.0；M0–M4 PASS + §9 清零 + post-M4 A/C/B 闭环；待 owner：dogfood 执行 / push / S7 预算线 |
 | [HANDOFF](HANDOFF-mew.md) | 当天下一步：258 dogfood 等 owner 执行；本地 main 领先 origin 17 提交 |
+| [术语表](glossary.md) | 用户面统一术语口径（task 264） |
 | [Quickstart](quickstart.md) | 安装、配置、短窗口、导出 |
 | [Troubleshooting](troubleshooting.md) | 失败恢复 |
 | [Release Checklist](release-checklist.md) | 维护者发布门 |

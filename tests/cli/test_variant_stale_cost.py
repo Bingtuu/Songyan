@@ -168,7 +168,7 @@ async def _change_approved_location(new_value: str = "北站") -> None:
 def test_list_marks_stale_after_approved_canon_change(
     runner: CliRunner, stale_db: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Lazy mark (B3): list after Canon change → stale_vs_canon=1; content_stale untouched."""
+    """Lazy mark (B3): list after Canon change → 相对事实已过期; content_stale untouched."""
     _generate_two(runner, monkeypatch)
     before = runner.invoke(
         cli,
@@ -307,8 +307,7 @@ def test_list_exposes_cost_field_even_when_zero(
         ["variant", "list", "--project-id", _PROJECT, "--chapter", str(_CHAPTER)],
     )
     assert text.exit_code == 0, text.output
-    assert "cost=" in text.output
-    assert "cost=0" in text.output or "cost=0.0" in text.output
+    assert "费用=¥0.0000" in text.output
 
 
 def test_diff_also_lazy_marks_stale(

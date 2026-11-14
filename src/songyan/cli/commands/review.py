@@ -81,7 +81,10 @@ async def _run_review(project_id: str, chapter: int | None) -> ChapterReviewRepo
             return None
         chapter = max(universe)
     elif chapter not in universe:
-        raise ChapterNotInUniverseError(f"指定章不存在（不在章宇宙）：第 {chapter} 章")
+        raise ChapterNotInUniverseError(
+            f"该章还没有章节工作记录：第 {chapter} 章"
+            f"（开新章走 chapter continue --chapter {chapter}）"
+        )
     return await build_chapter_review(project_id, chapter)
 
 
@@ -124,7 +127,7 @@ def _render_markdown(report: ChapterReviewReport) -> str:
         "## 被审工作稿",
     ]
     if report.workdraft_version_id is not None:
-        lines.append(f"`{report.workdraft_version_id}`（head.current_version_id 工作稿）")
+        lines.append(f"`{report.workdraft_version_id}`（当前工作稿）")
     else:
         lines.append(report.gate_note)
     lines.append("")
@@ -208,7 +211,7 @@ def review_cmd(
         empty_payload = {
             "project_id": project_id,
             "chapter": None,
-            "note": "章宇宙为空：该项目无任何章头，无可审章。",
+            "note": "还没有任何章节工作记录，无可审章（先 chapter continue --chapter 1 开书）",
         }
         if json_output:
             click.echo(json.dumps(empty_payload, ensure_ascii=False))

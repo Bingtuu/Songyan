@@ -119,9 +119,10 @@ def test_list_text_shows_flag(runner: CliRunner, flag_db: Path) -> None:
         ],
     )
     assert result.exit_code == 0, result.output
-    assert "slot=1" in result.output
-    assert "flag=too_short" in result.output
-    assert "flag=too_short" not in result.output.split("slot=2")[1]
+    assert "槽1" in result.output
+    assert "判失败=太短" in result.output
+    # 判失败标记只出现在被标记槽的行上
+    assert "判失败=太短" not in result.output.split("槽2")[1]
 
 
 def test_pick_rejects_flagged_slot_exit_2(
@@ -163,4 +164,4 @@ def test_pick_clean_slot_still_works(
         ],
     )
     assert result.exit_code == 0, result.output
-    assert "picked slot=2" in result.output
+    assert "已选 槽2" in result.output

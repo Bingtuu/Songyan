@@ -558,7 +558,7 @@ async def _apply_title(project_id: str, title: str) -> None:
 @click.option(
     "--title",
     default=None,
-    help="项目书名（缺省取模板/交互默认值；task 261）",
+    help="项目书名（缺省取模板/交互默认值）",
 )
 def create_project(
     outline_file: str | None, template_id: str | None, title: str | None

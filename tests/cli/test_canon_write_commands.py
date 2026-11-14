@@ -84,11 +84,15 @@ def test_canon_edit_entity_writes_pending_visible_in_show_not_canon(
         cli, ["canon", "show", "--project-id", DUSHI_LINGYI_PROJECT_ID]
     )
     assert show.exit_code == 0, show.output
-    canon = _between(show.output, "# Canon（approved）", "# Pending（不是 Canon）")
+    canon = _between(
+        show.output,
+        "# 已确认事实（Canon / approved）",
+        "# 待确认提案（pending，不是已确认事实）",
+    )
     pending = _between(
         show.output,
-        "# Pending（不是 Canon）",
-        "# Storyline（规划骨架，不是已确认事实）",
+        "# 待确认提案（pending，不是已确认事实）",
+        "# 故事线（规划，不是已确认事实）",
     )
     assert _EDIT_ENTITY_ID not in canon
     assert _EDIT_ENTITY_ID in pending
@@ -544,11 +548,15 @@ def test_canon_dismiss_entity_rejects_excluded_from_queues_and_bible(
         cli, ["canon", "show", "--project-id", DUSHI_LINGYI_PROJECT_ID]
     )
     assert show.exit_code == 0, show.output
-    canon = _between(show.output, "# Canon（approved）", "# Pending（不是 Canon）")
+    canon = _between(
+        show.output,
+        "# 已确认事实（Canon / approved）",
+        "# 待确认提案（pending，不是已确认事实）",
+    )
     pending = _between(
         show.output,
-        "# Pending（不是 Canon）",
-        "# Storyline（规划骨架，不是已确认事实）",
+        "# 待确认提案（pending，不是已确认事实）",
+        "# 故事线（规划，不是已确认事实）",
     )
     assert _EDIT_ENTITY_ID not in canon
     assert _EDIT_ENTITY_ID not in pending

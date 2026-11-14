@@ -30,7 +30,7 @@ _PLANTED_ID = "fs-planted-m2-step1"
 _DUE_ID = "fs-due-m2-step1"
 _RESOLVED_ID = "fs-resolved-m2-step1"
 _DORMANT_ID = "fs-dormant-overdue-m2-step1"
-_PROMISE_HEAD = "# Promises（开放承诺，不是 Canon）"
+_PROMISE_HEAD = "# 开放承诺（不是已确认事实）"
 
 
 @pytest.fixture
@@ -171,7 +171,7 @@ def test_today_counts_include_overdue_promise(
     assert "promise_due: 1" in result.output
     assert "promise_overdue: 1" in result.output
     # Must not present open promises as confirmed Canon facts.
-    assert "Canon（approved）" not in result.output
+    assert "已确认事实（Canon / approved）" not in result.output
     assert _OVERDUE_ID not in result.output
     assert after_fs == before_fs
     assert after_plan == before_plan
@@ -214,14 +214,14 @@ def test_canon_show_kind_promise_lists_open_only(
 
     assert result.exit_code == 0, result.output
     assert _PROMISE_HEAD in result.output
-    assert "不是 Canon" in result.output
+    assert "不是已确认事实" in result.output
     assert _OVERDUE_ID in result.output
     assert _PLANTED_ID in result.output
     assert _DUE_ID in result.output
     assert _RESOLVED_ID not in result.output
     assert _DORMANT_ID not in result.output
     # Default Canon / Pending plan sections must not appear as confirmed facts here.
-    assert "# Canon（approved）" not in result.output
+    assert "# 已确认事实（Canon / approved）" not in result.output
     assert _PENDING_ID not in result.output
     assert after_fs == before_fs
 
@@ -260,7 +260,7 @@ def test_default_canon_show_does_not_leak_promises_as_canon(
         cli, ["canon", "show", "--project-id", DUSHI_LINGYI_PROJECT_ID]
     )
     assert result.exit_code == 0, result.output
-    canon = result.output.split("# Pending（不是 Canon）")[0]
+    canon = result.output.split("# 待确认提案（pending，不是已确认事实）")[0]
     assert _OVERDUE_ID not in canon
     assert _PLANTED_ID not in canon
     assert _DUE_ID not in canon

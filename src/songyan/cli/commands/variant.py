@@ -28,6 +28,13 @@ from songyan.services.variant_pick import (
     pick_variant_slot,
 )
 
+_QUALITY_REASONS = {
+    "too_short": "太短",
+    "empty": "空",
+    "empty_echo": "空回显",
+    "refusal_keyword": "拒写关键词",
+}
+
 
 class VariantBusinessReject(click.ClickException):
     """Business reject — process exit 2 (tech-m3 §4.1)."""
@@ -175,13 +182,16 @@ def variant_list(project_id: str, chapter: int, as_json: bool) -> None:
         click.echo("（空）")
         return
     for row in rows:
-        flag = f" flag={row['quality_flag']}" if row.get("quality_flag") else ""
+        marks = ""
+        if row.get("quality_flag"):
+            marks += f" [判失败={_QUALITY_REASONS.get(row['quality_flag'], row['quality_flag'])}]"
+        if int(row.get("stale_vs_canon") or 0) == 1:
+            marks += " [相对事实已过期]"
+        if int(row.get("stale_vs_storyline") or 0) == 1:
+            marks += " [相对故事线已演进]"
         click.echo(
-            f"- slot={row['slot_index']} status={row['status']} "
-            f"fp={row['fingerprint']} "
-            f"ref={row['content_ref']} stale_vs_canon={row['stale_vs_canon']} "
-            f"slStale={row['stale_vs_storyline']} "
-            f"cost={row['cost_cny_estimate']}{flag}"
+            f"- 槽{row['slot_index']} 状态={row['status']} "
+            f"费用=¥{row['cost_cny_estimate']:.4f}{marks}"
         )
 
 
@@ -223,16 +233,19 @@ def variant_generate(
         click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
     else:
         click.echo(
-            f"generated={len(variants)}/{payload['n']} "
-            f"fingerprint={str(payload['fingerprint'])[:12]}… "
-            f"budget_exhausted={payload['budget_exhausted']}"
+            f"已生成 {len(variants)}/{payload['n']} 槽 "
+            f"指纹={str(payload['fingerprint'])[:12]}… "
+            f"预算耗尽={'是' if payload['budget_exhausted'] else '否'}"
         )
         for row in variants:
             assert isinstance(row, dict)
-            flag = f" flag={row['quality_flag']}" if row.get("quality_flag") else ""
+            flag = ""
+            if row.get("quality_flag"):
+                reason = _QUALITY_REASONS.get(row["quality_flag"], row["quality_flag"])
+                flag = f" [判失败={reason}]"
             click.echo(
-                f"- slot={row['slot_index']} status={row['status']} "
-                f"ref={row['content_ref']} cost={row['cost_cny_estimate']}{flag}"
+                f"- 槽{row['slot_index']} 状态={row['status']} "
+                f"费用=¥{row['cost_cny_estimate']:.4f}{flag}"
             )
 
     # task 245：拒写/占位质量门——全槽失败 exit 2；部分失败 stderr 列出失败槽。
@@ -250,8 +263,9 @@ def variant_generate(
         )
         ctx.exit(2)
     for row in failed_slots:
+        reason = _QUALITY_REASONS.get(row["quality_flag"], row["quality_flag"])
         click.echo(
-            f"slot {row['slot_index']} 判失败：{row['quality_flag']}",
+            f"槽 {row['slot_index']} 判失败：{reason}",
             err=True,
         )
 
@@ -321,15 +335,14 @@ def variant_pick(
     if as_json:
         click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
         return
+    stale_note = " 相对事实已过期" if int(payload["stale_vs_canon"] or 0) == 1 else ""
     click.echo(
-        f"picked slot={payload['slot_index']} "
-        f"ref={payload['content_ref']} "
-        f"current_version_id={payload['current_version_id']} "
-        f"stale_vs_canon={payload['stale_vs_canon']}"
+        f"已选 槽{payload['slot_index']} "
+        f"当前工作稿={payload['current_version_id']}{stale_note}"
     )
     if int(payload.get("stale_vs_storyline") or 0) == 1:
         click.echo(
-            "提醒：该槽基于已演进的故事线草稿（stale_vs_storyline=1），请人工斟酌",
+            "提醒：该槽基于已演进的故事线草稿，请人工斟酌",
             err=True,
         )
 
@@ -355,9 +368,7 @@ def variant_abandon(
     if as_json:
         click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
         return
-    click.echo(
-        f"abandoned slot={payload['slot_index']} ref={payload['content_ref']}"
-    )
+    click.echo(f"已弃 槽{payload['slot_index']}")
 
 
 def register_variant_commands(cli: click.Group) -> None:

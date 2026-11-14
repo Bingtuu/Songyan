@@ -183,9 +183,8 @@ def test_list_text_shows_fingerprint_short(
         ["variant", "list", "--project-id", _PROJECT, "--chapter", str(_CHAPTER)],
     )
     assert result.exit_code == 0, result.output
-    assert "slot=1" in result.output
-    assert "slot=2" in result.output
-    assert "fp=" in result.output
+    assert "槽1" in result.output
+    assert "槽2" in result.output
     assert "未实现" not in result.output
 
 

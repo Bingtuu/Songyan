@@ -211,7 +211,7 @@ def test_chapter_not_in_universe_exit_2(
 ) -> None:
     result = _invoke(runner, 99)
     assert result.exit_code == 2
-    assert "章宇宙" in result.stderr
+    assert "还没有章节工作记录" in result.stderr
 
 
 def test_zero_writes(runner: CliRunner, status_db: Path) -> None:

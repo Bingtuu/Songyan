@@ -122,7 +122,7 @@ def test_partial_failure_exit_0_with_failed_listing(
     )
 
     assert result.exit_code == 0, result.output
-    assert "slot 2" in result.stderr
+    assert "槽 2" in result.stderr
     payload = json.loads(result.stdout)
     by_slot = {v["slot_index"]: v for v in payload["variants"]}
     assert by_slot[1]["quality_flag"] is None

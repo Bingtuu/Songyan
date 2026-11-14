@@ -227,8 +227,8 @@ def test_pending_extract_visible_in_canon_show_pending_not_canon_section(
     attr_id = asyncio.run(_seed_and_attr_id())
     show = runner.invoke(cli, ["canon", "show", "--project-id", _PROJECT_ID])
     assert show.exit_code == 0, show.output
-    canon = show.output.split("# Pending（不是 Canon）")[0]
-    pending = show.output.split("# Pending（不是 Canon）")[1].split("# Storyline")[0]
+    canon = show.output.split("# 待确认提案（pending，不是已确认事实）")[0]
+    pending = show.output.split("# 待确认提案（pending，不是已确认事实）")[1].split("# 故事线")[0]
     assert attr_id not in canon
     assert attr_id in pending
 

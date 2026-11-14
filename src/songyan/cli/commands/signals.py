@@ -16,16 +16,37 @@ from songyan.cli.commands.workbench import _ensure_project_readable
 _ORDER = ("S1", "S2", "S3", "S4", "S5", "S7")
 
 
+_S_LABELS = {
+    "S1": "确认入典",
+    "S2": "问题关闭周期",
+    "S3": "开放承诺年龄",
+    "S4": "抽卡采纳分布",
+    "S5": "人改率",
+    "S7": "单章成本",
+}
+
+
 def _render_text(payload: dict[str, Any]) -> str:
-    lines = [f"signals: {payload['project_id']}"]
+    lines = [f"信号（{payload['project_id']}）"]
     signals = payload["signals"]
     for key in _ORDER:
         block = signals[key]
+        label = _S_LABELS.get(key, key)
         if block.get("gap"):
-            lines.append(f"{key}: gap——{block['note']}")
+            lines.append(f"{key} {label}: 暂不可算——{block['note']}")
             continue
-        body = json.dumps(block, ensure_ascii=False, sort_keys=True)
-        lines.append(f"{key}: {body}")
+        parts = []
+        for k, v in block.items():
+            if k == "note":
+                continue
+            if isinstance(v, dict) and not v:
+                continue
+            parts.append(f"{k}={v}")
+        line = f"{key} {label}: " + " ".join(parts)
+        note = block.get("note")
+        if note:
+            line += f"（{note}）"
+        lines.append(line)
     return "\n".join(lines)
 
 
