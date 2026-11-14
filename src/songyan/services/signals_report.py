@@ -134,6 +134,25 @@ async def _s5(project_id: str) -> dict[str, Any]:
     }
 
 
+async def _chapter_cost_budget(project_id: str) -> float:
+    """task 262 / S7：单章成本预算线（projects.chapter_cost_budget_cny，默认 0.5）。
+
+    未迁移旧库（无该列）回落 0.5。
+    """
+    async with get_db() as conn:
+        try:
+            cursor = await conn.execute(
+                "SELECT chapter_cost_budget_cny FROM projects WHERE project_id = ?",
+                (project_id,),
+            )
+            row = await cursor.fetchone()
+        except OperationalError:
+            return 0.5
+    if row is None or row[0] is None:
+        return 0.5
+    return float(row[0])
+
+
 async def _s7(project_id: str) -> dict[str, Any]:
     """S7 单章成本：llm_call_usage 全项目合计 + settled 章数（口径为估算值）。"""
     async with get_db() as conn:
@@ -160,10 +179,23 @@ async def _s7(project_id: str) -> dict[str, Any]:
         per_chapter = {
             str(int(r[0])): round(float(r[1]), 4) for r in await cursor.fetchall()
         }
+    budget = await _chapter_cost_budget(project_id)
+    over_budget = sorted(
+        ch for ch, cost in per_chapter.items() if cost > budget
+    )
+    settled_with_cost = [
+        c for ch, c in per_chapter.items() if int(ch) <= int(settled or 0)
+    ]
+    within = sum(1 for c in settled_with_cost if c <= budget)
     return {
         "total_cost_cny": round(float(row[0]), 4),
         "chapters_with_usage": int(row[1] or 0),
         "settled_chapters": int(settled or 0),
+        "budget_cny": budget,
+        "over_budget_chapters": over_budget,
+        "within_budget_share": (
+            round(within / len(settled_with_cost), 4) if settled_with_cost else 0.0
+        ),
         "mean_per_settled_chapter": (
             round(float(row[0]) / int(settled or 0), 4) if settled else 0.0
         ),
@@ -173,16 +205,51 @@ async def _s7(project_id: str) -> dict[str, Any]:
     }
 
 
+async def _s2(project_id: str) -> dict[str, Any]:
+    """S2 冲突关闭周期：human_marks 的 open→resolved 天数 P50（task 262）。
+
+    数据源：human_marks（现网唯一有 created_at/resolved_at 时间序列表）。
+    诚实边界：规则 check 的发现问题无持久 open 注册表，纳入需另立
+    check-findings 记账面——note 明示，不编造。
+    """
+    async with get_db() as conn:
+        cursor = await conn.execute(
+            "SELECT created_at, resolved_at FROM human_marks "
+            "WHERE project_id = ?",
+            (project_id,),
+        )
+        rows = await cursor.fetchall()
+    open_count = 0
+    cycles: list[int] = []
+    for created, resolved in rows:
+        if not resolved:
+            open_count += 1
+            continue
+        try:
+            from datetime import datetime
+
+            c = datetime.fromisoformat(str(created).replace("Z", "+00:00"))
+            r = datetime.fromisoformat(str(resolved).replace("Z", "+00:00"))
+            cycles.append(max(0, (r - c).days))
+        except ValueError:
+            continue
+    return {
+        "gap": False,
+        "open_count": open_count,
+        "closed_count": len(cycles),
+        "close_p50_days": median(cycles) if cycles else 0,
+        "note": "口径 = human_marks 创建→解决天数；规则 check 的发现问题"
+        "无持久 open 注册表，未计入（需另立 check-findings 记账面）",
+    }
+
+
 async def build_signals(project_id: str) -> dict[str, Any]:
-    """组装 S1–S7（S2 gap 明示）。只读，零写库。"""
+    """组装 S1–S7。只读，零写库。"""
     return {
         "project_id": project_id,
         "signals": {
             "S1": await _s1(project_id),
-            "S2": {
-                "gap": True,
-                "note": "冲突关闭周期需 open→closed/dismiss 时间记账面，现网无；立项另议",
-            },
+            "S2": await _s2(project_id),
             "S3": await _s3(project_id),
             "S4": await _s4(project_id),
             "S5": await _s5(project_id),

@@ -258,9 +258,10 @@ class TestSignalsCommand:
         assert s7["per_chapter"] == {"1": 0.03, "2": 0.04}
         assert s7["mean_per_settled_chapter"] == pytest.approx(0.07 / 3, abs=1e-4)
 
-    def test_s2_gap_marked(self, runner: CliRunner, signals_db: Path) -> None:
+    def test_s2_no_longer_gap(self, runner: CliRunner, signals_db: Path) -> None:
+        """262：S2 落地（human_marks 口径），不再是 gap。"""
         payload = self._payload(runner)
-        assert payload["signals"]["S2"]["gap"] is True
+        assert payload["signals"]["S2"]["gap"] is False
 
     def test_text_output_sections(self, runner: CliRunner, signals_db: Path) -> None:
         result = runner.invoke(cli, ["signals", "--project-id", _PROJECT])
@@ -268,3 +269,90 @@ class TestSignalsCommand:
         for key in ("S1", "S2", "S3", "S4", "S5", "S7"):
             assert key in result.output
         assert "gap" in result.output
+
+
+class TestS2HumanMarkCycle:
+    """262：S2 = human_marks open→resolved 天数 P50（check-findings 记账面不在本切片）。"""
+
+    async def _seed_marks(self, db_path: Path) -> None:
+        import sqlite3
+
+        con = sqlite3.connect(db_path)
+        # 两条已解决：3 天前创建 1 天前关闭（2 天周期）、5 天前创建 5 天前关闭（0 天）；一条 open
+        rows = [
+            ("hm-1", "2026-11-10 08:00:00", "2026-11-12 08:00:00"),
+            ("hm-2", "2026-11-08 08:00:00", "2026-11-08 09:00:00"),
+            ("hm-3", "2026-11-13 08:00:00", None),
+        ]
+        for mid, created, resolved in rows:
+            con.execute(
+                "INSERT INTO human_marks (mark_id, project_id, mark_type, target_key, "
+                "note, created_at, resolved_at) VALUES (?,?,?,?,?,?,?)",
+                (mid, _PROJECT, "continuity", "k", "n", created, resolved),
+            )
+        con.commit()
+        con.close()
+
+    def test_s2_computed_from_human_marks(
+        self, runner: CliRunner, signals_db: Path
+    ) -> None:
+        import asyncio
+
+        asyncio.run(self._seed_marks(signals_db))
+        result = runner.invoke(
+            cli, ["signals", "--project-id", _PROJECT, "--json"]
+        )
+        assert result.exit_code == 0, result.output
+        s2 = json.loads(result.stdout)["signals"]["S2"]
+        assert s2["gap"] is False
+        assert s2["open_count"] == 1
+        assert s2["closed_count"] == 2
+        assert s2["close_p50_days"] == 1  # 周期 [2, 0] 的 P50
+
+    def test_s2_empty_marks_zero(
+        self, runner: CliRunner, signals_db: Path
+    ) -> None:
+        result = runner.invoke(
+            cli, ["signals", "--project-id", _PROJECT, "--json"]
+        )
+        s2 = json.loads(result.stdout)["signals"]["S2"]
+        assert s2["gap"] is False
+        assert s2["open_count"] == 0
+        assert s2["closed_count"] == 0
+
+
+class TestS7BudgetLine:
+    """262：S7 预算线（默认 ¥0.5/章）——超预算章列表 + 预算内占比。"""
+
+    def test_s7_budget_fields(
+        self, runner: CliRunner, signals_db: Path
+    ) -> None:
+        result = runner.invoke(
+            cli, ["signals", "--project-id", _PROJECT, "--json"]
+        )
+        s7 = json.loads(result.stdout)["signals"]["S7"]
+        assert s7["budget_cny"] == 0.5
+        # 夹具 per_chapter：ch1=0.03 / ch2=0.04 均低于 0.5；ch3 settled 但无费用
+        assert s7["over_budget_chapters"] == []
+        assert s7["within_budget_share"] == 1.0
+
+    def test_s7_over_budget_detected(
+        self, runner: CliRunner, signals_db: Path
+    ) -> None:
+        import sqlite3
+
+        con = sqlite3.connect(signals_db)
+        con.execute(
+            "INSERT INTO llm_call_usage (model, token_source, cost_source, "
+            "project_id, chapter_number, cost_cny) VALUES "
+            "('mock','estimate','pricing_estimate',?,2,1.0)",
+            (_PROJECT,),
+        )
+        con.commit()
+        con.close()
+        result = runner.invoke(
+            cli, ["signals", "--project-id", _PROJECT, "--json"]
+        )
+        s7 = json.loads(result.stdout)["signals"]["S7"]
+        assert s7["over_budget_chapters"] == ["2"]
+        assert s7["within_budget_share"] < 1.0

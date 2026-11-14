@@ -1759,6 +1759,20 @@ async def _migrate_chapter_heads_edit_ratio(conn: aiosqlite.Connection) -> None:
     )
 
 
+async def _migrate_projects_chapter_cost_budget(conn: aiosqlite.Connection) -> None:
+    """task 262 / S7：单章成本预算线（默认 ¥0.5；五体裁 dogfood 实测均章 ¥0.11-0.17）。
+
+    窄加列幂等迁移；现阶段信号用途固定默认值，不设修改命令。
+    """
+    await _add_column_if_missing(
+        conn,
+        table="projects",
+        column="chapter_cost_budget_cny",
+        ddl="ALTER TABLE projects ADD COLUMN chapter_cost_budget_cny "
+        "REAL NOT NULL DEFAULT 0.5",
+    )
+
+
 async def run_migrations(conn: aiosqlite.Connection) -> None:
     """执行注册表中的所有迁移（与 init_schema 共用 _MIGRATIONS 单一事实源）."""
     for _name, _migrate in _MIGRATIONS:
@@ -1858,6 +1872,10 @@ _MIGRATIONS: list[tuple[str, Callable[[aiosqlite.Connection], Awaitable[None]]]]
     (
         "_migrate_chapter_heads_edit_ratio",
         _migrate_chapter_heads_edit_ratio,
+    ),
+    (
+        "_migrate_projects_chapter_cost_budget",
+        _migrate_projects_chapter_cost_budget,
     ),
     (
         "_migrate_foreshadowings_resolved_evidence",
