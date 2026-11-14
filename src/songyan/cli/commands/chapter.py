@@ -129,6 +129,7 @@ async def _continue_chapters(
     count: int,
     variants: int | None,
     require_plan: bool,
+    chapter: int | None,
 ) -> dict[str, Any] | None:
     db_path = get_db_path()
     if not db_path.is_file():
@@ -142,6 +143,7 @@ async def _continue_chapters(
             count=count,
             variants=variants,
             require_plan=require_plan,
+            chapter=chapter,
             notice=lambda m: click.echo(m, err=True),
         )
     except ContinueGateError as exc:
@@ -166,20 +168,30 @@ async def _continue_chapters(
 @click.option("--count", default=1, type=int, help="批命令次数 1..3（逐章停闸，非跳过确认）")
 @click.option("--variants", type=int, default=None, help="转调 M3 抽卡生成 N 槽（不 auto-pick）")
 @click.option("--require-plan", is_flag=True, help="本章计划缺失时拒绝执行（默认仅警告）")
+@click.option(
+    "--chapter",
+    type=int,
+    default=None,
+    help="显式目标章（task 263 开章语义）：不在章宇宙则内联铺 empty head；"
+    "前面有未写章或已 accepted 则拒绝（exit 2）；省略 = 自动 targeting",
+)
 @click.option("--json", "as_json", is_flag=True, help="JSON 输出")
 def chapter_continue_cmd(
     project_id: str,
     count: int,
     variants: int | None,
     require_plan: bool,
+    chapter: int | None,
     as_json: bool,
 ) -> None:
-    """推进下一章：准备（settlement）→ 组装 → 生成草稿或抽卡转调；每章生成即停闸。"""
+    """推进下一章（或 --chapter 显式开章）：准备 → 组装 → 生成草稿或抽卡；每章生成即停闸。"""
     if count < 1 or count > 3:
         raise click.ClickException(f"--count 必须在 1..3 之间（收到 {count}）")
     if variants is not None and variants < 1:
         raise click.ClickException(f"--variants 必须 >= 1（收到 {variants}）")
-    payload = asyncio.run(_continue_chapters(project_id, count, variants, require_plan))
+    payload = asyncio.run(
+        _continue_chapters(project_id, count, variants, require_plan, chapter)
+    )
     if payload is None:
         # 区分「空项目（章宇宙为空）」与「全部 accepted」——前者并非已确认完成
         # （task 244 / 冒烟发现 2）。

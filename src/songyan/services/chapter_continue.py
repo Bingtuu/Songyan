@@ -13,6 +13,7 @@ from __future__ import annotations
 from collections.abc import Callable, Sequence
 from collections.abc import Set as AbstractSet
 from dataclasses import dataclass
+from typing import Any
 
 import structlog
 from structlog.contextvars import bound_contextvars
@@ -39,7 +40,7 @@ from songyan.exceptions import (
     LLMResponseParseError,
     SongyanError,
 )
-from songyan.models.chapter import ChapterGoal
+from songyan.models.chapter import ChapterGoal, ChapterHead
 from songyan.models.project import ProjectSetting
 from songyan.models.project_run import ProjectRunState
 from songyan.models.variant import ChapterVariant
@@ -119,18 +120,68 @@ class ContinueOutcome:
     generated_variants: int
 
 
+async def _resolve_explicit_target(
+    project_id: str,
+    chapter: int,
+    progress: Any,
+) -> int:
+    """task 263 / 形态 A：显式目标章解析（开章语义）。
+
+    - N 不在章宇宙 → 章号跳跃校验（1..N-1 全部已 accepted，防 settlement
+      上一章断档）后内联铺 empty head（产品原生 seeding）。
+    - N 已 accepted → 拒绝。
+    - 返回目标章号（已存在 empty head 时原样返回）。
+    """
+    universe = {entry.chapter_number for entry in progress.chapters}
+    if chapter in universe:
+        heads = await ChapterHeadRepository().list_by_project(project_id)
+        by_ch = {h.chapter_number: h for h in heads}
+        head = by_ch.get(chapter)
+        if head is not None and head.accepted_version_id is not None:
+            raise ContinueGateError(
+                f"章 {chapter} 已 accepted；无需 continue（重复生成不产生新版本）"
+            )
+        return chapter
+    accepted = {
+        h.chapter_number
+        for h in await ChapterHeadRepository().list_by_project(project_id)
+        if h.accepted_version_id is not None
+    }
+    holes = [c for c in range(1, chapter) if c not in accepted]
+    if holes:
+        raise ContinueGateError(
+            f"章 {chapter} 之前还有未写的章（{holes[0]} 等）；"
+            f"请先逐章 continue 到章 {chapter - 1} 并 accept，再开章 {chapter}"
+        )
+    await ChapterHeadRepository().update(
+        ChapterHead(
+            project_id=project_id,
+            chapter_number=chapter,
+            current_version_id=None,
+            accepted_version_id=None,
+            status="draft",
+        )
+    )
+    return chapter
+
+
 async def continue_chapters(
     project_id: str,
     *,
     count: int = 1,
     variants: int | None = None,
     require_plan: bool = False,
+    chapter: int | None = None,
     notice: Callable[[str], None] | None = None,
 ) -> ContinueOutcome | None:
     """推进一章：准备（settlement）→ 组装 → 生成（草稿或抽卡转调）。
 
     - ``count`` 仅校验 1..3；停闸结构决定单次 invocation 最多生成一章（B4）。
     - ``variants`` 非 None → 函数级转调 ``generate_chapter_variants``（B7）。
+    - ``chapter`` 显式目标章（task 263 / 形态 A）：省略 = 自动 targeting（B1）
+      零变化；传入 = 开章语义——N 不在章宇宙则内联铺 empty head（产品原生
+      seeding，替代 runbook SQL）；N-1 之前有未写章（settlement 上一章会
+      断档）→ ``ContinueGateError``；N 已 accepted → ``ContinueGateError``。
     - 返回 ``None`` = 空项目 / 全 accepted（CLI exit 0 提示）。
     - LLM 失败 / settlement 失败 → run 壳 ``paused`` + ``pause_reason`` 后抛
       ``ContinueLLMError`` / ``ContinueSettlementError``（exit 1）；预算熔断 →
@@ -140,13 +191,18 @@ async def continue_chapters(
         raise ValueError(f"--count 必须在 1..3 之间（收到 {count}）")
     if variants is not None and variants < 1:
         raise ValueError(f"--variants 必须 >= 1（收到 {variants}）")
+    if chapter is not None and chapter < 1:
+        raise ValueError(f"--chapter 必须 >= 1（收到 {chapter}）")
 
     project = await ProjectRepository().get(project_id)
     if project is None:
         raise ValueError(f"项目不存在: {project_id}")
 
     progress = await load_chapter_progress(project_id)
-    target = progress.next_chapter
+    if chapter is not None:
+        target = await _resolve_explicit_target(project_id, chapter, progress)
+    else:
+        target = progress.next_chapter
     if target is None:
         return None
 
