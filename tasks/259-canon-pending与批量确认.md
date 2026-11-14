@@ -2,7 +2,7 @@
 
 | 项 | 内容 |
 |---|---|
-| 状态 | TODO（dogfood Run A/B 洞察；owner 批准批量，2026-11-13） |
+| 状态 | DOING（2026-11-13；goal loop 批次首项） |
 | 关联 | dogfood 复盘（每章 settlement 产 8–16 条 pending，逐条 confirm 是最大高频摩擦）；tech-m4 B11；B4 成本门交互先例 |
 | 预估 | 一个编码切片（TDD） |
 
