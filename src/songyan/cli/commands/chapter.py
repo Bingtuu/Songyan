@@ -104,10 +104,11 @@ def chapter_accept_cmd(
     if chapter < 1:
         raise click.ClickException("chapter 必须 >= 1")
     payload = asyncio.run(_accept_chapter(project_id, chapter, from_file))
-    # task 253 / S5：几乎没改就标 settled 的所有权提醒（<5%，不拦，exit 0）；
+    # task 253 / S5：人改率警告——task 260 收窄为仅纯复制（edit_ratio == 0.0）
+    # 触发：非零改动（含一两行润色）视为真实参与不警告（dogfood Run B 实证
+    # 0.83% 触发 → 警告疲劳）。edit_ratio 数值照常落列并进 signals。
     # task 256：--no-edit-warn 可关（PRD :473）。
-    edit_warn_threshold = 0.05
-    if not no_edit_warn and float(payload.get("edit_ratio") or 0.0) < edit_warn_threshold:
+    if not no_edit_warn and float(payload.get("edit_ratio") or 0.0) == 0.0:
         click.echo(
             f"人改率 {float(payload['edit_ratio']):.1%}：本章几乎未改动工作稿即确认"
             f"——所有权提醒（S5），不影响确认",

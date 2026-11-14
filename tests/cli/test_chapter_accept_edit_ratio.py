@@ -22,7 +22,7 @@ from songyan.models.project import ProjectSetting
 _PROJECT = "p-edratio"
 _CHAPTER = 1
 
-_DRAFT = "夜色压低站台，陈屿等着末班车。\n" * 12  # 12 行工作稿
+_DRAFT = "夜色压低站台，陈屿等着末班车。\n" * 60  # 60 行工作稿（供小比率改动测试）
 
 
 @pytest.fixture
@@ -220,6 +220,29 @@ def test_no_edit_warn_with_from_file(
             "--from-file",
             str(edited),
             "--no-edit-warn",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert "所有权提醒" not in result.stderr
+
+
+def test_light_edit_does_not_warn(
+    runner: CliRunner, ratio_db: Path, tmp_path: Path
+) -> None:
+    """task 260：一两行润色不警告（dogfood Run B 实证 0.83% 触发 → 警告疲劳）。"""
+    edited = tmp_path / "edited-light.txt"
+    edited.write_text("开头加一句。" + chr(10) + _DRAFT, encoding="utf-8")
+    result = runner.invoke(
+        cli,
+        [
+            "chapter",
+            "accept",
+            "--project-id",
+            _PROJECT,
+            "--chapter",
+            str(_CHAPTER),
+            "--from-file",
+            str(edited),
         ],
     )
     assert result.exit_code == 0, result.output
