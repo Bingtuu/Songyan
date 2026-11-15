@@ -1773,6 +1773,58 @@ async def _migrate_projects_chapter_cost_budget(conn: aiosqlite.Connection) -> N
     )
 
 
+async def _migrate_characters_archived(conn: aiosqlite.Connection) -> None:
+    """task 266：characters.archived — 编辑面软删标志（与 storyline archived 同语义）。
+
+    窄加列幂等迁移；软删行从默认 list_by_project（组装/名册/初始化出口）消失。
+    """
+    await _add_column_if_missing(
+        conn,
+        table="characters",
+        column="archived",
+        ddl="ALTER TABLE characters ADD COLUMN archived INTEGER NOT NULL DEFAULT 0",
+    )
+
+
+async def _migrate_profile_edit_history(conn: aiosqlite.Connection) -> None:
+    """task 266：角色/设定编辑审计表（仿 storyline_edit_history 先例）。
+
+    target_type 覆盖 character / setting；与目标行同事务写。
+    """
+    await conn.execute(
+        """CREATE TABLE IF NOT EXISTS profile_edit_history (
+            history_id  TEXT PRIMARY KEY,
+            project_id  TEXT NOT NULL,
+            target_type TEXT NOT NULL
+                        CHECK (target_type IN ('character', 'setting')),
+            target_id   TEXT NOT NULL,
+            action      TEXT NOT NULL
+                        CHECK (action IN ('create', 'update', 'remove')),
+            before_json TEXT,
+            after_json  TEXT,
+            created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+        )"""
+    )
+    await conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_profile_history_project "
+        "ON profile_edit_history(project_id, created_at)"
+    )
+
+
+async def _migrate_foreshadowings_confirmed_due(conn: aiosqlite.Connection) -> None:
+    """task 269：foreshadowings.confirmed_due_chapter — 人确认到期日。
+
+    NULL = 未确认（expected_resolve_chapter 只是 LLM 建议，不驱动 overdue）。
+    窄加列幂等迁移。
+    """
+    await _add_column_if_missing(
+        conn,
+        table="foreshadowings",
+        column="confirmed_due_chapter",
+        ddl="ALTER TABLE foreshadowings ADD COLUMN confirmed_due_chapter INTEGER",
+    )
+
+
 async def run_migrations(conn: aiosqlite.Connection) -> None:
     """执行注册表中的所有迁移（与 init_schema 共用 _MIGRATIONS 单一事实源）."""
     for _name, _migrate in _MIGRATIONS:
@@ -1880,5 +1932,17 @@ _MIGRATIONS: list[tuple[str, Callable[[aiosqlite.Connection], Awaitable[None]]]]
     (
         "_migrate_foreshadowings_resolved_evidence",
         _migrate_foreshadowings_resolved_evidence,
+    ),
+    (
+        "_migrate_characters_archived",
+        _migrate_characters_archived,
+    ),
+    (
+        "_migrate_profile_edit_history",
+        _migrate_profile_edit_history,
+    ),
+    (
+        "_migrate_foreshadowings_confirmed_due",
+        _migrate_foreshadowings_confirmed_due,
     ),
 ]

@@ -63,4 +63,5 @@ class Character(BaseModel):
     goals: list[str] = Field(default_factory=list)
     relationships: dict[str, str] = Field(default_factory=dict)
     dialogue_style_card: DialogueStyleCard | None = None
+    archived: bool = False  # task 266：编辑面软删（与 storyline archived 同语义）
     created_at: str = ""

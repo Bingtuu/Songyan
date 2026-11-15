@@ -15,6 +15,7 @@ from songyan.cli.commands.chapter import register_chapter_commands
 from songyan.cli.commands.check import register_check_commands
 from songyan.cli.commands.import_pipeline import register_import_commands
 from songyan.cli.commands.index import register_index_commands
+from songyan.cli.commands.profile import register_profile_commands
 from songyan.cli.commands.project import register_project_commands
 from songyan.cli.commands.quality import register_quality_commands
 from songyan.cli.commands.review import register_review_commands
@@ -1365,3 +1366,5 @@ register_project_commands(cli)
 # M4 步 4: review 只读共审（B8/B11；七源输入并集，零写库）。
 register_review_commands(cli)
 register_signals_commands(cli)
+# task 266: 角色/设定人编辑写径（character / setting；软删 + 审计）。
+register_profile_commands(cli)

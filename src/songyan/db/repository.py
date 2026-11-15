@@ -312,15 +312,92 @@ class CharacterRepository:
             row = await cursor.fetchone()
         return _character_from_row(row) if row is not None else None
 
-    async def list_by_project(self, project_id: str) -> list[Character]:
+    async def list_by_project(
+        self, project_id: str, include_archived: bool = False
+    ) -> list[Character]:
+        """task 266：默认只返回未软删（archived=0）角色。
+
+        软删行从所有组装/名册/初始化出口消失；编辑面用
+        include_archived=True 取全量快照。
+        """
+        sql = "SELECT * FROM characters WHERE project_id = ?"
+        if not include_archived:
+            sql += " AND archived = 0"
+        sql += " ORDER BY created_at, character_id"
         async with get_db() as conn:
             conn.row_factory = Row
-            cursor = await conn.execute(
-                "SELECT * FROM characters WHERE project_id = ? ORDER BY created_at, character_id",
-                (project_id,),
-            )
+            cursor = await conn.execute(sql, (project_id,))
             rows = await cursor.fetchall()
         return [_character_from_row(row) for row in rows]
+
+    async def update_profile(
+        self, character: Character, conn: aiosqlite.Connection | None = None
+    ) -> None:
+        """task 266：编辑面档案 UPDATE（可编辑字段 + archived）。
+
+        有意不叫 ``update``：tests/db/test_repository.py 钉死 CharacterRepository
+        无通用 update（character_states 只追加）；本方法只整行改档案列。
+        """
+
+        async def _do(c: aiosqlite.Connection) -> None:
+            await c.execute(
+                """UPDATE characters SET
+                    name = ?, role_type = ?, background = ?,
+                    personality_traits = ?, goals = ?, relationships = ?,
+                    archived = ?
+                WHERE character_id = ?""",
+                (
+                    character.name,
+                    character.role_type,
+                    character.background,
+                    _to_json(character.personality_traits),
+                    _to_json(character.goals),
+                    _to_json(character.relationships),
+                    1 if character.archived else 0,
+                    character.character_id,
+                ),
+            )
+
+        if conn is None:
+            async with get_db() as c:
+                await _do(c)
+                await c.commit()
+        else:
+            await _do(conn)
+        logger.info(
+            "repository.write",
+            table="characters",
+            operation="update",
+            character_id=character.character_id,
+        )
+
+    async def set_archived(
+        self,
+        character_id: str,
+        archived: bool,
+        conn: aiosqlite.Connection | None = None,
+    ) -> None:
+        """task 266：软删标志落列（编辑面 remove / 复活）。"""
+
+        async def _do(c: aiosqlite.Connection) -> None:
+            await c.execute(
+                "UPDATE characters SET archived = ? WHERE character_id = ?",
+                (1 if archived else 0, character_id),
+            )
+
+        if conn is None:
+            async with get_db() as c:
+                await _do(c)
+                await c.commit()
+        else:
+            await _do(conn)
+        logger.info(
+            "repository.write",
+            table="characters",
+            operation="set_archived",
+            character_id=character_id,
+            archived=archived,
+        )
 
     async def save_dialogue_style_card(
         self,
@@ -956,6 +1033,7 @@ def _character_from_row(row: Row) -> Character:
         goals=_from_json(row["goals"], []),
         relationships=_from_json(row["relationships"], {}),
         dialogue_style_card=dialogue_style_card,
+        archived=bool(row["archived"]) if "archived" in row.keys() else False,
         created_at=row["created_at"],
     )
 

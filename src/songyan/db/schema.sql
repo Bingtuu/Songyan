@@ -46,6 +46,7 @@ CREATE TABLE IF NOT EXISTS characters (
     goals           TEXT DEFAULT '[]',           -- JSON array
     relationships   TEXT DEFAULT '{}',           -- JSON object
     dialogue_style_card TEXT DEFAULT '{}',       -- JSON of DialogueStyleCard (Task 074)
+    archived        INTEGER NOT NULL DEFAULT 0,  -- task 266：编辑面软删
     created_at      TEXT DEFAULT (datetime('now'))
 );
 
@@ -316,6 +317,7 @@ CREATE TABLE IF NOT EXISTS foreshadowings (
     resolved_chapter        INTEGER,                 -- Task 241: resolve 发生竫（可追溯，NULL=未回收/历史）
     resolved_version_id     TEXT,                    -- Task 241: resolve 关联版本
     resolved_evidence       TEXT,                    -- task 228: 人确认销账时给的证据（写-only 审计）
+    confirmed_due_chapter   INTEGER,                 -- task 269：人确认的到期日（NULL=未确认，expected 仅建议）
     created_at              TEXT DEFAULT (datetime('now'))
 );
 
