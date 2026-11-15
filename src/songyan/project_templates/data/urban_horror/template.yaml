@@ -1,0 +1,25 @@
+id: urban_horror
+name: 都市灵异
+extends: null
+overwrite: {}
+
+# task 268：薄模板——只给轻量书名/钩子/主角背景（钟表、雨夜取向）。
+# 不附 seed.json：不得种子化任何角色/设定（职场班子、AI/Echo、债务、
+# 网吧等均禁止）；建项时只登记主角档案（ensure_protagonist_character）。
+# 不复用/不改名 urban_fantasy（那是都市异能）。
+project_setting:
+  title: 雨夜钟表店
+  genre_id: urban
+  mode_id: webnovel_intense
+  protagonist_name: 陈屿
+  protagonist_background: 老城区钟表店学徒，值夜班。雨夜打烊后总会慢五分钟的老座钟，和一条没人敢走的后巷。
+  core_hook: 雨夜修好的每一只表，都指回同一个不该存在的时间
+  target_reader_expectation: 短篇都市灵异，氛围压迫，日常物件异化，节奏紧凑
+  target_word_count: 120000
+  tone: 悬疑
+  estimated_chapters: 40
+  words_per_chapter: 3000
+  story_structure: serial
+  sub_genre_id: null
+  arc_boundaries: [10, 20, 30]
+  arc_boundaries_auto: true

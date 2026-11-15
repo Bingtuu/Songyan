@@ -35,8 +35,15 @@ class ProjectInitializer:
     """从模板创建完整项目."""
 
     @staticmethod
-    async def from_template(template: ProjectTemplate) -> tuple[str, ProjectSetting]:
-        """从模板创建完整项目，返回 (project_id, project_setting)."""
+    async def from_template(
+        template: ProjectTemplate, *, no_seed: bool = False
+    ) -> tuple[str, ProjectSetting]:
+        """从模板创建完整项目，返回 (project_id, project_setting).
+
+        task 268 ``no_seed``：只要项目设定/题材，不导入模板种子——跳过
+        seed 角色/设定/数值与大纲导入；主角档案仍建（ensure_protagonist_character，
+        以模板 protagonist_name 为准，不含模板配角）。
+        """
         await init_schema()
 
         project_id = uuid.uuid4().hex
@@ -45,10 +52,14 @@ class ProjectInitializer:
             "project_initialized_from_template",
             project_id=project_id,
             template_id=template.id,
+            no_seed=no_seed,
         )
 
         # 创建 protagonist Character（与 CLI 行为一致）
         await ensure_protagonist_character(project_id, template.project_setting)
+
+        if no_seed:
+            return project_id, template.project_setting
 
         # 写入 seed 角色
         await _import_seed_characters(template, project_id)

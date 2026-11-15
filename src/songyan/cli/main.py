@@ -518,7 +518,7 @@ async def _create_project_async(outline_file: str | None = None) -> tuple[str, P
 
 
 async def _create_project_from_template(
-    template_id: str, outline_file: str | None
+    template_id: str, outline_file: str | None, *, no_seed: bool = False
 ) -> tuple[str, ProjectSetting]:
     await init_schema()
     template = ProjectTemplateLoader().load(template_id)
@@ -527,7 +527,7 @@ async def _create_project_from_template(
         outline, arcs, threads = load_outline_file(outline_file, "dummy")
         template.set_outline(outline, arcs, threads)
 
-    project_id, project = await ProjectInitializer.from_template(template)
+    project_id, project = await ProjectInitializer.from_template(template, no_seed=no_seed)
     return project_id, project
 
 
@@ -561,14 +561,20 @@ async def _apply_title(project_id: str, title: str) -> None:
     default=None,
     help="项目书名（缺省取模板/交互默认值）",
 )
+@click.option(
+    "--no-seed",
+    is_flag=True,
+    default=False,
+    help="task 268：跳过模板种子（配角/设定/大纲），只建主角档案与项目设定",
+)
 def create_project(
-    outline_file: str | None, template_id: str | None, title: str | None
+    outline_file: str | None, template_id: str | None, title: str | None, no_seed: bool
 ) -> None:
     """交互式创建小说项目，或 --template 使用模板."""
     try:
         if template_id:
             project_id, project = asyncio.run(
-                _create_project_from_template(template_id, outline_file)
+                _create_project_from_template(template_id, outline_file, no_seed=no_seed)
             )
         else:
             project_id, project = asyncio.run(_create_project_async(outline_file))
