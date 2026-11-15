@@ -232,6 +232,8 @@ def _resolve_profile_level(
     current_chapter: int,
     last_appeared_chapters: dict[str, int] | None,
     focal_gaps: dict[str, int] | None = None,
+    *,
+    has_character_states: bool = True,
 ) -> Literal["full", "compact", "symbol", "skip"]:
     """V5.0 Task 102: 按未出场章数解析档案衰减级别.
 
@@ -241,7 +243,10 @@ def _resolve_profile_level(
     - 11-30 章：符号档案
     - 30+ 章：不加载（skip）
 
-    protagonist / antagonist 核心角色永不衰减（保留完整档案）。
+    protagonist 永不衰减。
+    task 267：antagonist 的核心保护只对「已出场或有 character_states」生效——
+    从未出场且无 states 的模板反派只给符号档案（importance 0.2），
+    不占硬顶、不保送 0.8（dogfood《雨幕钟表店》周牧野挤掉周德顺的防御层）。
     V8 Task 172a.6: focal_gaps 按体裁定制（如 xuanhuan 角色出场密，窗口更宽）。
     """
     full_gap = 3
@@ -251,8 +256,13 @@ def _resolve_profile_level(
         full_gap = focal_gaps.get("full", full_gap)
         compact_gap = focal_gaps.get("compact", compact_gap)
         symbol_gap = focal_gaps.get("symbol", symbol_gap)
-    if is_protagonist or is_antagonist:
+    if is_protagonist:
         return "full"
+    if is_antagonist:
+        last_chapter = (last_appeared_chapters or {}).get(character_id, 0)
+        if last_chapter > 0 or has_character_states:
+            return "full"
+        return "symbol"
     if not last_appeared_chapters:
         return "full"
     last_chapter = last_appeared_chapters.get(character_id, 0)
@@ -362,6 +372,7 @@ def _build_character_snapshots(
             continue  # 完全跳过
 
         # Task 102: 通过 focal decay 解析档案级别
+        # task 267：模板反派是否有 states 参与保护判定
         profile_level = _resolve_profile_level(
             char.character_id,
             is_protagonist,
@@ -369,6 +380,7 @@ def _build_character_snapshots(
             current_chapter,
             last_appeared_chapters,
             focal_gaps,
+            has_character_states=bool(states),
         )
 
         # character_focus 覆盖 decay 规则（人工指定优先）
