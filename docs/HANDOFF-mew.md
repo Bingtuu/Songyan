@@ -6,9 +6,17 @@ owner：Bingtuu。包 tip **v0.5**（`0.5.0`）。「V1.0」是产品代际名�
 
 ## 下一刀
 
-**task 265 已 DONE 归档（2026-11-15）**：context 断链修复（owner 拍板选项 B）——writer 卡 1.1.2 注入故事定向（story_brief/角色名册/世界观设定，断链 C2/C3/C4）；`chapter continue` 四路定向全空可见提醒（`orientation_notice`，不越 B12）；`storyline edit outline --core-hook/--protagonist-background`（C5）；抽卡字数门 `quality_flag=short`（F9）；`--title` 回显（F3）。代码 @ `43eca48`；dogfood 复测 PASS（`.tmp/dogfood-265-末班电梯-003233/`：纯 CLI storyline、零 canon 预置，ch1 2726 字 ¥0.0245 恐怖要素全命中零泄漏）；回归：默认收集 3663 passed，tests/cli 339 全绿，ruff 零告警。评估文档：[docs/experiments/265-context-disconnect-eval.md](experiments/265-context-disconnect-eval.md)；归档：[tasks/done/265](../tasks/done/265-context-disconnect.md)。
+**266–269 批次已 DONE 归档（2026-11-15，goal loop 交付）**——都市灵异清模板与 pending/伏笔过目（依据 `.tmp/266-269-都市灵异清模板与pending过目.md`）：
 
-**下一刀（均需 owner 侧动作，助手默认待命）**：① owner 真人 dogfood 写一章（评估会输入）；② F1/F2（无 horror/empty 模板、characters 表无编辑 CLI）立项决策；③ 选项 A（W2 缺失 goal/brief 时自动调规划器，涉推翻 B12）产品决策。未建任务文件，不口头开工。
+- **266 角色/设定编辑 CLI**（`8181771`）：`character|setting list|edit|remove`；软删（characters.archived / setting lifecycle=archived）+ 审计 `profile_edit_history` 同事务；软删行从默认 list 与组装/名册/初始化出口消失；主角禁 remove（exit 2）；edit 命中软删行=复活（storyline 同口径）。urban 新项目全 CLI 清场验收测试过。
+- **267 未出场模板反派衰减**（`864d3c3`）：0 states 且从未出场的 antagonist 只给符号档案（importance 0.2），不占硬顶不保送 0.8；已出场/有 states 保护不变，protagonist 不变。
+- **268 --no-seed + urban_horror**（`74802be`）：`create-project --no-seed` 只建主角档案；都市灵异薄模板无 seed.json。doctor 实认 8 templates。
+- **269 pending 分组 + 伏笔 horizon + 承诺归档**（`591a285`）：`canon pending --chapter/--source/--kind`（entity 经引用归组）+ `confirm/dismiss batch` 同族过滤（非 TTY 无 --yes exit 2）；urban `foreshadowing_horizon_floor=8`；`canon dismiss promise` 归档（幂等，出开放集/overdue/紧迫）+ `canon confirm promise-due`（人确认到期日，未确认 expected 只是建议：不翻 overdue、不加 +2 紧迫）。
+- 回归：默认收集 3689 passed / 2 skipped / 1 xpassed（基线 3663 + 本批新增/口径更新）；tests/cli 371 全绿（基线 339）；ruff 零告警。**升级提醒：旧库先 `songyan doctor --init-db`**（characters.archived / foreshadowings.confirmed_due_chapter 窄加列，既有契约；2 条钉旧口径的测试已随口径更新改写）。
+
+**下一刀（均需 owner 侧动作，助手默认待命）**：① owner 真人 dogfood 写一章（266–269 的实模型验收输入，建议都市灵异 urban_horror 起步）；② 选项 A（W2 缺失 goal/brief 时自动调规划器，涉推翻 B12）产品决策；③ 实模型抽检 1–2 章看是否再漏模板（先报预算再跑）。未建任务文件，不口头开工。
+
+**task 265 已 DONE 归档（2026-11-15）**：context 断链修复（owner 拍板选项 B）——writer 卡 1.1.2 注入故事定向（story_brief/角色名册/世界观设定，断链 C2/C3/C4）；`chapter continue` 四路定向全空可见提醒（`orientation_notice`，不越 B12）；`storyline edit outline --core-hook/--protagonist-background`（C5）；抽卡字数门 `quality_flag=short`（F9）；`--title` 回显（F3）。代码 @ `43eca48`；dogfood 复测 PASS（`.tmp/dogfood-265-末班电梯-003233/`：纯 CLI storyline、零 canon 预置，ch1 2726 字 ¥0.0245 恐怖要素全命中零泄漏）；回归：默认收集 3663 passed，tests/cli 339 全绿，ruff 零告警。评估文档：[docs/experiments/265-context-disconnect-eval.md](experiments/265-context-disconnect-eval.md)；归档：[tasks/done/265](../tasks/done/265-context-disconnect.md)。
 
 **task 244 已 DONE 归档（2026-11-11）**：真实模型冒烟发现 5/6 两个 P1 修复，代码 @ `120012c`，切片 5 真实模型复验 PASS（`.tmp/smoke-244-verify-20261111/`：pick→accept 后 continue exit 0；圣经 text_len 0→1664；抽卡两槽真实正文 1602/2075 字；canon confirm 后 stale_vs_canon=1；费用 ¥0.4823 / 24 次调用）。归档：[tasks/done/244](../tasks/done/244-修复抽卡死锁与圣经空渲染.md)。
 
@@ -64,7 +72,7 @@ M1 代码验收（步 1–5 + tech-m1 §6–7）在 `main` `69d7ece`：**PASS**�
 | M4 步 3 | 已提交 `23bd3f3`（`chapter continue`）；[tasks/done/240-m4-step3-chapter-continue.md](../tasks/done/240-m4-step3-chapter-continue.md) |
 | M4 步 4 | 已提交 `b857e8b`（`review` 只读共审）；[tasks/done/241-m4-step4-review.md](../tasks/done/241-m4-step4-review.md) |
 | M4 步 5 + §6–7 验收 | 步 5 已提交 `e5a33bd`（W2 连走集成测试 + `today` M4 文案）；**§6–7 PASS @ `e5a33bd`**（[tasks/done/242-m4-step5-closure.md](../tasks/done/242-m4-step5-closure.md) · [tasks/done/243-m4-code-acceptance.md](../tasks/done/243-m4-code-acceptance.md)） |
-| 当前任务 | 无进行中。**已 push 至 `53ed841`**（265 context 断链修复 + 归档）。263 开章语义 / 264 术语治理（docs/glossary.md）/ 265 故事定向注入均 DONE。待 owner：真人 dogfood 写一章 / F1/F2 立项 / 选项 A 产品决策（均未建任务文件） |
+| 当前任务 | 无进行中。**266–269 批次 DONE 已归档**（角色/设定编辑 CLI、模板反派衰减、--no-seed+urban_horror、pending 分组+伏笔 horizon+承诺归档；tests/cli 371 全绿）。待 owner：真人 dogfood 写一章（266–269 实模型验收）/ 选项 A 产品决策 |
 | 架构方向 | [adr/0001-plan-first-facts.md](adr/0001-plan-first-facts.md) |
 | 工程现状 | [STATUS.md](STATUS.md) |
 | 阶段 A–C | [ROADMAP-plan-first.md](ROADMAP-plan-first.md)（CLOSED 短指针；全文在 archive，日常不要加载） |

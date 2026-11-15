@@ -201,6 +201,8 @@ def _make_items() -> tuple[ForeshadowingItem, ForeshadowingItem]:
         description="soon foreshadowing",
         planted_in_chapter=2,
         expected_resolve_chapter=7,
+        # task 269：「2 章内 +2」只认人确认到期日
+        confirmed_due_chapter=7,
         status="planted",
     )
     return due_item, soon_item

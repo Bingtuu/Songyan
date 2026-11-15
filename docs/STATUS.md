@@ -8,14 +8,14 @@
 
 | 项 | 值 |
 |----|----|
-| **git tip（`main`）** | `53ed841`（已 push；265 归档文档，功能代码 `43eca48`；此前 `29dcd72`） |
-| **功能面** | M0–M4（@ `e5a33bd`）+ post-M4：248–257 批次 + 263 开章语义转正 + 264 术语治理 + **265 故事定向注入**（writer 卡 1.1.2：story_brief/角色名册/世界观设定三版面；`chapter continue` 四路定向全空时可见提醒 + JSON `orientation_notice`；`storyline edit outline --core-hook/--protagonist-background` 同步 projects；`variant generate` 字数门 `quality_flag=short`；`create-project --title` 回显修正） |
+| **git tip（`main`）** | `591a285`（266–269 批次功能；已 push；此前 `a4e0955` 任务文档、`53ed841` 265 归档） |
+| **功能面** | M0–M4（@ `e5a33bd`）+ post-M4：248–257 + 263–265 批次 + **266–269 批次（2026-11-15）**：266 角色/设定编辑 CLI（character\|setting list/edit/remove，软删+审计 profile_edit_history，主角禁 remove，edit 软删行=复活）· 267 未出场无 states 模板反派只给符号档案（0.2）不占硬顶 · 268 `create-project --no-seed` + `urban_horror` 都市灵异薄模板 · 269 pending 分组过滤（--chapter/--source/--kind，confirm/dismiss batch 同族，非 TTY 无 --yes exit 2）+ urban 伏笔 horizon=8 + `dismiss promise` 归档 + `confirm promise-due` 人确认到期日（未确认 expected 只是建议，不翻 overdue/不加 +2 紧迫） |
 | **包版本** | 仍是 `0.5.0`（不 bump） |
-| **里程碑** | **M0–M4 代码验收全量 PASS；tech-m4 §9 清零；post-M4 A/C/B 闭环；265 dogfood 复测 PASS**（都市恐怖 ch1 2726 字 ¥0.0245：storyline 全 CLI 无 canon 预置，恐怖要素全命中、职场零泄漏） |
-| **回归基线** | 默认收集 3663 passed / 2 skipped / 1 xpassed；`tests/cli` 339 全绿；ruff 零告警 |
-| **进行中** | 无（265 已归档） |
-| **下一闸门** | owner 真人 dogfood（写一章评估会）；F1/F2（模板缺口/角色编辑面）与选项 A（W2 调规划器，涉 B12）待 owner 立项 |
-| **本 handoff** | 265 五切片全交付：context 断链 C2/C3/C4 修复 + C5 编辑面 + F9 字数门 + F3 回显 |
+| **里程碑** | **M0–M4 代码验收全量 PASS；tech-m4 §9 清零；post-M4 A/C/B 闭环；265 dogfood 复测 PASS；266–269 批次 DONE 归档** |
+| **回归基线** | 默认收集 3689 passed / 2 skipped / 1 xpassed；`tests/cli` 371 全绿；ruff 零告警 |
+| **进行中** | 无（266–269 已归档 `tasks/done/`） |
+| **下一闸门** | owner 真人 dogfood 写一章（266–269 的实模型验收输入，建议 urban_horror 起步）；选项 A（W2 调规划器，涉 B12）待 owner 产品决策 |
+| **本 handoff** | 266–269 四任务全交付：清模板写径（266/268）+ 模板反派防御（267）+ pending/伏笔过目降本（269） |
 
 硬约束（接手期间同样适用）：
 
@@ -121,7 +121,7 @@ songyan review --project-id TEXT --chapter INT [--json]
 | 本地回归（抽卡相关） | `tests/cli/test_variant_*.py`、`tests/services/test_variant_fingerprint.py`、`tests/db/test_chapter_variants.py` |
 | 本地回归（M4 相关） | `tests/cli/test_chapter_*.py`、`tests/cli/test_review*.py`、`tests/cli/test_status_command.py`、`tests/services/test_review_report.py` |
 
-本地仓库路径（Diupi-Yun）：`C:\Vibe Project\Songyan`；origin/main 随本页提交 push 后同步（当前 @ `53ed841`）。
+本地仓库路径（Diupi-Yun）：`C:\Vibe Project\Songyan`；origin/main 随本页提交 push 后同步（当前 @ `591a285`）。
 
 ## 已知限制
 
@@ -149,6 +149,7 @@ songyan review --project-id TEXT --chapter INT [--json]
 - **2026-11-14 S 信号闭环（task 262 @ `e455207`）**：S2 落地（human_marks 周期口径）+ S7 预算线（默认 ¥0.5/章，超预算章列表 + 预算内占比）——**S1–S7 七信号全部可算**。
 - **2026-11-14 术语与文案治理（task 264）**：`docs/glossary.md` 术语表 v1 落地；today next、variant/chapter status 输出、错误与帮助文案全面去内部术语（章宇宙/fp/slStale/task 号等）；README/quickstart 刷新。tests/cli 334 全绿 + 全量 3654 passed。
 - **2026-11-14 开章语义转正（task 263 @ `bdb5c39`）**：`chapter continue --chapter N` 显式开章——内联铺 empty head 替代 dogfood 里反复出现的 SQL seeding；跳跃/已 accepted 拒绝；真实模型复验一步开书（新项目 --chapter 1 → 3266 字草稿 ¥0.0314，无需 run 先跑）。
+- **2026-11-15 都市灵异清模板与 pending/伏笔过目批次（266–269，已归档 `tasks/done/`）**：266 角色/设定编辑 CLI（`character|setting list|edit|remove`；characters.archived 软删 + `profile_edit_history` 审计同事务；软删行从默认 list 与组装/名册/初始化出口消失；主角禁 remove exit 2；edit 命中软删行=复活，与 storyline 同口径）· 267 未出场且无 character_states 的模板反派只给符号档案（importance 0.2，不占硬顶不保送 0.8；已出场/有 states 保护不变，protagonist 不变）· 268 `create-project --no-seed`（跳过模板种子只建主角档案）+ 薄模板 `urban_horror`（无 seed.json）· 269 pending 分组过滤（`canon pending --chapter/--source/--kind`，entity 经「被过滤 attribute 引用」归组；`confirm/dismiss batch` 同族过滤，非 TTY 无 --yes exit 2，空集 exit 0 明示）+ urban `foreshadowing_horizon_floor=8` + `canon dismiss promise` 归档（幂等，出开放集/overdue/紧迫）+ `canon confirm promise-due`（未确认 expected 只是建议：结算不翻 due/overdue、不加「2 章内 +2 紧迫」）。代码 266 `8181771` / 267 `864d3c3` / 268 `74802be` / 269 `591a285`；全量 3689 passed + tests/cli 371 + ruff 绿。**升级先 `songyan doctor --init-db`**（characters.archived / foreshadowings.confirmed_due_chapter 窄加列，既有契约）；2 条钉旧口径测试（mark_overdue / urgency within_2）已随新口径改写。遗留：真人 dogfood 验证待人跑；选项 A 未决。
 
 标识与助手交接：[HANDOFF-mew.md](HANDOFF-mew.md)。书稿不入库。
 
@@ -168,7 +169,7 @@ songyan review --project-id TEXT --chapter INT [--json]
 
 ## 维护者下一步
 
-1. **当前 tip `53ed841`（已 push）。** M0–M4 代码验收全量 **PASS**；tech-m4 §9 清零（248–250）；post-M4 路线方向 A/C/B（255–257）、dogfood 洞察批次（259–261）、S 信号闭环（262）、263 开章语义、264 术语治理、265 context 断链修复全部闭环。下一闸门 = owner 真人 dogfood（写一章评估会）；F1/F2（模板缺口 / 角色编辑面）与选项 A（W2 调规划器，涉 B12）待 owner 立项决策，没有任务文件不口头开工。
+1. **当前 tip `591a285`（已 push；266–269 批次功能）。** M0–M4 代码验收全量 **PASS**；tech-m4 §9 清零；248–265 与 **266–269 批次全部闭环归档**。下一闸门 = owner 真人 dogfood（写一章，266–269 的实模型验收输入，建议 `urban_horror` 起步）；选项 A（W2 缺失 goal/brief 时自动调规划器，涉 B12）待 owner 产品决策。没有任务文件不口头开工。
 2. 不改结算权威；不大 PR；不 bump；不声称 V1.0 完成。
 3. owner 本地接手期间：以本页 + tech-m3 / tech-m4 为准；助手侧默认待命，不抢开「以后」清单。
 

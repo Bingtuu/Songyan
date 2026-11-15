@@ -284,14 +284,15 @@ async def _insert_foreshadowing(
     status: str,
     project_id: str = "p1",
     source_version_id: str = "v1",
+    confirmed_due_chapter: int | None = None,
 ) -> None:
     async with get_db() as conn:
         await conn.execute(
             """INSERT INTO foreshadowings (
                 foreshadowing_id, project_id, description,
                 planted_in_chapter, expected_resolve_chapter, status,
-                source_version_id
-            ) VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                source_version_id, confirmed_due_chapter
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 foreshadowing_id,
                 project_id,
@@ -300,6 +301,7 @@ async def _insert_foreshadowing(
                 expected_resolve_chapter,
                 status,
                 source_version_id,
+                confirmed_due_chapter,
             ),
         )
         await conn.commit()
@@ -307,15 +309,22 @@ async def _insert_foreshadowing(
 
 class TestForeshadowingPressure:
     async def test_mark_overdue(self, dedup_db: Path) -> None:
+        # task 269：overdue 只认人确认的 confirmed_due_chapter；
+        # expected 未确认只是建议（fs3 有 expected 无 confirmed → 不翻）。
         await _seed_project("p1")
-        await _insert_foreshadowing("fs1", "伏笔1", 10, 30, "planted")
-        await _insert_foreshadowing("fs2", "伏笔2", 20, 40, "due")
+        await _insert_foreshadowing(
+            "fs1", "伏笔1", 10, 30, "planted", confirmed_due_chapter=30
+        )
+        await _insert_foreshadowing(
+            "fs2", "伏笔2", 20, 40, "due", confirmed_due_chapter=40
+        )
+        await _insert_foreshadowing("fs3", "伏笔3", 10, 15, "planted")
 
         from songyan.db.settlement_repo import ForeshadowingRepository
 
         repo = ForeshadowingRepository()
         updated = await repo.mark_overdue("p1", current_chapter=35)
-        assert updated == 1  # fs1 overdue
+        assert updated == 1  # 仅 fs1 overdue
 
         async with get_db() as conn:
             cursor = await conn.execute(
@@ -332,6 +341,14 @@ class TestForeshadowingPressure:
             )
             row = await cursor.fetchone()
         assert row[0] == "due"
+
+        async with get_db() as conn:
+            cursor = await conn.execute(
+                "SELECT status FROM foreshadowings WHERE foreshadowing_id = ?",
+                ("fs3",),
+            )
+            row = await cursor.fetchone()
+        assert row[0] == "planted"
 
     async def test_get_unresolved_ratio(self, dedup_db: Path) -> None:
         await _seed_project("p1")

@@ -112,7 +112,7 @@ songyan doctor --init-db
 songyan create-project --template scifi
 ```
 
-`create-project` 会打印 `project_id`。模板还有 `xuanhuan`、`wuxia`、`urban` 等。
+`create-project` 会打印 `project_id`。模板还有 `xuanhuan`、`wuxia`、`urban`、`urban_horror`（都市灵异薄模板）等；不想带模板班子时用 `--no-seed`（只建主角档案）。
 
 下面是**管线冒烟示例**，用来看引擎能不能跑完前三章。它不是作者主路径。
 
@@ -122,7 +122,7 @@ songyan report --run-id <run_id>
 songyan export --project-id <project_id> --chapters 1-3 --format md --output exports/
 ```
 
-`run` 会打印 `run_id`，这是**引擎冒烟路径**。作者路径命令均已落地：工作台（`today`、`canon show|pending`、`canon confirm [entity|attribute|batch|promise]`、`check`、`storyline show|edit|remove`、`project list`、`signals`、`status`）、抽卡（`variant list|generate|diff|pick|abandon`）、W2 短环（`chapter continue [--chapter N]|accept|status`、`review [--deep]`）。备份与排错见 [Quickstart](docs/quickstart.md)；导入已有小说见 `songyan import --help`。
+`run` 会打印 `run_id`，这是**引擎冒烟路径**。作者路径命令均已落地：工作台（`today`、`canon show|pending`、`canon confirm [entity|attribute|batch|promise|promise-due]`、`canon dismiss [entity|attribute|batch|promise]`、`check`、`storyline show|edit|remove`、`character|setting list|edit|remove`、`project list`、`signals`、`status`）、抽卡（`variant list|generate|diff|pick|abandon`）、W2 短环（`chapter continue [--chapter N]|accept|status`、`review [--deep]`）。备份与排错见 [Quickstart](docs/quickstart.md)；导入已有小说见 `songyan import --help`。
 
 报告里的费用按这个口径估算：输入 **¥2/M**，输出 **¥8/M**，单章停线 **¥7.66**。这是估算，不是供应商账单。
 
