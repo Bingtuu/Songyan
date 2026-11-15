@@ -16,8 +16,6 @@ owner：Bingtuu。包 tip **v0.5**（`0.5.0`）。「V1.0」是产品代际名�
 
 **task 246 已 DONE 归档（2026-11-12）**：db-maintenance 锁表根因 = `get_db()` 的 `PRAGMA quick_check` 未消费结果悬挂持锁（4 轮实验链实锤：插桩→sync 探针→最小复现→单变量二分）；修复后真实 run 收尾 0 告警、WAL 截断 0 字节（¥0.4203），全量 3623 passed。归档：[tasks/done/246](../tasks/done/246-修复run收尾db-maintenance锁表失败.md)。
 
-**下一刀（均需 owner 侧动作，助手默认待命）**：tech-m4 §9「以后」清单（`chapter status` / `review --deep` / 导入后再续写验收）——新功能授权项，未建任务文件，需 owner 新授权立项
-
 M0 步 1–4 已全部在 `main`：[#28](https://github.com/Bingtuu/Songyan/pull/28) → `1d8c0c0`；[#29](https://github.com/Bingtuu/Songyan/pull/29) → `8f03453`；[#30](https://github.com/Bingtuu/Songyan/pull/30) → `d5c2cc1`；[#31](https://github.com/Bingtuu/Songyan/pull/31) → `48fa354`。任务分别在 [tasks/done/200.md](../tasks/done/200.md)、[tasks/done/201.md](../tasks/done/201.md)、[tasks/done/202.md](../tasks/done/202.md)、[tasks/done/203.md](../tasks/done/203.md)。
 
 M0 代码验收（步 1–4 + tech-m0 §6–7）在 `main` `80f4107`：**PASS**。归档说明：[tasks/done/204-m0-acceptance.md](../tasks/done/204-m0-acceptance.md)。S6 不在代码验收内。
@@ -32,7 +30,7 @@ M1 代码验收（步 1–5 + tech-m1 §6–7）在 `main` `69d7ece`：**PASS**�
 - 不重开 plan-first 阶段 C，不加题材专用检查器，不改 SettlementExtractor 的权威。
 - 不把 Ch1–10 写成文学验收。文学质量归人。
 - 正式 git tag 仍由维护者决定。
-- **M0–M4 编码范围全部闭环**：不扩 M3（continue / review 已由 M4 交付）、不扩 M4（步 1–5 + §6–7 PASS @ `e5a33bd`，task 243）；结算表仍保留为 untrusted 对照，不升格 Canon。tech-m4 §9「以后」事项需 owner 新授权立项。
+- **M0–M4 编码范围全部闭环**：不扩 M3（continue / review 已由 M4 交付）、不扩 M4（步 1–5 + §6–7 PASS @ `e5a33bd`，task 243）；结算表仍保留为 untrusted 对照，不升格 Canon。tech-m4 §9「以后」事项已由 followup 248–250 闭环（`chapter status` / `review --deep` / 导入后再续写验收），§9 清零。
 - 不声称 V1.0 完成，不升包版本。
 
 ## 事实指针（短）
@@ -66,7 +64,7 @@ M1 代码验收（步 1–5 + tech-m1 §6–7）在 `main` `69d7ece`：**PASS**�
 | M4 步 3 | 已提交 `23bd3f3`（`chapter continue`）；[tasks/done/240-m4-step3-chapter-continue.md](../tasks/done/240-m4-step3-chapter-continue.md) |
 | M4 步 4 | 已提交 `b857e8b`（`review` 只读共审）；[tasks/done/241-m4-step4-review.md](../tasks/done/241-m4-step4-review.md) |
 | M4 步 5 + §6–7 验收 | 步 5 已提交 `e5a33bd`（W2 连走集成测试 + `today` M4 文案）；**§6–7 PASS @ `e5a33bd`**（[tasks/done/242-m4-step5-closure.md](../tasks/done/242-m4-step5-closure.md) · [tasks/done/243-m4-code-acceptance.md](../tasks/done/243-m4-code-acceptance.md)） |
-| 当前任务 | 无进行中。**已 push 至 `96ba4e2`**。dogfood 五体裁 + 洞察批次（259–261）+ S 信号闭环（262，S1–S7 全可算）均 DONE。待 owner：真人 dogfood 体验 / 新方向立项（264 术语治理已落地：docs/glossary.md） |
+| 当前任务 | 无进行中。**已 push 至 `53ed841`**（265 context 断链修复 + 归档）。263 开章语义 / 264 术语治理（docs/glossary.md）/ 265 故事定向注入均 DONE。待 owner：真人 dogfood 写一章 / F1/F2 立项 / 选项 A 产品决策（均未建任务文件） |
 | 架构方向 | [adr/0001-plan-first-facts.md](adr/0001-plan-first-facts.md) |
 | 工程现状 | [STATUS.md](STATUS.md) |
 | 阶段 A–C | [ROADMAP-plan-first.md](ROADMAP-plan-first.md)（CLOSED 短指针；全文在 archive，日常不要加载） |

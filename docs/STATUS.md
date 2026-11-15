@@ -8,7 +8,7 @@
 
 | 项 | 值 |
 |----|----|
-| **git tip（`main`）** | `43eca48`（已 push；265 context 断链修复；此前 `29dcd72`） |
+| **git tip（`main`）** | `53ed841`（已 push；265 归档文档，功能代码 `43eca48`；此前 `29dcd72`） |
 | **功能面** | M0–M4（@ `e5a33bd`）+ post-M4：248–257 批次 + 263 开章语义转正 + 264 术语治理 + **265 故事定向注入**（writer 卡 1.1.2：story_brief/角色名册/世界观设定三版面；`chapter continue` 四路定向全空时可见提醒 + JSON `orientation_notice`；`storyline edit outline --core-hook/--protagonist-background` 同步 projects；`variant generate` 字数门 `quality_flag=short`；`create-project --title` 回显修正） |
 | **包版本** | 仍是 `0.5.0`（不 bump） |
 | **里程碑** | **M0–M4 代码验收全量 PASS；tech-m4 §9 清零；post-M4 A/C/B 闭环；265 dogfood 复测 PASS**（都市恐怖 ch1 2726 字 ¥0.0245：storyline 全 CLI 无 canon 预置，恐怖要素全命中、职场零泄漏） |
@@ -75,7 +75,7 @@ songyan status --project-id TEXT [--json]
 
 - 纯只读项目级计数面：章进度六态分布（章宇宙 = heads ∪ variants ∪ versions 章号并集；`stale`/`settled` = accepted ± `content_stale`，`picked` / `variants_ready` / `drafting` / `empty`）+ 待确认 picked 数 + ContextEmergency 触发次数 / 最近触发章 / `budget_used_before_emergency`（B10）。
 - `today` 文本与 `--json` 同步增加 `chapter_progress` 摘要行（下一章 = B1 口径第一个非 accepted 章）；`_NEXT` 文案在 task 242 更新为 M4 口径（continue 短环 + 抽卡提示）。
-- exit 0 / 1（缺库缺项目）；usage 错误 exit 2（B11 口径）。`chapter status` 不做。
+- exit 0 / 1（缺库缺项目）；usage 错误 exit 2（B11 口径）。`chapter status` 不在 tech-m4 范围（tech-m4-followup 步 1 已交付，见「已知限制」tech-m4-followup 条）。
 
 M4 步 2 `chapter accept`（task 239）/ 步 3 `chapter continue`（task 240）：
 
@@ -121,7 +121,7 @@ songyan review --project-id TEXT --chapter INT [--json]
 | 本地回归（抽卡相关） | `tests/cli/test_variant_*.py`、`tests/services/test_variant_fingerprint.py`、`tests/db/test_chapter_variants.py` |
 | 本地回归（M4 相关） | `tests/cli/test_chapter_*.py`、`tests/cli/test_review*.py`、`tests/cli/test_status_command.py`、`tests/services/test_review_report.py` |
 
-本地仓库路径（Diupi-Yun）：`C:\Vibe Project\Songyan`；origin/main 随本页提交 push 后同步（此前 @ `8da4cd0`）。
+本地仓库路径（Diupi-Yun）：`C:\Vibe Project\Songyan`；origin/main 随本页提交 push 后同步（当前 @ `53ed841`）。
 
 ## 已知限制
 
@@ -129,7 +129,7 @@ songyan review --project-id TEXT --chapter INT [--json]
 - **升级后先跑 `songyan doctor --init-db`**：窄加列迁移（quality_flag / stale_vs_storyline 等）只在 init/doctor 路径执行；直接对旧库跑 list/status 会以 IndexError 提示缺列（2026-11-13 真实库核对实证，既有契约非新缺陷）。
 - 《轨道蜃景》Ch1–10 管线曾 PASS、文学未过（DG-1 失败等）；细节见历史冒烟记录，不作 V1.0 文学验收。
 - 真实模型上「导入后再续写」还没有验收。
-- **未做：** 真实模型冒烟（维护者任务，不挡代码验收）；M4 之后事项（`chapter status` / `review --deep` / 导入后再续写验收）属 tech-m4 §9「以后」清单，需 owner 新授权立项。
+- **未做：** 真实模型冒烟（维护者任务，不挡代码验收）。注：tech-m4 §9「以后」清单（`chapter status` / `review --deep` / 导入后再续写验收）已由 tech-m4-followup 248–250 全部闭环，§9 清零，不再是待立项项。
 - `today` 的固定 `next` 文案已更新为 M4 口径（提示 `chapter continue` 短环 + `variant generate` 抽卡；task 242，2026-11-09）。
 - **2026-11-07 评审修复（task 226，已归档 `tasks/done/`）**：全量 code review 的 1 blocker + 4 major + minor 批已修复——settlement 声称的伏笔 resolve 只进提案（不再直写 `resolved`；唯一写径 = `canon confirm promise`）；`variant generate` 成本记账去重且归因 project/agent；pick 拒绝 abandoned 槽；LLM 失败保留已写槽并报 stderr；rejected 行不可被 confirm 直接转正；extract 提案跳过 rejected。详见 `tasks/done/226-review-findings-fix.md` 与 `docs/superpowers/plans/2026-11-07-m0-m3-review-audit.md`。
 - **2026-11-07 审计补强（task 228，已归档 `tasks/done/`）**：`canon confirm promise` 的人证 evidence 落库（`foreshadowings.resolved_evidence`，写-only 审计列）；销账守卫与写入合并为原子 UPDATE（并发双销账恰一成交）。读口径与 open 集不变。
@@ -168,7 +168,7 @@ songyan review --project-id TEXT --chapter INT [--json]
 
 ## 维护者下一步
 
-1. **当前 tip `e5a33bd` + 本页文档提交（push 后 origin 同步）。** M0–M4 代码验收全量 **PASS**；PRD 内里程碑全部闭环。下一闸门 = 真实模型冒烟（维护者任务，花真钱）；「以后」清单（tech-m4 §9：`chapter status` / `review --deep` / 导入后再续写验收）需 owner 新授权立项。
+1. **当前 tip `53ed841`（已 push）。** M0–M4 代码验收全量 **PASS**；tech-m4 §9 清零（248–250）；post-M4 路线方向 A/C/B（255–257）、dogfood 洞察批次（259–261）、S 信号闭环（262）、263 开章语义、264 术语治理、265 context 断链修复全部闭环。下一闸门 = owner 真人 dogfood（写一章评估会）；F1/F2（模板缺口 / 角色编辑面）与选项 A（W2 调规划器，涉 B12）待 owner 立项决策，没有任务文件不口头开工。
 2. 不改结算权威；不大 PR；不 bump；不声称 V1.0 完成。
 3. owner 本地接手期间：以本页 + tech-m3 / tech-m4 为准；助手侧默认待命，不抢开「以后」清单。
 
