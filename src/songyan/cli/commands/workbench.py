@@ -221,9 +221,14 @@ def _render_promise_text(items: list[ForeshadowingItem]) -> str:
             lines.append("（空）")
             continue
         for item in bucket:
+            due_note = ""
+            if item.confirmed_due_chapter is not None:
+                due_note = f" 确认到期ch={item.confirmed_due_chapter}"
+            elif item.expected_resolve_chapter is not None:
+                due_note = f" 建议到期ch={item.expected_resolve_chapter}"
             lines.append(
                 f"- {item.foreshadowing_id} status={item.status} "
-                f"planted_in_chapter={item.planted_in_chapter}"
+                f"planted_in_chapter={item.planted_in_chapter}{due_note}"
             )
     return "\n".join(lines)
 
@@ -238,6 +243,7 @@ def _render_promise_json(project_id: str, items: list[ForeshadowingItem]) -> str
                 "description": item.description,
                 "planted_in_chapter": item.planted_in_chapter,
                 "expected_resolve_chapter": item.expected_resolve_chapter,
+                "confirmed_due_chapter": item.confirmed_due_chapter,
                 "status": item.status,
                 "source_version_id": item.source_version_id,
             }
@@ -274,21 +280,54 @@ def canon_group() -> None:
 
 @canon_group.command(name="pending")
 @click.option("--project-id", required=True, help="项目 ID")
+@click.option(
+    "--chapter",
+    type=int,
+    default=None,
+    help="task 269：只看本章提案（attribute valid_from_ch）",
+)
+@click.option(
+    "--source",
+    type=click.Choice(["plan", "human", "extract"]),
+    default=None,
+    help="task 269：按来源过滤（attribute）",
+)
+@click.option(
+    "--kind",
+    type=click.Choice(["entity", "attribute"]),
+    default=None,
+    help="task 269：只列一类",
+)
 @click.option("--json", "as_json", is_flag=True, help="JSON 输出")
-def canon_pending(project_id: str, as_json: bool) -> None:
-    """列出 pending 提案（entity/attribute 分节；attribute 带 key=值预览）。task 259。"""
+def canon_pending(
+    project_id: str,
+    chapter: int | None,
+    source: str | None,
+    kind: str | None,
+    as_json: bool,
+) -> None:
+    """列出 pending 提案；未过滤文本按章分节。task 259 / 269。
+
+    过滤口径：entity 无章/来源列，过滤生效时经「被过滤 attribute 引用」归组。
+    """
     import asyncio as _asyncio
     import json as _json
 
     from songyan.cli.commands.workbench import _ensure_project_readable as _ensure
+    from songyan.services.pending_groups import filter_pending
 
     _asyncio.run(_ensure(project_id))
     entities, attributes = _asyncio.run(_load_pending(project_id))
+    entities, attributes = filter_pending(
+        entities, attributes, chapter=chapter, source=source, kind=kind  # type: ignore[arg-type]
+    )
     if as_json:
         click.echo(
             _json.dumps(
                 {
                     "project_id": project_id,
+                    "chapter": chapter,
+                    "source": source,
                     "entities": [e.model_dump(mode="json") for e in entities],
                     "attributes": [a.model_dump(mode="json") for a in attributes],
                 },
@@ -298,14 +337,25 @@ def canon_pending(project_id: str, as_json: bool) -> None:
         )
         return
     if not entities and not attributes:
-        click.echo("无 pending 提案")
+        if chapter is None and source is None:
+            click.echo("无 pending 提案")
+        else:
+            click.echo("无匹配过滤条件的 pending 提案")
         return
-    click.echo(f"entities ({len(entities)}):")
-    for row in entities:
-        click.echo(f"- {row.entity_id} type={row.entity_type} alias={row.aliases}")
-    click.echo(f"attributes ({len(attributes)}):")
+    if entities:
+        click.echo(f"entities ({len(entities)}):")
+        for row in entities:
+            click.echo(f"- {row.entity_id} type={row.entity_type} alias={row.aliases}")
+    # attribute 按章分节（None = 未标章）
+    groups: dict[object, list] = {}
     for row in attributes:
-        click.echo(f"- {row.attribute_id} {row.key}={row.value}")
+        groups.setdefault(row.valid_from_ch, []).append(row)
+    for ch in sorted(groups, key=lambda c: (c is None, c)):
+        rows = groups[ch]
+        label = "未标章" if ch is None else f"ch {ch}"
+        click.echo(f"attributes [{label}] ({len(rows)}):")
+        for row in rows:
+            click.echo(f"- {row.attribute_id} {row.key}={row.value}")
 
 
 async def _load_pending(project_id: str):

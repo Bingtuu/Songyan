@@ -537,24 +537,56 @@ class BatchConfirmReject(click.ClickException):
 @canon_confirm_group.command(name="batch")
 @click.option("--project-id", required=True, help="项目 ID")
 @click.option("--yes", is_flag=True, help="跳过交互确认（脚本/CI 用）")
+@click.option("--chapter", type=int, default=None, help="task 269：只确认本章提案")
+@click.option(
+    "--source",
+    type=click.Choice(["plan", "human", "extract"]),
+    default=None,
+    help="task 269：按来源过滤（attribute）",
+)
+@click.option(
+    "--kind",
+    type=click.Choice(["entity", "attribute"]),
+    default=None,
+    help="task 269：只处理一类",
+)
 @click.option("--json", "as_json", is_flag=True, help="JSON 输出")
-def confirm_batch(project_id: str, yes: bool, as_json: bool) -> None:
-    """批量确认全部 pending 提案（entity/attribute；软确认不带标脏）。
+def confirm_batch(
+    project_id: str,
+    yes: bool,
+    chapter: int | None,
+    source: str | None,
+    kind: str | None,
+    as_json: bool,
+) -> None:
+    """批量确认 pending 提案（entity/attribute；软确认不带标脏）。
 
     人确认语义不稀释：摘要 y/N 或 --yes；非 TTY 须显式 --yes（exit 2）。
-    批量前请先 `canon pending` 过目。task 259。
+    批量前请先 `canon pending` 过目。task 259；分组过滤 task 269
+    （无过滤 = 全部 pending，与 259 兼容；确认/驳回均不进 W2 默认环）。
     """
     from songyan.cli.commands.workbench import _ensure_project_readable as _ensure
     from songyan.cli.commands.workbench import _load_pending
+    from songyan.services.pending_groups import filter_pending
 
     _run(_ensure(project_id))
     entities, attributes = _run(_load_pending(project_id))
+    entities, attributes = filter_pending(
+        entities, attributes, chapter=chapter, source=source, kind=kind  # type: ignore[arg-type]
+    )
     if not entities and not attributes:
-        click.echo("无 pending 提案")
+        click.echo(
+            "无 pending 提案"
+            if chapter is None and source is None and kind is None
+            else "无匹配过滤条件的 pending 提案"
+        )
         return
+    scope = f"chapter={chapter} " if chapter is not None else ""
+    scope += f"source={source} " if source is not None else ""
+    scope += f"kind={kind}" if kind is not None else ""
     note = (
-        f"batch confirm：entity={len(entities)} attribute={len(attributes)}"
-        f"（软确认不带 --hard/--mark-stale）"
+        f"batch confirm（{scope.strip()}）：entity={len(entities)} "
+        f"attribute={len(attributes)}（软确认不带 --hard/--mark-stale）"
     )
     if not yes:
         if not _stdin_isatty():
@@ -562,7 +594,7 @@ def confirm_batch(project_id: str, yes: bool, as_json: bool) -> None:
                 f"{note}；非交互环境须显式 --yes 才会执行（防脚本静默入典）"
             )
         click.echo(note, err=True)
-        if not click.confirm("确认全部入典？", default=False):
+        if not click.confirm("确认入典？", default=False):
             raise BatchConfirmReject("已取消批量确认")
     else:
         click.echo(f"{note}（--yes 跳过确认）", err=True)
@@ -621,6 +653,24 @@ def confirm_promise(
     )
 
 
+@canon_confirm_group.command(name="promise-due")
+@click.option("--project-id", required=True, help="项目 ID")
+@click.option("--foreshadowing-id", required=True, help="伏笔 / 承诺稳定 id")
+@click.option("--chapter", required=True, type=int, help="确认到期章号")
+def confirm_promise_due(project_id: str, foreshadowing_id: str, chapter: int) -> None:
+    """task 269：人显式确认承诺到期日（单独写径，不与入典 batch 绑定）。
+
+    确认前 LLM 的 expected_resolve_chapter 只是建议：不驱动 overdue 翻转、
+    不触发「2 章内到期 +2 紧迫」；确认后才按到期日计算。
+    """
+    from songyan.services.promise_admin import PromiseAdminError, confirm_due
+
+    try:
+        click.echo(_run(confirm_due(project_id, foreshadowing_id, chapter)))
+    except PromiseAdminError as exc:
+        raise BatchConfirmReject(str(exc)) from exc
+
+
 @click.group(name="dismiss")
 def canon_dismiss_group() -> None:
     """驳回计划行：approval_status=rejected（保留行，不进已确认事实库）。"""
@@ -642,6 +692,127 @@ def dismiss_attribute(project_id: str, attribute_id: str) -> None:
     click.echo(
         _run(_dismiss_attribute(project_id=project_id, attribute_id=attribute_id))
     )
+
+
+@canon_dismiss_group.command(name="batch")
+@click.option("--project-id", required=True, help="项目 ID")
+@click.option("--yes", is_flag=True, help="跳过交互确认（脚本/CI 用）")
+@click.option("--chapter", type=int, default=None, help="task 269：只驳回本章提案")
+@click.option(
+    "--source",
+    type=click.Choice(["plan", "human", "extract"]),
+    default=None,
+    help="task 269：按来源过滤（attribute）",
+)
+@click.option(
+    "--kind",
+    type=click.Choice(["entity", "attribute"]),
+    default=None,
+    help="task 269：只处理一类",
+)
+@click.option("--json", "as_json", is_flag=True, help="JSON 输出")
+def dismiss_batch(
+    project_id: str,
+    yes: bool,
+    chapter: int | None,
+    source: str | None,
+    kind: str | None,
+    as_json: bool,
+) -> None:
+    """批量驳回 pending 提案（approval_status=rejected；保留行）。
+
+    与 confirm batch 同族交互门：摘要 y/N 或 --yes；非 TTY 须 --yes（exit 2）；
+    空集 exit 0 明示；部分失败 exit 1、已处理的保留。task 269。
+    """
+    from songyan.cli.commands.workbench import _ensure_project_readable as _ensure
+    from songyan.cli.commands.workbench import _load_pending
+    from songyan.services.pending_groups import filter_pending
+
+    _run(_ensure(project_id))
+    entities, attributes = _run(_load_pending(project_id))
+    entities, attributes = filter_pending(
+        entities, attributes, chapter=chapter, source=source, kind=kind  # type: ignore[arg-type]
+    )
+    if not entities and not attributes:
+        click.echo(
+            "无 pending 提案"
+            if chapter is None and source is None and kind is None
+            else "无匹配过滤条件的 pending 提案"
+        )
+        return
+    scope = f"chapter={chapter} " if chapter is not None else ""
+    scope += f"source={source} " if source is not None else ""
+    scope += f"kind={kind}" if kind is not None else ""
+    note = f"batch dismiss（{scope.strip()}）：entity={len(entities)} attribute={len(attributes)}"
+    if not yes:
+        if not _stdin_isatty():
+            raise BatchConfirmReject(
+                f"{note}；非交互环境须显式 --yes 才会执行（防脚本静默驳回）"
+            )
+        click.echo(note, err=True)
+        if not click.confirm("确认驳回？", default=False):
+            raise BatchConfirmReject("已取消批量驳回")
+    else:
+        click.echo(f"{note}（--yes 跳过确认）", err=True)
+
+    ok = 0
+    failed: list[str] = []
+    for row in entities:
+        try:
+            _run(_dismiss_entity(project_id=project_id, entity_id=row.entity_id))
+            ok += 1
+        except Exception as exc:  # noqa: BLE001 - 逐条隔离，保住已处理
+            failed.append(f"entity {row.entity_id}: {exc}")
+    for row in attributes:
+        try:
+            _run(
+                _dismiss_attribute(
+                    project_id=project_id, attribute_id=row.attribute_id
+                )
+            )
+            ok += 1
+        except Exception as exc:  # noqa: BLE001
+            failed.append(f"attribute {row.attribute_id}: {exc}")
+
+    payload = {
+        "dismissed": ok,
+        "failed": len(failed),
+        "entity": len(entities),
+        "attribute": len(attributes),
+    }
+    if as_json:
+        click.echo(json.dumps(payload, ensure_ascii=False))
+    else:
+        click.echo(f"dismissed={ok} failed={len(failed)}")
+    for item in failed:
+        click.echo(f"失败：{item}", err=True)
+    if failed:
+        raise click.ClickException(
+            f"批量驳回部分失败（{len(failed)} 条）；已处理的保留"
+        ) from None
+
+
+@canon_dismiss_group.command(name="promise")
+@click.option("--project-id", required=True, help="项目 ID")
+@click.option("--foreshadowing-id", required=True, help="伏笔 / 承诺稳定 id")
+@click.option("--json", "as_json", is_flag=True, help="JSON 输出")
+def dismiss_promise(project_id: str, foreshadowing_id: str, as_json: bool) -> None:
+    """task 269：归档放弃的承诺（lifecycle_status=archived；幂等 noop）。
+
+    归档后不再进开放承诺集、today 的 overdue 与上下文紧迫加分。
+    这不是 ``confirm promise``——那个仍是人确认回收为 resolved。
+    """
+    from songyan.services.promise_admin import PromiseAdminError, archive_promise
+
+    try:
+        action = _run(archive_promise(project_id, foreshadowing_id))
+    except PromiseAdminError as exc:
+        raise BatchConfirmReject(str(exc)) from exc
+    payload = {"foreshadowing_id": foreshadowing_id, "action": action}
+    if as_json:
+        click.echo(json.dumps(payload, ensure_ascii=False))
+        return
+    click.echo(f"promise {foreshadowing_id} {action}")
 
 
 @click.group(name="accept")

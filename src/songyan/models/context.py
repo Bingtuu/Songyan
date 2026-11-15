@@ -70,6 +70,8 @@ class ForeshadowingItem(BaseModel):
     expected_resolve_chapter: int | None = None
     status: Literal["planted", "due", "overdue", "resolved", "archived"] = "planted"
     source_version_id: str | None = None
+    # task 269：人显式确认的到期日；NULL = 未确认，expected_resolve_chapter 仅作建议
+    confirmed_due_chapter: int | None = None
 
 
 class SoftReference(BaseModel):

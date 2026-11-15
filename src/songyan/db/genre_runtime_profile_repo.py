@@ -119,6 +119,10 @@ def _default_registry() -> dict[str, GenreRuntimeProfile]:
     # overdue 门已独立 PASS；默认 0.3 会把 vdim-pass 的 P2 overdue 二次重罚到
     # health=5.2。urban 采用更低 health 扣分权重，五门 overdue 口径不变。
     urban.continuity.health_overdue_weight = 0.08
+    # task 269：短篇都市灵异 horizon 抬到 8（xuanhuan/wuxia=48 先例，只抬高
+    # 不缩短；scifi/默认 0 不受影响）。机制在结算写入时夹紧 expected_resolve
+    # （planted + horizon_floor），机制不变、只改档案值。
+    urban.foreshadowing_horizon_floor = 8
 
     return {p.genre: p for p in (scifi, xuanhuan, wuxia, urban)}
 

@@ -23,6 +23,22 @@ logger = structlog.get_logger(__name__)
 UNTRUSTED_UNTIL_CONFIRMED = "untrusted_until_confirmed"
 
 
+def _fs_item_from_row(row: Row) -> ForeshadowingItem:
+    """row → ForeshadowingItem（task 269：带出 confirmed_due_chapter）。"""
+    keys = row.keys() if hasattr(row, "keys") else []
+    return ForeshadowingItem(
+        foreshadowing_id=row["foreshadowing_id"],
+        description=row["description"],
+        planted_in_chapter=row["planted_in_chapter"],
+        expected_resolve_chapter=row["expected_resolve_chapter"],
+        status=row["status"],
+        source_version_id=row["source_version_id"],
+        confirmed_due_chapter=(
+            row["confirmed_due_chapter"] if "confirmed_due_chapter" in keys else None
+        ),
+    )
+
+
 class ForeshadowingRepository:
     """Repository for foreshadowing records."""
 
@@ -161,6 +177,75 @@ class ForeshadowingRepository:
             row = await cursor.fetchone()
         return None if row is None else dict(row)
 
+    async def set_confirmed_due(
+        self,
+        foreshadowing_id: str,
+        chapter: int,
+        conn: aiosqlite.Connection | None = None,
+    ) -> int:
+        """task 269：人确认到期日（仅开放承诺集内可写）；返回受影响行数。"""
+
+        async def _do(c: aiosqlite.Connection) -> int:
+            cursor = await c.execute(
+                """UPDATE foreshadowings
+                SET confirmed_due_chapter = ?
+                WHERE foreshadowing_id = ?
+                  AND lifecycle_status = 'active'
+                  AND status IN ('planted', 'due', 'overdue')""",
+                (chapter, foreshadowing_id),
+            )
+            return cursor.rowcount
+
+        if conn is None:
+            async with get_db() as c:
+                count = await _do(c)
+                await c.commit()
+        else:
+            count = await _do(conn)
+        logger.info(
+            "repository.write",
+            table="foreshadowings",
+            operation="set_confirmed_due",
+            foreshadowing_id=foreshadowing_id,
+            chapter=chapter,
+        )
+        return count
+
+    async def set_lifecycle_status(
+        self,
+        foreshadowing_id: str,
+        status: str,
+        conn: aiosqlite.Connection | None = None,
+    ) -> int:
+        """task 269：编辑面 lifecycle 软迁移（归档/复活）；返回受影响行数。"""
+        if status not in ("active", "dormant", "archived"):
+            raise ValueError(f"非法 lifecycle_status: {status}")
+
+        async def _do(c: aiosqlite.Connection) -> int:
+            cursor = await c.execute(
+                """UPDATE foreshadowings
+                SET lifecycle_status = ?
+                WHERE foreshadowing_id = ?
+                  AND lifecycle_status != ?""",
+                (status, foreshadowing_id, status),
+            )
+            return cursor.rowcount
+
+        if conn is None:
+            async with get_db() as c:
+                count = await _do(c)
+                await c.commit()
+        else:
+            count = await _do(conn)
+        logger.info(
+            "repository.write",
+            table="foreshadowings",
+            operation="set_lifecycle_status",
+            foreshadowing_id=foreshadowing_id,
+            lifecycle_status=status,
+        )
+        return count
+
     async def list_all(self, project_id: str) -> list[ForeshadowingItem]:
         async with get_db() as conn:
             conn.row_factory = Row
@@ -170,14 +255,7 @@ class ForeshadowingRepository:
             )
             rows = await cursor.fetchall()
         return [
-            ForeshadowingItem(
-                foreshadowing_id=row["foreshadowing_id"],
-                description=row["description"],
-                planted_in_chapter=row["planted_in_chapter"],
-                expected_resolve_chapter=row["expected_resolve_chapter"],
-                status=row["status"],
-                source_version_id=row["source_version_id"],
-            )
+            _fs_item_from_row(row)
             for row in rows
         ]
 
@@ -194,14 +272,7 @@ class ForeshadowingRepository:
             )
             rows = await cursor.fetchall()
         return [
-            ForeshadowingItem(
-                foreshadowing_id=row["foreshadowing_id"],
-                description=row["description"],
-                planted_in_chapter=row["planted_in_chapter"],
-                expected_resolve_chapter=row["expected_resolve_chapter"],
-                status=row["status"],
-                source_version_id=row["source_version_id"],
-            )
+            _fs_item_from_row(row)
             for row in rows
         ]
 
@@ -219,14 +290,7 @@ class ForeshadowingRepository:
             )
             rows = await cursor.fetchall()
         return [
-            ForeshadowingItem(
-                foreshadowing_id=row["foreshadowing_id"],
-                description=row["description"],
-                planted_in_chapter=row["planted_in_chapter"],
-                expected_resolve_chapter=row["expected_resolve_chapter"],
-                status=row["status"],
-                source_version_id=row["source_version_id"],
-            )
+            _fs_item_from_row(row)
             for row in rows
         ]
 
@@ -253,14 +317,7 @@ class ForeshadowingRepository:
             )
             rows = await cursor.fetchall()
         return [
-            ForeshadowingItem(
-                foreshadowing_id=row["foreshadowing_id"],
-                description=row["description"],
-                planted_in_chapter=row["planted_in_chapter"],
-                expected_resolve_chapter=row["expected_resolve_chapter"],
-                status=row["status"],
-                source_version_id=row["source_version_id"],
-            )
+            _fs_item_from_row(row)
             for row in rows
         ]
 
@@ -293,14 +350,7 @@ class ForeshadowingRepository:
             )
             rows = await cursor.fetchall()
         return [
-            ForeshadowingItem(
-                foreshadowing_id=row["foreshadowing_id"],
-                description=row["description"],
-                planted_in_chapter=row["planted_in_chapter"],
-                expected_resolve_chapter=row["expected_resolve_chapter"],
-                status=row["status"],
-                source_version_id=row["source_version_id"],
-            )
+            _fs_item_from_row(row)
             for row in rows
         ]
 
@@ -426,15 +476,19 @@ class ForeshadowingRepository:
         current_chapter: int,
         conn: aiosqlite.Connection | None = None,
     ) -> int:
-        """将 expected_resolve_chapter < current_chapter 的 planted/due 伏笔标记为 overdue."""
+        """将 confirmed_due_chapter < current_chapter 的 planted/due 伏笔标记为 overdue.
+
+        task 269：到期日硬信号只认人确认的 confirmed_due_chapter；
+        LLM 的 expected_resolve_chapter 未确认前只是建议，不翻 overdue。
+        """
         async def _do(c: aiosqlite.Connection) -> int:
             cursor = await c.execute(
                 """UPDATE foreshadowings
                 SET status = 'overdue'
                 WHERE project_id = ?
                   AND status IN ('planted', 'due')
-                  AND expected_resolve_chapter IS NOT NULL
-                  AND expected_resolve_chapter < ?""",
+                  AND confirmed_due_chapter IS NOT NULL
+                  AND confirmed_due_chapter < ?""",
                 (project_id, current_chapter),
             )
             return cursor.rowcount
@@ -561,6 +615,104 @@ class SettingSnapshotRepository:
                 )
             )
         return result
+
+    async def list_rows(
+        self, project_id: str, include_archived: bool = False
+    ) -> list[dict[str, Any]]:
+        """task 266：编辑面原始行（含 setting_id / lifecycle_status）。
+
+        默认排除 archived（软删从 list 与组装出口消失）；dormant 仍列出。
+        """
+        sql = "SELECT * FROM setting_snapshots WHERE project_id = ?"
+        if not include_archived:
+            sql += " AND lifecycle_status != 'archived'"
+        sql += " ORDER BY created_at, setting_id"
+        async with get_db() as conn:
+            conn.row_factory = Row
+            cursor = await conn.execute(sql, (project_id,))
+            rows = await cursor.fetchall()
+        return [dict(row) for row in rows]
+
+    async def get_row(self, setting_id: str) -> dict[str, Any] | None:
+        """task 266：按 setting_id 取原始行（含软删；编辑面快照）。"""
+        async with get_db() as conn:
+            conn.row_factory = Row
+            cursor = await conn.execute(
+                "SELECT * FROM setting_snapshots WHERE setting_id = ?",
+                (setting_id,),
+            )
+            row = await cursor.fetchone()
+        return dict(row) if row is not None else None
+
+    async def update_fields(
+        self,
+        setting_id: str,
+        *,
+        setting_name: str | None = None,
+        description: str | None = None,
+        conn: aiosqlite.Connection | None = None,
+    ) -> None:
+        """task 266：编辑面 UPDATE（未传字段保持原值）。"""
+
+        async def _do(c: aiosqlite.Connection) -> None:
+            sets: list[str] = []
+            params: list[object] = []
+            if setting_name is not None:
+                sets.append("setting_name = ?")
+                params.append(setting_name)
+            if description is not None:
+                sets.append("description = ?")
+                params.append(description)
+            if not sets:
+                return
+            params.append(setting_id)
+            await c.execute(
+                f"UPDATE setting_snapshots SET {', '.join(sets)} WHERE setting_id = ?",
+                params,
+            )
+
+        if conn is None:
+            async with get_db() as c:
+                await _do(c)
+                await c.commit()
+        else:
+            await _do(conn)
+        logger.info(
+            "repository.write",
+            table="setting_snapshots",
+            operation="update",
+            setting_id=setting_id,
+        )
+
+    async def set_lifecycle_status(
+        self,
+        setting_id: str,
+        status: str,
+        conn: aiosqlite.Connection | None = None,
+    ) -> None:
+        """task 266：编辑面软删/复活（复用既有 lifecycle_status 列，不另建）。"""
+        if status not in ("active", "dormant", "archived"):
+            raise ValueError(f"非法 lifecycle_status: {status}")
+
+        async def _do(c: aiosqlite.Connection) -> None:
+            await c.execute(
+                "UPDATE setting_snapshots SET lifecycle_status = ? WHERE setting_id = ?",
+                (status, setting_id),
+            )
+
+        if conn is None:
+            async with get_db() as c:
+                await _do(c)
+                await c.commit()
+        else:
+            await _do(conn)
+        logger.info(
+            "repository.write",
+            table="setting_snapshots",
+            operation="set_lifecycle_status",
+            setting_id=setting_id,
+            lifecycle_status=status,
+        )
 
     async def count_by_lifecycle(self, project_id: str) -> dict[str, int]:
         """按 lifecycle_status 分组统计 setting_snapshots 数量（V15 synthesize 只读汇总）."""

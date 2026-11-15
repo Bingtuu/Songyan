@@ -1302,12 +1302,14 @@ async def _update_continuity_tracking(
     for fs in active:
         if fs.foreshadowing_id in resolved_in_this_settlement:
             continue
-        expected = fs.expected_resolve_chapter
-        if expected is None:
+        # task 269：到期日硬信号只认人确认的 confirmed_due_chapter；
+        # LLM 的 expected_resolve_chapter 未确认前只是建议，不翻 due/overdue。
+        due_ch = fs.confirmed_due_chapter
+        if due_ch is None:
             continue
-        if chapter_number >= expected:
+        if chapter_number >= due_ch:
             await foreshadowing_repo.update_status(fs.foreshadowing_id, "overdue", conn=conn)
-        elif chapter_number >= expected - 1:
+        elif chapter_number >= due_ch - 1:
             await foreshadowing_repo.update_status(fs.foreshadowing_id, "due", conn=conn)
 
 

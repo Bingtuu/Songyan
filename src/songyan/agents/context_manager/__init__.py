@@ -1008,8 +1008,9 @@ def _rank_foreshadowings(
         if item.status == "overdue":
             urgency += overdue_bump
         elif (
-            item.expected_resolve_chapter
-            and (item.expected_resolve_chapter - current_chapter) <= 2
+            # task 269：+2 紧迫只作用于已确认到期日；expected 未确认只是建议
+            item.confirmed_due_chapter is not None
+            and (item.confirmed_due_chapter - current_chapter) <= 2
         ):
             urgency += within_2_bump
         if item.status == "due":
