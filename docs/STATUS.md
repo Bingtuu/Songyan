@@ -8,14 +8,14 @@
 
 | 项 | 值 |
 |----|----|
-| **git tip（`main`）** | `591a285`（266–269 批次功能；已 push；此前 `a4e0955` 任务文档、`53ed841` 265 归档） |
-| **功能面** | M0–M4（@ `e5a33bd`）+ post-M4：248–257 + 263–265 批次 + **266–269 批次（2026-11-15）**：266 角色/设定编辑 CLI（character\|setting list/edit/remove，软删+审计 profile_edit_history，主角禁 remove，edit 软删行=复活）· 267 未出场无 states 模板反派只给符号档案（0.2）不占硬顶 · 268 `create-project --no-seed` + `urban_horror` 都市灵异薄模板 · 269 pending 分组过滤（--chapter/--source/--kind，confirm/dismiss batch 同族，非 TTY 无 --yes exit 2）+ urban 伏笔 horizon=8 + `dismiss promise` 归档 + `confirm promise-due` 人确认到期日（未确认 expected 只是建议，不翻 overdue/不加 +2 紧迫） |
+| **git tip（`main`）** | `510f79b`（270 extract 提案碰撞修复；未 push；此前 `5f08178` 266–269 归档、`591a285` 269 功能） |
+| **功能面** | M0–M4（@ `e5a33bd`）+ post-M4：248–257 + 263–265 批次 + 266–269 批次（2026-11-15：清模板写径 266/268、模板反派防御 267、pending 分组+伏笔 horizon+承诺归档 269，详见流水）+ **270（2026-11-15）：extract 提案 `attribute_id` 碰撞修复**——同 (entity,key,chapter) 多次观测 / character_updates × numerical_updates 跨族同 key / 非 ASCII key slug 塌缩，三条向量不再静默覆盖（seen 表幂等 + 含 value 哈希 ID 升级；ASCII 正常路径 ID 逐字不变；approved/rejected 语义不变） |
 | **包版本** | 仍是 `0.5.0`（不 bump） |
 | **里程碑** | **M0–M4 代码验收全量 PASS；tech-m4 §9 清零；post-M4 A/C/B 闭环；265 dogfood 复测 PASS；266–269 批次 DONE 归档** |
-| **回归基线** | 默认收集 3689 passed / 2 skipped / 1 xpassed；`tests/cli` 371 全绿；ruff 零告警 |
-| **进行中** | 无（266–269 已归档 `tasks/done/`） |
+| **回归基线** | 默认收集 3694 passed / 2 skipped / 1 xpassed（基线 3689 + 270 新增 5）；`tests/cli` 371 全绿；ruff 零告警 |
+| **进行中** | 无（270 已归档 `tasks/done/`） |
 | **下一闸门** | owner 真人 dogfood 写一章（266–269 的实模型验收输入，建议 urban_horror 起步）；选项 A（W2 调规划器，涉 B12）待 owner 产品决策 |
-| **本 handoff** | 266–269 四任务全交付：清模板写径（266/268）+ 模板反派防御（267）+ pending/伏笔过目降本（269） |
+| **本 handoff** | 270 交付：extract 提案碰撞静默覆盖修复（三条向量 + ASCII 形态兼容锁）；归档 `tasks/done/270` |
 
 硬约束（接手期间同样适用）：
 
@@ -121,7 +121,7 @@ songyan review --project-id TEXT --chapter INT [--json]
 | 本地回归（抽卡相关） | `tests/cli/test_variant_*.py`、`tests/services/test_variant_fingerprint.py`、`tests/db/test_chapter_variants.py` |
 | 本地回归（M4 相关） | `tests/cli/test_chapter_*.py`、`tests/cli/test_review*.py`、`tests/cli/test_status_command.py`、`tests/services/test_review_report.py` |
 
-本地仓库路径（Diupi-Yun）：`C:\Vibe Project\Songyan`；origin/main 随本页提交 push 后同步（当前 @ `591a285`）。
+本地仓库路径（Diupi-Yun）：`C:\Vibe Project\Songyan`；origin/main 随本页提交 push 后同步（当前 main @ `510f79b` 未 push，origin @ `5f08178`）。
 
 ## 已知限制
 
@@ -150,6 +150,7 @@ songyan review --project-id TEXT --chapter INT [--json]
 - **2026-11-14 术语与文案治理（task 264）**：`docs/glossary.md` 术语表 v1 落地；today next、variant/chapter status 输出、错误与帮助文案全面去内部术语（章宇宙/fp/slStale/task 号等）；README/quickstart 刷新。tests/cli 334 全绿 + 全量 3654 passed。
 - **2026-11-14 开章语义转正（task 263 @ `bdb5c39`）**：`chapter continue --chapter N` 显式开章——内联铺 empty head 替代 dogfood 里反复出现的 SQL seeding；跳跃/已 accepted 拒绝；真实模型复验一步开书（新项目 --chapter 1 → 3266 字草稿 ¥0.0314，无需 run 先跑）。
 - **2026-11-15 都市灵异清模板与 pending/伏笔过目批次（266–269，已归档 `tasks/done/`）**：266 角色/设定编辑 CLI（`character|setting list|edit|remove`；characters.archived 软删 + `profile_edit_history` 审计同事务；软删行从默认 list 与组装/名册/初始化出口消失；主角禁 remove exit 2；edit 命中软删行=复活，与 storyline 同口径）· 267 未出场且无 character_states 的模板反派只给符号档案（importance 0.2，不占硬顶不保送 0.8；已出场/有 states 保护不变，protagonist 不变）· 268 `create-project --no-seed`（跳过模板种子只建主角档案）+ 薄模板 `urban_horror`（无 seed.json）· 269 pending 分组过滤（`canon pending --chapter/--source/--kind`，entity 经「被过滤 attribute 引用」归组；`confirm/dismiss batch` 同族过滤，非 TTY 无 --yes exit 2，空集 exit 0 明示）+ urban `foreshadowing_horizon_floor=8` + `canon dismiss promise` 归档（幂等，出开放集/overdue/紧迫）+ `canon confirm promise-due`（未确认 expected 只是建议：结算不翻 due/overdue、不加「2 章内 +2 紧迫」）。代码 266 `8181771` / 267 `864d3c3` / 268 `74802be` / 269 `591a285`；全量 3689 passed + tests/cli 371 + ruff 绿。**升级先 `songyan doctor --init-db`**（characters.archived / foreshadowings.confirmed_due_chapter 窄加列，既有契约）；2 条钉旧口径测试（mark_overdue / urgency within_2）已随新口径改写。遗留：真人 dogfood 验证待人跑；选项 A 未决。
+- **2026-11-15 task 270 交付（已归档 `tasks/done/`）**：修复 extract 提案 `attribute_id` 碰撞静默覆盖（代码 @ `510f79b`）。三条向量：同 settlement 同 (entity, key, chapter) 多次观测、character_updates × numerical_updates 跨族同 key（真实词表两边都有 `level`）、非 ASCII key/entity 经 `_slug` 塌缩成 `x`。修复（`_proposals.py`）：写入携带本次调用 `seen` 表——同 ID 同值幂等跳过；ASCII base ID 被不同 value 占用 → 升级「base + entity/key/value 短哈希」ID（记 `extract_proposal_disambiguated`）；entity/key 非 ASCII → 恒走哈希 ID。哈希含 value，重跑幂等。兼容性：无碰撞 ASCII 正常路径 ID 逐字不变（锁测试）；approved/rejected 跳过语义不变（task 226）；settlement 表仍 `untrusted_until_confirmed` 可回溯。新增 5 测（`test_extract_proposal_collisions`）；受影响面回归（settlement_extractor / extract pending 族）182 passed 全绿。遗留：历史库中旧塌缩 ID（`x`）的 pending/rejected 行不迁移，与新哈希 ID 不互认（旧行本就异常数据，量极小）。
 
 标识与助手交接：[HANDOFF-mew.md](HANDOFF-mew.md)。书稿不入库。
 
@@ -169,7 +170,7 @@ songyan review --project-id TEXT --chapter INT [--json]
 
 ## 维护者下一步
 
-1. **当前 tip `591a285`（已 push；266–269 批次功能）。** M0–M4 代码验收全量 **PASS**；tech-m4 §9 清零；248–265 与 **266–269 批次全部闭环归档**。下一闸门 = owner 真人 dogfood（写一章，266–269 的实模型验收输入，建议 `urban_horror` 起步）；选项 A（W2 缺失 goal/brief 时自动调规划器，涉 B12）待 owner 产品决策。没有任务文件不口头开工。
+1. **当前 tip `510f79b`（270 extract 提案碰撞修复，未 push；此前 `5f08178` 已 push）。** M0–M4 代码验收全量 **PASS**；tech-m4 §9 清零；248–265 与 266–269 批次全部闭环归档；**270 DONE 归档**。下一闸门 = owner 真人 dogfood（写一章，266–269 的实模型验收输入，建议 `urban_horror` 起步）；选项 A（W2 缺失 goal/brief 时自动调规划器，涉 B12）待 owner 产品决策。没有任务文件不口头开工。
 2. 不改结算权威；不大 PR；不 bump；不声称 V1.0 完成。
 3. owner 本地接手期间：以本页 + tech-m3 / tech-m4 为准；助手侧默认待命，不抢开「以后」清单。
 

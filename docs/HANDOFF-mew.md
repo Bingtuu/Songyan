@@ -6,6 +6,13 @@ owner：Bingtuu。包 tip **v0.5**（`0.5.0`）。「V1.0」是产品代际名�
 
 ## 下一刀
 
+**270 已 DONE 归档（2026-11-15，goal loop 交付，代码 @ `510f79b`）**：修复抽取提案 `attribute_id` 碰撞静默覆盖——
+
+- 碰撞向量（修复前全部 last-writer-wins，人在 `canon pending` 看不到被覆盖的提案）：同 settlement 同 (entity, key, chapter) 多次观测；`character_updates.field` × `numerical_updates.attribute_name` 跨族同 key（真实词表两边都有 `level`）；非 ASCII key/entity 经 `_slug` 塌缩成 `x`。
+- 修复（`_proposals.py`）：写入携带本次调用 `seen` 表；同 ID 同值 → 幂等跳过（重跑不重复）；ASCII base ID 被不同 value 占用 → 升级「base + entity/key/value 短哈希」ID 并记 `extract_proposal_disambiguated` 日志；entity/key 含非 ASCII → 恒走哈希 ID。哈希含 value，重跑幂等。
+- 兼容性：无碰撞 ASCII 正常路径 ID 逐字不变（有锁测试）；approved/rejected 跳过语义不变（task 226）；settlement 表仍是 `untrusted_until_confirmed` 观测源，原始观测可回溯。
+- 测试：`tests/settlement_extractor/test_extract_proposal_collisions.py` 5 测（两值并存 / 同值幂等 / 跨族并存 / 中文 key 不塌缩 / ASCII ID 形态锁）。回归：tests/cli 371 全绿；ruff 零告警；全量默认收集见 STATUS。
+
 **266–269 批次已 DONE 归档（2026-11-15，goal loop 交付）**——都市灵异清模板与 pending/伏笔过目（依据 `.tmp/266-269-都市灵异清模板与pending过目.md`）：
 
 - **266 角色/设定编辑 CLI**（`8181771`）：`character|setting list|edit|remove`；软删（characters.archived / setting lifecycle=archived）+ 审计 `profile_edit_history` 同事务；软删行从默认 list 与组装/名册/初始化出口消失；主角禁 remove（exit 2）；edit 命中软删行=复活（storyline 同口径）。urban 新项目全 CLI 清场验收测试过。
@@ -72,7 +79,7 @@ M1 代码验收（步 1–5 + tech-m1 §6–7）在 `main` `69d7ece`：**PASS**�
 | M4 步 3 | 已提交 `23bd3f3`（`chapter continue`）；[tasks/done/240-m4-step3-chapter-continue.md](../tasks/done/240-m4-step3-chapter-continue.md) |
 | M4 步 4 | 已提交 `b857e8b`（`review` 只读共审）；[tasks/done/241-m4-step4-review.md](../tasks/done/241-m4-step4-review.md) |
 | M4 步 5 + §6–7 验收 | 步 5 已提交 `e5a33bd`（W2 连走集成测试 + `today` M4 文案）；**§6–7 PASS @ `e5a33bd`**（[tasks/done/242-m4-step5-closure.md](../tasks/done/242-m4-step5-closure.md) · [tasks/done/243-m4-code-acceptance.md](../tasks/done/243-m4-code-acceptance.md)） |
-| 当前任务 | 无进行中。**266–269 批次 DONE 已归档**（角色/设定编辑 CLI、模板反派衰减、--no-seed+urban_horror、pending 分组+伏笔 horizon+承诺归档；tests/cli 371 全绿）。待 owner：真人 dogfood 写一章（266–269 实模型验收）/ 选项 A 产品决策 |
+| 当前任务 | 无进行中。**270 DONE 已归档**（extract 提案 attribute_id 碰撞修复：同章多次观测/跨族同 key/非 ASCII 塌缩不再静默覆盖，ASCII 正常 ID 形态不变；tests/cli 371 全绿）。待 owner：真人 dogfood 写一章（266–269 实模型验收）/ 选项 A 产品决策 |
 | 架构方向 | [adr/0001-plan-first-facts.md](adr/0001-plan-first-facts.md) |
 | 工程现状 | [STATUS.md](STATUS.md) |
 | 阶段 A–C | [ROADMAP-plan-first.md](ROADMAP-plan-first.md)（CLOSED 短指针；全文在 archive，日常不要加载） |
