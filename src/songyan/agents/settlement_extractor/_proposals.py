@@ -8,6 +8,7 @@ runtime observation store and stay ``untrusted_until_confirmed``.
 from __future__ import annotations
 
 import re
+from hashlib import sha1
 from typing import TYPE_CHECKING
 
 import structlog
@@ -34,13 +35,27 @@ def _slug(raw: str, *, max_len: int = 48) -> str:
     return cleaned[:max_len]
 
 
+def _has_non_ascii(raw: str) -> bool:
+    return any(ord(c) > 127 for c in raw)
+
+
 def _attribute_id(
-    *, project_id: str, entity_id: str, key: str, chapter_number: int
+    *,
+    project_id: str,
+    entity_id: str,
+    key: str,
+    chapter_number: int,
+    value: str | None = None,
+    hashed: bool = False,
 ) -> str:
-    return (
+    base = (
         f"ext-{_slug(project_id, max_len=24)}"
         f"-{_slug(entity_id)}-{_slug(key)}-c{chapter_number}"
     )
+    if not hashed:
+        return base
+    digest = sha1(f"{entity_id}\x00{key}\x00{value or ''}".encode())
+    return f"{base}-{digest.hexdigest()[:8]}"
 
 
 def _setting_entity_id(project_id: str, setting_key: str) -> str:
@@ -65,6 +80,7 @@ async def enqueue_extract_proposals(
     repo = plan_repo or PlanFactRepository()
     names = character_names or {}
     written: list[str] = []
+    seen: dict[str, str] = {}  # attribute_id -> value，本次调用内幂等/碰撞判定
 
     for update in settlement.character_updates:
         entity_id = update.character_id
@@ -84,6 +100,7 @@ async def enqueue_extract_proposals(
             key=update.field,
             value=update.new_value,
             chapter_number=chapter_number,
+            seen=seen,
         )
         if attr_id is not None:
             written.append(attr_id)
@@ -111,6 +128,7 @@ async def enqueue_extract_proposals(
             key="description",
             value=setting.description,
             chapter_number=chapter_number,
+            seen=seen,
         )
         if attr_id is not None:
             written.append(attr_id)
@@ -133,6 +151,7 @@ async def enqueue_extract_proposals(
             key=num.attribute_name,
             value=str(num.closing_value),
             chapter_number=chapter_number,
+            seen=seen,
         )
         if attr_id is not None:
             written.append(attr_id)
@@ -182,13 +201,58 @@ async def _write_pending_extract_attribute(
     key: str,
     value: str,
     chapter_number: int,
+    seen: dict[str, str] | None = None,
 ) -> str | None:
+    """写一条 pending extract 提案，返回 attribute_id（被跳过返回 None）。
+
+    碰撞语义（task 270）：attribute_id 确定性生成，三条向量会导致静默覆盖——
+    同 (entity, key, chapter) 多次观测、跨族同 key、非 ASCII key slug 塌缩。
+    非 ASCII 实体/key 恒走带内容哈希的 ID；ASCII 路径在检测到同调用内
+    同 ID 不同 value 时升级为哈希 ID。哈希含 value，因此对同一观测重跑幂等。
+    """
+    force_hashed = _has_non_ascii(entity_id) or _has_non_ascii(key)
     attribute_id = _attribute_id(
         project_id=project_id,
         entity_id=entity_id,
         key=key,
         chapter_number=chapter_number,
+        value=value,
+        hashed=force_hashed,
     )
+    if seen is not None:
+        if attribute_id in seen:
+            # 哈希含 value，同 ID 同值 → 幂等跳过；不同值只可能出现在 ASCII
+            # base ID 先占的情形，落到下方升级分支。
+            if force_hashed or seen[attribute_id] == value:
+                return None
+        if not force_hashed:
+            base_id = _attribute_id(
+                project_id=project_id,
+                entity_id=entity_id,
+                key=key,
+                chapter_number=chapter_number,
+            )
+            if base_id in seen and seen[base_id] != value:
+                # 同 (entity, key, chapter) 的不同观测：base ID 已占用，升级哈希。
+                attribute_id = _attribute_id(
+                    project_id=project_id,
+                    entity_id=entity_id,
+                    key=key,
+                    chapter_number=chapter_number,
+                    value=value,
+                    hashed=True,
+                )
+                if attribute_id in seen:
+                    return None
+                logger.info(
+                    "settlement.extract_proposal_disambiguated",
+                    attribute_id=attribute_id,
+                    base_id=base_id,
+                    entity_id=entity_id,
+                    key=key,
+                    project_id=project_id,
+                    chapter_number=chapter_number,
+                )
     existing = await repo.read_attribute(attribute_id)
     if existing is not None and existing.approval_status in ("approved", "rejected"):
         # approved：confirm 不可被静默降级；rejected：人 dismissed 的提案不被
@@ -214,4 +278,6 @@ async def _write_pending_extract_attribute(
         ),
         conn=conn,
     )
+    if seen is not None:
+        seen[attribute_id] = value
     return attribute_id
