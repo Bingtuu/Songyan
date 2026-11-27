@@ -21,7 +21,7 @@ owner：Bingtuu。包 tip **v0.5**（`0.5.0`）。「V1.0」是产品代际名�
 - **269 pending 分组 + 伏笔 horizon + 承诺归档**（`591a285`）：`canon pending --chapter/--source/--kind`（entity 经引用归组）+ `confirm/dismiss batch` 同族过滤（非 TTY 无 --yes exit 2）；urban `foreshadowing_horizon_floor=8`；`canon dismiss promise` 归档（幂等，出开放集/overdue/紧迫）+ `canon confirm promise-due`（人确认到期日，未确认 expected 只是建议：不翻 overdue、不加 +2 紧迫）。
 - 回归：默认收集 3689 passed / 2 skipped / 1 xpassed（基线 3663 + 本批新增/口径更新）；tests/cli 371 全绿（基线 339）；ruff 零告警。**升级提醒：旧库先 `songyan doctor --init-db`**（characters.archived / foreshadowings.confirmed_due_chapter 窄加列，既有契约；2 条钉旧口径的测试已随口径更新改写）。
 
-**下一刀（均需 owner 侧动作，助手默认待命）**：① owner 真人 dogfood 写一章（266–269 的实模型验收输入，建议都市灵异 urban_horror 起步）；② 选项 A（W2 缺失 goal/brief 时自动调规划器，涉推翻 B12）产品决策；③ 实模型抽检 1–2 章看是否再漏模板（先报预算再跑）。未建任务文件，不口头开工。
+**下一刀（均需 owner 侧动作，助手默认待命）**：① owner 真人 dogfood 写一章（266–269 的实模型验收输入，建议都市灵异 urban_horror 起步）；② ~~选项 A~~ **已拍板不做（2026-11-15，owner 确认）**——B（265 定向注入）已消除裸奔，A 的残余价值只剩章节级 target_events/hooks 自动规划，与「人主导 + B12 轻量短环」相悖且每章 +¥0.02–0.05；③ ~~实模型抽检 1–2 章看是否再漏模板~~ **271 已 DONE（2026-11-27）**：urban_horror / urban 两模板原生开书抽检 PASS 不漏不串（¥0.0628），265 story_brief 注入与 267 反派衰减实模型实锤。未建任务文件，不口头开工。
 
 **task 265 已 DONE 归档（2026-11-15）**：context 断链修复（owner 拍板选项 B）——writer 卡 1.1.2 注入故事定向（story_brief/角色名册/世界观设定，断链 C2/C3/C4）；`chapter continue` 四路定向全空可见提醒（`orientation_notice`，不越 B12）；`storyline edit outline --core-hook/--protagonist-background`（C5）；抽卡字数门 `quality_flag=short`（F9）；`--title` 回显（F3）。代码 @ `43eca48`；dogfood 复测 PASS（`.tmp/dogfood-265-末班电梯-003233/`：纯 CLI storyline、零 canon 预置，ch1 2726 字 ¥0.0245 恐怖要素全命中零泄漏）；回归：默认收集 3663 passed，tests/cli 339 全绿，ruff 零告警。评估文档：[docs/experiments/265-context-disconnect-eval.md](experiments/265-context-disconnect-eval.md)；归档：[tasks/done/265](../tasks/done/265-context-disconnect.md)。
 
@@ -79,7 +79,7 @@ M1 代码验收（步 1–5 + tech-m1 §6–7）在 `main` `69d7ece`：**PASS**�
 | M4 步 3 | 已提交 `23bd3f3`（`chapter continue`）；[tasks/done/240-m4-step3-chapter-continue.md](../tasks/done/240-m4-step3-chapter-continue.md) |
 | M4 步 4 | 已提交 `b857e8b`（`review` 只读共审）；[tasks/done/241-m4-step4-review.md](../tasks/done/241-m4-step4-review.md) |
 | M4 步 5 + §6–7 验收 | 步 5 已提交 `e5a33bd`（W2 连走集成测试 + `today` M4 文案）；**§6–7 PASS @ `e5a33bd`**（[tasks/done/242-m4-step5-closure.md](../tasks/done/242-m4-step5-closure.md) · [tasks/done/243-m4-code-acceptance.md](../tasks/done/243-m4-code-acceptance.md)） |
-| 当前任务 | 无进行中。**270 DONE 已归档**（extract 提案 attribute_id 碰撞修复：同章多次观测/跨族同 key/非 ASCII 塌缩不再静默覆盖，ASCII 正常 ID 形态不变；tests/cli 371 全绿）。待 owner：真人 dogfood 写一章（266–269 实模型验收）/ 选项 A 产品决策 |
+| 当前任务 | 无进行中。**271 实模型抽检 DONE 已归档**（两模板原生开书不漏不串 ¥0.0628）；此前 270 extract 碰撞修复已归档。待 owner：真人 dogfood 写一章（266–269 实模型验收） |
 | 架构方向 | [adr/0001-plan-first-facts.md](adr/0001-plan-first-facts.md) |
 | 工程现状 | [STATUS.md](STATUS.md) |
 | 阶段 A–C | [ROADMAP-plan-first.md](ROADMAP-plan-first.md)（CLOSED 短指针；全文在 archive，日常不要加载） |

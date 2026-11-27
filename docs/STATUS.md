@@ -13,9 +13,9 @@
 | **包版本** | 仍是 `0.5.0`（不 bump） |
 | **里程碑** | **M0–M4 代码验收全量 PASS；tech-m4 §9 清零；post-M4 A/C/B 闭环；265 dogfood 复测 PASS；266–269 批次 DONE 归档** |
 | **回归基线** | 默认收集 3694 passed / 2 skipped / 1 xpassed（基线 3689 + 270 新增 5）；`tests/cli` 371 全绿；ruff 零告警 |
-| **进行中** | 无（270 已归档 `tasks/done/`） |
-| **下一闸门** | owner 真人 dogfood 写一章（266–269 的实模型验收输入，建议 urban_horror 起步）；选项 A（W2 调规划器，涉 B12）待 owner 产品决策 |
-| **本 handoff** | 270 交付：extract 提案碰撞静默覆盖修复（三条向量 + ASCII 形态兼容锁）；归档 `tasks/done/270` |
+| **进行中** | 无（271 实模型抽检模板泄漏已归档 `tasks/done/`） |
+| **下一闸门** | owner 真人 dogfood 写一章（266–269 的实模型验收输入，建议 urban_horror 起步）；~~选项 A~~ 已拍板不做（2026-11-15：265 定向注入已消除裸奔，A 与「人主导 + B12 轻量短环」相悖） |
+| **本 handoff** | 271 交付：两模板（urban_horror / urban）W2 原生开书实模型抽检 PASS，不漏不串（¥0.0628）；265 C2 七段 story_brief 注入与 267 反派符号档案实锤；归档 `tasks/done/271` |
 
 硬约束（接手期间同样适用）：
 
@@ -170,7 +170,7 @@ songyan review --project-id TEXT --chapter INT [--json]
 
 ## 维护者下一步
 
-1. **当前 tip `510f79b`（270 extract 提案碰撞修复，未 push；此前 `5f08178` 已 push）。** M0–M4 代码验收全量 **PASS**；tech-m4 §9 清零；248–265 与 266–269 批次全部闭环归档；**270 DONE 归档**。下一闸门 = owner 真人 dogfood（写一章，266–269 的实模型验收输入，建议 `urban_horror` 起步）；选项 A（W2 缺失 goal/brief 时自动调规划器，涉 B12）待 owner 产品决策。没有任务文件不口头开工。
+1. **当前 tip `510f79b``（270 extract 提案碰撞修复，未 push；此前 `5f08178` 已 push）。** M0–M4 代码验收全量 **PASS**；tech-m4 §9 清零；248–265 与 266–269 批次全部闭环归档；270/271 DONE 归档。下一闸门 = owner 真人 dogfood（写一章，266–269 的实模型验收输入，建议 `urban_horror` 起步）；~~选项 A~~ 已拍板不做（2026-11-15）。没有任务文件不口头开工。
 2. 不改结算权威；不大 PR；不 bump；不声称 V1.0 完成。
 3. owner 本地接手期间：以本页 + tech-m3 / tech-m4 为准；助手侧默认待命，不抢开「以后」清单。
 
